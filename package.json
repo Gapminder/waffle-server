@@ -1,0 +1,29 @@
+{
+  "name": "waffle-implementation",
+  "version": "0.1.0",
+  "description": "Waffle server",
+  "main": "app.js",
+  "dependencies": {
+    "gulp-eslint": "^0.15.0",
+    "lodash": "^3.10.0",
+    "mongoose": "^4.0.6",
+    "require-dir": "^0.3.0"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.0",
+    "gulp-eslint": "^0.15.0"
+  },
+  "scripts": {
+    "test": "gulp test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/valor-software/waffle-server.git"
+  },
+  "author": "Dmitriy Shekhovtsov <valorkin@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/valor-software/waffle-server/issues"
+  },
+  "homepage": "https://github.com/valor-software/waffle-server"
+}
