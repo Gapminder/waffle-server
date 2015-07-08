@@ -1,13 +1,13 @@
 'use strict';
 
-var name = 'data-source-types';
-require('./data-source-types.model');
-var Repository = require('./data-source-types.repository');
+var name = 'data-sources';
+require('./data-sources.model');
+var Repository = require('./data-sources.repository');
 
 /**
  * Register Data Source repository and MongoDB model
- * @param {RepositoryServiceLocator} serviceLocator - repository service locator
- * @returns {RepositoryServiceLocator} - instance of locator
+ * @param {ServiceLocatorFactory} serviceLocator - repository service locator
+ * @returns {ServiceLocatorFactory} - instance of locator
  */
 module.exports = function (serviceLocator) {
   return serviceLocator.set(name, Repository);
