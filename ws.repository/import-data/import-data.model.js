@@ -5,11 +5,12 @@ var Schema = mongoose.Schema;
 
 /**
  * @typedef {Object} ImportData
+ * @memberof Models
  *
  * @property {Array<Dimension>} ds - dimensions, list of dimension pointers
  * @property {String|Number} v - observed value
  *
- * @property {Array<ImportSessions>} importSession - point observed in several import sessions
+ * @property {Array<Models.ImportSessions>} importSession - point observed in several import sessions
  */
 var ImportData = new Schema({
   ds: [{

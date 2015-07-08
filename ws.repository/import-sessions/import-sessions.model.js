@@ -5,11 +5,12 @@ var Schema = mongoose.Schema;
 
 /**
  * @typedef {Object} ImportSessions
+ * @memberof Models
  *
- * @property {DataSourceTypes} dsid - Import Session of this DataSource
+ * @property {Models.DataSourceTypes} dsid - Import Session of this DataSource
  * @property {Boolean} isApproved - is this import session approved, default: false
  *
- * @property {ImportSessions} user - user started this import session
+ * @property {Models.ImportSessions} user - user started this import session
  * @property {Date} createdAt - when this import session was started
  */
 var ImportSessions = new Schema({

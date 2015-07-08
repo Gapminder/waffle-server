@@ -5,6 +5,8 @@ var Schema = mongoose.Schema;
 
 /**
  * @typedef {Object} Users
+ * @memberof Models
+ *
  * @property {String} name - users full name
  * @property {String} password - @private, users password
  * @property {String} salt - @private, users salt

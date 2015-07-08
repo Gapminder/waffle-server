@@ -5,6 +5,8 @@ var Schema = mongoose.Schema;
 
 /**
  * @typedef {Object} DataSourceTypes
+ * @memberof Models
+ *
  * @property {String} name - unqi
  * @property {String} dsuid - unique data source `id` within DataSource space
  */

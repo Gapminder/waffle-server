@@ -1,11 +1,15 @@
-/** @module Models */
 'use strict';
+/**
+ * @namespace Models
+ */
 
 /**
  * @typedef {Object} Dimension
+ * @memberof Models
+ *
  * @param {ObjectId|String} d - dimension name or reference of dimension
  * @param {String|Number} v - value of dimension pointer
- * */
+ */
 
 /**
  * Models and repository bootstrap
