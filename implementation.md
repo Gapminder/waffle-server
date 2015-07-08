@@ -256,6 +256,8 @@ manually or basing on existing history of analysis patters, data values, data so
 creating and extending existing dimensions and indicators.
 
 // todo: write this
+// model: dimensions
+// model: indicators
 
 ### Export\Expose
 
