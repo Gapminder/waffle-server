@@ -9,7 +9,7 @@ var Schema = mongoose.Schema;
  *
  * @property {String} name - unique indicator name, lowercase
  * @property {String} title - nice name for indicator
- * @property {String} valueType - string representation of value type
+ * @property {Array<Models.Coordinates>} coordinates - expression of dimensionality nature
  *
  * @property {Object} meta - any meta for indicator
  *
@@ -19,7 +19,8 @@ var Schema = mongoose.Schema;
 var Indicators = new Schema({
   name: {type: String, unique: true, required: true, index: true},
   title: String,
-  valueType: String,
+
+  coordinates: [{type: Schema.Types.ObjectId, refs: 'Coordinates'}],
 
   meta: {},
 

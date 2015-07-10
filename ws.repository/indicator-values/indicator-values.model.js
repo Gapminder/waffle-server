@@ -15,6 +15,10 @@ var Schema = mongoose.Schema;
  * @property {Array<Models.AnalysisSessions>} analysisSessions - when this indicator was created and modified
  */
 var IndicatorValues = new Schema({
+  ds: [{
+    d: {type: Schema.Types.ObjectId, refs: 'Dimensions'},
+    v: String
+  }],
   indicator: {type: Schema.Types.ObjectId, refs: 'Indicators'},
   value: String,
 

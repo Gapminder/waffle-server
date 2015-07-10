@@ -9,7 +9,6 @@ var Schema = mongoose.Schema;
  *
  * @property {String} name - unique dimension name, lowercase
  * @property {String} title - nice name for dimension
- * @property {Array<Models.Coordinates>} coordinates - expression of dimensionality nature
  *
  * @property {Object} meta - any meta for dimension
  *
@@ -18,7 +17,6 @@ var Schema = mongoose.Schema;
 var Dimensions = new Schema({
   name: {type: String, required: true, unique: true, index: true},
   title: String,
-  coordinates: [{type: Schema.Types.ObjectId, refs: 'Coordinates'}],
 
   meta: {},
 
