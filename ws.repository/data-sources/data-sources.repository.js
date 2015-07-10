@@ -64,7 +64,9 @@ DataSourcesRepository.prototype.list = function listAll(projection, cb) {
  * @param {ErrorOnlyCallback} cb - callback, to be called on finish
  * @returns {DataSourcesRepository} - this, chainable
  */
-DataSourcesRepository.prototype.add = function addNewOrIgnore(ds, cb) {
+DataSourcesRepository.prototype.add = function addNewOrIgnore(dataStore, cb) {
+  var self = this;
+  var ds = (new DataSources(dataStore)).toObject();
   var query = _.pick(ds, ['dst', 'dsuid']);
   if (query.length < 2) {
     (new DataSources(ds)).validate(cb);
@@ -85,11 +87,15 @@ DataSourcesRepository.prototype.add = function addNewOrIgnore(ds, cb) {
   }
 
   function createNewDataSource(newDataSource) {
-    return DataSources.create(newDataSource, cb);
+    return DataSources.create(newDataSource, findOne);
   }
 
   function updateExistingDataSource(newDataSource) {
-    return DataSources.update(query, {$set: _.pick(newDataSource, 'meta')}, cb);
+    return DataSources.update(query, {$set: _.pick(newDataSource, 'meta')}, findOne);
+  }
+
+  function findOne() {
+    return self.find(query, {}, wAtoS(cb));
   }
 };
 

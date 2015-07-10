@@ -12,6 +12,7 @@
  * @param {Models.DataSourceTypes} [dataSourceType] - found data source type instance, if any
  */
 
+var _ = require('lodash');
 var mongoose = require('mongoose');
 var DataSourceTypes = mongoose.model('DataSourceTypes');
 
@@ -63,7 +64,7 @@ DataSourceTypesRepository.prototype.list = function listAll(cb) {
  * @returns {DataSourceTypesRepository} - this, chainable
  */
 DataSourceTypesRepository.prototype.add = function addNewOrIgnore(dst, cb) {
-  DataSourceTypes.update({name: dst.name}, {$set: dst}, {$upsert: true}, cb);
+  DataSourceTypes.update({name: dst.name}, {$set: dst}, {upsert: true}, cb);
   return this;
 };
 

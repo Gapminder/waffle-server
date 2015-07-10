@@ -5,13 +5,13 @@
 
 /**
  * Models and repository bootstrap
- * @param {ServiceLocator} serviceLocator - express serviceLocator2 instance
+ * @param {ServiceLocatorContainer} serviceLocator - express serviceLocator2 instance
  * @returns {void} - nothing
  */
 module.exports = function (serviceLocator) {
-  require('./data-source-types')(serviceLocator);
-  require('./data-sources')(serviceLocator);
-  require('./import-data')(serviceLocator);
-  require('./import-sessions')(serviceLocator);
-  require('./users')(serviceLocator);
+  require('./data-source-types')(serviceLocator.repositories);
+  require('./data-sources')(serviceLocator.repositories);
+  require('./import-data')(serviceLocator.repositories);
+  require('./import-sessions')(serviceLocator.repositories);
+  require('./users')(serviceLocator.repositories);
 };

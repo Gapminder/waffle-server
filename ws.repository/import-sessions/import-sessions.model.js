@@ -18,7 +18,7 @@ var ImportSessions = new Schema({
   isApproved: {type: Boolean, 'default': false},
 
   user: {type: Schema.Types.ObjectId, refs: 'Users', required: true},
-  createAt: {type: Date, 'default': new Date(), required: true}
+  version: {type: Date, 'default': new Date()}
 });
 
 mongoose.model('ImportSessions', ImportSessions);

@@ -3,26 +3,25 @@
 /**
  * Register Main Service Locator
  * @param {app} app - express app instance
- * @return {ServiceLocator} - instance of service locator
+ * @return {ServiceLocatorContainer} - instance of service locator
  */
 module.exports = function (app) {
-  var serviceLocator = new ServiceLocator(app);
-  app.set('ServiceLocator', serviceLocator);
-  return serviceLocator;
+  // todo: use cache, to reuse on ui
+  return new ServiceLocatorContainer(app);
 };
 
-function ServiceLocator(app) {
-  this.repositories = new ServiceLocatorFactory('repository', app);
+function ServiceLocatorContainer(app) {
+  this.repositories = new ServiceLocator('repository', app);
+  this.plugins = new ServiceLocator('plugins', app);
 }
 
 /**
- * {null} ServiceLocatorFactory
+ * ServiceLocatorFactory
  * @param {String} namePrefix - prefix to be used for service name change
  * @param {app} app - express app instance
- * @private
  * @constructor
  */
-function ServiceLocatorFactory(namePrefix, app) {
+function ServiceLocator(namePrefix, app) {
   /*eslint no-underscore-dangle: 0*/
   var _delimeter = '.';
   /** @private */
@@ -30,25 +29,37 @@ function ServiceLocatorFactory(namePrefix, app) {
   /** @private */
   var _namePrefix = namePrefix + _delimeter;
 
+  /** @private */
+  var servicesList = [];
+
   /**
    * Registers repository instance, sync
    *
    * @param {String} name - repository name
    * @param {Object} instance - instance of repository
-   * @returns {ServiceLocatorFactory} - this, for chainable calls
+   * @returns {ServiceLocator} - this, for chainable calls
    */
   this.set = function registerRepositoryInstance(name, instance) {
     _app.set(_namePrefix + name, instance);
+    servicesList.push(name);
     return this;
   };
 
-  /** Get repository instance, sync
-   *
+  /**
+   * Get repository instance, sync
    * @param {String} name - of repository
    * @return {Object} - instance of repository
    */
   this.get = function getRepositoryInstance(name) {
     return _app.get(_namePrefix + name);
+  };
+
+  /**
+   * Lists names of all registered services
+   * @returns {Array<String>} - list of registered services names
+   */
+  this.list = function listRegisteredServices() {
+    return servicesList;
   };
 }
 
