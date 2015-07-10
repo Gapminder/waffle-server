@@ -1,7 +1,7 @@
 # waffle server implementation document
 
 Please read:
-- [Architecture overview](https://goo.gl/XrhLG7) for concept overview
+- [Architecture overview]() for concept overview
 - [Tidy data](http://www.jstatsoft.org/v59/i10/paper) for terms and data concepts understanding (3rd normal form of data)
 
 ## Import component
