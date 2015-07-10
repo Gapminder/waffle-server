@@ -28,4 +28,6 @@ var ImportData = new Schema({
   }
 });
 
+ImportData.index({'ds.d': 1, 'ds.v': 1, v: 1});
+
 mongoose.model('ImportData', ImportData);

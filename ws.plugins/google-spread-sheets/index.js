@@ -1,7 +1,7 @@
 'use strict';
-var serviceLocator;
-function GoogleSpreadSheetPlugin() {
+function GoogleSpreadSheetPlugin(serviceLocator) {
   this.meta = require('./plugin-meta');
+  serviceLocator.plugins.set(this.meta.name, this);
   this.parser = require('./parser');
 
   var Importer = require('./importer');
@@ -22,7 +22,6 @@ function GoogleSpreadSheetPlugin() {
 
     /** @type DataSourcesRepository */
     var dstRepo = serviceLocator.repositories.get('data-source-types');
-
 
     gs.importer.getDataSource(uid, function(err, ds){
       dstRepo.findByName(gs.meta.name, function (err, dst){
@@ -68,9 +67,9 @@ function GoogleSpreadSheetPlugin() {
   };
 
   this.importer = new Importer();
+  this.analysis = require('./analysis')(serviceLocator);
 }
 
-module.exports = function (_serviceLocator) {
-  serviceLocator = _serviceLocator;
-  return new GoogleSpreadSheetPlugin();
+module.exports = function (serviceLocator) {
+  return new GoogleSpreadSheetPlugin(serviceLocator);
 };

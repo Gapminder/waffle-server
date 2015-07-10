@@ -9,9 +9,19 @@
  * @returns {void} - nothing
  */
 module.exports = function (serviceLocator) {
+  // system
+  require('./users')(serviceLocator.repositories);
+
+  // data source
   require('./data-source-types')(serviceLocator.repositories);
   require('./data-sources')(serviceLocator.repositories);
+
+  // import
   require('./import-data')(serviceLocator.repositories);
   require('./import-sessions')(serviceLocator.repositories);
-  require('./users')(serviceLocator.repositories);
+
+  // schema analysis
+  require('./analysis-sessions')(serviceLocator.repositories);
+  require('./dimensions')(serviceLocator.repositories);
+  require('./dimension-values')(serviceLocator.repositories);
 };
