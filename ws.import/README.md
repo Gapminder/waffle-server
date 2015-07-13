@@ -16,6 +16,20 @@ app expects `neo4j` user to have `neo4j` password,
 Default login/pass is `neo4j`/`neo4j`, but you should change password to something,
  and then run `:server change-password` in neo4j console and set pass to `neo4j`.
  Only then you can move to express server steps.
+#####4. Create folder for dump
+```
+mkdir /tmp/neo4j-backup
+```
+#####5. Dump data from neo4j:
+```
+~/Downloads/neo4j-community-2.2.2/bin/neo4j-shell -v -c "dump match (n:Coordinates) return n;" > /tmp/neo4j-backup/coordinates.db.cql
+```
+#####5. Import data to neo4j:
+```
+~/Downloads/neo4j-community-2.2.2/bin/neo4j stop
+~/Downloads/neo4j-community-2.2.2/bin/neo4j-shell -v < /tmp/neo4j-backup/all.db.cql
+~/Downloads/neo4j-community-2.2.2/bin/neo4j start
+```
 
 ####Install modules
 #####1. Install mongodb:
