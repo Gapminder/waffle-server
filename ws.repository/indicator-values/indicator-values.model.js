@@ -7,10 +7,7 @@ var Schema = mongoose.Schema;
  * @typeof {Object} IndicatorValues
  * @memberof Models
  *
- * @property {String} name - unique indicator name, lowercase
- * @property {String} title - nice name for indicator
  *
- * @property {Object} meta - any meta for indicator
  *
  * @property {Array<Models.AnalysisSessions>} analysisSessions - when this indicator was created and modified
  */
@@ -19,10 +16,14 @@ var IndicatorValues = new Schema({
     d: {type: Schema.Types.ObjectId, refs: 'Dimensions'},
     v: String
   }],
+  v: String,
+
+  coordinates: {type: Schema.Types.ObjectId, refs: 'Coordinates'},
   indicator: {type: Schema.Types.ObjectId, refs: 'Indicators'},
-  value: String,
 
   analysisSessions: [{type: Schema.Types.ObjectId, refs: 'AnalysisSessions'}]
 });
+
+IndicatorValues.index({'ds.d': 1, 'ds.v': 1, v: 1, coordinates: 1, indicator: 1});
 
 mongoose.model('IndicatorValues', IndicatorValues);

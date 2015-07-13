@@ -3,6 +3,14 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
+/**
+ * @name DimensionsSet
+ * @memberof Models
+ * @class
+ *
+ * @param {String} d - dimension
+ * @param {String} v - value
+ */
 var DimensionSchema = new Schema({
   d: String,
   v: String
@@ -21,11 +29,7 @@ var ImportData = new Schema({
   ds: [DimensionSchema],
   v: String,
 
-  importSessions: {
-
-    type: [{type: Schema.Types.ObjectId, refs: 'ImportSessions'}],
-    'private': true
-  }
+  importSessions: [{type: Schema.Types.ObjectId, refs: 'ImportSessions'}]
 });
 
 ImportData.index({'ds.d': 1, 'ds.v': 1, v: 1});

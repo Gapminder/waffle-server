@@ -24,4 +24,9 @@ module.exports = function (serviceLocator) {
   require('./analysis-sessions')(serviceLocator.repositories);
   require('./dimensions')(serviceLocator.repositories);
   require('./dimension-values')(serviceLocator.repositories);
+
+  // indicators
+  require('./coordinates')(serviceLocator.repositories);
+  require('./indicators')(serviceLocator.repositories);
+  require('./indicator-values')(serviceLocator.repositories);
 };

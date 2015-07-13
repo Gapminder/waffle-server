@@ -1,7 +1,7 @@
 'use strict';
 
 // var name = 'users';
-require('./dimensions.model');
+require('./indicator-values.model');
 // var Repository = require('./data-source-types.repository');
 
 /**

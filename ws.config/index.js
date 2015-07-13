@@ -3,7 +3,7 @@ var mongoose = require('mongoose');
 
 var mongoUri = 'mongodb://localhost/waffleserver';
 var db = mongoose.connection;
-mongoose.set('debug', true)
+mongoose.set('debug', false);
 mongoose.connect(mongoUri);
 
 db.on('error', function (err) {

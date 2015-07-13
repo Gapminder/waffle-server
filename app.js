@@ -15,7 +15,6 @@ require('./ws.plugins')(serviceLocator, function () {
   /** @type GoogleSpreadSheetPlugin */
   var gs = serviceLocator.plugins.get('google-spread-sheets');
   //gs.importer.importData(uid, console.log.bind(console));
-  require('./')
 });
 
 
