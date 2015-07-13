@@ -10,6 +10,7 @@
     "gulp-eslint": "^0.15.0",
     "lodash": "^3.10.0",
     "mongoose": "^4.0.6",
+    "node-neo4j": "^2.0.3",
     "require-dir": "^0.3.0",
     "validator": "^3.41.2"
   },
