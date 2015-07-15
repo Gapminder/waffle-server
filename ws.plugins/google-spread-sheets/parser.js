@@ -50,3 +50,5 @@ GoogleSpreadSheetParser.prototype.parse = function (uri) {
 
   return uri;
 };
+
+module.exports = new GoogleSpreadSheetParser();
