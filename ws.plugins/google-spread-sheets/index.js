@@ -10,8 +10,9 @@ function GoogleSpreadSheetPlugin(serviceLocator) {
   var Importer = require('./importer');
   // todo: refactor
   Importer.prototype.importData = function importData(uid, cb) {
+    console.log('Start import of: ' + uid);
     uid = self.parser.parse(uid);
-    console.log(uid);
+    console.log('Parsed uid: ' + uid);
     // fixme: user, data source type
     var mongoose = require('mongoose');
     var Users = mongoose.model('Users');

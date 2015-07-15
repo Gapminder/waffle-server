@@ -5,9 +5,9 @@ var validator = require('validator');
 // todo: add validation error class
 function GoogleSpreadSheetParser() {
   /** @private */
-  this.hasKeyRegExp = /key=([\w]*)/;
+  this.hasKeyRegExp = /key=([\w-]*)/;
   /** @private */
-  this.hasUid = /([\w]*)/;
+  this.hasUid = /([\w-]*)/;
 }
 
 /**
@@ -34,6 +34,8 @@ GoogleSpreadSheetParser.prototype.validate = function (uri) {
 /**
  * Parse raw format uid (url to public table) in dsuid
  * @param {String} uri - unique resource identifier
+ *
+ *
  * @returns {String|Error} - returns parsed data source unique id
  */
 GoogleSpreadSheetParser.prototype.parse = function (uri) {
