@@ -27,3 +27,14 @@ MATCH (n:Coordinates),(u:Dimensions) where u._id in n.dimensions create (n)-[:di
 // Coordinates to AnalysisSessions
 MATCH (n:Coordinates),(u:AnalysisSessions) where u._id in n.analysisSessions create (n)-[:analysis_session]->(u)
 
+// IndicatorValues to DimensionValues
+MATCH (n:IndicatorValues),(u:DimensionValues) where u._id in n.ds create (n)-[:dimension_values]->(u)
+
+// IndicatorValues to Coordinates
+MATCH (n:IndicatorValues),(u:Coordinates) where u._id = n.coordinates create (n)-[:coordinates]->(u)
+
+// IndicatorValues to Indicators
+MATCH (n:IndicatorValues),(u:Indicators) where u._id = n.indicator create (n)-[:indicator]->(u)
+
+// IndicatorValues to AnalysisSessions
+MATCH (n:IndicatorValues),(u:AnalysisSessions) where u._id in n.analysisSessions create (n)-[:analysis_session]->(u)

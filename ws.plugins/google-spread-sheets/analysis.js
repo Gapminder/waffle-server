@@ -84,10 +84,12 @@ module.exports = function (serviceLocator) {
           /** @type GoogleSpreadSheetPlugin */
 
           var AnalysisSessions = mongoose.model('AnalysisSessions');
-          AnalysisSessions.create({user: user}, function (err, analysisSession) {
+          AnalysisSessions.create({
+            user: user,
+            importSession: importSessionId
+          }, function (err, analysisSession) {
             pipe.user = user;
             pipe.analysisSession = analysisSession.toJSON();
-            pipe.importSession = importSessionId;
             return cb(err, pipe);
           });
         },

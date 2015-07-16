@@ -13,8 +13,8 @@ var serviceLocator = require('../ws.service-locator')(app);
 require('../ws.repository')(serviceLocator);
 var neo4jdb = new Neo4j(config.NEO4J_DB_URL);
 
-//var collections = Object.keys(mongoose.models);
-var collections = ['ImportSessions'];
+var collections = Object.keys(mongoose.models);
+//var collections = ['ImportSessions'];
 
 function saveEntryToNeo4j(entry, label, cb) {
   console.time('save entry to neo4j: ' + entry._id);
