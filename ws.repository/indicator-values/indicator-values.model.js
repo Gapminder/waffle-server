@@ -4,6 +4,20 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 /**
+ * @name DimensionsSet
+ * @memberof Models
+ * @class
+ *
+ * @param {String} d - dimension
+ * @param {String} v - value
+ */
+var DimensionSchema = new Schema({
+  dv: {type: Schema.Types.ObjectId, refs: 'DimensionValues'},
+  d: {type: Schema.Types.ObjectId, refs: 'Dimensions'},
+  v: String
+}, {_id: false});
+
+/**
  * @typeof {Object} IndicatorValues
  * @memberof Models
  *
@@ -12,10 +26,7 @@ var Schema = mongoose.Schema;
  * @property {Array<Models.AnalysisSessions>} analysisSessions - when this indicator was created and modified
  */
 var IndicatorValues = new Schema({
-  ds: [{
-    d: {type: Schema.Types.ObjectId, refs: 'Dimensions'},
-    v: String
-  }],
+  ds: [DimensionSchema],
   v: String,
 
   coordinates: {type: Schema.Types.ObjectId, refs: 'Coordinates'},

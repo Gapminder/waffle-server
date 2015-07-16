@@ -16,9 +16,22 @@ require('./ws.plugins')(serviceLocator, function () {
   /** @type GoogleSpreadSheetPlugin */
   var gs = serviceLocator.plugins.get('google-spread-sheets');
 
-  var uid = '1H3nzTwbn8z4lJ5gJ_WfDgCeGEXK3PVGcNjQ_U5og8eo';
-  var indicatorName = 'some-indicator';
-  var indicatorTitle = 'Awesome stats here!'
+  var exclude = [
+    'https://docs.google.com/spreadsheets/d/1aYzLwblTgPVT6Zbexq-V8coTzKr54Fg9JB7rhkzfLbU/pub',
+    'https://docs.google.com/spreadsheets/d/1ZMmT3Lj2BCu8AYODni-sbv0Ibeh6mkSsn3DRmJo4rNg/pub',
+    'https://docs.google.com/spreadsheets/d/1wQj8YxaeP4MAoMeRh6xZ5AnJkABhufT1UAuE_M5LeB0/pub',
+    'https://docs.google.com/spreadsheets/d/1clUeOPK_Rs-ASt2Wl0NWXo-KhOrszkJJ19he7ID4YWY/pub',
+    'https://docs.google.com/spreadsheets/d/1tt2bb3fpvOdBaRp1fv39pQ8RjkOb_VbjTi0XdVQEVpI/pub',
+    'https://docs.google.com/spreadsheets/d/1erdUA9SDUzZw5M8KfbRL7fgda2XqoAkuvZ1XgGnQ-sY/pub',
+    'https://docs.google.com/spreadsheets/d/1bOnlJd00Ygl1nxKrfnmOvkrJ4ruJ_md7WWdrdWYixr0/pub',
+    'https://docs.google.com/spreadsheets/d/1FIfJRjfPJSC0S3q5fNUiASC0Xo3j-FlN_kMTPL7FXI0/pub',
+    'https://docs.google.com/spreadsheets/d/1MYOjKDFE2z5JBAu5-UhCEjpgxDQF8-0zdReX8BFaPGU/pub',
+    'https://docs.google.com/spreadsheets/d/1tj6e75vcdYfDWjz7dNVN-6C8QBJT5OH_OKCTCu2VmjE/pub',
+    'https://docs.google.com/spreadsheets/d/1WMpJl70z4epmKyEkqwKDnCJ-_8NcF1WAe18JINslWww/pub',
+    'https://docs.google.com/spreadsheets/d/1kB4PFkvhQu2emRcFBMu368wCjVhZzEcbWsXFgFfikJU/pub',
+    'https://docs.google.com/spreadsheets/d/1oDVONphUheFEDSlNgaBZsP36KblRXPAG0q1O3vdALsg/pub'
+  ];
+
   var optionsList = [
     {
       uid: "http://spreadsheets.google.com/pub?key=phAwcNAVuyj0TAlJeCEzcGQ",

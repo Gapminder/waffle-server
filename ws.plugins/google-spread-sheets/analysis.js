@@ -76,18 +76,18 @@ module.exports = function (serviceLocator) {
 
         // create analysis session
         function createAnalysisSession(pipe, cb) {
-          var Users = mongoose.model('Users');
-          var user = new Users({
-            _id: mongoose.Types.ObjectId(),
-            name: 'test',
-            email: 'test@test.com'
-          });
+          var user = {
+            "_id": "55a779dd1083ec4c438f347b",
+            "email": "gapdata@gmail.com",
+            "name": "gapdata"
+          };
           /** @type GoogleSpreadSheetPlugin */
 
           var AnalysisSessions = mongoose.model('AnalysisSessions');
           AnalysisSessions.create({user: user}, function (err, analysisSession) {
             pipe.user = user;
             pipe.analysisSession = analysisSession.toJSON();
+            pipe.importSession = importSessionId;
             return cb(err, pipe);
           });
         },
@@ -227,8 +227,6 @@ module.exports = function (serviceLocator) {
         function updateOrCreateIndicator(pipe, cb) {
           // todo: should be created not as a part of this flow\
           var Indicators = mongoose.model('Indicators');
-;
-
           var coordinates = pipe.coordinates;
           var analysisSession = pipe.analysisSession;
 
@@ -241,7 +239,7 @@ module.exports = function (serviceLocator) {
               },
               $addToSet: {
                 coordinates: coordinates._id,
-                analysisSession: analysisSession._id
+                analysisSessions: analysisSession._id
               }
             }, {'new': true, upsert: true},
             function (err, indicator) {
@@ -253,7 +251,7 @@ module.exports = function (serviceLocator) {
         // todo: how to vary by selector?
         // create indicator values
         // where (worksheet:Data) what (indicator:life_expectancy_at_birth)
-        function (pipe, cb) {
+        function mergeIndicatorValues(pipe, cb) {
           var analysisSession = pipe.analysisSession;
           var indicator = pipe.indicator;
           var coordinates = pipe.coordinates;
@@ -336,52 +334,57 @@ module.exports = function (serviceLocator) {
                */
               var options = [
                 {
-                  id: results.dimensions.year._id,
+                  id: results.dimensions.year._id.toString(),
                   values: results.years
                 },
                 {
-                  id: results.dimensions.country._id,
+                  id: results.dimensions.country._id.toString(),
                   values: results.countries
                 }
               ];
 
-              var dimensionsMapper = produceMapper(options);
-              var l = results.data.length;
-              console.log('Analysis values to save: ', l);
-              return async.eachLimit(results.data, 100, function (importData, cb) {
-                l--;
-                if (l % 100 === 0 || l < 100 && l % 10 === 0 || l < 10) {
-                  console.time('Analysis left to save: ' + l);
+              return produceMapper(options, function (err, dimensionsMapper) {
+                if (err) {
+                  return cb(err);
                 }
-                var IndicatorValues = mongoose.model('IndicatorValues');
-                var dimensionValues = dimensionsMapper(importData.ds);
-                var query = _.merge(mapCoordinatesToQuery(dimensionValues), {
-                  v: importData.v,
-                  coordinates: coordinates._id,
-                  indicator: indicator._id
-                });
 
-                return IndicatorValues.update(query,
-                  {
-                    $set: {
-                      ds: dimensionValues,
-                      v: importData.v,
-
-                      coordinates: coordinates._id,
-                      indicator: indicator._id
-                    },
-                    $addToSet: {
-                      analysisSessions: analysisSession._id
-                    }
-                  },
-                  {'new': true, upsert: true}, function (err) {
-                    if (l % 100 === 0 || l < 100 && l % 10 === 0 || l < 10) {
-                      console.timeEnd('Analysis left to save: ' + l);
-                    }
-                    return cb(err);
+                var l = results.data.length;
+                console.log('Analysis values to save: ', l);
+                return async.eachLimit(results.data, 100, function (importData, cb) {
+                  l--;
+                  if (l % 100 === 0 || l < 100 && l % 10 === 0 || l < 10) {
+                    console.time('Analysis left to save: ' + l);
+                  }
+                  var IndicatorValues = mongoose.model('IndicatorValues');
+                  var dimensionValues = dimensionsMapper(importData.ds);
+                  var query = _.merge(mapCoordinatesToQuery(dimensionValues), {
+                    v: importData.v,
+                    coordinates: coordinates._id,
+                    indicator: indicator._id
                   });
-              }, function (err) {
-                return cb(err);
+
+                  return IndicatorValues.update(query,
+                    {
+                      $set: {
+                        ds: dimensionValues,
+                        v: importData.v,
+
+                        coordinates: coordinates._id,
+                        indicator: indicator._id
+                      },
+                      $addToSet: {
+                        analysisSessions: analysisSession._id
+                      }
+                    },
+                    {'new': true, upsert: true}, function (err) {
+                      if (l % 100 === 0 || l < 100 && l % 10 === 0 || l < 10) {
+                        console.timeEnd('Analysis left to save: ' + l);
+                      }
+                      return cb(err);
+                    });
+                }, function (err) {
+                  return cb(err);
+                });
               });
 
               function mapCoordinatesToQuery(coordinates) {
@@ -397,49 +400,77 @@ module.exports = function (serviceLocator) {
                * @param {Array<{values:Array<Models.ImportData>, id: ObjectId}>} options
                * @returns {Function}
                */
-              function produceMapper(options) {
-                var maps = _.map(options, function (opt) {
-                  var res = {};
-                  var map = {};
-                  /** @param {Models.ImportData} year */
-                  _.each(opt.values, function (importDataEntry) {
-                    _.each(importDataEntry.ds, function (entryDimensionsEntry) {
-                      res[entryDimensionsEntry.d] = res[entryDimensionsEntry.d] || [];
-                      map[entryDimensionsEntry.d] = map[entryDimensionsEntry.d] || {};
-
-                      if (res[entryDimensionsEntry.d].indexOf(entryDimensionsEntry.v) === -1) {
-                        res[entryDimensionsEntry.d].push(entryDimensionsEntry.v);
-                        map[entryDimensionsEntry.d][entryDimensionsEntry.v] = {d: opt.id, v: importDataEntry.v};
+              function produceMapper(options, cb) {
+                var DimensionValues = mongoose.model('DimensionValues');
+                var dimensionValuesHash = {};
+                async.each(options, function (opt, cb) {
+                  DimensionValues
+                    .find({dimension: opt.id}, {_id: 1, value: 1})
+                    .lean()
+                    .exec(function (err, dimValues) {
+                      if (err) {
+                        return cb(err);
                       }
+
+                      dimensionValuesHash[opt.id] = _.reduce(dimValues, function (res, dimValue) {
+                        res[dimValue.value] = dimValue._id;
+                        return res;
+                      }, {});
+                      cb();
                     });
-                  });
+                }, function (err) {
+                  if (err) {
+                    return cb(err);
+                  }
 
-                  var mapping = _.pick(map, function (dimention, dimName) {
-                    return res[dimName].length > 1;
+                  var maps = _.map(options, function (opt) {
+                    var res = {};
+                    var map = {};
+                    /** @param {Models.ImportData} year */
+                    _.each(opt.values, function (importDataEntry) {
+                      _.each(importDataEntry.ds, function (entryDimensionsEntry) {
+                        res[entryDimensionsEntry.d] = res[entryDimensionsEntry.d] || [];
+                        map[entryDimensionsEntry.d] = map[entryDimensionsEntry.d] || {};
+
+                        if (res[entryDimensionsEntry.d].indexOf(entryDimensionsEntry.v) === -1) {
+                          res[entryDimensionsEntry.d].push(entryDimensionsEntry.v);
+                          map[entryDimensionsEntry.d][entryDimensionsEntry.v] = {
+                            dv: dimensionValuesHash[opt.id][importDataEntry.v],
+                            d: opt.id,
+                            v: importDataEntry.v
+                          };
+                        }
+                      });
+                    });
+
+                    var mapping = _.pick(map, function (dimention, dimName) {
+                      return res[dimName].length > 1;
+                    });
+                    return mapping;
                   });
-                  return mapping;
+                  var dimHashMap = _.merge.apply(null, maps);
+                  // merge
+                  /**
+                   * @param {Array<Models.DimensionsSet>} dataEntry
+                   */
+                  var mapperFn = function mapDimensions(dimensions) {
+                    return _(dimensions)
+                      .filter(function (dimension) {
+                        return dimension.d in dimHashMap;
+                      })
+                      .map(function (dimension) {
+                        var result = dimHashMap[dimension.d][dimension.v];
+                        if (!result) {
+                          // todo: log analysis session, and all data required to understand where is issue came from
+                          console.error(dimensions, ' not found');
+                        }
+                        return result;
+                      })
+                      .compact()
+                      .value();
+                  };
+                  return cb(null, mapperFn);
                 });
-                var dimHashMap = _.merge.apply(null, maps);
-                // merge
-                /**
-                 * @param {Array<Models.DimensionsSet>} dataEntry
-                 */
-                return function mapDimensions(dimensions) {
-                  return _(dimensions)
-                    .filter(function (dimension) {
-                      return dimension.d in dimHashMap;
-                    })
-                    .map(function (dimension) {
-                      var result = dimHashMap[dimension.d][dimension.v];
-                      if (!result) {
-                        // todo: log analysis session, and all data required to understand where is issue came from
-                        console.error(dimensions, ' not found');
-                      }
-                      return result;
-                    })
-                    .compact()
-                    .value();
-                };
               }
             });
           // map row+column into set of dimensions

@@ -15,12 +15,11 @@ function GoogleSpreadSheetPlugin(serviceLocator) {
     console.log('Parsed uid: ' + uid);
     // fixme: user, data source type
     var mongoose = require('mongoose');
-    var Users = mongoose.model('Users');
-    var user = new Users({
-      _id: mongoose.Types.ObjectId(),
-      name: 'test',
-      email: 'test@test.com'
-    });
+    var user = {
+      "_id" : "55a779dd1083ec4c438f347b",
+      "email" : "gapdata@gmail.com",
+      "name" : "gapdata"
+    };
     /** @type GoogleSpreadSheetPlugin */
     var gs = serviceLocator.plugins.get('google-spread-sheets');
 

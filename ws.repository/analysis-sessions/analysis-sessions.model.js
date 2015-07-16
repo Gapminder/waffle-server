@@ -13,6 +13,7 @@ var Schema = mongoose.Schema;
  * @property {Date} createdAt - when this analysis session was started
  */
 var AnalysisSessions = new Schema({
+  importSession: {type: Schema.Types.ObjectId, refs: 'ImportSessions'},
   isApproved: {type: Boolean, 'default': false},
 
   user: {type: Schema.Types.ObjectId, refs: 'Users', required: true},
