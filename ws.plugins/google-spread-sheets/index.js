@@ -46,11 +46,14 @@ function GoogleSpreadSheetPlugin(serviceLocator) {
               console.log('Import data values to save: ', l);
               async.eachLimit(data, 500, function (d, cb) {
                 l--;
-                if (l % 100 === 0 || l < 100 && l % 10 === 0 || l < 10) {
+                if (l % 1000 === 0 || l < 100 && l % 10 === 0 || l < 10) {
                   console.time('Import left to save: ' + l);
                 }
                 var ImportData = mongoose.model('ImportData');
                 process.nextTick(function () {
+                  if (d.v.length > 500) {
+                    d.v = d.v.substr(0, 500) + '...';
+                  }
                   var query = _.merge(mapCoordinatesToQuery(d.ds), {v: d.v});
                   ImportData.update(query, {$addToSet: {importSessions: is._id}}, function (err, status) {
                     if (err) {
@@ -62,11 +65,9 @@ function GoogleSpreadSheetPlugin(serviceLocator) {
                     }
 
                     d.importSessions = [is._id];
-                    if (d.v.length > 500) {
-                      d.v = d.v.substr(0, 500) + '...';
-                    }
+
                     return ImportData.create(d, function (err) {
-                      if (l % 100 === 0 || l < 100 && l % 10 === 0 || l < 10) {
+                      if (l % 1000 === 0 || l < 100 && l % 10 === 0 || l < 10) {
                         console.timeEnd('Import left to save: ' + l);
                       }
                       return cb(err);
