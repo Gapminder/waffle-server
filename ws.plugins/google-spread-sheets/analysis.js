@@ -354,9 +354,9 @@ module.exports = function (serviceLocator) {
                 console.log('Analysis values to save: ', l);
                 return async.eachLimit(results.data, 100, function (importData, cb) {
                   l--;
-                  if (l % 100 === 0 || l < 100 && l % 10 === 0 || l < 10) {
-                    console.time('Analysis left to save: ' + l);
-                  }
+                  // if (l % 100 === 0 || l < 100 && l % 10 === 0 || l < 10) {
+                    // console.time('Analysis left to save: ' + l);
+                  // }
                   var IndicatorValues = mongoose.model('IndicatorValues');
                   var dimensionValues = dimensionsMapper(importData.ds);
                   var query = _.merge(mapCoordinatesToQuery(dimensionValues), {
@@ -379,9 +379,9 @@ module.exports = function (serviceLocator) {
                       }
                     },
                     {'new': true, upsert: true}, function (err) {
-                      if (l % 100 === 0 || l < 100 && l % 10 === 0 || l < 10) {
-                        console.timeEnd('Analysis left to save: ' + l);
-                      }
+                      // if (l % 100 === 0 || l < 100 && l % 10 === 0 || l < 10) {
+                        // console.timeEnd('Analysis left to save: ' + l);
+                      // }
                       return cb(err);
                     });
                 }, function (err) {

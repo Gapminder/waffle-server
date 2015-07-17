@@ -22,7 +22,9 @@ require('./ws.plugins')(serviceLocator, function () {
   //   { name: 'GNIpercapita_atlasmethod_current_US',
   //     title: 'GNI/capita (Atlas method, current US$)' } }];
   console.time('All imported!');
+  var l = optionsList.length;
   async.eachLimit(optionsList, 1, function (options, cb) {
+    console.log('Data source left to import: ' + l);
     console.time('importing: ' + options.uid);
     gs.importer.importData(options.uid, function (err, opts) {
       console.timeEnd('importing: ' + options.uid);
