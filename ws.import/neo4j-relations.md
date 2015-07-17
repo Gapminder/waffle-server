@@ -61,9 +61,21 @@ try 2 - works!
 create index on :IndicatorValues(indicator)
 MATCH (n:Indicators),(u:IndicatorValues) where n._id = u.indicator create (n)-[:has_indicator_values]->(u)
 
+// IndicatorValues DimensionValues
 create index on :IndicatorValues(ds)
 MATCH (n:IndicatorValues),(u:DimensionValues) where u._id in n.ds create (n)-[:has_dimension_values]->(u)
 
 // Dimensions to DimensionValues
 create index on :DimensionValues(dimension)
 MATCH (d:Dimensions),(dv:DimensionValues) where d._id = dv.dimension create (d)-[:has_dimension_values]->(dv)
+
+///query
+MATCH (ind:Indicators)-[:has_indicator_values]->(indv:IndicatorValues),
+(indv:IndicatorValues)-[:with_dimension_values]->(dv1:DimensionValues)<-[:has_dimension_values]-(d1:Dimensions),
+(indv:IndicatorValues)-[:with_dimension_values]->(dv2:DimensionValues)<-[:has_dimension_values]-(d2:Dimensions)
+where ind.name='GNIpercapita_atlasmethod_current_US' and d1.name='countries'
+return 
+    dv1.value as Country,
+    dv2.value as Year,
+    indv.value as Children_per_woman_total_fertility
+limit 50
