@@ -5,7 +5,9 @@ var validator = require('validator');
 // todo: add validation error class
 function GoogleSpreadSheetParser() {
   /** @private */
-  this.hasKeyRegExp = /key=([\w-]*)/;
+  this.hasKeyRegExp = /(key=|spreadsheets\/d\/)([\w-]*)/;
+  /** @private */
+  this.has
   /** @private */
   this.hasUid = /([\w-]*)/;
 }
@@ -47,7 +49,7 @@ GoogleSpreadSheetParser.prototype.parse = function (uri) {
   }
 
   if (validator.isURL(uri)) {
-    return this.hasKeyRegExp.exec(uri)[1];
+    return this.hasKeyRegExp.exec(uri)[2];
   }
 
   return uri;

@@ -203,6 +203,13 @@ require('./ws.plugins')(serviceLocator, function () {
       }
     }
   ];
+  optionsList = [{
+    uid: "https://docs.google.com/spreadsheets/d/1IbDM8z5XicMIXgr93FPwjgwoTTKMuyLfzU6cQrGZzH8/pub",
+    indicator: {
+      name: "indicator gapminder population",
+      title: "indicator_gapminder_population"
+    }
+  }];
   console.time('All imported!');
   async.eachLimit(optionsList, 1, function (options, cb) {
     console.time('importing: ' + options.uid);
