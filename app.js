@@ -17,6 +17,13 @@ require('./ws.plugins')(serviceLocator, function () {
   var gs = serviceLocator.plugins.get('google-spread-sheets');
 
   var optionsList = require('./ds_list');
+  var isFound = false;
+  optionsList = _.filter(optionsList, function (item) {
+    if (!isFound) {
+      isFound = item.uid === 'rIpDsoI9lVTCh_PRqm66Tcw';
+    }
+    return isFound;
+  });
   // optionsList = [{ uid: '0ArfEDsV3bBwCdFVrVDZQUnRwZ2lqT2lPMXcySXZwRmc',
   //   indicator:
   //   { name: 'GNIpercapita_atlasmethod_current_US',
@@ -24,7 +31,7 @@ require('./ws.plugins')(serviceLocator, function () {
   console.time('All imported!');
   var l = optionsList.length;
   async.eachLimit(optionsList, 1, function (options, cb) {
-    console.log('Data source left to import: ' + l);
+    console.log('Data source left to import: ' + l--);
     console.time('importing: ' + options.uid);
     gs.importer.importData(options.uid, function (err, opts) {
       console.timeEnd('importing: ' + options.uid);
