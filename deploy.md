@@ -43,3 +43,25 @@ npm i -g gulp
 gulp tests
 ```
 
+##### Test flow:
+
+Using [BDD](https://en.wikipedia.org/wiki/Behavior-driven_development) testing methodology (for each kind of tests)
+
+1. Test data creation (prepare data for testing each step of the flow, writing test cases)
+1. [Sanity/Smoke testing](https://en.wikipedia.org/wiki/Sanity_check) (manual testing by test cases)
+1. Release testing/Upgrade testing + [Continuous Integration](https://en.wikipedia.org/wiki/Continuous_integration) (CI)
+  * [Security testing](https://en.wikipedia.org/wiki/Security_testing) and [Data security](https://en.wikipedia.org/wiki/Data_security)
+  * [Unit-tests](https://en.wikipedia.org/wiki/Unit_testing) (for checking isolated modules of the project) - automated, CI
+  * Functional test (for checking the most common cases) - automated, CI
+  * [Regression testing](https://en.wikipedia.org/wiki/Regression_testing)
+  * Software performance testing (the functional requirements)
+    * [load testing](https://en.wikipedia.org/wiki/Load_testing#Software_load_testing)
+    * [stress](https://en.wikipedia.org/wiki/Stress_testing_(software))
+    * [endurance or soak or stability](https://en.wikipedia.org/wiki/Soak_testing)
+    * [performance specifications](https://en.wikipedia.org/wiki/Software_performance_testing#Performance_specifications)
+    * [UX testing](https://en.wikipedia.org/wiki/Usability_testing)
+
+For each step of testing we are checking the rest functional requirements:
+  * [Issues creation/verification/investigation](https://en.wikipedia.org/wiki/Software_verification_and_validation)
+  * [Localization testing](https://en.wikipedia.org/wiki/Software_testing#Internationalization_and_localization)
+
