@@ -4,10 +4,10 @@
 var _ = require('lodash');
 var GoogleSpreadsheet = require('google-spreadsheet');
 
-var someSheet = new GoogleSpreadsheet('1H3nzTwbn8z4lJ5gJ_WfDgCeGEXK3PVGcNjQ_U5og8eo');
+var someSheet = new GoogleSpreadsheet('192pjt2vtwAQzi154LJ3Eb5RF8W9Fx3ZAiUZy-zXgyJo');
 
 // https://docs.google.com/spreadsheets/d/1H3nzTwbn8z4lJ5gJ_WfDgCeGEXK3PVGcNjQ_U5og8eo/pub#
-someSheet.getInfo(console.log.bind(console));
+//someSheet.getInfo(console.log.bind(console));
 // { title: 'indicator life_expectancy_at_birth',
 //   updated: '2015-01-16T14:50:53.248Z',
 //   author: { name: 'gapdata', email: 'gapdata@gmail.com' },
@@ -49,8 +49,26 @@ someSheet.getInfo(function (err, info) {
   // rowCount: '245',
   // colCount: '206'}
 
-  info.worksheets[0].getCells({'max-row': 2, 'max-col': 2}, function (err2, cells) {
-    // console.log(cells);
+  //info.worksheets[3].getCells({'max-row': 2, 'max-col': 2}, function (err2, cells) {
+  info.worksheets[3].getRows({'start-index': 1}, function (err2, cells) {
+    function parseName(name, title) {
+      if (!name || !name.replace(/-/g, ' ').trim()) {
+        return title.replace(/[^%\w]+/g, '_');
+      }
+
+      return name;
+    }
+
+    var rows = _.map(cells, function (row) {
+      return {
+        uid: row.indicatorurl,
+        indicator: {
+          name: parseName(row.id, row.title),
+          title: row.title
+        }
+      };
+    });
+    console.log(rows);
 
 // [ { id: 'https://spreadsheets.google.com/feeds/cells/1H3nzTwbn8z4lJ5gJ_WfDgCeGEXK3PVGcNjQ_U5og8eo/od6/public/values/R1C1',
 //   row: 1,
@@ -74,7 +92,7 @@ someSheet.getInfo(function (err, info) {
 //   numericValue: '28.211'}
 // ]
 
-    transformToTidyData(info.worksheets[0], cells);
+    //transformToTidyData(info.worksheets[0], cells);
   });
 });
 

@@ -62,6 +62,9 @@ function GoogleSpreadSheetPlugin(serviceLocator) {
                     }
 
                     d.importSessions = [is._id];
+                    if (d.v.length > 500) {
+                      d.v = d.v.substr(0, 500) + '...';
+                    }
                     return ImportData.create(d, function (err) {
                       if (l % 100 === 0 || l < 100 && l % 10 === 0 || l < 10) {
                         console.timeEnd('Import left to save: ' + l);
