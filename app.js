@@ -18,9 +18,10 @@ require('./ws.plugins')(serviceLocator, function () {
 
   var optionsList = require('./ds_list');
   var isFound = false;
+  //Parsed uid: https://docs.google.com/spreadsheet/pub?key=0ArfEDsV3bBwCdEV1RkJqTEItQnJYVXJlZzVuc3Y3Mmc
   optionsList = _.filter(optionsList, function (item) {
     if (!isFound) {
-      isFound = item.uid === 'rIpDsoI9lVTCh_PRqm66Tcw';
+      isFound = item.uid === '0ArfEDsV3bBwCdEV1RkJqTEItQnJYVXJlZzVuc3Y3Mmc';
     }
     return isFound;
   });
@@ -52,7 +53,7 @@ require('./ws.plugins')(serviceLocator, function () {
   }, function (err) {
     console.timeEnd('All imported!');
     // export to neo4j
-    require('./ws.import/neo4j.import');
+    // require('./ws.import/neo4j.import');
   });
 });
 

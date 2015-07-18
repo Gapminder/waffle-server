@@ -2088,7 +2088,7 @@ module.exports = [ { uid: 'phAwcNAVuyj0TAlJeCEzcGQ',
     indicator:
      { name: 'Energy_from_solid_biofuels_%_',
        title: 'Energy from solid biofuels (%)' } },
-  { uid: 'https://docs.google.com/spreadsheet/pub?key=0ArfEDsV3bBwCdEV1RkJqTEItQnJYVXJlZzVuc3Y3Mmc\n\n',
+  { uid: '0ArfEDsV3bBwCdEV1RkJqTEItQnJYVXJlZzVuc3Y3Mmc',
     indicator:
      { name: 'Residential_energy_use_%_',
        title: 'Residential energy use (%)' } },
