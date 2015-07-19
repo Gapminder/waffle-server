@@ -20,11 +20,11 @@ var Indicators = new Schema({
   name: {type: String, unique: true, required: true, index: true},
   title: String,
 
-  coordinates: [{type: Schema.Types.ObjectId, refs: 'Coordinates'}],
+  coordinates: [{type: Schema.Types.ObjectId, ref: 'Coordinates'}],
 
   meta: {},
 
-  analysisSessions: [{type: Schema.Types.ObjectId, refs: 'AnalysisSessions'}]
+  analysisSessions: [{type: Schema.Types.ObjectId, ref: 'AnalysisSessions'}]
 });
 
 mongoose.model('Indicators', Indicators);

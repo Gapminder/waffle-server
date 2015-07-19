@@ -20,7 +20,7 @@ var Dimensions = new Schema({
 
   meta: {},
 
-  analysisSessions: [{type: Schema.Types.ObjectId, refs: 'AnalysisSessions'}]
+  analysisSessions: [{type: Schema.Types.ObjectId, ref: 'AnalysisSessions'}]
 });
 
 mongoose.model('Dimensions', Dimensions);

@@ -14,9 +14,9 @@ var Schema = mongoose.Schema;
  */
 var Coordinates = new Schema({
   name: String,
-  dimensions: [{type: Schema.Types.ObjectId, refs: 'Dimensions'}],
+  dimensions: [{type: Schema.Types.ObjectId, ref: 'Dimensions'}],
 
-  analysisSessions: [{type: Schema.Types.ObjectId, refs: 'AnalysisSessions'}]
+  analysisSessions: [{type: Schema.Types.ObjectId, ref: 'AnalysisSessions'}]
 });
 
 mongoose.model('Coordinates', Coordinates);

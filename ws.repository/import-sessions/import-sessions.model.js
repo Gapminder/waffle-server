@@ -14,10 +14,10 @@ var Schema = mongoose.Schema;
  * @property {Date} createdAt - when this import session was started
  */
 var ImportSessions = new Schema({
-  ds: {type: Schema.Types.ObjectId, refs: 'DataSources', required: true},
+  ds: {type: Schema.Types.ObjectId, ref: 'DataSources', required: true},
   isApproved: {type: Boolean, 'default': false},
 
-  user: {type: Schema.Types.ObjectId, refs: 'Users', required: true},
+  user: {type: Schema.Types.ObjectId, ref: 'Users', required: true},
   version: {type: Date, 'default': new Date()}
 });
 

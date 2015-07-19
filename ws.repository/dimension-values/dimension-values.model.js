@@ -14,10 +14,10 @@ var Schema = mongoose.Schema;
  * was created and modified
  */
 var DimensionValues = new Schema({
-  dimension: {type: Schema.Types.ObjectId, refs: 'Dimensions'},
+  dimension: {type: Schema.Types.ObjectId, ref: 'Dimensions'},
   value: String,
 
-  analysisSessions: [{type: Schema.Types.ObjectId, refs: 'AnalysisSessions'}]
+  analysisSessions: [{type: Schema.Types.ObjectId, ref: 'AnalysisSessions'}]
 });
 
 DimensionValues.index({dimension: 1, value: 1});

@@ -16,10 +16,10 @@ var Schema = mongoose.Schema;
  * @property {Date} version - timestamp when this DataSource was created
  */
 var DataSources = new Schema({
-  dst: {type: Schema.Types.ObjectId, refs: 'DataSourceTypes', required: true},
+  dst: {type: Schema.Types.ObjectId, ref: 'DataSourceTypes', required: true},
   dsuid: {type: String, required: true},
   meta: {},
-  user: {type: Schema.Types.ObjectId, refs: 'Users', required: true},
+  user: {type: Schema.Types.ObjectId, ref: 'Users', required: true},
   version: {type: Date, 'default': new Date(), required: true}
 });
 

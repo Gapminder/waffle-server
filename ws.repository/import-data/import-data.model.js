@@ -29,7 +29,7 @@ var ImportData = new Schema({
   ds: [DimensionSchema],
   v: String,
 
-  importSessions: [{type: Schema.Types.ObjectId, refs: 'ImportSessions'}]
+  importSessions: [{type: Schema.Types.ObjectId, ref: 'ImportSessions'}]
 });
 
 ImportData.index({'ds.d': 1, 'ds.v': 1, v: 1});
