@@ -183,6 +183,7 @@ function importDataCollection(modelName, eachcb) {
 }
 
 function createRelations(cb) {
+  return cb();
   async.series([
     function createIndicators(cb) {
       console.time('has_indicator_values');
