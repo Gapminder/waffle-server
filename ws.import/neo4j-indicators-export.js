@@ -270,7 +270,7 @@ function exportIndicatorValues(pipe, cb) {
     }
 
     var tasks = [];
-    var page = 2000;
+    var page = 1000;
 
     var pages = Math.floor(count / page);
     var lastPage = count % page;
