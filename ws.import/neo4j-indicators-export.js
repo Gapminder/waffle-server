@@ -270,7 +270,7 @@ function exportIndicatorValues(pipe, cb) {
     }
 
     var tasks = [];
-    var page = 1000;
+    var page = 1500;
 
     var pages = Math.floor(count / page);
     var lastPage = count % page;
@@ -282,7 +282,7 @@ function exportIndicatorValues(pipe, cb) {
 
     var counter = pages + 1;
     console.log('Export data values to save: ', counter);
-    async.eachLimit(tasks, 1, function (task, cb) {
+    async.eachSeries(tasks, function (task, cb) {
       var currentCounter = counter--;
       console.time('Export data left to save: ' + currentCounter);
       IndicatorValues.find({}, {v: 1, ds: 1, indicator: 1, _id: 0})
@@ -319,7 +319,7 @@ function exportIndicatorValues(pipe, cb) {
                 id: batchQuery.length,
                 body: {
                   to: '{' + newNodeIndex + '}',
-                  type: 'with_dimension_value'
+                  type: 'with_indicator_value'
                 }
               });
             });

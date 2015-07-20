@@ -17,8 +17,8 @@ require('./ws.plugins')(serviceLocator, function () {
   var gs = serviceLocator.plugins.get('google-spread-sheets');
 
   var optionsList = require('./ds_list');
-  var isFound = false;
-  //Parsed uid: https://docs.google.com/spreadsheet/pub?key=0ArfEDsV3bBwCdEV1RkJqTEItQnJYVXJlZzVuc3Y3Mmc
+  // re-import only specific DS
+  //var isFound = false;
   //optionsList = _.filter(optionsList, function (item) {
   //  return
   //  //item.uid === '0ArfEDsV3bBwCdEV1RkJqTEItQnJYVXJlZzVuc3Y3Mmc'
@@ -30,10 +30,7 @@ require('./ws.plugins')(serviceLocator, function () {
   //  return isFound;
   //});
   optionsList = optionsList.slice(0,3);
-  // optionsList = [{ uid: '0ArfEDsV3bBwCdFVrVDZQUnRwZ2lqT2lPMXcySXZwRmc',
-  //   indicator:
-  //   { name: 'GNIpercapita_atlasmethod_current_US',
-  //     title: 'GNI/capita (Atlas method, current US$)' } }];
+
   console.time('All imported!');
   var l = optionsList.length;
   async.eachLimit(optionsList, 1, function (options, cb) {
@@ -57,8 +54,7 @@ require('./ws.plugins')(serviceLocator, function () {
     });
   }, function (err) {
     console.timeEnd('All imported!');
-    // export to neo4j
-    //require('./ws.import/neo4j.import');
+    process.exit(0);
   });
 });
 
