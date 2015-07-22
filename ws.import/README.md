@@ -1,3 +1,6 @@
+**notes**
+do not use this scripts, they are only PoC, each one implements different approach of exporting data from mongo to neo4j
+
 ### waffle-server
 
 #### Install neo4j and run it
