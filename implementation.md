@@ -1,7 +1,7 @@
 # waffle server implementation document
 
 Please read:
-- [Architecture overview](https://goo.gl/XrhLG7) for concept overview
+- [Architecture overview](https://docs.google.com/presentation/d/14AM4YUTNrpVI7FRZpvCIgdJERA1vCrBsgGVJOKC9igY) for concept overview
 - [Tidy data](http://www.jstatsoft.org/v59/i10/paper) for terms and data concepts understanding (3rd normal form of data)
 
 ## Import component
@@ -256,6 +256,8 @@ manually or basing on existing history of analysis patters, data values, data so
 creating and extending existing dimensions and indicators.
 
 // todo: write this
+// model: dimensions
+// model: indicators
 
 ### Export\Expose
 
