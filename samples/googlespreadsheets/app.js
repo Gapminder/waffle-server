@@ -1,10 +1,13 @@
-var _ = require('lodash');
-var GoogleSpreadsheet = require("google-spreadsheet");
+/*eslint no-console:0, handle-callback-err:0, max-len:0*/
+'use strict';
 
-var my_sheet = new GoogleSpreadsheet('1H3nzTwbn8z4lJ5gJ_WfDgCeGEXK3PVGcNjQ_U5og8eo');
+var _ = require('lodash');
+var GoogleSpreadsheet = require('google-spreadsheet');
+
+var someSheet = new GoogleSpreadsheet('192pjt2vtwAQzi154LJ3Eb5RF8W9Fx3ZAiUZy-zXgyJo');
 
 // https://docs.google.com/spreadsheets/d/1H3nzTwbn8z4lJ5gJ_WfDgCeGEXK3PVGcNjQ_U5og8eo/pub#
-my_sheet.getInfo(console.log.bind(console));
+//someSheet.getInfo(console.log.bind(console));
 // { title: 'indicator life_expectancy_at_birth',
 //   updated: '2015-01-16T14:50:53.248Z',
 //   author: { name: 'gapdata', email: 'gapdata@gmail.com' },
@@ -36,8 +39,7 @@ my_sheet.getInfo(console.log.bind(console));
 //   ]
 // }
 
-
-my_sheet.getInfo(function (err, info) {
+someSheet.getInfo(function (err, info) {
   // data worksheet
 
   // console.log(info.worksheets[0]);
@@ -47,38 +49,54 @@ my_sheet.getInfo(function (err, info) {
   // rowCount: '245',
   // colCount: '206'}
 
-  info.worksheets[0].getCells({'max-row': 2, 'max-col': 2}, function (err, cells) {
-    // console.log(cells);
+  //info.worksheets[3].getCells({'max-row': 2, 'max-col': 2}, function (err2, cells) {
+  info.worksheets[3].getRows({'start-index': 1}, function (err2, cells) {
+    function parseName(name, title) {
+      if (!name || !name.replace(/-/g, ' ').trim()) {
+        return title.replace(/[^%\w]+/g, '_');
+      }
 
-    // [ { id: 'https://spreadsheets.google.com/feeds/cells/1H3nzTwbn8z4lJ5gJ_WfDgCeGEXK3PVGcNjQ_U5og8eo/od6/public/values/R1C1',
-    //   row: 1,
-    //   col: 1,
-    //   value: 'Life expectancy with projections. Yellow is IHME',
-    //   numericValue: undefined},
-    // { id: 'https://spreadsheets.google.com/feeds/cells/1H3nzTwbn8z4lJ5gJ_WfDgCeGEXK3PVGcNjQ_U5og8eo/od6/public/values/R1C2',
-    //   row: 1,
-    //   col: 2,
-    //   value: '1800',
-    //   numericValue: '1800.0'},
-    // { id: 'https://spreadsheets.google.com/feeds/cells/1H3nzTwbn8z4lJ5gJ_WfDgCeGEXK3PVGcNjQ_U5og8eo/od6/public/values/R2C1',
-    //   row: 2,
-    //   col: 1,
-    //   value: 'Afghanistan',
-    //   numericValue: undefined},
-    // { id: 'https://spreadsheets.google.com/feeds/cells/1H3nzTwbn8z4lJ5gJ_WfDgCeGEXK3PVGcNjQ_U5og8eo/od6/public/values/R2C2',
-    //   row: 2,
-    //   col: 2,
-    //   value: '28.211',
-    //   numericValue: '28.211'}
-    // ]
+      return name;
+    }
 
-    transformToTidyData(info.worksheets[0], cells);
+    var rows = _.map(cells, function (row) {
+      return {
+        uid: row.indicatorurl,
+        indicator: {
+          name: parseName(row.id, row.title),
+          title: row.title
+        }
+      };
+    });
+    console.log(rows);
+
+// [ { id: 'https://spreadsheets.google.com/feeds/cells/1H3nzTwbn8z4lJ5gJ_WfDgCeGEXK3PVGcNjQ_U5og8eo/od6/public/values/R1C1',
+//   row: 1,
+//   col: 1,
+//   value: 'Life expectancy with projections. Yellow is IHME',
+//   numericValue: undefined},
+// { id: 'https://spreadsheets.google.com/feeds/cells/1H3nzTwbn8z4lJ5gJ_WfDgCeGEXK3PVGcNjQ_U5og8eo/od6/public/values/R1C2',
+//   row: 1,
+//   col: 2,
+//   value: '1800',
+//   numericValue: '1800.0'},
+// { id: 'https://spreadsheets.google.com/feeds/cells/1H3nzTwbn8z4lJ5gJ_WfDgCeGEXK3PVGcNjQ_U5og8eo/od6/public/values/R2C1',
+//   row: 2,
+//   col: 1,
+//   value: 'Afghanistan',
+//   numericValue: undefined},
+// { id: 'https://spreadsheets.google.com/feeds/cells/1H3nzTwbn8z4lJ5gJ_WfDgCeGEXK3PVGcNjQ_U5og8eo/od6/public/values/R2C2',
+//   row: 2,
+//   col: 2,
+//   value: '28.211',
+//   numericValue: '28.211'}
+// ]
+
+    //transformToTidyData(info.worksheets[0], cells);
   });
 });
 
-
 function transformToTidyData(sheet, cells) {
-  var _id = sheet._id;
   console.log('|\tsheet\t|\trow\t|\tcolumn\t|\tvalue\t|');
   return _.map(cells, function (cell) {
     // console.log('|\t%s\t|\t%s\t|\t%s\t|\t%s\t|', sheet.id, cell.row, cell.col, cell.value);
