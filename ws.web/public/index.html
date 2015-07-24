@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html ng-app="adminPanel">
+<html>
 
 <head>
 
@@ -26,10 +26,28 @@
 
 <!-- ControllerAs syntax -->
 <!-- Main controller with serveral data used in Inspinia theme on diferent view -->
-<body ng-controller="MainCtrl as main" class="{{$state.current.data.specialClass}}" landing-scrollspy id="page-top">
+<body ng-app="adminPanel" ng-controller="MainController" class="{{$state.current.data.specialClass}}" landing-scrollspy id="page-top">
 
 <!-- Main view  -->
-<div ui-view></div>
+<!-- Wrapper-->
+<div id="wrapper">
+
+  <!-- Navigation -->
+  <div ui-view="navigation"></div>
+
+  <!-- Page wraper -->
+  <!-- ng-class with current state name give you the ability to extended customization your view -->
+  <div id="page-wrapper" class="gray-bg {{$state.current.name}}">
+    <!-- Page wrapper -->
+    <div ui-view="topnavbar"></div>
+
+    <!-- Main view  -->
+    <div ui-view></div>
+
+  </div>
+  <!-- End page wrapper-->
+</div>
+<!-- End wrapper-->
 
 <!-- jQuery and Bootstrap -->
 <script src="js/libs/jquery/jquery-2.1.1.min.js"></script>
@@ -49,17 +67,23 @@
 <script src="js/inspinia.js"></script>
 
 <!-- Main Angular scripts-->
-<script src="js/libs/angular/angular.min.js"></script>
+<script src="js/libs/angular/angular.js"></script>
 <script src="js/libs/plugins/oclazyload/dist/ocLazyLoad.min.js"></script>
 <script src="js/libs/ui-router/angular-ui-router.min.js"></script>
 <script src="js/libs/bootstrap/ui-bootstrap-tpls-0.12.0.min.js"></script>
 <script src="js/libs/plugins/angular-idle/angular-idle.js"></script>
+<script src="js/libs/angular/angular-cookies.js"></script>
 
 <!-- Anglar App Script -->
 <script src="js/app.js"></script>
 <script src="js/config.js"></script>
-<script src="js/directives/directives.js"></script>
-<script src="js/controllers/controllers.js"></script>
+<!-- ANGULAR CUSTOM -->
+<script src="js/controllers/MainCtrl.js"></script>
+<script src="js/controllers/IndexCtrl.js"></script>
+<script src="js/controllers/UserCtrl.js"></script>
+<script src="js/services/UserService.js"></script>
+<!--<script src="js/directives/directives.js"></script>-->
+<!--<script src="js/controllers/controllers.js"></script>-->
 
 </body>
 </html>

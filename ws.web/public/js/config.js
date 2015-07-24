@@ -17,6 +17,7 @@ function config($locationProvider, $stateProvider, $urlRouterProvider, $ocLazyLo
   $locationProvider.html5Mode(true);
   $locationProvider.hashPrefix('!');
 
+  //$urlRouterProvider.otherwise("/");
   //$urlRouterProvider.otherwise('/errorOne');
 
   //$ocLazyLoadProvider.config({
@@ -25,35 +26,73 @@ function config($locationProvider, $stateProvider, $urlRouterProvider, $ocLazyLo
   //});
 
   $stateProvider
-    .state('index', {
-      url: '',
-      templateUrl: 'views/content.html'
+    .state('app', {
+      url: '/',
+      abstract: true,
+      views: {
+        '@': {
+          template: '<ui-view />'
+        },
+        topnavbar: {
+          templateUrl: '/views/topnavbar.html'
+        },
+        navigation: {
+          templateUrl: '/views/navigation.html'
+        }
+      },
+      resolve: {
+        isCookiesSet: ['$state', '$cookies', function ($state, $cookies) {
+          console.log('test1', $state);
+
+          if ($state.params.isloginPage) {
+            return false;
+          }
+
+          if (!$cookies.Session || !$cookies.Session.user.isAdmin()) {
+            $state.go('app.login', {isLoginPage: true});
+            return false;
+          }
+
+          return true;
+        }]
+      }
     })
-    .state('login', {
+    .state('app.account', {
+      url: '/account',
+      template: '<ui-view />',
+      controller: 'AuthController'
+    })
+    .state('app.login', {
       url: '/login',
       templateUrl: 'views/login.html',
+      controller: 'UserController',
       data: {
+        page: 'login',
         pageTitle: 'Login',
         specialClass: 'gray-bg'
       }
     })
-    .state('login_two_columns', {
+    .state('app.login_two_columns', {
       url: '/login_two_columns',
       templateUrl: 'views/login_two_columns.html',
+      controller: 'UserController',
       data: {
+        page: 'login',
         pageTitle: 'Login two columns',
         specialClass: 'gray-bg'
       }
     })
-    .state('register', {
+    .state('app.register', {
       url: '/register',
       templateUrl: 'views/register.html',
+      controller: 'UserController',
       data: {
+        page: 'login',
         pageTitle: 'Register',
         specialClass: 'gray-bg'
       }
     })
-    .state('lockscreen', {
+    .state('app.lockscreen', {
       url: '/lockscreen',
       templateUrl: 'views/lockscreen.html',
       data: {
@@ -61,15 +100,17 @@ function config($locationProvider, $stateProvider, $urlRouterProvider, $ocLazyLo
         specialClass: 'gray-bg'
       }
     })
-    .state('forgot_password', {
+    .state('app.forgot_password', {
       url: '/forgot_password',
       templateUrl: 'views/forgot_password.html',
+      controller: 'UserController',
       data: {
+        page: 'login',
         pageTitle: 'Forgot password',
         specialClass: 'gray-bg'
       }
     })
-    .state('errorOne', {
+    .state('app.errorOne', {
       url: '/errorOne',
       templateUrl: 'views/errorOne.html',
       data: {
@@ -77,7 +118,7 @@ function config($locationProvider, $stateProvider, $urlRouterProvider, $ocLazyLo
         specialClass: 'gray-bg'
       }
     })
-    .state('errorTwo', {
+    .state('app.errorTwo', {
       url: '/errorTwo',
       templateUrl: 'views/errorTwo.html',
       data: {
@@ -85,22 +126,10 @@ function config($locationProvider, $stateProvider, $urlRouterProvider, $ocLazyLo
         specialClass: 'gray-bg'
       }
     })
-    .state('ui', {
-      'abstract': true,
-      url: '/ui',
-      templateUrl: 'views/content.html'
-    })
-    .state('collections', {
+    .state('app.collections', {
       'abstract': true,
       url: '/collections',
-      templateUrl: 'views/content.html'
-    })
-    .state('collections.list', {
-      url: '/list',
-      templateUrl: 'views/collectionsList.html',
-      data: {
-        pageTitle: 'Collections List'
-      },
+      templateUrl: 'views/collections.html',
       resolve: {
         loadPlugin: function ($ocLazyLoad) {
           return $ocLazyLoad.load([{
@@ -110,8 +139,67 @@ function config($locationProvider, $stateProvider, $urlRouterProvider, $ocLazyLo
           }]);
         }
       }
+    })
+    .state('app.collections.list', {
+      url: '/list',
+      templateUrl: 'views/collectionsList.html',
+      data: {
+        pageTitle: 'Collections List'
+      }
+    })
+    .state('app.collections.users', {
+      url: '/users',
+      templateUrl: 'views/collectionUsers.html',
+      data: {
+        pageTitle: 'Collection Users List'
+      }
+    })
+    .state('app.collections.indicators', {
+      url: '/indicators',
+      templateUrl: 'views/collectionIndicators.html',
+      data: {
+        pageTitle: 'Collection Indicators List'
+      }
+    })
+    .state('app.collections.sessions', {
+      url: '/sessions',
+      templateUrl: 'views/collectionSessions.html',
+      data: {
+        pageTitle: 'Collection Sessions List'
+      }
+    })
+    .state('app.collections.dimensions', {
+      url: '/dimensions',
+      templateUrl: 'views/collectionDimensions.html',
+      data: {
+        pageTitle: 'Collection Dimensions List'
+      }
+    })
+    .state('app.home', {
+      url: '',
+      templateUrl: '/views/index.html',
+      resolve: {
+        isCookiesSet: ['$state', '$cookies', function ($state, $cookies) {
+          console.log('test2', $state);
+          //if (!$cookies.Session || !$cookies.Session.user.isAdmin()) {
+          //  $state.go('login');
+          //  return false;
+          //}
+          //
+        }]
+      }
     });
 }
-angular.module('adminPanel').config(['$locationProvider', '$stateProvider', '$urlRouterProvider', '$ocLazyLoadProvider', 'IdleProvider', config]).run(function ($rootScope, $state) {
-  $rootScope.$state = $state;
-});
+angular.module('adminPanel')
+  .config(['$locationProvider', '$stateProvider', '$urlRouterProvider', '$ocLazyLoadProvider', 'IdleProvider', config])
+  .run(['$state', '$cookies', '$rootScope', function ($state, $cookies, $rootScope) {
+    $rootScope.$on('$stateChangeError', function () {
+      $state.go('errorTwo');
+    });
+
+    $rootScope.$on('$stateNotFound', function () {
+      $state.go('errorOne');
+    });
+    //
+    //$rootState.$state = $state;
+  }]);

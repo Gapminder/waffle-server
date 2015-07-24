@@ -1,11 +1,14 @@
 'use strict';
 
 (function () {
+  // public/js/app.js
   angular.module('adminPanel', [
     'ui.router',
     'oc.lazyLoad',
     'ui.bootstrap',
-    'ngIdle'
+    'ngIdle',
+    'ngCookies',
+    'MainCtrl', 'IndexCtrl', 'UserCtrl', 'UserService'
   ]);
 })();
 

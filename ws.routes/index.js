@@ -1,9 +1,16 @@
-var express = require('express');
-var _ = require('lodash');
+'use strict';
+
 var path = require('path');
 
-/*eslint-disable new-cap*/
-var router = express.Router();
-/*eslint-enable new-cap*/
+module.exports = function (app, serviceLocator) {
+  app.get('/api', function (req, res, next) {
+    next();
+  });
 
-module.exports = router;
+  // frontend routes =========================================================
+  // route to handle all angular requests
+  app.get('*', function(req, res) {
+    // load our public/index.html file
+    res.sendFile('index.html', {root: path.join(__dirname, '../ws.web/public')});
+  });
+};
