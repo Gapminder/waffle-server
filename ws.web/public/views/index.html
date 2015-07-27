@@ -1,8 +1,33 @@
-<div class="middle-box text-center loginscreen  animated fadeInDown">
-  <div>
-    <div>
-      <h1 class="logo-name">{{ tagline }}</h1>
+<div class="row wrapper border-bottom white-bg page-heading">
+  <div class="col-sm-4">
+    <h2>{{ tagline }}</h2>
+    <ol class="breadcrumb">
+      <li class="active">
+        <a href=""><strong>Home</strong></a>
+      </li>
+      <!--<li>-->
+        <!--<strong></strong>-->
+      <!--</li>-->
+    </ol>
+  </div>
+  <!--<div class="col-sm-8">-->
+    <!--<div class="title-action">-->
+      <!--<a href="" class="btn btn-primary">This is action area</a>-->
+    <!--</div>-->
+  <!--</div>-->
+</div>
+<div class="row">
+  <div class="col-lg-12">
+    <div class="wrapper wrapper-content">
+      <div class="middle-box text-center animated fadeInRightBig">
+        <h3 class="font-bold">Welcome to {{ tagline }}</h3>
+
+        <div class="error-desc">
+          You can update here any collection document you want. And try other actions:
+          get, delete, create.
+          <br/><a ui-sref="admin.collections.list" class="btn btn-primary m-t">Collections</a>
+        </div>
+      </div>
     </div>
-    <h3>Welcome to {{ tagline }}</h3>
   </div>
 </div>

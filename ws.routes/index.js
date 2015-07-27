@@ -3,9 +3,7 @@
 var path = require('path');
 
 module.exports = function (app, serviceLocator) {
-  app.get('/api', function (req, res, next) {
-    next();
-  });
+  require('./api')(app, serviceLocator);
 
   // frontend routes =========================================================
   // route to handle all angular requests

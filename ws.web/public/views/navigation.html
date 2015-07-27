@@ -1,40 +1,48 @@
 <nav class="navbar-default navbar-static-side" role="navigation">
-    <div class="sidebar-collapse">
-        <ul side-navigation class="nav metismenu" id="side-menu">
-            <li class="nav-header">
+  <div class="sidebar-collapse">
+    <ul side-navigation class="nav metismenu" id="side-menu">
+      <li class="nav-header">
 
-                <div class="dropdown profile-element" dropdown>
-                    <img alt="image" class="img-circle" src="img/profile_small.jpg"/>
-                    <a class="dropdown-toggle" dropdown-toggle href>
-                            <span class="clear">
-                                <span class="block m-t-xs">
-                                    <strong class="font-bold">David Williams</strong>
-                             </span>
-                                <span class="text-muted text-xs block">Art Director <b class="caret"></b></span>
-                            </span>
-                    </a>
-                    <ul class="dropdown-menu animated fadeInRight m-t-xs">
-                        <li><a ui-sref="profile">Profile</a></li>
-                        <li><a ui-sref="contacts">Contacts</a></li>
-                        <li><a ui-sref="inbox">Mailbox</a></li>
-                        <li class="divider"></li>
-                        <li><a href="login">Logout</a></li>
-                    </ul>
-                </div>
-                <div class="logo-element">
-                    {{ tagline }}
-                </div>
-            </li>
-            <li ng-class="{active: $state.includes('collections')}">
-                <a href="collectionsList"><i class="fa fa-files-o"></i> <span class="nav-label">{{ 'Collections' }}</span> <span class="fa arrow"></span></a>
-                <ul class="nav nav-second-level" ng-class="{in: $state.includes('collections')}">
-                    <li ui-sref-active="active"><a ui-sref="app.collections.users">{{ 'Users' }}</a></li>
-                    <li ui-sref-active="active"><a ui-sref="app.collections.indicators">{{ 'Indicators' }}</a></li>
-                    <li ui-sref-active="active"><a ui-sref="app.collections.sessions">{{ 'Sessions' }}</a></li>
-                    <li ui-sref-active="active"><a ui-sref="app.collections.dimensions">{{ 'Dimensions' }}</a></li>
-                </ul>
-            </li>
+        <!--<div class="dropdown profile-element" dropdown>-->
+          <!--&lt;!&ndash;<img alt="image" class="img-circle" src="img/profile_small.jpg"/>&ndash;&gt;-->
+          <!--<a class="dropdown-toggle" dropdown-toggle href>-->
+                            <!--<span class="clear">-->
+                                <!--<span class="block m-t-xs">-->
+                                    <!--<strong class="font-bold">David Williams</strong>-->
+                             <!--</span>-->
+                                <!--<span class="text-muted text-xs block">Art Director <b class="caret"></b></span>-->
+                            <!--</span>-->
+          <!--</a>-->
+          <!--<ul class="dropdown-menu animated fadeInRight m-t-xs">-->
+            <!--<li><a ui-sref="profile">Profile</a></li>-->
+            <!--<li><a ui-sref="contacts">Contacts</a></li>-->
+            <!--<li><a ui-sref="inbox">Mailbox</a></li>-->
+            <!--<li class="divider"></li>-->
+            <!--<li><a href="login">Logout</a></li>-->
+          <!--</ul>-->
+        <!--</div>-->
+        <div class="logo-element">
+          {{ tagline }}
+        </div>
+      </li>
+      <li ng-class="{active: $state.includes('collections')}">
+        <a ui-sref="admin.collections.list"><i class="fa fa-files-o"></i> <span class="nav-label">{{ 'Collections' }}</span> <span
+          class="fa arrow"></span></a>
+        <ul class="nav nav-second-level" ng-class="{in: $state.includes('collections')}">
+          <li ui-sref-active="active"><a ui-sref="admin.collections.users">{{ 'Users' }}</a></li>
+          <li ui-sref-active="active"><a ui-sref="admin.collections.dataSourceTypes">{{ 'DataSourceTypes' }}</a></li>
+          <li ui-sref-active="active"><a ui-sref="admin.collections.dataSources">{{ 'DataSources' }}</a></li>
+          <li ui-sref-active="active"><a ui-sref="admin.collections.importData">{{ 'ImportData' }}</a></li>
+          <li ui-sref-active="active"><a ui-sref="admin.collections.importSessions">{{ 'ImportSessions' }}</a></li>
+          <li ui-sref-active="active"><a ui-sref="admin.collections.analysisSessions">{{ 'AnalysisSessions' }}</a></li>
+          <li ui-sref-active="active"><a ui-sref="admin.collections.dimensions">{{ 'Dimensions' }}</a></li>
+          <li ui-sref-active="active"><a ui-sref="admin.collections.dimensionValues">{{ 'DimensionValues' }}</a></li>
+          <li ui-sref-active="active"><a ui-sref="admin.collections.coordinates">{{ 'Coordinates' }}</a></li>
+          <li ui-sref-active="active"><a ui-sref="admin.collections.indicators">{{ 'Indicators' }}</a></li>
+          <li ui-sref-active="active"><a ui-sref="admin.collections.indicatorValues">{{ 'IndicatorValues' }}</a></li>
         </ul>
+      </li>
+    </ul>
 
-    </div>
+  </div>
 </nav>

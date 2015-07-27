@@ -14,7 +14,10 @@ function config($locationProvider, $stateProvider, $urlRouterProvider, $ocLazyLo
   IdleProvider.idle(5);
   IdleProvider.timeout(120);
 
-  $locationProvider.html5Mode(true);
+  $locationProvider.html5Mode({
+    enabled: true,
+    requireBase: false
+  });
   $locationProvider.hashPrefix('!');
 
   //$urlRouterProvider.otherwise("/");
@@ -26,8 +29,8 @@ function config($locationProvider, $stateProvider, $urlRouterProvider, $ocLazyLo
   //});
 
   $stateProvider
-    .state('app', {
-      url: '/',
+    .state('admin', {
+      url: '/admin',
       abstract: true,
       views: {
         '@': {
@@ -41,15 +44,12 @@ function config($locationProvider, $stateProvider, $urlRouterProvider, $ocLazyLo
         }
       },
       resolve: {
-        isCookiesSet: ['$state', '$cookies', function ($state, $cookies) {
-          console.log('test1', $state);
+        isCookiesSet: ['$state', '$stateParams', '$cookies', function ($state, $stateParams, $cookies) {
+          console.log('test1', $state, $stateParams, $cookies);
 
-          if ($state.params.isloginPage) {
-            return false;
-          }
-
-          if (!$cookies.Session || !$cookies.Session.user.isAdmin()) {
-            $state.go('app.login', {isLoginPage: true});
+          if (!$cookies.Session || !$cookies.Session.user || !$cookies.Session.user.isAdmin()) {
+            console.log('fdhj');
+            $state.transitionTo('login');
             return false;
           }
 
@@ -57,42 +57,225 @@ function config($locationProvider, $stateProvider, $urlRouterProvider, $ocLazyLo
         }]
       }
     })
-    .state('app.account', {
+    .state('admin.home', {
+      url: '',
+      templateUrl: '/views/index.html'
+    })
+    .state('admin.account', {
       url: '/account',
-      template: '<ui-view />',
+      templateUrl: '/views/index.html',
       controller: 'AuthController'
     })
-    .state('app.login', {
+    .state('admin.collections', {
+      'abstract': true,
+      url: '/collections',
+      template: '<ui-view/>',
+      //templateUrl: 'views/collections.html',
+      //
+      resolve: {
+        loadPlugin: function ($ocLazyLoad) {
+          return $ocLazyLoad.load([{
+            name: 'ngGrid', files: ['js/libs/plugins/nggrid/ng-grid-2.0.3.min.js']
+          }, {
+            insertBefore: '#loadBefore', files: ['/js/libs/plugins/nggrid/ng-grid.css']
+          }]);
+        }
+      }
+    })
+    .state('admin.collections.list', {
+      url: '/list',
+      templateUrl: 'views/collectionsList.html',
+      data: {
+        pageTitle: 'Collections List',
+        pageType: 'list'
+      }
+    })
+    .state('admin.collections.users', {
+      url: '/users',
+      views: {
+        '@': {
+          templateUrl: 'views/collectionUsers.html',
+          controller: 'MainController'
+        }
+      },
+      data: {
+        pageTitle: 'Collection Users List',
+        pageType: 'users'
+      }
+    })
+    .state('admin.collections.dataSourceTypes', {
+      url: '/dataSourceTypes',
+      views: {
+        '@': {
+          templateUrl: 'views/collectionDataSourceTypes.html',
+          controller: 'MainController'
+        }
+      },
+      data: {
+        pageTitle: 'Collection DataSourceTypes List',
+        pageType: 'dataSourceTypes'
+      }
+    })
+    .state('admin.collections.dataSources', {
+      url: '/dataSources',
+      views: {
+        '@': {
+          templateUrl: 'views/collectionDataSources.html',
+          controller: 'MainController'
+        }
+      },
+      data: {
+        pageTitle: 'Collection DataSources List',
+        pageType: 'dataSources'
+      }
+    })
+    .state('admin.collections.importData', {
+      url: '/importData',
+      views: {
+        '@': {
+          templateUrl: 'views/collectionImportData.html',
+          controller: 'MainController'
+        }
+      },
+      data: {
+        pageTitle: 'Collection ImportData List',
+        pageType: 'importData'
+      }
+    })
+    .state('admin.collections.importSessions', {
+      url: '/importSessions',
+      views: {
+        '@': {
+          templateUrl: 'views/collectionImportSessions.html',
+          controller: 'MainController'
+        }
+      },
+      data: {
+        pageTitle: 'Collection ImportSessions List',
+        pageType: 'importSessions'
+      }
+    })
+    .state('admin.collections.analysisSessions', {
+      url: '/analysisSessions',
+      views: {
+        '@': {
+          templateUrl: 'views/collectionAnalysisSessions.html',
+          controller: 'MainController'
+        }
+      },
+      data: {
+        pageTitle: 'Collection AnalysisSessions List',
+        pageType: 'analysisSessions'
+      }
+    })
+    .state('admin.collections.dimensions', {
+      url: '/dimensions',
+      views: {
+        '@': {
+          templateUrl: 'views/collectionDimensions.html',
+          controller: 'MainController'
+        }
+      },
+      data: {
+        pageTitle: 'Collection Dimensions List',
+        pageType: 'dimensions'
+      }
+    })
+    .state('admin.collections.dimensionValues', {
+      url: '/dimensionValues',
+      views: {
+        '@': {
+          templateUrl: 'views/collectionDimensionValues.html',
+          controller: 'MainController'
+        }
+      },
+      data: {
+        pageTitle: 'Collection DimensionValues List',
+        pageType: 'dimensionValues'
+      }
+    })
+    .state('admin.collections.coordinates', {
+      url: '/coordinates',
+      views: {
+        '@': {
+          templateUrl: 'views/collectionCoordinates.html',
+          controller: 'MainController'
+        }
+      },
+      data: {
+        pageTitle: 'Collection Coordinates List',
+        pageType: 'Coordinates'
+      }
+    })
+    .state('admin.collections.indicators', {
+      url: '/indicators',
+      views: {
+        '@': {
+          templateUrl: 'views/collectionIndicators.html',
+          controller: 'MainController'
+        }
+      },
+      data: {
+        pageTitle: 'Collection Indicators List',
+        pageType: 'indicators'
+      }
+    })
+    .state('admin.collections.indicatorsValues', {
+      url: '/indicatorsValues',
+      views: {
+        '@': {
+          templateUrl: 'views/collectionIndicatorsValues.html',
+          controller: 'MainController'
+        }
+      },
+      data: {
+        pageTitle: 'Collection IndicatorsValues List',
+        pageType: 'indicatorsValues'
+      }
+    })
+    // AUTENTICATION
+    .state('login', {
       url: '/login',
       templateUrl: 'views/login.html',
       controller: 'UserController',
       data: {
         page: 'login',
         pageTitle: 'Login',
-        specialClass: 'gray-bg'
+        specialClass: 'gray-bg',
       }
     })
-    .state('app.login_two_columns', {
+    .state('login_two_columns', {
       url: '/login_two_columns',
       templateUrl: 'views/login_two_columns.html',
       controller: 'UserController',
       data: {
         page: 'login',
         pageTitle: 'Login two columns',
-        specialClass: 'gray-bg'
+        specialClass: 'gray-bg',
       }
     })
-    .state('app.register', {
+    .state('register', {
       url: '/register',
       templateUrl: 'views/register.html',
       controller: 'UserController',
       data: {
         page: 'login',
         pageTitle: 'Register',
-        specialClass: 'gray-bg'
+        specialClass: 'gray-bg',
       }
     })
-    .state('app.lockscreen', {
+    .state('forgot_password', {
+      url: '/forgot_password',
+      templateUrl: 'views/forgot_password.html',
+      controller: 'UserController',
+      data: {
+        page: 'login',
+        pageTitle: 'Forgot password',
+        specialClass: 'gray-bg',
+      }
+    })
+    // ERRORS AND LOCKS
+    .state('lockscreen', {
       url: '/lockscreen',
       templateUrl: 'views/lockscreen.html',
       data: {
@@ -100,106 +283,35 @@ function config($locationProvider, $stateProvider, $urlRouterProvider, $ocLazyLo
         specialClass: 'gray-bg'
       }
     })
-    .state('app.forgot_password', {
-      url: '/forgot_password',
-      templateUrl: 'views/forgot_password.html',
-      controller: 'UserController',
-      data: {
-        page: 'login',
-        pageTitle: 'Forgot password',
-        specialClass: 'gray-bg'
-      }
-    })
-    .state('app.errorOne', {
-      url: '/errorOne',
-      templateUrl: 'views/errorOne.html',
+    .state('error404', {
+      url: '/error404',
+      templateUrl: 'views/error404.html',
       data: {
         pageTitle: '404',
         specialClass: 'gray-bg'
       }
     })
-    .state('app.errorTwo', {
-      url: '/errorTwo',
-      templateUrl: 'views/errorTwo.html',
+    .state('error500', {
+      url: '/error500',
+      templateUrl: 'views/error500.html',
       data: {
         pageTitle: '500',
         specialClass: 'gray-bg'
       }
-    })
-    .state('app.collections', {
-      'abstract': true,
-      url: '/collections',
-      templateUrl: 'views/collections.html',
-      resolve: {
-        loadPlugin: function ($ocLazyLoad) {
-          return $ocLazyLoad.load([{
-            name: 'ngGrid', files: ['js/plugins/nggrid/ng-grid-2.0.3.min.js']
-          }, {
-            insertBefore: '#loadBefore', files: ['js/plugins/nggrid/ng-grid.css']
-          }]);
-        }
-      }
-    })
-    .state('app.collections.list', {
-      url: '/list',
-      templateUrl: 'views/collectionsList.html',
-      data: {
-        pageTitle: 'Collections List'
-      }
-    })
-    .state('app.collections.users', {
-      url: '/users',
-      templateUrl: 'views/collectionUsers.html',
-      data: {
-        pageTitle: 'Collection Users List'
-      }
-    })
-    .state('app.collections.indicators', {
-      url: '/indicators',
-      templateUrl: 'views/collectionIndicators.html',
-      data: {
-        pageTitle: 'Collection Indicators List'
-      }
-    })
-    .state('app.collections.sessions', {
-      url: '/sessions',
-      templateUrl: 'views/collectionSessions.html',
-      data: {
-        pageTitle: 'Collection Sessions List'
-      }
-    })
-    .state('app.collections.dimensions', {
-      url: '/dimensions',
-      templateUrl: 'views/collectionDimensions.html',
-      data: {
-        pageTitle: 'Collection Dimensions List'
-      }
-    })
-    .state('app.home', {
-      url: '',
-      templateUrl: '/views/index.html',
-      resolve: {
-        isCookiesSet: ['$state', '$cookies', function ($state, $cookies) {
-          console.log('test2', $state);
-          //if (!$cookies.Session || !$cookies.Session.user.isAdmin()) {
-          //  $state.go('login');
-          //  return false;
-          //}
-          //
-        }]
-      }
     });
 }
+
 angular.module('adminPanel')
   .config(['$locationProvider', '$stateProvider', '$urlRouterProvider', '$ocLazyLoadProvider', 'IdleProvider', config])
-  .run(['$state', '$cookies', '$rootScope', function ($state, $cookies, $rootScope) {
+  .run(['$state', '$stateParams', '$cookies', '$rootScope', function ($state, $stateParams, $cookies, $rootScope) {
     $rootScope.$on('$stateChangeError', function () {
-      $state.go('errorTwo');
+      $state.go('error500');
     });
 
     $rootScope.$on('$stateNotFound', function () {
-      $state.go('errorOne');
+      $state.go('error404');
     });
     //
-    //$rootState.$state = $state;
+    $rootScope.$state = $state;
+    $rootScope.$stateParams = $stateParams;
   }]);
