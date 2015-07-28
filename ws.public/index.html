@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <base href="/">
+
+  <!-- Page title set in pageTitle directive -->
+  <title page-title></title>
+
+  <link href="font-awesome/css/font-awesome.css" rel="stylesheet">
+
+  <!-- Main Inspinia CSS files -->
+  <link href="css/animate.css" rel="stylesheet">
+  <link id="loadBefore" href="css/style.css" rel="stylesheet">
+
+</head>
+
+<body ng-app="adminPanel">
+
+<div id="wrapper">
+
+  <!-- Navigation -->
+  <div ui-view="navigation"></div>
+
+  <div>
+    <!-- Page wrapper -->
+    <div ui-view="topnavbar"></div>
+
+    <!-- Main view  -->
+    <div ui-view></div>
+
+  </div>
+  <!-- End page wrapper-->
+</div>
+<!-- End wrapper-->
+
+<!-- jQuery and Bootstrap -->
+<script src="js/libs/jquery/jquery-2.1.1.min.js"></script>
+
+<!-- Main Angular scripts-->
+<script src="js/libs/angular/angular.js"></script>
+<script src="js/libs/ui-router/angular-ui-router.min.js"></script>
+<script src="js/libs/plugins/oclazyload/dist/ocLazyLoad.min.js"></script>
+
+<script src="js/libs/bootstrap/ui-bootstrap-tpls-0.12.0.min.js"></script>
+
+<!-- Anglar App Script -->
+<script src="js/app.js"></script>
+<script src="js/config.js"></script>
+<!-- ANGULAR CUSTOM -->
+<script src="js/controllers/MainCtrl.js"></script>
+
+</body>
+</html>
