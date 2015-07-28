@@ -13,6 +13,7 @@ module.exports = function (app) {
 function ServiceLocatorContainer(app) {
   this.repositories = new ServiceLocator('repository', app);
   this.plugins = new ServiceLocator('plugins', app);
+  this.models = new ServiceLocator('model', app);
 }
 
 /**

@@ -3,7 +3,7 @@
 var gulp = require('gulp');
 
 gulp.paths = {
-  src: ['**/*.js', '!node_modules/**/*']
+  src: ['**/*.js', '!node_modules/**/*', '!ws.web/public/js/libs/**/*']
 };
 
 require('require-dir')('./gulp');
