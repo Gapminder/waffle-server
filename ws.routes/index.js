@@ -11,7 +11,7 @@ module.exports = function (serviceLocator) {
   // route to handle all angular requests
   router.get('*', function(req, res) {
     // load our public/index.html file
-    res.sendFile('index.html', {root: path.join(__dirname, '../ws.web/public')});
+    res.sendFile('index.html', {root: path.join(__dirname, '../ws.public')});
   });
 
   return router;

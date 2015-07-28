@@ -1,13 +1,15 @@
+'use strict';
+
 angular.module('adminPanel')
   .config([
     '$locationProvider', '$urlRouterProvider',
-    function ($locationProvider, $urlRouterProvider){
+    function ($locationProvider, $urlRouterProvider) {
     $locationProvider.html5Mode({
       enabled: true,
       requireBase: false
     });
 
-    $urlRouterProvider.otherwise("/admin");
+    $urlRouterProvider.otherwise('/admin');
   }])
   .run(['$state', '$rootScope', function ($state, $rootScope) {
     $rootScope.$on('$stateChangeError', function () {

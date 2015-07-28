@@ -11,11 +11,15 @@
   <!-- Page title set in pageTitle directive -->
   <title page-title></title>
 
-  <link href="font-awesome/css/font-awesome.css" rel="stylesheet">
+  <!-- Bootstrap -->
+  <link href="libs/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Font awesome -->
+  <link href="libs/font-awesome/css/font-awesome.min.css" rel="stylesheet">
 
   <!-- Main Inspinia CSS files -->
-  <link href="css/animate.css" rel="stylesheet">
-  <link id="loadBefore" href="css/style.css" rel="stylesheet">
+  <link href="assets/css/animate.css" rel="stylesheet">
+  <link id="loadBefore" href="assets/css/style.css" rel="stylesheet">
 
 </head>
 
@@ -39,20 +43,24 @@
 <!-- End wrapper-->
 
 <!-- jQuery and Bootstrap -->
-<script src="js/libs/jquery/jquery-2.1.1.min.js"></script>
+<script src="libs/jquery/dist/jquery.min.js"></script>
+<script src="libs/bootstrap/dist/js/bootstrap.min.js"></script>
 
 <!-- Main Angular scripts-->
-<script src="js/libs/angular/angular.js"></script>
-<script src="js/libs/ui-router/angular-ui-router.min.js"></script>
-<script src="js/libs/plugins/oclazyload/dist/ocLazyLoad.min.js"></script>
-
-<script src="js/libs/bootstrap/ui-bootstrap-tpls-0.12.0.min.js"></script>
+<script src="libs/angular/angular.js"></script>
+<script src="libs/angular-resource/angular-resource.min.js"></script>
+<script src="libs/angular-ui-router/release/angular-ui-router.min.js"></script>
+<script src="libs/angular-bootstrap/ui-bootstrap.min.js"></script>
+<script src="libs/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
 
 <!-- Anglar App Script -->
-<script src="js/app.js"></script>
-<script src="js/config.js"></script>
+<script src="components/ws-app.module.js"></script>
+<script src="components/ws-app.config.js"></script>
+<script src="components/ws-app.routes.js"></script>
+<script src="components/ws-app.utils.js"></script>
 <!-- ANGULAR CUSTOM -->
-<script src="js/controllers/MainCtrl.js"></script>
+<script src="components/controllers/MainCtrl.js"></script>
+<script src="components/controllers/UserCtrl.js"></script>
 
 </body>
 </html>

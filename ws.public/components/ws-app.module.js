@@ -1,7 +1,7 @@
 'use strict';
 angular.module('adminPanel', [
+    'ngResource',
     'ui.router',
-    'oc.lazyLoad',
     'ui.bootstrap'
   ]);
 // Other libraries are loaded dynamically in the config.js file using the library ocLazyLoad
