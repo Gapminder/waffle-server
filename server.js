@@ -28,7 +28,9 @@ app.use(express.static(path.join(__dirname, '/ws.web/public')));
 
 // routes ==================================================
 // configure our routes
-require('./ws.routes/index')(app, serviceLocator);
+var routes = require('./ws.routes/index')(serviceLocator);
+
+app.use('/', routes);
 
 // start server
 var config = app.get('config');
