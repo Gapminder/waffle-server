@@ -5,11 +5,11 @@
       <li>
         <a href="index.html">Home</a>
       </li>
-      <li>
-        <a>ng Grid</a>
+      <li ng-class="{'active': !$state.params.type}">
+        <a ui-sref="admin.collections.list">Collections List</a>
       </li>
-      <li class="active">
-        <strong>ng Grid</strong>
+      <li ng-hide="!$state.params.type" ng-class="{'active': $state.params.type}" >
+        <strong>{{$state.params.type.charAt(0).toUpperCase() + $state.params.type.slice(1)}}</strong>
       </li>
     </ol>
   </div>

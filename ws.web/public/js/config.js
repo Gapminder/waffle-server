@@ -20,7 +20,7 @@ function config($locationProvider, $stateProvider, $urlRouterProvider, $ocLazyLo
   });
   $locationProvider.hashPrefix('!');
 
-  //$urlRouterProvider.otherwise("/");
+  $urlRouterProvider.otherwise("/admin");
   //$urlRouterProvider.otherwise('/errorOne');
 
   //$ocLazyLoadProvider.config({
@@ -90,147 +90,13 @@ function config($locationProvider, $stateProvider, $urlRouterProvider, $ocLazyLo
         pageType: 'list'
       }
     })
-    .state('admin.collections.users', {
-      url: '/users',
+    .state('admin.collections.collection', {
+      url: '/:type',
       views: {
         '@': {
-          templateUrl: 'views/collectionUsers.html',
+          templateUrl: 'views/collectionsList.html',
           controller: 'MainController'
         }
-      },
-      data: {
-        pageTitle: 'Collection Users List',
-        pageType: 'users'
-      }
-    })
-    .state('admin.collections.dataSourceTypes', {
-      url: '/dataSourceTypes',
-      views: {
-        '@': {
-          templateUrl: 'views/collectionDataSourceTypes.html',
-          controller: 'MainController'
-        }
-      },
-      data: {
-        pageTitle: 'Collection DataSourceTypes List',
-        pageType: 'dataSourceTypes'
-      }
-    })
-    .state('admin.collections.dataSources', {
-      url: '/dataSources',
-      views: {
-        '@': {
-          templateUrl: 'views/collectionDataSources.html',
-          controller: 'MainController'
-        }
-      },
-      data: {
-        pageTitle: 'Collection DataSources List',
-        pageType: 'dataSources'
-      }
-    })
-    .state('admin.collections.importData', {
-      url: '/importData',
-      views: {
-        '@': {
-          templateUrl: 'views/collectionImportData.html',
-          controller: 'MainController'
-        }
-      },
-      data: {
-        pageTitle: 'Collection ImportData List',
-        pageType: 'importData'
-      }
-    })
-    .state('admin.collections.importSessions', {
-      url: '/importSessions',
-      views: {
-        '@': {
-          templateUrl: 'views/collectionImportSessions.html',
-          controller: 'MainController'
-        }
-      },
-      data: {
-        pageTitle: 'Collection ImportSessions List',
-        pageType: 'importSessions'
-      }
-    })
-    .state('admin.collections.analysisSessions', {
-      url: '/analysisSessions',
-      views: {
-        '@': {
-          templateUrl: 'views/collectionAnalysisSessions.html',
-          controller: 'MainController'
-        }
-      },
-      data: {
-        pageTitle: 'Collection AnalysisSessions List',
-        pageType: 'analysisSessions'
-      }
-    })
-    .state('admin.collections.dimensions', {
-      url: '/dimensions',
-      views: {
-        '@': {
-          templateUrl: 'views/collectionDimensions.html',
-          controller: 'MainController'
-        }
-      },
-      data: {
-        pageTitle: 'Collection Dimensions List',
-        pageType: 'dimensions'
-      }
-    })
-    .state('admin.collections.dimensionValues', {
-      url: '/dimensionValues',
-      views: {
-        '@': {
-          templateUrl: 'views/collectionDimensionValues.html',
-          controller: 'MainController'
-        }
-      },
-      data: {
-        pageTitle: 'Collection DimensionValues List',
-        pageType: 'dimensionValues'
-      }
-    })
-    .state('admin.collections.coordinates', {
-      url: '/coordinates',
-      views: {
-        '@': {
-          templateUrl: 'views/collectionCoordinates.html',
-          controller: 'MainController'
-        }
-      },
-      data: {
-        pageTitle: 'Collection Coordinates List',
-        pageType: 'Coordinates'
-      }
-    })
-    .state('admin.collections.indicators', {
-      url: '/indicators',
-      views: {
-        '@': {
-          templateUrl: 'views/collectionIndicators.html',
-          controller: 'MainController'
-        }
-      },
-      data: {
-        pageTitle: 'Collection Indicators List',
-        pageType: 'indicators'
-      }
-    })
-    .state('admin.collections.indicatorsValues', {
-      url: '/indicatorsValues',
-      views: {
-        '@': {
-          templateUrl: 'views/collectionIndicatorsValues.html',
-          controller: 'MainController'
-        }
-      },
-      data: {
-        pageTitle: 'Collection IndicatorsValues List',
-        pageType: 'indicatorsValues'
       }
     })
     // AUTENTICATION

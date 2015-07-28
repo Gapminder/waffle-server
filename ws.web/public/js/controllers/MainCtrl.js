@@ -15,10 +15,14 @@ angular.module('MainCtrl', []).controller('MainController', ['$rootScope', '$htt
       ]
     }
 
-    $rootScope.$on('$stateChangeSuccess', function (event, toState) {
-      $http.get('/api/collection' + toState.url)
+    $rootScope.$on('$stateChangeSuccess', function (event, toState, toParams) {
+      debugger;
+      $http.get('/api/collection/' + (toParams.type || 'list'))
         .success(function(data) {
           $scope.data = data.data;
+        })
+        .error(function(data, status, headers, config) {
+          console.error(data, status);
         });
     });
   }

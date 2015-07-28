@@ -32,18 +32,6 @@ module.exports = function (app, serviceLocator) {
 
   var models = mongoose.modelNames();
 
-  _.each(models, function (modelName) {
-    app.get('/api/collection/' + modelName.toLowerCase(), function (req, res, next) {
-      mongoose.model(modelName).find({}, function (err, data) {
-        if (err) {
-          return next(err);
-        }
-
-        return res.json({data: data});
-      });
-    });
-  });
-
   app.get('/api/collection/list', function (req, res, next) {
     async.map(models, function (item, cb) {
       mongoose.model(item).count({}, function (err, count) {
@@ -61,4 +49,17 @@ module.exports = function (app, serviceLocator) {
       return res.json({data: result});
     });
   });
+
+  app.get('/api/collection/:modelName', function (req, res, next) {
+    var modelName = req.params.modelName.charAt(0).toUpperCase() + req.params.modelName.slice(1);
+    mongoose.model(modelName).find({}, function (err, data) {
+      if (err) {
+        return next(err);
+      }
+
+      console.log('Documents was found: ', data.length);
+      return res.json({data: data});
+    });
+  });
+
 };
