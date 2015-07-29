@@ -1,8 +1,7 @@
 'use strict';
 
-// public/js/controllers/MainCtrl.js
-angular.module('MainCtrl', []).controller('MainController', ['$rootScope', '$http', '$scope',
-  function($rootScope, $http, $scope) {
+angular.module('adminPanel.controllers').controller('CollectionsController', ['$rootScope', '$http', '$scope',
+  function CollectionsController($rootScope, $http, $scope) {
     $scope.tagline = 'Waffle Server';
 
     $scope.data = [];

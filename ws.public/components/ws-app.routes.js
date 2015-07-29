@@ -31,7 +31,9 @@ angular.module('adminPanel')
       })
       .state('admin.home', {
         url: '',
-        templateUrl: '/components/landing/landing.html'
+        templateUrl: '/components/landing/landing.html',
+        controller: 'MainController',
+        controllerAs: 'mainCtrl'
       })
       // todo: add states for each back end type Dimensions, Indicators etc. what actually make sense
 
