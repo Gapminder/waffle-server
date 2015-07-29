@@ -1,11 +1,12 @@
 'use strict';
 
-angular.module('adminPanel.controllers').controller('CollectionsController', ['$rootScope', '$http', '$scope',
-  function CollectionsController($rootScope, $http, $scope) {
-    $scope.tagline = 'Waffle Server';
+angular.module('adminPanel.controllers').controller('CollectionsController', ['$rootScope', '$http', '$state',
+  function CollectionsController($rootScope, $http, $state) {
+    var self = this;
+    self.tagline = 'Waffle Server';
 
-    $scope.data = [];
-    $scope.gridCollections = {
+    self.data = [];
+    self.gridCollections = {
       data: 'data',
       columnDefs: [
         {field: 'name', displayName: 'Name'},
@@ -15,12 +16,11 @@ angular.module('adminPanel.controllers').controller('CollectionsController', ['$
     }
 
     $rootScope.$on('$stateChangeSuccess', function (event, toState, toParams) {
-      debugger;
       $http.get('/api/collection/' + (toParams.type || 'list'))
         .success(function(data) {
-          $scope.data = data.data;
+          self.data = data.data;
         })
-        .error(function(data, status, headers, config) {
+        .error(function(data, status) {
           console.error(data, status);
         });
     });

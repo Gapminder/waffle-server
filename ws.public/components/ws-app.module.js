@@ -5,6 +5,7 @@ angular.module('adminPanel', [
     'ngResource',
     'ui.router',
     'ui.bootstrap',
+    'ui.grid',
     'adminPanel.controllers'
   ]);
 // Other libraries are loaded dynamically in the config.js file using the library ocLazyLoad
