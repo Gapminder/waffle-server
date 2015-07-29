@@ -23,14 +23,20 @@
 
 </head>
 
-<body ng-app="adminPanel">
+<!-- ControllerAs syntax -->
+<!-- Main controller with serveral data used in Inspinia theme on diferent view -->
+<body ng-app="adminPanel" class="{{$state.current.data.specialClass}}" landing-scrollspy id="page-top">
 
+<!-- Main view  -->
+<!-- Wrapper-->
 <div id="wrapper">
 
   <!-- Navigation -->
   <div ui-view="navigation"></div>
 
-  <div>
+  <!-- Page wraper -->
+  <!-- ng-class with current state name give you the ability to extended customization your view -->
+  <div id="page-wrapper" class="gray-bg {{$state.current.name}}">
     <!-- Page wrapper -->
     <div ui-view="topnavbar"></div>
 
@@ -44,7 +50,14 @@
 
 <!-- jQuery and Bootstrap -->
 <script src="libs/jquery/dist/jquery.min.js"></script>
+<script src="libs/jquery-ui/jquery-ui.min.js"></script>
 <script src="libs/bootstrap/dist/js/bootstrap.min.js"></script>
+
+<!-- MetsiMenu -->
+<!--<script src="js/libs/plugins/metisMenu/jquery.metisMenu.js"></script>-->
+
+<!-- SlimScroll -->
+<script src="libs/slimScroll/jquery.slimscroll.min.js"></script>
 
 <!-- Main Angular scripts-->
 <script src="libs/angular/angular.js"></script>
