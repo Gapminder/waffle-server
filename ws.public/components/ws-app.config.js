@@ -21,6 +21,4 @@ angular.module('adminPanel')
     $rootScope.$on('$stateNotFound', function () {
       $state.go('error404');
     });
-
-    $rootScope.$state = $state;
   }]);

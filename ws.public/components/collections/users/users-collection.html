@@ -1,15 +1,15 @@
 <div class="row wrapper border-bottom white-bg page-heading">
   <div class="col-lg-10">
-    <h2>{{$state.params.pageTitle}}</h2>
+    <h2>{{collectionsCtrl.params.pageTitle}}</h2>
     <ol class="breadcrumb">
       <li>
         <a href="index.html">Home</a>
       </li>
-      <li ng-class="{'active': !$state.params.pageType}">
+      <li ui-sref-active="active">
         <a ui-sref="admin.collections.list">Collections List</a>
       </li>
-      <li ng-hide="!$state.params.pageType" ng-class="{'active': $state.params.pageType}" >
-        <strong>{{$state.params.pageTitle}}</strong>
+      <li ui-sref-active="active">
+        <a ui-sref="admin.collections.{{collectionsCtrl.params.pageType}}">{{collectionsCtrl.params.pageTitle}}</a>
       </li>
     </ol>
   </div>

@@ -179,7 +179,7 @@ angular.module('adminPanel')
         },
         data: {
           pageTitle: 'Collection Coordinates List',
-          pageType: 'Coordinates'
+          pageType: 'coordinates'
         }
       })
       .state('admin.collections.indicators', {

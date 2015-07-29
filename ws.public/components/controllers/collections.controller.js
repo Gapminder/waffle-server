@@ -1,8 +1,9 @@
 'use strict';
 
-angular.module('adminPanel.controllers').controller('CollectionsController', ['$rootScope', '$http', '$state',
-  function CollectionsController($rootScope, $http, $state) {
+angular.module('adminPanel.controllers').controller('CollectionsController', ['$rootScope', '$http', '$state', '$scope',
+  function CollectionsController($rootScope, $http, $state, $scope) {
     var self = this;
+    self.params = $state.current.data;
     self.tagline = 'Waffle Server';
 
     self.data = [];
