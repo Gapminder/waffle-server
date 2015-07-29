@@ -28,9 +28,11 @@ app.use(express.static(path.join(__dirname, '/ws.public')));
 
 // routes ==================================================
 // configure our routes
-var routes = require('./ws.routes/index')(serviceLocator);
+var homeRoutes = require('./ws.routes/home');
+var apiRoutes = require('./ws.routes/index')(serviceLocator);
 
-app.use('/', routes);
+app.use('/', homeRoutes);
+app.use('/api', apiRoutes);
 
 // start server
 var config = app.get('config');

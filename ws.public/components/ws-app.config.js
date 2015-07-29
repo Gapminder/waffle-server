@@ -9,6 +9,8 @@ angular.module('adminPanel')
       requireBase: false
     });
 
+    $locationProvider.hashPrefix('!');
+
     $urlRouterProvider.otherwise('/admin');
   }])
   .run(['$state', '$rootScope', function ($state, $rootScope) {

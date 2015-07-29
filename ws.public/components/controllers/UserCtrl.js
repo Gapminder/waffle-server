@@ -1,5 +1,5 @@
 'use strict';
 
-angular.module('adminPanel').controller('UserController', function () {
+angular.module('adminPanel').controller('UserController', function UserController () {
 
 });

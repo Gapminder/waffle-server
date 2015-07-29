@@ -7,9 +7,9 @@ var async = require('async');
 module.exports = function (router) {
   var models = mongoose.modelNames();
 
-  router.get('/api/collection/list', getCollectionList);
+  router.get('/collection/list', getCollectionList);
 
-  router.get('/api/collection/:modelName', getSpecifiedCollection);
+  router.get('/collection/:modelName', getSpecifiedCollection);
 
   function getCollectionList(req, res, next) {
     async.map(models, function (item, cb) {

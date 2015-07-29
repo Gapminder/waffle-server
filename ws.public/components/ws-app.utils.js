@@ -8,11 +8,6 @@
  */
 
 $(document).ready(function () {
-  // Append config box / Only for demo purpose
-  $.get('views/skin-config.html', function (data) {
-    $('body').append(data);
-  });
-
   $(window).bind('load resize scroll', function () {
     if (!$('body').hasClass('body-small')) {
       fixHeight();
