@@ -32,6 +32,5 @@
   },
   "_source": "git://github.com/components/font-awesome.git",
   "_target": "~4.3.0",
-  "_originalSource": "components-font-awesome",
-  "_direct": true
+  "_originalSource": "components-font-awesome"
 }

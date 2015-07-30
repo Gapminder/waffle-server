@@ -1,0 +1,18 @@
+<p ng-if="!ctrl.currentData.length">No data for collection.</p>
+
+<div ng-if="ctrl.currentData.length" class="table-responsive">
+  <table class="table table-striped">
+    <thead>
+    <tr>
+      <th ng-repeat="(key, item) in ctrl.currentData[0]">{{key.substring(0,1).toUpperCase() + key.substring(1)}}</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr ng-repeat="item in ctrl.currentData">
+      <td ng-repeat="cell in item">{{cell}}</td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+<pager total-items="totalItems" ng-model="currentPage" items-per-page="{{ctrl.limit}}" ng-change="pageChanged()" num-pages="numPages"></pager>
+<pre>Page: {{currentPage}} / {{numPages}}</pre>

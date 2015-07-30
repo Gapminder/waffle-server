@@ -3540,6 +3540,7 @@ img.circle-border {
 }
 .breadcrumb > .active {
     color: inherit;
+    font-weight: 700;
 }
 code {
     background-color: #F9F2F4;

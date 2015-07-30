@@ -1,0 +1,12 @@
+<h2>{{ctrl.pageTitle}}</h2>
+<ol class="breadcrumb">
+  <li>
+    <a href="index.html">Home</a>
+  </li>
+  <li ui-sref-active="active">
+    <a ui-sref="admin.collections.list">Collections List</a>
+  </li>
+  <li ui-sref-active="active">
+    <a ui-sref="admin.collections.{{ctrl.pageType}}">{{ctrl.pageTitle}}</a>
+  </li>
+</ol>

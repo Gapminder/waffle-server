@@ -1,0 +1,27 @@
+<div class="row wrapper border-bottom white-bg page-heading">
+  <div class="col-lg-10">
+    <h2>{{ctrl.pageTitle}}</h2>
+    <ol class="breadcrumb">
+      <li>
+        <a href="index.html">Home</a>
+      </li>
+      <li ui-sref-active="active">
+        <a ui-sref="admin.collections.{{ctrl.pageType}}">{{ctrl.pageTitle}}</a>
+      </li>
+    </ol>
+  </div>
+  <div class="col-lg-2">
+
+  </div>
+</div>
+<div class="wrapper wrapper-content animated fadeInRight">
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="ibox float-e-margins">
+        <div class="ibox-content">
+          <admin-collections-table></admin-collections-table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

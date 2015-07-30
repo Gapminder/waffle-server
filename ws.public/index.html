@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <base href="/">
+
+  <!-- Page title set in pageTitle directive -->
+  <title page-title></title>
+
+  <!-- Bootstrap -->
+  <link href="libs/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Font awesome -->
+  <!--<link href="libs/font-awesome/css/font-awesome.min.css" rel="stylesheet">-->
+
+  <!-- Main Inspinia CSS files -->
+  <link href="assets/css/animate.css" rel="stylesheet">
+  <link id="loadBefore" href="assets/css/style.css" rel="stylesheet">
+</head>
+
+<!-- ControllerAs syntax -->
+<!-- Main controller with serveral data used in Inspinia theme on diferent view -->
+<body ng-app="adminPanel" class="{{$state.current.data.specialClass}}" landing-scrollspy id="page-top">
+
+<!-- Main view  -->
+<!-- Wrapper-->
+<div id="wrapper">
+
+  <!-- Navigation -->
+  <div ui-view="navigation"></div>
+
+  <!-- Page wraper -->
+  <!-- ng-class with current state name give you the ability to extended customization your view -->
+  <div id="page-wrapper" class="gray-bg {{$state.current.name}}">
+    <!-- Page wrapper -->
+    <div ui-view="topnavbar"></div>
+
+    <!-- Main view  -->
+    <div ui-view></div>
+
+  </div>
+  <!-- End page wrapper-->
+</div>
+<!-- End wrapper-->
+
+<!-- jQuery and Bootstrap -->
+<script src="libs/jquery/dist/jquery.min.js"></script>
+<script src="libs/lodash/lodash.min.js"></script>
+<!--<script src="libs/bootstrap/dist/js/bootstrap.min.js"></script>-->
+
+<!-- Main Angular scripts-->
+<script src="libs/angular/angular.js"></script>
+<script src="libs/angular-resource/angular-resource.min.js"></script>
+<script src="libs/angular-ui-router/release/angular-ui-router.min.js"></script>
+<script src="https://cdn.rawgit.com/angular-ui/bower-ui-grid/master/ui-grid.js"></script>
+<script src="libs/angular-bootstrap/ui-bootstrap.min.js"></script>
+<script src="libs/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
+
+<!-- Anglar App Script -->
+<script src="components/ws-app.module.js"></script>
+<script src="components/ws-app.config.js"></script>
+<script src="components/ws-app.routes.js"></script>
+<script src="components/ws-app.utils.js"></script>
+<!-- ANGULAR CUSTOM -->
+<script src="components/collections/collections.service.js"></script>
+<script src="components/collections/collections-table.directive.js"></script>
+<script src="components/collections/collections-breadcrumb.directive.js"></script>
+
+<script src="components/landing/main.controller.js"></script>
+<script src="components/users/user.controller.js"></script>
+<script src="components/collections/collections-table.controller.js"></script>
+<script src="components/collections/collections-breadcrumb.controller.js"></script>
+
+</body>
+</html>
