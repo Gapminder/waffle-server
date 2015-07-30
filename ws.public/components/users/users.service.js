@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('adminPanel')
+angular.module('admin')
   .factory('User', ['$http', function ($http) {
     return {
       // call to get all users

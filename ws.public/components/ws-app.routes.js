@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('adminPanel')
+angular.module('admin')
   .config(function ($stateProvider) {
     $stateProvider
       .state('admin', {
@@ -40,6 +40,11 @@ angular.module('adminPanel')
         templateUrl: '/components/users/profile.html',
         controller: 'AuthController',
         controllerAs: 'authCtrl'
+      })
+      .state('admin.playground', {
+        'abstract': true,
+        url: '/collections',
+        template: '<ui-view/>'
       })
       .state('admin.collections', {
         'abstract': true,

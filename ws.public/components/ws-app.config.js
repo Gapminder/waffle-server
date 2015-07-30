@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('adminPanel')
+angular.module('admin')
   .config([
     '$locationProvider', '$urlRouterProvider',
     function ($locationProvider, $urlRouterProvider) {

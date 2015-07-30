@@ -24,7 +24,7 @@
 
 <!-- ControllerAs syntax -->
 <!-- Main controller with serveral data used in Inspinia theme on diferent view -->
-<body ng-app="adminPanel" class="{{$state.current.data.specialClass}}" landing-scrollspy id="page-top">
+<body ng-app="admin" class="{{$state.current.data.specialClass}}" landing-scrollspy id="page-top">
 
 <!-- Main view  -->
 <!-- Wrapper-->
@@ -65,15 +65,21 @@
 <script src="components/ws-app.config.js"></script>
 <script src="components/ws-app.routes.js"></script>
 <script src="components/ws-app.utils.js"></script>
-<!-- ANGULAR CUSTOM -->
+
+<!-- ANGULAR Services -->
 <script src="components/collections/collections.service.js"></script>
+<script src="components/playground/cyper-editor.service.js"></script>
+
+<!-- ANGULAR Directives -->
 <script src="components/collections/collections-table.directive.js"></script>
 <script src="components/collections/collections-breadcrumb.directive.js"></script>
 
+<!-- ANGULAR Controllers -->
 <script src="components/landing/main.controller.js"></script>
 <script src="components/users/user.controller.js"></script>
 <script src="components/collections/collections-table.controller.js"></script>
 <script src="components/collections/collections-breadcrumb.controller.js"></script>
+<script src="components/playground/cyper-editor.controller.js"></script>
 
 </body>
 </html>

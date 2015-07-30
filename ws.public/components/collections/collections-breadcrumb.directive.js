@@ -1,5 +1,5 @@
 'use strict';
-angular.module('adminPanel.directives')
+angular.module('admin.directives')
   .directive('adminCollectionsBreadcrumb', function adminCollectionTable() {
     var directive = {
       templateUrl: '/components/collections/collections-breadcrumb.html',

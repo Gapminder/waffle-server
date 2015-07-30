@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('adminPanel.controllers').controller('CollectionsBreadcrumbController', [
+angular.module('admin.controllers').controller('CollectionsBreadcrumbController', [
   '$state', function CollectionsBreadcrumbController($state) {
     var self = this;
     self.pageTitle = $state.current.data.pageTitle;

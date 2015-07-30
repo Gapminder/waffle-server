@@ -4,7 +4,7 @@
  * Service that will be used in different places of Admin
  * for data access
  */
-angular.module('adminPanel.services')
+angular.module('admin.services')
   .service('CollectionsService', ['$resource', function ($resource) {
     /**
      * This object will be contain all information of this service

@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('adminPanel.controllers').controller('CollectionsTableController', [
+angular.module('admin.controllers').controller('CollectionsTableController', [
   '$rootScope', '$state', 'CollectionsService', '$scope',
   function CollectionsTableController($rootScope, $state, CollectionsService, $scope) {
     var self = this;
