@@ -26,6 +26,10 @@
         </div>
       </li>
       <li ng-class="{active: $state.includes('collections')}">
+        <a ui-sref="admin.playground"><i class="fa fa-files-o"></i> <span class="nav-label">{{ 'Cyper Editor' }}</span> <span
+          class="fa arrow"></span></a>
+      </li>
+      <li ng-class="{active: $state.includes('collections')}">
         <a ui-sref="admin.collections.list"><i class="fa fa-files-o"></i> <span class="nav-label">{{ 'Collections' }}</span> <span
           class="fa arrow"></span></a>
         <ul class="nav nav-second-level" ng-class="{in: $state.includes('collections')}">

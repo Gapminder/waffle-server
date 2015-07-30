@@ -42,9 +42,10 @@ angular.module('admin')
         controllerAs: 'authCtrl'
       })
       .state('admin.playground', {
-        'abstract': true,
-        url: '/collections',
-        template: '<ui-view/>'
+        url: '/playground',
+        templateUrl: '/components/playground/cyper-editor.html',
+        controller: 'CyperEditorController',
+        controllerAs: 'ctrl'
       })
       .state('admin.collections', {
         'abstract': true,
