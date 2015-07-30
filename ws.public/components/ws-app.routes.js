@@ -49,20 +49,18 @@ angular.module('adminPanel')
       .state('admin.collections.list', {
         url: '/list',
         templateUrl: 'components/collections/collections.html',
-        controller: 'CollectionsController',
-        controllerAs: 'collectionsCtrl',
+        controller: 'CollectionsBreadcrumbController',
+        controllerAs: 'ctrl',
         data: {
           pageTitle: 'Collections List',
-          //pageType: 'list'
+          pageType: 'list'
         }
       })
       .state('admin.collections.users', {
         url: '/users',
         views: {
           '@': {
-            templateUrl: 'components/collections/users/users-collection.html',
-            controller: 'CollectionsController',
-            controllerAs: 'collectionsCtrl'
+            templateUrl: 'components/collections/users/users-collection.html'
           }
         },
         data: {
@@ -74,9 +72,7 @@ angular.module('adminPanel')
         url: '/data-source-types',
         views: {
           '@': {
-            templateUrl: 'components/collections/data-sources-types/data-sources-types-collection.html',
-            controller: 'CollectionsController',
-            controllerAs: 'collectionsCtrl'
+            templateUrl: 'components/collections/data-sources-types/data-sources-types-collection.html'
           }
         },
         data: {
@@ -88,9 +84,7 @@ angular.module('adminPanel')
         url: '/data-sources',
         views: {
           '@': {
-            templateUrl: 'components/collections/data-sources/data-sources-collection.html',
-            controller: 'CollectionsController',
-            controllerAs: 'collectionsCtrl'
+            templateUrl: 'components/collections/data-sources/data-sources-collection.html'
           }
         },
         data: {
@@ -102,9 +96,7 @@ angular.module('adminPanel')
         url: '/import-data',
         views: {
           '@': {
-            templateUrl: 'components/collections/import-data/import-data-collection.html',
-            controller: 'CollectionsController',
-            controllerAs: 'collectionsCtrl'
+            templateUrl: 'components/collections/import-data/import-data-collection.html'
           }
         },
         data: {
@@ -116,9 +108,7 @@ angular.module('adminPanel')
         url: '/import-sessions',
         views: {
           '@': {
-            templateUrl: 'components/collections/import-sessions/import-sessions-collection.html',
-            controller: 'CollectionsController',
-            controllerAs: 'collectionsCtrl'
+            templateUrl: 'components/collections/import-sessions/import-sessions-collection.html'
           }
         },
         data: {
@@ -130,9 +120,7 @@ angular.module('adminPanel')
         url: '/analysis-sessions',
         views: {
           '@': {
-            templateUrl: 'components/collections/analysis-sessions/analysis-sessions-collection.html',
-            controller: 'CollectionsController',
-            controllerAs: 'collectionsCtrl'
+            templateUrl: 'components/collections/analysis-sessions/analysis-sessions-collection.html'
           }
         },
         data: {
@@ -144,9 +132,7 @@ angular.module('adminPanel')
         url: '/dimensions',
         views: {
           '@': {
-            templateUrl: 'components/collections/dimensions/dimensions-collection.html',
-            controller: 'CollectionsController',
-            controllerAs: 'collectionsCtrl'
+            templateUrl: 'components/collections/dimensions/dimensions-collection.html'
           }
         },
         data: {
@@ -158,9 +144,7 @@ angular.module('adminPanel')
         url: '/dimension-values',
         views: {
           '@': {
-            templateUrl: 'components/collections/dimension-values/dimension-values-collection.html',
-            controller: 'CollectionsController',
-            controllerAs: 'collectionsCtrl'
+            templateUrl: 'components/collections/dimension-values/dimension-values-collection.html'
           }
         },
         data: {
@@ -172,9 +156,7 @@ angular.module('adminPanel')
         url: '/coordinates',
         views: {
           '@': {
-            templateUrl: 'components/collections/coordinates/coordinates-collection.html',
-            controller: 'CollectionsController',
-            controllerAs: 'collectionsCtrl'
+            templateUrl: 'components/collections/coordinates/coordinates-collection.html'
           }
         },
         data: {
@@ -186,9 +168,7 @@ angular.module('adminPanel')
         url: '/indicators',
         views: {
           '@': {
-            templateUrl: 'components/collections/indicators/indicators-collection.html',
-            controller: 'CollectionsController',
-            controllerAs: 'collectionsCtrl'
+            templateUrl: 'components/collections/indicators/indicators-collection.html'
           }
         },
         data: {
@@ -196,18 +176,16 @@ angular.module('adminPanel')
           pageType: 'indicators'
         }
       })
-      .state('admin.collections.indicatorsValues', {
-        url: '/indicators-values',
+      .state('admin.collections.indicatorValues', {
+        url: '/indicator-values',
         views: {
           '@': {
-            templateUrl: 'components/collections/indicators-values/indicators-values-collection.html',
-            controller: 'CollectionsController',
-            controllerAs: 'collectionsCtrl'
+            templateUrl: 'components/collections/indicator-values/indicator-values-collection.html'
           }
         },
         data: {
-          pageTitle: 'Collection Indicators Values List',
-          pageType: 'indicatorsValues'
+          pageTitle: 'Collection Indicator Values List',
+          pageType: 'indicatorValues'
         }
       })
       // AUTENTICATION

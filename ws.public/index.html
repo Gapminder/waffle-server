@@ -15,11 +15,10 @@
   <link href="libs/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 
   <!-- Font awesome -->
-  <link href="libs/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+  <!--<link href="libs/font-awesome/css/font-awesome.min.css" rel="stylesheet">-->
 
   <!-- Main Inspinia CSS files -->
   <link href="assets/css/animate.css" rel="stylesheet">
-  <link href="libs/angular-ui-grid/ui-grid.min.css" rel="stylesheet">
   <link id="loadBefore" href="assets/css/style.css" rel="stylesheet">
 </head>
 
@@ -50,13 +49,14 @@
 
 <!-- jQuery and Bootstrap -->
 <script src="libs/jquery/dist/jquery.min.js"></script>
-<script src="libs/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="libs/lodash/lodash.min.js"></script>
+<!--<script src="libs/bootstrap/dist/js/bootstrap.min.js"></script>-->
 
 <!-- Main Angular scripts-->
 <script src="libs/angular/angular.js"></script>
 <script src="libs/angular-resource/angular-resource.min.js"></script>
 <script src="libs/angular-ui-router/release/angular-ui-router.min.js"></script>
-<script src="libs/angular-ui-grid/ui-grid.min.js"></script>
+<script src="https://cdn.rawgit.com/angular-ui/bower-ui-grid/master/ui-grid.js"></script>
 <script src="libs/angular-bootstrap/ui-bootstrap.min.js"></script>
 <script src="libs/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
 
@@ -66,8 +66,14 @@
 <script src="components/ws-app.routes.js"></script>
 <script src="components/ws-app.utils.js"></script>
 <!-- ANGULAR CUSTOM -->
-<script src="components/controllers/main.controller.js"></script>
-<script src="components/controllers/user.controller.js"></script>
-<script src="components/controllers/collections.controller.js"></script>
+<script src="components/collections/collections.service.js"></script>
+<script src="components/collections/collections-table.directive.js"></script>
+<script src="components/collections/collections-breadcrumb.directive.js"></script>
+
+<script src="components/landing/main.controller.js"></script>
+<script src="components/users/user.controller.js"></script>
+<script src="components/collections/collections-table.controller.js"></script>
+<script src="components/collections/collections-breadcrumb.controller.js"></script>
+
 </body>
 </html>

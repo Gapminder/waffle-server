@@ -1,17 +1,6 @@
 <div class="row wrapper border-bottom white-bg page-heading">
   <div class="col-lg-10">
-    <h2>{{collectionsCtrl.params.pageTitle}}</h2>
-    <ol class="breadcrumb">
-      <li>
-        <a href="index.html">Home</a>
-      </li>
-      <li ui-sref-active="active">
-        <a ui-sref="admin.collections.list">Collections List</a>
-      </li>
-      <li ui-sref-active="active">
-        <a ui-sref="admin.collections.{{collectionsCtrl.params.pageType}}">{{collectionsCtrl.params.pageTitle}}</a>
-      </li>
-    </ol>
+    <admin-collections-breadcrumb></admin-collections-breadcrumb>
   </div>
   <div class="col-lg-2">
 
@@ -21,18 +10,8 @@
   <div class="row">
     <div class="col-lg-12">
       <div class="ibox float-e-margins">
-        <div class="ibox-title">
-          <h5>ng Grid - Basic Example</h5>
-
-          <div ibox-tools></div>
-        </div>
         <div class="ibox-content">
-          <p>
-            Ng Grid is a Angular native directive control that provides solutions for representing and manipulating
-            tabular data on the web.
-          </p>
-
-          <div class="gridStyle" ng-grid="gridCollections"></div>
+          <admin-collections-table></admin-collections-table>
         </div>
       </div>
     </div>

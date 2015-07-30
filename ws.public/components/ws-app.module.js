@@ -1,12 +1,16 @@
 'use strict';
+
 angular.module('adminPanel.controllers', []);
+angular.module('adminPanel.services', []);
+angular.module('adminPanel.directives', []);
 
 angular.module('adminPanel', [
     'ngResource',
     'ui.router',
     'ui.bootstrap',
-    'ui.grid',
-    'adminPanel.controllers'
+    'adminPanel.controllers',
+    'adminPanel.services',
+    'adminPanel.directives'
   ]);
 // Other libraries are loaded dynamically in the config.js file using the library ocLazyLoad
 

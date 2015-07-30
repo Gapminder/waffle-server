@@ -7,9 +7,9 @@ var async = require('async');
 module.exports = function (router) {
   var models = mongoose.modelNames();
 
-  router.get('/collection/list', getCollectionList);
+  router.get('/admin/collections/list', getCollectionList);
 
-  router.get('/collection/:modelName', getSpecifiedCollection);
+  router.get('/admin/collections/:modelName', getSpecifiedCollection);
 
   function getCollectionList(req, res, next) {
     async.map(models, function (item, cb) {
@@ -25,19 +25,28 @@ module.exports = function (router) {
         return next(err);
       }
 
-      return res.json({data: result});
+      return res.json({success: true, data: result, totalItems: models.length});
     });
   }
 
   function getSpecifiedCollection(req, res, next) {
     var modelName = req.params.modelName.charAt(0).toUpperCase() + req.params.modelName.slice(1);
-    mongoose.model(modelName).find({}, function (err, data) {
+    var limit = req.query.limit || 1000;
+    var skip = req.query.skip || 0;
+
+    mongoose.model(modelName).find({}, {}, {skip: skip, limit: limit}, function (err, data) {
       if (err) {
         return next(err);
       }
 
-      console.log('Documents was found: ', data.length);
-      return res.json({data: data});
+      mongoose.model(modelName).count({}, function (_err, totalItems) {
+        if (_err) {
+          return next(_err);
+        }
+
+        console.log('Documents was found: ', data.length);
+        return res.json({success: true, data: data, totalItems: totalItems});
+      });
     });
   }
 };
