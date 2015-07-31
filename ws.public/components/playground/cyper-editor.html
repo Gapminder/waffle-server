@@ -18,173 +18,191 @@
   <div class="row">
     <div class="col-lg-12">
       <div class="ibox float-e-margins">
-        <div class="ibox-title">
-          <h5>CSS Animations
-            <small>http://daneden.github.io/animate.css/</small>
-          </h5>
-          <div ibox-tools></div>
-        </div>
         <div class="ibox-content text-center css-animation-box">
           <h1 class="text-navy">
-            Animation.css
+            Cyper editor
           </h1>
 
           <p>
-            A cross-browser library of CSS animations. Animation.css is a bunch of cool, fun, and cross-browser
-            animations for you to use in your projects. Great for emphasis, home pages,
-            sliders, and general just-add-water-awesomeness.
+            Cyper editor for queries. Be sure the neo4j db is running <a href="http://localhost:7474">http://localhost:7474</a>.
           </p>
 
           <div class="hr-line-dashed"></div>
 
           <div class="row">
-            <div class="col-sm-6 animation-efect-links text-center">
-              <h4 class="m-b-lg">
-                Use any animation button to turn on the animation on box example.
+            <div class="col-sm-6">
+              <h4 class="m-b-lg text-center">
+                Use any query templates, just click on the example button.
               </h4>
-              <h5 class="text-navy">Read Query Structure</h5>
-              <a href="" class="btn btn-white animation_select">
-                <pre class="programlisting brush: cypher cm-s-neo">
-                  <span
-                class="cm-node">[</span><span class="cm-keyword">MATCH</span> <span class="cm-keyword">WHERE</span><span
-                class="cm-node">]</span>
-<span class="cm-node">[</span>
-                  <span class="cm-keyword">OPTIONAL</span> <span class="cm-keyword">MATCH</span> <span
-                  class="cm-keyword">WHERE</span><span class="cm-node">]</span>
-<span class="cm-node">[</span><span class="cm-keyword">WITH</span> <span class="cm-node">[</span><span
-                  class="cm-keyword">ORDER</span> <span class="cm-keyword">BY</span><span class="cm-node">]</span> <span
-                  class="cm-node">[</span><span class="cm-keyword">SKIP</span><span class="cm-node">]</span> <span
-                  class="cm-node">[</span><span class="cm-keyword">LIMIT</span><span class="cm-node">]</span><span
-                  class="cm-node">]</span>
-<span class="cm-keyword">RETURN</span> <span class="cm-node">[</span><span class="cm-keyword">ORDER</span> <span
-                  class="cm-keyword">BY</span><span class="cm-node">]</span> <span class="cm-node">[</span><span
-                  class="cm-keyword">SKIP</span><span class="cm-node">]</span> <span class="cm-node">[</span><span
-                  class="cm-keyword">LIMIT</span><span class="cm-node">]</span></pre>
-              </a>
-              <a href="" class="btn btn-white animation_select" data-animation="flash">flash</a>
-              <a href="" class="btn btn-white animation_select" data-animation="pulse">pulse</a>
-              <a href="" class="btn btn-white animation_select" data-animation="rubberBand">rubberBand</a>
-              <a href="" class="btn btn-white animation_select" data-animation="shake">shake</a>
-              <a href="" class="btn btn-white animation_select" data-animation="swing">swing</a>
-              <a href="" class="btn btn-white animation_select" data-animation="tada">tada</a>
-              <a href="" class="btn btn-white animation_select" data-animation="wobble">wobble</a>
 
-              <h5 class="text-navy">MATCH</h5>
-              <a href="" class="btn btn-white animation_select" data-animation="bounce">bounce</a>
-              <a href="" class="btn btn-white animation_select" data-animation="flash">flash</a>
-              <a href="" class="btn btn-white animation_select" data-animation="pulse">pulse</a>
-              <a href="" class="btn btn-white animation_select" data-animation="rubberBand">rubberBand</a>
-              <a href="" class="btn btn-white animation_select" data-animation="shake">shake</a>
-              <a href="" class="btn btn-white animation_select" data-animation="swing">swing</a>
-              <a href="" class="btn btn-white animation_select" data-animation="tada">tada</a>
-              <a href="" class="btn btn-white animation_select" data-animation="wobble">wobble</a>
+              <div class="row text-center">
+                <div class="col-lg-12">
+                  <h5 class="text-navy">MATCH</h5>
+                  <a href="" class="btn btn-white cyper_select"
+                     title="Node patterns can contain labels and properties."
+                     ng-click="ctrl.choosePattern(ctrl.patterns['MATCH'][0])">
+                    <pre class="programlisting brush: cypher cm-s-neo"><span class="cm-keyword">MATCH</span>&nbsp;<span
+                      class="cm-node">(</span><span class="cm-atom">n:Person</span><span class="cm-node">)</span>-<span
+                      class="cm-node">[</span><span class="cm-variable">:KNOWS</span><span class="cm-node">]</span>-&gt;<span
+                      class="cm-node">(</span><span class="cm-atom">m:Person</span><span
+                      class="cm-node">)</span>&nbsp;<span
+                      class="cm-keyword">WHERE</span>&nbsp;<span class="cm-variable">n</span><span
+                      class="cm-node">.</span><span
+                      class="cm-variable">name</span>=<span class="cm-string">"Alice"</span></pre>
+                  </a>
+                  <a href="" class="btn btn-white cyper_select" title="Any pattern can be used in MATCH."
+                     ng-click="ctrl.choosePattern(ctrl.patterns['MATCH'][1])">
+                    <pre class="programlisting brush: cypher cm-s-neo"><span class="cm-keyword">MATCH</span>&nbsp;<span
+                      class="cm-node">(</span><span class="cm-variable">n</span><span
+                      class="cm-node">)</span>--&gt;<span class="cm-node">(</span><span
+                      class="cm-variable">m</span><span class="cm-node">)</span></pre>
+                  </a>
+                  <a href="" class="btn btn-white cyper_select" title="Patterns with node properties."
+                     ng-click="ctrl.choosePattern(ctrl.patterns['MATCH'][2])">
+                    <pre class="programlisting brush: cypher cm-s-neo"><span class="cm-keyword">MATCH</span>&nbsp;<span
+                      class="cm-node">(</span><span class="cm-variable">n</span>&nbsp;<span
+                      class="cm-node">{</span><span
+                      class="cm-atom">name:</span><span class="cm-string">'Alice'</span><span
+                      class="cm-node">}</span><span class="cm-node">)</span>--&gt;<span class="cm-node">(</span><span
+                      class="cm-variable">m</span><span class="cm-node">)</span></pre>
+                  </a>
+                  <a href="" class="btn btn-white cyper_select" title="Assign a path to p."
+                     ng-click="ctrl.choosePattern(ctrl.patterns['MATCH'][3])">
+                    <pre class="programlisting brush: cypher cm-s-neo"><span class="cm-keyword">MATCH</span>&nbsp;<span
+                      class="cm-variable">p</span> = <span class="cm-node">(</span><span
+                      class="cm-variable">n</span><span class="cm-node">)</span>--&gt;<span
+                      class="cm-node">(</span><span class="cm-variable">m</span><span class="cm-node">)</span></pre>
+                  </a>
+                  <a href="" class="btn btn-white cyper_select"
+                     title="Optional pattern, NULLs will be used for missing parts."
+                     ng-click="ctrl.choosePattern(ctrl.patterns['MATCH'][4])">
+                    <pre class="programlisting brush: cypher cm-s-neo"><span
+                      class="cm-keyword">OPTIONAL</span>&nbsp;<span
+                      class="cm-keyword">MATCH</span>&nbsp;<span class="cm-node">(</span><span
+                      class="cm-variable">n</span><span class="cm-node">)</span>-<span class="cm-node">[</span><span
+                      class="cm-variable">r</span><span class="cm-node">]</span>-&gt;<span class="cm-node">(</span><span
+                      class="cm-variable">m</span><span class="cm-node">)</span></pre>
+                  </a>
+                </div>
+              </div>
+              <div class="row text-center">
+                <div class="col-lg-12">
+                  <h5 class="text-navy">WHERE</h5>
+                  <a href="" class="btn btn-white cyper_select"
+                     title="Use a predicate to filter. Note that WHERE is always part of a MATCH, OPTIONAL MATCH, WITH or START clause. Putting it after a different clause in a query will alter what it does."
+                     ng-click="ctrl.choosePattern(ctrl.patterns['WHERE'][0])">
+                    <pre class="programlisting brush: cypher cm-s-neo"><span class="cm-keyword">WHERE</span>&nbsp;<span
+                      class="cm-variable">n</span><span class="cm-node">.</span><span
+                      class="cm-variable">property</span> &lt;&gt; <span class="cm-node">{</span><span
+                      class="cm-variable">value</span><span class="cm-node">}</span></pre>
+                  </a>
+                </div>
+              </div>
+              <div class="row text-center">
+                <br/>
+              </div>
+              <div class="row text-center">
+                <div class="col-lg-12">
+                  <textarea class="form-control" rows="10" ng-model="query" id="query"></textarea>
+                  <br/>
+                  <button class="btn btn-sm btn-white pull-left m-t-n-xs" ng-click="ctrl.cleanQuery()">
+                    <strong>Clean</strong></button>
+                  <button class="btn btn-sm btn-primary pull-right m-t-n-xs" type="submit" ng-click="ctrl.runQuery()"
+                          ng-disabled="ctrl.loadingQuery"><strong>{{ ctrl.loadingQuery ? 'Wait, pls...' : 'Run' }}</strong></button>
+                </div>
+              </div>
+              <div class="row text-center">
+                <br/>
+              </div>
+              <div class="row text-center">
+                <div class="col-lg-12">
+                  <h5 class="text-navy">Read Query Structure</h5>
 
-              <h5 class="text-navy">WHERE</h5>
-              <a href="" class="btn btn-white animation_select" data-animation="bounceIn">bounceIn</a>
-              <a href="" class="btn btn-white animation_select" data-animation="bounceInDown">bounceInDown</a>
-              <a href="" class="btn btn-white animation_select" data-animation="bounceInLeft">bounceInLeft</a>
-              <a href="" class="btn btn-white animation_select" data-animation="bounceInRight">bounceInRight</a>
-              <a href="" class="btn btn-white animation_select" data-animation="bounceInUp">bounceInUp</a>
+                  <div class="listingblock text-left">
+                    <pre class="programlisting brush: cypher cm-s-neo"><span
+                      class="cm-node">[</span><span class="cm-keyword">MATCH</span>&nbsp;<span
+                      class="cm-keyword">WHERE</span><span
+                      class="cm-node">]</span>&nbsp;<span class="cm-node">[</span><span
+                      class="cm-keyword">OPTIONAL</span>&nbsp;<span
+                      class="cm-keyword">MATCH</span>&nbsp;<span class="cm-keyword">WHERE</span><span
+                      class="cm-node">]</span>&nbsp;<span class="cm-node">[</span><span class="cm-keyword">WITH</span>&nbsp;<span
+                      class="cm-node">[</span><span class="cm-keyword">ORDER</span>&nbsp;<span
+                      class="cm-keyword">BY</span><span class="cm-node">]</span>&nbsp;<span
+                      class="cm-node">[</span><span
+                      class="cm-keyword">SKIP</span><span class="cm-node">]</span>&nbsp;<span
+                      class="cm-node">[</span><span
+                      class="cm-keyword">LIMIT</span><span class="cm-node">]</span><span
+                      class="cm-node">]</span><br/><span
+                      class="cm-keyword">RETURN</span>&nbsp;<span class="cm-node">[</span><span
+                      class="cm-keyword">ORDER</span>&nbsp;<span class="cm-keyword">BY</span><span
+                      class="cm-node">]</span>&nbsp;<span
+                      class="cm-node">[</span><span class="cm-keyword">SKIP</span><span
+                      class="cm-node">]</span>&nbsp;<span
+                      class="cm-node">[</span><span class="cm-keyword">LIMIT</span><span class="cm-node">]</span></pre>
+                  </div>
 
-              <h5 class="text-navy">UNION</h5>
-              <a href="" class="btn btn-white animation_select" data-animation="bounceOut">bounceOut</a>
-              <a href="" class="btn btn-white animation_select" data-animation="bounceOutDown">bounceOutDown</a>
-              <a href="" class="btn btn-white animation_select" data-animation="bounceOutLeft">bounceOutLeft</a>
-              <a href="" class="btn btn-white animation_select" data-animation="bounceOutRight">bounceOutRight</a>
-              <a href="" class="btn btn-white animation_select" data-animation="bounceOutUp">bounceOutUp</a>
+                  <h5 class="text-navy">Write-Only Query Structure</h5>
 
-              <h5 class="text-navy">Labels</h5>
-              <a href="" class="btn btn-white animation_select" data-animation="fadeIn">fadeIn</a>
-              <a href="" class="btn btn-white animation_select" data-animation="fadeInDown">fadeInDown</a>
-              <a href="" class="btn btn-white animation_select" data-animation="fadeInDownBig">fadeInDownBig</a>
-              <a href="" class="btn btn-white animation_select" data-animation="fadeInLeft">fadeInLeft</a>
-              <a href="" class="btn btn-white animation_select" data-animation="fadeInLeftBig">fadeInLeftBig</a>
-              <a href="" class="btn btn-white animation_select" data-animation="fadeInRight">fadeInRight</a>
-              <a href="" class="btn btn-white animation_select" data-animation="fadeInRightBig">fadeInRightBig</a>
-              <a href="" class="btn btn-white animation_select" data-animation="fadeInUp">fadeInUp</a>
-              <a href="" class="btn btn-white animation_select" data-animation="fadeInUpBig">fadeInUpBig</a>
+                  <div class="listingblock text-left">
+                    <pre class="programlisting brush: cypher cm-s-neo"><span class="cm-node">(</span><span
+                      class="cm-keyword">CREATE</span>&nbsp;<span class="cm-node">[</span><span
+                      class="cm-keyword">UNIQUE</span><span class="cm-node">]</span> | <span
+                      class="cm-keyword">MERGE</span><span class="cm-node">)</span>*
+<span class="cm-node">[</span><span class="cm-keyword">SET</span>|<span class="cm-keyword">DELETE</span>|<span
+                        class="cm-keyword">REMOVE</span>|<span class="cm-keyword">FOREACH</span><span
+                        class="cm-node">]</span>*
+<span class="cm-node">[</span><span class="cm-keyword">RETURN</span>&nbsp;<span class="cm-node">[</span><span
+                        class="cm-keyword">ORDER</span>&nbsp;<span class="cm-keyword">BY</span><span
+                        class="cm-node">]</span>&nbsp;<span
+                        class="cm-node">[</span><span class="cm-keyword">SKIP</span><span class="cm-node">]</span>&nbsp;<span
+                        class="cm-node">[</span><span class="cm-keyword">LIMIT</span><span class="cm-node">]</span><span
+                        class="cm-node">]</span></pre>
+                  </div>
 
-              <h5 class="text-navy">RETURN</h5>
-              <a href="" class="btn btn-white animation_select" data-animation="fadeOut">fadeOut</a>
-              <a href="" class="btn btn-white animation_select" data-animation="fadeOutDown">fadeOutDown</a>
-              <a href="" class="btn btn-white animation_select" data-animation="fadeOutDownBig">fadeOutDownBig</a>
-              <a href="" class="btn btn-white animation_select" data-animation="fadeOutLeft">fadeOutLeft</a>
-              <a href="" class="btn btn-white animation_select" data-animation="fadeOutLeftBig">fadeOutLeftBig</a>
-              <a href="" class="btn btn-white animation_select" data-animation="fadeOutRight">fadeOutRight</a>
-              <a href="" class="btn btn-white animation_select" data-animation="fadeOutRightBig">fadeOutRightBig</a>
-              <a href="" class="btn btn-white animation_select" data-animation="fadeOutUp">fadeOutUp</a>
-              <a href="" class="btn btn-white animation_select" data-animation="fadeOutUpBig">fadeOutUpBig</a>
+                  <h5 class="text-navy">Read-Write Query Structure</h5>
 
-              <h5 class="text-navy">WITH</h5>
-              <a href="" class="btn btn-white animation_select" data-animation="flip">flip</a>
-              <a href="" class="btn btn-white animation_select" data-animation="flipInX">flipInX</a>
-              <a href="" class="btn btn-white animation_select" data-animation="flipInY">flipInY</a>
-              <a href="" class="btn btn-white animation_select" data-animation="flipOutX">flipOutX</a>
-              <a href="" class="btn btn-white animation_select" data-animation="flipOutY">flipOutY</a>
-
-              <!--<h5 class="text-navy">Lightspeed</h5>-->
-              <a href="" class="btn btn-white animation_select" data-animation="lightSpeedIn">lightSpeedIn</a>
-              <a href="" class="btn btn-white animation_select" data-animation="lightSpeedOut">lightSpeedOut</a>
-              <!--<h5 class="text-navy">Rotating Entrances</h5>-->
-              <a href="" class="btn btn-white animation_select" data-animation="rotateIn">rotateIn</a>
-              <a href="" class="btn btn-white animation_select" data-animation="rotateInDownLeft">rotateInDownLeft</a>
-              <a href="" class="btn btn-white animation_select" data-animation="rotateInDownRight">rotateInDownRight</a>
-              <a href="" class="btn btn-white animation_select" data-animation="rotateInUpLeft">rotateInUpLeft</a>
-              <a href="" class="btn btn-white animation_select" data-animation="rotateInUpRight">rotateInUpRight</a>
-
-              <!--<h5 class="text-navy">Rotating Exits</h5>-->
-              <a href="" class="btn btn-white animation_select" data-animation="rotateOut">rotateOut</a>
-              <a href="" class="btn btn-white animation_select" data-animation="rotateOutDownLeft">rotateOutDownLeft</a>
-              <a href="" class="btn btn-white animation_select"
-                 data-animation="rotateOutDownRight">rotateOutDownRight</a>
-              <a href="" class="btn btn-white animation_select" data-animation="rotateOutUpLeft">rotateOutUpLeft</a>
-              <a href="" class="btn btn-white animation_select" data-animation="rotateOutUpRight">rotateOutUpRight</a>
-
-              <!--<h5 class="text-navy">Sliders</h5>-->
-              <a href="" class="btn btn-white animation_select" data-animation="slideInDown">slideInDown</a>
-              <a href="" class="btn btn-white animation_select" data-animation="slideInLeft">slideInLeft</a>
-              <a href="" class="btn btn-white animation_select" data-animation="slideInRight">slideInRight</a>
-              <a href="" class="btn btn-white animation_select" data-animation="slideOutLeft">slideOutLeft</a>
-              <a href="" class="btn btn-white animation_select" data-animation="slideOutRight">slideOutRight</a>
-              <a href="" class="btn btn-white animation_select" data-animation="slideOutUp">slideOutUp</a>
-              <!--<h5 class="text-navy">Specials</h5>-->
-              <a href="" class="btn btn-white animation_select" data-animation="hinge">hinge</a>
-              <a href="" class="btn btn-white animation_select" data-animation="rollIn">rollIn</a>
-              <a href="" class="btn btn-white animation_select" data-animation="rollOut">rollOut</a>
-
-              <textarea class="form-control" rows="10"></textarea>
+                  <div class="listingblock text-left">
+                    <pre class="programlisting brush: cypher cm-s-neo"><span class="cm-node">[</span><span
+                      class="cm-keyword">MATCH</span>&nbsp;<span class="cm-keyword">WHERE</span><span
+                      class="cm-node">]</span>
+<span class="cm-node">[</span><span class="cm-keyword">OPTIONAL</span>&nbsp;<span
+                        class="cm-keyword">MATCH</span>&nbsp;<span
+                        class="cm-keyword">WHERE</span><span class="cm-node">]</span>
+<span class="cm-node">[</span><span class="cm-keyword">WITH</span>&nbsp;<span class="cm-node">[</span><span
+                        class="cm-keyword">ORDER</span>&nbsp;<span class="cm-keyword">BY</span><span
+                        class="cm-node">]</span>&nbsp;<span
+                        class="cm-node">[</span><span class="cm-keyword">SKIP</span><span class="cm-node">]</span>&nbsp;<span
+                        class="cm-node">[</span><span class="cm-keyword">LIMIT</span><span class="cm-node">]</span><span
+                        class="cm-node">]</span>
+<span class="cm-node">(</span><span class="cm-keyword">CREATE</span>&nbsp;<span class="cm-node">[</span><span
+                        class="cm-keyword">UNIQUE</span><span class="cm-node">]</span> | <span
+                        class="cm-keyword">MERGE</span><span class="cm-node">)</span>*
+<span class="cm-node">[</span><span class="cm-keyword">SET</span>|<span class="cm-keyword">DELETE</span>|<span
+                        class="cm-keyword">REMOVE</span>|<span class="cm-keyword">FOREACH</span><span
+                        class="cm-node">]</span>*
+<span class="cm-node">[</span><span class="cm-keyword">RETURN</span>&nbsp;<span class="cm-node">[</span><span
+                        class="cm-keyword">ORDER</span>&nbsp;<span class="cm-keyword">BY</span><span
+                        class="cm-node">]</span>&nbsp;<span
+                        class="cm-node">[</span><span class="cm-keyword">SKIP</span><span class="cm-node">]</span>&nbsp;<span
+                        class="cm-node">[</span><span class="cm-keyword">LIMIT</span><span class="cm-node">]</span><span
+                        class="cm-node">]</span></pre>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="col-lg-6 animation-efect-links text-center">
+            <div class="col-lg-6 text-left">
+              <h4 class="m-b-lg text-center">
+                Query result
+              </h4>
 
+              <pre>{{ ctrl.data | json }}</pre>
             </div>
           </div>
-
         </div>
+
       </div>
     </div>
-
   </div>
-</div>
-<script>
-
-  // This is just for demo demo purpose - animation css local script
-  $(document).ready(function () {
-    $('.animation_select').click(function () {
-      $('#animation_box').removeAttr('class').attr('class', '');
-      var animation = $(this).attr("data-animation");
-      $('#animation_box').addClass('animated');
-      $('#animation_box').addClass(animation);
-      return false;
-    });
-  });
-
-</script>
-
-<!-- Footer -->
-<div ng-include="'views/common/footer.html'"></div>
 
 </div>
-<!-- End page wrapper-->
-
 </div>
-<!-- End wrapper-->
