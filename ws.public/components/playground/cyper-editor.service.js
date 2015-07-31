@@ -23,7 +23,7 @@ angular.module('admin.services')
 
     function runQuery(params, cb) {
       apiResource.runQuery(params, function (resp) {
-        return cb(resp.error, {data: resp.data}, resp);
+        return cb(resp.error, resp.data, resp);
       });
     }
   }]);

@@ -25,8 +25,6 @@ angular.module('admin.controllers').controller('CyperEditorController', ['CyperE
 
   function choosePattern (pattern) {
     var cursorPosition = $('#query').prop('selectionEnd');
-    console.log(cursorPosition);
-    console.log($scope.query);
     var text = $scope.query;
     $scope.query = [text.substr(0, cursorPosition), pattern, text.substr(cursorPosition)].join('');
   }
@@ -38,8 +36,8 @@ angular.module('admin.controllers').controller('CyperEditorController', ['CyperE
   function runQuery () {
     self.loadingQuery = true;
 
-    CyperEditorService.runQuery({query: $scope.query}, function(data) {
-      self.data = data;
+    CyperEditorService.runQuery({query: $scope.query}, function(error, data) {
+      self.data = error || data;
       self.loadingQuery = false;
     });
   }

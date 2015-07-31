@@ -26,16 +26,13 @@ app.use(methodOverride('X-HTTP-Method-Override'));
 // set the static files location /public/img will be /img for users
 app.use(express.static(path.join(__dirname, '/ws.public')));
 
-// routes ==================================================
-// configure our routes
-var homeRoutes = require('./ws.routes/home');
-var apiRoutes = require('./ws.routes/index')(serviceLocator);
-
-app.use('/api', apiRoutes);
-app.use('/', homeRoutes);
-
 // start server
 var config = app.get('config');
+
+// routes ==================================================
+// configure our routes
+require('./ws.routes/index')(app, serviceLocator);
+require('./ws.routes/home')(app);
 
 // start app ===============================================
 // startup our app at http://localhost:3000
