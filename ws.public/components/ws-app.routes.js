@@ -38,7 +38,7 @@ angular.module('admin')
       .state('admin.profile', {
         url: '/profile',
         templateUrl: '/components/users/profile.html',
-        controller: 'AuthController',
+        controller: 'UserController',
         controllerAs: 'authCtrl'
       })
       .state('admin.playground', {
@@ -46,6 +46,18 @@ angular.module('admin')
         templateUrl: '/components/playground/cyper-editor.html',
         controller: 'CyperEditorController',
         controllerAs: 'ctrl'
+      })
+      .state('admin.importData', {
+        url: '/import-data?importSession',
+        templateUrl: 'components/collections/import-data/import-data-spreadsheet.html',
+        controller: 'ImportDataSpreadsheetController',
+        controllerAs: 'ctrl',
+        data: {
+          pageTitle: 'Import Data Spreadsheet',
+          pageType: 'spreadsheet',
+          pageParentTitle: 'Collection Import Data List',
+          pageParentType: 'importData'
+        }
       })
       .state('admin.collections', {
         'abstract': true,
@@ -194,6 +206,7 @@ angular.module('admin')
           pageType: 'indicatorValues'
         }
       })
+
       // AUTENTICATION
       .state('login', {
         url: '/login',

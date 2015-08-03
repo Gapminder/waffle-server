@@ -5,6 +5,8 @@ angular.module('admin.controllers').controller('CollectionsBreadcrumbController'
     var self = this;
     self.pageTitle = $state.current.data.pageTitle;
     self.pageType = $state.current.data.pageType;
+    self.pageParentTitle = $state.current.data.pageParentTitle;
+    self.pageParentType = $state.current.data.pageParentType;
     self.tagline = 'Waffle Server';
   }
 ]);

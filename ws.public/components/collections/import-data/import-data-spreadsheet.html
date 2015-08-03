@@ -1,0 +1,44 @@
+<div class="row wrapper border-bottom white-bg page-heading">
+  <div class="col-lg-10">
+    <admin-collections-breadcrumb></admin-collections-breadcrumb>
+  </div>
+  <div class="col-lg-2">
+
+  </div>
+</div>
+<div class="wrapper wrapper-content animated fadeInRight">
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="ibox float-e-margins">
+        <div class="ibox-content">
+          <p ng-if="::(!ctrl.currentData.length)">No data.</p>
+        </div>
+      </div>
+      <tabset ng-if="::ctrl.currentData.length" ng-repeat="tab in ::ctrl.currentData">
+        <tab heading="{{::tab.name}}">
+          <div class="panel-body">
+            <p ng-if="::(!tab.data.length)">No data for collection.</p>
+
+            <div ng-if="::tab.data.length" class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                <tr>
+                  <th ng-repeat="(key, item) in ::tab.data[0]">{{::(key.substring(0,1).toUpperCase() +
+                    key.substring(1))}}
+                  </th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="item in ::tab.data">
+                  <td ng-repeat="cell in ::item">{{::cell}}</td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </tab>
+      </tabset>
+
+    </div>
+  </div>
+</div>
