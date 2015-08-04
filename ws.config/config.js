@@ -10,7 +10,17 @@ module.exports = function (app) {
     NODE_ENV: process.env.NODE_ENV,
     DEFAULT_NODE_ENV: 'development',
     // LOG_LEVEL: log, info, warn, error
-    LOG_LEVEL: process.env.LOG_LEVEL
+    LOG_LEVEL: process.env.LOG_LEVEL,
+
+    DEFAULT_OPTIONS_CONVERTING_JSON_TO_CSV: {
+      DELIMITER: {
+        FIELD: ';',
+        ARRAY: ',',
+        WRAP: '"'
+      },
+      EOL: '\n',
+      PARSE_CSV_NUMBERS: false
+    }
   }
 
   app.set('config', config);
