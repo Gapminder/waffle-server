@@ -1,0 +1,208 @@
+<div class="row wrapper border-bottom white-bg page-heading">
+  <div class="col-lg-10">
+    <h2>Cyper Editor</h2>
+    <ol class="breadcrumb">
+      <li>
+        <a href="index.html">Home</a>
+      </li>
+      <li class="active">
+        <strong>Cyper Editor</strong>
+      </li>
+    </ol>
+  </div>
+  <div class="col-lg-2">
+
+  </div>
+</div>
+<div class="wrapper wrapper-content animated fadeIn">
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="ibox float-e-margins">
+        <div class="ibox-content text-center css-animation-box">
+          <h1 class="text-navy">
+            Cyper editor
+          </h1>
+
+          <p>
+            Cyper editor for queries. Be sure the neo4j db is running <a href="http://localhost:7474">http://localhost:7474</a>.
+          </p>
+
+          <div class="hr-line-dashed"></div>
+
+          <div class="row">
+            <div class="col-sm-6">
+              <h4 class="m-b-lg text-center">
+                Use any query templates, just click on the example button.
+              </h4>
+
+              <div class="row text-center">
+                <div class="col-lg-12">
+                  <h5 class="text-navy">MATCH</h5>
+                  <a href="" class="btn btn-white cyper_select"
+                     title="Node patterns can contain labels and properties."
+                     ng-click="ctrl.choosePattern(ctrl.patterns['MATCH'][0])">
+                    <pre class="programlisting brush: cypher cm-s-neo"><span class="cm-keyword">MATCH</span>&nbsp;<span
+                      class="cm-node">(</span><span class="cm-atom">n:Person</span><span class="cm-node">)</span>-<span
+                      class="cm-node">[</span><span class="cm-variable">:KNOWS</span><span class="cm-node">]</span>-&gt;<span
+                      class="cm-node">(</span><span class="cm-atom">m:Person</span><span
+                      class="cm-node">)</span>&nbsp;<span
+                      class="cm-keyword">WHERE</span>&nbsp;<span class="cm-variable">n</span><span
+                      class="cm-node">.</span><span
+                      class="cm-variable">name</span>=<span class="cm-string">"Alice"</span></pre>
+                  </a>
+                  <a href="" class="btn btn-white cyper_select" title="Any pattern can be used in MATCH."
+                     ng-click="ctrl.choosePattern(ctrl.patterns['MATCH'][1])">
+                    <pre class="programlisting brush: cypher cm-s-neo"><span class="cm-keyword">MATCH</span>&nbsp;<span
+                      class="cm-node">(</span><span class="cm-variable">n</span><span
+                      class="cm-node">)</span>--&gt;<span class="cm-node">(</span><span
+                      class="cm-variable">m</span><span class="cm-node">)</span></pre>
+                  </a>
+                  <a href="" class="btn btn-white cyper_select" title="Patterns with node properties."
+                     ng-click="ctrl.choosePattern(ctrl.patterns['MATCH'][2])">
+                    <pre class="programlisting brush: cypher cm-s-neo"><span class="cm-keyword">MATCH</span>&nbsp;<span
+                      class="cm-node">(</span><span class="cm-variable">n</span>&nbsp;<span
+                      class="cm-node">{</span><span
+                      class="cm-atom">name:</span><span class="cm-string">'Alice'</span><span
+                      class="cm-node">}</span><span class="cm-node">)</span>--&gt;<span class="cm-node">(</span><span
+                      class="cm-variable">m</span><span class="cm-node">)</span></pre>
+                  </a>
+                  <a href="" class="btn btn-white cyper_select" title="Assign a path to p."
+                     ng-click="ctrl.choosePattern(ctrl.patterns['MATCH'][3])">
+                    <pre class="programlisting brush: cypher cm-s-neo"><span class="cm-keyword">MATCH</span>&nbsp;<span
+                      class="cm-variable">p</span> = <span class="cm-node">(</span><span
+                      class="cm-variable">n</span><span class="cm-node">)</span>--&gt;<span
+                      class="cm-node">(</span><span class="cm-variable">m</span><span class="cm-node">)</span></pre>
+                  </a>
+                  <a href="" class="btn btn-white cyper_select"
+                     title="Optional pattern, NULLs will be used for missing parts."
+                     ng-click="ctrl.choosePattern(ctrl.patterns['MATCH'][4])">
+                    <pre class="programlisting brush: cypher cm-s-neo"><span
+                      class="cm-keyword">OPTIONAL</span>&nbsp;<span
+                      class="cm-keyword">MATCH</span>&nbsp;<span class="cm-node">(</span><span
+                      class="cm-variable">n</span><span class="cm-node">)</span>-<span class="cm-node">[</span><span
+                      class="cm-variable">r</span><span class="cm-node">]</span>-&gt;<span class="cm-node">(</span><span
+                      class="cm-variable">m</span><span class="cm-node">)</span></pre>
+                  </a>
+                </div>
+              </div>
+              <div class="row text-center">
+                <div class="col-lg-12">
+                  <h5 class="text-navy">WHERE</h5>
+                  <a href="" class="btn btn-white cyper_select"
+                     title="Use a predicate to filter. Note that WHERE is always part of a MATCH, OPTIONAL MATCH, WITH or START clause. Putting it after a different clause in a query will alter what it does."
+                     ng-click="ctrl.choosePattern(ctrl.patterns['WHERE'][0])">
+                    <pre class="programlisting brush: cypher cm-s-neo"><span class="cm-keyword">WHERE</span>&nbsp;<span
+                      class="cm-variable">n</span><span class="cm-node">.</span><span
+                      class="cm-variable">property</span> &lt;&gt; <span class="cm-node">{</span><span
+                      class="cm-variable">value</span><span class="cm-node">}</span></pre>
+                  </a>
+                </div>
+              </div>
+              <div class="row text-center">
+                <br/>
+              </div>
+              <div class="row text-center">
+                <div class="col-lg-12">
+                  <textarea class="form-control" rows="10" ng-model="query" id="query"></textarea>
+                  <br/>
+                  <button class="btn btn-sm btn-white pull-left m-t-n-xs" ng-click="ctrl.cleanQuery()">
+                    <strong>Clean</strong></button>
+                  <button class="btn btn-sm btn-primary pull-right m-t-n-xs" type="submit" ng-click="ctrl.runQuery()"
+                          ng-disabled="ctrl.loadingQuery"><strong>{{ ctrl.loadingQuery ? 'Wait, pls...' : 'Run' }}</strong></button>
+                </div>
+              </div>
+              <div class="row text-center">
+                <br/>
+              </div>
+              <div class="row text-center">
+                <div class="col-lg-12">
+                  <h5 class="text-navy">Read Query Structure</h5>
+
+                  <div class="listingblock text-left">
+                    <pre class="programlisting brush: cypher cm-s-neo"><span
+                      class="cm-node">[</span><span class="cm-keyword">MATCH</span>&nbsp;<span
+                      class="cm-keyword">WHERE</span><span
+                      class="cm-node">]</span>&nbsp;<span class="cm-node">[</span><span
+                      class="cm-keyword">OPTIONAL</span>&nbsp;<span
+                      class="cm-keyword">MATCH</span>&nbsp;<span class="cm-keyword">WHERE</span><span
+                      class="cm-node">]</span>&nbsp;<span class="cm-node">[</span><span class="cm-keyword">WITH</span>&nbsp;<span
+                      class="cm-node">[</span><span class="cm-keyword">ORDER</span>&nbsp;<span
+                      class="cm-keyword">BY</span><span class="cm-node">]</span>&nbsp;<span
+                      class="cm-node">[</span><span
+                      class="cm-keyword">SKIP</span><span class="cm-node">]</span>&nbsp;<span
+                      class="cm-node">[</span><span
+                      class="cm-keyword">LIMIT</span><span class="cm-node">]</span><span
+                      class="cm-node">]</span><br/><span
+                      class="cm-keyword">RETURN</span>&nbsp;<span class="cm-node">[</span><span
+                      class="cm-keyword">ORDER</span>&nbsp;<span class="cm-keyword">BY</span><span
+                      class="cm-node">]</span>&nbsp;<span
+                      class="cm-node">[</span><span class="cm-keyword">SKIP</span><span
+                      class="cm-node">]</span>&nbsp;<span
+                      class="cm-node">[</span><span class="cm-keyword">LIMIT</span><span class="cm-node">]</span></pre>
+                  </div>
+
+                  <h5 class="text-navy">Write-Only Query Structure</h5>
+
+                  <div class="listingblock text-left">
+                    <pre class="programlisting brush: cypher cm-s-neo"><span class="cm-node">(</span><span
+                      class="cm-keyword">CREATE</span>&nbsp;<span class="cm-node">[</span><span
+                      class="cm-keyword">UNIQUE</span><span class="cm-node">]</span> | <span
+                      class="cm-keyword">MERGE</span><span class="cm-node">)</span>*
+<span class="cm-node">[</span><span class="cm-keyword">SET</span>|<span class="cm-keyword">DELETE</span>|<span
+                        class="cm-keyword">REMOVE</span>|<span class="cm-keyword">FOREACH</span><span
+                        class="cm-node">]</span>*
+<span class="cm-node">[</span><span class="cm-keyword">RETURN</span>&nbsp;<span class="cm-node">[</span><span
+                        class="cm-keyword">ORDER</span>&nbsp;<span class="cm-keyword">BY</span><span
+                        class="cm-node">]</span>&nbsp;<span
+                        class="cm-node">[</span><span class="cm-keyword">SKIP</span><span class="cm-node">]</span>&nbsp;<span
+                        class="cm-node">[</span><span class="cm-keyword">LIMIT</span><span class="cm-node">]</span><span
+                        class="cm-node">]</span></pre>
+                  </div>
+
+                  <h5 class="text-navy">Read-Write Query Structure</h5>
+
+                  <div class="listingblock text-left">
+                    <pre class="programlisting brush: cypher cm-s-neo"><span class="cm-node">[</span><span
+                      class="cm-keyword">MATCH</span>&nbsp;<span class="cm-keyword">WHERE</span><span
+                      class="cm-node">]</span>
+<span class="cm-node">[</span><span class="cm-keyword">OPTIONAL</span>&nbsp;<span
+                        class="cm-keyword">MATCH</span>&nbsp;<span
+                        class="cm-keyword">WHERE</span><span class="cm-node">]</span>
+<span class="cm-node">[</span><span class="cm-keyword">WITH</span>&nbsp;<span class="cm-node">[</span><span
+                        class="cm-keyword">ORDER</span>&nbsp;<span class="cm-keyword">BY</span><span
+                        class="cm-node">]</span>&nbsp;<span
+                        class="cm-node">[</span><span class="cm-keyword">SKIP</span><span class="cm-node">]</span>&nbsp;<span
+                        class="cm-node">[</span><span class="cm-keyword">LIMIT</span><span class="cm-node">]</span><span
+                        class="cm-node">]</span>
+<span class="cm-node">(</span><span class="cm-keyword">CREATE</span>&nbsp;<span class="cm-node">[</span><span
+                        class="cm-keyword">UNIQUE</span><span class="cm-node">]</span> | <span
+                        class="cm-keyword">MERGE</span><span class="cm-node">)</span>*
+<span class="cm-node">[</span><span class="cm-keyword">SET</span>|<span class="cm-keyword">DELETE</span>|<span
+                        class="cm-keyword">REMOVE</span>|<span class="cm-keyword">FOREACH</span><span
+                        class="cm-node">]</span>*
+<span class="cm-node">[</span><span class="cm-keyword">RETURN</span>&nbsp;<span class="cm-node">[</span><span
+                        class="cm-keyword">ORDER</span>&nbsp;<span class="cm-keyword">BY</span><span
+                        class="cm-node">]</span>&nbsp;<span
+                        class="cm-node">[</span><span class="cm-keyword">SKIP</span><span class="cm-node">]</span>&nbsp;<span
+                        class="cm-node">[</span><span class="cm-keyword">LIMIT</span><span class="cm-node">]</span><span
+                        class="cm-node">]</span></pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-6 text-left">
+              <h4 class="m-b-lg text-center">
+                Query result
+              </h4>
+
+              <pre>{{ ctrl.data | json }}</pre>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>

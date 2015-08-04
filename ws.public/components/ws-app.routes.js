@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('adminPanel')
+angular.module('admin')
   .config(function ($stateProvider) {
     $stateProvider
       .state('admin', {
@@ -40,6 +40,12 @@ angular.module('adminPanel')
         templateUrl: '/components/users/profile.html',
         controller: 'AuthController',
         controllerAs: 'authCtrl'
+      })
+      .state('admin.playground', {
+        url: '/playground',
+        templateUrl: '/components/playground/cyper-editor.html',
+        controller: 'CyperEditorController',
+        controllerAs: 'ctrl'
       })
       .state('admin.collections', {
         'abstract': true,

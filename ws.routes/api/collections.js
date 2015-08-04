@@ -4,12 +4,12 @@ var mongoose = require('mongoose');
 var _ = require('lodash');
 var async = require('async');
 
-module.exports = function (router) {
+module.exports = function (app, serviceLocator) {
   var models = mongoose.modelNames();
 
-  router.get('/admin/collections/list', getCollectionList);
+  app.get('/api/admin/collections/list', getCollectionList);
 
-  router.get('/admin/collections/:modelName', getSpecifiedCollection);
+  app.get('/api/admin/collections/:modelName', getSpecifiedCollection);
 
   function getCollectionList(req, res, next) {
     async.map(models, function (item, cb) {
