@@ -55,8 +55,8 @@ angular.module('admin')
         data: {
           pageTitle: 'Import Data Spreadsheet',
           pageType: 'spreadsheet',
-          pageParentTitle: 'Collection Import Data List',
-          pageParentType: 'importData'
+          pageParentTitle: 'Collection Import Sessions List',
+          pageParentType: 'importSessions'
         }
       })
       .state('admin.collections', {

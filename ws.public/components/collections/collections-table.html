@@ -9,7 +9,10 @@
     </thead>
     <tbody>
     <tr ng-repeat="item in ctrl.currentData">
-      <td ng-repeat="cell in item">{{cell}}</td>
+      <td ng-repeat="(key, cell) in item">
+        <a ng-if="ctrl.pageType=='importSessions' && key=='_id'" ui-sref="admin.importData({importSession: cell})">{{cell}}</a>
+        <div ng-if="ctrl.pageType!='importSessions' || key!='_id'">{{cell}}</div>
+      </td>
     </tr>
     </tbody>
   </table>
