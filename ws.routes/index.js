@@ -1,9 +1,9 @@
 'use strict';
 
-module.exports = function (app, serviceLocator) {
-  require('./api/collections')(app, serviceLocator);
-  require('./api/cyper')(app, serviceLocator);
+module.exports = function (serviceLocator) {
+  require('./api/collections')(serviceLocator);
+  require('./api/cyper')(serviceLocator);
   require('./api/spreadsheet')(app, serviceLocator);
-  require('./api/import')(app, serviceLocator);
-  require('./auth')(app, serviceLocator);
+  require('./api/import')(serviceLocator);
+  require('./auth')(serviceLocator);
 };

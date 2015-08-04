@@ -4,7 +4,8 @@ var mongoose = require('mongoose');
 var _ = require('lodash');
 var async = require('async');
 
-module.exports = function (app, serviceLocator) {
+module.exports = function (serviceLocator) {
+  var app = serviceLocator.getApplication();
   var models = mongoose.modelNames();
 
   app.get('/api/admin/collections/list', getCollectionList);

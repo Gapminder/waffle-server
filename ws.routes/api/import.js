@@ -3,7 +3,8 @@
 var converter = require('json-2-csv');
 var _ = require('lodash');
 
-module.exports = function (app, serviceLocator) {
+module.exports = function (serviceLocator) {
+  var app = serviceLocator.getApplication();
   var config = app.get('config');
   var optionsDefault = config.DEFAULT_OPTIONS_CONVERTING_JSON_TO_CSV;
 
@@ -11,7 +12,7 @@ module.exports = function (app, serviceLocator) {
 
   function convertJson2Csv(req, res) {
     var json = req.body.data;
-    var options = _.assign(optionsDefault, req.body.options);
+    var options = _.defaultsDeep(req.body.options, optionsDefault);
 
     if (!_.isArray(json)) {
       return res.json({error: 'Data is not an array'});

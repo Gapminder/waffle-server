@@ -31,8 +31,8 @@ var config = app.get('config');
 
 // routes ==================================================
 // configure our routes
-require('./ws.routes/index')(app, serviceLocator);
-require('./ws.routes/home')(app);
+require('./ws.routes/index')(serviceLocator);
+require('./ws.routes/home')(serviceLocator);
 
 // start app ===============================================
 // startup our app at http://localhost:3000

@@ -11,10 +11,16 @@ module.exports = function (app) {
 };
 
 function ServiceLocatorContainer(app) {
-  this.repositories = new ServiceLocator('repository', app);
-  this.plugins = new ServiceLocator('plugins', app);
-  this.models = new ServiceLocator('models', app);
+  var self = this;
+  self._application = app;
+  self.repositories = new ServiceLocator('repository', self);
+  self.plugins = new ServiceLocator('plugins', self);
+  self.models = new ServiceLocator('models', self);
 }
+
+ServiceLocatorContainer.prototype.getApplication = function () {
+  return this._application;
+};
 
 /**
  * ServiceLocatorFactory
@@ -22,11 +28,11 @@ function ServiceLocatorContainer(app) {
  * @param {app} app - express app instance
  * @constructor
  */
-function ServiceLocator(namePrefix, app) {
+function ServiceLocator(namePrefix, container) {
   /*eslint no-underscore-dangle: 0*/
   var _delimeter = '.';
   /** @private */
-  var _app = app;
+  var _app = container.getApplication();
   /** @private */
   var _namePrefix = namePrefix + _delimeter;
 
