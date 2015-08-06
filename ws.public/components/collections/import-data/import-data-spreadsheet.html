@@ -30,7 +30,7 @@
         </div>
       </div>
       <tabset ng-if="ctrl.currentData">
-        <tab ng-repeat="(index, tab) in ::ctrl.currentData" heading="{{::tab.title}}">
+        <tab ng-repeat="(index, tab) in ::ctrl.currentData track by $index" heading="{{::tab.title}}">
           <div class="panel-body">
             <p ng-if="::(tab.data.length<=0)">No data for tab.</p>
 
@@ -38,11 +38,11 @@
               <table class="table table-striped">
                 <thead>
                   <tr>
-                    <th ng-repeat="key in ::tab.data[0]">{{::key}}</th>
+                    <th ng-repeat="key in ::tab.data[0] track by $index">{{::key}}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr ng-if="(!$first)" ng-repeat="row in ::tab.data">
+                  <tr ng-if="::(!$first)" ng-repeat="row in ::tab.data track by $index">
                     <td ng-repeat="(key, cell) in ::tab.data[0] track by $index">
                       <div ng-class="::{'text-center': !row[key]}">{{::row[key] || '-'}}</div>
                     </td>
