@@ -24,7 +24,8 @@
     "angular-resource": "~1.4.1",
     "components-font-awesome": "~4.3.0",
     "angular": "~1.4.3",
-    "font-awesome": "~4.4.0"
+    "font-awesome": "~4.4.0",
+    "ng-stats": "~2.3.1"
   },
   "resolutions": {
     "angular": "~1.4.3",
