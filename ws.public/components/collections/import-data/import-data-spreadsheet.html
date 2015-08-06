@@ -1,0 +1,58 @@
+<div class="row wrapper border-bottom white-bg page-heading">
+  <div class="col-lg-10">
+    <admin-collections-breadcrumb></admin-collections-breadcrumb>
+  </div>
+  <div class="col-lg-2">
+
+  </div>
+</div>
+<div class="wrapper wrapper-content animated fadeInRight">
+  <div class="row">
+    <div class="col-lg-12">
+      <div ng-if="ctrl.loadingData" class="ibox">
+        <div class="ibox-content">
+          <div class="sk-spinner sk-spinner-cube-grid">
+            <div class="sk-cube"></div>
+            <div class="sk-cube"></div>
+            <div class="sk-cube"></div>
+            <div class="sk-cube"></div>
+            <div class="sk-cube"></div>
+            <div class="sk-cube"></div>
+            <div class="sk-cube"></div>
+            <div class="sk-cube"></div>
+            <div class="sk-cube"></div>
+          </div>
+        </div>
+      </div>
+      <div ng-if="!ctrl.currentData && !ctrl.loadingData" class="ibox float-e-margins">
+        <div class="ibox-content">
+          <p>No matched data.</p>
+        </div>
+      </div>
+      <tabset ng-if="ctrl.currentData">
+        <tab ng-repeat="(index, tab) in ::ctrl.currentData" heading="{{::tab.title}}">
+          <div class="panel-body">
+            <p ng-if="::(tab.data.length<=0)">No data for tab.</p>
+
+            <div ng-if="::(tab.data.length>0)" class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th ng-repeat="key in ::tab.data[0]">{{::key}}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr ng-if="(!$first)" ng-repeat="row in ::tab.data">
+                    <td ng-repeat="(key, cell) in ::tab.data[0] track by $index">
+                      <div ng-class="::{'text-center': !row[key]}">{{::row[key] || '-'}}</div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </tab>
+      </tabset>
+    </div>
+  </div>
+</div>
