@@ -19,7 +19,8 @@ module.exports = function (serviceLocator) {
           return cb(err);
         }
 
-        return cb(null, {name: item, fields: _.keys(mongoose.model(item).schema.paths), count: count});
+        var fields = _.keys(_.omit(mongoose.model(item).schema.paths, ['__v', '_id']));
+        return cb(null, {name: item, fields: fields, count: count});
       });
     }, function (err, result) {
       if (err) {
@@ -35,19 +36,21 @@ module.exports = function (serviceLocator) {
     var limit = req.query.limit || 1000;
     var skip = req.query.skip || 0;
 
-    mongoose.model(modelName).find({}, {}, {skip: skip, limit: limit}, function (err, data) {
-      if (err) {
-        return next(err);
-      }
-
-      mongoose.model(modelName).count({}, function (_err, totalItems) {
-        if (_err) {
-          return next(_err);
+    mongoose.model(modelName).find({},
+      {analysisSessions: false, importSessions: false, __v: false},
+      {skip: skip, limit: limit}, function (err, data) {
+        if (err) {
+          return next(err);
         }
 
-        console.log('Documents was found: ', data.length);
-        return res.json({success: true, data: data, totalItems: totalItems});
+        mongoose.model(modelName).count({}, function (_err, totalItems) {
+          if (_err) {
+            return next(_err);
+          }
+
+          console.log('Documents was found: ', data.length);
+          return res.json({success: true, data: data, totalItems: totalItems});
+        });
       });
-    });
   }
 };

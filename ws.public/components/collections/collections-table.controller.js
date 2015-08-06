@@ -18,20 +18,13 @@ angular.module('admin.controllers').controller('CollectionsTableController', [
       self.data = [];
     });
 
-    $scope.currentPage = 1;
-    $scope.pageChanged = pageChanged;
+    $scope.paging = {currentPage: 1};
+    $scope.pageChanged = getData;
 
     getData();
 
-    /////////////
-
-    function pageChanged() {
-      var start = self.limit * ($scope.currentPage - 1);
-      var end = start + self.limit;
-      self.currentData = self.data.slice(start, end);
-    }
-
     function getData() {
+      page = $scope.paging.currentPage - 1;
       var params = {
         skip: skip + page * self.limit,
         limit: self.limit,
@@ -47,18 +40,8 @@ angular.module('admin.controllers').controller('CollectionsTableController', [
         console.error(err);
         return;
       }
-
-      self.data = self.data.concat(data.data);
-      $scope.totalItems = self.data.length;
-
-      if (!self.currentData.length) {
-        self.currentData = data.data;
-      }
-
-      if (data.data.length === self.limit) {
-        page++;
-        getData();
-      }
+      self.currentData = data.data;
+      $scope.totalItems = data.totalItems;
     }
   }
 ]);
