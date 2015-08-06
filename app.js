@@ -29,7 +29,7 @@ require('./ws.plugins')(serviceLocator, function () {
   //  }
   //  return isFound;
   //});
-  optionsList = optionsList.slice(0,3);
+  optionsList = optionsList.slice(0,8);
 
   console.time('All imported!');
   var l = optionsList.length;

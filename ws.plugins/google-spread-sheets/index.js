@@ -54,7 +54,7 @@ function GoogleSpreadSheetPlugin(serviceLocator) {
                   if (!d.v) {
                     return cb();
                   }
-                  
+
                   if (d.v.length > 500) {
                     d.v = d.v.substr(0, 500) + '...';
                   }
@@ -93,7 +93,7 @@ function GoogleSpreadSheetPlugin(serviceLocator) {
   };
 
   this.importer = new Importer();
-  this.analysis = require('./analysis')(serviceLocator).analyse;
+  this.analysis = require('./analysis.colors-spreadsheets')(serviceLocator).analyse;
 }
 
 module.exports = function (serviceLocator) {

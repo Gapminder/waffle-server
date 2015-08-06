@@ -5,13 +5,14 @@ var Neo4j = require('node-neo4j');
 var express = require('express');
 var mongoose = require('mongoose');
 
-require('../ws.config');
-var config = require('./config');
-
 var app = express();
+require('../ws.config')(app);
+var config = app.get('config');
 var serviceLocator = require('../ws.service-locator')(app);
+
 require('../ws.repository')(serviceLocator);
-var neo4jdb = new Neo4j(config.NEO4J_DB_URL);
+
+var neo4jdb = new Neo4j(config.NEO4J_URL);
 
 var collections = Object.keys(mongoose.models);
 //var collections = ['ImportSessions'];
