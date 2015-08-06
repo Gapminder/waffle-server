@@ -1,4 +1,48 @@
-module.exports = [ { uid: 'phAwcNAVuyj0TAlJeCEzcGQ',
+module.exports = [
+  // Color Groups
+  { uid: '1OxmGUNWeADbPJkQxVPupSOK5MbAECdqThnvyPrwG5Os',
+    tableName: 'Groups',
+    indicator:
+    { name: 'regions',
+      title: 'Regions' } },
+  { uid: '1OxmGUNWeADbPJkQxVPupSOK5MbAECdqThnvyPrwG5Os',
+    tableName: 'Groups',
+    indicator:
+    { name: 'country_ids',
+      title: 'Country IDs' } },
+  { uid: '1-bral8tYUsyVuDrOg8S6vulUCmUABeEXzcOSmbXTNhw',
+    tableName: 'Groups',
+    indicator:
+    { name: 'income',
+      title: 'Income' } },
+  { uid: '1-bral8tYUsyVuDrOg8S6vulUCmUABeEXzcOSmbXTNhw',
+    tableName: 'Groups',
+    indicator:
+    { name: 'country_ids',
+      title: 'Country IDs' } },
+  { uid: '1t1lGXVuJbUA567LfRzrtc52FKsEqdMvsEylA6pgNe-E',
+    tableName: 'Groups',
+    indicator:
+    { name: 'landlocked',
+      title: 'Landlocked' } },
+  { uid: '1I9Bt2jnafZKGyWDry4RAnZ_DopLYw9t_SjIiAZwZaGY',
+    tableName: 'Groups',
+    indicator:
+    { name: 'continents',
+      title: 'Continents' } },
+  { uid: '1I9Bt2jnafZKGyWDry4RAnZ_DopLYw9t_SjIiAZwZaGY',
+    tableName: 'Groups',
+    indicator:
+    { name: 'country_ids',
+      title: 'Country IDs' } },
+  { uid: '1CDqPn-tRyR3-78KwihhE6toRPtGm8pyvbKBAGw9caec',
+    tableName: 'Groups',
+    indicator:
+    { name: 'religions',
+      title: 'Religions' } },
+
+  //Indicators
+  { uid: 'phAwcNAVuyj0TAlJeCEzcGQ',
     indicator:
      { name: 'Children_per_woman_total_fertility',
        title: 'Children per woman (total fertility)' } },
