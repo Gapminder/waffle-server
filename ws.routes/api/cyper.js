@@ -3,7 +3,8 @@
 var flatten = require('flat');
 var _ = require('lodash');
 
-module.exports = function (app, serviceLocator) {
+module.exports = function (serviceLocator) {
+  var app = serviceLocator.getApplication();
   var db = app.get('neo4jDb');
 
   app.post('/api/admin/cyper', runCyperQuery);

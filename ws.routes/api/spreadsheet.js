@@ -4,8 +4,8 @@ var mongoose = require('mongoose');
 var async = require('async');
 var _ = require('lodash');
 
-module.exports = function (app, serviceLocator) {
-  var db = app.get('neo4jDb');
+module.exports = function (serviceLocator) {
+  var app = serviceLocator.getApplication();
 
   app.get('/api/admin/import-data', getImportData);
 

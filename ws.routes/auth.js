@@ -5,7 +5,8 @@ var mongoose = require('mongoose');
 
 var User = mongoose.model('Users');
 
-module.exports = function (app) {
+module.exports = function (serviceLocator) {
+  var app = serviceLocator.getApplication();
   var logger = app.get('log');
 
   app.get('/auth/logged-user', function (req, res) {

@@ -1,7 +1,9 @@
 'use strict';
 var path = require('path');
 
-module.exports = function (app) {
+module.exports = function (serviceLocator) {
+  var app = serviceLocator.getApplication();
+
   // frontend routes =========================================================
   // route to handle all angular requests
   app.get('*', function(req, res) {
