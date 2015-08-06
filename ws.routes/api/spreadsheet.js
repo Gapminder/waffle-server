@@ -61,9 +61,7 @@ module.exports = function (app, serviceLocator) {
           }
 
           _.each(data, function (doc) {
-            var ds = _.indexBy(doc.ds, function (item) {
-              return item.d;
-            });
+            var ds = _.indexBy(doc.ds, 'd');
 
             result[ds['gs-worksheet'].v].data[ds['gs-row'].v - 1][ds['gs-column'].v - 1] = doc.v;
           });
