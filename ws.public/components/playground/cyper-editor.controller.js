@@ -25,27 +25,28 @@ angular.module('admin.controllers').controller('CyperEditorController', ['CyperE
   };
 
   $scope.query = "// get all data for 4 indicators\n" +
-  "MATCH (i1:Indicators)-[]->(:Dimensions{name: 'year'})-[]->(dv1:DimensionValues)-[]->(iv1:IndicatorValues),\n" +
-  "(:Dimensions)-[]->(dv2:DimensionValues)-[]->(iv1:IndicatorValues)\n" +
-  "where i1.name in ['GNIpercapita_atlasmethod_current_US', 'Children_per_woman_total_fertility',\n" +
-  "'CO2_emissions_tonnes_per_person', 'Life_expectancy_years']\n" +
-  "RETURN collect(i1.title) as indicator,dv1.value as year, dv2.value as country, collect(iv1.value) as value\n" +
-  "order by year\n";
+    "MATCH (i1:Indicators)-[]->(:Dimensions{name: 'year'})-[]->(dv1:DimensionValues)-[]->(iv1:IndicatorValues),\n" +
+    "(:Dimensions)-[]->(dv2:DimensionValues)-[]->(iv1:IndicatorValues)\n" +
+    "where i1.name in ['GNIpercapita_atlasmethod_current_US', 'Children_per_woman_total_fertility',\n" +
+    "'CO2_emissions_tonnes_per_person', 'Life_expectancy_years']\n" +
+    "and dv1.value > '2000' and dv1.value < '2010'\n" +
+    "RETURN collect(i1.title) as indicator,dv1.value as year, dv2.value as country, collect(iv1.value) as value\n" +
+    "order by year\n";
 
-  function choosePattern (pattern) {
+  function choosePattern(pattern) {
     var cursorPosition = $('#query').prop('selectionEnd');
     var text = $scope.query;
     $scope.query = [text.substr(0, cursorPosition), pattern, text.substr(cursorPosition)].join('');
   }
 
-  function cleanQuery () {
+  function cleanQuery() {
     $scope.query = '';
   }
 
-  function runQuery () {
+  function runQuery() {
     self.loadingQuery = true;
     var start = Date.now();
-    CyperEditorService.runQuery({query: $scope.query}, function(error, data) {
+    CyperEditorService.runQuery({query: $scope.query}, function (error, data) {
       var end = Date.now();
       self.data = error || data;
       self.loadingQuery = false;
