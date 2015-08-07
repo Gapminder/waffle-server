@@ -12,7 +12,7 @@
       </tr>
       </thead>
       <tbody>
-      <tr ng-repeat="item in ctrl.currentData track by item._id">
+      <tr ng-repeat="item in ctrl.currentData">
         <td ng-repeat="(key, cell) in item"
             ng-if="::ctrl.pageType=='importSessions' && key=='_id' || ['_id', 'importSessions', 'user', 'analysisSessions'].indexOf(key) === -1">
           <a ng-if="::ctrl.pageType=='importSessions' && key=='_id'" ui-sref="admin.importData({importSession: cell})">{{::cell}}</a>
