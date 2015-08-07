@@ -1,9 +1,10 @@
 //eslint-disable
 var mongoose = require('mongoose');
-var neo4j = require('neo4j');
+var Neo4j = require('node-neo4j');
 
 module.exports = function (app) {
-  require('./config')(app); // should be the first
+  // should be the first
+  require('./config')(app);
   require('./log')(app);
 
   var config = app.get('config');
@@ -12,7 +13,7 @@ module.exports = function (app) {
   mongoose.set('debug', false);
   mongoose.connect(mongoUri);
 
-  var neo4jDb = new neo4j.GraphDatabase(config.NEO4J_URL);
+  var neo4jDb = new Neo4j(config.NEO4J_URL);
 
   app.set('neo4jDb', neo4jDb);
 
