@@ -93,7 +93,8 @@ function GoogleSpreadSheetPlugin(serviceLocator) {
   };
 
   this.importer = new Importer();
-  this.analysis = require('./analysis.colors-spreadsheets')(serviceLocator).analyse;
+  this.analysisColorsSpreadsheets = require('./analysis.colors-spreadsheets')(serviceLocator).analyse;
+  this.analysis = require('./analysis')(serviceLocator).analyse;
 }
 
 module.exports = function (serviceLocator) {
