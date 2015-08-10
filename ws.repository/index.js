@@ -30,6 +30,9 @@ module.exports = function (serviceLocator) {
   require('./indicator-values')(serviceLocator.repositories);
   require('./indicators')(serviceLocator.repositories);
 
+  //utils
+  require('./utils-data')(serviceLocator.repositories);
+
   // humnum
   require('./humnum-matrix')(serviceLocator.repositories);
 
