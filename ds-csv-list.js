@@ -1,14 +1,14 @@
 module.exports = [
   // Visabi local data
-  { uid: 'tmp/basic-indicators.csv',
-    filter: {columnNumber: 6, include: ['planet']},
-    dimensions: [{type: 'column', subtype: 'year', columnNumber: 1}, {type: 'row', subtype: 'planet'}],
+  { uid: 'tmp/basic-indicators-test.csv',
+    filter: {columnNumber: 6, includeValues: ['planet']},
+    dimensions: [{type: 'row', subtype: 'year', rowNumber: 0}, {type: 'row', subtype: 'planet', rowNumber: 0, colNumber: 5}],
     indicator:
     { name: 'gdp_per_cap',
       title: 'Gdp per cap' } },
-  { uid: 'tmp/basic-indicators.csv',
-    filter: {columnNumber: 6, include: ['planet']},
-    dimensions: [{type: 'column', subtype: 'year', columnNumber: 1}, {type: 'row', subtype: 'planet'}],
+  { uid: 'tmp/basic-indicators-test.csv',
+    filter: {columnNumber: 6, includeValues: ['region']},
+    dimensions: [{type: 'row', subtype: 'year', rowNumber: 0}, {type: 'row', subtype: 'region', rowNumber: 0, colNumber: 5}],
     indicator:
     { name: 'lex',
       title: 'Lex' } },
