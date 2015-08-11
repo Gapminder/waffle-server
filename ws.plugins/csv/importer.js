@@ -127,9 +127,9 @@ function createFileStream(serviceLocator, options, models, cb) {
 
   var parser = parse({delimiter: ','});
 
-  var transformer = transform(function(data){
+  var transformer = transform(function(data, _cb){
     console.log('data: ', data);
-    return data;
+    return _cb();
   });
 
   transformer.on('error', function(err){
@@ -137,7 +137,13 @@ function createFileStream(serviceLocator, options, models, cb) {
   });
 
   transformer.on('finish', function(){
-    cb();
+    // Same as ReadableStream's close event
+    stats = fs.statSync(uid);
+    info = _.defaults(util.inspect(stats), {rowCount: rowCount, colCount: colCount, title: options.uid});
+
+    meta = {dsuid: options.uid, meta: info, version: info.ctime};
+
+    cb(null, meta);
   });
 
   fsStream.pipe(parser).pipe(transformer);
