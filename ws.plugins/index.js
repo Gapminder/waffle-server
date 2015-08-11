@@ -31,7 +31,7 @@ module.exports = function (serviceLocator, cb) {
     dataSourceTypesRepository.add(plugin.meta, registerCb);
   }
 
-  function runImportCsv(cb) {
+  function runImportCsv(_cb) {
     return function () {
       // Limit of the data source elements
       var optionsList = require('../ds-csv-list').slice(0, 2);
@@ -39,10 +39,10 @@ module.exports = function (serviceLocator, cb) {
 
       console.time('All imported!');
 
-      async.each(optionsList, function (options, ecb) {
+      async.eachSeries(optionsList, function (options, ecb) {
         _runImportCsv(options, function (err) {
           if (!err) {
-            console.log('Data source left to import: ' + l--);
+            console.log('Data source left to import: ' + --l);
           }
 
           ecb(err);
@@ -50,12 +50,12 @@ module.exports = function (serviceLocator, cb) {
       }, function (err) {
         console.timeEnd('All imported!');
 
-        cb(err);
+        _cb(err);
       });
     };
   }
 
-  function _runImportCsv(options, ecb) {
+  function _runImportCsv(options, _cb) {
     /** @type CsvPlugin */
     var plugin = serviceLocator.plugins.get('csv');
 
@@ -69,25 +69,25 @@ module.exports = function (serviceLocator, cb) {
     console.log('Start import of: ' + options.uid);
 
     async.waterfall([
-      function _parseData(wcb) {
+      function _parseData(wfcb) {
         plugin.parser.parse(options.uid, function (err, opts) {
           if (err) {
-            return wcb(err);
+            return wfcb(err);
           }
-          _.defaults(options, opts);
+          _.defaultsDeep(options, opts);
 
-          return wcb();
+          return wfcb();
         });
       },
-      function _getDataSourceType(wcb) {
+      function _getDataSourceType(wfcb) {
         /** @type DataSourcesRepository */
         var dstRepo = serviceLocator.repositories.get('data-source-types');
 
         dstRepo.findByName(plugin.meta.name, function (err, dst) {
-          return wcb(err, dst);
+          return wfcb(err, dst);
         });
       },
-      function _createOrUpdateDataSource(dst, wcb) {
+      function _createOrUpdateDataSource(dst, wfcb) {
         /** @type DataSourcesRepository */
         var dsRepo = serviceLocator.repositories.get('data-sources');
 
@@ -98,10 +98,10 @@ module.exports = function (serviceLocator, cb) {
         };
 
         dsRepo.add(ds, function (err, dataSource) {
-          return wcb(err, {ds: dataSource, dst: dst, user: user});
+          return wfcb(err, {ds: dataSource, dst: dst, user: user});
         });
       },
-      function _createImportSession(models, wcb) {
+      function _createImportSession(models, wfcb) {
         var ImportSessions = mongoose.model('ImportSessions');
         var is = {
           ds: models.ds._id,
@@ -110,44 +110,41 @@ module.exports = function (serviceLocator, cb) {
 
         ImportSessions.create(is, function (err, importSession) {
           if (err) {
-            return wcb(err);
+            return wfcb(err);
           }
 
-          models.importSession = importSession;
-          return wcb(null, models);
+          models.importSession = importSession.toJSON();
+          return wfcb(null, models);
         });
       },
-      function _importData(models, wcb) {
-        console.time('importing: ' + options.uid);
-
+      function _importData(models, wfcb) {
+        console.time('imported: ' + options.uid);
         plugin.importer.importData(serviceLocator, options, models, function (err, opts) {
-          console.timeEnd('importing: ' + options.uid);
+          console.timeEnd('imported: ' + options.uid);
 
           if (err) {
-            return wcb(err);
+            return wfcb(err);
           }
 
           _.merge(options, opts);
 
-          return wcb();
+          return wfcb();
         });
       },
-      //function _analyseData(wcb) {
-      //  console.time('analysing: ' + options.uid);
-      //
-      //  plugin.analysis(options, function (err) {
-      //    console.timeEnd('analysing: ' + options.uid);
-      //
-      //    if (err) {
-      //      return wcb(err);
-      //    }
-      //
-      //    return wcb();
-      //  });
-      //}
-    ], function (err, test) {
-      console.log(test);
-      ecb(err);
+      function _analyseData(wfcb) {
+        console.time('analysing: ' + options.uid);
+        plugin.analysis(options, function (err) {
+          console.timeEnd('analysing: ' + options.uid);
+
+          if (err) {
+            return wfcb(err);
+          }
+
+          return wfcb();
+        });
+      }
+    ], function (err) {
+      _cb(err);
     });
   }
 

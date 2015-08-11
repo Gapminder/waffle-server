@@ -13,5 +13,23 @@ module.exports = {
     filename: 'csv-filename',
     row: 'csv-row',
     column: 'csv-column'
+  },
+  dimensionTypes: {
+    country: {
+      name: 'countries',
+      title: 'Countries'
+    },
+    year: {
+      name: 'year',
+      title: 'Year'
+    },
+    region: {
+      name: 'regions',
+      title: 'Regions'
+    },
+    planet: {
+      name: 'planet',
+      title: 'World'
+    }
   }
 };

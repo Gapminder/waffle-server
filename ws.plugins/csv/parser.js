@@ -50,7 +50,7 @@ CsvParser.prototype.parse = function (file, cb) {
 
   console.log('Parsed file: ' + file);
 
-  return cb(null, {filename: file});
+  return cb(null, {filename: file, dsuid: path.basename(file, '.csv')});
 };
 
 module.exports = new CsvParser();
