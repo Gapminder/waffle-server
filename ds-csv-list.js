@@ -2,22 +2,24 @@ module.exports = [
   // Visabi local data
   { uid: 'tmp/basic-indicators.csv',
     filter: {columnNumber: 6, include: ['planet']},
-    dimensions: [{type: 'year', columnNumber: 1}, {type: 'planet', columnNumber: 6}],
+    dimensions: [{type: 'column', subtype: 'year', columnNumber: 1}, {type: 'row', subtype: 'planet'}],
     indicator:
     { name: 'gdp_per_cap',
       title: 'Gdp per cap' } },
-  { uid: '1NOl11kmdo_9lY_w9WohsKvx65az8kPYsXYeprv1w0Tw',
-    dimensions: [{type: 'year', columnNumber: 1}, {type: 'planet', columnNumber: 6}],
+  { uid: 'tmp/basic-indicators.csv',
+    filter: {columnNumber: 6, include: ['planet']},
+    dimensions: [{type: 'column', subtype: 'year', columnNumber: 1}, {type: 'row', subtype: 'planet'}],
     indicator:
     { name: 'lex',
       title: 'Lex' } },
-  { uid: '1NOl11kmdo_9lY_w9WohsKvx65az8kPYsXYeprv1w0Tw',
+  { uid: 'tmp/basic-indicators.csv',
     dimensions: [{type: 'year', columnNumber: 1}, {type: 'planet', columnNumber: 6}],
     indicator:
     { name: 'pop',
       title: 'Pop' } },
 
   { uid: '1DEdd8HNpByDecPPwIhtKnFbAO0uWCllzcVy6v7U3rJI',
+    filter: {columnNumber: 6, include: ['planet']},
     dimensions: [{type: 'year', columnNumber: 1}, {type: 'region', columnNumber: 6}],
     indicator:
     { name: 'gdp_per_cap',

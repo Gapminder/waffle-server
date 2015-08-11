@@ -16,12 +16,12 @@ module.exports = function (serviceLocator, cb) {
 
   // todo: can be generic
   async.waterfall([
-    function (wcb) {
-      registerPlugin(require('./google-spread-sheets')(serviceLocator), runImportGoogleSpreadSheets(wcb));
-    }
     //function (wcb) {
-    //  registerPlugin(require('./csv')(serviceLocator), runImportCsv(wcb));
+    //  registerPlugin(require('./google-spread-sheets')(serviceLocator), runImportGoogleSpreadSheets(wcb));
     //}
+    function (wcb) {
+      registerPlugin(require('./csv')(serviceLocator), runImportCsv(wcb));
+    }
   ], function (err) {
     cb(err);
   });
@@ -31,16 +31,16 @@ module.exports = function (serviceLocator, cb) {
     dataSourceTypesRepository.add(plugin.meta, registerCb);
   }
 
-  function runImportCsv(serviceLocator, cb) {
+  function runImportCsv(cb) {
     return function () {
       // Limit of the data source elements
-      var optionsList = require('../ds-csv-list').slice(0, 1);
+      var optionsList = require('../ds-csv-list').slice(0, 2);
       var l = optionsList.length;
 
       console.time('All imported!');
 
       async.each(optionsList, function (options, ecb) {
-        _runImportCsv(serviceLocator, options, function (err) {
+        _runImportCsv(options, function (err) {
           if (!err) {
             console.log('Data source left to import: ' + l--);
           }
@@ -116,22 +116,22 @@ module.exports = function (serviceLocator, cb) {
           models.importSession = importSession;
           return wcb(null, models);
         });
-      }
-      //function _importData(wcb) {
-      //  console.time('importing: ' + options.uid);
-      //
-      //  plugin.importer.importData(plugin, options.uid, function (err, opts) {
-      //    console.timeEnd('importing: ' + options.uid);
-      //
-      //    if (err) {
-      //      return wcb(err);
-      //    }
-      //
-      //    _.merge(options, opts);
-      //
-      //    return wcb();
-      //  });
-      //},
+      },
+      function _importData(models, wcb) {
+        console.time('importing: ' + options.uid);
+
+        plugin.importer.importData(serviceLocator, options, models, function (err, opts) {
+          console.timeEnd('importing: ' + options.uid);
+
+          if (err) {
+            return wcb(err);
+          }
+
+          _.merge(options, opts);
+
+          return wcb();
+        });
+      },
       //function _analyseData(wcb) {
       //  console.time('analysing: ' + options.uid);
       //
