@@ -1,17 +1,25 @@
+'use strict';
+
+/*
+* AVOID USING IN DIMENSION SUBTYPE '::'
+* bad: {type: 'row', subtype: 'year::month'}
+* good: {type: 'row', subtype: 'year/month'}
+*/
+
 module.exports = [
   // Visabi local data
-  { uid: 'tmp/basic-indicators-test.csv',
+  {
+    uid: 'tmp/basic-indicators-test.csv',
     filter: {columnNumber: 6, includeValues: ['planet']},
-    dimensions: [{type: 'row', subtype: 'year', rowNumber: 0}, {type: 'row', subtype: 'planet', rowNumber: 0, colNumber: 5}],
-    indicator:
-    { name: 'gdp_per_cap',
-      title: 'Gdp per cap' } },
-  { uid: 'tmp/basic-indicators-test.csv',
+    dimensions: [{type: 'row', subtype: 'year'}, {type: 'row', subtype: 'planet', colNumber: 5}],
+    indicator: {name: 'gdp_per_cap', title: 'Gdp per cap'}
+  },
+  {
+    uid: 'tmp/basic-indicators-test.csv',
     filter: {columnNumber: 6, includeValues: ['region']},
-    dimensions: [{type: 'row', subtype: 'year', rowNumber: 0}, {type: 'row', subtype: 'region', rowNumber: 0, colNumber: 5}],
-    indicator:
-    { name: 'lex',
-      title: 'Lex' } },
+    dimensions: [{type: 'row', subtype: 'year'}, {type: 'row', subtype: 'region', colNumber: 5}],
+    indicator: {name: 'lex', title: 'Lex'}
+  },
   { uid: 'tmp/basic-indicators.csv',
     dimensions: [{type: 'year', columnNumber: 1}, {type: 'planet', columnNumber: 6}],
     indicator:
@@ -21,9 +29,8 @@ module.exports = [
   { uid: '1DEdd8HNpByDecPPwIhtKnFbAO0uWCllzcVy6v7U3rJI',
     filter: {columnNumber: 6, include: ['planet']},
     dimensions: [{type: 'year', columnNumber: 1}, {type: 'region', columnNumber: 6}],
-    indicator:
-    { name: 'gdp_per_cap',
-      title: 'Gdp per cap' } },
+    indicator: { name: 'gdp_per_cap', title: 'Gdp per cap' }
+  },
   { uid: '1DEdd8HNpByDecPPwIhtKnFbAO0uWCllzcVy6v7U3rJI',
     dimensions: [{type: 'year', columnNumber: 1}, {type: 'region', columnNumber: 6}],
     indicator:
