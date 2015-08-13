@@ -42,7 +42,7 @@ module.exports = function (serviceLocator, cb) {
       async.eachSeries(optionsList, function (options, ecb) {
         _runImportCsv(options, function (err) {
           if (!err) {
-            console.log('Data source left to import: ' + --l);
+            console.log('\nData source left to import: ' + --l);
           }
 
           ecb(err);
@@ -118,9 +118,9 @@ module.exports = function (serviceLocator, cb) {
         });
       },
       function _importData(models, wfcb) {
-        console.time('imported: ' + options.uid);
+        console.time('  File was imported: ' + options.uid);
         plugin.importer.importData(serviceLocator, options, models, function (err, opts) {
-          console.timeEnd('imported: ' + options.uid);
+          console.timeEnd('  File was imported: ' + options.uid);
 
           if (err) {
             return wfcb(err);
@@ -132,9 +132,9 @@ module.exports = function (serviceLocator, cb) {
         });
       },
       function _analyseData(wfcb) {
-        console.time('analysing: ' + options.uid);
+        console.time('Analysing time: ' + options.uid);
         plugin.analysis(options, function (err) {
-          console.timeEnd('analysing: ' + options.uid);
+          console.timeEnd('Analysing time: ' + options.uid);
 
           if (err) {
             return wfcb(err);

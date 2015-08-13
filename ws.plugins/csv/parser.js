@@ -48,7 +48,7 @@ CsvParser.prototype.parse = function (file, cb) {
     return cb(isValid);
   }
 
-  console.log('Parsed file: ' + file);
+  console.log('  Parsed file: ' + file);
 
   return cb(null, {filename: file, dsuid: path.basename(file, '.csv')});
 };

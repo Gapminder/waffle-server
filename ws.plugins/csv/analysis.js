@@ -18,7 +18,6 @@ module.exports = function (serviceLocator) {
 
         // create analysis session
         function _createAnalysisSession(pipe, wcb) {
-          console.log('Creating Analysis Session...');
           //todo: refactor getting user
           var user = {
             _id: '55a779dd1083ec4c438f347b',
@@ -27,6 +26,9 @@ module.exports = function (serviceLocator) {
           };
 
           var AnalysisSessions = mongoose.model('AnalysisSessions');
+
+          console.log('  Creating Analysis Session...');
+
           AnalysisSessions.create({
             user: user,
             importSession: importSessionId
@@ -40,23 +42,23 @@ module.exports = function (serviceLocator) {
 
         // get unique dimensions values
         function _getDistinctDimensionValues(pipe, wcb) {
-          console.log('Getting distinct Dimension Values...');
+          console.log('  Getting distinct Dimension Values...');
 
           getDistinctDimensionValues(pipe, wcb);
         },
 
         // update or create dimensions
         function _analyseDimensions(pipe, wcb) {
-          console.log('dimensionValues:', pipe.dimensionValues);
-          console.log('Analysing Dimensions...');
+          console.log('    dimensionValues:', pipe.dimensionValues);
+          console.log('  Analysing Dimensions...');
 
           analyseDimensions(pipe, wcb);
         },
 
         // update or create dimension values
         function _analyseDimensionValues(pipe, wcb) {
-          console.log('analysedDimensions:', _.keys(pipe.analysedDimensions));
-          console.log('Analysing Dimension Values...');
+          console.log('    analysedDimensions:', _.keys(pipe.analysedDimensions));
+          console.log('  Analysing Dimension Values...');
 
           analyseDimensionValues(pipe, wcb);
         },
@@ -88,8 +90,9 @@ module.exports = function (serviceLocator) {
                 analysisSessions: analysisSessions._id
               }
             },
-            {'new': true, upsert: true},
-            function (err, coordinates) {
+            {'new': true, upsert: true})
+            .lean()
+            .exec(function (err, coordinates) {
               pipe.coordinates = coordinates;
               return wcb(err, pipe);
             });
@@ -97,11 +100,11 @@ module.exports = function (serviceLocator) {
 
         // update or create indicator
         function _analyseIndicator(pipe, wcb) {
-          console.log('Analysing Indicator...');
+          console.log('  Analysing Indicator...');
           analyseIndicator(pipe, wcb);
         }
       ], function (err) {
-        console.log('analysis done!');
+        console.log('Analysis is done!');
         return cb(err);
       });
     }
@@ -110,9 +113,11 @@ module.exports = function (serviceLocator) {
   function analyseIndicator(pipe, cb) {
     async.waterfall([
       function (wcb) {
+        console.log('  Update or create Indicator');
         updateOrCreateIndicator(pipe, wcb);
       },
       function (wcb) {
+        console.log('  Merge Indicator Values');
         mergeIndicatorValues(pipe, wcb);
       }
     ], function (err) {
@@ -122,7 +127,7 @@ module.exports = function (serviceLocator) {
 
   function updateOrCreateIndicator(pipe, cb) {
     var Indicators = mongoose.model('Indicators');
-    //var coordinates = pipe.coordinates;
+    var coordinates = pipe.coordinates;
     var analysisSession = pipe.analysisSession;
 
     Indicators.findOneAndUpdate({
@@ -133,11 +138,12 @@ module.exports = function (serviceLocator) {
           title: pipe.indicator.title
         },
         $addToSet: {
-          //coordinates: coordinates._id,
+          coordinates: coordinates._id,
           analysisSessions: analysisSession._id
         }
-      }, {'new': true, upsert: true},
-      function (err, indicator) {
+      }, {'new': true, upsert: true})
+      .lean()
+      .exec(function (err, indicator) {
         pipe.indicator = indicator;
         return cb(err);
       });
@@ -145,89 +151,167 @@ module.exports = function (serviceLocator) {
 
   function mergeIndicatorValues(pipe, cb) {
     var importSession = pipe.is;
-    var analysisSession = pipe.analysisSession;
     var indicator = pipe.indicator;
-    var dimensionValues = pipe.dimensionValues;
-    var coordinates = pipe.coordinates;
     var csv = serviceLocator.plugins.get('csv');
     var ImportData = mongoose.model('ImportData');
-    var IndicatorValues = mongoose.model('IndicatorValues');
 
     async.waterfall([
       function _getIndicatorMeta(wcb) {
+        console.log('    Get Indicator Meta');
         ImportData.findOne({
           v: indicator.name,
           importSessions: importSession._id,
           ds: {$elemMatch: {d: csv.meta.dimensions.filename, v: pipe.dsuid}}
-        }, function (err, indicatorMeta) {
+        }).lean().exec(function (err, indicatorMeta) {
           pipe.indicatorMeta = indicatorMeta;
           return wcb(err);
         });
       },
       function _getIndicatorData(wcb) {
-        var col = _.find(pipe.indicatorMeta.ds, {d: csv.meta.dimensions.column});
-        var colValue = _.result(col, 'v');
-        var row = _.find(pipe.indicatorMeta.ds, {d: csv.meta.dimensions.row});
-        var rowValue = _.result(row, 'v');
-
-        // todo refactor: add new types of indicator values (cols, cells)
-        if (indicator.type && indicator.type !== 'row') {
-          pipe.indicatorData = [];
-          return wcb();
-        }
-
-        ImportData.find({
-          importSessions: importSession._id,
-          $and: [
-            {ds: {$elemMatch: {d: csv.meta.dimensions.filename, v: pipe.dsuid}}},
-            {ds: {$elemMatch: {d: csv.meta.dimensions.column, v: colValue}}},
-            {ds: {$elemMatch: {d: csv.meta.dimensions.row, v: {$gt: rowValue}}}}
-          ]
-        }, function (err, indicatorData) {
-          //console.log('indicatorData: ', indicatorData);
-          pipe.indicatorData = indicatorData;
-          return wcb(err);
-        });
+        console.log('    Get Indicator Data');
+        getIndicatorData(pipe, wcb);
       },
       function _mergeIndicatorValues(wcb) {
-        async.eachSeries(pipe.indicatorData, function (data, ecb) {
-          return ecb();
-          IndicatorValues.update({
-              v: data.v,
-              coordinates: coordinates._id,
-              indicator: indicator._id
-            },
-            {
-              $set: {
-                ds: dimensionsMapper(data, dimensionValues),
-                v: data.v,
-
-                coordinates: coordinates._id,
-                indicator: indicator._id
-              },
-              $addToSet: {
-                analysisSessions: analysisSession._id
-              }
-            },
-            {'new': true, upsert: true},
-            function (err) {
-              return ecb(err);
-            }
-          );
-        },
-        function (err) {
-          return wcb(err);
-        });
+        console.log('    Do merge Indicator Values');
+        doMergeIndicatorValues(pipe, wcb);
       }
     ], function (err) {
       cb(err);
     });
+  }
 
-    function dimensionsMapper (data, dimensionValues) {
-      var ds = [];
+  function getIndicatorData(pipe, cb) {
+    var indicator = pipe.indicator;
+    var importSession = pipe.is;
+    var csv = serviceLocator.plugins.get('csv');
+    var ImportData = mongoose.model('ImportData');
 
-      return ds;
+    var col = _.find(pipe.indicatorMeta.ds, {d: csv.meta.dimensions.column});
+    var colValue = _.result(col, 'v');
+    var row = _.find(pipe.indicatorMeta.ds, {d: csv.meta.dimensions.row});
+    var rowValue = _.result(row, 'v');
+
+    // todo refactor: add new types of indicator values (cols, cells)
+    if (indicator.type && indicator.type !== 'row') {
+      pipe.indicatorData = [];
+      return cb();
     }
+
+    ImportData.find({
+      importSessions: importSession._id,
+      $and: [
+        {ds: {$elemMatch: {d: csv.meta.dimensions.filename, v: pipe.dsuid}}},
+        {ds: {$elemMatch: {d: csv.meta.dimensions.column, v: colValue}}},
+        {ds: {$elemMatch: {d: csv.meta.dimensions.row, v: {$gt: rowValue}}}}
+      ]
+    }).lean().exec(function (err, indicatorData) {
+      pipe.indicatorData = indicatorData;
+      return cb(err);
+    });
+  }
+
+  function doMergeIndicatorValues(pipe, cb) {
+    async.eachSeries(pipe.indicatorData, function (data, ecb) {
+        async.waterfall([
+          function _getDimensionValuesMeta(_wcb) {
+            console.log('      Get Dimension Values Meta');
+            getDimensionValuesMeta(pipe, data, _wcb);
+          },
+          function _createOrUpdateIndiactorValue(_wcb) {
+            console.log('      Create or update Indicator Value');
+            createOrUpdateIndiactorValue(pipe, data, _wcb);
+          }
+        ], function (err) {
+          return ecb(err);
+        });
+      },
+      function (err) {
+        return cb(err);
+      });
+  }
+
+  function createOrUpdateIndiactorValue(pipe, data, cb) {
+    var indicator = pipe.indicator;
+    var coordinates = pipe.coordinates;
+    var analysisSession = pipe.analysisSession;
+    var indicatorDimensions = pipe.indicatorDimensions;
+    var IndicatorValues = mongoose.model('IndicatorValues');
+
+    IndicatorValues.update({
+        v: data.v,
+        coordinates: coordinates._id,
+        indicator: indicator._id
+      },
+      {
+        $set: {
+          v: data.v,
+
+          coordinates: coordinates._id,
+          indicator: indicator._id
+        },
+        $addToSet: {
+          analysisSessions: analysisSession._id,
+          ds: {$each: indicatorDimensions[data._id]}
+        }
+      },
+      {'new': true, upsert: true},
+      function (err) {
+        return cb(err);
+      }
+    );
+  }
+
+  function getDimensionValuesMeta(pipe, data, cb) {
+    var dimensionsConfig = pipe.dimensions;
+    var dimensions = pipe.analysedDimensions;
+    var analysedDimensionValues = pipe.analysedDimensionValues;
+    var importSession = pipe.is;
+    var ImportData = mongoose.model('ImportData');
+    var csv = serviceLocator.plugins.get('csv');
+    var dataRowNumber = _.result(_.find(data.ds, {d: csv.meta.dimensions.row}), 'v');
+    //var dataColNumber = _.result(_.find(data.ds, {d: csv.meta.dimensions.column}), 'v');
+    var ds = [];
+
+    async.forEachOfSeries(dimensions, function (dm, key, ecb) {
+      var dc = _.find(dimensionsConfig, {subtype: key});
+      var dv;
+      var query = {};
+
+      // todo: add queries for indicator type column
+      if (!pipe.indicator.type || pipe.indicator.type === 'row') {
+        query = {
+          importSessions: importSession._id,
+          $and: [
+            {ds: {$elemMatch: {d: csv.meta.dimensions.filename, v: pipe.dsuid}}},
+            {ds: {$elemMatch: {d: csv.meta.dimensions.row, v: dataRowNumber}}},
+            {ds: {$elemMatch: {d: csv.meta.dimensions.column, v: dc.colNumber || 0}}}
+          ]
+        };
+      }
+
+      ImportData.findOne(query).lean().exec(function (err, doc) {
+        if (!doc) {
+          return ecb('No dimension value!');
+        }
+
+        dv = _.find(analysedDimensionValues, {dimension: dm._id, value: doc.v});
+
+        if (!dv) {
+          return ecb('Something went wrong!');
+        }
+
+        if (!ds[data._id]) {
+          ds[data._id] = [];
+        }
+
+        ds[data._id].push({dv: dv._id, d: dm._id, v: doc.v});
+
+        return ecb(err);
+      });
+    }, function (err) {
+      pipe.indicatorDimensions = ds;
+      return cb(err);
+    });
   }
 
   function analyseDimensions(pipe, cb) {
@@ -270,111 +354,36 @@ module.exports = function (serviceLocator) {
   function analyseDimensionValues(pipe, cb) {
     var dimensionValues = pipe.dimensionValues;
     var analysedDimensions = pipe.analysedDimensions;
-    var dimensionValuesList = {};
+    var analysisSession = pipe.analysisSession;
+    var DimensionValues = mongoose.model('DimensionValues');
+    var analysedDimensionValues = [];
 
     async.each(_.keys(dimensionValues), function (key, ecb) {
       async.each(dimensionValues[key], function (dmv, _ecb) {
-        async.parallel({
-          matchedRows: function (pcb) {
-            getDimensionValuesMatchedRows(pipe, key, pcb);
+        DimensionValues.findOneAndUpdate(
+          {
+            dimension: analysedDimensions[key]._id,
+            value: dmv
           },
-          matchedCols: function (pcb) {
-            getDimensionValuesMatchedCols(pipe, key,  pcb);
+          {
+            dimension: analysedDimensions[key]._id,
+            value: dmv,
+            $addToSet: {analysisSessions: analysisSession._id}
           },
-          dv: function (pcb) {
-            createOrUpdateDimensionValue(pipe, dmv, key, pcb);
+          {upsert: true, 'new': true})
+          .lean()
+          .exec(function (err, dv) {
+            analysedDimensionValues.push(dv);
+            return _ecb(err);
           }
-        }, function (err, result) {
-          //console.log(result);
-          var dimensionConfig = _.find(pipe.dimensions, {subtype: key});
-          var matchedValues = dimensionConfig.type === 'row' ? result.matchedRows : result.matchedCols;
-          dimensionValuesList[key + '::' + dmv] = {
-            // all index of rows or columns (depends on dimension type)
-            // where the dimension value was come across
-            matchedValues: matchedValues,
-            dv: result.dv._id,
-            d: analysedDimensions[key]._id
-          };
-
-          return _ecb(err);
-        });
+        );
       }, function (err) {
         ecb(err);
       });
     }, function (err) {
-      // is used for analysing indicator values
-      pipe.dimensionValuesList = dimensionValuesList;
-      //console.log('dimensionValuesList: ', dimensionValuesList);
+      pipe.analysedDimensionValues = analysedDimensionValues;
       return cb(err, pipe);
     });
-  }
-
-  function getDimensionValuesMatchedRows(pipe, key, cb) {
-    var dimensionConfig = _.find(pipe.dimensions, {subtype: key});
-    var importSessionId = pipe.is._id;
-    var csv = serviceLocator.plugins.get('csv');
-    var ImportData = mongoose.model('ImportData');
-
-    ImportData.find({
-      importSessions: importSessionId,
-      $and: [
-        {ds: {$elemMatch: {d: csv.meta.dimensions.filename, v: pipe.dsuid}}},
-        {ds: {$elemMatch: {d: csv.meta.dimensions.column, v: dimensionConfig.colNumber || 0}}},
-        {ds: {$elemMatch: {d: csv.meta.dimensions.column, v: {$gt: dimensionConfig.rowNumber || 0}}}}
-      ]
-    }, function (err, docs) {
-      var matchedRows = _.map(docs, function (data) {
-        var row = _.find(data.ds, {d: csv.meta.dimensions.row});
-        return _.result(row, 'v');
-      });
-      console.log(matchedRows);
-      return cb(err, matchedRows);
-    });
-  }
-
-  function getDimensionValuesMatchedCols(pipe, key, cb) {
-    var dimensionConfig = _.find(pipe.dimensions, {subtype: key});
-    var importSessionId = pipe.is._id;
-    var csv = serviceLocator.plugins.get('csv');
-    var ImportData = mongoose.model('ImportData');
-
-    ImportData.find({
-      importSessions: importSessionId,
-      $and: [
-        {ds: {$elemMatch: {d: csv.meta.dimensions.filename, v: pipe.dsuid}}},
-        {ds: {$elemMatch: {d: csv.meta.dimensions.column, v: {$gt: dimensionConfig.colNumber || 0}}}},
-        {ds: {$elemMatch: {d: csv.meta.dimensions.row, v: dimensionConfig.rowNumber || 0}}}
-      ]
-    }, function (err, docs) {
-      var matchedCols = _.map(docs, function (ds) {
-        var col = _.find(ds, {d: csv.meta.dimensions.column});
-        return _.result(col, 'v');
-      });
-
-      return cb(err, matchedCols);
-    });
-  }
-
-  function createOrUpdateDimensionValue(pipe, dmv, key, cb) {
-    var analysedDimensions = pipe.analysedDimensions;
-    var analysisSession = pipe.analysisSession;
-    var DimensionValues = mongoose.model('DimensionValues');
-
-    DimensionValues.findOneAndUpdate(
-      {
-        dimension: analysedDimensions[key]._id,
-        value: dmv
-      },
-      {
-        dimension: analysedDimensions[key]._id,
-        value: dmv,
-        $addToSet: {analysisSessions: analysisSession._id}
-      },
-      {upsert: true, new: true},
-      function (err, dv) {
-        return cb(err, dv);
-      }
-    );
   }
 
   function getDistinctDimensionValues(pipe, cb) {
