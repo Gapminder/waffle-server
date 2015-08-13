@@ -49,11 +49,26 @@ function createFileStream(serviceLocator, options, models, cb) {
     processLine(data, _cb);
   }, {parallel: 1});
 
+  fsStream.on('data', function(chunk) {
+    console.log('got %d bytes of data', chunk.length);
+  });
+
+  fsStream.on('error', function(err) {
+    console.error(err);
+    cb(err);
+  });
+
+  transformer.on('pipe', function(chunk) {
+    console.log('start transform processing', chunk.length);
+  });
+
   transformer.on('error', function(err) {
+    console.error(err);
     cb(err);
   });
 
   transformer.on('finish', function() {
+    console.log('transform finish');
     // Same as ReadableStream's close event
     info = util.inspect(fs.statSync(uid));
     meta = {rowCount: rowCount, colCount: colCount, title: options.dsuid};
@@ -74,9 +89,11 @@ function createFileStream(serviceLocator, options, models, cb) {
       colCount = cells.length;
     }
 
-    if (rowCount && filter.includeValues && filter.includeValues.indexOf(cells[filter.columnNumber]) < 0) {
+    if (rowCount && filter.includeValues && filter.includeValues.indexOf(cells[filter.colNumber]) < 0) {
       return tcb();
     }
+
+    console.log('processing ' + rowCount + ' row...');
 
     async.eachSeries(cells, function (cell, ecb) {
       var key = cells.indexOf(cell);

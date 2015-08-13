@@ -34,7 +34,7 @@ module.exports = function (serviceLocator, cb) {
   function runImportCsv(_cb) {
     return function () {
       // Limit of the data source elements
-      var optionsList = require('../ds-csv-list').slice(0, 2);
+      var optionsList = require('../ds-csv-list').slice(0, 9);
       var l = optionsList.length;
 
       console.time('All imported!');
@@ -97,6 +97,8 @@ module.exports = function (serviceLocator, cb) {
           dsuid: path.basename(options.uid, '.csv')
         };
 
+        console.log('_createOrUpdateDataSource');
+
         dsRepo.add(ds, function (err, dataSource) {
           return wfcb(err, {ds: dataSource, dst: dst, user: user});
         });
@@ -108,6 +110,8 @@ module.exports = function (serviceLocator, cb) {
           user: models.user._id
         };
 
+        console.log('_createImportSession');
+
         ImportSessions.create(is, function (err, importSession) {
           if (err) {
             return wfcb(err);
@@ -118,6 +122,8 @@ module.exports = function (serviceLocator, cb) {
         });
       },
       function _importData(models, wfcb) {
+        console.log('_importData');
+
         console.time('  File was imported: ' + options.uid);
         plugin.importer.importData(serviceLocator, options, models, function (err, opts) {
           console.timeEnd('  File was imported: ' + options.uid);
@@ -144,6 +150,7 @@ module.exports = function (serviceLocator, cb) {
         });
       }
     ], function (err) {
+      console.log(err);
       _cb(err);
     });
   }

@@ -30,6 +30,30 @@ module.exports = {
     planet: {
       name: 'planet',
       title: 'World'
+    },
+    time: {
+      name: 'year',
+      title: 'Year'
+    },
+    name: {
+      name: 'companies',
+      title: 'Companies'
+    },
+    category: {
+      name: 'categories',
+      title: 'Categories'
+    },
+    age: {
+      name: 'age',
+      title: 'Age'
+    },
+    'age.group': {
+      name: 'age.group',
+      title: 'Age group'
+    },
+    'geo.category': {
+      name: 'geo.category',
+      title: 'Geo category'
     }
   }
 };

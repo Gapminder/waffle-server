@@ -113,11 +113,11 @@ module.exports = function (serviceLocator) {
   function analyseIndicator(pipe, cb) {
     async.waterfall([
       function (wcb) {
-        console.log('  Update or create Indicator');
+        console.log('  Update or create Indicator..');
         updateOrCreateIndicator(pipe, wcb);
       },
       function (wcb) {
-        console.log('  Merge Indicator Values');
+        console.log('  Merge Indicator Values...');
         mergeIndicatorValues(pipe, wcb);
       }
     ], function (err) {
@@ -144,6 +144,7 @@ module.exports = function (serviceLocator) {
       }, {'new': true, upsert: true})
       .lean()
       .exec(function (err, indicator) {
+        console.log('    analysedIndicator:', indicator.name);
         pipe.indicator = indicator;
         return cb(err);
       });
@@ -157,7 +158,6 @@ module.exports = function (serviceLocator) {
 
     async.waterfall([
       function _getIndicatorMeta(wcb) {
-        console.log('    Get Indicator Meta');
         ImportData.findOne({
           v: indicator.name,
           importSessions: importSession._id,
@@ -168,11 +168,9 @@ module.exports = function (serviceLocator) {
         });
       },
       function _getIndicatorData(wcb) {
-        console.log('    Get Indicator Data');
         getIndicatorData(pipe, wcb);
       },
       function _mergeIndicatorValues(wcb) {
-        console.log('    Do merge Indicator Values');
         doMergeIndicatorValues(pipe, wcb);
       }
     ], function (err) {
@@ -214,11 +212,9 @@ module.exports = function (serviceLocator) {
     async.eachSeries(pipe.indicatorData, function (data, ecb) {
         async.waterfall([
           function _getDimensionValuesMeta(_wcb) {
-            console.log('      Get Dimension Values Meta');
             getDimensionValuesMeta(pipe, data, _wcb);
           },
           function _createOrUpdateIndiactorValue(_wcb) {
-            console.log('      Create or update Indicator Value');
             createOrUpdateIndiactorValue(pipe, data, _wcb);
           }
         ], function (err) {
@@ -236,29 +232,39 @@ module.exports = function (serviceLocator) {
     var analysisSession = pipe.analysisSession;
     var indicatorDimensions = pipe.indicatorDimensions;
     var IndicatorValues = mongoose.model('IndicatorValues');
+    var indicatorValue;
 
-    IndicatorValues.update({
-        v: data.v,
-        coordinates: coordinates._id,
-        indicator: indicator._id
-      },
-      {
-        $set: {
-          v: data.v,
-
-          coordinates: coordinates._id,
-          indicator: indicator._id
-        },
-        $addToSet: {
-          analysisSessions: analysisSession._id,
-          ds: {$each: indicatorDimensions[data._id]}
-        }
-      },
-      {'new': true, upsert: true},
-      function (err) {
+    // todo; refactor complexity
+    IndicatorValues.findOne({
+      v: data.v,
+      coordinates: coordinates._id,
+      indicator: indicator._id,
+      ds: {$all: indicatorDimensions[data._id], $size: indicatorDimensions[data._id].length}
+    }, function (err, doc) {
+      if (err) {
         return cb(err);
       }
-    );
+
+      if (doc) {
+        indicatorValue = doc;
+      }
+
+      if (!doc) {
+        indicatorValue = new IndicatorValues({
+          v: data.v,
+          coordinates: coordinates._id,
+          indicator: indicator._id,
+          analysisSessions: [],
+          ds: indicatorDimensions[data._id]
+        });
+      }
+
+      indicatorValue.analysisSessions.addToSet(analysisSession._id);
+
+      indicatorValue.save(function (_err) {
+        return cb(_err);
+      });
+    });
   }
 
   function getDimensionValuesMeta(pipe, data, cb) {
