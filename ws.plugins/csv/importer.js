@@ -40,6 +40,8 @@ function createFileStream(serviceLocator, options, models, cb) {
   var colCount = 0;
 
   var plugin = serviceLocator.plugins.get('csv');
+  var ImportData = mongoose.model('ImportData');
+  var bulk = ImportData.collection.initializeOrderedBulkOp();
 
   var fsStream = fs.createReadStream(uid, {flags: 'r'});
 
@@ -68,35 +70,38 @@ function createFileStream(serviceLocator, options, models, cb) {
   });
 
   transformer.on('finish', function() {
-    console.log('transform finish');
-    // Same as ReadableStream's close event
-    info = util.inspect(fs.statSync(uid));
-    meta = {rowCount: rowCount, colCount: colCount, title: options.dsuid};
+    bulk.execute(function (err) {
+      if (err) {
+        return cb(err);
+      }
 
-    result = {stats: {dsuid: options.dsuid, meta: meta, version: info.ctime}, is: models.importSession, ds: models.ds};
+      console.log('transform finish');
+      // Same as ReadableStream's close event
+      info = util.inspect(fs.statSync(uid));
+      meta = {rowCount: rowCount, colCount: colCount, title: options.dsuid};
 
-    cb(null, result);
+      result = {stats: {dsuid: options.dsuid, meta: meta, version: info.ctime}, is: models.importSession, ds: models.ds};
+
+      cb(err, result);
+    });
   });
 
   fsStream.pipe(parser).pipe(transformer);
 
   function processLine(cells, tcb) {
-    var ImportData = mongoose.model('ImportData');
-
     var filter = options.filter;
 
     if (!rowCount) {
       colCount = cells.length;
     }
 
-    if (rowCount && filter.includeValues && filter.includeValues.indexOf(cells[filter.colNumber]) < 0) {
+    if (rowCount && filter && filter.includeValues && filter.includeValues.indexOf(cells[filter.colNumber]) < 0) {
       return tcb();
     }
 
-    console.log('processing ' + rowCount + ' row...');
+    console.log('processing ' + (rowCount + 1) + ' row...');
 
-    async.eachSeries(cells, function (cell, ecb) {
-      var key = cells.indexOf(cell);
+    _.each(cells, function (cell, key) {
       var ds = [
         {d: plugin.meta.dimensions.filename, v: options.dsuid},
         {d: plugin.meta.dimensions.column, v: key},
@@ -107,22 +112,15 @@ function createFileStream(serviceLocator, options, models, cb) {
         return {ds: {$elemMatch: d}};
       });
 
-      ImportData.update({$and: query},
-        {$set: {v: cell, ds: ds}, $addToSet: {importSessions: models.importSession._id}},
-        {upsert: true},
-        function (err) {
-          if (err) {
-            return ecb(err);
-          }
-
-          return ecb();
-        }
-      );
-    }, function (err) {
-      rowCount++;
-
-      tcb(err);
+      bulk
+        .find({$and: query})
+        .upsert()
+        .updateOne({$set: {v: cell, ds: ds}, $addToSet: {importSessions: models.importSession._id}});
     });
+
+    rowCount++;
+
+    return tcb();
   }
 }
 
