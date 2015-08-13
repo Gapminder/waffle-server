@@ -29,4 +29,7 @@ module.exports = function (serviceLocator) {
   require('./coordinates')(serviceLocator.repositories);
   require('./indicators')(serviceLocator.repositories);
   require('./indicator-values')(serviceLocator.repositories);
+
+  // publishers
+  require('./publishers')(serviceLocator.repositories);
 };

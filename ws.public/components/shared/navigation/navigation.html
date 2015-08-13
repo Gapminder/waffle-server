@@ -25,6 +25,13 @@
           {{ tagline }}
         </div>
       </li>
+      <li ng-class="{active: $state.includes('home')}">
+        <a ui-sref="admin.landing"><i class="fa fa-files-o"></i> <span class="nav-label">{{ 'Home' }}</span> <span
+                class="fa arrow"></span></a>
+        <ul class="nav nav-second-level" ng-class="{in: $state.includes('home')}">
+          <li ui-sref-active="active"><a ui-sref="admin.home.publishers.list">{{ 'Publishers' }}</a></li>
+        </ul>
+      </li>
       <li ng-class="{active: $state.includes('collections')}">
         <a ui-sref="admin.playground"><i class="fa fa-files-o"></i> <span class="nav-label">{{ 'Cyper Editor' }}</span> <span
           class="fa arrow"></span></a>

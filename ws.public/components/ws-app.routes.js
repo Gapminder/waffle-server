@@ -29,11 +29,38 @@ angular.module('admin')
           }]
         }
       })
-      .state('admin.home', {
+      .state('admin.landing', {
         url: '',
         templateUrl: '/components/landing/landing.html',
         controller: 'MainController',
         controllerAs: 'mainCtrl'
+      })
+      .state('admin.home', {
+        'abstract': true,
+        url: '/home',
+        template: '<ui-view/>'
+      })
+      .state('admin.home.publishers', {
+        'abstract': true,
+        url: '/publishers',
+        template: '<ui-view/>',
+        controller: 'PublishersCollectionController',
+        controllerAs: 'ctrl'
+      })
+      .state('admin.home.publishers.list', {
+        url: '/list',
+        templateUrl: '/components/home/publishers/publishers-collection.html',
+        data: {
+          pageTitle: 'Publishers',
+          pageType: 'list'
+        }
+      })
+      .state('admin.home.publishers.edit', {
+        url: '/edit/:id',
+        templateUrl: '/components/home/publishers/publisher-edit.html',
+        data: {
+          pageTitle: 'Publishers'
+        }
       })
       .state('admin.profile', {
         url: '/profile',
