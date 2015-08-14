@@ -3,7 +3,7 @@
 module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
   var logger = app.get('log');
-  var publisherCatalogs = serviceLocator.repositories.get('publisher-catalogs');
+  var publisherCatalogs = serviceLocator.repositories.get('PublisherCatalogs');
 
   app.get('/api/admin/publisher-catalog/:id', getPublisherCatalog);
   app.post('/api/admin/publisher-catalog/:id', updatePublisherCatalog);

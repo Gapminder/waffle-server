@@ -88,6 +88,30 @@ angular.module('admin')
           pageTitle: 'Publisher Catalog'
         }
       })
+      .state('admin.home.publisherCatalogVersions', {
+        'abstract': true,
+        url: '/publisher-catalog-versions',
+        template: '<ui-view/>'
+      })
+      .state('admin.home.publisherCatalogVersions.list', {
+        url: '/list',
+        templateUrl: '/components/home/publisher-catalog-versions/publisher-catalog-versions-list.html',
+        controller: 'PublisherCatalogVersionsListController',
+        controllerAs: 'ctrl',
+        data: {
+          pageTitle: 'Publisher Catalog Versions',
+          pageType: 'list'
+        }
+      })
+      .state('admin.home.publisherCatalogVersions.edit', {
+        url: '/edit/:id',
+        templateUrl: '/components/home/publisher-catalog-versions/publisher-catalog-versions-edit.html',
+        controller: 'PublisherCatalogVersionsEditController',
+        controllerAs: 'ctrl',
+        data: {
+          pageTitle: 'Publisher Catalog Version'
+        }
+      })
       .state('admin.profile', {
         url: '/profile',
         templateUrl: '/components/users/profile.html',

@@ -1,6 +1,6 @@
 'use strict';
 
-var name = 'publisher-catalogs';
+var name = 'PublisherCatalogs';
 require('./publisher-catalogs.model');
 var Repository = require('./publisher-catalogs.repository');
 

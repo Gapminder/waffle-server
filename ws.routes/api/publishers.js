@@ -3,7 +3,7 @@
 module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
   var logger = app.get('log');
-  var publishers = serviceLocator.repositories.get('publishers');
+  var publishers = serviceLocator.repositories.get('Publishers');
 
   app.get('/api/admin/publisher/:id', getPublisher);
   app.post('/api/admin/publisher/:id', updatePublisher);
