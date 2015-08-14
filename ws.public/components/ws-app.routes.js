@@ -424,7 +424,7 @@ angular.module('admin')
       })
       .state('forgot_password', {
         url: '/forgot_password',
-        templateUrl: '/components/auth/forgot-password/forgot_password.html',
+        templateUrl: '/components/auth/forgot-password/forgot-password.html',
         controller: 'UserController',
         data: {
           page: 'login',
