@@ -209,33 +209,24 @@ module.exports = function (serviceLocator) {
   }
 
   function doMergeIndicatorValues(pipe, cb) {
-    var IndicatorValues = mongoose.model('IndicatorValues');
-    var bulk = IndicatorValues.collection.initializeOrderedBulkOp();
-
-    async.each(pipe.indicatorData, function (data, ecb) {
+    async.eachSeries(pipe.indicatorData, function (data, ecb) {
         async.waterfall([
           function _getDimensionValuesMeta(_wcb) {
             getDimensionValuesMeta(pipe, data, _wcb);
           },
           function _createOrUpdateIndiactorValue(_wcb) {
-            createOrUpdateIndiactorValue(pipe, data, bulk, _wcb);
+            createOrUpdateIndiactorValue(pipe, data, _wcb);
           }
         ], function (err) {
           return ecb(err);
         });
       },
       function (err) {
-        if (err) {
-          return cb(err);
-        }
-
-        bulk.execute(function (_err) {
-          return cb(_err);
-        });
+        return cb(err);
       });
   }
 
-  function createOrUpdateIndiactorValue(pipe, data, bulk, cb) {
+  function createOrUpdateIndiactorValue(pipe, data, cb) {
     var indicator = pipe.indicator;
     var coordinates = pipe.coordinates;
     var analysisSession = pipe.analysisSession;
