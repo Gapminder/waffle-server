@@ -61,7 +61,31 @@ angular.module('admin')
         controller: 'PublishersEditController',
         controllerAs: 'ctrl',
         data: {
-          pageTitle: 'Publishers'
+          pageTitle: 'Publisher'
+        }
+      })
+      .state('admin.home.publisherCatalogs', {
+        'abstract': true,
+        url: '/publisher-catalogs',
+        template: '<ui-view/>'
+      })
+      .state('admin.home.publisherCatalogs.list', {
+        url: '/list',
+        templateUrl: '/components/home/publisher-catalogs/publisher-catalogs-list.html',
+        controller: 'PublisherCatalogsListController',
+        controllerAs: 'ctrl',
+        data: {
+          pageTitle: 'Publisher Catalogs',
+          pageType: 'list'
+        }
+      })
+      .state('admin.home.publisherCatalogs.edit', {
+        url: '/edit/:id',
+        templateUrl: '/components/home/publisher-catalogs/publisher-catalogs-edit.html',
+        controller: 'PublisherCatalogsEditController',
+        controllerAs: 'ctrl',
+        data: {
+          pageTitle: 'Publisher Catalog'
         }
       })
       .state('admin.profile', {

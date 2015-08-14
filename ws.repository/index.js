@@ -32,4 +32,5 @@ module.exports = function (serviceLocator) {
 
   // publishers
   require('./publishers')(serviceLocator.repositories);
+  require('./publisher-catalogs')(serviceLocator.repositories);
 };

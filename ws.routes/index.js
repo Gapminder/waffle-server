@@ -6,5 +6,6 @@ module.exports = function (serviceLocator) {
   require('./api/spreadsheet')(serviceLocator);
   require('./api/import')(serviceLocator);
   require('./api/publishers')(serviceLocator);
+  require('./api/publisher-catalogs')(serviceLocator);
   require('./auth')(serviceLocator);
 };

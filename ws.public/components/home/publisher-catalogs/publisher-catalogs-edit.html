@@ -1,0 +1,35 @@
+<div class="row wrapper border-bottom white-bg page-heading">
+    <div class="col-lg-10">
+        <admin-collections-breadcrumb></admin-collections-breadcrumb>
+    </div>
+    <div class="col-lg-2">
+
+    </div>
+</div>
+<div class="page-wrapper wrapper-content animated fadeInRight">
+    <div ng-if="ctrl.record" class="row">
+        <div class="col-lg-7">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>{{ctrl.record._id ? ctrl.record.name : 'New Publisher Catalog'}}</h5>
+                </div>
+                <div class="ibox-content">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <form role="form">
+                                <div class="form-group">
+                                    <label>Name</label>
+                                    <input type="text" ng-model="ctrl.record.name" placeholder="Enter name of Publisher Catalog" class="form-control">
+                                </div>
+                                <div>
+                                    <button ng-click="ctrl.update()" class="btn btn-sm btn-primary pull-left m-t-n-xs" type="button"><strong>Save</strong></button>
+                                    <button ng-click="ctrl.cancel()" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button"><strong>Cancel</strong></button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

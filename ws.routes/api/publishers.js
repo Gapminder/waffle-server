@@ -1,9 +1,5 @@
 'use strict';
 
-var mongoose = require('mongoose');
-var _ = require('lodash');
-var async = require('async');
-
 module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
   var logger = app.get('log');
