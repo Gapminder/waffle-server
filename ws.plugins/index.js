@@ -16,9 +16,9 @@ module.exports = function (serviceLocator, cb) {
 
   // todo: can be generic
   async.waterfall([
-    //function (wcb) {
-    //  registerPlugin(require('./google-spread-sheets')(serviceLocator), runImportGoogleSpreadSheets(wcb));
-    //}
+    function (wcb) {
+      registerPlugin(require('./google-spread-sheets')(serviceLocator), runImportGoogleSpreadSheets(wcb));
+    },
     function (wcb) {
       registerPlugin(require('./csv')(serviceLocator), runImportCsv(wcb));
     }
