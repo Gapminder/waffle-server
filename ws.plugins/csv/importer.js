@@ -89,7 +89,7 @@ function createFileStream(serviceLocator, options, models, cb) {
       colCount = cells.length;
     }
 
-    if (rowCount && filter.includeValues && filter.includeValues.indexOf(cells[filter.colNumber]) < 0) {
+    if (rowCount && filter && filter.includeValues && filter.includeValues.indexOf(cells[filter.colNumber]) < 0) {
       return tcb();
     }
 
