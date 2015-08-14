@@ -1,33 +1,49 @@
 'use strict';
 
 angular.module('admin.controllers')
-  .controller('PublishersCollectionController', [
-    '$state', 'CollectionsService',
-    function ($state, CollectionsService) {
+  .controller('PublishersListController', [
+    '$state', 'CollectionsService', 'PublisherEntry',
+    function ($state, CollectionsService, PublisherEntry) {
       var self = this;
 
-      self.data = [];
-      self.currentData = [];
-      self.limit = 10;
-      self.paging = {currentPage: 1};
-      self.record = null;
-      self.pageChanged = getData;
+      self.deleteRecord = function deleteRecord(id) {
+        if (confirm('Are you sure?')) {
+          PublisherEntry.deleteRecord({id: id}, function (resp) {
+            if (resp.error) {
+              console.log(resp.error);
+            } else {
+              var currentRecord = _.findWhere(self.currentData, {_id: id});
+              if (currentRecord) {
+                self.currentData.splice(self.currentData.indexOf(currentRecord), 1);
+              }
+            }
+          });
+        }
+      };
 
-      console.log($state.current.name);
-      ($state.current.name.indexOf('.edit') > 0 ? getRecord : getData)();
+      self.pageChanged = getData;
+      self.refresh = refresh;
+
+      refresh();
+
+      function refresh() {
+        initData();
+        getData();
+      }
+
+      function initData() {
+        self.currentData = [];
+        self.limit = 10;
+        self.paging = {currentPage: 1};
+      }
 
       function getData() {
-        self.record = null;
         CollectionsService.getData({
           skip: (self.paging.currentPage - 1) * self.limit,
           limit: self.limit,
           list: '',
           action: 'publishers'
         }, updateList);
-      }
-
-      function getRecord() {
-        console.log(11111);
       }
 
       function updateList(err, data) {

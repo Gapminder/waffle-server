@@ -43,13 +43,13 @@ angular.module('admin')
       .state('admin.home.publishers', {
         'abstract': true,
         url: '/publishers',
-        template: '<ui-view/>',
-        controller: 'PublishersCollectionController',
-        controllerAs: 'ctrl'
+        template: '<ui-view/>'
       })
       .state('admin.home.publishers.list', {
         url: '/list',
-        templateUrl: '/components/home/publishers/publishers-collection.html',
+        templateUrl: '/components/home/publishers/publishers-list.html',
+        controller: 'PublishersListController',
+        controllerAs: 'ctrl',
         data: {
           pageTitle: 'Publishers',
           pageType: 'list'
@@ -57,7 +57,9 @@ angular.module('admin')
       })
       .state('admin.home.publishers.edit', {
         url: '/edit/:id',
-        templateUrl: '/components/home/publishers/publisher-edit.html',
+        templateUrl: '/components/home/publishers/publishers-edit.html',
+        controller: 'PublishersEditController',
+        controllerAs: 'ctrl',
         data: {
           pageTitle: 'Publishers'
         }

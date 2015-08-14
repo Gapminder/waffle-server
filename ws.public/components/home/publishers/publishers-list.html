@@ -12,15 +12,21 @@
             <div class="ibox float-e-margins">
                 <div class="ibox-content">
 
-                    <p ng-if="!ctrl.currentData.length">No data for collection.</p>
+                    <div ng-if="!ctrl.currentData.length">
+                        <p>No data for collection.</p>
+                        <a ui-sref="admin.home.publishers.edit({id: 'new'})" class="btn btn-primary">New Publisher</a>
+                        <a href ng-click="ctrl.refresh()" class="btn btn-white">Refresh</a>
+                    </div>
                     <div ng-if="ctrl.currentData.length">
                         <div class="table-responsive">
                             <table class="table table-striped">
                                 <thead>
                                 <tr>
                                     <th>Name</th>
+                                    <th>URL</th>
                                     <th>
                                         <a ui-sref="admin.home.publishers.edit({id: 'new'})" class="btn btn-primary">New Publisher</a>
+                                        <a href ng-click="ctrl.refresh()" class="btn btn-white">Refresh</a>
                                     </th>
                                 </tr>
                                 </thead>
@@ -30,8 +36,11 @@
                                         <div><a href>{{::item.name}} (X)</a></div>
                                     </td>
                                     <td>
+                                        <div>{{::item.url}}</div>
+                                    </td>
+                                    <td>
                                         <a ui-sref="admin.home.publishers.edit({id: item._id})" class="btn btn-primary">Edit</a>
-                                        <a href class="btn btn-white">Delete</a>
+                                        <a href ng-click="ctrl.deleteRecord(item._id)" class="btn btn-white">Delete</a>
                                     </td>
                                 </tr>
                                 </tbody>
