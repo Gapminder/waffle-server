@@ -41,7 +41,7 @@ function createFileStream(serviceLocator, options, models, cb) {
 
   var plugin = serviceLocator.plugins.get('csv');
   var ImportData = mongoose.model('ImportData');
-  var bulk = ImportData.collection.initializeOrderedBulkOp();
+  var bulk = ImportData.collection.initializeUnorderedBulkOp();
 
   var fsStream = fs.createReadStream(uid, {flags: 'r'});
 
@@ -70,26 +70,50 @@ function createFileStream(serviceLocator, options, models, cb) {
   });
 
   transformer.on('finish', function() {
+    console.log('  Start Bulk Upsert for ' + rowCount * colCount + ' cell(s)...');
+
     bulk.execute(function (err) {
       if (err) {
-        return cb(err);
+        return cb(err.errmsg);
       }
-
-      console.log('transform finish');
-      // Same as ReadableStream's close event
-      info = util.inspect(fs.statSync(uid));
-      meta = {rowCount: rowCount, colCount: colCount, title: options.dsuid};
-
-      result = {stats: {dsuid: options.dsuid, meta: meta, version: info.ctime}, is: models.importSession, ds: models.ds};
-
-      cb(err, result);
+      console.log('  Finished Bulk Upsert...');
     });
+
+    async.whilst(
+      function () {
+        if (bulk.s) {
+          console.log('    Bulk Upsert in progress...');
+        }
+        return bulk && bulk.s && bulk.s.bulkResult && bulk.s.bulkResult.nMatched === 0 && bulk.s.bulkResult.nUpserted === 0;
+      },
+      function (callback) {
+        setTimeout(callback, 5000);
+      },
+      function () {
+        // Same as ReadableStream's close event
+        info = util.inspect(fs.statSync(uid));
+        meta = {rowCount: rowCount, colCount: colCount, title: options.dsuid};
+
+        result = {
+          stats: {
+            dsuid: options.dsuid,
+            meta: meta,
+            version: info.ctime
+          },
+          is: models.importSession._id,
+          ds: models.ds
+        };
+
+        cb(null, result);
+      }
+    );
   });
 
   fsStream.pipe(parser).pipe(transformer);
 
   function processLine(cells, tcb) {
     var filter = options.filter;
+    var ObjectId = mongoose.Schema.Types.ObjectId;
 
     if (!rowCount) {
       colCount = cells.length;
@@ -98,8 +122,6 @@ function createFileStream(serviceLocator, options, models, cb) {
     if (rowCount && filter && filter.includeValues && filter.includeValues.indexOf(cells[filter.colNumber]) < 0) {
       return tcb();
     }
-
-    console.log('processing ' + (rowCount + 1) + ' row...');
 
     _.each(cells, function (cell, key) {
       var ds = [
@@ -115,7 +137,7 @@ function createFileStream(serviceLocator, options, models, cb) {
       bulk
         .find({$and: query})
         .upsert()
-        .updateOne({$set: {v: cell, ds: ds}, $addToSet: {importSessions: models.importSession._id}});
+        .updateOne({$setOnInsert: {v: cell, ds: ds}, $addToSet: {importSessions: models.importSession._id}});
     });
 
     rowCount++;

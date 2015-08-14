@@ -105,19 +105,19 @@ module.exports = function (serviceLocator, cb) {
       },
       function _createImportSession(models, wfcb) {
         var ImportSessions = mongoose.model('ImportSessions');
-        var is = {
+        var is = new ImportSessions({
           ds: models.ds._id,
           user: models.user._id
-        };
+        });
 
         console.log('_createImportSession');
 
-        ImportSessions.create(is, function (err, importSession) {
+        is.save(function (err, importSession) {
           if (err) {
             return wfcb(err);
           }
 
-          models.importSession = importSession.toJSON();
+          models.importSession = importSession;
           return wfcb(null, models);
         });
       },
@@ -150,7 +150,6 @@ module.exports = function (serviceLocator, cb) {
         });
       }
     ], function (err) {
-      console.log(err);
       _cb(err);
     });
   }
