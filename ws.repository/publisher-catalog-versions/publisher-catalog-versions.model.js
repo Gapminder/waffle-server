@@ -13,7 +13,7 @@ var Schema = mongoose.Schema;
 var PublisherCatalogVersions = new Schema({
   publisher: {type: Schema.Types.ObjectId, ref: 'Publishers'},
   catalog: {type: Schema.Types.ObjectId, ref: 'PublisherCatalogs'},
-  version: {type: String, unique: true, required: true}
+  version: {type: String, required: true}
 });
 
 mongoose.model('PublisherCatalogVersions', PublisherCatalogVersions);

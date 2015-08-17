@@ -25,6 +25,32 @@ exports.actionFactory = function actionFactory(actionType) {
         return obj;
       };
     },
+    pagedList: function pagedList(Model, obj) {
+      return function pagedListFun(params, cb) {
+        var limit = params.limit || 1000;
+        var skip = params.skip || 0;
+        var filter = params.filter || {};
+        var projection = params.projection || {};
+
+        Model.find(filter,
+          projection,
+          {skip: skip, limit: limit}, function (err, data) {
+            if (err) {
+              return cb(err);
+            }
+
+            Model.count(filter, function (_err, totalItems) {
+              if (_err) {
+                return cb(err);
+              }
+
+              return cb(err, {success: true, data: data, totalItems: totalItems});
+            });
+          });
+
+        return obj;
+      };
+    },
     findById: function findById(Model, obj) {
       return function findByIdFun(id, cb) {
         if (!mongoose.Types.ObjectId.isValid(id)) {

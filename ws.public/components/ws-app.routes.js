@@ -55,6 +55,26 @@ angular.module('admin')
           pageType: 'list'
         }
       })
+      .state('admin.home.publishers.catalogVersions', {
+        url: '/catalog/:publisherId',
+        templateUrl: '/components/home/publishers/publishers-catalog-versions.html',
+        controller: 'PublishersCatalogVersionsController',
+        controllerAs: 'ctrl',
+        data: {
+          pageTitle: 'Publishers',
+          pageType: 'list'
+        }
+      })
+      .state('admin.home.publishers.catalogVersionDetails', {
+        url: '/catalog/:publisherId/version/:versionId',
+        templateUrl: '/components/home/publishers/publishers-catalog-version-details.html',
+        controller: 'PublishersCatalogVersionDetailsController',
+        controllerAs: 'ctrl',
+        data: {
+          pageTitle: 'Publishers',
+          pageType: 'list'
+        }
+      })
       .state('admin.home.publishers.edit', {
         url: '/edit/:id',
         templateUrl: '/components/home/publishers/publishers-edit.html',

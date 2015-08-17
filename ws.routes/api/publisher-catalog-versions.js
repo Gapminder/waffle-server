@@ -11,7 +11,9 @@ module.exports = function (serviceLocator) {
   app.delete('/api/admin/publisher-catalog-version/:id', deletePublisherCatalogVersion);
 
   function getPublisherCatalogVersions(req, res) {
-    return publisherCatalogVersions.list(null, function (err, data) {
+    return publisherCatalogVersions.lastVersionByPublisher({
+      publisherId: req.query.publisherId
+    }, function (err, data) {
       if (err) {
         logger.error(err);
         return res.json({error: err});
