@@ -8,7 +8,7 @@ var utils = require('../utils');
 function PublishersRepository() {
 }
 
-['update', 'findById', 'deleteRecord'].forEach(function (actionName) {
+['pagedList', 'update', 'findById', 'deleteRecord'].forEach(function (actionName) {
   PublishersRepository.prototype[actionName] = utils.actionFactory(actionName)(Publishers, this);
 });
 

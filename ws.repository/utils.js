@@ -30,11 +30,14 @@ exports.actionFactory = function actionFactory(actionType) {
         var limit = params.limit || 1000;
         var skip = params.skip || 0;
         var filter = params.filter || {};
-        var projection = params.projection || {};
+        var projection = params.projection || null;
 
-        Model.find(filter,
+        Model
+          .find(filter,
           projection,
-          {skip: skip, limit: limit}, function (err, data) {
+          {skip: skip, limit: limit})
+          .lean()
+          .exec(function (err, data) {
             if (err) {
               return cb(err);
             }

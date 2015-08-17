@@ -10,6 +10,15 @@ var utils = require('../utils');
 function PublisherCatalogVersionsRepository() {
 }
 
+PublisherCatalogVersionsRepository.prototype.countByPublisher =
+  function countByPublisher(params, cb) {
+    return PublisherCatalogVersions
+      .count({publisher: params.publisherId})
+      .exec(function (err, count) {
+        return cb(err, count);
+      });
+  };
+
 PublisherCatalogVersionsRepository.prototype.lastVersionByPublisher =
   function lastVersionByPublisher(params, cb) {
     return PublisherCatalogVersions.aggregate([

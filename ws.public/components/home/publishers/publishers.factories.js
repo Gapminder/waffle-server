@@ -1,6 +1,6 @@
 angular.module('admin.services')
   .factory('Publishers', ['$resource', function ($resource) {
-    return $resource('/api/admin/collections/publishers', {}, {
+    return $resource('/api/admin/publishers', {}, {
       get: {
         method: 'GET'
       }

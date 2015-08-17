@@ -33,7 +33,7 @@
                                 <tbody>
                                 <tr ng-repeat="item in ctrl.currentData">
                                     <td>
-                                        <div><a ui-sref="admin.home.publishers.catalogVersions({publisherId: item._id})">{{::item.name}} (X)</a></div>
+                                        <div><a ui-sref="admin.home.publishers.catalogVersions({publisherId: item._id})">{{::item.name}} ({{::item.versions}})</a></div>
                                     </td>
                                     <td>
                                         <div>{{::item.url}}</div>

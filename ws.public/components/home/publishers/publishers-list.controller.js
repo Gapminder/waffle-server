@@ -2,8 +2,8 @@
 
 angular.module('admin.controllers')
   .controller('PublishersListController', [
-    '$state', 'CollectionsService', 'PublisherEntry',
-    function ($state, CollectionsService, PublisherEntry) {
+    '$state', 'Publishers', 'PublisherEntry',
+    function ($state, Publishers, PublisherEntry) {
       var self = this;
 
       self.deleteRecord = function deleteRecord(id) {
@@ -38,21 +38,20 @@ angular.module('admin.controllers')
       }
 
       function getData() {
-        CollectionsService.getData({
+        Publishers.get({
           skip: (self.paging.currentPage - 1) * self.limit,
-          limit: self.limit,
-          list: '',
-          action: 'publishers'
+          limit: self.limit
         }, updateList);
       }
 
-      function updateList(err, data) {
-        if (err) {
-          console.error(err);
+      function updateList(resp) {
+        if (resp.error) {
+          console.error(resp.error);
           return;
         }
-        self.currentData = data.data;
-        self.totalItems = data.totalItems;
+
+        self.currentData = resp.data.data;
+        self.totalItems = resp.data.totalItems;
       }
     }
   ]);
