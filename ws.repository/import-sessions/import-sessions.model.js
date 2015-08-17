@@ -16,9 +16,9 @@ var Schema = mongoose.Schema;
 var ImportSessions = new Schema({
   ds: {type: Schema.Types.ObjectId, ref: 'DataSources', required: true},
   isApproved: {type: Boolean, 'default': false},
-
   user: {type: Schema.Types.ObjectId, ref: 'Users', required: true},
-  version: {type: Date, 'default': new Date()}
+  version: {type: Date, 'default': new Date()},
+  publisherCatalogVersion: {type: Schema.Types.ObjectId, ref: 'PublisherCatalogVersions', required: true}
 });
 
 mongoose.model('ImportSessions', ImportSessions);
