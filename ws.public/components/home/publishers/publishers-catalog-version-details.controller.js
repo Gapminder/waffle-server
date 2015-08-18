@@ -5,9 +5,10 @@ angular.module('admin.controllers')
     '$state', 'PublisherCatalogVersionCounters',
     function ($state, PublisherCatalogVersionCounters) {
       var self = this;
+      self.versionId = $state.params.versionId;
 
       PublisherCatalogVersionCounters.get({
-          versionId: $state.params.versionId
+          versionId: self.versionId
         },
         function (resp) {
           if (resp.error) {

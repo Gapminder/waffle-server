@@ -4,7 +4,6 @@ module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
   var logger = app.get('log');
   var publisherCatalogVersions = serviceLocator.repositories.get('PublisherCatalogVersions');
-  var dimensions = serviceLocator.repositories.get('Dimensions');
 
   app.get('/api/admin/publisher-catalog-versions', getPublisherCatalogVersions);
   app.get('/api/admin/publisher-catalog-version-counters/:versionId', detailsCounts);
@@ -26,9 +25,6 @@ module.exports = function (serviceLocator) {
   }
 
   function detailsCounts(req, res) {
-
-    /////////////////////////////
-
     return publisherCatalogVersions.detailsCounts({
       versionId: req.params.versionId
     }, function (err, data) {

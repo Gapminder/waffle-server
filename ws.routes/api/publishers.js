@@ -12,6 +12,9 @@ module.exports = function (serviceLocator) {
   app.get('/api/admin/publisher/:id', getPublisher);
   app.post('/api/admin/publisher/:id', updatePublisher);
   app.delete('/api/admin/publisher/:id', deletePublisher);
+  app.get('/api/admin/publisher/dimensions/:versionId', getDimensions);
+  app.get('/api/admin/publisher/indicators/:versionId', getIndicators);
+  app.get('/api/admin/publisher/stats/:versionId', getStats);
 
   function getPublishers(req, res) {
     return publishers.pagedList(req.params, function (err, data) {
@@ -78,5 +81,17 @@ module.exports = function (serviceLocator) {
 
       return res.json({success: true});
     })
+  }
+
+  function getDimensions(req, res) {
+    return res.json({success: true, data: []});
+  }
+
+  function getIndicators(req, res) {
+    return res.json({success: true, data: []});
+  }
+
+  function getStats(req, res) {
+    return res.json({success: true, data: []});
   }
 };

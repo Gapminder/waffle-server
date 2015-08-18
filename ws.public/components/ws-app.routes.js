@@ -75,6 +75,36 @@ angular.module('admin')
           pageType: 'list'
         }
       })
+      .state('admin.home.publishers.dimensions', {
+        url: '/dimensions/:versionId',
+        templateUrl: '/components/home/publishers/details/detail-dimensions.html',
+        controller: 'DetailDimensionsController',
+        controllerAs: 'ctrl',
+        data: {
+          pageTitle: 'Publishers',
+          pageType: 'list'
+        }
+      })
+      .state('admin.home.publishers.indicators', {
+        url: '/indicators/:versionId',
+        templateUrl: '/components/home/publishers/details/detail-indicators.html',
+        controller: 'DetailIndicatorsController',
+        controllerAs: 'ctrl',
+        data: {
+          pageTitle: 'Publishers',
+          pageType: 'list'
+        }
+      })
+      .state('admin.home.publishers.stats', {
+        url: '/stats/:versionId',
+        templateUrl: '/components/home/publishers/details/detail-stats.html',
+        controller: 'DetailStatsController',
+        controllerAs: 'ctrl',
+        data: {
+          pageTitle: 'Publishers',
+          pageType: 'list'
+        }
+      })
       .state('admin.home.publishers.edit', {
         url: '/edit/:id',
         templateUrl: '/components/home/publishers/publishers-edit.html',
