@@ -1,17 +1,16 @@
 'use strict';
 var _ = require('lodash');
 var async = require('async');
-var Neo4j = require('node-neo4j');
 var express = require('express');
 var mongoose = require('mongoose');
 
-require('../ws.config');
-var config = require('./config');
-
 var app = express();
+require('../ws.config')(app);
+
 var serviceLocator = require('../ws.service-locator')(app);
 require('../ws.repository')(serviceLocator);
-var neo4jdb = new Neo4j(config.NEO4J_DB_URL);
+
+var neo4jdb = app.get('neo4jDb');
 
 createRelations(console.log.bind(console));
 

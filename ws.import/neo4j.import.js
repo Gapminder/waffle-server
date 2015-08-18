@@ -1,18 +1,17 @@
 'use strict';
 var _ = require('lodash');
 var async = require('async');
-var Neo4j = require('node-neo4j');
 var express = require('express');
 var mongoose = require('mongoose');
 
 var app = express();
 require('../ws.config')(app);
-var config = app.get('config');
+
 var serviceLocator = require('../ws.service-locator')(app);
 
 require('../ws.repository')(serviceLocator);
 
-var neo4jdb = new Neo4j(config.NEO4J_URL);
+var neo4jdb = app.get('neo4jDb');
 
 var collections = Object.keys(mongoose.models);
 //var collections = ['ImportSessions'];
@@ -184,7 +183,6 @@ function importDataCollection(modelName, eachcb) {
 }
 
 function createRelations(cb) {
-  return cb();
   async.series([
     function createIndicators(cb) {
       console.time('has_indicator_values');
