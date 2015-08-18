@@ -91,9 +91,13 @@ PublisherCatalogVersionsRepository.prototype.lastVersionByPublisher =
     });
   };
 
-['pagedList', 'update', 'findById', 'deleteRecord'].forEach(function (actionName) {
+['pagedList', 'update', 'deleteRecord'].forEach(function (actionName) {
   PublisherCatalogVersionsRepository.prototype[actionName] =
     utils.actionFactory(actionName)(PublisherCatalogVersions, this);
 });
+
+PublisherCatalogVersionsRepository.prototype.findById =
+  utils.actionFactory('findById')(PublisherCatalogVersions, this,
+    [{path: 'publisher', select: 'name'}, {path: 'catalog', select: 'name'}]);
 
 module.exports = PublisherCatalogVersionsRepository;

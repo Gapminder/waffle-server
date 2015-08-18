@@ -33,7 +33,10 @@ angular.module('admin')
         url: '',
         templateUrl: '/components/landing/landing.html',
         controller: 'MainController',
-        controllerAs: 'mainCtrl'
+        controllerAs: 'mainCtrl',
+        ncyBreadcrumb: {
+          label: 'Home'
+        }
       })
       .state('admin.home', {
         'abstract': true,
@@ -50,9 +53,9 @@ angular.module('admin')
         templateUrl: '/components/home/publishers/publishers-list.html',
         controller: 'PublishersListController',
         controllerAs: 'ctrl',
-        data: {
-          pageTitle: 'Publishers',
-          pageType: 'list'
+        ncyBreadcrumb: {
+          label: 'Publishers',
+          parent: 'admin.landing'
         }
       })
       .state('admin.home.publishers.catalogVersions', {
@@ -60,9 +63,9 @@ angular.module('admin')
         templateUrl: '/components/home/publishers/publishers-catalog-versions.html',
         controller: 'PublishersCatalogVersionsController',
         controllerAs: 'ctrl',
-        data: {
-          pageTitle: 'Publishers',
-          pageType: 'list'
+        ncyBreadcrumb: {
+          label: '{{ctrl.publisherRecord.name}}',
+          parent: 'admin.home.publishers.list'
         }
       })
       .state('admin.home.publishers.catalogVersionDetails', {
@@ -70,9 +73,9 @@ angular.module('admin')
         templateUrl: '/components/home/publishers/publishers-catalog-version-details.html',
         controller: 'PublishersCatalogVersionDetailsController',
         controllerAs: 'ctrl',
-        data: {
-          pageTitle: 'Publishers',
-          pageType: 'list'
+        ncyBreadcrumb: {
+          label: '{{ctrl.versionRecord.catalog.name}} ({{ctrl.versionRecord.version}})',
+          parent: 'admin.home.publishers.catalogVersions'
         }
       })
       .state('admin.home.publishers.dimensions', {
@@ -80,9 +83,9 @@ angular.module('admin')
         templateUrl: '/components/home/publishers/details/detail-dimensions.html',
         controller: 'DetailDimensionsController',
         controllerAs: 'ctrl',
-        data: {
-          pageTitle: 'Publishers',
-          pageType: 'list'
+        ncyBreadcrumb: {
+          label: 'Dimensions',
+          parent: 'admin.home.publishers.catalogVersionDetails'
         }
       })
       .state('admin.home.publishers.indicators', {
@@ -90,9 +93,9 @@ angular.module('admin')
         templateUrl: '/components/home/publishers/details/detail-indicators.html',
         controller: 'DetailIndicatorsController',
         controllerAs: 'ctrl',
-        data: {
-          pageTitle: 'Publishers',
-          pageType: 'list'
+        ncyBreadcrumb: {
+          label: 'Indicators',
+          parent: 'admin.home.publishers.catalogVersionDetails'
         }
       })
       .state('admin.home.publishers.stats', {
@@ -100,9 +103,9 @@ angular.module('admin')
         templateUrl: '/components/home/publishers/details/detail-stats.html',
         controller: 'DetailStatsController',
         controllerAs: 'ctrl',
-        data: {
-          pageTitle: 'Publishers',
-          pageType: 'list'
+        ncyBreadcrumb: {
+          label: 'Stats',
+          parent: 'admin.home.publishers.catalogVersionDetails'
         }
       })
       .state('admin.home.publishers.edit', {
@@ -110,8 +113,9 @@ angular.module('admin')
         templateUrl: '/components/home/publishers/publishers-edit.html',
         controller: 'PublishersEditController',
         controllerAs: 'ctrl',
-        data: {
-          pageTitle: 'Publisher'
+        ncyBreadcrumb: {
+          label: '{{ctrl.record._id ? ctrl.record.name : "New Publisher"}}',
+          parent: 'admin.home.publishers.list'
         }
       })
       .state('admin.home.publisherCatalogs', {
@@ -124,9 +128,9 @@ angular.module('admin')
         templateUrl: '/components/home/publisher-catalogs/publisher-catalogs-list.html',
         controller: 'PublisherCatalogsListController',
         controllerAs: 'ctrl',
-        data: {
-          pageTitle: 'Publisher Catalogs',
-          pageType: 'list'
+        ncyBreadcrumb: {
+          label: 'Publisher Catalogs',
+          parent: 'admin.landing'
         }
       })
       .state('admin.home.publisherCatalogs.edit', {
@@ -134,8 +138,9 @@ angular.module('admin')
         templateUrl: '/components/home/publisher-catalogs/publisher-catalogs-edit.html',
         controller: 'PublisherCatalogsEditController',
         controllerAs: 'ctrl',
-        data: {
-          pageTitle: 'Publisher Catalog'
+        ncyBreadcrumb: {
+          label: '{{ctrl.record._id ? ctrl.record.name : "New Publisher Catalog"}}',
+          parent: 'admin.home.publisherCatalogs.list'
         }
       })
       .state('admin.home.publisherCatalogVersions', {
@@ -148,9 +153,9 @@ angular.module('admin')
         templateUrl: '/components/home/publisher-catalog-versions/publisher-catalog-versions-list.html',
         controller: 'PublisherCatalogVersionsListController',
         controllerAs: 'ctrl',
-        data: {
-          pageTitle: 'Publisher Catalog Versions',
-          pageType: 'list'
+        ncyBreadcrumb: {
+          label: 'Publisher Catalog Versions',
+          parent: 'admin.landing'
         }
       })
       .state('admin.home.publisherCatalogVersions.edit', {
@@ -158,8 +163,10 @@ angular.module('admin')
         templateUrl: '/components/home/publisher-catalog-versions/publisher-catalog-versions-edit.html',
         controller: 'PublisherCatalogVersionsEditController',
         controllerAs: 'ctrl',
-        data: {
-          pageTitle: 'Publisher Catalog Version'
+        ncyBreadcrumb: {
+          label: '{{ctrl.record._id ? ctrl.record.catalog.name + " by " + ctrl.record.publisher.name + ' +
+          '"(" + ctrl.record.version + ")" : "New Publisher Catalog Version"}}',
+          parent: 'admin.home.publisherCatalogVersions.list'
         }
       })
       .state('admin.profile', {
@@ -172,7 +179,11 @@ angular.module('admin')
         url: '/playground',
         templateUrl: '/components/playground/cyper-editor.html',
         controller: 'CyperEditorController',
-        controllerAs: 'ctrl'
+        controllerAs: 'ctrl',
+        ncyBreadcrumb: {
+          label: 'Playground',
+          parent: 'admin.landing'
+        }
       })
       .state('admin.importData', {
         url: '/import-data?importSession',
@@ -194,11 +205,13 @@ angular.module('admin')
       .state('admin.collections.list', {
         url: '/list',
         templateUrl: 'components/collections/collections.html',
-        controller: 'CollectionsBreadcrumbController',
-        controllerAs: 'ctrl',
         data: {
           pageTitle: 'Collections List',
           pageType: 'list'
+        },
+        ncyBreadcrumb: {
+          label: 'Collections',
+          parent: 'admin.landing'
         }
       })
       .state('admin.collections.users', {
@@ -211,6 +224,10 @@ angular.module('admin')
         data: {
           pageTitle: 'Collection Users List',
           pageType: 'users'
+        },
+        ncyBreadcrumb: {
+          label: 'Users',
+          parent: 'admin.collections.list'
         }
       })
       .state('admin.collections.dataSourceTypes', {
@@ -223,6 +240,10 @@ angular.module('admin')
         data: {
           pageTitle: 'Collection Data Source Types List',
           pageType: 'dataSourceTypes'
+        },
+        ncyBreadcrumb: {
+          label: 'Data Source Types',
+          parent: 'admin.collections.list'
         }
       })
       .state('admin.collections.dataSources', {
@@ -235,6 +256,10 @@ angular.module('admin')
         data: {
           pageTitle: 'Collection Data Sources List',
           pageType: 'dataSources'
+        },
+        ncyBreadcrumb: {
+          label: 'Data Sources',
+          parent: 'admin.collections.list'
         }
       })
       .state('admin.collections.importData', {
@@ -247,6 +272,10 @@ angular.module('admin')
         data: {
           pageTitle: 'Collection Import Data List',
           pageType: 'importData'
+        },
+        ncyBreadcrumb: {
+          label: 'Import Data',
+          parent: 'admin.collections.list'
         }
       })
       .state('admin.collections.importSessions', {
@@ -259,6 +288,10 @@ angular.module('admin')
         data: {
           pageTitle: 'Collection Import Sessions List',
           pageType: 'importSessions'
+        },
+        ncyBreadcrumb: {
+          label: 'Import Sessions',
+          parent: 'admin.collections.list'
         }
       })
       .state('admin.collections.analysisSessions', {
@@ -271,6 +304,10 @@ angular.module('admin')
         data: {
           pageTitle: 'Collection Analysis Sessions List',
           pageType: 'analysisSessions'
+        },
+        ncyBreadcrumb: {
+          label: 'Analysis Sessions',
+          parent: 'admin.collections.list'
         }
       })
       .state('admin.collections.dimensions', {
@@ -283,6 +320,10 @@ angular.module('admin')
         data: {
           pageTitle: 'Collection Dimensions List',
           pageType: 'dimensions'
+        },
+        ncyBreadcrumb: {
+          label: 'Dimensions',
+          parent: 'admin.collections.list'
         }
       })
       .state('admin.collections.dimensionValues', {
@@ -295,6 +336,10 @@ angular.module('admin')
         data: {
           pageTitle: 'Collection Dimension Values List',
           pageType: 'dimensionValues'
+        },
+        ncyBreadcrumb: {
+          label: 'Dimension Values',
+          parent: 'admin.collections.list'
         }
       })
       .state('admin.collections.coordinates', {
@@ -307,6 +352,10 @@ angular.module('admin')
         data: {
           pageTitle: 'Collection Coordinates List',
           pageType: 'coordinates'
+        },
+        ncyBreadcrumb: {
+          label: 'Coordinates',
+          parent: 'admin.collections.list'
         }
       })
       .state('admin.collections.indicators', {
@@ -319,6 +368,10 @@ angular.module('admin')
         data: {
           pageTitle: 'Collection Indicators List',
           pageType: 'indicators'
+        },
+        ncyBreadcrumb: {
+          label: 'Indicators',
+          parent: 'admin.collections.list'
         }
       })
       .state('admin.collections.indicatorValues', {
@@ -331,6 +384,10 @@ angular.module('admin')
         data: {
           pageTitle: 'Collection Indicator Values List',
           pageType: 'indicatorValues'
+        },
+        ncyBreadcrumb: {
+          label: 'Indicator Values',
+          parent: 'admin.collections.list'
         }
       })
 

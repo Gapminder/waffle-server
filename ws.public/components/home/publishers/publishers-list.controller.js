@@ -50,8 +50,8 @@ angular.module('admin.controllers')
           return;
         }
 
-        self.currentData = resp.data.data;
-        self.totalItems = resp.data.totalItems;
+        self.currentData = resp.data;
+        self.totalItems = resp.totalItems;
       }
     }
   ]);

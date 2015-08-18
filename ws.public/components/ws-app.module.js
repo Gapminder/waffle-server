@@ -8,6 +8,7 @@ angular.module('admin', [
     'ngResource',
     'ui.router',
     'ui.bootstrap',
+    'ncy-angular-breadcrumb',
     'admin.controllers',
     'admin.services',
     'admin.directives'

@@ -2,8 +2,8 @@
 
 angular.module('admin.controllers')
   .controller('PublishersCatalogVersionsController', [
-    '$state', 'PublisherCatalogVersionsEntry',
-    function ($state, PublisherCatalogVersionsEntry) {
+    '$state', 'PublisherEntry', 'PublisherCatalogVersionsEntry',
+    function ($state, PublisherEntry, PublisherCatalogVersionsEntry) {
       var self = this;
 
       self.publisherId = $state.params.publisherId;
@@ -24,6 +24,10 @@ angular.module('admin.controllers')
       }
 
       function getData() {
+        PublisherEntry.get({id: self.publisherId},
+          function (resp) {
+            self.publisherRecord = resp.data;
+          });
         PublisherCatalogVersionsEntry.get({
           publisherId: self.publisherId
         }, updateList);

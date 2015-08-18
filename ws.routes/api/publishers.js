@@ -45,7 +45,7 @@ module.exports = function (serviceLocator) {
           return res.json({error: err});
         }
 
-        return res.json({success: true, data: data});
+        return res.json({success: true, data: data.data});
       });
     });
   }

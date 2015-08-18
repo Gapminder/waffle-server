@@ -57,21 +57,29 @@ exports.actionFactory = function actionFactory(actionType) {
         return obj;
       };
     },
-    findById: function findById(Model, obj) {
+    findById: function findById(Model, obj, populations) {
       return function findByIdFun(id, cb) {
         if (!mongoose.Types.ObjectId.isValid(id)) {
           return cb(null, {});
         }
 
-        Model.find({_id: id}, {}, function (err, data) {
-          if (err || (!data || !data.length || data.length < 1)) {
-            cb(err);
-            return obj;
-          }
+        var query = Model.find({_id: id});
 
-          cb(err, data[0]);
-          return obj;
-        });
+        if (populations) {
+          query.populate(populations)
+        }
+
+        query
+          .lean()
+          .exec(function (err, data) {
+            if (err || (!data || !data.length || data.length < 1)) {
+              cb(err);
+              return obj;
+            }
+
+            cb(err, data[0]);
+            return obj;
+          });
       }
     },
     deleteRecord: function deleteRecord(Model, obj) {

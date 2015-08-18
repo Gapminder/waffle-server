@@ -2,10 +2,18 @@
 
 angular.module('admin.controllers')
   .controller('PublishersCatalogVersionDetailsController', [
-    '$state', 'PublisherCatalogVersionCounters',
-    function ($state, PublisherCatalogVersionCounters) {
+    '$state', 'PublisherCatalogVersionEntry', 'PublisherCatalogVersionCounters',
+    function ($state, PublisherCatalogVersionEntry, PublisherCatalogVersionCounters) {
       var self = this;
       self.versionId = $state.params.versionId;
+
+      PublisherCatalogVersionEntry.get({id: self.versionId},
+        function (resp) {
+          self.publisherRecord = {};
+          // for previous state in breadcrumbs
+          self.publisherRecord.name = resp.data.publisher.name;
+          self.versionRecord = resp.data;
+        });
 
       PublisherCatalogVersionCounters.get({
           versionId: self.versionId
