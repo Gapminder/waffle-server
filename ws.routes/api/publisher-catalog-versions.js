@@ -4,8 +4,10 @@ module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
   var logger = app.get('log');
   var publisherCatalogVersions = serviceLocator.repositories.get('PublisherCatalogVersions');
+  var dimensions = serviceLocator.repositories.get('Dimensions');
 
   app.get('/api/admin/publisher-catalog-versions', getPublisherCatalogVersions);
+  app.get('/api/admin/publisher-catalog-version-counters/:versionId', detailsCounts);
   app.get('/api/admin/publisher-catalog-version/:id', getPublisherCatalogVersion);
   app.post('/api/admin/publisher-catalog-version/:id', updatePublisherCatalogVersion);
   app.delete('/api/admin/publisher-catalog-version/:id', deletePublisherCatalogVersion);
@@ -13,6 +15,22 @@ module.exports = function (serviceLocator) {
   function getPublisherCatalogVersions(req, res) {
     return publisherCatalogVersions.lastVersionByPublisher({
       publisherId: req.query.publisherId
+    }, function (err, data) {
+      if (err) {
+        logger.error(err);
+        return res.json({error: err});
+      }
+
+      return res.json({success: true, data: data});
+    });
+  }
+
+  function detailsCounts(req, res) {
+
+    /////////////////////////////
+
+    return publisherCatalogVersions.detailsCounts({
+      versionId: req.params.versionId
     }, function (err, data) {
       if (err) {
         logger.error(err);

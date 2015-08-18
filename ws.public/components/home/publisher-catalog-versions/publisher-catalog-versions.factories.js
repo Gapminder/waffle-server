@@ -6,6 +6,14 @@ angular.module('admin.services')
       }
     });
   }])
+  .factory('PublisherCatalogVersionCounters', ['$resource', function ($resource) {
+    return $resource('/api/admin/publisher-catalog-version-counters/:versionId',
+      {versionId: '@versionId'}, {
+        get: {
+          method: 'GET'
+        }
+      });
+  }])
   .factory('PublisherCatalogVersionEntry', ['$resource', function ($resource) {
     return $resource('/api/admin/publisher-catalog-version/:id', {id: '@_id'}, {
       get: {

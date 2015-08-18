@@ -66,7 +66,7 @@ angular.module('admin')
         }
       })
       .state('admin.home.publishers.catalogVersionDetails', {
-        url: '/catalog/:publisherId/version/:versionId',
+        url: '/version/:versionId',
         templateUrl: '/components/home/publishers/publishers-catalog-version-details.html',
         controller: 'PublishersCatalogVersionDetailsController',
         controllerAs: 'ctrl',
