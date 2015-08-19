@@ -7,7 +7,8 @@ var PublisherCatalogVersions = mongoose.model('PublisherCatalogVersions');
 var PublisherCatalogs = mongoose.model('PublisherCatalogs');
 var AnalysisSessions = mongoose.model('AnalysisSessions');
 var ImportSessions = mongoose.model('ImportSessions');
-var DimensionValues = mongoose.model('DimensionValues');
+var Dimensions = mongoose.model('Dimensions');
+var Indicators = mongoose.model('Indicators');
 var IndicatorValues = mongoose.model('IndicatorValues');
 
 var utils = require('../utils');
@@ -21,17 +22,17 @@ PublisherCatalogVersionsRepository.prototype.detailsCounts =
       function (err, analysisSessions) {
         return async.parallel({
             dimensions: function (cb) {
-              return DimensionValues
-                .distinct('dimension', {analysisSessions: {$in: analysisSessions}})
-                .exec(function (err, data) {
-                  return cb(err, data.length);
+              return Dimensions
+                .count({analysisSessions: {$in: analysisSessions}})
+                .exec(function (err, count) {
+                  return cb(err, count);
                 });
             },
             indicators: function (cb) {
-              return IndicatorValues
-                .distinct('indicator', {analysisSessions: {$in: analysisSessions}})
-                .exec(function (err, data) {
-                  return cb(err, data.length);
+              return Indicators
+                .count({analysisSessions: {$in: analysisSessions}})
+                .exec(function (err, count) {
+                  return cb(err, count);
                 });
             },
             stats: function (cb) {
