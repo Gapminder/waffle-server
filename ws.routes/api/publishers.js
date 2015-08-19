@@ -51,7 +51,7 @@ module.exports = function (serviceLocator) {
   }
 
   function getPublisher(req, res) {
-    return publishers.findById(req.params.id, function (err, publisher) {
+    return publishers.findById({id: req.params.id}, function (err, publisher) {
       if (err) {
         logger.error(err);
         return res.json({error: err});

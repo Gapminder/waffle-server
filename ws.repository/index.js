@@ -22,8 +22,8 @@ module.exports = function (serviceLocator) {
 
   // schema analysis
   require('./analysis-sessions')(serviceLocator.repositories);
-  require('./dimensions')(serviceLocator.repositories);
   require('./dimension-values')(serviceLocator.repositories);
+  require('./dimensions')(serviceLocator.repositories);
 
   // indicators
   require('./coordinates')(serviceLocator.repositories);

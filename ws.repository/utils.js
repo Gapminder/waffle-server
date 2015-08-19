@@ -58,12 +58,12 @@ exports.actionFactory = function actionFactory(actionType) {
       };
     },
     findById: function findById(Model, obj, populations) {
-      return function findByIdFun(id, cb) {
-        if (!mongoose.Types.ObjectId.isValid(id)) {
+      return function findByIdFun(params, cb) {
+        if (!mongoose.Types.ObjectId.isValid(params.id)) {
           return cb(null, {});
         }
 
-        var query = Model.find({_id: id});
+        var query = Model.find({_id: params.id}, params.projection || null);
 
         if (populations) {
           query.populate(populations)

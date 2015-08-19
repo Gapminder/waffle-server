@@ -5,4 +5,17 @@ angular.module('admin.services')
         method: 'GET'
       }
     });
+  }])
+  .factory('DimensionEntity', ['$resource', function ($resource) {
+    return $resource('/api/admin/dimensions/:id', {id: '@_id'}, {
+      get: {
+        method: 'GET'
+      },
+      update: {
+        method: 'POST'
+      },
+      deleteRecord: {
+        method: 'DELETE'
+      }
+    });
   }]);

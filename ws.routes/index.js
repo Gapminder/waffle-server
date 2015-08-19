@@ -3,6 +3,8 @@
 module.exports = function (serviceLocator) {
   require('./api/collections')(serviceLocator);
   require('./api/cyper')(serviceLocator);
+  require('./api/dimensions')(serviceLocator);
+  require('./api/dimension-values')(serviceLocator);
   require('./api/spreadsheet')(serviceLocator);
   require('./api/import')(serviceLocator);
   require('./api/publishers')(serviceLocator);

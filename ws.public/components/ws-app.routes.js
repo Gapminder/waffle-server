@@ -88,6 +88,31 @@ angular.module('admin')
           parent: 'admin.home.publishers.catalogVersionDetails'
         }
       })
+      .state('admin.home.publishers.dimensionValues', {
+        'abstract': true,
+        url: '/dimension-values',
+        template: '<ui-view/>'
+      })
+      .state('admin.home.publishers.dimensionValues.list', {
+        url: '/:versionId/:dimensionId',
+        templateUrl: '/components/home/publishers/details/detail-dimension-values.html',
+        controller: 'DetailDimensionValuesController',
+        controllerAs: 'ctrl',
+        ncyBreadcrumb: {
+          label: '{{ctrl.currentDimension.name}}',
+          parent: 'admin.home.publishers.dimensions'
+        }
+      })
+      .state('admin.home.publishers.dimensionValues.edit', {
+        url: '/:versionId/:dimensionId/:id',
+        templateUrl: '/components/home/publishers/details/detail-dimension-values-edit.html',
+        controller: 'DetailDimensionValuesEditController',
+        controllerAs: 'ctrl',
+        ncyBreadcrumb: {
+          label: '{{ctrl.record.value}}',
+          parent: 'admin.home.publishers.dimensionValues.list'
+        }
+      })
       .state('admin.home.publishers.indicators', {
         url: '/indicators/:versionId',
         templateUrl: '/components/home/publishers/details/detail-indicators.html',

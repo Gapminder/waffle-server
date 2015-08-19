@@ -10,7 +10,7 @@ module.exports = function (serviceLocator) {
   app.delete('/api/admin/publisher-catalog/:id', deletePublisherCatalog);
 
   function getPublisherCatalog(req, res) {
-    return publisherCatalogs.findById(req.params.id, function (err, publisherCatalog) {
+    return publisherCatalogs.findById({id: req.params.id}, function (err, publisherCatalog) {
       if (err) {
         logger.error(err);
         return res.json({error: err});

@@ -38,7 +38,7 @@ module.exports = function (serviceLocator) {
   }
 
   function getPublisherCatalogVersion(req, res) {
-    return publisherCatalogVersions.findById(req.params.id, function (err, record) {
+    return publisherCatalogVersions.findById({id: req.params.id}, function (err, record) {
       if (err) {
         logger.error(err);
         return res.json({error: err});
