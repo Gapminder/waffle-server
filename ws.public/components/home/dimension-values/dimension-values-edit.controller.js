@@ -24,6 +24,7 @@ angular.module('admin.controllers')
       getRecord();
 
       self.update = function update() {
+        self.record.dimension = self.dimensionId;
         DimensionValueEntity.update({id: $state.params.id}, self.record, function (resp) {
           if (resp.error) {
             console.log(resp.error);

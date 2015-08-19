@@ -9,21 +9,25 @@ exports.actionFactory = function actionFactory(actionType) {
     update: function update(Model, obj) {
       return function updateFun(id, data, cb) {
         var isNew = !mongoose.Types.ObjectId.isValid(id);
-        if (!isNew) {
-          data._id = id;
-        }
 
-        var record = new Model(data);
-        record.isNew = isNew;
-        record.validate(function (err) {
-          if (err) {
+        if (!isNew) {
+          Model.update({_id: id}, {$set: data}, function (err) {
             cb(err);
-          } else {
-            record.save(function (err, updatedRecord) {
-              cb(err, updatedRecord);
-            });
-          }
-        });
+          });
+        } else {
+          data._id = id;
+          var record = new Model(data);
+          record.isNew = isNew;
+          record.validate(function (err) {
+            if (err) {
+              cb(err);
+            } else {
+              record.save(function (err) {
+                cb(err);
+              });
+            }
+          });
+        }
 
         return obj;
       };

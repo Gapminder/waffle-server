@@ -14,7 +14,6 @@
 
                     <div ng-if="!ctrl.currentData.length">
                         <p>No data for collection.</p>
-                        <a ui-sref="admin.home.publishers.edit({id: 'new'})" class="btn btn-primary">New</a>
                         <a href ng-click="ctrl.refresh()" class="btn btn-white">Refresh</a>
                     </div>
                     <div ng-if="ctrl.currentData.length">
@@ -35,7 +34,6 @@
                                     </td>
                                     <td>
                                         <a ui-sref="admin.home.publishers.dimensionValues.edit({versionId: ctrl.versionId, dimensionId: ctrl.dimensionId, id: item._id})" class="btn btn-primary">Edit</a>
-                                        <a href ng-click="ctrl.deleteRecord(item._id)" class="btn btn-white">Delete</a>
                                     </td>
                                 </tr>
                                 </tbody>
