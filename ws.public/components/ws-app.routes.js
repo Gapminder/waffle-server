@@ -60,7 +60,7 @@ angular.module('admin')
       })
       .state('admin.home.publishers.catalogVersions', {
         url: '/catalog/:publisherId',
-        templateUrl: '/components/home/publishers/publishers-catalog-versions.html',
+        templateUrl: '/components/home/versions/versions.html',
         controller: 'PublishersCatalogVersionsController',
         controllerAs: 'ctrl',
         ncyBreadcrumb: {
@@ -70,7 +70,7 @@ angular.module('admin')
       })
       .state('admin.home.publishers.catalogVersionDetails', {
         url: '/version/:versionId',
-        templateUrl: '/components/home/publishers/publishers-catalog-version-details.html',
+        templateUrl: '/components/home/versions/version-details.html',
         controller: 'PublishersCatalogVersionDetailsController',
         controllerAs: 'ctrl',
         ncyBreadcrumb: {
@@ -80,7 +80,7 @@ angular.module('admin')
       })
       .state('admin.home.publishers.dimensions', {
         url: '/dimensions/:versionId',
-        templateUrl: '/components/home/publishers/details/detail-dimensions.html',
+        templateUrl: '/components/home/dimensions/dimensions.html',
         controller: 'DetailDimensionsController',
         controllerAs: 'ctrl',
         ncyBreadcrumb: {
@@ -95,7 +95,7 @@ angular.module('admin')
       })
       .state('admin.home.publishers.dimensionValues.list', {
         url: '/:versionId/:dimensionId',
-        templateUrl: '/components/home/publishers/details/detail-dimension-values.html',
+        templateUrl: '/components/home/dimension-values/dimension-values.html',
         controller: 'DetailDimensionValuesController',
         controllerAs: 'ctrl',
         ncyBreadcrumb: {
@@ -105,7 +105,7 @@ angular.module('admin')
       })
       .state('admin.home.publishers.dimensionValues.edit', {
         url: '/:versionId/:dimensionId/:id',
-        templateUrl: '/components/home/publishers/details/detail-dimension-values-edit.html',
+        templateUrl: '/components/home/dimension-values/dimension-values-edit.html',
         controller: 'DetailDimensionValuesEditController',
         controllerAs: 'ctrl',
         ncyBreadcrumb: {
@@ -115,7 +115,7 @@ angular.module('admin')
       })
       .state('admin.home.publishers.indicators', {
         url: '/indicators/:versionId',
-        templateUrl: '/components/home/publishers/details/detail-indicators.html',
+        templateUrl: '/components/home/indicators/indicators.html',
         controller: 'DetailIndicatorsController',
         controllerAs: 'ctrl',
         ncyBreadcrumb: {
@@ -125,7 +125,7 @@ angular.module('admin')
       })
       .state('admin.home.publishers.stats', {
         url: '/stats/:versionId',
-        templateUrl: '/components/home/publishers/details/detail-stats.html',
+        templateUrl: '/components/home/stats/stats.html',
         controller: 'DetailStatsController',
         controllerAs: 'ctrl',
         ncyBreadcrumb: {
@@ -145,12 +145,12 @@ angular.module('admin')
       })
       .state('admin.home.publisherCatalogs', {
         'abstract': true,
-        url: '/publisher-catalogs',
+        url: '/catalogs',
         template: '<ui-view/>'
       })
       .state('admin.home.publisherCatalogs.list', {
         url: '/list',
-        templateUrl: '/components/home/publisher-catalogs/publisher-catalogs-list.html',
+        templateUrl: '/components/home/catalogs-registry/catalogs-registry-list.html',
         controller: 'PublisherCatalogsListController',
         controllerAs: 'ctrl',
         ncyBreadcrumb: {
@@ -160,7 +160,7 @@ angular.module('admin')
       })
       .state('admin.home.publisherCatalogs.edit', {
         url: '/edit/:id',
-        templateUrl: '/components/home/publisher-catalogs/publisher-catalogs-edit.html',
+        templateUrl: '/components/home/catalogs-registry/catalogs-registry-edit.html',
         controller: 'PublisherCatalogsEditController',
         controllerAs: 'ctrl',
         ncyBreadcrumb: {
@@ -170,12 +170,12 @@ angular.module('admin')
       })
       .state('admin.home.publisherCatalogVersions', {
         'abstract': true,
-        url: '/publisher-catalog-versions',
+        url: '/versions',
         template: '<ui-view/>'
       })
       .state('admin.home.publisherCatalogVersions.list', {
         url: '/list',
-        templateUrl: '/components/home/publisher-catalog-versions/publisher-catalog-versions-list.html',
+        templateUrl: '/components/home/versions-registry/versions-registry-list.html',
         controller: 'PublisherCatalogVersionsListController',
         controllerAs: 'ctrl',
         ncyBreadcrumb: {
@@ -185,7 +185,7 @@ angular.module('admin')
       })
       .state('admin.home.publisherCatalogVersions.edit', {
         url: '/edit/:id',
-        templateUrl: '/components/home/publisher-catalog-versions/publisher-catalog-versions-edit.html',
+        templateUrl: '/components/home/versions-registry/versions-registry-edit.html',
         controller: 'PublisherCatalogVersionsEditController',
         controllerAs: 'ctrl',
         ncyBreadcrumb: {
