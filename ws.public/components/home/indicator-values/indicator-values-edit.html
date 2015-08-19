@@ -11,7 +11,7 @@
         <div class="col-lg-7">
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
-                    <h5>{{ctrl.record._id ? ctrl.record.name : 'New Dimension Value'}}</h5>
+                    <h5>{{ctrl.record._id ? ctrl.record.ds[0].v + ' / ' + ctrl.record.ds[1].v : 'New Indicator Value'}}</h5>
                 </div>
                 <div class="ibox-content">
                     <div class="row">
@@ -19,7 +19,7 @@
                             <form role="form">
                                 <div class="form-group">
                                     <label>Value</label>
-                                    <input type="text" ng-model="ctrl.record.value" placeholder="Enter Dimension Value" class="form-control">
+                                    <input type="text" ng-model="ctrl.record.v" placeholder="Enter Indicator Value" class="form-control">
                                 </div>
                                 <div>
                                     <button ng-click="ctrl.update()" class="btn btn-sm btn-primary pull-left m-t-n-xs" type="button"><strong>Save</strong></button>

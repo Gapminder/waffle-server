@@ -5,4 +5,17 @@ angular.module('admin.services')
         method: 'GET'
       }
     });
+  }])
+  .factory('IndicatorEntity', ['$resource', function ($resource) {
+    return $resource('/api/admin/indicators/:id', {id: '@_id'}, {
+      get: {
+        method: 'GET'
+      },
+      update: {
+        method: 'POST'
+      },
+      deleteRecord: {
+        method: 'DELETE'
+      }
+    });
   }]);

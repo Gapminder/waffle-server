@@ -27,8 +27,8 @@ module.exports = function (serviceLocator) {
 
   // indicators
   require('./coordinates')(serviceLocator.repositories);
-  require('./indicators')(serviceLocator.repositories);
   require('./indicator-values')(serviceLocator.repositories);
+  require('./indicators')(serviceLocator.repositories);
 
   // publishers
   require('./publishers')(serviceLocator.repositories);

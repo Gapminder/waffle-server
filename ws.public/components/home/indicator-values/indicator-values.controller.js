@@ -1,12 +1,12 @@
 'use strict';
 
 angular.module('admin.controllers')
-  .controller('DetailDimensionValuesController', [
-    '$state', 'PublisherCatalogVersionEntry', 'PublisherDetailDimensionValues', 'DimensionEntity',
-    function ($state, PublisherCatalogVersionEntry, PublisherDetailDimensionValues, DimensionEntity) {
+  .controller('DetailIndicatorValuesController', [
+    '$state', 'PublisherCatalogVersionEntry', 'PublisherDetailIndicatorValues', 'IndicatorEntity',
+    function ($state, PublisherCatalogVersionEntry, PublisherDetailIndicatorValues, IndicatorEntity) {
       var self = this;
       self.versionId = $state.params.versionId;
-      self.dimensionId = $state.params.dimensionId;
+      self.indicatorId = $state.params.indicatorId;
 
       // It's data for breadcrumbs dynamic states
       PublisherCatalogVersionEntry.get({id: self.versionId},
@@ -17,8 +17,8 @@ angular.module('admin.controllers')
           self.versionRecord = resp.data;
         });
 
-      DimensionEntity.get({id: self.dimensionId}, function (resp) {
-        self.currentDimension = resp.data;
+      IndicatorEntity.get({id: self.indicatorId}, function (resp) {
+        self.currentIndicator = resp.data;
       });
       //--It's data for breadcrumbs dynamic states
 
@@ -40,11 +40,11 @@ angular.module('admin.controllers')
       }
 
       function getData() {
-        PublisherDetailDimensionValues.get({
+        PublisherDetailIndicatorValues.get({
           skip: (self.paging.currentPage - 1) * self.limit,
           limit: self.limit,
           versionId: self.versionId,
-          dimensionId: self.dimensionId
+          indicatorId: self.indicatorId
         }, updateList);
       }
 

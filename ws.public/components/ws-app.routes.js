@@ -123,6 +123,31 @@ angular.module('admin')
           parent: 'admin.home.publishers.catalogVersionDetails'
         }
       })
+      .state('admin.home.publishers.indicatorValues', {
+        'abstract': true,
+        url: '/indicator-values',
+        template: '<ui-view/>'
+      })
+      .state('admin.home.publishers.indicatorValues.list', {
+        url: '/:versionId/:indicatorId',
+        templateUrl: '/components/home/indicator-values/indicator-values.html',
+        controller: 'DetailIndicatorValuesController',
+        controllerAs: 'ctrl',
+        ncyBreadcrumb: {
+          label: '{{ctrl.currentIndicator.name}}',
+          parent: 'admin.home.publishers.indicators'
+        }
+      })
+      .state('admin.home.publishers.indicatorValues.edit', {
+        url: '/:versionId/:indicatorId/:id',
+        templateUrl: '/components/home/indicator-values/indicator-values-edit.html',
+        controller: 'DetailIndicatorValuesEditController',
+        controllerAs: 'ctrl',
+        ncyBreadcrumb: {
+          label: '{{ctrl.record._id ? ctrl.record.ds[0].v + " - " + ctrl.record.ds[1].v : "New Indicator Value"}}',
+          parent: 'admin.home.publishers.indicatorValues.list'
+        }
+      })
       .state('admin.home.publishers.stats', {
         url: '/stats/:versionId',
         templateUrl: '/components/home/stats/stats.html',

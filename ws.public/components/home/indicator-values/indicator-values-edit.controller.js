@@ -1,12 +1,12 @@
 'use strict';
 
 angular.module('admin.controllers')
-  .controller('DetailDimensionValuesEditController', [
-    '$state', 'PublisherCatalogVersionEntry', 'DimensionEntity', 'DimensionValueEntity',
-    function ($state, PublisherCatalogVersionEntry, DimensionEntity, DimensionValueEntity) {
+  .controller('DetailIndicatorValuesEditController', [
+    '$state', 'PublisherCatalogVersionEntry', 'IndicatorEntity', 'IndicatorValueEntity',
+    function ($state, PublisherCatalogVersionEntry, IndicatorEntity, IndicatorValueEntity) {
       var self = this;
       self.versionId = $state.params.versionId;
-      self.dimensionId = $state.params.dimensionId;
+      self.indicatorId = $state.params.indicatorId;
 
       // It's data for breadcrumbs dynamic states
       PublisherCatalogVersionEntry.get({id: self.versionId},
@@ -16,32 +16,32 @@ angular.module('admin.controllers')
           self.versionRecord = resp.data;
         });
 
-      DimensionEntity.get({id: self.dimensionId}, function (resp) {
-        self.currentDimension = resp.data;
+      IndicatorEntity.get({id: self.indicatorId}, function (resp) {
+        self.currentIndicator = resp.data;
       });
       //--It's data for breadcrumbs dynamic states
 
       getRecord();
 
       self.update = function update() {
-        self.record.dimension = self.dimensionId;
-        DimensionValueEntity.update({id: $state.params.id}, self.record, function (resp) {
+        self.record.indicator = self.indicatorId;
+        IndicatorValueEntity.update({id: $state.params.id}, self.record, function (resp) {
           if (resp.error) {
             console.log(resp.error);
           } else {
-            $state.go('admin.home.publishers.dimensionValues.list',
-              {versionId: self.versionId, dimensionId: self.dimensionId});
+            $state.go('admin.home.publishers.indicatorValues.list',
+              {versionId: self.versionId, indicatorId: self.indicatorId});
           }
         });
       };
 
       self.cancel = function cancel() {
-        $state.go('admin.home.publishers.dimensionValues.list',
-          {versionId: self.versionId, dimensionId: self.dimensionId});
+        $state.go('admin.home.publishers.indicatorValues.list',
+          {versionId: self.versionId, indicatorId: self.indicatorId});
       };
 
       function getRecord() {
-        DimensionValueEntity.get({id: $state.params.id}, function (resp) {
+        IndicatorValueEntity.get({id: $state.params.id}, function (resp) {
           if (resp.error) {
             console.log(resp.error);
           } else {

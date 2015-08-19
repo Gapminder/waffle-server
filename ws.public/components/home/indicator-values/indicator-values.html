@@ -21,6 +21,7 @@
                             <table class="table table-striped">
                                 <thead>
                                 <tr>
+                                    <th></th>
                                     <th>Value</th>
                                     <th>
                                         <a href ng-click="ctrl.refresh()" class="btn btn-white">Refresh</a>
@@ -29,11 +30,10 @@
                                 </thead>
                                 <tbody>
                                 <tr ng-repeat="item in ctrl.currentData">
+                                    <td>{{::item.ds[0].v}} / {{::item.ds[1].v}}</td>
+                                    <td>{{::item.v}}</td>
                                     <td>
-                                        <div>{{::item.value}}</div>
-                                    </td>
-                                    <td>
-                                        <a ui-sref="admin.home.publishers.dimensionValues.edit({versionId: ctrl.versionId, dimensionId: ctrl.dimensionId, id: item._id})" class="btn btn-primary">Edit</a>
+                                        <a ui-sref="admin.home.publishers.indicatorValues.edit({versionId: ctrl.versionId, indicatorId: ctrl.indicatorId, id: item._id})" class="btn btn-primary">Edit</a>
                                     </td>
                                 </tr>
                                 </tbody>

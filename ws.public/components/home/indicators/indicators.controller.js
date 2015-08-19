@@ -18,7 +18,7 @@ angular.module('admin.controllers')
       //--It's data for breadcrumbs dynamic states
 
       PublisherDetailIndicators.get({versionId: self.versionId}, function (resp) {
-        console.log(self.versionId, resp.error, resp.data);
+        self.currentData = resp.data;
       });
     }
   ]);

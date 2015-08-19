@@ -1,14 +1,14 @@
 angular.module('admin.services')
-  .factory('PublisherDetailDimensionValues', ['$resource', function ($resource) {
-    return $resource('/api/admin/publisher/dimension-values/:versionId/:dimensionId',
-      {versionId: '@versionId', dimensionId: '@dimensionId'}, {
+  .factory('PublisherDetailIndicatorValues', ['$resource', function ($resource) {
+    return $resource('/api/admin/publisher/indicator-values/:versionId/:indicatorId',
+      {versionId: '@versionId', indicatorId: '@indicatorId'}, {
         get: {
           method: 'GET'
         }
       });
   }])
-  .factory('DimensionValueEntity', ['$resource', function ($resource) {
-    return $resource('/api/admin/dimension-values/:id', {id: '@_id'}, {
+  .factory('IndicatorValueEntity', ['$resource', function ($resource) {
+    return $resource('/api/admin/indicator-values/:id', {id: '@_id'}, {
       get: {
         method: 'GET'
       },
