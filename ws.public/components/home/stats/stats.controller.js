@@ -2,8 +2,8 @@
 
 angular.module('admin.controllers')
   .controller('DetailStatsController', [
-    '$state', 'PublisherCatalogVersionEntry', 'PublisherDetailStats',
-    function ($state, PublisherCatalogVersionEntry, PublisherDetailStats) {
+    '$state', 'PublisherCatalogVersionEntry', 'Chart',
+    function ($state, PublisherCatalogVersionEntry, Chart) {
       var self = this;
       self.versionId = $state.params.versionId;
 
@@ -16,9 +16,5 @@ angular.module('admin.controllers')
           self.versionRecord = resp.data;
         });
       //--It's data for breadcrumbs dynamic states
-
-      PublisherDetailStats.get({versionId: self.versionId}, function (resp) {
-        console.log(self.versionId, resp.error, resp.data);
-      });
     }
   ]);
