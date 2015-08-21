@@ -30,6 +30,7 @@
                                                 {{::item._id.name}}
                                             </a>
                                             <select ng-model="item.version"
+                                                    ng-change="ctrl.goNext(item.version)"
                                                     ng-options="item._id as item.name for item in item.versions | orderBy:'name':true">
                                             </select>
                                         </div>

@@ -10,6 +10,12 @@ angular.module('admin.controllers')
       self.pageChanged = getData;
       self.refresh = refresh;
 
+      self.goNext = function goNext(versionId) {
+        $state.go('admin.home.publishers.catalogVersionDetails', {
+          publisherId: self.publisherId, versionId: versionId
+        });
+      };
+
       refresh(false);
 
       function refresh(isForce) {
