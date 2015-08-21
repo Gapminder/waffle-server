@@ -302,12 +302,35 @@ var executions = {
       },
       function fillIndicatorValues(pipe, cb) {
         console.log('Fill Indicator values');
+        var currentPublisherId = 'change me!';
 
-        function addNewIndicatorValue(data) {
+        function updateRelatedDataByRecordSource(devInfoValue, cb) {
+          console.log(devInfoValue['Source']);
+          // todo: update Dimensions, DimensionValues, Indicators, IndicatorValues:
+          // 0. Import session and publisher are predefined
+          // 1. find Publisher Catalog by devInfoValue['Source'] and current Import session
+          // 2. create it in case of does not exists
+          // 3. create new Publisher catalog version and add it to ImportSessions
+          // 4. find 'AnalysisSession' by current Import session
+          // 5. create it in case of does not exists
+          // 6. add current 'AnalysisSession' to 'analysisSessions' array in
+          // Dimensions, DimensionValues, Indicators, IndicatorValues if needed
+          // todo: use currentPublisherId
+          return cb();
+        }
+
+        function addNewIndicatorValue(data, devInfoValue) {
           return function (cb) {
             return (new IndicatorValues(data))
               .save(function (err) {
-                return cb(err);
+                if (err) {
+                  return cb(err);
+                }
+
+                // update related structures: devInfoValue['Source']
+                return updateRelatedDataByRecordSource(devInfoValue, function (err) {
+                  return cb(err);
+                });
               });
           }
         }
@@ -339,7 +362,7 @@ var executions = {
 
                     console.log(data);
                     console.log('---');
-                    actions.push(addNewIndicatorValue(data));
+                    actions.push(addNewIndicatorValue(data, devInfoValue));
                   });
 
                   return async.parallelLimit(actions, 10, function (err) {
@@ -382,7 +405,12 @@ var executions = {
  });*/
 
 if (process.argv.length !== 3) {
-  console.log('Usage: node index.js first|second|third');
+  console.log('Usage: node index.js first|second|third\n' +
+    'first: fetch data from devinfo.org\n' +
+    'second: fill temporary MongoDB table "devinfoorgs"\n' +
+    'third: fill data by temporary MongoDB table "devinfoorgs"\n' +
+    'Note: create Publisher "DevInfo" in manual mode before run "third":\n' +
+    'look at comments in "fillIndicatorValues" function');
   process.exit(1);
 }
 
