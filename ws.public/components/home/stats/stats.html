@@ -21,10 +21,12 @@
         <div class="col-lg-12">
             <div class="ibox float-e-margins">
                 <div class="ibox-content">
-                    <!-- lop over indicatorsv ... -->
-                    <div visabi-chart type="bar" version="{{'55d1a613a730536b1b7f2306'}}" indicator="{{'55a91ea84d595c590be57ab4'}}"></div>
-                    <div visabi-chart type="line" version="{{'55d1a613a730536b1b7f2306'}}" indicator="{{'55a91ea84d595c590be57ab4'}}"></div>
-                    <div visabi-chart type="bubble" version="{{'55d1a613a730536b1b7f2306'}}" indicator="{{'55a91ea84d595c590be57ab4'}}"></div>
+                    <div ng-if="ctrl.indicators" ng-repeat="indicator in ctrl.indicators">
+                        <h2>{{::indicator.name}}</h2>
+                        <div visabi-chart type="bar" version="{{::ctrl.versionId}}" indicator="{{indicator._id}}"></div><br>
+                        <div visabi-chart type="line" version="{{::ctrl.versionId}}" indicator="{{indicator._id}}"></div><br>
+                        <div visabi-chart type="bubble" version="{{::ctrl.versionId}}" indicator="{{indicator._id}}"></div>
+                    </div>
                 </div>
             </div>
         </div>

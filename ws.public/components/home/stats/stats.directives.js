@@ -52,7 +52,7 @@ angular.module('admin.services')
               Vizabi('LineChart', document.getElementById(elementId), {
                 data: {
                   reader: 'csv-file',
-                  path: '/api/admin/chartcsv/xx/xx'
+                  path: '/api/admin/chart-csv/' + attr.version + '/' + attr.indicator
                 }
               });
             },
@@ -60,7 +60,7 @@ angular.module('admin.services')
               Vizabi('BubbleChart', document.getElementById(elementId), {
                 data: {
                   reader: 'csv-file',
-                  path: '/api/admin/chartcsv/xx/xx'
+                  path: '/api/admin/chart-csv/' + attr.version + '/' + attr.indicator
                 }
               });
             }

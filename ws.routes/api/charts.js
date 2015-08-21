@@ -10,7 +10,7 @@ module.exports = function (serviceLocator) {
   var dimensions = serviceLocator.repositories.get('Dimensions');
 
   app.get('/api/admin/chart/:versionId/:indicatorId', getChartData);
-  app.get('/api/admin/chartcsv/:versionId/:indicatorId', getChartCsvData);
+  app.get('/api/admin/chart-csv/:versionId/:indicatorId', getChartCsvData);
 
   function getChartData(req, res) {
     var LIMIT = 999999;
@@ -47,10 +47,7 @@ module.exports = function (serviceLocator) {
           return res.json({error: err});
         }
 
-        var filledHash = {};
-        var countries = [];
-        var minTime = 9999;
-        var maxTime = 0;
+        var resultData = [];
         data.data.forEach(function (record) {
           var _record = {
             score: record.v
@@ -59,30 +56,8 @@ module.exports = function (serviceLocator) {
           _record[pipe.dimensions[record.ds[0].d].name === 'countries' ? 'geo' : 'time'] = record.ds[0].v;
           _record[pipe.dimensions[record.ds[1].d].name === 'countries' ? 'geo' : 'time'] = record.ds[1].v;
 
-          /*if (_record.geo !== 'Benin' && _record.geo !== 'Botswana') {
-            return;
-          }*/
-
-          if (!filledHash[_record.geo]) {
-            filledHash[_record.geo] = {};
-          }
-
-          filledHash[_record.geo][_record.time] = _record.score;
-
-          minTime = Math.min(minTime, Number(_record.time));
-          maxTime = Math.max(maxTime, Number(_record.time));
-          if (countries.indexOf(_record.geo) < 0) {
-            countries.push(_record.geo);
-          }
+          resultData.push({geo: _record.geo, time: _record.time, score: _record.score});
         });
-
-        var resultData = [];
-        for (var i = 0; i < countries.length; i++) {
-          for (var time = minTime; time <= maxTime; time++) {
-            var _time = time.toString();
-            resultData.push({geo: countries[i], time: _time, score: filledHash[countries[i]][_time] || 0});
-          }
-        }
 
         return res.json({success: true, data: resultData});
       });
