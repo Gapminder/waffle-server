@@ -3,6 +3,9 @@ var async = require('async');
 var fs = require('fs');
 var path = require('path');
 var _ = require('lodash');
+var cache = require('express-redis-cache')();
+
+var u = require('../utils');
 
 module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
@@ -10,8 +13,10 @@ module.exports = function (serviceLocator) {
   var indicatorValues = serviceLocator.repositories.get('IndicatorValues');
   var dimensions = serviceLocator.repositories.get('Dimensions');
 
-  app.get('/api/admin/chart/:versionId/:indicatorId', getChartData);
-  app.get('/api/admin/chart-csv/:versionId/:indicatorId', getChartCsvData);
+  app.get('/api/admin/chart/:versionId/:indicatorId',
+    u.getCacheConfig('chart'), cache.route(), getChartData);
+  app.get('/api/admin/chart-csv/:versionId/:indicatorId',
+    u.getCacheConfig('chart-csv'), cache.route(), getChartCsvData);
 
   function getChartData(req, res) {
     var LIMIT = 999999;
