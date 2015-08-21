@@ -17,6 +17,11 @@ var DimensionValues = new Schema({
   dimension: {type: Schema.Types.ObjectId, ref: 'Dimensions'},
   value: String,
 
+  // todo: denormilized data
+  dimensionName: String,
+  dataSources: [{type: Schema.Types.ObjectId, ref: 'DataSources'}],
+  catalogVersions: [{type: Schema.Types.ObjectId, ref: 'PublisherCatalogVersions'}],
+
   analysisSessions: [{type: Schema.Types.ObjectId, ref: 'AnalysisSessions'}]
 });
 

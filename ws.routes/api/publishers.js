@@ -11,7 +11,7 @@ module.exports = function (serviceLocator) {
   var publishers = serviceLocator.repositories.get('Publishers');
   var publisherCatalogVersions = serviceLocator.repositories.get('PublisherCatalogVersions');
 
-  app.get('/api/admin/publishers', u.getCacheConfig('publishers'), cache.route(), getPublishers);
+  app.get('/api/admin/publishers', getPublishers);
   app.get('/api/admin/publisher/:id', getPublisher);
   app.post('/api/admin/publisher/:id', updatePublisher);
   app.delete('/api/admin/publisher/:id', deletePublisher);

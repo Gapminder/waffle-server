@@ -1,9 +1,10 @@
 'use strict';
-var async = require('async');
+var _ = require('lodash');
 var fs = require('fs');
 var path = require('path');
-var _ = require('lodash');
+var async = require('async');
 var cache = require('express-redis-cache')();
+var compression = require('compression');
 
 var u = require('../utils');
 
@@ -11,12 +12,14 @@ module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
   var logger = app.get('log');
   var indicatorValues = serviceLocator.repositories.get('IndicatorValues');
+  var Indicators = require('mongoose').model('Indicators');
   var dimensions = serviceLocator.repositories.get('Dimensions');
 
   app.get('/api/admin/chart/:versionId/:indicatorId',
-    u.getCacheConfig('chart'), cache.route(), getChartData);
+    compression(), u.getCacheConfig('chart'), cache.route(),
+    getChartData);
   app.get('/api/admin/chart-csv/:versionId/:indicatorId',
-    u.getCacheConfig('chart-csv'), cache.route(), getChartCsvData);
+    compression(), u.getCacheConfig('chart-csv'), cache.route(), getChartCsvData);
 
   function getChartData(req, res) {
     var LIMIT = 999999;
@@ -36,6 +39,12 @@ module.exports = function (serviceLocator) {
             pipe.dimensions[record._id] = record;
           });
 
+          return cb(err, pipe);
+        });
+      },
+      function (pipe, cb) {
+        Indicators.findById(req.params.indicatorId, {title: true}, function (err, indicator){
+          pipe.indicator = indicator;
           return cb(err, pipe);
         });
       }
@@ -65,7 +74,7 @@ module.exports = function (serviceLocator) {
           resultData.push({geo: _record.geo, time: _record.time, score: _record.score});
         });
 
-        return res.json({success: true, data: resultData});
+        return res.json({success: true, data: resultData, indicator: pipe.indicator});
       });
     });
   }

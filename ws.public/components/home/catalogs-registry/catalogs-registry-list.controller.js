@@ -2,8 +2,8 @@
 
 angular.module('admin.controllers')
   .controller('PublisherCatalogsListController', [
-    '$state', 'CollectionsService', 'PublisherCatalogEntry',
-    function ($state, CollectionsService, PublisherCatalogEntry) {
+    '$state', 'PublisherCatalogs', 'PublisherCatalogEntry',
+    function ($state, PublisherCatalogs, PublisherCatalogEntry) {
       var self = this;
 
       self.deleteRecord = function deleteRecord(id) {
@@ -38,7 +38,7 @@ angular.module('admin.controllers')
       }
 
       function getData() {
-        CollectionsService.getData({
+        PublisherCatalogs.getData({
           skip: (self.paging.currentPage - 1) * self.limit,
           limit: self.limit,
           list: '',

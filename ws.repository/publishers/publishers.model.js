@@ -13,7 +13,9 @@ var Schema = mongoose.Schema;
  */
 var Publishers = new Schema({
   name: {type: String, unique: true, required: true},
-  url: {type: String}
+  url: {type: String},
+  createdAt: {type: Date, 'default': Date.now()},
+  createdBy: {type: mongoose.Schema.Types.ObjectId, ref: 'Users'}
 });
 
 mongoose.model('Publishers', Publishers);

@@ -20,6 +20,12 @@ var Dimensions = new Schema({
 
   meta: {},
 
+  // todo: should be linked from dataSource, catalogVersion, analysisSessions
+
+  // system marks
+  dataSources: [{type: Schema.Types.ObjectId, ref: 'DataSources'}],
+  catalogVersions: [{type: Schema.Types.ObjectId, ref: 'PublisherCatalogVersions'}],
+
   analysisSessions: [{type: Schema.Types.ObjectId, ref: 'AnalysisSessions'}]
 });
 

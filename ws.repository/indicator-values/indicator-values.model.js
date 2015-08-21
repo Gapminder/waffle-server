@@ -12,9 +12,15 @@ var Schema = mongoose.Schema;
  * @param {String} v - value
  */
 var DimensionSchema = new Schema({
+  // todo: rename
   dv: {type: Schema.Types.ObjectId, ref: 'DimensionValues'},
   d: {type: Schema.Types.ObjectId, ref: 'Dimensions'},
-  v: String
+  v: String,
+  // todo: to
+  dimension: {type: Schema.Types.ObjectId, ref: 'Dimensions'},
+  dimensionValue: {type: Schema.Types.ObjectId, ref: 'DimensionValues'},
+  dimensionName: String,
+  value: String
 }, {_id: false});
 
 /**
@@ -32,7 +38,7 @@ var IndicatorValues = new Schema({
   coordinates: {type: Schema.Types.ObjectId, ref: 'Coordinates'},
   indicator: {type: Schema.Types.ObjectId, ref: 'Indicators'},
 
-  analysisSessions: [{type: Schema.Types.ObjectId, ref: 'AnalysisSessions'}]
+  analysisSessions: [{type: Schema.Types.ObjectId, ref: 'AnalysisSessions', index: true}]
 });
 
 IndicatorValues.index({'ds.d': 1, 'ds.v': 1, v: 1, coordinates: 1, indicator: 1});

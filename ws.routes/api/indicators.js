@@ -12,6 +12,7 @@ module.exports = function (serviceLocator) {
 
   app.get('/api/admin/publisher/indicators/:versionId',
     u.getCacheConfig('publisher-indicators'), cache.route(), getIndicatorsByVersion);
+
   app.get('/api/admin/indicators/:id',
     getIndicators);
   app.post('/api/admin/indicators/:id',
@@ -22,10 +23,9 @@ module.exports = function (serviceLocator) {
     return indicators.getByVersion(req.params, function (err, data) {
       if (err) {
         logger.error(err);
-        return res.json({error: err});
       }
 
-      return res.json({success: true, data: data});
+      return res.json({success: !err, error: err, data: data});
     });
   }
 

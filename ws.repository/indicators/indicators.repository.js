@@ -1,7 +1,8 @@
 'use strict';
 
-var mongoose = require('mongoose');
+var _ = require('lodash');
 var async = require('async');
+var mongoose = require('mongoose');
 
 var Indicators = mongoose.model('Indicators');
 var IndicatorValues = mongoose.model('IndicatorValues');
@@ -22,34 +23,42 @@ IndicatorsRepository.prototype.getByVersion = function getByVersion(params, cb) 
         return cb(err);
       }
 
-      return Indicators
-        .find({analysisSessions: {$in: analysisSessions}}, '_id name')
-        .lean()
-        .exec(function (err, indicators) {
-
-          function prepareCount(indicator) {
-            return function (cb) {
-              IndicatorValues.count({
-                indicator: indicator._id,
+      async.parallel({
+        indicatorValuesHash: function (cb) {
+          IndicatorValues.aggregate([
+            {
+              $match: {
                 analysisSessions: {
                   $in: analysisSessions
                 }
-              }, function (err, count) {
-                indicator.values = count;
-                return cb(err);
-              });
+              }
+            },
+            {
+              $group: {
+                _id: '$indicator', count: {$sum: 1}
+              }
             }
-          }
+          ], function (err, result) {
+            if (err) {
+              return cb(err);
+            }
 
-          var actions = [];
-          indicators.forEach(function (indicator) {
-            actions.push(prepareCount(indicator));
+            return cb(err, _.indexBy(result, '_id'));
           });
-
-          return async.parallel(actions, function (err) {
-            return cb(err, indicators);
-          });
+        },
+        indicators: function (cb) {
+          return Indicators
+            .find({analysisSessions: {$in: analysisSessions}}, '_id name')
+            .lean(true)
+            .exec(cb);
+        }
+      }, function (err, result) {
+        _.each(result.indicators, function (indicator){
+          var counter = result.indicatorValuesHash[indicator._id.toString()];
+          indicator.values = counter ? counter.count: 0;
         });
+        return cb(err, result.indicators);
+      });
     }
   );
 };

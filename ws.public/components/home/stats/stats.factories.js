@@ -10,7 +10,7 @@ angular.module('admin.services')
     return $resource('/api/admin/chart/:versionId/:indicatorId',
       {versionId: '@versionId', indicatorId: '@indicatorId'}, {
         get: {
-          method: 'GET'
+          method: 'GET', cache: true
         }
       });
   }]);

@@ -1,4 +1,6 @@
+'use strict';
 var _ = require('lodash');
+var async = require('async');
 var mongoose = require('mongoose');
 
 var AnalysisSessions = mongoose.model('AnalysisSessions');
@@ -15,7 +17,7 @@ exports.actionFactory = function actionFactory(actionType) {
             cb(err);
           });
         } else {
-          data._id = id;
+          // data._id = id;
           var record = new Model(data);
           record.isNew = isNew;
           record.validate(function (err) {
@@ -38,25 +40,27 @@ exports.actionFactory = function actionFactory(actionType) {
         var skip = params.skip || 0;
         var filter = params.filter || {};
         var projection = params.projection || null;
+        var populate = !params.populate || _.isArray(params.populate) ? params.populate : [params.populate];
 
-        Model
-          .find(filter,
-          projection,
-          {skip: skip, limit: limit})
-          .lean()
-          .exec(function (err, data) {
-            if (err) {
-              return cb(err);
-            }
+        var query = Model.find(filter, projection, {skip: skip, limit: limit});
 
-            Model.count(filter, function (_err, totalItems) {
-              if (_err) {
-                return cb(err);
-              }
-
-              return cb(err, {success: true, data: data, totalItems: totalItems});
-            });
+        if (populate) {
+          _.each(populate, function (pop) {
+            query = query.populate(pop);
           });
+        }
+
+        async.parallel({
+          data: function (acb) {
+            return query.lean(true).exec(acb);
+          },
+          totalItems: function (acb) {
+            return Model.count(filter, acb);
+          }
+        }, function getPagedListDone(err, result) {
+          // todo: return only data! do not format as response in helpers
+          return cb(err, {success: !err, error: err, data: result.data, totalItems: result.totalItems});
+        });
 
         return obj;
       };
@@ -69,22 +73,17 @@ exports.actionFactory = function actionFactory(actionType) {
 
         var query = Model.find({_id: params.id}, params.projection || null);
 
-        if (populations) {
-          query.populate(populations)
+        if (populations || params.populate) {
+          query.populate(populations || params.populate);
         }
 
         query
-          .lean()
+          .lean(true)
           .exec(function (err, data) {
-            if (err || (!data || !data.length || data.length < 1)) {
-              cb(err);
-              return obj;
-            }
-
-            cb(err, data[0]);
+            cb(err, data && data.length ? data[0] : null);
             return obj;
           });
-      }
+      };
     },
     deleteRecord: function deleteRecord(Model, obj) {
       return function deleteRecordFun(id, cb) {
@@ -102,14 +101,12 @@ exports.actionFactory = function actionFactory(actionType) {
 
 exports.getActualAnalysisSessions = function getActualAnalysisSessions(params, cb) {
   return ImportSessions
-    .distinct('_id', {publisherCatalogVersion: params.versionId})
+    .distinct('_id', {catalogVersion: params.versionId})
     .lean()
     .exec(function (err, importSessions) {
       return AnalysisSessions
         .distinct('_id', {importSession: {$in: importSessions}})
-        .lean()
-        .exec(function (err, analysisSessions) {
-          return cb(err, analysisSessions);
-        });
+        .lean(true)
+        .exec(cb);
     });
 };

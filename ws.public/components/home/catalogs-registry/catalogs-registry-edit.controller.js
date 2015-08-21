@@ -2,8 +2,8 @@
 
 angular.module('admin.controllers')
   .controller('PublisherCatalogsEditController', [
-    '$state', 'PublisherCatalogEntry',
-    function ($state, PublisherCatalogEntry) {
+    '$state', 'PublisherCatalogEntry', 'OptionsHolder',
+    function ($state, PublisherCatalogEntry, OptionsHolder) {
       var self = this;
 
       getRecord();
@@ -22,13 +22,22 @@ angular.module('admin.controllers')
         $state.go('^.list');
       };
 
+      function getOptions(cb) {
+        OptionsHolder.fillPublishers(function (err, publishers) {
+          self.publishers = publishers;
+          cb();
+        });
+      }
+
       function getRecord() {
-        PublisherCatalogEntry.get({id: $state.params.id}, function (resp) {
-          if (resp.error) {
-            console.log(resp.error);
-          } else {
-            self.record = resp.data;
-          }
+        getOptions(function () {
+          PublisherCatalogEntry.get({id: $state.params.id}, function (resp) {
+            if (resp.error) {
+              console.log(resp.error);
+            } else {
+              self.record = resp.data;
+            }
+          });
         });
       }
     }

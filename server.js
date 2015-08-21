@@ -29,6 +29,18 @@ app.use(express.static(path.join(__dirname, '/ws.public')));
 // start server
 var config = app.get('config');
 
+// generic req logger
+app.use(function (req, res, next) {
+  var self = this;
+  function _next() {
+    var args = Array.prototype.slice.apply(arguments);
+    console.log(req.method, req.url, req.params, req.body);
+    next.apply(self, args);
+  }
+
+  req.next = _next();
+});
+
 // routes ==================================================
 // configure our routes
 require('./ws.routes/index')(serviceLocator);
