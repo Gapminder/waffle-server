@@ -6,6 +6,7 @@ angular.module('admin.controllers')
     function ($state, PublisherCatalogVersionEntry, PublisherCatalogVersionCounters) {
       var self = this;
       self.versionId = $state.params.versionId;
+      self.publisherId = $state.params.publisherId;
 
       PublisherCatalogVersionEntry.get({id: self.versionId},
         function (resp) {

@@ -6,6 +6,7 @@ angular.module('admin.controllers')
     function ($state, PublisherCatalogVersionEntry, PublisherDetailIndicatorValues, IndicatorEntity) {
       var self = this;
       self.versionId = $state.params.versionId;
+      self.publisherId = $state.params.publisherId;
       self.indicatorId = $state.params.indicatorId;
 
       // It's data for breadcrumbs dynamic states

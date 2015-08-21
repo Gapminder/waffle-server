@@ -69,7 +69,7 @@ angular.module('admin')
         }
       })
       .state('admin.home.publishers.catalogVersionDetails', {
-        url: '/version/:versionId',
+        url: '/version/:publisherId/:versionId',
         templateUrl: '/components/home/versions/version-details.html',
         controller: 'PublishersCatalogVersionDetailsController',
         controllerAs: 'ctrl',
@@ -79,7 +79,7 @@ angular.module('admin')
         }
       })
       .state('admin.home.publishers.dimensions', {
-        url: '/dimensions/:versionId',
+        url: '/dimensions/:publisherId/:versionId',
         templateUrl: '/components/home/dimensions/dimensions.html',
         controller: 'DetailDimensionsController',
         controllerAs: 'ctrl',
@@ -90,7 +90,7 @@ angular.module('admin')
       })
       .state('admin.home.publishers.dimensionValues', {
         'abstract': true,
-        url: '/dimension-values',
+        url: '/dimension-values/:publisherId',
         template: '<ui-view/>'
       })
       .state('admin.home.publishers.dimensionValues.list', {
@@ -114,7 +114,7 @@ angular.module('admin')
         }
       })
       .state('admin.home.publishers.indicators', {
-        url: '/indicators/:versionId',
+        url: '/indicators/:publisherId/:versionId',
         templateUrl: '/components/home/indicators/indicators.html',
         controller: 'DetailIndicatorsController',
         controllerAs: 'ctrl',
@@ -125,7 +125,7 @@ angular.module('admin')
       })
       .state('admin.home.publishers.indicatorValues', {
         'abstract': true,
-        url: '/indicator-values',
+        url: '/indicator-values/:publisherId',
         template: '<ui-view/>'
       })
       .state('admin.home.publishers.indicatorValues.list', {
@@ -149,7 +149,7 @@ angular.module('admin')
         }
       })
       .state('admin.home.publishers.stats', {
-        url: '/stats/:versionId',
+        url: '/stats/:publisherId/:versionId',
         templateUrl: '/components/home/stats/stats.html',
         controller: 'DetailStatsController',
         controllerAs: 'ctrl',

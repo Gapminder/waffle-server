@@ -11,9 +11,9 @@
         <div class="col-lg-7">
             <div class="ibox float-e-margins">
                 <div class="ibox-content">
-                    <div><a ui-sref="admin.home.publishers.dimensions({versionId: ctrl.versionId})">Dimensions</a> ({{ctrl.data.dimensions}})</div>
-                    <div><a ui-sref="admin.home.publishers.indicators({versionId: ctrl.versionId})">Indicators</a> ({{ctrl.data.indicators}})</div>
-                    <div><a ui-sref="admin.home.publishers.stats({versionId: ctrl.versionId})">Stats</a> ({{ctrl.data.stats}})</div>
+                    <div><a ui-sref="admin.home.publishers.dimensions({publisherId: ctrl.publisherId, versionId: ctrl.versionId})">Dimensions</a> ({{ctrl.data.dimensions}})</div>
+                    <div><a ui-sref="admin.home.publishers.indicators({publisherId: ctrl.publisherId, versionId: ctrl.versionId})">Indicators</a> ({{ctrl.data.indicators}})</div>
+                    <div><a ui-sref="admin.home.publishers.stats({publisherId: ctrl.publisherId, versionId: ctrl.versionId})">Stats</a> ({{ctrl.data.stats}})</div>
                 </div>
             </div>
         </div>

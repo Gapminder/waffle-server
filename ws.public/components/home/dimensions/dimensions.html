@@ -20,7 +20,7 @@
                                 <tbody>
                                 <tr ng-repeat="item in ctrl.currentData">
                                     <td>
-                                        <div><a ui-sref="admin.home.publishers.dimensionValues.list({dimensionId: item._id, versionId: ctrl.versionId})">{{::item.name}}</a> ({{::item.values}})</div>
+                                        <div><a ui-sref="admin.home.publishers.dimensionValues.list({dimensionId: item._id, publisherId: ctrl.publisherId, versionId: ctrl.versionId})">{{::item.name}}</a> ({{::item.values}})</div>
                                     </td>
                                 </tr>
                                 </tbody>
