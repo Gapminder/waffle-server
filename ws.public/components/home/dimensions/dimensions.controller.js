@@ -18,8 +18,19 @@ angular.module('admin.controllers')
         });
       //--It's data for breadcrumbs dynamic states
 
-      PublisherDetailDimensions.get({versionId: self.versionId}, function (resp) {
-        self.currentData = resp.data;
-      });
+      refresh();
+      self.refresh = refresh;
+
+      function refresh(isForce) {
+        var query = {versionId: self.versionId};
+
+        if (isForce) {
+          query.force = true;
+        }
+
+        PublisherDetailDimensions.get(query, function (resp) {
+          self.currentData = resp.data;
+        });
+      }
     }
   ]);

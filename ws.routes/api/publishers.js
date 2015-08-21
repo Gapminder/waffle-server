@@ -1,6 +1,9 @@
 'use strict';
 var async = require('async');
 var _ = require('lodash');
+var cache = require('express-redis-cache')();
+
+var u = require('../utils');
 
 module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
@@ -8,13 +11,13 @@ module.exports = function (serviceLocator) {
   var publishers = serviceLocator.repositories.get('Publishers');
   var publisherCatalogVersions = serviceLocator.repositories.get('PublisherCatalogVersions');
 
-  app.get('/api/admin/publishers', getPublishers);
+  app.get('/api/admin/publishers', u.getCacheConfig('publishers'), cache.route(), getPublishers);
   app.get('/api/admin/publisher/:id', getPublisher);
   app.post('/api/admin/publisher/:id', updatePublisher);
   app.delete('/api/admin/publisher/:id', deletePublisher);
-  app.get('/api/admin/publisher/dimensions/:versionId', getDimensions);
-  app.get('/api/admin/publisher/indicators/:versionId', getIndicators);
-  app.get('/api/admin/publisher/stats/:versionId', getStats);
+  app.get('/api/admin/publisher/dimensions/:versionId', u.getCacheConfig('dimensions'), cache.route(), getDimensions);
+  app.get('/api/admin/publisher/indicators/:versionId', u.getCacheConfig('indicators'), cache.route(), getIndicators);
+  app.get('/api/admin/publisher/stats/:versionId', u.getCacheConfig('stats'), cache.route(), getStats);
 
   function getPublishers(req, res) {
     return publishers.pagedList(req.params, function (err, data) {

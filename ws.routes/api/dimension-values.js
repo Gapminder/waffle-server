@@ -1,6 +1,9 @@
 'use strict';
 var async = require('async');
 var _ = require('lodash');
+var cache = require('express-redis-cache')();
+
+var u = require('../utils');
 
 module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
@@ -8,10 +11,13 @@ module.exports = function (serviceLocator) {
   var dimensionValues = serviceLocator.repositories.get('DimensionValues');
 
   app.get('/api/admin/publisher/dimension-values/:versionId/:dimensionId',
-    getDimensionValuesByVersion);
-  app.get('/api/admin/dimension-values', getDimensionValues);
-  app.get('/api/admin/dimension-values/:id', getDimensionValue);
-  app.post('/api/admin/dimension-values/:id', updateDimensionValue);
+    u.getCacheConfig('publisher-dimension-values'), cache.route(), getDimensionValuesByVersion);
+  app.get('/api/admin/dimension-values',
+    u.getCacheConfig('dimension-values'), cache.route(), getDimensionValues);
+  app.get('/api/admin/dimension-values/:id',
+    getDimensionValue);
+  app.post('/api/admin/dimension-values/:id',
+    updateDimensionValue);
 
   function getDimensionValuesByVersion(req, res) {
     req.query.filter = req.params;

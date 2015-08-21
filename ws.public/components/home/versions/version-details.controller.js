@@ -16,15 +16,27 @@ angular.module('admin.controllers')
           self.versionRecord = resp.data;
         });
 
-      PublisherCatalogVersionCounters.get({
-          versionId: self.versionId
-        },
-        function (resp) {
-          if (resp.error) {
-            console.log(resp.error);
-          }
+      refresh();
 
-          self.data = resp.data;
-        });
+      self.refresh = refresh;
+
+      function refresh(isForce) {
+        var query = {
+          versionId: self.versionId
+        };
+
+        if (isForce) {
+          query.force = true;
+        }
+
+        PublisherCatalogVersionCounters.get(query,
+          function (resp) {
+            if (resp.error) {
+              console.log(resp.error);
+            }
+
+            self.data = resp.data;
+          });
+      }
     }
   ]);

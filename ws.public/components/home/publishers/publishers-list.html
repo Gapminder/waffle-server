@@ -15,7 +15,7 @@
                     <div ng-if="!ctrl.currentData.length">
                         <p>No data for collection.</p>
                         <a ui-sref="admin.home.publishers.edit({id: 'new'})" class="btn btn-primary">New</a>
-                        <a href ng-click="ctrl.refresh()" class="btn btn-white">Refresh</a>
+                        <a href ng-click="ctrl.refresh(true)" class="btn btn-white">Refresh</a>
                     </div>
                     <div ng-if="ctrl.currentData.length">
                         <div class="table-responsive">
@@ -26,7 +26,7 @@
                                     <th>URL</th>
                                     <th>
                                         <a ui-sref="admin.home.publishers.edit({id: 'new'})" class="btn btn-primary">New</a>
-                                        <a href ng-click="ctrl.refresh()" class="btn btn-white">Refresh</a>
+                                        <a href ng-click="ctrl.refresh(true)" class="btn btn-white">Refresh</a>
                                     </th>
                                 </tr>
                                 </thead>

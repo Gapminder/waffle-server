@@ -14,10 +14,14 @@
 
                     <div ng-if="!ctrl.currentData.length">
                         <p>No data for collection.</p>
+                        <a href ng-click="ctrl.refresh(true)" class="btn btn-white">Refresh</a>
                     </div>
                     <div ng-if="ctrl.currentData.length">
                         <div class="table-responsive">
                             <table class="table table-striped">
+                                <thead>
+                                    <th><a href ng-click="ctrl.refresh(true)" class="btn btn-white">Refresh</a></th>
+                                </thead>
                                 <tbody>
                                 <tr ng-repeat="item in ctrl.currentData">
                                     <td>

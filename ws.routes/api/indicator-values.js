@@ -1,6 +1,9 @@
 'use strict';
 var async = require('async');
 var _ = require('lodash');
+var cache = require('express-redis-cache')();
+
+var u = require('../utils');
 
 module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
@@ -8,9 +11,11 @@ module.exports = function (serviceLocator) {
   var indicatorValues = serviceLocator.repositories.get('IndicatorValues');
 
   app.get('/api/admin/publisher/indicator-values/:versionId/:indicatorId',
-    getIndicatorValuesByVersion);
-  app.get('/api/admin/indicator-values/:id', getIndicatorValue);
-  app.post('/api/admin/indicator-values/:id', updateIndicatorValue);
+    u.getCacheConfig('publisher-indicator-values'), cache.route(), getIndicatorValuesByVersion);
+  app.get('/api/admin/indicator-values/:id',
+    getIndicatorValue);
+  app.post('/api/admin/indicator-values/:id',
+    updateIndicatorValue);
 
   function getIndicatorValuesByVersion(req, res) {
     req.query.filter = req.params;

@@ -24,11 +24,11 @@ angular.module('admin.controllers')
       self.pageChanged = getData;
       self.refresh = refresh;
 
+      initData();
       refresh();
 
-      function refresh() {
-        initData();
-        getData();
+      function refresh(isForce) {
+        getData(isForce);
       }
 
       function initData() {
@@ -37,11 +37,17 @@ angular.module('admin.controllers')
         self.paging = {currentPage: 1};
       }
 
-      function getData() {
-        Publishers.get({
+      function getData(isForce) {
+        var query = {
           skip: (self.paging.currentPage - 1) * self.limit,
           limit: self.limit
-        }, updateList);
+        };
+
+        if (isForce) {
+          query.force = true;
+        }
+
+        Publishers.get(query, updateList);
       }
 
       function updateList(resp) {

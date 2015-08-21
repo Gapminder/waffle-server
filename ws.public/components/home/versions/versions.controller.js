@@ -10,11 +10,11 @@ angular.module('admin.controllers')
       self.pageChanged = getData;
       self.refresh = refresh;
 
-      refresh();
+      refresh(false);
 
-      function refresh() {
+      function refresh(isForce) {
         initData();
-        getData();
+        getData(isForce);
       }
 
       function initData() {
@@ -23,14 +23,21 @@ angular.module('admin.controllers')
         self.paging = {currentPage: 1};
       }
 
-      function getData() {
+      function getData(isForce) {
         PublisherEntry.get({id: self.publisherId},
           function (resp) {
             self.publisherRecord = resp.data;
           });
-        PublisherCatalogVersionsEntry.get({
+
+        var query = {
           publisherId: self.publisherId
-        }, updateList);
+        };
+
+        if (isForce) {
+          query.force = true;
+        }
+
+        PublisherCatalogVersionsEntry.get(query, updateList);
       }
 
       function updateList(resp) {

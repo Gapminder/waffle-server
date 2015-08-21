@@ -27,11 +27,11 @@ angular.module('admin.controllers')
       self.pageChanged = getData;
       self.refresh = refresh;
 
+      initData();
       refresh();
 
-      function refresh() {
-        initData();
-        getData();
+      function refresh(isForce) {
+        getData(isForce);
       }
 
       function initData() {
@@ -40,13 +40,19 @@ angular.module('admin.controllers')
         self.paging = {currentPage: 1};
       }
 
-      function getData() {
-        PublisherDetailDimensionValues.get({
+      function getData(isForce) {
+        var query = {
           skip: (self.paging.currentPage - 1) * self.limit,
           limit: self.limit,
           versionId: self.versionId,
           dimensionId: self.dimensionId
-        }, updateList);
+        };
+
+        if (isForce) {
+          query.force = true;
+        }
+
+        PublisherDetailDimensionValues.get(query, updateList);
       }
 
       function updateList(resp) {
