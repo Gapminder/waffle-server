@@ -2,7 +2,7 @@
 module.exports = function (app) {
   var config = {
     PORT: process.env.PORT || 3000,
-    MONGODB_URL: 'mongodb://localhost/waffleserver',
+    MONGODB_URL: 'mongodb://localhost/waffleserverV2',
     DEFAULT_NODE_ENV: 'develop',
     NEO4J_URL: 'http://neo4j:neo4j@localhost:7474',
 
