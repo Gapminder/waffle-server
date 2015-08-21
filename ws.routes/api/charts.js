@@ -1,6 +1,7 @@
 'use strict';
 var async = require('async');
 var fs = require('fs');
+var path = require('path');
 var _ = require('lodash');
 
 module.exports = function (serviceLocator) {
@@ -66,7 +67,8 @@ module.exports = function (serviceLocator) {
 
   function getChartCsvData(req, res) {
     res.setHeader('Content-type', 'text/csv;charset=utf-8');
-    res.write(fs.readFileSync('/home/slava/waffle-server/ws.routes/api/_tmpData/basic-indicators.csv'));
+    console.log(path.join(__dirname, '_tmpData/basic-indicators.csv'));
+    res.write(fs.readFileSync(path.join(__dirname, '_tmpData/basic-indicators.csv')));
     res.end();
   }
 };
