@@ -59,12 +59,19 @@
 <script src="libs/angular-ui-router/release/angular-ui-router.min.js"></script>
 <script src="libs/angular-bootstrap/ui-bootstrap.min.js"></script>
 <script src="libs/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
+<script src="libs/angular-breadcrumb/release/angular-breadcrumb.min.js"></script>
 
 <!-- Anglar App Script -->
 <script src="components/ws-app.module.js"></script>
 <script src="components/ws-app.config.js"></script>
 <script src="components/ws-app.routes.js"></script>
+<script src="components/ws-app.factories.js"></script>
 <script src="components/ws-app.utils.js"></script>
+
+<!-- VISABI -->
+<link rel='stylesheet prefetch' href='http://static.gapminderdev.org/vizabi/develop/dist/vizabi.css'>
+<script src='libs/d3-local/d3.js'></script>
+<script src='libs/visabi-local/vizabi.js'></script>
 
 <!-- ANGULAR Services -->
 <script src="components/collections/collections.service.js"></script>
@@ -73,15 +80,38 @@
 
 <!-- ANGULAR Directives -->
 <script src="components/collections/collections-table.directive.js"></script>
-<script src="components/collections/collections-breadcrumb.directive.js"></script>
+<script src="components/shared/navigation/breadcrumb.directive.js"></script>
 
 <!-- ANGULAR Controllers -->
 <script src="components/landing/main.controller.js"></script>
 <script src="components/users/user.controller.js"></script>
 <script src="components/collections/collections-table.controller.js"></script>
-<script src="components/collections/collections-breadcrumb.controller.js"></script>
 <script src="components/playground/cyper-editor.controller.js"></script>
 <script src="components/collections/import-data/import-data-spreadsheet.controller.js"></script>
+<script src="components/home/publishers/publishers.factories.js"></script>
+<script src="components/home/publishers/publishers-list.controller.js"></script>
+<script src="components/home/publishers/publishers-edit.controller.js"></script>
+<script src="components/home/versions/versions.controller.js"></script>
+<script src="components/home/versions/version-details.controller.js"></script>
+<script src="components/home/dimensions/dimensions.controller.js"></script>
+<script src="components/home/dimensions/dimensions.factories.js"></script>
+<script src="components/home/dimension-values/dimension-values.controller.js"></script>
+<script src="components/home/dimension-values/dimension-values.factories.js"></script>
+<script src="components/home/dimension-values/dimension-values-edit.controller.js"></script>
+<script src="components/home/indicators/indicators.controller.js"></script>
+<script src="components/home/indicators/indicators.factories.js"></script>
+<script src="components/home/indicator-values/indicator-values.controller.js"></script>
+<script src="components/home/indicator-values/indicator-values.factories.js"></script>
+<script src="components/home/indicator-values/indicator-values-edit.controller.js"></script>
+<script src="components/home/stats/stats.controller.js"></script>
+<script src="components/home/stats/stats.factories.js"></script>
+<script src="components/home/stats/stats.directives.js"></script>
+<script src="components/home/catalogs-registry/catalogs-registry.factories.js"></script>
+<script src="components/home/catalogs-registry/catalogs-registry-list.controller.js"></script>
+<script src="components/home/catalogs-registry/catalogs-registry-edit.controller.js"></script>
+<script src="components/home/versions-registry/versions-registry.factories.js"></script>
+<script src="components/home/versions-registry/versions-registry-list.controller.js"></script>
+<script src="components/home/versions-registry/versions-registry-edit.controller.js"></script>
 
 <!--ng-stats-->
 <script src="libs/ng-stats/dist/ng-stats.min.js"></script>

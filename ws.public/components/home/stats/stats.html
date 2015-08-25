@@ -1,0 +1,42 @@
+<style class="cp-pen-styles">
+  .placeholder {
+    position: relative;
+    display: block;
+    margin: 0 auto;
+    width: 600px;
+    height: 400px;
+    border: 1px solid #ccc
+  }
+</style>
+<div class="row wrapper border-bottom white-bg page-heading">
+  <div class="col-lg-10">
+    <admin-breadcrumb></admin-breadcrumb>
+  </div>
+  <div class="col-lg-2">
+
+  </div>
+</div>
+<div class="wrapper wrapper-content animated fadeInRight">
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="ibox float-e-margins">
+        <div class="ibox-content row">
+          <div class="col-lg-6" ng-if="ctrl.indicators" ng-repeat="indicator in ctrl.indicators">
+            <h2>{{::indicator.name}}</h2>
+            <tabset class="tabs-container" ng-init="tabs=[{active: true},{active: false}, {active: false}]">
+              <tab heading="Bar chart" active="tabs[0].active">
+                <div ng-if="tabs[0].active" visabi-chart type="bar" version="{{::ctrl.versionId}}" indicator="{{indicator._id}}"></div><br>
+              </tab>
+              <tab  heading="Line chart" active="tabs[1].active">
+                <div class="panel-body" ng-if="tabs[1].active" visabi-chart type="line" version="{{::ctrl.versionId}}" indicator="{{indicator._id}}"></div><br>
+              </tab>
+              <tab  heading="Bubble chart" active="tabs[2].active">
+                <div ng-if="tabs[2].active" visabi-chart type="bubble" version="{{::ctrl.versionId}}" indicator="{{indicator._id}}"></div>
+              </tab>
+            </tabset>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

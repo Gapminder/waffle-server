@@ -1,0 +1,45 @@
+<div class="row wrapper border-bottom white-bg page-heading">
+    <div class="col-lg-10">
+        <admin-breadcrumb></admin-breadcrumb>
+    </div>
+    <div class="col-lg-2">
+
+    </div>
+</div>
+<div class="page-wrapper wrapper-content animated fadeInRight">
+    <div ng-if="ctrl.record" class="row">
+        <div class="col-lg-7">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>{{ctrl.record._id ? ctrl.record.catalog.name + " by " + ctrl.record.publisher.name + "(" + ctrl.record.version + ")" : 'New Publisher Catalog Version'}}</h5>
+                </div>
+                <div class="ibox-content">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <form role="form">
+                                <div class="form-group">
+                                    <label>Version</label>
+                                    <input type="text" ng-model="ctrl.record.version" placeholder="Enter Version" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>Publisher</label>
+                                    <select ng-model="ctrl.record.publisher._id" ng-options="item._id as item.name for item in ctrl.publishers" class="form-control">
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Catalog</label>
+                                    <select ng-model="ctrl.record.catalog._id" ng-options="item._id as item.name for item in ctrl.catalogs" class="form-control">
+                                    </select>
+                                </div>
+                                <div>
+                                    <button ng-click="ctrl.update()" class="btn btn-sm btn-primary pull-left m-t-n-xs" type="button"><strong>Save</strong></button>
+                                    <button ng-click="ctrl.cancel()" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button"><strong>Cancel</strong></button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

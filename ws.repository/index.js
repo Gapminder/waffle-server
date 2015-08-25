@@ -22,11 +22,16 @@ module.exports = function (serviceLocator) {
 
   // schema analysis
   require('./analysis-sessions')(serviceLocator.repositories);
-  require('./dimensions')(serviceLocator.repositories);
   require('./dimension-values')(serviceLocator.repositories);
+  require('./dimensions')(serviceLocator.repositories);
 
   // indicators
   require('./coordinates')(serviceLocator.repositories);
-  require('./indicators')(serviceLocator.repositories);
   require('./indicator-values')(serviceLocator.repositories);
+  require('./indicators')(serviceLocator.repositories);
+
+  // publishers
+  require('./publishers')(serviceLocator.repositories);
+  require('./publisher-catalogs')(serviceLocator.repositories);
+  require('./publisher-catalog-versions')(serviceLocator.repositories);
 };
