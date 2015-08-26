@@ -11,7 +11,11 @@ var Schema = mongoose.Schema;
  *
  */
 var PublisherCatalogs = new Schema({
-  name: {type: String, unique: true, required: true}
+  publisher: {type: Schema.Types.ObjectId, ref: 'Publishers', required: true},
+  name: {type: String, unique: true, required: true},
+  url: String,
+  createdAt: {type: Date, 'default': Date.now()},
+  createdBy: {type: mongoose.Schema.Types.ObjectId, ref: 'Users'}
 });
 
 mongoose.model('PublisherCatalogs', PublisherCatalogs);

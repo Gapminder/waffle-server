@@ -2,8 +2,8 @@
 
 angular.module('admin.controllers')
   .controller('PublisherCatalogVersionsEditController', [
-    '$state', 'CollectionsService', 'PublisherCatalogVersionEntry', 'OptionsHolder',
-    function ($state, CollectionsService, PublisherCatalogVersionEntry, OptionsHolder) {
+    '$scope', '$state', 'CollectionsService', 'PublisherCatalogVersionEntry', 'OptionsHolder',
+    function ($scope, $state, CollectionsService, PublisherCatalogVersionEntry, OptionsHolder) {
       var self = this;
 
       getRecord();
@@ -27,11 +27,21 @@ angular.module('admin.controllers')
           self.publishers = publishers;
 
           OptionsHolder.fillCatalogs(function (err, catalogs) {
-            self.catalogs = catalogs;
+            self.catalogsList = catalogs;
             cb();
           });
         });
       }
+
+      $scope.$watch('ctrl.record.publisher._id', function(newValue, oldValue){
+        if (!newValue || oldValue === newValue) {
+          return;
+        }
+
+        self.catalogs = _.filter(self.catalogsList, function (catalog){
+          return catalog.publisher && catalog.publisher._id === newValue;
+        });
+      });
 
       function getRecord() {
         getOptions(function () {

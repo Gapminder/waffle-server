@@ -2,9 +2,9 @@ angular.module('admin.services')
   .factory('PublisherDetailIndicators', ['$resource', function ($resource) {
     return $resource('/api/admin/publisher/indicators/:versionId', {id: '@versionId'}, {
       get: {
-        method: 'GET'
+        method: 'GET', cache: true
       }
-    });
+    }, {cache: true});
   }])
   .factory('IndicatorEntity', ['$resource', function ($resource) {
     return $resource('/api/admin/indicators/:id', {id: '@_id'}, {

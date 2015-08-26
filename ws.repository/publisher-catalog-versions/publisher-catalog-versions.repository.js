@@ -1,15 +1,16 @@
 'use strict';
 
-var mongoose = require('mongoose');
+var _ = require('lodash');
 var async = require('async');
-
-var PublisherCatalogVersions = mongoose.model('PublisherCatalogVersions');
-var PublisherCatalogs = mongoose.model('PublisherCatalogs');
-var AnalysisSessions = mongoose.model('AnalysisSessions');
-var ImportSessions = mongoose.model('ImportSessions');
+var mongoose = require('mongoose');
 var Dimensions = mongoose.model('Dimensions');
 var Indicators = mongoose.model('Indicators');
+var DataSources = mongoose.model('DataSources');
+var ImportSessions = mongoose.model('ImportSessions');
 var IndicatorValues = mongoose.model('IndicatorValues');
+var AnalysisSessions = mongoose.model('AnalysisSessions');
+var PublisherCatalogs = mongoose.model('PublisherCatalogs');
+var PublisherCatalogVersions = mongoose.model('PublisherCatalogVersions');
 
 var utils = require('../utils');
 
@@ -24,33 +25,20 @@ PublisherCatalogVersionsRepository.prototype.detailsCounts =
             dimensions: function (cb) {
               return Dimensions
                 .count({analysisSessions: {$in: analysisSessions}})
-                .exec(function (err, count) {
-                  return cb(err, count);
-                });
+                .exec(cb);
             },
             indicators: function (cb) {
               return Indicators
                 .count({analysisSessions: {$in: analysisSessions}})
-                .exec(function (err, count) {
-                  return cb(err, count);
-                });
+                .exec(cb);
             },
             stats: function (cb) {
               return IndicatorValues
                 .count({analysisSessions: {$in: analysisSessions}})
-                .exec(function (err, count) {
-                  return cb(err, count);
-                });
+                .exec(cb);
             }
           },
-          function (err, results) {
-            return cb(err, {
-              dimensions: results.dimensions,
-              indicators: results.indicators,
-              stats: results.stats
-            });
-          }
-        );
+          cb);
       });
   };
 
