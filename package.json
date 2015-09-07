@@ -5,8 +5,10 @@
   "main": "app.js",
   "scripts": {
     "test": "gulp lint",
+    "dev": "npm run serve & npm start",
     "start": "NODE_ENV=development webpack-dev-server --inline --hot --progress --color",
-    "deploy": " gulp build && NODE_ENV=production webpack -p --progress --color --optimize-minimize --optimize-dedupe --optimize-occurence-order"
+    "deploy": " gulp build && NODE_ENV=production webpack -p --progress --color --optimize-minimize --optimize-dedupe --optimize-occurence-order",
+    "serve": "PORT=3000 forever -w  --minUptime 1000 --spinSleepTime 1000 server.js"
   },
   "dependencies": {
     "adm-zip": "*",

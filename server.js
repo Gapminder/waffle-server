@@ -44,7 +44,6 @@ app.use(function (req, res, next) {
 // routes ==================================================
 // configure our routes
 require('./ws.routes/index')(serviceLocator);
-require('./ws.routes/home')(serviceLocator);
 
 // start app ===============================================
 // startup our app at http://localhost:3000

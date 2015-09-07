@@ -1,5 +1,3 @@
-'use strict';
-
 module.exports = function (serviceLocator) {
   require('./api/collections')(serviceLocator);
   require('./api/cyper')(serviceLocator);

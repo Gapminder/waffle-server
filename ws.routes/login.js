@@ -1,4 +1,3 @@
-'use strict';
 var passport = require('../ws.config/passport');
 
 module.exports = function (serviceLocator) {
