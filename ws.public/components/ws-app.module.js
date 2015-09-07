@@ -3,11 +3,14 @@ var uiRouter = require('angular-ui-router');
 var ngResource = require('angular-resource');
 require('angular-breadcrumb');
 
+var fileManagementComponent = require('./file-management');
+
 var app = angular.module('admin', [
   ngResource,
   uiRouter,
   'ui.bootstrap',
-  'ncy-angular-breadcrumb'
+  'ncy-angular-breadcrumb',
+  fileManagementComponent
 ]);
 
 require('./ws-app.config')(app);

@@ -1,4 +1,3 @@
-'use strict';
 var passport = require('passport');
 var Cookies = require('cookies');
 var mongoose = require('mongoose');

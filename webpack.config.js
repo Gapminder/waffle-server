@@ -148,7 +148,7 @@ var wConfig = {
   devServer: {
     contentBase: config.dest,
     publicPath: '/',
-    noInfo: true,
+    noInfo: false,
     hot: true,
     inline: true,
     historyApiFallback: true,
