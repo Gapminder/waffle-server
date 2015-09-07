@@ -38,23 +38,6 @@
         <a ui-sref="admin.playground"><i class="fa fa-files-o"></i> <span class="nav-label">{{ 'Cyper Editor' }}</span> <span
           class="fa arrow"></span></a>
       </li>
-      <li ng-class="{active: $state.includes('collections')}">
-        <a ui-sref="admin.collections.list"><i class="fa fa-files-o"></i> <span class="nav-label">{{ 'Collections' }}</span> <span
-          class="fa arrow"></span></a>
-        <ul class="nav nav-second-level" ng-class="{in: $state.includes('collections')}">
-          <li ui-sref-active="active"><a ui-sref="admin.collections.users">{{ 'Users' }}</a></li>
-          <li ui-sref-active="active"><a ui-sref="admin.collections.dataSourceTypes">{{ 'DataSourceTypes' }}</a></li>
-          <li ui-sref-active="active"><a ui-sref="admin.collections.dataSources">{{ 'DataSources' }}</a></li>
-          <li ui-sref-active="active"><a ui-sref="admin.collections.importData">{{ 'ImportData' }}</a></li>
-          <li ui-sref-active="active"><a ui-sref="admin.collections.importSessions">{{ 'ImportSessions' }}</a></li>
-          <li ui-sref-active="active"><a ui-sref="admin.collections.analysisSessions">{{ 'AnalysisSessions' }}</a></li>
-          <li ui-sref-active="active"><a ui-sref="admin.collections.dimensions">{{ 'Dimensions' }}</a></li>
-          <li ui-sref-active="active"><a ui-sref="admin.collections.dimensionValues">{{ 'DimensionValues' }}</a></li>
-          <li ui-sref-active="active"><a ui-sref="admin.collections.coordinates">{{ 'Coordinates' }}</a></li>
-          <li ui-sref-active="active"><a ui-sref="admin.collections.indicators">{{ 'Indicators' }}</a></li>
-          <li ui-sref-active="active"><a ui-sref="admin.collections.indicatorValues">{{ 'IndicatorValues' }}</a></li>
-        </ul>
-      </li>
     </ul>
 
   </div>

@@ -1,5 +1,5 @@
-'use strict';
+module.exports = function (app) {
+  app.controller('UserController', function UserController() {
 
-angular.module('admin.controllers').controller('UserController', function UserController () {
-
-});
+  });
+};

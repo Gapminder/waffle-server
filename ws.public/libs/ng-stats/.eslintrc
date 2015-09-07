@@ -1,6 +1,0 @@
-{
-  "extends": "./node_modules/kcd-common-tools/shared/.eslintrc",
-  "globals": {
-    "chrome": false
-  }
-}

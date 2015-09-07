@@ -1,7 +1,5 @@
-'use strict';
-
-angular.module('admin')
-  .factory('User', ['$http', function ($http) {
+module.exports = function (app) {
+  app.factory('User', ['$http', function ($http) {
     return {
       // call to get all users
       get: function () {
@@ -18,3 +16,4 @@ angular.module('admin')
       }
     };
   }]);
+};

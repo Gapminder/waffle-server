@@ -1,42 +1,60 @@
-'use strict';
+var angular = require('angular');
+var uiRouter = require('angular-ui-router');
+var ngResource = require('angular-resource');
+require('angular-breadcrumb');
 
-angular.module('admin.controllers', []);
-angular.module('admin.services', []);
-angular.module('admin.directives', []);
+var app = angular.module('admin', [
+  ngResource,
+  uiRouter,
+  'ui.bootstrap',
+  'ncy-angular-breadcrumb'
+]);
 
-angular.module('admin', [
-    'ngResource',
-    'ui.router',
-    'ui.bootstrap',
-    'ncy-angular-breadcrumb',
-    'admin.controllers',
-    'admin.services',
-    'admin.directives'
-  ]);
-// Other libraries are loaded dynamically in the config.js file using the library ocLazyLoad
+require('./ws-app.config')(app);
+require('./ws-app.factories')(app);
 
-// todo: remove?
-function mainController($scope, $http) {
-  $scope.formData = {};
+// all in one bunch
+require('./collections.service')(app);
+require('./shared/navigation/breadcrumb.directive')(app);
+require('./landing/landing.controller')(app);
 
-  $http.get('/api/collections/list')
-    .success(function(data) {
-      $scope.collections = data;
-      console.log(data);
-    })
-    .error(function(data) {
-      console.log('Error: ' + data);
-    });
+require('./users/user.controller')(app);
+require('./users/users.service')(app);
 
-  $scope.getData = function() {
-    $http.get('/api/collections', $scope.formData)
-      .success(function(data) {
-        $scope.formData = {};
-        $scope.data = data;
-        console.log(data);
-      })
-      .error(function(data) {
-        console.log('Error: ' + data);
-      });
-  };
-}
+require('./playground/cyper-editor.service')(app);
+require('./playground/cyper-editor.controller')(app);
+
+require('./home/catalogs-registry/catalogs-registry.factories')(app);
+require('./home/catalogs-registry/catalogs-registry-edit.controller')(app);
+require('./home/catalogs-registry/catalogs-registry-list.controller')(app);
+
+require('./home/dimension-values/dimension-values.factories')(app);
+require('./home/dimension-values/dimension-values-edit.controller')(app);
+require('./home/dimension-values/dimension-values.controller')(app);
+
+require('./home/dimensions/dimensions.factories')(app);
+require('./home/dimensions/dimensions.controller')(app);
+
+require('./home/indicator-values/indicator-values.factories')(app);
+require('./home/indicator-values/indicator-values-edit.controller')(app);
+require('./home/indicator-values/indicator-values.controller')(app);
+
+require('./home/indicators/indicators.factories')(app);
+require('./home/indicators/indicators.controller')(app);
+
+require('./home/publishers/publishers.factories')(app);
+require('./home/publishers/publishers-edit.controller')(app);
+require('./home/publishers/publishers-list.controller')(app);
+
+require('./home/stats/stats.factories')(app);
+require('./home/stats/stats.controller')(app);
+require('./home/stats/stats.directives')(app);
+
+require('./home/versions/versions.controller')(app);
+require('./home/versions/version-details.controller')(app);
+
+require('./home/versions-registry/versions-registry.factories')(app);
+require('./home/versions-registry/versions-registry-list.controller')(app);
+require('./home/versions-registry/versions-registry-edit.controller')(app);
+
+require('./ws-app.routes')(app);

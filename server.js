@@ -24,7 +24,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(methodOverride('X-HTTP-Method-Override'));
 
 // set the static files location /public/img will be /img for users
-app.use(express.static(path.join(__dirname, '/ws.public')));
+//app.use(express.static(path.join(__dirname, '/ws.public')));
 
 // start server
 var config = app.get('config');
