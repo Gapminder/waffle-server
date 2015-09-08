@@ -1,4 +1,5 @@
 var md5 = require('md5');
+var loginPage = '/login';
 
 exports.getCacheConfig = function getCacheConfig(prefix) {
   return function (req, res, next) {
@@ -13,3 +14,14 @@ exports.getCacheConfig = function getCacheConfig(prefix) {
     next();
   };
 };
+
+exports.ensureAuthenticated = function ensureAuthenticated(req, res, next) {
+    if (req.isAuthenticated()) {
+      return next();
+    }
+    if (req.xhr) {
+      return res.json({success: false, error: 'You need to be logged in'});
+    }
+
+    return res.redirect(loginPage);
+  };

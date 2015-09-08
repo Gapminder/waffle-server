@@ -1,56 +1,91 @@
+var bcrypt = require('bcrypt');
 var passport = require('passport');
-var Cookies = require('cookies');
 var mongoose = require('mongoose');
 
-var User = mongoose.model('Users');
-
+var loginPage = '/login';
+var ensureAuthenticated = require('./utils').ensureAuthenticated;
 module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
   var logger = app.get('log');
+  var config = app.get('config');
+  var Users = mongoose.model('Users');
 
-  app.get('/auth/logged-user', function (req, res) {
-    var cookies = new Cookies(req, res);
+  // google stategy
+  app.get('/api/auth/google', passport.authenticate('google', {scope: config.social.GOOGLE_SCOPE}));
+  app.get('/api/auth/google/callback', passport.authenticate('google', {
+    failureRedirect: loginPage,
+    successRedirect: '/'
+  }));
 
-    if (!cookies.get('rememberUser')) {
-      return res.json({success: true, error: null, data: req.user});
-    }
+  // local strategy
+  app.post('/api/auth/register', function (req, res, next) {
+    Users.findOne({
+      $or: [
+        {username: req.body.username},
+        {email: req.body.email}
+      ]
+    }, onUserLookUp);
+    function onUserLookUp(err, existUser) {
+      if (err) {
+        return res.json({success: false, error: err});
+      }
 
-    return User.findOne({_id: mongoose.Types.ObjectId(cookies.get('rememberUser'))}).lean().exec(function (err, user) {
-        if (err) {
-          logger.error(err);
-          return res.json({success: false, error: err});
+      if (existUser) {
+        console.log('[' + (new Date()).toTimeString() + '] registration is failed - ' +
+          'user already exist, username: ' + req.body.username);
+        var info = 'User already exist';
+
+        if (existUser.username === req.body.username) {
+          info += ', with username: ' + existUser.username;
         }
 
-        return req.logIn(user, function (err) {
-          if (err) {
-            logger.error(err);
-          }
+        if (existUser.email === req.body.email) {
+          info += ', with email: ' + existUser.email;
+        }
+        return res.json({success: false, data: {info: info}, error: true});
+      }
 
-          return res.json({success: !err, error: err, data: user});
+      bcrypt.genSalt(10, function (err1, salt) {
+        if (err1) {
+          return res.json({success: false, error: err});
+        }
+        bcrypt.hash(req.body.password, salt, function (err2, hash) {
+          if (err2) {
+            return res.json({success: false, error: err});
+          }
+          Users.create({
+            username: req.body.username,
+            password: hash,
+            email: req.body.email
+          }, onUserCreate);
         });
       });
-  });
-
-  app.get('/auth/logged-admin-user', function (req, res) {
-    if (!req.user || !req.user._id) {
-      return res.json({success: true, error: null, data: null});
     }
 
-    return User.findOne({_id: req.user._id, role: {$exists: true}}).lean().exec(function (err, user) {
+    function onUserCreate(err1) {
+      if (err1) {
+        return res.json({success: false, error: err1});
+      }
+      console.log('[' + (new Date()).toTimeString() + '] registration is successful, username: ' + req.body.username);
+
+      passport.authenticate('local', function (err, user) {
         if (err) {
-          logger.error(err);
           return res.json({success: false, error: err});
         }
 
-        var out = user && user._id ? {
-          _id: user._id, role: user.role
-        } : null;
-
-        return res.json({success: !err, error: err, data: out});
-      });
+        return req.login(user, function () {
+          console.log(user.email + ' logged in');
+          return res.json({
+            success: !err,
+            data: {username: user.username},
+            error: err
+          });
+        });
+      })(req, res, next);
+    }
   });
 
-  app.post('/auth/login', function (req, res) {
+  app.post('/api/auth/login', function (req, res) {
     passport.authenticate('local', function (err, user, info) {
       if (err) {
         return res.json({success: !err, error: err, data: info});
@@ -63,54 +98,21 @@ module.exports = function (serviceLocator) {
         });
       }
 
-      req.logIn(user, function (err) {
-        if (err) {
-          logger.error(err);
+      req.logIn(user, function (err2) {
+        if (err2) {
+          logger.error(err2);
         }
 
-        var cookieValue = req.body.remember ? user._id : '';
-
-        if (req.body.remember) {
-          var cookies = new Cookies(req, res);
-          cookies.set('rememberUser', cookieValue, {
-            overwrite: true, expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 31)
-          });
-        }
-
-        return res.json({success: !err, error: err, data: user});
+        return res.json({success: !err2, error: err2, data: user});
       });
     })(req, res);
   });
 
-  app.get('/auth/logout', ensureAuthenticated, function (req, res) {
-    var cookies = new Cookies(req, res);
-    cookies.set('rememberUser', '', {overwrite: true});
-
-    return res.json({success: true, error: undefined, data: undefined});
+  app.get('/api/auth/logout', ensureAuthenticated, function (req, res) {
+    req.logout();
+    if (req.xhr) {
+      return res.json({success: true});
+    }
+    return res.redirect(loginPage);
   });
-
-  //app.get('/google', passport.authenticate('google', { scope: 'email' }));
-  //app.get('/google/callback', passport.authenticate('google', {
-  //  failureRedirect: '/auth/login',
-  //  successRedirect: '/'
-  //}));
-  //
-  //app.get('/facebook', passport.authenticate('facebook'));
-  //app.get('/facebook/callback', passport.authenticate('facebook', {
-  //  failureRedirect: '/auth/login',
-  //  successRedirect: '/'
-  //}));
-  //
-  //app.get('/twitter', passport.authenticate('twitter'));
-  //app.get('/twitter/callback', passport.authenticate('twitter', {
-  //  failureRedirect: '/auth/login',
-  //  successRedirect: '/'
-  //}));
 };
-
-function ensureAuthenticated(req, res, next) {
-  if (req.isAuthenticated()) {
-    return next();
-  }
-  res.redirect('/auth/login');
-}

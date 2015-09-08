@@ -17,8 +17,12 @@ module.exports = function (app) {
             }
           },
           resolve: {
-            isAdmin: [function () {
-              return true;
+            authentication: ['$http', '$state', function ($http, $state) {
+              $http.get('/api/users/me').success(function (res) {
+                if (!res.success) {
+                  $state.go('login');
+                }
+              });
             }]
           }
         })
@@ -241,7 +245,6 @@ module.exports = function (app) {
           }
         })
 
-
         //  AUTENTICATION
         .state('login', {
           url: '/login',
@@ -250,16 +253,6 @@ module.exports = function (app) {
           data: {
             page: 'login',
             pageTitle: 'Login',
-            specialClass: 'gray-bg'
-          }
-        })
-        .state('login_two_columns', {
-          url: '/login_two_columns',
-          templateUrl: '/components/auth/login/login_two_columns.html',
-          controller: 'UserController',
-          data: {
-            page: 'login',
-            pageTitle: 'Login two columns',
             specialClass: 'gray-bg'
           }
         })

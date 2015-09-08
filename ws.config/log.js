@@ -3,7 +3,6 @@ var path = require('path');
 var winston = require('winston');
 
 module.exports = function (app) {
-  'use strict';
   var config = app.get('config');
 
   var consoleTransport = new (winston.transports.Console)({

@@ -119,7 +119,7 @@
     "no-new-require": 2,
     "no-path-concat": 2,
     "no-process-exit": 2,
-    "no-restricted-modules": [2, "mongoose"],
+    "no-restricted-modules": [1, "mongoose"],
     "no-sync": 2,
 
     // Stylistic Issues

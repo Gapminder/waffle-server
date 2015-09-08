@@ -4,7 +4,7 @@ var cors = require('cors');
 var uuid = require('node-uuid');
 var multiparty = require('connect-multiparty')();
 
-var s3 = new AWS.S3({ region: 'eu-west-1', params: {Bucket: 'digital-world'} });
+var s3 = new AWS.S3({region: 'eu-west-1', params: {Bucket: 'digital-world'}});
 
 // put to config
 // bucket name
@@ -27,7 +27,7 @@ module.exports = function (serviceLocator) {
     // zip -> unzip
     // tar.gz -> ungzip
     var file = req.files.file;
-    var fileExt = (file.name.match(/\..*$/) || '');
+    var fileExt = (file.name.match(/\..*$/) || [''])[0];
     var key = uuid.v4() + fileExt;
     var prefix = 'original/';
     s3.upload({
@@ -42,7 +42,7 @@ module.exports = function (serviceLocator) {
         name: file.name,
         size: file.size.toString()
       }
-    }, function(err, data) {
+    }, function (err, data) {
       // create
       if (data) {
         var user = {name: 'me :)'};

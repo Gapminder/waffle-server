@@ -14,8 +14,15 @@ var Schema = mongoose.Schema;
 var Users = new Schema({
   name: String,
   email: {type: String, index: true, unique: true, required: true},
+  username: {type: String, index: true, unique: true, required: true},
   password: {type: String, required: true, 'private': true},
-  salt: {type: String, required: true, 'private': true}
+  image: String,
+  social: {
+    googleId: String
+  }
+
+  /*,
+  salt: {type: String, required: true, 'private': true}*/
 });
 
 mongoose.model('Users', Users);
