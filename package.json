@@ -65,6 +65,7 @@
     "stream-transform": "^0.1.0",
     "validator": "^3.41.2",
     "winston": "^1.0.1",
+    "xlsx": "^0.8.0",
     "ya-csv": "*"
   },
   "devDependencies": {

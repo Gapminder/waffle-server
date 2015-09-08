@@ -42,7 +42,7 @@
                   <td><a ng-href="{{::item.uri}}" target="_blank">{{::item.name}}</a></td>
                   <td>{{::item.ext}}</td>
                   <td>{{::item.size}}</td>
-                  <td>actions</td>
+                  <td><button ng-click="ctrl.preview(item)" class="btn btn-sm btn-primary">Preview</button></td>
                 </tr>
                 </tbody>
               </table>

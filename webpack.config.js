@@ -50,6 +50,7 @@ var wConfig = {
     }
   },
   module: {
+    //noParse: /xlsx/ig,
     loaders: [
 /*      {
         test: /ws\.public.*\.js$/,
