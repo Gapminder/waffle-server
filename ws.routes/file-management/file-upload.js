@@ -4,8 +4,12 @@ var cors = require('cors');
 var uuid = require('node-uuid');
 var multiparty = require('connect-multiparty')();
 
+var mongoose = require('mongoose');
+var Files = mongoose.model('Files');
+
 var s3 = new AWS.S3({region: 'eu-west-1', params: {Bucket: 'digital-world'}});
 
+var ensureAuthenticated = require('../utils').ensureAuthenticated;
 // put to config
 // bucket name
 // region
@@ -22,43 +26,49 @@ module.exports = function (serviceLocator) {
   var logger = app.get('log');
   app.options('/api/files/uploads', cors(corsOptions));
 
-  app.post('/api/files/uploads', cors(corsOptions), multiparty, function (req, res) {
-    // image -> create thumbnail
-    // zip -> unzip
-    // tar.gz -> ungzip
-    var file = req.files.file;
-    var fileExt = (file.name.match(/\..*$/) || [''])[0];
-    var key = uuid.v4() + fileExt;
-    var prefix = 'original/';
-    s3.upload({
-      ACL: 'public-read',
-      Bucket: 'digital-world',
-      Key: prefix + key,
-      Body: fs.createReadStream(file.path),
-      CacheControl: 'max-age=86400',
-      ContentLength: file.size,
-      ContentType: file.type,
-      Metadata: {
-        name: file.name,
-        size: file.size.toString()
-      }
-    }, function (err, data) {
-      // create
-      if (data) {
-        var user = {name: 'me :)'};
-        var fileMeta = {
-          uri: data.Location,
+  app.post('/api/files/uploads', cors(corsOptions), multiparty, ensureAuthenticated, function (req, res) {
+    uploadPostProcessing(req.files.file, req.user);
+    return res.json({answer: 'completed'});
+  });
+
+  function uploadPostProcessing(file, user) {
+    process.nextTick(function postProcessing() {
+      var fileExt = (file.name.match(/\..*$/) || [''])[0];
+      var key = uuid.v4() + fileExt;
+      var prefix = 'original/';
+      s3.upload({
+        ACL: 'public-read',
+        Bucket: 'digital-world',
+        Key: prefix + key,
+        Body: fs.createReadStream(file.path),
+        CacheControl: 'max-age=86400',
+        ContentLength: file.size,
+        ContentType: file.type,
+        Metadata: {
+          name: file.name,
+          size: file.size.toString()
+        }
+      }, function (err, s3Object) {
+        if (err) {
+          return logger.error(err);
+        }
+
+        Files.create({
+          uri: s3Object.Location,
           name: file.originalFilename || file.name,
           ext: fileExt,
-          owner: {$push: user},
+          owners: [user],
           type: file.type,
-          size: file.size
-        };
-        console.log(fileMeta);
-        // todo: save to DB
-      }
-      fs.unlink(file.path, logger.log.bind(logger));
-      return res.json({answer: 'completed', err: err, data: data});
+          size: file.size,
+          createdBy: user
+        }, function (err) {
+          if (err) {
+            logger.error(err);
+          }
+
+          fs.unlink(file.path, logger.log.bind(logger));
+        });
+      });
     });
-  });
+  }
 };

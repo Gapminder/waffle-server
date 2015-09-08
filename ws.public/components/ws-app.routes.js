@@ -17,13 +17,16 @@ module.exports = function (app) {
             }
           },
           resolve: {
-            authentication: ['$http', '$state', function ($http, $state) {
-              $http.get('/api/users/me').success(function (res) {
-                if (!res.success) {
-                  $state.go('login');
-                }
-              });
-            }]
+            authentication: [
+              '$http', '$state', '$rootScope',
+              function ($http, $state, $rootScope) {
+                $http.get('/api/users/me').success(function (res) {
+                  if (!res.success) {
+                    $state.go('login');
+                  }
+                  $rootScope.user = res.data && res.data.user;
+                });
+              }]
           }
         })
         .state('admin.landing', {

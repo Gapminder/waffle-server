@@ -30,7 +30,7 @@ module.exports = function (serviceLocator) {
   require('./indicator-values')(serviceLocator.repositories);
   require('./indicators')(serviceLocator.repositories);
 
-  //utils
+  // utils
   require('./utils-data')(serviceLocator.repositories);
 
   // humnum
@@ -40,4 +40,7 @@ module.exports = function (serviceLocator) {
   require('./publishers')(serviceLocator.repositories);
   require('./publisher-catalogs')(serviceLocator.repositories);
   require('./publisher-catalog-versions')(serviceLocator.repositories);
+
+  // files
+  require('./files.model');
 };
