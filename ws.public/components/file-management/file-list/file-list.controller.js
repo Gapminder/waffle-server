@@ -175,7 +175,8 @@ module.exports = function (app) {
         // create settings for table
         function createSettings(headers) {
           return {
-            height: 396,
+            height: 400,
+            colWidths: 100,
             rowHeaders: true,
             stretchH: 'all',
             columnSorting: true,
