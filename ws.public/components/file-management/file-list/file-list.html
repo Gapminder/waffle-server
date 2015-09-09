@@ -38,11 +38,15 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr ng-repeat="item in ctrl.currentData track by item._id">
-                  <td><a ng-href="{{::item.uri}}" target="_blank">{{::item.name}}</a></td>
-                  <td>{{::item.ext}}</td>
-                  <td>{{::item.size/1024/1024|number:2}} MB</td>
-                  <td><button ng-click="ctrl.preview(item)" class="btn btn-sm btn-primary">Preview</button></td>
+                <tr ng-repeat="file in ctrl.currentData track by file._id">
+                  <td><a ng-href="{{::file.uri}}" target="_blank">{{::file.name}}</a></td>
+                  <td>{{::file.ext}}</td>
+                  <td>{{::file.size/1024/1024|number:2}} MB</td>
+                  <td>
+                    <button ng-click="ctrl.preview(file)" class="btn btn-sm btn-primary">Preview</button>
+                    <button ng-if="file.loading" class="btn btn-sm btn-info">Loading</button>
+                    <button ng-if="file.parsing" class="btn btn-sm btn-warning">Parsing</button>
+                  </td>
                 </tr>
                 </tbody>
               </table>
@@ -50,11 +54,16 @@
             <pager total-items="ctrl.totalItems" ng-model="ctrl.paging.currentPage" items-per-page="{{ctrl.limit}}" ng-change="ctrl.pageChanged()"
                    num-pages="ctrl.numPages"></pager>
             <pre>Page: {{ctrl.paging.currentPage}} / {{ctrl.numPages}}</pre>
-            <div ng-if="ctrl.table">
-              <hot-table settings="ctrl.table" datarows="ctrl.tableItems" class="hot handsontable htRowHeaders htColumnHeaders"></hot-table>
+            <div ng-if="ctrl.tables">
+              <tabset>
+                <tab ng-repeat="table in ctrl.tables" heading="{{ table.name }}" active="table.active">
+                </tab>
+              </tabset>
+              <div ng-repeat="table in ctrl.tables" ng-if="table.active">
+                <hot-table settings="table.settings" datarows="table.rows" class="hot handsontable htRowHeaders htColumnHeaders"></hot-table>
+              </div>
             </div>
           </div>
-
         </div>
       </div>
     </div>

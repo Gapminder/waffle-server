@@ -1,6 +1,7 @@
 // var XLSX = require('xlsx/dist/xlsx.core.min.js');
 // var XLSX = require('xlsx');
 var _ = require('lodash');
+var async = require('async');
 var papa = require('papaparse');
 
 module.exports = function (app) {
@@ -48,41 +49,77 @@ module.exports = function (app) {
           });
         }
 
+        function safeApplyW(pipe, cb) {
+          if ($scope.$$phase) {
+            console.log($scope.$$phase);
+            return cb(null, pipe);
+          }
+          $scope.$apply(function () {
+            setTimeout(function () {
+              return cb(null, pipe);
+            }, 50)
+          });
+        }
+
         function preview(file) {
           self.table = null;
+          async.waterfall([
+            function init(cb) {
+              console.time('Loading');
+              file.loading = true;
+              return cb(null, {file: file});
+            },
+            function loading(pipe, cb) {
+              load(pipe.file, function (err, fileContent) {
+                pipe.fileContent = fileContent;
+                return cb(err, pipe);
+              });
+            },
+            function next(pipe, cb) {
+              pipe.file.loading = false;
+              console.timeEnd('Loading');
+              console.time('Parsing');
+              pipe.file.parsing = true;
+              return cb(null, pipe);
+            },
+            safeApplyW,
+            function parsing(pipe, cb) {
+              parse(pipe.file, pipe.fileContent, function (err, tables) {
+                pipe.tables = tables;
+                return cb(err, pipe);
+              });
+            },
+            function next(pipe, cb) {
+              pipe.file.parsing = false;
+              console.timeEnd('Parsing');
+              console.time('Rendering');
+              return cb(null, pipe);
+            },
+            safeApplyW,
+            function rendering(pipe, cb) {
+              render(pipe.tables, function () {
+                console.timeEnd('Rendering');
+                return cb(null, pipe);
+              });
+            },
+            safeApplyW
+          ], angular.noop);
+        }
+
+        // load file by url
+        function load(file, cb) {
           if (file.ext === '.csv') {
             papa.parse(file.uri, {
               download: true,
               dynamicTyping: true,
               worker: false,
-              error: console.error.bind(console),
+              error: cb,
               complete: function (json) {
-                var rows = json.data;
-                if (!rows.length) {
-                  return;
-                }
-
-                var headers = rows.shift();
-
-                var settings = {
-                  height: 396,
-                  rowHeaders: true,
-                  stretchH: 'all',
-                  columnSorting: true,
-                  contextMenu: false,
-                  className: 'htCenter htMiddle',
-                  readOnly: true,
-                  colHeaders: headers
-                };
-                self.table = settings;
-                self.tableItems = rows;
-                if (!$scope.$$phase) {
-                  $scope.$root.$applyAsync(function () {
-                  });
-                }
+                // json.data: Array<Array<string>>
+                return cb(json.error, json.data);
               }
             });
-            return true;
+            return;
           }
 
           if (file.ext !== '.csv') {
@@ -93,50 +130,73 @@ module.exports = function (app) {
             oReq.responseType = 'arraybuffer';
 
             oReq.onload = function (e) {
-              console.time('parse');
               var arraybuffer = oReq.response;
-
-              /* convert data to binary string */
-              var data = new Uint8Array(arraybuffer);
-              var arr = [];
-
-              for (var i = 0; i !== data.length; ++i) {
-                arr[i] = String.fromCharCode(data[i]);
-              }
-              var bstr = arr.join('');
-              /* Call XLSX */
-              var workbook = XLSX.read(bstr, {type: 'binary'});
-              console.timeEnd('parse');
-              /* DO SOMETHING WITH workbook HERE */
-
-              console.time('transform');
-              var key = Object.keys(workbook.Sheets)[0];
-              var dataSheet = sheet_to_table(workbook.Sheets[key]);
-              var rows = dataSheet.rows;
-              var headers = dataSheet.headers;
-              console.timeEnd('transform');
-
-              var settings = {
-                height: 396,
-                rowHeaders: true,
-                stretchH: 'all',
-                columnSorting: true,
-                contextMenu: false,
-                className: 'htCenter htMiddle',
-                readOnly: true,
-                colHeaders: headers
-              };
-              self.table = settings;
-              self.tableItems = rows;
-              if (!$scope.$$phase) {
-                $scope.$root.$applyAsync(function () {
-                  // self.table = _.merge({data: rows}, settings);
-                });
-              }
+              return cb(null, arraybuffer);
             };
 
             oReq.send();
+            return;
           }
+        }
+
+        // parses file content into {header and rows}
+        function parse(file, fileContent, cb) {
+          var headers = [];
+          if (file.ext === '.csv') {
+            headers = fileContent.shift();
+            return cb(null, [{
+              name: file.name,
+              table: {headers: headers, rows: fileContent}
+            }]);
+          }
+
+          if (file.ext !== '.csv') {
+            /* convert data to binary string */
+            var data = new Uint8Array(fileContent);
+            var arr = [];
+
+            for (var i = 0; i !== data.length; ++i) {
+              arr[i] = String.fromCharCode(data[i]);
+            }
+            var bstr = arr.join('');
+            var workbook = XLSX.read(bstr, {type: 'binary'});
+
+            console.time('compile xls');
+            var tables = _.map(Object.keys(workbook.Sheets), function (key) {
+              return {name: key, table: sheet_to_table(workbook.Sheets[key])};
+            });
+            console.timeEnd('compile xls');
+            return cb(null, tables);
+          }
+        }
+
+        // create settings for table
+        function createSettings(headers) {
+          return {
+            height: 396,
+            rowHeaders: true,
+            stretchH: 'all',
+            columnSorting: true,
+            contextMenu: false,
+            className: 'htCenter htMiddle',
+            readOnly: true,
+            colHeaders: headers
+          };
+        }
+
+        // requires self and $scope
+        // tables: [{name:string, table: {headers:[string], rows: [string]}]
+        function render(tables, cb) {
+          self.tables = _.map(tables, function (table) {
+            return {
+              name: table.name,
+              rows: table.table.rows,
+              settings: createSettings(table.table.headers)
+            };
+          });
+          //self.table = createSettings(tables.headers);
+          //self.tableItems = tables.rows;
+          return cb();
         }
       }
     ]);
@@ -189,12 +249,6 @@ module.exports = function (app) {
       rr = encode_row(R);
       isempty = true;
       row = [];
-      //if (header === 1) row = [];
-      //else {
-      //  row = {};
-      //  if (Object.defineProperty) Object.defineProperty(row, '__rowNum__', {value: R, enumerable: false});
-      //  else row.__rowNum__ = R;
-      //}
 
       for (C = r.s.c; C <= r.e.c; ++C) {
         val = sheet[cols[C] + rr];
@@ -213,7 +267,6 @@ module.exports = function (app) {
         }
         if (v !== undefined) {
           row[C] = raw ? v : format_cell(val, v);
-          //row[hdr[C]] = raw ? v : format_cell(val, v);
           isempty = false;
         }
       } // end column
