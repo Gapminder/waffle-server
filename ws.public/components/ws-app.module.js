@@ -18,7 +18,10 @@ require('./ws-app.factories')(app);
 
 // all in one bunch
 require('./collections.service')(app);
+
+require('./shared/handsontable.directive')(app);
 require('./shared/navigation/breadcrumb.directive')(app);
+
 require('./landing/landing.controller')(app);
 
 require('./users/user.controller')(app);

@@ -9,6 +9,7 @@
     "modules": true
   },
   "globals": {
+    "Handsontable": 2
   },
   "rules": {
     // Possible Errors
