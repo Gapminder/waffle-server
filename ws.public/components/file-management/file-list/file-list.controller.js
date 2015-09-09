@@ -1,11 +1,13 @@
-//var XLSX = require('xlsx/dist/xlsx.core.min.js');
-//var XLSX = require('xlsx');
+// var XLSX = require('xlsx/dist/xlsx.core.min.js');
+// var XLSX = require('xlsx');
+var _ = require('lodash');
+var papa = require('papaparse');
 
 module.exports = function (app) {
   app
     .controller('FileListController', [
-      '$state', 'FilesService',
-      function ($state, FilesService) {
+      '$scope', '$state', 'FilesService',
+      function ($scope, $state, FilesService) {
         var self = this;
         self.model = {search: ''};
         self.currentData = [];
@@ -47,31 +49,69 @@ module.exports = function (app) {
         }
 
         function preview(file) {
-          /* set up XMLHttpRequest */
-          var url = file.uri;
-          var oReq = new XMLHttpRequest();
-          oReq.open('GET', url, true);
-          oReq.responseType = 'arraybuffer';
+          self.table = null;
+          if (file.ext === '.csv') {
+            papa.parse(file.uri, {
+              download: true,
+              dynamicTyping: true,
+              worker: false,
+              error: console.error.bind(console),
+              complete: function (json) {
+                var rows = json.data;
+                if (!rows.length) {
+                  return;
+                }
 
-          oReq.onload = function (e) {
-            var arraybuffer = oReq.response;
+                var headers = rows.shift();
 
-            /* convert data to binary string */
-            var data = new Uint8Array(arraybuffer);
-            var arr = [];
-            for (var i = 0; i !== data.length; ++i) {
-              arr[i] = String.fromCharCode(data[i]);
-            }
-            var bstr = arr.join('');
-
-            /* Call XLSX */
-            var workbook = XLSX.read(bstr, {type: 'binary'});
-
-            /* DO SOMETHING WITH workbook HERE */
-            console.log(workbook);
+                var settings = {
+                  height: 396,
+                  rowHeaders: true,
+                  stretchH: 'all',
+                  columnSorting: true,
+                  contextMenu: false,
+                  className: 'htCenter htMiddle',
+                  readOnly: true,
+                  colHeaders: headers
+                };
+                self.table = settings;
+                self.tableItems = rows;
+                if (!$scope.$$phase) {
+                  $scope.$root.$applyAsync(function () {
+                    self.table = _.merge({data: rows}, settings);
+                  });
+                }
+              }
+            });
+            return true;
           }
 
-          oReq.send();
+          if (file.ext !== '.csv') {
+            /* set up XMLHttpRequest */
+            var url = file.uri;
+            var oReq = new XMLHttpRequest();
+            oReq.open('GET', url, true);
+            oReq.responseType = 'arraybuffer';
+
+            oReq.onload = function (e) {
+              var arraybuffer = oReq.response;
+
+              /* convert data to binary string */
+              var data = new Uint8Array(arraybuffer);
+              var arr = [];
+
+              for (var i = 0; i !== data.length; ++i) {
+                arr[i] = String.fromCharCode(data[i]);
+              }
+              var bstr = arr.join('');
+              /* Call XLSX */
+              var workbook = XLSX.read(bstr, {type: 'binary'});
+              /* DO SOMETHING WITH workbook HERE */
+              console.log(workbook);
+            };
+
+            oReq.send();
+          }
         }
       }
     ]);

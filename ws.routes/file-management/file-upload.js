@@ -33,7 +33,7 @@ module.exports = function (serviceLocator) {
 
   function uploadPostProcessing(file, user) {
     process.nextTick(function postProcessing() {
-      var fileExt = (file.name.match(/\..*$/) || [''])[0];
+      var fileExt = (file.name.match(/\.[^\.]*$/) || [''])[0];
       var key = uuid.v4() + fileExt;
       var prefix = 'original/';
       s3.upload({

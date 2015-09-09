@@ -50,6 +50,10 @@
             <pager total-items="ctrl.totalItems" ng-model="ctrl.paging.currentPage" items-per-page="{{ctrl.limit}}" ng-change="ctrl.pageChanged()"
                    num-pages="ctrl.numPages"></pager>
             <pre>Page: {{ctrl.paging.currentPage}} / {{ctrl.numPages}}</pre>
+            <div ng-if="ctrl.table">
+              <!--<div handsontable></div>-->
+              <hot-table settings="ctrl.table" datarows="ctrl.tableItems"></hot-table>
+            </div>
           </div>
 
         </div>

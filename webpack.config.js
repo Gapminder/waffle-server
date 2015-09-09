@@ -30,7 +30,7 @@ var wConfig = {
     'waffle-server': './components',
     angular: ['jquery', 'angular', 'angular-resource',
       'angular-ui-router', 'angular-breadcrumb', 'oclazyload',
-      'angular-ui-bootstrap', 'async', 'lodash'
+      'angular-ui-bootstrap', 'async', 'lodash', 'ngHandsontable'
     ]
   },
   output: {
@@ -41,16 +41,17 @@ var wConfig = {
   },
   resolve: {
     root: [absSrc],
-    modulesDirectories: ['./components', 'node_modules'],
+    modulesDirectories: ['./components', 'node_modules', './assets'],
     extensions: ['', '.js', '.png', '.gif', '.jpg'],
     alias: {
       'angular-google-maps': 'angular-google-maps/dist/angular-google-maps.min.js',
+      ngHandsontable: 'assets/ngHandsontable/dist/ngHandsontable.min.js',
       'ng-infinite-scroll': 'ng-infinite-scroll/build/ng-infinite-scroll.js'/*,
       datamaps: 'datamaps/dist/datamaps.all.js'*/
     }
   },
   module: {
-    //noParse: /xlsx/ig,
+    noParse: /handsontable/ig,
     loaders: [
 /*      {
         test: /ws\.public.*\.js$/,
