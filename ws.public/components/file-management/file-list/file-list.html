@@ -51,8 +51,7 @@
                    num-pages="ctrl.numPages"></pager>
             <pre>Page: {{ctrl.paging.currentPage}} / {{ctrl.numPages}}</pre>
             <div ng-if="ctrl.table">
-              <!--<div handsontable></div>-->
-              <hot-table settings="ctrl.table" datarows="ctrl.tableItems"></hot-table>
+              <hot-table settings="ctrl.table" datarows="ctrl.tableItems" class="hot handsontable htRowHeaders htColumnHeaders"></hot-table>
             </div>
           </div>
 
