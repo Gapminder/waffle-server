@@ -1,5 +1,5 @@
 // var XLSX = require('xlsx/dist/xlsx.core.min.js');
-// var XLSX = require('xlsx');
+var XLSX = require('xlsx');
 var _ = require('lodash');
 var async = require('async');
 var papa = require('papaparse');
@@ -146,7 +146,8 @@ module.exports = function (app) {
             headers = fileContent.shift();
             return cb(null, [{
               name: file.name,
-              table: {headers: headers, rows: fileContent}
+              headers: headers,
+              rows: fileContent
             }]);
           }
 
@@ -163,7 +164,8 @@ module.exports = function (app) {
 
             console.time('compile xls');
             var tables = _.map(Object.keys(workbook.Sheets), function (key) {
-              return {name: key, table: sheet_to_table(workbook.Sheets[key])};
+              var table = sheet_to_table(workbook.Sheets[key]);
+              return {name: key, headers: table.headers, rows: table.rows};
             });
             console.timeEnd('compile xls');
             return cb(null, tables);
@@ -185,17 +187,15 @@ module.exports = function (app) {
         }
 
         // requires self and $scope
-        // tables: [{name:string, table: {headers:[string], rows: [string]}]
+        // tables: [{name:string, headers:[string], rows: [string]]
         function render(tables, cb) {
           self.tables = _.map(tables, function (table) {
             return {
               name: table.name,
-              rows: table.table.rows,
-              settings: createSettings(table.table.headers)
+              rows: table.rows,
+              settings: createSettings(table.headers)
             };
           });
-          //self.table = createSettings(tables.headers);
-          //self.tableItems = tables.rows;
           return cb();
         }
       }
@@ -252,7 +252,11 @@ module.exports = function (app) {
 
       for (C = r.s.c; C <= r.e.c; ++C) {
         val = sheet[cols[C] + rr];
-        if (val === undefined || val.t === undefined) continue;
+        if (val === undefined || val.t === undefined) {
+          row[C] = undefined;
+          continue;
+        }
+
         v = val.v;
         switch (val.t) {
           case 'e':
@@ -265,12 +269,13 @@ module.exports = function (app) {
           default:
             throw 'unrecognized type ' + val.t;
         }
-        if (v !== undefined) {
-          row[C] = raw ? v : format_cell(val, v);
-          isempty = false;
-        }
+        row[C] = raw ? v : format_cell(val, v);
+        //if (v !== undefined) {
+        //  isempty = false;
+        //}
       } // end column
-      if (isempty === false || header === 1) out[outi++] = row;
+      //if (isempty === false || header === 1)
+      out[outi++] = row;
     } // end row
     out.length = outi;
     return {rows: out, headers: hdr};
