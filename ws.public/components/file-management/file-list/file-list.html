@@ -41,7 +41,7 @@
                 <tr ng-repeat="item in ctrl.currentData track by item._id">
                   <td><a ng-href="{{::item.uri}}" target="_blank">{{::item.name}}</a></td>
                   <td>{{::item.ext}}</td>
-                  <td>{{::item.size}}</td>
+                  <td>{{::item.size/1024/1024|number:2}} MB</td>
                   <td><button ng-click="ctrl.preview(item)" class="btn btn-sm btn-primary">Preview</button></td>
                 </tr>
                 </tbody>

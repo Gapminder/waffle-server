@@ -42,6 +42,7 @@ module.exports = function (serviceLocator) {
         Key: prefix + key,
         Body: fs.createReadStream(file.path),
         CacheControl: 'max-age=86400',
+        ContentDisposition: 'attachment; filename=' + file.name,
         ContentLength: file.size,
         ContentType: file.type,
         Metadata: {
@@ -61,9 +62,9 @@ module.exports = function (serviceLocator) {
           type: file.type,
           size: file.size,
           createdBy: user
-        }, function (err) {
-          if (err) {
-            logger.error(err);
+        }, function (err2) {
+          if (err2) {
+            logger.error(err2);
           }
 
           fs.unlink(file.path, logger.log.bind(logger));
