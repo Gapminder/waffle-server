@@ -17,4 +17,5 @@ node_modules
 samples/humnum-import/data
 ws.utils/devinfo.org.import/data
 
+ws.public/index.html
 ws.public/dest

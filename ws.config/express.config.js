@@ -1,3 +1,5 @@
+var path = require('path');
+var express = require('express');
 var bodyParser = require('body-parser');
 var methodOverride = require('method-override');
 
@@ -30,6 +32,7 @@ module.exports = function (app) {
   app.use(passport.initialize());
   app.use(passport.session());
   app.set('passport', passport);
+
 // generic req logger
 /*  app.use(function (req, res, next) {
     var self = this;
