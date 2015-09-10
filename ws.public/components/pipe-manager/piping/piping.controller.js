@@ -9,6 +9,7 @@ module.exports = function (app) {
     self.pipe = '';
     self.onChange = function () {
       if (!self.pipe) {
+        self.result = self.error = null;
         return;
       }
       /* eslint no-new-func: 0*/
@@ -20,8 +21,6 @@ module.exports = function (app) {
         self.error = e;
       }
     };
-
-    console.log('let the show go on!');
   }]);
 
   // warning duplicates from file-manager!
