@@ -9,6 +9,7 @@
     "modules": true
   },
   "globals": {
+    "Handsontable": 2
   },
   "rules": {
     // Possible Errors
@@ -119,7 +120,7 @@
     "no-new-require": 2,
     "no-path-concat": 2,
     "no-process-exit": 2,
-    "no-restricted-modules": [2, "mongoose"],
+    "no-restricted-modules": [1, "mongoose"],
     "no-sync": 2,
 
     // Stylistic Issues
@@ -134,7 +135,7 @@
     "eol-last": 0,
     "func-names": 0,
     "func-style": [2, "declaration"],
-    "indent": [2, 2],
+    "indent": [2, 2, {"SwitchCase": 1}],
     "key-spacing": [2, { "beforeColon": false, "afterColon": true}],
     "max-nested-callbacks": [2, 3],
     "new-cap": [2, {"newIsCap": true, "capIsNew": true, "capIsNewExceptions":[

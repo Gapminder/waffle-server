@@ -2,12 +2,17 @@ var angular = require('angular');
 var uiRouter = require('angular-ui-router');
 var ngResource = require('angular-resource');
 require('angular-breadcrumb');
+require('ngHandsontable');
+
+var fileManagementComponent = require('./file-management');
 
 var app = angular.module('admin', [
   ngResource,
   uiRouter,
   'ui.bootstrap',
-  'ncy-angular-breadcrumb'
+  'ncy-angular-breadcrumb',
+  'ngHandsontable',
+  fileManagementComponent
 ]);
 
 require('./ws-app.config')(app);
@@ -15,7 +20,9 @@ require('./ws-app.factories')(app);
 
 // all in one bunch
 require('./collections.service')(app);
+
 require('./shared/navigation/breadcrumb.directive')(app);
+
 require('./landing/landing.controller')(app);
 
 require('./users/user.controller')(app);

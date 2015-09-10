@@ -1,0 +1,13 @@
+var _ = require('lodash');
+
+var ensureAuthenticated = require('./utils').ensureAuthenticated;
+module.exports = function (serviceLocator) {
+  var app = serviceLocator.getApplication();
+
+  app.get('/api/users/me', function (req, res) {
+    if (!req.user) {
+      return res.json({success: false});
+    }
+    return res.json({success: true, data: {user: _.pick(req.user, ['_id', 'name', 'email', 'username', 'image'])}});
+  });
+};

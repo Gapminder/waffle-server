@@ -3,31 +3,32 @@
     <ul side-navigation class="nav metismenu" id="side-menu">
       <li class="nav-header">
 
-        <!--<div class="dropdown profile-element" dropdown>-->
-          <!--&lt;!&ndash;<img alt="image" class="img-circle" src="img/profile_small.jpg"/>&ndash;&gt;-->
-          <!--<a class="dropdown-toggle" dropdown-toggle href>-->
-                            <!--<span class="clear">-->
-                                <!--<span class="block m-t-xs">-->
-                                    <!--<strong class="font-bold">David Williams</strong>-->
-                             <!--</span>-->
-                                <!--<span class="text-muted text-xs block">Art Director <b class="caret"></b></span>-->
-                            <!--</span>-->
-          <!--</a>-->
-          <!--<ul class="dropdown-menu animated fadeInRight m-t-xs">-->
-            <!--<li><a ui-sref="profile">Profile</a></li>-->
-            <!--<li><a ui-sref="contacts">Contacts</a></li>-->
-            <!--<li><a ui-sref="inbox">Mailbox</a></li>-->
-            <!--<li class="divider"></li>-->
-            <!--<li><a href="login">Logout</a></li>-->
-          <!--</ul>-->
-        <!--</div>-->
+        <div class="profile-element text-center">
+          <img alt="image" class="img-circle" ng-src="{{::user.image}}"/>
+          <a class="" href>
+            <span class="clear">
+              <span class="block m-t-xs">
+                <strong class="font-bold">{{::user.name || user.username}}</strong>
+              </span>
+            </span>
+          </a>
+        </div>
+
         <div class="logo-element">
           {{ tagline }}
         </div>
       </li>
+      <li ng-class="{active: $state.includes('files')}">
+        <a ui-sref="admin.files"><i class="fa fa-files-o"></i> <span class="nav-label">Files</span> <span
+          class="fa arrow"></span></a>
+        <ul class="nav nav-second-level" ng-class="{in: $state.includes('files')}">
+          <li ui-sref-active="active"><a ui-sref="admin.file-upload">Upload</a></li>
+          <li ui-sref-active="active"><a ui-sref="admin.file-list">Management</a></li>
+        </ul>
+      </li>
       <li ng-class="{active: $state.includes('home')}">
         <a ui-sref="admin.landing"><i class="fa fa-files-o"></i> <span class="nav-label">{{ 'Home' }}</span> <span
-                class="fa arrow"></span></a>
+          class="fa arrow"></span></a>
         <ul class="nav nav-second-level" ng-class="{in: $state.includes('home')}">
           <li ui-sref-active="active"><a ui-sref="admin.home.publishers.list">{{ 'Publishers' }}</a></li>
           <li ui-sref-active="active"><a ui-sref="admin.home.publisherCatalogs.list">{{ 'Publisher Catalogs' }}</a></li>
