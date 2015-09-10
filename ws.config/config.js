@@ -1,5 +1,9 @@
 /*eslint no-process-env:0 */
 module.exports = function (app) {
+  if (!process.env.AWS_SECRET_ACCESS_KEY) {
+    throw new Error('You need to set up AWS access keys');
+  }
+
   var config = {
     PORT: process.env.PORT || 3000,
     HOST: process.env.HOST || 'http://localhost',
@@ -25,11 +29,10 @@ module.exports = function (app) {
   config.social = {
     GOOGLE_CLIENT_ID: '267502081172-qcabnkcj1ns254hnu45gf67d0t5675e3.apps.googleusercontent.com',
     GOOGLE_CLIENT_SECRET: '-qvIG6hoI8a7IpsX1-7-uojr',
-    GOOGLE_CALLBACK_URL: config.HOST + ':' +/* config.PORT*/ 8080 + '/api/auth/google/callback',
-    'GOOGLE_SCOPE': [
+    GOOGLE_CALLBACK_URL: config.HOST + ':' + config.PORT + '/api/auth/google/callback',
+    GOOGLE_SCOPE: [
       'https://www.googleapis.com/auth/userinfo.profile',
-      'https://www.googleapis.com/auth/userinfo.email'
-    ],
+      'https://www.googleapis.com/auth/userinfo.email']
   };
 
   app.set('config', config);

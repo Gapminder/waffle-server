@@ -195,7 +195,7 @@ module.exports = function (app) {
             columnSorting: true,
             contextMenu: false,
             className: 'htCenter htMiddle',
-            readOnly: true,
+            readOnly: false,
             colHeaders: headers
           };
         }
