@@ -1,8 +1,9 @@
 // var XLSX = require('xlsx/dist/xlsx.core.min.js');
-var XLSX = require('xlsx');
 var _ = require('lodash');
 var async = require('async');
 var papa = require('papaparse');
+var XLSX = require('xlsx');
+var angular = require('angular');
 
 module.exports = function (app) {
   app
@@ -57,12 +58,22 @@ module.exports = function (app) {
           $scope.$apply(function () {
             setTimeout(function () {
               return cb(null, pipe);
-            }, 50)
+            }, 50);
           });
         }
 
         function preview(file) {
           self.table = null;
+          if (['.csv', '.xls', '.xlsx'].indexOf(file.ext) === -1) {
+            setTimeout(function () {
+              if (confirm('File format ' + file.ext + 'not yet supported,' +
+                  'open it in new tab?')) {
+                window.open(file.uri, '_blank');
+              }
+            }, 0);
+            return;
+          }
+
           async.waterfall([
             function init(cb) {
               console.time('Loading');
@@ -130,6 +141,7 @@ module.exports = function (app) {
             oReq.responseType = 'arraybuffer';
 
             oReq.onload = function (e) {
+              console.log(e);
               var arraybuffer = oReq.response;
               return cb(null, arraybuffer);
             };
@@ -151,7 +163,7 @@ module.exports = function (app) {
             }]);
           }
 
-          if (file.ext !== '.csv') {
+          if (file.ext === '.xlsx' || file.ext === '.xls') {
             /* convert data to binary string */
             var data = new Uint8Array(fileContent);
             var arr = [];
@@ -170,6 +182,7 @@ module.exports = function (app) {
             console.timeEnd('compile xls');
             return cb(null, tables);
           }
+          return false;
         }
 
         // create settings for table
