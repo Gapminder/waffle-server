@@ -5,6 +5,7 @@ require('angular-breadcrumb');
 require('ngHandsontable');
 
 var fileManagementComponent = require('./file-management');
+var pipeManager = require('./pipe-manager');
 
 var app = angular.module('admin', [
   ngResource,
@@ -12,7 +13,8 @@ var app = angular.module('admin', [
   'ui.bootstrap',
   'ncy-angular-breadcrumb',
   'ngHandsontable',
-  fileManagementComponent
+  fileManagementComponent,
+  pipeManager
 ]);
 
 require('./ws-app.config')(app);

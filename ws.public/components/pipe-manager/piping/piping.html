@@ -1,0 +1,28 @@
+<div class="row wrapper border-bottom white-bg page-heading">
+  <div class="col-lg-10">
+    <admin-breadcrumb></admin-breadcrumb>
+  </div>
+  <div class="col-lg-2">
+
+  </div>
+</div>
+<div class="page-wrapper wrapper-content animated fadeInRight">
+  <div class="row">
+    <div class="col-lg-6">
+      <p>Piping</p>
+      <textarea name="js" cols="80" rows="20"
+                ng-change="ctrl.onChange()"
+                ng-model="ctrl.pipe"></textarea>
+      <p ng-if="!ctrl.error">Result</p>
+      <pre ng-if="!ctrl.error">{{ctrl.result}}</pre>
+      <p ng-if="ctrl.error">Error</p>
+      <pre class="bg-danger" ng-if="ctrl.error">{{ctrl.error.toString()}}</pre>
+      <pre class="bg-danger" ng-if="ctrl.error">{{ctrl.error.stack}}</pre>
+    </div>
+    <div class="col-lg-6">
+      <p>Preview:</p>
+      <hot-table settings="ctrl.settings" datarows="ctrl.rows"
+                 class="hot handsontable htRowHeaders htColumnHeaders"></hot-table>
+    </div>
+  </div>
+</div>

@@ -13,7 +13,7 @@ module.exports = function (app) {
               templateUrl: '/components/shared/navigation/top-navbar.html'
             },
             navigation: {
-              templateUrl: '/components/shared/navigation/navigation.html'
+              template: require('./shared/navigation/navigation.html')
             }
           },
           resolve: {
