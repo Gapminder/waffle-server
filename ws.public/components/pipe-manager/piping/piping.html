@@ -17,7 +17,7 @@
           <div class="row">
             <div class="col-lg-6">
               <ui-select ng-model="step.opts"
-                         on-select="step.run()"
+                         on-select="ctrl.runStep(step)"
                          reset-search-input="false">
                 <ui-select-match placeholder="Select file">{{$select.selected.name}}</ui-select-match>
                 <ui-select-choices repeat="file in ctrl.files track by $index"
@@ -28,11 +28,14 @@
               </ui-select>
             </div>
 
-            <div class="col-lg-6">Nigga!</div>
+            <div class="col-lg-2 btn"
+                 ng-class="{'alert-info': step.ready, 'alert-danger': !step.ready}"
+                 ng-if="step.ready !== null">{{step.ready === true ? 'Status: ready' : 'Please wait'}}</div>
+            <div class="col-lg-2" ng-if="step.ready !== null"><button class="btn btn-success" ng-click="ctrl.previewStep(step)">Preview</button></div>
           </div>
         </li>
       </ul>
-      <p>Piping</p>
+<!--      <p>Piping</p>
       <textarea name="js" cols="80" rows="20"
                 ng-change="ctrl.onChange()"
                 ng-model="ctrl.jspipe"></textarea>
@@ -41,12 +44,22 @@
       <pre ng-if="!ctrl.error">{{ctrl.result}}</pre>
       <p ng-if="ctrl.error">Error</p>
       <pre class="bg-danger" ng-if="ctrl.error">{{ctrl.error.toString()}}</pre>
-      <pre class="bg-danger" ng-if="ctrl.error">{{ctrl.error.stack}}</pre>
+      <pre class="bg-danger" ng-if="ctrl.error">{{ctrl.error.stack}}</pre>-->
     </div>
     <div class="col-lg-6">
-      <p>Preview:</p>
-      <hot-table settings="ctrl.settings" datarows="ctrl.rows"
-                 class="hot handsontable htRowHeaders htColumnHeaders"></hot-table>
+      <p ng-if="ctrl.previews">Previews:</p>
+
+      <!--<hot-table settings="ctrl.settings" datarows="ctrl.rows"-->
+                 <!--class="hot handsontable htRowHeaders htColumnHeaders"></hot-table>-->
+      <div ng-if="ctrl.previews">
+        <tabset>
+          <tab ng-repeat="table in ctrl.previews" heading="{{ table.name }}" active="table.active">
+          </tab>
+        </tabset>
+        <div ng-repeat="table in ctrl.previews" ng-if="table.active">
+          <hot-table settings="table.settings" datarows="table.rows" class="hot handsontable htRowHeaders htColumnHeaders"></hot-table>
+        </div>
+      </div>
     </div>
   </div>
 </div>
