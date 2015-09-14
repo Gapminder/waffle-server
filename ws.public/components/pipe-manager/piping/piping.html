@@ -9,50 +9,12 @@
 <div class="page-wrapper wrapper-content animated fadeInRight">
   <div class="row">
     <div class="col-lg-6">
-      <div class="wizard">
-        <div class="steps clearfix">
-          <ul role="tablist">
-            <li role="tab" class="first current error" aria-disabled="false" aria-selected="true">
-              <a id="form-t-0" href="#form-h-0" aria-controls="form-p-0">
-                <span class="current-info audible">current step: </span>
-                <span class="number">1.</span> Account</a>
-            </li>
-            <li role="tab" class="disabled" aria-disabled="true">
-              <a id="form-t-1" href="#form-h-1" aria-controls="form-p-1">
-                <span class="number">2.</span> Profile</a>
-            </li>
-            <li role="tab" class="disabled" aria-disabled="true">
-              <a id="form-t-2" href="#form-h-2" aria-controls="form-p-2">
-                <span class="number">3.</span> Warning</a>
-            </li>
-            <li role="tab" class="disabled last" aria-disabled="true">
-              <a id="form-t-3" href="#form-h-3" aria-controls="form-p-3">
-                <span class="number">4.</span> Finish</a>
-            </li>            <li role="tab" class="disabled last" aria-disabled="true">
-              <a id="form-t-3" href="#form-h-3" aria-controls="form-p-3">
-                <span class="number">4.</span> Finish</a>
-            </li>            <li role="tab" class="disabled last" aria-disabled="true">
-              <a id="form-t-3" href="#form-h-3" aria-controls="form-p-3">
-                <span class="number">4.</span> Finish</a>
-            </li>            <li role="tab" class="disabled last" aria-disabled="true">
-              <a id="form-t-3" href="#form-h-3" aria-controls="form-p-3">
-                <span class="number">4.</span> Finish</a>
-            </li>            <li role="tab" class="disabled last" aria-disabled="true">
-              <a id="form-t-3" href="#form-h-3" aria-controls="form-p-3">
-                <span class="number">4.</span> Finish</a>
-            </li>            <li role="tab" class="disabled last" aria-disabled="true">
-              <a id="form-t-3" href="#form-h-3" aria-controls="form-p-3">
-                <span class="number">4.</span> Finish</a>
-            </li>            <li role="tab" class="disabled last" aria-disabled="true">
-              <a id="form-t-3" href="#form-h-3" aria-controls="form-p-3">
-                <span class="number">4.</span> Finish</a>
-            </li>            <li role="tab" class="disabled last" aria-disabled="true">
-              <a id="form-t-3" href="#form-h-3" aria-controls="form-p-3">
-                <span class="number">4.</span> Finish</a>
-            </li>
-          </ul>
-        </div>
-      </div>
+      <button ng-click="ctrl.pipe.createImportStep()">Import +</button>
+      <ul>
+        <li ng-repeat="step in ctrl.pipe.steps">
+          {{step.getDisplayName()}}
+        </li>
+      </ul>
       <p>Piping</p>
       <textarea name="js" cols="80" rows="20"
                 ng-change="ctrl.onChange()"
