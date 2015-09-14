@@ -24,6 +24,5 @@
   },
   "_source": "git://github.com/brettshollenberger/ui-select.git",
   "_target": "*",
-  "_originalSource": "ui-select",
-  "_direct": true
+  "_originalSource": "ui-select"
 }
