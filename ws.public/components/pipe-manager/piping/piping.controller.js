@@ -171,20 +171,61 @@ module.exports = function (app) {
       // warning duplicates from file-manager!
       // todo: DRY them out
       function createSettings(headers) {
-        var settings = {
+        return {
           height: 400,
           colWidths: 100,
-          rowHeaders: true,
           stretchH: 'all',
           columnSorting: true,
-          contextMenu: false,
+          dropdownMenu: true,
+          contextMenu: {
+            callback: function (key, options) {
+
+              if (key === 'about') {
+                setTimeout(function () {
+                  // timeout is used to make sure the menu collapsed before alert is shown
+                  alert("This is a context menu with default and custom options mixed");
+                }, 100);
+              }
+            },
+            items: {
+              "recognize_data": {
+                name: 'Recognize data',
+                callback: function (key, selection) {
+                  console.log(arguments)
+                  // [startRow, startCol, endRow, endCol]
+                  var selected = this.getSelected();
+                  // is cell startRow === endRow && startCol === endCol
+                  // is row: startRow === endRow
+                  // is column: startCol === endCol
+                  // is rectangle: else
+                  var selectedData = this.getData.apply(this, selected);
+                  this.selectCellByProp(selection.start.row, selection.start.col,
+                    selection.end.row, selection.end.col, false);
+                  window.a = this;
+                }
+              },
+              "row_above": {
+                disabled: function () {
+                  // if first row, disable this option
+                }
+              },
+              "row_below": {},
+              "hsep1": "---------",
+              "remove_row": {
+                name: 'Remove this row, ok?',
+                disabled: function () {
+                  // if first row, disable this option
+                }
+              },
+              "hsep2": "---------",
+              "about": {name: 'About this menu'}
+            }
+          },
           className: 'htCenter htMiddle',
-          readOnly: false
+          readOnly: false,
+          colHeaders: headers || true,
+          rowHeaders: true
         };
-        if (headers) {
-          settings.colHeaders = headers;
-        }
-        return settings;
       }
     }]);
 };
