@@ -1,8 +1,10 @@
 var angular = require('angular');
 var uiRouter = require('angular-ui-router');
 var ngResource = require('angular-resource');
+var ngSanitize = require('angular-sanitize');
 require('angular-breadcrumb');
 require('ngHandsontable');
+require('angular-ui-select');
 
 var fileManagementComponent = require('./file-management');
 var pipeManager = require('./pipe-manager');
@@ -10,9 +12,11 @@ var pipeManager = require('./pipe-manager');
 var app = angular.module('admin', [
   ngResource,
   uiRouter,
+  ngSanitize,
   'ui.bootstrap',
   'ncy-angular-breadcrumb',
   'ngHandsontable',
+  'ui.select',
   fileManagementComponent,
   pipeManager
 ]);
@@ -24,6 +28,7 @@ require('./ws-app.factories')(app);
 require('./collections.service')(app);
 
 require('./shared/navigation/breadcrumb.directive')(app);
+require('./shared/file-services')(app);
 
 require('./landing/landing.controller')(app);
 

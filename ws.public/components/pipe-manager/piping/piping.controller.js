@@ -1,5 +1,7 @@
+var angular = require('angular');
+
 module.exports = function (app) {
-  app.controller('PipingController', [function () {
+  app.controller('PipingController', ['FileResources', function (FileResources) {
     var self = this;
     // test data, todo: replaces with services load\parse
     var input = require('./test_data');
@@ -22,18 +24,31 @@ module.exports = function (app) {
       }
     };
 
+    // todo: as service
+    self.refresh = function refresh(type, search) {
+      FileResources.list({search: search}, function (err, data) {
+        self.files = data.files;
+      });
+    };
   }]);
 
-  function Importer(opts) {
-    this.options = opts;
+  /*  function Importer(opts) {
+   this.options = opts;
+   }
+
+   Importer.prototype.run = function run() {
+   // load file
+   };*/
+
+  function loadFile(file, cb) {
+    var callback = cb || angular.noop;
+    // todo: load file
+    console.log(arguments);
+    callback();
   }
 
-  Importer.prototype.run = function run() {
-    // load file
-  };
-
   var ImportTypes = {
-    file: {name: 'file', fields: ['uri', 'name', 'ext'], handler: Importer},
+    file: {name: 'file', fields: ['uri', 'name', 'ext'], handler: loadFile},
     dimension: {},
     observable: {}
   };
@@ -41,7 +56,6 @@ module.exports = function (app) {
   var StepTypes = {
     'import': {name: 'import', displayName: 'Import', type: ImportTypes['file']}
   };
-
 
   function Step(type, opts) {
     if (!(type in StepTypes)) {
@@ -54,6 +68,10 @@ module.exports = function (app) {
 
     this.defaults = this.getDefaults();
   }
+
+  Step.prototype.run = function run(cb) {
+    return loadFile(this.opts, cb);
+  };
 
   Step.prototype.getDefaults = function getDefaults() {
     switch (this.type) {
@@ -83,6 +101,7 @@ module.exports = function (app) {
   };
 
   function Pipe() {
+    this.imports = {};
     this.steps = [];
   }
 
@@ -94,6 +113,13 @@ module.exports = function (app) {
 
   Pipe.prototype.createImportStep = function createImportStep(step, opts) {
     this.addStep(new Step(StepTypes.import.name, opts));
+    return this;
+  };
+
+  Pipe.prototype.runStep = function runStep(step, cb) {
+    step.run(function () {
+      callback.apply(step, arguments);
+    });
     return this;
   };
 

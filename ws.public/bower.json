@@ -21,7 +21,8 @@
     "handsontable": "~0.17.0",
     "js-xlsx": "~0.8.0",
     "ngHandsontable": "~0.6.0",
-    "ui-select": "*"
+    "ui-select": "*",
+    "angular-ui-select": "~0.12.1"
   },
   "resolutions": {
     "angular": "~1.4",
