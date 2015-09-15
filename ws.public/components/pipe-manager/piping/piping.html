@@ -11,12 +11,12 @@
     <div class="col-lg-6">
       <button ng-click="ctrl.pipe.createImportStep()">Import +</button>
       <ul>
-        <li ng-repeat="step in ctrl.pipe.steps">
-          <span>{{step.getDisplayName()}}</span>
+        <li ng-repeat="step in ctrl.pipe.steps track by $index">
+          <span>{{step.displayName}}</span>
 
           <div class="row">
             <div class="col-lg-6">
-              <ui-select ng-model="step.opts"
+              <ui-select ng-model="step.options.file"
                          on-select="ctrl.runStep(step)"
                          reset-search-input="false">
                 <ui-select-match placeholder="Select file">{{$select.selected.name}}</ui-select-match>

@@ -75,7 +75,7 @@ module.exports = function (app) {
         }]);
       };
       CsvFileService.prototype.recognizeHeaders = function recognize(file, table) {
-        table.headers = table.rows.shift();
+        table.headers = {col: table.rows.shift()};
         return table;
       };
 

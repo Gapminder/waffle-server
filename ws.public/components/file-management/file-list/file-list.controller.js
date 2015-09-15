@@ -140,7 +140,7 @@ module.exports = function (app) {
             return {
               name: table.name,
               rows: table.rows,
-              settings: createSettings(table.headers)
+              settings: createSettings(table.headers && {col: table.headers.col})
             };
           });
           return cb();

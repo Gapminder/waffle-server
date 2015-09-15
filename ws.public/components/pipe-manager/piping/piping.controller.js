@@ -36,6 +36,7 @@ module.exports = function (app) {
         $scope.$apply(cb);
       }
 
+      // pipes related
       self.runStep = function runStep(step) {
         step.ready = false;
         self.pipe.runStep(step, function (err) {
@@ -56,77 +57,79 @@ module.exports = function (app) {
           // if type === table
           return {
             name: table.name,
-            settings: createSettings(table.headers),
+            settings: createSettings({col: table.headers}, self.pipe, step),
             rows: table.rows
           };
         });
       };
-      // extract to configuration
-      var ImportTypes = {
-        file: {name: 'file', fields: ['uri', 'name', 'ext'], action: loadFile},
-        dimension: {},
-        observable: {}
-      };
 
+      // todo: make as configurable Service Locator
       var StepTypes = {
-        'import': {name: 'import', displayName: 'Import', stepDef: ImportTypes.file}
+        'import_file': {
+          name: 'import_file',
+          displayName: 'Import file',
+          group: 'import',
+          fields: ['uri', 'name', 'ext'],
+          action: function loadFile(cb) {
+            var file = this.options.file;
+            FileService.load(file, function (err1, fileContent) {
+              FileService.parse(file, fileContent, function (err2, tables) {
+                return cb(err1 || err2, tables);
+              });
+            });
+          }
+        },
+        'extract_col_headers': {
+          name: 'extract_col_headers',
+          displayName: 'Extract column header',
+          group: 'extract',
+          action: function (cb) {
+            try {
+              var table = this.options.table;
+              table.headers = table.headers || {};
+              table.headers.col = table.rows.shift();
+              return cb(null, table);
+            } catch (err) {
+              return cb(err);
+            }
+          }
+        },
+        'extract_row_headers': {
+          name: 'extract_row_headers',
+          displayName: 'Extract row header',
+          group: 'extract',
+          action: function (cb) {
+            try {
+              var table = this.options.table;
+              table.headers = table.headers || {};
+              table.headers.row = _.map(table.rows, function (row) {
+                return row.shift();
+              });
+              return cb(null, table);
+            } catch (err) {
+              return cb(err);
+            }
+          }
+        }
       };
-
-      function loadFile(file, cb) {
-        FileService.load(file, function (err1, fileContent) {
-          FileService.parse(file, fileContent, function (err2, tables) {
-            return cb(err1 || err2, tables);
-          });
-        });
-      }
 
       // extract to factory?
       function Step(type, opts) {
         if (!(type in StepTypes)) {
           throw new Error('Not supported step type: ' + type);
         }
+        // id? serialize!
         this.index = -1;
-        this.type = type;
-        this.stepType = StepTypes[type];
-        this.opts = opts || {};
-        this.defaults = this.getDefaults();
+        _.merge(this, StepTypes[type]);
+        this.options = opts || {};
         this.ready = null;
       }
 
       Step.prototype.run = function run(cb) {
-        switch (this.type) {
-          case 'import':
-            return this.stepType.stepDef.action(this.opts, cb);
-          default:
-            throw new Error('[Step] Not found step run action for type: ' + this.type);
-        }
-      };
-
-      Step.prototype.getDefaults = function getDefaults() {
-        switch (this.type) {
-          case 'import':
-            return ImportTypes[this.type];
-          default:
-            throw new Error('[Step] Not found step defaults for type: ' + this.type);
-        }
-      };
-
-      Step.prototype.getDisplayName = function getDisplayName() {
-        var name = [
-          this.stepType.displayName,
-          this.stepType.stepDef.name
-        ];
-        switch (this.type) {
-          case 'import':
-            switch (this.stepType.name) {
-              case 'file':
-              default :
-                name.push(this.opts.name);
-            }
-            return name.join(' ');
-          default:
-            throw new Error('[Step] Not found step defaults for type: ' + this.type);
-        }
+        // check this group?
+        // validate options?
+        return this.action(cb);
+        // throw new Error('[Step] Not found step run action for type: ' + this.type);
       };
 
       function Pipe() {
@@ -141,7 +144,19 @@ module.exports = function (app) {
       };
 
       Pipe.prototype.createImportStep = function createImportStep(step, opts) {
-        this.addStep(new Step(StepTypes.import.name, opts));
+        this.addStep(new Step(StepTypes.import_file.name, opts));
+        return this;
+      };
+
+      Pipe.prototype.createExtractRowHeaderStep = function createExtractRowHeaderStep(step, opts) {
+        // type: [row,col]
+        this.addStep(new Step(StepTypes.extract_row_headers.name, opts));
+        return this;
+      };
+
+      Pipe.prototype.createExtractColHeaderStep = function createExtractColHeaderStep(step, opts) {
+        // type: [row,col]
+        this.addStep(new Step(StepTypes.extract_col_headers.name, opts));
         return this;
       };
 
@@ -149,19 +164,18 @@ module.exports = function (app) {
         var selfPipe = this;
         step.run(function (err, res) {
           selfPipe.setStepData(step, res);
-          console.log(selfPipe);
           return cb(err, res);
         });
         return this;
       };
 
       Pipe.prototype.setStepData = function setStepData(step, data) {
-        this.pipe[step.type] = this.pipe[step.type] || {};
-        this.pipe[step.type][step.opts.name] = data;
+        this.pipe[step.name] = this.pipe[step.name] || {};
+        this.pipe[step.name][step.index] = data;
       };
 
       Pipe.prototype.getStepData = function setStepData(step) {
-        return this.pipe[step.type] && this.pipe[step.type][step.opts.name];
+        return this.pipe[step.name] && this.pipe[step.name][step.index];
       };
 
       // warning duplicates from file-manager!
@@ -187,10 +201,9 @@ module.exports = function (app) {
       }
 
       /**
-       *
        * @param headers {row:[], col:[]}
        */
-      function createSettings(headers) {
+      function createSettings(headers, pipe, step) {
         /*eslint camelcase:0*/
         return {
           height: 400,
@@ -200,7 +213,6 @@ module.exports = function (app) {
           dropdownMenu: true,
           contextMenu: {
             callback: function (key, options) {
-
               if (key === 'about') {
                 setTimeout(function () {
                   // timeout is used to make sure the menu collapsed before alert is shown
@@ -219,20 +231,20 @@ module.exports = function (app) {
                     return alert('Please select row or column to set as a header');
                   }
 
-                  if (this.hasRowHeaders() && selectionType === 'row'){
+                  if (this.hasRowHeaders() && selectionType === 'row') {
                     // confirm and replace?
                     return alert('Row headers already set');
                   }
 
-                  if (this.hasColHeaders() && selectionType === 'col'){
+                  if (this.hasColHeaders() && selectionType === 'col') {
                     // confirm and replace?
                     return alert('Col headers already set');
                   }
 
                   console.log(this);
                 },
-                visible: function(){
-                  return !this.hasRowHeaders() || !this.hasColHeaders();
+                visible: function () {
+                  return !(this.hasRowHeaders() && this.hasColHeaders());
                 }
               },
               recognize_data: {
