@@ -38,28 +38,18 @@ module.exports = function (app) {
 
       // pipes related
       self.runStep = function runStep(step) {
-        step.ready = false;
         self.pipe.runStep(step, function (err) {
           safeApply(function () {
-            step.ready = !err;
             step.error = err;
           });
         });
       };
 
       self.previewStep = function previewStep(step) {
-        var data = self.pipe.getStepData(step);
-        if (!data) {
-          return;
-        }
-
-        self.previews = _.map(_.isArray(data) ? data : [data], function (table) {
-          // if type === table
-          return {
-            name: table.name,
-            settings: createSettings({col: table.headers}, self.pipe, step),
-            rows: table.rows
-          };
+        self.previews = self.previews || [];
+        _.each(step.tables, function (table) {
+          table.settings = createSettings(table.headers, self.pipe, step);
+          self.previews.push(table);
         });
       };
 
@@ -71,9 +61,14 @@ module.exports = function (app) {
           group: 'import',
           fields: ['uri', 'name', 'ext'],
           action: function loadFile(cb) {
+            var self = this;
+            self.ready = false;
             var file = this.options.file;
             FileService.load(file, function (err1, fileContent) {
               FileService.parse(file, fileContent, function (err2, tables) {
+                self.tables = _.isArray(tables) ? tables : [tables];
+                self.tables[0].active = true;
+                self.ready = true;
                 return cb(err1 || err2, tables);
               });
             });
@@ -83,31 +78,20 @@ module.exports = function (app) {
           name: 'extract_col_headers',
           displayName: 'Extract column header',
           group: 'extract',
+          sfx: true,
           action: function (cb) {
             try {
+              this.ready = false;
               var table = this.options.table;
               table.headers = table.headers || {};
               table.headers.col = table.rows.shift();
-              return cb(null, table);
+              this.tables = [table];
+              this.ready = true;
+              cb(null, table);
             } catch (err) {
-              return cb(err);
-            }
-          }
-        },
-        'extract_row_headers': {
-          name: 'extract_row_headers',
-          displayName: 'Extract row header',
-          group: 'extract',
-          action: function (cb) {
-            try {
-              var table = this.options.table;
-              table.headers = table.headers || {};
-              table.headers.row = _.map(table.rows, function (row) {
-                return row.shift();
-              });
-              return cb(null, table);
-            } catch (err) {
-              return cb(err);
+              cb(err);
+            } finally {
+              safeApply(_.noop);
             }
           }
         }
@@ -140,6 +124,13 @@ module.exports = function (app) {
       Pipe.prototype.addStep = function (step) {
         step.index = this.steps.length;
         this.steps.push(step);
+        safeApply(_.noop);
+        if (step.sfx === true) {
+          step.action(function () {
+            safeApply(_.noop);
+          });
+        }
+        console.log(this);
         return this;
       };
 
@@ -148,15 +139,10 @@ module.exports = function (app) {
         return this;
       };
 
-      Pipe.prototype.createExtractRowHeaderStep = function createExtractRowHeaderStep(step, opts) {
-        // type: [row,col]
-        this.addStep(new Step(StepTypes.extract_row_headers.name, opts));
-        return this;
-      };
-
       Pipe.prototype.createExtractColHeaderStep = function createExtractColHeaderStep(step, opts) {
+        var options = _.merge(opts || {}, {table: _.find(step.tables, {active: true})});
         // type: [row,col]
-        this.addStep(new Step(StepTypes.extract_col_headers.name, opts));
+        this.addStep(new Step(StepTypes.extract_col_headers.name, options));
         return this;
       };
 
@@ -180,20 +166,25 @@ module.exports = function (app) {
 
       // warning duplicates from file-manager!
       // todo: DRY them out
-      function getSelectionType(selection) {
+      function getSelectionType(selected) {
+        var selection = _.isArray(selected) ? selected : [];
+        if (selected.start && selected.end) {
+          selection = [selected.start.row, selected.start.col,
+            selected.end.row, selected.end.col];
+        }
         // is cell startRow === endRow && startCol === endCol
         // is row: startRow === endRow
         // is column: startCol === endCol
         // is rectangle: else
-        if (selection.start.row === selection.end.row && selection.end.col === selection.start.col) {
+        if (selection[0] === selection[2] && selection[1] === selection[3]) {
           return 'cell';
         }
 
-        if (selection.start.row === selection.end.row) {
+        if (selection[0] === selection[2]) {
           return 'row';
         }
 
-        if (selection.end.col === selection.start.col) {
+        if (selection[1] === selection[3]) {
           return 'col';
         }
 
@@ -201,16 +192,22 @@ module.exports = function (app) {
       }
 
       /**
-       * @param headers {row:[], col:[]}
+       * @param  {{row?:[], col?:[]}} headers
+       * @param {Pipe} pipe
+       * @param {step} step
        */
       function createSettings(headers, pipe, step) {
         /*eslint camelcase:0*/
-        return {
-          height: 400,
+        var settings = {
+          height: 396,
           colWidths: 100,
+          className: 'htCenter htMiddle',
+          colHeaders: headers && headers.col || true,
+          rowHeaders: headers && headers.row || true,
+          readOnly: true,
+          manualColumnFreeze: true,
           stretchH: 'all',
           columnSorting: true,
-          dropdownMenu: true,
           contextMenu: {
             callback: function (key, options) {
               if (key === 'about') {
@@ -224,27 +221,16 @@ module.exports = function (app) {
               set_as_header: {
                 name: 'Set as header',
                 callback: function (key, selection) {
-                  window.a = this;
-
                   var selectionType = getSelectionType(selection);
-                  if (selectionType !== 'col' && selectionType !== 'row') {
-                    return alert('Please select row or column to set as a header');
+                  if (selectionType === 'row') {
+                    return pipe.createExtractColHeaderStep(step);
                   }
-
-                  if (this.hasRowHeaders() && selectionType === 'row') {
-                    // confirm and replace?
-                    return alert('Row headers already set');
-                  }
-
-                  if (this.hasColHeaders() && selectionType === 'col') {
-                    // confirm and replace?
-                    return alert('Col headers already set');
-                  }
-
-                  console.log(this);
                 },
-                visible: function () {
-                  return !(this.hasRowHeaders() && this.hasColHeaders());
+                disabled: function () {
+                  var hotSettings = this.getSettings();
+                  var selectionType = getSelectionType(this.getSelected());
+                  console.log(selectionType)
+                  return selectionType !== 'row' || _.isArray(hotSettings.colHeaders);
                 }
               },
               recognize_data: {
@@ -281,14 +267,15 @@ module.exports = function (app) {
                 }
               },
               hsep2: '---------',
-              about: {name: 'About this menu'}
+              freeze_column: {}
             }
-          },
-          className: 'htCenter htMiddle',
-          readOnly: false,
-          colHeaders: headers || true,
-          rowHeaders: true
+          }
         };
+
+        if (_.isArray(settings.colHeaders)) {
+          delete settings.contextMenu.items.set_as_header;
+        }
+        return settings;
       }
     }]);
 };

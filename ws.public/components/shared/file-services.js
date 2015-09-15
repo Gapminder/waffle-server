@@ -121,7 +121,7 @@ module.exports = function (app) {
         console.time('compile xls');
         var tables = _.map(Object.keys(workbook.Sheets), function (key) {
           var table = sheet_to_table(workbook.Sheets[key]);
-          return {type: 'table', name: key, headers: table.headers, rows: table.rows};
+          return {type: 'table', name: key, headers: {col: table.headers}, rows: table.rows};
         });
         console.timeEnd('compile xls');
         return cb(null, tables);

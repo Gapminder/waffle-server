@@ -15,7 +15,7 @@
           <span>{{step.displayName}}</span>
 
           <div class="row">
-            <div class="col-lg-6">
+            <div class="col-lg-6" ng-if="step.name === 'import_file'">
               <ui-select ng-model="step.options.file"
                          on-select="ctrl.runStep(step)"
                          reset-search-input="false">
@@ -53,11 +53,11 @@
                  <!--class="hot handsontable htRowHeaders htColumnHeaders"></hot-table>-->
       <div ng-if="ctrl.previews">
         <tabset>
-          <tab ng-repeat="table in ctrl.previews" heading="{{ table.name }}" active="table.active">
+          <tab ng-repeat="table in ctrl.previews track by $index" heading="{{ ::table.name }}" active="table.active">
           </tab>
         </tabset>
-        <div ng-repeat="table in ctrl.previews" ng-if="table.active">
-          <hot-table settings="table.settings" datarows="table.rows" class="hot handsontable htRowHeaders htColumnHeaders"></hot-table>
+        <div ng-repeat="table in ctrl.previews track by $index" ng-if="table.active">
+          <hot-table settings="table.settings" datarows="table.rows" class="zebra hot handsontable htRowHeaders htColumnHeaders"></hot-table>
         </div>
       </div>
     </div>
