@@ -6,10 +6,6 @@ module.exports = function (app) {
     function ($scope, FileResources, FileService) {
       var self = this;
       // test data, todo: replaces with services load\parse
-      var input = require('./test_data');
-      self.rows = input.rows.slice();
-      self.settings = createSettings(input.headers);
-
       self.pipe = new Pipe();
       self.onChange = function () {
         if (!self.pipe) {
@@ -170,7 +166,32 @@ module.exports = function (app) {
 
       // warning duplicates from file-manager!
       // todo: DRY them out
+      function getSelectionType(selection) {
+        // is cell startRow === endRow && startCol === endCol
+        // is row: startRow === endRow
+        // is column: startCol === endCol
+        // is rectangle: else
+        if (selection.start.row === selection.end.row && selection.end.col === selection.start.col) {
+          return 'cell';
+        }
+
+        if (selection.start.row === selection.end.row) {
+          return 'row';
+        }
+
+        if (selection.end.col === selection.start.col) {
+          return 'col';
+        }
+
+        return 'rectangle';
+      }
+
+      /**
+       *
+       * @param headers {row:[], col:[]}
+       */
       function createSettings(headers) {
+        /*eslint camelcase:0*/
         return {
           height: 400,
           colWidths: 100,
@@ -188,7 +209,33 @@ module.exports = function (app) {
               }
             },
             items: {
-              "recognize_data": {
+              set_as_header: {
+                name: 'Set as header',
+                callback: function (key, selection) {
+                  window.a = this;
+
+                  var selectionType = getSelectionType(selection);
+                  if (selectionType !== 'col' && selectionType !== 'row') {
+                    return alert('Please select row or column to set as a header');
+                  }
+
+                  if (this.hasRowHeaders() && selectionType === 'row'){
+                    // confirm and replace?
+                    return alert('Row headers already set');
+                  }
+
+                  if (this.hasColHeaders() && selectionType === 'col'){
+                    // confirm and replace?
+                    return alert('Col headers already set');
+                  }
+
+                  console.log(this);
+                },
+                visible: function(){
+                  return !this.hasRowHeaders() || !this.hasColHeaders();
+                }
+              },
+              recognize_data: {
                 name: 'Recognize data',
                 callback: function (key, selection) {
                   console.log(arguments)
@@ -199,26 +246,30 @@ module.exports = function (app) {
                   // is column: startCol === endCol
                   // is rectangle: else
                   var selectedData = this.getData.apply(this, selected);
-                  this.selectCellByProp(selection.start.row, selection.start.col,
-                    selection.end.row, selection.end.col, false);
+                  var self = this;
+                  setTimeout(function () {
+                    self.selectCellByProp(selection.start.row, selection.start.col,
+                      selection.end.row, selection.end.col, false);
+                  }, 150);
+
                   window.a = this;
                 }
               },
-              "row_above": {
+              row_above: {
                 disabled: function () {
                   // if first row, disable this option
                 }
               },
-              "row_below": {},
-              "hsep1": "---------",
-              "remove_row": {
+              row_below: {},
+              hsep1: '---------',
+              remove_row: {
                 name: 'Remove this row, ok?',
                 disabled: function () {
                   // if first row, disable this option
                 }
               },
-              "hsep2": "---------",
-              "about": {name: 'About this menu'}
+              hsep2: '---------',
+              about: {name: 'About this menu'}
             }
           },
           className: 'htCenter htMiddle',
