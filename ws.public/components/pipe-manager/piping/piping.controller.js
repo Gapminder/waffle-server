@@ -46,10 +46,9 @@ module.exports = function (app) {
       };
 
       self.previewStep = function previewStep(step) {
-        self.previews = self.previews || [];
-        _.each(step.tables, function (table) {
+        self.previews = _.map(step.tables, function (table) {
           table.settings = createSettings(table.headers, self.pipe, step);
-          self.previews.push(table);
+          return table;
         });
       };
 
@@ -66,8 +65,12 @@ module.exports = function (app) {
             var file = this.options.file;
             FileService.load(file, function (err1, fileContent) {
               FileService.parse(file, fileContent, function (err2, tables) {
-                self.tables = _.isArray(tables) ? tables : [tables];
+                self.tables = (_.isArray(tables) ? tables : [tables]).map(function (table) {
+                  return FileService.recognizeHeaders(file, table);
+                });
+
                 self.tables[0].active = true;
+                self.tables = tables;
                 self.ready = true;
                 return cb(err1 || err2, tables);
               });
@@ -229,28 +232,26 @@ module.exports = function (app) {
                 disabled: function () {
                   var hotSettings = this.getSettings();
                   var selectionType = getSelectionType(this.getSelected());
-                  console.log(selectionType)
                   return selectionType !== 'row' || _.isArray(hotSettings.colHeaders);
                 }
               },
               recognize_data: {
                 name: 'Recognize data',
                 callback: function (key, selection) {
-                  console.log(arguments)
-                  // [startRow, startCol, endRow, endCol]
-                  var selected = this.getSelected();
-                  // is cell startRow === endRow && startCol === endCol
-                  // is row: startRow === endRow
-                  // is column: startCol === endCol
-                  // is rectangle: else
-                  var selectedData = this.getData.apply(this, selected);
                   var self = this;
+                  var selected = this.getSelected();
+                  var selectedData = this.getData.apply(this, selected);
+                  // todo: make api call and freeze this column
+
                   setTimeout(function () {
                     self.selectCellByProp(selection.start.row, selection.start.col,
                       selection.end.row, selection.end.col, false);
                   }, 150);
-
+                },
+                disabled: function () {
                   window.a = this;
+                  var selectionType = getSelectionType(this.getSelected());
+                  return selectionType !== 'col';
                 }
               },
               row_above: {

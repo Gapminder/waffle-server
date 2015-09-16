@@ -40,8 +40,8 @@ module.exports = function (app) {
         this.getService(file.ext).recognize(file, fileContent, cb);
         return this;
       };
-      FileService.prototype.recognizeHeaders = function recognizeHeaders(file, rows) {
-        return this.getService(file.ext).recognizeHeaders(file, rows);
+      FileService.prototype.recognizeHeaders = function recognizeHeaders(file, table) {
+        return this.getService(file.ext).recognizeHeaders(file, table);
       };
       return new FileService();
     }])
