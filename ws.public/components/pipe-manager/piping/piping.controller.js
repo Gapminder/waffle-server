@@ -29,13 +29,6 @@ module.exports = function (app) {
         });
       };
 
-      function safeApply(cb) {
-        if ($scope.$$phase) {
-          return cb();
-        }
-        $scope.$apply(cb);
-      }
-
       // pipes related
       self.runStep = function runStep(step) {
         self.pipe.runStep(step, function (err) {
@@ -50,6 +43,7 @@ module.exports = function (app) {
           table.settings = createSettings(table.headers, self.pipe, step);
           return table;
         });
+        return false;
       };
 
       // todo: make as configurable Service Locator
@@ -57,12 +51,14 @@ module.exports = function (app) {
         'import_file': {
           name: 'import_file',
           displayName: 'Import file',
+          defaultDisplayName: 'Import file',
           group: 'import',
           fields: ['uri', 'name', 'ext'],
           action: function loadFile(cb) {
             var self = this;
             self.ready = false;
             var file = this.options.file;
+            self.displayName = self.defaultDisplayName + ' ' + file.name;
             FileService.load(file, function (err1, fileContent) {
               FileService.parse(file, fileContent, function (err2, tables) {
                 self.tables = (_.isArray(tables) ? tables : [tables]).map(function (table) {
@@ -97,6 +93,16 @@ module.exports = function (app) {
               safeApply(_.noop);
             }
           }
+        },
+        'export_dimension': {
+          name: 'export_dimension',
+          displayName: 'Export Dimension',
+          action: function(cb) {cb();}
+        },
+        "export_indicator": {
+          name: 'export_indicator',
+          displayName: 'Export Indicator',
+          action: function(cb) {cb();}
         }
       };
 
@@ -110,6 +116,7 @@ module.exports = function (app) {
         _.merge(this, StepTypes[type]);
         this.options = opts || {};
         this.ready = null;
+        this.active = true;
       }
 
       Step.prototype.run = function run(cb) {
@@ -146,6 +153,16 @@ module.exports = function (app) {
         var options = _.merge(opts || {}, {table: _.find(step.tables, {active: true})});
         // type: [row,col]
         this.addStep(new Step(StepTypes.extract_col_headers.name, options));
+        return this;
+      };
+
+      Pipe.prototype.createExportDimensionStep = function createExportDimensionStep() {
+        this.addStep(new Step(StepTypes.export_dimension.name));
+        return this;
+      };
+
+      Pipe.prototype.createExportIndicatorStep = function createExportIndicatorStep() {
+        this.addStep(new Step(StepTypes.export_indicator.name));
         return this;
       };
 
@@ -277,6 +294,13 @@ module.exports = function (app) {
           delete settings.contextMenu.items.set_as_header;
         }
         return settings;
+      }
+
+      function safeApply(cb) {
+        if ($scope.$$phase) {
+          return cb();
+        }
+        $scope.$apply(cb);
       }
     }]);
 };

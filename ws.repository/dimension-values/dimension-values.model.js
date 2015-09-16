@@ -16,7 +16,8 @@ var Schema = mongoose.Schema;
 var DimensionValues = new Schema({
   dimension: {type: Schema.Types.ObjectId, ref: 'Dimensions'},
   value: String,
-
+  title: String,
+  synonyms: [String],
   // todo: denormilized data
   dimensionName: String,
   dataSources: [{type: Schema.Types.ObjectId, ref: 'DataSources'}],

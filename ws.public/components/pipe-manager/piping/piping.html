@@ -10,54 +10,213 @@
   <div class="row">
     <div class="col-lg-6">
       <button ng-click="ctrl.pipe.createImportStep()">Import +</button>
-      <ul>
-        <li ng-repeat="step in ctrl.pipe.steps track by $index">
-          <span>{{step.displayName}}</span>
+      <button ng-click="ctrl.pipe.createExportDimensionStep()">Export Dim</button>
+      <button ng-click="ctrl.pipe.createExportIndicatorStep()">Export Ind</button>
+      <div class="ibox no-margins" ng-if="ctrl.pipe.steps.length">
+        <div class="ibox-content">
+          <accordion>
+            <accordion-group ng-repeat="step in ctrl.pipe.steps track by $index" is-open="step.active">
+              <accordion-heading>
+                <div class="row">
+                  <div class="col-lg-8 btn btn-xs"
+                       style="text-align: left; !important;">
+                    <span>{{step.displayName}}</span>
+                  </div>
 
-          <div class="row">
-            <div class="col-lg-6" ng-if="step.name === 'import_file'">
-              <ui-select ng-model="step.options.file"
-                         on-select="ctrl.runStep(step)"
-                         reset-search-input="false">
-                <ui-select-match placeholder="Select file">{{$select.selected.name}}</ui-select-match>
-                <ui-select-choices repeat="file in ctrl.files track by $index"
-                                   refresh="ctrl.refresh(step.type, $select.search)"
-                                   refresh-delay="0">
-                  <div ng-bind-html="file.name | highlight: $select.search"></div>
-                </ui-select-choices>
-              </ui-select>
-            </div>
+                  <div class="col-lg-2 btn btn-xs"
+                       ng-class="{
+                   'alert-info': step.ready === null,
+                   'alert-success': step.ready === true,
+                   'alert-danger': step.ready === false
+                   }"
+                  >{{step.ready === true && 'Status: ready' ||
+                    step.ready === false && 'Please wait' ||
+                    'Do something!'}}
+                  </div>
 
-            <div class="col-lg-2 btn"
-                 ng-class="{'alert-info': step.ready, 'alert-danger': !step.ready}"
-                 ng-if="step.ready !== null">{{step.ready === true ? 'Status: ready' : 'Please wait'}}</div>
-            <div class="col-lg-2" ng-if="step.ready !== null"><button class="btn btn-success" ng-click="ctrl.previewStep(step)">Preview</button></div>
-          </div>
-        </li>
-      </ul>
-<!--      <p>Piping</p>
-      <textarea name="js" cols="80" rows="20"
-                ng-change="ctrl.onChange()"
-                ng-model="ctrl.jspipe"></textarea>
+                  <div class="col-lg-1">
+                    <button class="btn btn-success btn-xs"
+                            ng-disabled="step.ready === null"
+                            ng-click="ctrl.previewStep(step)">
+                      Preview
+                    </button>
+                  </div>
+                  <div class="col-lg-1 btn btn-xs">
+                    <i class="pull-right glyphicon"
+                       ng-class="{'glyphicon-chevron-down': step.active, 'glyphicon-chevron-right': !step.active}"></i>
+                  </div>
+                </div>
+              </accordion-heading>
+              <div class="row">
+                <!-- step: import file -->
+                <div class="col-lg-6" ng-if="step.name === 'import_file'">
+                  <ui-select ng-model="step.options.file"
+                             on-select="ctrl.runStep(step)"
+                             reset-search-input="false">
+                    <ui-select-match placeholder="Select file">{{$select.selected.name}}</ui-select-match>
+                    <ui-select-choices repeat="file in ctrl.files track by $index"
+                                       refresh="ctrl.refresh(step.type, $select.search)"
+                                       refresh-delay="0">
+                      <div ng-bind-html="file.name | highlight: $select.search"></div>
+                    </ui-select-choices>
+                  </ui-select>
+                </div>
 
-      <p ng-if="!ctrl.error">Result</p>
-      <pre ng-if="!ctrl.error">{{ctrl.result}}</pre>
-      <p ng-if="ctrl.error">Error</p>
-      <pre class="bg-danger" ng-if="ctrl.error">{{ctrl.error.toString()}}</pre>
-      <pre class="bg-danger" ng-if="ctrl.error">{{ctrl.error.stack}}</pre>-->
+                <!-- step: export dimension -->
+                <div class="col-log-6" ng-if="step.name === 'export_dimension'">
+                  <div class="form-horizontal">
+                    <!--data source-->
+                    <div class="form-group">
+                      <label class="col-lg-2 control-label">Source</label>
+
+                      <div class="col-lg-8">
+                        <select name="input"
+                                class="form-control m-b"
+                                ng-options="step1.displayName for step1 in ctrl.pipe.steps | filter: {group: 'import'}"
+                                ng-model="step.options.step">
+                        </select>
+                      </div>
+                      <div class="col-lg-2">
+                        <button class="btn btn-success" ng-click="ctrl.previewStep(step)">Preview</button>
+                      </div>
+                    </div>
+                    <div class="form-group" ng-if="step.options.step">
+                      <label class="col-lg-2 control-label">Table</label>
+
+                      <div class="col-lg-8">
+                        <select name="input"
+                                class="form-control m-b"
+                                ng-options="table.name for table in step.options.step.tables"
+                                ng-model="step.options.table">
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  <!--todo: split dimension and dimension values-->
+                  <!--todo: add option to select existing dimension-->
+                  <div ng-if="step.options.table">
+                    <div class="form-horizontal">
+                      <p>Select fields mapping</p>
+
+                      <!--dimension name-->
+                      <div class="form-group">
+                        <label class="col-lg-2 control-label">Name</label>
+
+                        <div class="col-lg-10">
+                          <input type="text" class="form-control"
+                                 ng-model="step.options.dimension.name"
+                                 placeholder="Dimension name">
+                          <span class="help-block m-b-none">Should be single(not plural), lowercase,unique, required, only [a-z_]</span>
+                        </div>
+                      </div>
+
+                      <!--dimension title-->
+                      <div class="form-group">
+                        <label class="col-lg-2 control-label">Title</label>
+
+                        <div class="col-lg-10">
+                          <input type="text" class="form-control"
+                                 ng-model="step.options.dimension.title"
+                                 placeholder="Dimension title">
+                        </div>
+                      </div>
+
+                      <!-- todo: add catalog selection -->
+                      <!--dimension values-->
+                      <div class="form-group">
+                        <label class="col-lg-2 control-label">Values from:</label>
+
+                        <div class="col-lg-10">
+                          <input type="text" class="form-control"
+                                 ng-model="step.options.map.dimension.value"
+                                 typeahead="name for name in step.options.table.headers.col | filter:$viewValue | limitTo:8"
+                                 placeholder="Dimension title">
+                          <small>
+                            Sample values:
+                           <span ng-repeat="row in ::step.options.table.rows | limitTo: 5">
+                             {{ ::row[step.options.table.headers.col.indexOf(step.options.map.dimension.value)] }}
+                          </span>
+                            ...
+                          </small>
+                        </div>
+                      </div>
+
+                      <!-- dimension synonyms -->
+                      <div class="form-group">
+                        <label class="col-lg-2 control-label">Synonyms from:</label>
+
+                        <div class="col-lg-10">
+                          <ui-select multiple ng-model="step.options.map.dimension.synonyms">
+                            <ui-select-match placeholder="Select field...">{{$item}}</ui-select-match>
+                            <ui-select-choices
+                              repeat="field in step.options.table.headers.col | filter:$select.search">
+                              <div ng-bind-html="field | highlight: $select.search"></div>
+                              <!--   <small>
+                                   email: {{person.email}}
+                                   age: <span ng-bind-html="''+person.age | highlight: $select.search"></span>
+                                 </small>-->
+                            </ui-select-choices>
+                          </ui-select>
+                          <!--<input type="text" class="form-control"
+                                 ng-model="step.options.map.dimension.synonyms"
+                                 typeahead="name for name in step.options.table.headers.col | filter:$viewValue | limitTo:8"
+                                 placeholder="Dimension title">-->
+                        </div>
+                      </div>
+
+
+                      <!--                  <div class="form-group"><label class="col-lg-2 control-label">Password</label>
+
+                                          <div class="col-lg-10"><input type="password" placeholder="Password" class="form-control">
+                                          </div>
+                                        </div>
+                                        <div class="form-group">
+                                          <div class="col-lg-offset-2 col-lg-10">
+                                            <input icheck type="checkbox" ng-model="main.checkOne"><i></i> Remember me
+                                          </div>
+                                        </div>
+                                        <div class="form-group">
+                                          <div class="col-lg-offset-2 col-lg-10">
+                                            <button class="btn btn-sm btn-white" type="submit">Sign in</button>
+                                          </div>
+                                        </div>-->
+                    </div>
+                  </div>
+                </div>
+
+                <!-- step: export indicator  -->
+                <div class="col-log-6" ng-if=" step.name === 'export_indicator'">
+                  <label>Source: </label>
+                  <select name="input"
+                          ng-options="step1.displayName for step1 in ctrl.pipe.steps | filter: {group: 'import'}"
+                          ng-model="step.options.step">
+                  </select>
+                  <label>Table</label>
+                  <select name="input"
+                          ng-options="table.name for table in step.options.step.tables"
+                          ng-model="step.options.table">
+                  </select>
+                  <pre>{{step.options.table.headers | json}}</pre>
+                </div>
+              </div>
+            </accordion-group>
+          </accordion>
+        </div>
+      </div>
     </div>
+
+    <!--preview-->
     <div class="col-lg-6">
       <p ng-if="ctrl.previews">Previews:</p>
 
-      <!--<hot-table settings="ctrl.settings" datarows="ctrl.rows"-->
-                 <!--class="hot handsontable htRowHeaders htColumnHeaders"></hot-table>-->
       <div ng-if="ctrl.previews">
         <tabset>
           <tab ng-repeat="table in ctrl.previews" heading="{{ ::table.name }}" active="table.active">
           </tab>
         </tabset>
         <div ng-repeat="table in ctrl.previews" ng-if="table.active">
-          <hot-table settings="table.settings" datarows="table.rows" class="zebra hot handsontable htRowHeaders htColumnHeaders"></hot-table>
+          <hot-table settings="table.settings" datarows="table.rows"
+                     class="zebra hot handsontable htRowHeaders htColumnHeaders"></hot-table>
         </div>
       </div>
     </div>
