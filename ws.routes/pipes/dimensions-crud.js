@@ -1,8 +1,10 @@
 // todo: make list searchable and paged
 // todo: make updates idempotent
 // todo: support analysis sessions
-var mongoose = require('mongoose');
+var _ = require('lodash');
+var async = require('async');
 var express = require('express');
+var mongoose = require('mongoose');
 
 var ensureAuthenticated = require('../utils').ensureAuthenticated;
 
@@ -57,7 +59,7 @@ module.exports = function (serviceLocator) {
   // read
   router.get('/api/dimensions/:did', ensureAuthenticated, readDimension);
   // update
-  router.put('/api/dimensions/:did', ensureAuthenticated, updateDimension);
+  router.put('/api/dimensions/:did', ensureAuthenticated, createDimension);
   // delete
   router.delete('/api/dimensions/:did', ensureAuthenticated, deleteDimension);
 
@@ -70,7 +72,7 @@ module.exports = function (serviceLocator) {
   // read
   router.get('/api/dimensions/:did/values/:vid', ensureAuthenticated, readDimensionValue);
   // update
-  router.put('/api/dimensions/:did/values/:vid', ensureAuthenticated, updateDimensionValue);
+  router.put('/api/dimensions/:did/values/:vid', ensureAuthenticated, createDimensionValues);
   // delete
   router.delete('/api/dimensions/:did/values/:vid', ensureAuthenticated, deleteDimensionValue);
 
@@ -102,30 +104,77 @@ module.exports = function (serviceLocator) {
     });
   }
 
-  // create dimension or dimensions if req.body is array
+  // create or update dimension or dimensions if req.body is array
   function createDimension(req, res, next) {
     try {
-      Dimensions.create(req.body, function (err, dimension) {
+      var dimension = req.body;
+      var name = dimension.name.toLowerCase();
+      var task = {
+        query: {
+          name: name
+        },
+        body: {
+          $set: {
+            name: name,
+            title: dimension.title || name,
+            meta: dimension.meta || {}
+          }
+        }
+      };
+      var options = {upsert: true, 'new': true};
+      Dimensions.findOneAndUpdate(task.query, task.body, options, function (err, dimension) {
         if (err) {
           return next(err);
         }
 
-        return res.json({success: true, data: {dimension: dimension}});
+        return res.json({
+          success: true,
+          data: {dimension: dimension}
+        });
       });
     } catch (e) {
       return next(e);
     }
   }
 
-  // create dimension value or values if req.body is array
+  // create or update dimension value or values if req.body is array
   function createDimensionValues(req, res, next) {
     try {
-      Dimensions.create(req.body, function (err, dimensionValues) {
+      var dimension = req.dimension;
+      var arr = _.isArray(req.body) ? req.body : [req.body];
+      var tasks = _.map(arr, function (dimensionValue) {
+        return {
+          query: {dimension: dimension._id, value: dimensionValue.value},
+          body: {
+            $set: {
+              dimension: dimension._id,
+              dimensionName: dimension.name,
+              value: dimensionValue.value,
+              title: dimensionValue.title
+            },
+            $addToSet: {synonyms: {$each: dimensionValue.synonyms}}
+          }
+        };
+      });
+      var options = {upsert: true};
+      var createdValues = 0;
+      var updatedValues = 0;
+      async.eachLimit(tasks, 50, function create(task, cb) {
+        return DimensionValues.update(task.query, task.body, options, function (err, result) {
+          createdValues += result.n;
+          updatedValues += result.nModified;
+          return cb(err);
+        });
+      }, function (err, dimensionValues) {
         if (err) {
           return next(err);
         }
 
-        return res.json({success: true, data: {dimensionValues: dimensionValues}});
+        return res.json({
+          success: true,
+          data: {dimensionValues: dimensionValues},
+          stats: {created: createdValues, updated: updatedValues}
+        });
       });
     } catch (e) {
       return next(e);
@@ -140,40 +189,6 @@ module.exports = function (serviceLocator) {
   // read dimension value
   function readDimensionValue(req, res) {
     return res.json({success: true, data: {dimension: req.dimensionValue}});
-  }
-
-  // update dimension
-  function updateDimension(req, res, next) {
-    try {
-      var body = req.body;
-      delete body._id;
-      Dimensions.update({_id: req.dimension._id}, {$set: body}, function (err) {
-        if (err) {
-          return next(err);
-        }
-
-        return res.json({success: true});
-      });
-    } catch (e) {
-      return next(e);
-    }
-  }
-
-  // update dimension value
-  function updateDimensionValue(req, res, next) {
-    try {
-      var body = req.body;
-      delete body._id;
-      DimensionValues.update({_id: req.dimensionValue._id}, {$set: body}, function (err) {
-        if (err) {
-          return next(err);
-        }
-
-        return res.json({success: true});
-      });
-    } catch (e) {
-      return next(e);
-    }
   }
 
   // delete dimension

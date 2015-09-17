@@ -9,8 +9,8 @@ var _ = require('lodash');
 
 module.exports = function (app) {
   app.controller('PipingController', [
-    '$scope', 'FileResources', 'FileService',
-    function ($scope, FileResources, FileService) {
+    '$scope', '$resource', 'FileResources', 'FileService',
+    function ($scope, $resource, FileResources, FileService) {
       // todo: make as configurable Service Locator
       var StepTypes = {
         'import_file': {
@@ -134,8 +134,76 @@ module.exports = function (app) {
               return false;
             }
           },
-          action: function doAction(cb) {
-            cb();
+          toJSON: function toJSON() {
+            try {
+              // by performance reasons this could looks ugly
+              // this.options.map.value, this.options.map.title
+              var colHeadersLength = 2 + this.options.map.synonyms.length;
+
+              var index = 0;
+              var rowMap = new Array(colHeadersLength);
+              rowMap[index++] = this.options.table.headers.col
+                .indexOf(this.options.map.value);
+              rowMap[index++] = this.options.table.headers.col
+                .indexOf(this.options.map.title);
+
+              for (var j = 0; j < this.options.map.synonyms.length; j++, index++) {
+                rowMap[index] = this.options.table.headers.col.indexOf(this.options.map.synonyms[j]);
+              }
+
+              function mapRow(row) {
+                var res = {
+                  value: row[rowMap[0]],
+                  synonyms: []
+                };
+                if (rowMap[1] !== -1) {
+                  res.title = row[rowMap[1]];
+                }
+                for (var i = 2; i < colHeadersLength; i++) {
+                  var value = row[rowMap[i]];
+                  if (!value) {
+                    continue;
+                  }
+                  if (res.synonyms.indexOf(value) !== -1) {
+                    continue;
+                  }
+
+                  res.synonyms.push(value);
+                }
+                return res;
+              }
+
+              /** @typeof Table*/
+              return _.map(this.options.table.rows, mapRow);
+            } catch (e) {
+              return false;
+            }
+          },
+          action: function updloadDimension(cb) {
+            var self = this;
+            // todo: get dimension by name
+            // todo: if dimension has id do not recreate, -> update
+            // todo: update: dimension values idempotently
+            var dimensionsResource = $resource('/api/dimensions');
+            var dimensionValuesResource = $resource('/api/dimensions/:id/values');
+            var body = this.options.dimension;
+
+            return dimensionsResource.save({}, body, function (res) {
+              if (res.error) {
+                return cb(res.error);
+              }
+
+              var dimension = res.data.dimension;
+              dimensionValuesResource.save({id: dimension._id}, self.toJSON(dimension), function (res) {
+                if (res.error) {
+                  return cb(res.error);
+                }
+
+                dimensionValuesResource.get(query, function (res) {
+                  console.log(res.data);
+                }, cb);
+              }, cb);
+            }, cb);
           }
         },
         "export_indicator": {

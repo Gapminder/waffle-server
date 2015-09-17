@@ -63,7 +63,7 @@
                 </div>
 
                 <!-- step: export dimension -->
-                <div class="col-log-6" ng-if="step.name === 'export_dimension'">
+                <div class="col-log-5" ng-if="step.name === 'export_dimension'">
                   <!--data source-->
                   <div class="form-horizontal">
                     <!--select step-->
@@ -98,7 +98,7 @@
                   <div class="form-horizontal" ng-if="step.options.table">
                     <!--heading-->
                     <div class="panel-heading row">
-                      <div class="col-lg-10">
+                      <div class="col-lg-8">
                         <h3>Dimension properties</h3>
                       </div>
                     </div>
@@ -107,7 +107,7 @@
                     <div class="form-group">
                       <label class="col-lg-2 control-label">Name</label>
 
-                      <div class="col-lg-10">
+                      <div class="col-lg-8">
                         <input type="text" class="form-control"
                                ng-model="step.options.dimension.name"
                                placeholder="Dimension name">
@@ -119,7 +119,7 @@
                     <div class="form-group">
                       <label class="col-lg-2 control-label">Title</label>
 
-                      <div class="col-lg-10">
+                      <div class="col-lg-8">
                         <input type="text" class="form-control"
                                ng-model="step.options.dimension.title"
                                placeholder="Dimension title">
@@ -135,7 +135,7 @@
                         <h3>Dimension values fields mapping</h3>
                       </div>
                       <div class="col-lg-2">
-                        <button class="btn btn-success" ng-click="ctrl.previewStep(step)">Preview</button>
+                        <button class="btn btn-success pull-right" ng-click="ctrl.previewStep(step)">Preview</button>
                       </div>
                     </div>
 
@@ -144,7 +144,7 @@
                     <div class="form-group">
                       <label class="col-lg-2 control-label">Values from:</label>
 
-                      <div class="col-lg-10">
+                      <div class="col-lg-8">
                         <input type="text" class="form-control"
                                ng-model="step.options.map.value"
                                typeahead="name for name in step.options.table.headers.col | filter:$viewValue | limitTo:8"
@@ -159,11 +159,30 @@
                       </div>
                     </div>
 
+                    <!--dimension value title-->
+                    <div class="form-group">
+                      <label class="col-lg-2 control-label">Titles from:</label>
+
+                      <div class="col-lg-8">
+                        <input type="text" class="form-control"
+                               ng-model="step.options.map.title"
+                               typeahead="name for name in step.options.table.headers.col | filter:$viewValue | limitTo:8"
+                               placeholder="Dimension value title selector">
+                        <small>
+                          Sample titles:
+                           <span ng-repeat="row in ::step.options.table.rows | limitTo: 5">
+                             {{ ::row[step.options.table.headers.col.indexOf(step.options.map.title)] }}
+                          </span>
+                          ...
+                        </small>
+                      </div>
+                    </div>
+
                     <!-- dimension synonyms -->
                     <div class="form-group">
                       <label class="col-lg-2 control-label">Synonyms from:</label>
 
-                      <div class="col-lg-10">
+                      <div class="col-lg-8">
                         <ui-select multiple ng-model="step.options.map.synonyms">
                           <ui-select-match placeholder="Select field...">{{$item}}</ui-select-match>
                           <ui-select-choices
@@ -182,6 +201,11 @@
                       </div>
                     </div>
 
+                    <!--start extracting-->
+                    <div>
+                      <button class="btn btn-primary pull-right"
+                              ng-click="ctrl.runStep(step)">{{::step.displayName}}</button>
+                    </div>
                   </div>
                 </div>
 
