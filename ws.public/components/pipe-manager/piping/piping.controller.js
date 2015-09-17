@@ -1,51 +1,16 @@
 var _ = require('lodash');
 
+/** Table
+ * @type Table
+ * @member {String} name
+ * @member {{col:[string], row:[string]}=} headers
+ * @member {[[string]]} rows
+ */
+
 module.exports = function (app) {
   app.controller('PipingController', [
     '$scope', 'FileResources', 'FileService',
     function ($scope, FileResources, FileService) {
-      var self = this;
-      // test data, todo: replaces with services load\parse
-      self.pipe = new Pipe();
-      self.onChange = function () {
-        if (!self.pipe) {
-          self.result = self.error = null;
-          return;
-        }
-        /* eslint no-new-func: 0*/
-        try {
-          var fn = new Function('self', self.pipe);
-          self.result = fn(self);
-          self.error = null;
-        } catch (e) {
-          self.error = e;
-        }
-      };
-
-      // todo: as service
-      self.refresh = function refresh(type, search) {
-        FileResources.list({search: search}, function (err, data) {
-          self.files = data.files;
-        });
-      };
-
-      // pipes related
-      self.runStep = function runStep(step) {
-        self.pipe.runStep(step, function (err) {
-          safeApply(function () {
-            step.error = err;
-          });
-        });
-      };
-
-      self.previewStep = function previewStep(step) {
-        self.previews = _.map(step.tables, function (table) {
-          table.settings = createSettings(table.headers, self.pipe, step);
-          return table;
-        });
-        return false;
-      };
-
       // todo: make as configurable Service Locator
       var StepTypes = {
         'import_file': {
@@ -54,6 +19,10 @@ module.exports = function (app) {
           defaultDisplayName: 'Import file',
           group: 'import',
           fields: ['uri', 'name', 'ext'],
+          options: {
+            // file object
+            file: {}
+          },
           action: function loadFile(cb) {
             var self = this;
             self.ready = false;
@@ -97,12 +66,139 @@ module.exports = function (app) {
         'export_dimension': {
           name: 'export_dimension',
           displayName: 'Export Dimension',
-          action: function(cb) {cb();}
+          options: {
+            // step to take data from
+            step: {},
+            // table to take data from,
+            table: {
+              headers: {
+                // required
+                col: []
+              }
+            },
+            // dimension to extract
+            dimension: {name: '', title: ''},
+            // dimension values map csv->dimension values
+            map: {
+              // required
+              value: '',
+              // to map dim title (like `Norway` for `nor`)
+              title: '',
+              // string[] - to values synonyms
+              synonyms: []
+            }
+          },
+          toTable: function toTable() {
+            try {
+              // by performance reasons this could looks ugly
+              // this.options.map.value, this.options.map.title
+              var colHeadersLength = 1 + (this.options.map.title ? 1 : 0) +
+                this.options.map.synonyms.length;
+
+              var colHeaders = new Array(colHeadersLength);
+              var rowMap = new Array(colHeadersLength);
+
+              var index = 0;
+              colHeaders[index] = 'value';
+              rowMap[index] = this.options.table.headers.col
+                .indexOf(this.options.map.value);
+              index++;
+
+              if (this.options.map.title) {
+                colHeaders[index] = 'title';
+                rowMap[index] = this.options.table.headers.col
+                  .indexOf(this.options.map.title);
+                index++;
+              }
+
+              for (var j = 0; j < this.options.map.synonyms.length; j++, index++) {
+                colHeaders[index] = 'syn.' + j;
+                rowMap[index] = this.options.table.headers.col.indexOf(this.options.map.synonyms[j]);
+              }
+
+              function mapRow(row) {
+                var res = new Array(colHeadersLength);
+                for (var i = 0; i < colHeadersLength; i++) {
+                  res[i] = row[rowMap[i]];
+                }
+                return res;
+              }
+
+              /** @typeof Table*/
+              return {
+                name: this.options.dimension.name,
+                headers: {col: colHeaders},
+                rows: _.map(this.options.table.rows, mapRow)
+              };
+            } catch (e) {
+              return false;
+            }
+          },
+          action: function doAction(cb) {
+            cb();
+          }
         },
         "export_indicator": {
           name: 'export_indicator',
           displayName: 'Export Indicator',
-          action: function(cb) {cb();}
+          action: function (cb) {
+            cb();
+          }
+        }
+      };
+
+      var self = this;
+      // test data, todo: replaces with services load\parse
+      self.pipe = new Pipe();
+      self.onChange = function () {
+        if (!self.pipe) {
+          self.result = self.error = null;
+          return;
+        }
+        /* eslint no-new-func: 0*/
+        try {
+          var fn = new Function('self', self.pipe);
+          self.result = fn(self);
+          self.error = null;
+        } catch (e) {
+          self.error = e;
+        }
+      };
+
+      // todo: as service
+      self.refresh = function refresh(type, search) {
+        FileResources.list({search: search}, function (err, data) {
+          self.files = data.files;
+        });
+      };
+
+      // pipes related
+      self.runStep = function runStep(step) {
+        self.pipe.runStep(step, function (err) {
+          safeApply(function () {
+            step.error = err;
+          });
+        });
+      };
+
+      self.previewStep = function previewStep(step) {
+        if (step.name === StepTypes.import_file.name) {
+          self.previews = _.map(step.tables, function (table) {
+            table.settings = createSettings(table.headers, self.pipe, step);
+            return table;
+          });
+          return;
+        }
+        if (step.name === StepTypes.export_dimension.name) {
+          var t = step.toTable();
+          if (!t) {
+            step.ready = null;
+            return;
+          }
+          t.settings = createSettings(t.headers, self.pipe, step);
+          step.ready = true;
+          self.previews = [t];
+          return;
         }
       };
 

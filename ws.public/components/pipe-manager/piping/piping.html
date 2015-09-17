@@ -14,7 +14,7 @@
       <button ng-click="ctrl.pipe.createExportIndicatorStep()">Export Ind</button>
       <div class="ibox no-margins" ng-if="ctrl.pipe.steps.length">
         <div class="ibox-content">
-          <accordion>
+          <accordion close-others="false">
             <accordion-group ng-repeat="step in ctrl.pipe.steps track by $index" is-open="step.active">
               <accordion-heading>
                 <div class="row">
@@ -64,8 +64,9 @@
 
                 <!-- step: export dimension -->
                 <div class="col-log-6" ng-if="step.name === 'export_dimension'">
+                  <!--data source-->
                   <div class="form-horizontal">
-                    <!--data source-->
+                    <!--select step-->
                     <div class="form-group">
                       <label class="col-lg-2 control-label">Source</label>
 
@@ -76,10 +77,8 @@
                                 ng-model="step.options.step">
                         </select>
                       </div>
-                      <div class="col-lg-2">
-                        <button class="btn btn-success" ng-click="ctrl.previewStep(step)">Preview</button>
-                      </div>
                     </div>
+                    <!--data table-->
                     <div class="form-group" ng-if="step.options.step">
                       <label class="col-lg-2 control-label">Table</label>
 
@@ -92,95 +91,97 @@
                       </div>
                     </div>
                   </div>
+
                   <!--todo: split dimension and dimension values-->
                   <!--todo: add option to select existing dimension-->
-                  <div ng-if="step.options.table">
-                    <div class="form-horizontal">
-                      <p>Select fields mapping</p>
-
-                      <!--dimension name-->
-                      <div class="form-group">
-                        <label class="col-lg-2 control-label">Name</label>
-
-                        <div class="col-lg-10">
-                          <input type="text" class="form-control"
-                                 ng-model="step.options.dimension.name"
-                                 placeholder="Dimension name">
-                          <span class="help-block m-b-none">Should be single(not plural), lowercase,unique, required, only [a-z_]</span>
-                        </div>
+                  <!--Dimension values-->
+                  <div class="form-horizontal" ng-if="step.options.table">
+                    <!--heading-->
+                    <div class="panel-heading row">
+                      <div class="col-lg-10">
+                        <h3>Dimension properties</h3>
                       </div>
-
-                      <!--dimension title-->
-                      <div class="form-group">
-                        <label class="col-lg-2 control-label">Title</label>
-
-                        <div class="col-lg-10">
-                          <input type="text" class="form-control"
-                                 ng-model="step.options.dimension.title"
-                                 placeholder="Dimension title">
-                        </div>
-                      </div>
-
-                      <!-- todo: add catalog selection -->
-                      <!--dimension values-->
-                      <div class="form-group">
-                        <label class="col-lg-2 control-label">Values from:</label>
-
-                        <div class="col-lg-10">
-                          <input type="text" class="form-control"
-                                 ng-model="step.options.map.dimension.value"
-                                 typeahead="name for name in step.options.table.headers.col | filter:$viewValue | limitTo:8"
-                                 placeholder="Dimension title">
-                          <small>
-                            Sample values:
-                           <span ng-repeat="row in ::step.options.table.rows | limitTo: 5">
-                             {{ ::row[step.options.table.headers.col.indexOf(step.options.map.dimension.value)] }}
-                          </span>
-                            ...
-                          </small>
-                        </div>
-                      </div>
-
-                      <!-- dimension synonyms -->
-                      <div class="form-group">
-                        <label class="col-lg-2 control-label">Synonyms from:</label>
-
-                        <div class="col-lg-10">
-                          <ui-select multiple ng-model="step.options.map.dimension.synonyms">
-                            <ui-select-match placeholder="Select field...">{{$item}}</ui-select-match>
-                            <ui-select-choices
-                              repeat="field in step.options.table.headers.col | filter:$select.search">
-                              <div ng-bind-html="field | highlight: $select.search"></div>
-                              <!--   <small>
-                                   email: {{person.email}}
-                                   age: <span ng-bind-html="''+person.age | highlight: $select.search"></span>
-                                 </small>-->
-                            </ui-select-choices>
-                          </ui-select>
-                          <!--<input type="text" class="form-control"
-                                 ng-model="step.options.map.dimension.synonyms"
-                                 typeahead="name for name in step.options.table.headers.col | filter:$viewValue | limitTo:8"
-                                 placeholder="Dimension title">-->
-                        </div>
-                      </div>
-
-
-                      <!--                  <div class="form-group"><label class="col-lg-2 control-label">Password</label>
-
-                                          <div class="col-lg-10"><input type="password" placeholder="Password" class="form-control">
-                                          </div>
-                                        </div>
-                                        <div class="form-group">
-                                          <div class="col-lg-offset-2 col-lg-10">
-                                            <input icheck type="checkbox" ng-model="main.checkOne"><i></i> Remember me
-                                          </div>
-                                        </div>
-                                        <div class="form-group">
-                                          <div class="col-lg-offset-2 col-lg-10">
-                                            <button class="btn btn-sm btn-white" type="submit">Sign in</button>
-                                          </div>
-                                        </div>-->
                     </div>
+
+                    <!--dimension name-->
+                    <div class="form-group">
+                      <label class="col-lg-2 control-label">Name</label>
+
+                      <div class="col-lg-10">
+                        <input type="text" class="form-control"
+                               ng-model="step.options.dimension.name"
+                               placeholder="Dimension name">
+                        <span class="help-block m-b-none">Should be single(not plural), lowercase,unique, required, only [a-z_]</span>
+                      </div>
+                    </div>
+
+                    <!--dimension title-->
+                    <div class="form-group">
+                      <label class="col-lg-2 control-label">Title</label>
+
+                      <div class="col-lg-10">
+                        <input type="text" class="form-control"
+                               ng-model="step.options.dimension.title"
+                               placeholder="Dimension title">
+                      </div>
+                    </div>
+                  </div>
+
+                  <!--Dimension values mapping-->
+                  <div class="form-horizontal" ng-if="step.options.dimension.name">
+                    <!--heading-->
+                    <div class="panel-heading row">
+                      <div class="col-lg-10">
+                        <h3>Dimension values fields mapping</h3>
+                      </div>
+                      <div class="col-lg-2">
+                        <button class="btn btn-success" ng-click="ctrl.previewStep(step)">Preview</button>
+                      </div>
+                    </div>
+
+                    <!-- todo: add catalog selection -->
+                    <!--dimension values-->
+                    <div class="form-group">
+                      <label class="col-lg-2 control-label">Values from:</label>
+
+                      <div class="col-lg-10">
+                        <input type="text" class="form-control"
+                               ng-model="step.options.map.value"
+                               typeahead="name for name in step.options.table.headers.col | filter:$viewValue | limitTo:8"
+                               placeholder="Dimension values selector">
+                        <small>
+                          Sample values:
+                           <span ng-repeat="row in ::step.options.table.rows | limitTo: 5">
+                             {{ ::row[step.options.table.headers.col.indexOf(step.options.map.value)] }}
+                          </span>
+                          ...
+                        </small>
+                      </div>
+                    </div>
+
+                    <!-- dimension synonyms -->
+                    <div class="form-group">
+                      <label class="col-lg-2 control-label">Synonyms from:</label>
+
+                      <div class="col-lg-10">
+                        <ui-select multiple ng-model="step.options.map.synonyms">
+                          <ui-select-match placeholder="Select field...">{{$item}}</ui-select-match>
+                          <ui-select-choices
+                            repeat="field in step.options.table.headers.col | filter:$select.search">
+                            <div ng-bind-html="field | highlight: $select.search"></div>
+                            <!--   <small>
+                                 email: {{person.email}}
+                                 age: <span ng-bind-html="''+person.age | highlight: $select.search"></span>
+                               </small>-->
+                          </ui-select-choices>
+                        </ui-select>
+                        <!--<input type="text" class="form-control"
+                               ng-model="step.options.map.dimension.synonyms"
+                               typeahead="name for name in step.options.table.headers.col | filter:$viewValue | limitTo:8"
+                               placeholder="Dimension title">-->
+                      </div>
+                    </div>
+
                   </div>
                 </div>
 
