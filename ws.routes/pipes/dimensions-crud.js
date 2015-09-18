@@ -107,8 +107,8 @@ module.exports = function (serviceLocator) {
   // create or update dimension or dimensions if req.body is array
   function createDimension(req, res, next) {
     try {
-      var dimension = req.body;
-      var name = dimension.name.toLowerCase();
+      var body = req.body;
+      var name = body.name.toLowerCase();
       var task = {
         query: {
           name: name
@@ -116,11 +116,14 @@ module.exports = function (serviceLocator) {
         body: {
           $set: {
             name: name,
-            title: dimension.title || name,
-            meta: dimension.meta || {}
+            // title: body.title || name,
+            meta: body.meta || {}
           }
         }
       };
+      if (body.title) {
+        task.body.$set.title = body.title;
+      }
       var options = {upsert: true, 'new': true};
       Dimensions.findOneAndUpdate(task.query, task.body, options, function (err, dimension) {
         if (err) {
@@ -143,18 +146,24 @@ module.exports = function (serviceLocator) {
       var dimension = req.dimension;
       var arr = _.isArray(req.body) ? req.body : [req.body];
       var tasks = _.map(arr, function (dimensionValue) {
-        return {
+        var task = {
           query: {dimension: dimension._id, value: dimensionValue.value},
           body: {
             $set: {
               dimension: dimension._id,
               dimensionName: dimension.name,
-              value: dimensionValue.value,
-              title: dimensionValue.title
+              value: dimensionValue.value
+              // title: dimensionValue.title
             },
             $addToSet: {synonyms: {$each: dimensionValue.synonyms}}
           }
         };
+
+        if (!_.isEmpty(dimensionValue.title)) {
+          task.body.$set.title = dimensionValue.title;
+        }
+
+        return task;
       });
       var options = {upsert: true};
       var createdValues = 0;
