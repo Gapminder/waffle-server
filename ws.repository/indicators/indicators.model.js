@@ -20,14 +20,15 @@ var Schema = mongoose.Schema;
 var Indicators = new Schema({
   name: {type: String, unique: true, required: true, index: true},
   title: String,
+  meta: {},
 
-  coordinates: [{type: Schema.Types.ObjectId, ref: 'Coordinates'}],
+  // todo: separate collection to manage units?
+  units: {name: String},
   dimensions: [{type: Schema.Types.ObjectId, ref: 'Dimensions'}],
 
-  meta: {},
-  // !!!
-  units: {},
+  // system marks
   dataSources: [{type: Schema.Types.ObjectId, ref: 'DataSources'}],
+  catalogVersions: [{type: Schema.Types.ObjectId, ref: 'PublisherCatalogVersions'}],
   analysisSessions: [{type: Schema.Types.ObjectId, ref: 'AnalysisSessions'}]
 });
 

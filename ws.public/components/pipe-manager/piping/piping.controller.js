@@ -92,8 +92,8 @@ module.exports = function (app) {
             try {
               // by performance reasons this could looks ugly
               // this.options.map.value, this.options.map.title
-              var colHeadersLength = 1 + (this.options.map.title ? 1 : 0) +
-                this.options.map.synonyms.length;
+              var synonymsCount = _.isArray(this.options.map.synonyms) ? this.options.map.synonyms.length : 0;
+              var colHeadersLength = 1 + (this.options.map.title ? 1 : 0) + synonymsCount;
 
               var colHeaders = new Array(colHeadersLength);
               var rowMap = new Array(colHeadersLength);
@@ -111,9 +111,11 @@ module.exports = function (app) {
                 index++;
               }
 
-              for (var j = 0; j < this.options.map.synonyms.length; j++, index++) {
-                colHeaders[index] = 'syn.' + j;
-                rowMap[index] = this.options.table.headers.col.indexOf(this.options.map.synonyms[j]);
+              if (_.isArray(this.options.map.synonyms)) {
+                for (var j = 0; j < this.options.map.synonyms.length; j++, index++) {
+                  colHeaders[index] = 'syn.' + j;
+                  rowMap[index] = this.options.table.headers.col.indexOf(this.options.map.synonyms[j]);
+                }
               }
 
               function mapRow(row) {
@@ -124,11 +126,12 @@ module.exports = function (app) {
                 return res;
               }
 
+              var rows = _.map(this.options.table.rows, mapRow);
               /** @typeof Table*/
               return {
                 name: this.options.dimension.name,
                 headers: {col: colHeaders},
-                rows: _.map(this.options.table.rows, mapRow)
+                rows: _.uniq(rows, function(row){return row[0]})
               };
             } catch (e) {
               return false;
