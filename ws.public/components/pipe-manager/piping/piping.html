@@ -11,6 +11,7 @@
     <div class="col-lg-6">
       <button ng-click="ctrl.pipe.createImportStep()">Import +</button>
       <button ng-click="ctrl.pipe.createExportDimensionStep()">Export Dim</button>
+      <button ng-click="ctrl.pipe.createRecognizeDimensions()">Recognize Dim</button>
       <button ng-click="ctrl.pipe.createExportIndicatorStep()">Export Ind</button>
       <div class="ibox no-margins" ng-if="ctrl.pipe.steps.length">
         <div class="ibox-content">
@@ -188,24 +189,94 @@
                           <ui-select-choices
                             repeat="field in step.options.table.headers.col | filter:$select.search">
                             <div ng-bind-html="field | highlight: $select.search"></div>
-                            <!--   <small>
-                                 email: {{person.email}}
-                                 age: <span ng-bind-html="''+person.age | highlight: $select.search"></span>
-                               </small>-->
                           </ui-select-choices>
                         </ui-select>
-                        <!--<input type="text" class="form-control"
-                               ng-model="step.options.map.dimension.synonyms"
-                               typeahead="name for name in step.options.table.headers.col | filter:$viewValue | limitTo:8"
-                               placeholder="Dimension title">-->
                       </div>
                     </div>
 
                     <!--start extracting-->
                     <div>
                       <button class="btn btn-primary pull-right"
-                              ng-click="ctrl.runStep(step)">{{::step.displayName}}</button>
+                              ng-click="ctrl.runStep(step)">{{::step.displayName}}
+                      </button>
                     </div>
+                  </div>
+                </div>
+
+                <!-- step: recognize dimensions -->
+                <div class="col-log-5" ng-if="step.name === 'recognize_dimensions'">
+                  <!--data source-->
+                  <div class="form-horizontal">
+                    <!--select step-->
+                    <div class="form-group">
+                      <label class="col-lg-2 control-label">Source</label>
+
+                      <div class="col-lg-8">
+                        <select name="input"
+                                class="form-control m-b"
+                                ng-options="step1.displayName for step1 in ctrl.pipe.steps | filter: {group: 'import'}"
+                                ng-model="step.options.step">
+                        </select>
+                      </div>
+                    </div>
+                    <!--data table-->
+                    <div class="form-group" ng-if="step.options.step">
+                      <label class="col-lg-2 control-label">Table</label>
+
+                      <div class="col-lg-8">
+                        <select name="input"
+                                class="form-control m-b"
+                                ng-options="table.name for table in step.options.step.tables"
+                                ng-model="step.options.table">
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!--Selectors heading-->
+                  <div class="form-horizontal" ng-if="step.options.table">
+                    <div class="panel-heading row">
+                      <div class="col-lg-8 col-of">
+                        <h3>Selectors:</h3>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!--Selectors-->
+                  <div class="form-horizontal" ng-if="step.options.table"
+                       ng-repeat="selector in step.options.selectors track by $index">
+                    <!--dimension name-->
+                    <div class="form-group">
+                      <!-- selector where -->
+                      <label class="col-lg-2 control-label">From</label>
+                      <div class="col-lg-1">
+                        <select name="input"
+                                ng-options="name for name in ['header', 'row']"
+                                ng-model="selector.where">
+                        </select>
+                      </div>
+
+                      <!-- selector row -->
+                      <label class="col-lg-2 control-label" ng-if="selector.where === 'row'">From</label>
+                      <div class="col-lg-1" ng-if="selector.where === 'row'">
+                        <input name="number" class="form-control" ng-model="selector.index"></input>
+                      </div>
+
+                      <!-- selector skip -->
+                      <label class="col-lg-2 control-label">Skip</label>
+                      <div class="col-lg-1">
+                        <input type="text" class="form-control"
+                               ng-model="selector.skip"
+                               placeholder="Indexes to skip">
+                      </div>
+                    </div>
+                  </div>
+
+                  <!--start extracting-->
+                  <div>
+                    <button class="btn btn-primary pull-right"
+                            ng-click="ctrl.runStep(step)">{{::step.displayName}}
+                    </button>
                   </div>
                 </div>
 

@@ -36,10 +36,6 @@ module.exports = function (app) {
         this.getService(file.ext).parse(file, fileContent, cb);
         return this;
       };
-      FileService.prototype.recognize = function recognize(file, fileContent, cb) {
-        this.getService(file.ext).recognize(file, fileContent, cb);
-        return this;
-      };
       FileService.prototype.recognizeHeaders = function recognizeHeaders(file, table) {
         return this.getService(file.ext).recognizeHeaders(file, table);
       };
@@ -74,7 +70,7 @@ module.exports = function (app) {
           rows: fileContent
         }]);
       };
-      CsvFileService.prototype.recognizeHeaders = function recognize(file, table) {
+      CsvFileService.prototype.recognizeHeaders = function recognizeHeaders(file, table) {
         table.headers = {col: table.rows.shift()};
         return table;
       };

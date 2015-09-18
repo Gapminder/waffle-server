@@ -1,4 +1,5 @@
 var _ = require('lodash');
+var async = require('async');
 
 /** Table
  * @type Table
@@ -220,6 +221,129 @@ module.exports = function (app) {
           action: function (cb) {
             cb();
           }
+        },
+        'recognize_dimensions': {
+          name: 'recognize_dimensions',
+          displayName: 'Recognize Dimensions',
+          defaults: {
+            selectors: [
+              {
+                where: 'header',
+                skip: '0'
+              },
+              {
+                where: 'row',
+                index: 0,
+                skip: '0'
+              }
+            ]
+          },
+          options: {
+            // step to take data from
+            step: {},
+            // table to take data from,
+            table: {
+              headers: {
+                // required
+                col: []
+              }
+            },
+            // selectors
+            // dimension values map csv->dimension values
+
+            // utilize default selectors later
+            selectors: [],
+            map: {
+              // required
+              value: '',
+              // to map dim title (like `Norway` for `nor`)
+              title: '',
+              // string[] - to values synonyms
+              synonyms: []
+            }
+          },
+          action: function (cb) {
+            // helper declarations
+            function TableQuery(table, selector) {
+              this.table = table;
+              this.selector = selector;
+            }
+
+            TableQuery.prototype.select = function chainableGetRow() {
+              this.row = getRow(this.table, this.selector);
+              return this;
+            };
+
+            TableQuery.prototype.filter = function chainableFilterRow() {
+              this.row = filterRow(this.row, this.selector);
+              return this;
+            };
+            TableQuery.prototype.value = function () {
+              return this.row;
+            };
+
+            /**
+             * Query chainer
+             * @param {Table} table
+             * @param {} selector
+             * @returns {TableQuery} - chainable instance if Query
+             */
+            TableQuery.chain = function createChain(table, selector) {
+              return new TableQuery(table, selector);
+            };
+
+            var self = this;
+            // valuable code
+            try {
+              async.map(this.options.selectors,
+                function iterator(selector, cb) {
+                  var row = TableQuery
+                    .chain(self.options.table, selector)
+                    .select()
+                    .filter()
+                    .value();
+                  return cb(null, row);
+                },
+                function final(err, results) {
+                  console.log(results);
+                  return cb(err, results);
+                });
+            } catch (e) {
+              console.error(e);
+              return cb(e);
+            }
+
+            function getRow(table, selector) {
+              if (selector.where === 'header') {
+                return table.headers.col;
+              }
+              if (selector.where === 'row') {
+                var index = parseInt(selector.index, 10);
+                return _.map(table.rows, function (row) {
+                  return row[index];
+                });
+              }
+            }
+
+            function filterRow(row, selector) {
+              var skips = _.map(selector.skip.split(','), function (val) {
+                return parseInt(val, 10);
+              });
+
+              var res = new Array(row.length - skips.length);
+
+              var index = 0;
+              for (var i = 0; i < row.length; i++) {
+                if (skips.indexOf(i) !== -1) {
+                  continue;
+                }
+
+                res[index++] = row[i];
+              }
+
+              return row;
+            }
+          }
         }
       };
 
@@ -286,7 +410,7 @@ module.exports = function (app) {
         // id? serialize!
         this.index = -1;
         _.merge(this, StepTypes[type]);
-        this.options = opts || {};
+        this.options = _.defaults(opts || {}, this.defaults || {});
         this.ready = null;
         this.active = true;
       }
@@ -335,6 +459,11 @@ module.exports = function (app) {
 
       Pipe.prototype.createExportIndicatorStep = function createExportIndicatorStep() {
         this.addStep(new Step(StepTypes.export_indicator.name));
+        return this;
+      };
+
+      Pipe.prototype.createRecognizeDimensions = function createRecognizeDimensions() {
+        this.addStep(new Step(StepTypes.recognize_dimensions.name));
         return this;
       };
 
