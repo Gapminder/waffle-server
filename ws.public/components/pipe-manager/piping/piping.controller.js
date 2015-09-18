@@ -131,7 +131,9 @@ module.exports = function (app) {
               return {
                 name: this.options.dimension.name,
                 headers: {col: colHeaders},
-                rows: _.uniq(rows, function(row){return row[0]})
+                rows: _.uniq(rows, function (row) {
+                  return row[0];
+                })
               };
             } catch (e) {
               return false;
