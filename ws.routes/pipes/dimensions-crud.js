@@ -159,7 +159,7 @@ module.exports = function (serviceLocator) {
           }
         };
 
-        if (!_.isEmpty(dimensionValue.title)) {
+        if (dimensionValue.title) {
           task.body.$set.title = dimensionValue.title;
         }
 

@@ -143,7 +143,8 @@ module.exports = function (app) {
             try {
               // by performance reasons this could looks ugly
               // this.options.map.value, this.options.map.title
-              var colHeadersLength = 2 + this.options.map.synonyms.length;
+              var synonymsCount = _.isArray(this.options.map.synonyms) ? this.options.map.synonyms.length : 0;
+              var colHeadersLength = 2 + synonymsCount;
 
               var index = 0;
               var rowMap = new Array(colHeadersLength);
@@ -152,8 +153,10 @@ module.exports = function (app) {
               rowMap[index++] = this.options.table.headers.col
                 .indexOf(this.options.map.title);
 
-              for (var j = 0; j < this.options.map.synonyms.length; j++, index++) {
-                rowMap[index] = this.options.table.headers.col.indexOf(this.options.map.synonyms[j]);
+              if (_.isArray(this.options.map.synonyms)) {
+                for (var j = 0; j < this.options.map.synonyms.length; j++, index++) {
+                  rowMap[index] = this.options.table.headers.col.indexOf(this.options.map.synonyms[j]);
+                }
               }
 
               function mapRow(row) {
@@ -211,7 +214,7 @@ module.exports = function (app) {
             }, cb);
           }
         },
-        "export_indicator": {
+        'export_indicator': {
           name: 'export_indicator',
           displayName: 'Export Indicator',
           action: function (cb) {
