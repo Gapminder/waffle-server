@@ -48,23 +48,33 @@
                   </div>
                 </div>
               </accordion-heading>
-              <div class="row">
+              <div >
                 <!-- step: import file -->
-                <div class="col-lg-6" ng-if="step.name === 'import_file'">
-                  <ui-select ng-model="step.options.file"
-                             on-select="ctrl.runStep(step)"
-                             reset-search-input="false">
-                    <ui-select-match placeholder="Select file">{{$select.selected.name}}</ui-select-match>
-                    <ui-select-choices repeat="file in ctrl.files track by $index"
-                                       refresh="ctrl.refresh(step.type, $select.search)"
-                                       refresh-delay="0">
-                      <div ng-bind-html="file.name | highlight: $select.search"></div>
-                    </ui-select-choices>
-                  </ui-select>
+                <div ng-if="step.name === 'import_file'">
+                  <div class="form-horizontal">
+                    <div class="form-group">
+                        <label class="col-lg-2 control-label">Source</label>
+                        <div class="col-lg-8">
+                          <ui-select ng-model="step.options.file"
+                               on-select="ctrl.runStep(step)"
+                               reset-search-input="false">
+                      <ui-select-match placeholder="Select file">{{$select.selected.name}}</ui-select-match>
+                      <ui-select-choices repeat="file in ctrl.files track by $index"
+                                         refresh="ctrl.refresh(step.type, $select.search)"
+                                         refresh-delay="0">
+                        <div ng-bind-html="file.name | highlight: $select.search"></div>
+                      </ui-select-choices>
+                    </ui-select>
+                        </div>
+                        <div class="col-log-2">
+                          <button class="btn btn-success" ng-disabled="!step.ready" ng-click="ctrl.previewStep(step)">Preview</button>
+                        </div>
+                      </div>
+                  </div>
                 </div>
 
                 <!-- step: export dimension -->
-                <div class="col-log-5" ng-if="step.name === 'export_dimension'">
+                <div ng-if="step.name === 'export_dimension'">
                   <!--data source-->
                   <div class="form-horizontal">
                     <!--select step-->
@@ -74,7 +84,7 @@
                       <div class="col-lg-8">
                         <select name="input"
                                 class="form-control m-b"
-                                ng-options="step1.displayName for step1 in ctrl.pipe.steps | filter: {group: 'import'}"
+                                ng-options="step1.displayName for step1 in ctrl.pipe.steps | filter: {group: 'data-source', ready: true}"
                                 ng-model="step.options.step">
                         </select>
                       </div>
@@ -204,7 +214,7 @@
                 </div>
 
                 <!-- step: recognize dimensions -->
-                <div class="col-log-5" ng-if="step.name === 'recognize_dimensions'">
+                <div ng-if="step.name === 'recognize_dimensions'">
                   <!--data source-->
                   <div class="form-horizontal">
                     <!--select step-->
@@ -214,7 +224,7 @@
                       <div class="col-lg-8">
                         <select name="input"
                                 class="form-control m-b"
-                                ng-options="step1.displayName for step1 in ctrl.pipe.steps | filter: {group: 'import'}"
+                                ng-options="step1.displayName for step1 in ctrl.pipe.steps | filter: {group: 'data-source', ready: true}"
                                 ng-model="step.options.step">
                         </select>
                       </div>
@@ -259,7 +269,7 @@
                       <!-- selector row -->
                       <label class="col-lg-2 control-label" ng-if="selector.where === 'row'">From</label>
                       <div class="col-lg-1" ng-if="selector.where === 'row'">
-                        <input name="number" class="form-control" ng-model="selector.index"></input>
+                        <input name="number" class="form-control" ng-model="selector.index"/>
                       </div>
 
                       <!-- selector skip -->
@@ -281,10 +291,10 @@
                 </div>
 
                 <!-- step: export indicator  -->
-                <div class="col-log-6" ng-if=" step.name === 'export_indicator'">
+                <div ng-if=" step.name === 'export_indicator'">
                   <label>Source: </label>
                   <select name="input"
-                          ng-options="step1.displayName for step1 in ctrl.pipe.steps | filter: {group: 'import'}"
+                          ng-options="step1.displayName for step1 in ctrl.pipe.steps | filter: {group: 'data-source', ready: true}"
                           ng-model="step.options.step">
                   </select>
                   <label>Table</label>

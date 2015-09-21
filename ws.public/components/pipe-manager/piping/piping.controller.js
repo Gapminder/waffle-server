@@ -18,8 +18,9 @@ module.exports = function (app) {
           name: 'import_file',
           displayName: 'Import file',
           defaultDisplayName: 'Import file',
-          group: 'import',
+          group: 'data-source',
           fields: ['uri', 'name', 'ext'],
+          tables: [],
           options: {
             // file object
             file: {}
@@ -35,8 +36,6 @@ module.exports = function (app) {
                   return FileService.recognizeHeaders(file, table);
                 });
 
-                self.tables[0].active = true;
-                self.tables = tables;
                 self.ready = true;
                 return cb(err1 || err2, tables);
               });
@@ -263,85 +262,34 @@ module.exports = function (app) {
             }
           },
           action: function (cb) {
-            // helper declarations
-            function TableQuery(table, selector) {
-              this.table = table;
-              this.selector = selector;
-            }
-
-            TableQuery.prototype.select = function chainableGetRow() {
-              this.row = getRow(this.table, this.selector);
-              return this;
-            };
-
-            TableQuery.prototype.filter = function chainableFilterRow() {
-              this.row = filterRow(this.row, this.selector);
-              return this;
-            };
-            TableQuery.prototype.value = function () {
-              return this.row;
-            };
-
-            /**
-             * Query chainer
-             * @param {Table} table
-             * @param {} selector
-             * @returns {TableQuery} - chainable instance if Query
-             */
-            TableQuery.chain = function createChain(table, selector) {
-              return new TableQuery(table, selector);
-            };
+            var recognizeRsource = $resource('/api/dimensions/recognize', {}, {
+              recognize: {method: 'POST', cache: true}
+            });
+            var TableQuery = require('./helpers/table-query');
 
             var self = this;
             // valuable code
             try {
               async.map(this.options.selectors,
                 function iterator(selector, cb) {
-                  var row = TableQuery
-                    .chain(self.options.table, selector)
-                    .select()
-                    .filter()
+                  var keys = TableQuery
+                    .chain(self.options.table)
+                    .select(selector)
+                    .filter(selector)
                     .value();
-                  return cb(null, row);
+                  recognizeRsource.recognize({keys: keys}, function (res) {
+                    return cb(res.error, _.merge(selector, res.data));
+                  }, cb);
                 },
-                function final(err, results) {
-                  console.log(results);
-                  return cb(err, results);
+                function final(err, selectors) {
+                  var table = TableQuery.chain(self.options.table).map(selectors);
+                  self.tables = [table];
+                  self.ready = true;
+                  return cb(err, selectors);
                 });
             } catch (e) {
               console.error(e);
               return cb(e);
-            }
-
-            function getRow(table, selector) {
-              if (selector.where === 'header') {
-                return table.headers.col;
-              }
-              if (selector.where === 'row') {
-                var index = parseInt(selector.index, 10);
-                return _.map(table.rows, function (row) {
-                  return row[index];
-                });
-              }
-            }
-
-            function filterRow(row, selector) {
-              var skips = _.map(selector.skip.split(','), function (val) {
-                return parseInt(val, 10);
-              });
-
-              var res = new Array(row.length - skips.length);
-
-              var index = 0;
-              for (var i = 0; i < row.length; i++) {
-                if (skips.indexOf(i) !== -1) {
-                  continue;
-                }
-
-                res[index++] = row[i];
-              }
-
-              return row;
             }
           }
         }
@@ -382,11 +330,12 @@ module.exports = function (app) {
       };
 
       self.previewStep = function previewStep(step) {
-        if (step.name === StepTypes.import_file.name) {
+        if (step.name === StepTypes.import_file.name || step.name === StepTypes.recognize_dimensions.name) {
           self.previews = _.map(step.tables, function (table) {
             table.settings = createSettings(table.headers, self.pipe, step);
             return table;
           });
+          self.previews[0].active = true;
           return;
         }
         if (step.name === StepTypes.export_dimension.name) {
@@ -436,7 +385,6 @@ module.exports = function (app) {
             safeApply(_.noop);
           });
         }
-        console.log(this);
         return this;
       };
 

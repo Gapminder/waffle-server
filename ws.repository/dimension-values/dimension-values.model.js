@@ -27,6 +27,8 @@ var DimensionValues = new Schema({
 });
 
 DimensionValues.index({dimension: 1, value: 1});
-DimensionValues.index({value: 1, title: 1, synonyms: 1});
+DimensionValues.index({value: 1});
+DimensionValues.index({title: 1});
+DimensionValues.index({synonyms: 1});
 
 mongoose.model('DimensionValues', DimensionValues);
