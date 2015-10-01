@@ -16,7 +16,7 @@ module.exports = function (app) {
 // parse application/json
   app.use(favicon());
   app.use(logger('dev'));
-  app.use(bodyParser.json());
+  app.use(bodyParser.json({limit: '50MB'}));
 
   app.use(bodyParser.json({type: 'application/vnd.api+json'}));
   app.use(bodyParser.urlencoded({extended: true}));
