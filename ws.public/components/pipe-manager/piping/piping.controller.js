@@ -224,6 +224,7 @@ module.exports = function (app) {
         'recognize_dimensions': {
           name: 'recognize_dimensions',
           displayName: 'Recognize Dimensions',
+          normalized: true,
           defaults: {
             selectors: [
               {
@@ -233,7 +234,7 @@ module.exports = function (app) {
               {
                 where: 'row',
                 index: 0,
-                skip: '0'
+                skip: ''
               }
             ]
           },
@@ -262,7 +263,7 @@ module.exports = function (app) {
             }
           },
           action: function (cb) {
-            var recognizeRsource = $resource('/api/dimensions/recognize', {}, {
+            var recognizeResource = $resource('/api/dimensions/recognize', {}, {
               recognize: {method: 'POST', cache: true}
             });
             var TableQuery = require('./helpers/table-query');
@@ -277,7 +278,8 @@ module.exports = function (app) {
                     .select(selector)
                     .filter(selector)
                     .value();
-                  recognizeRsource.recognize({keys: keys}, function (res) {
+                  var ukeys = _.uniq(keys);
+                  recognizeResource.recognize({keys: ukeys}, function (res) {
                     return cb(res.error, _.merge(selector, res.data));
                   }, cb);
                 },
@@ -287,6 +289,29 @@ module.exports = function (app) {
                   self.ready = true;
                   return cb(err, selectors);
                 });
+            } catch (e) {
+              console.error(e);
+              return cb(e);
+            }
+          }
+        },
+        'convert_to_tidy_data': {
+          name: 'convert_to_tidy_data',
+          displayName: 'Convert to tidy data',
+          sfx: true,
+          tables: [],
+          options: {
+            table: {}
+          },
+          action: function (cb) {
+            try {
+              var TableQuery = require('./helpers/table-query');
+              var table = TableQuery
+                .chain(this.options.table)
+                .convertToTidyData();
+              this.tables = [table];
+              this.ready = true;
+              return cb(null, table);
             } catch (e) {
               console.error(e);
               return cb(e);
@@ -330,7 +355,7 @@ module.exports = function (app) {
       };
 
       self.previewStep = function previewStep(step) {
-        if (step.name === StepTypes.import_file.name || step.name === StepTypes.recognize_dimensions.name) {
+        if (step.name === StepTypes.import_file.name || step.name === StepTypes.recognize_dimensions.name || step.name === StepTypes.convert_to_tidy_data.name) {
           self.previews = _.map(step.tables, function (table) {
             table.settings = createSettings(table.headers, self.pipe, step);
             return table;
@@ -350,6 +375,8 @@ module.exports = function (app) {
           return;
         }
       };
+
+      self.isIndicatorCanNotBeExported = require('./helpers/table-query').isTableCanNotBeConvertedToTidyData;
 
       // extract to factory?
       function Step(type, opts) {
@@ -410,8 +437,13 @@ module.exports = function (app) {
         return this;
       };
 
-      Pipe.prototype.createRecognizeDimensions = function createRecognizeDimensions() {
-        this.addStep(new Step(StepTypes.recognize_dimensions.name));
+      Pipe.prototype.createRecognizeDimensions = function createRecognizeDimensions(opts) {
+        this.addStep(new Step(StepTypes.recognize_dimensions.name, opts));
+        return this;
+      };
+
+      Pipe.prototype.createConvertToTidyDataStep = function createConvertToTidyDataStep(opts) {
+        this.addStep(new Step(StepTypes.convert_to_tidy_data.name, opts));
         return this;
       };
 

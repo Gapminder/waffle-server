@@ -30,15 +30,24 @@ TableQuery.prototype.map = function map(dimensions) {
     })
   };
   _.each(dimensions, function (dimension) {
+    dimension.rowHashMap = {};
     if (dimension.where === 'header') {
-      table.headers.col = replaceByHashMap(table.headers.col, dimension);
+      var skips = parseSkip(dimension.skip) || [];
+      table.headers.col = _.map(table.headers.col, function (val, index) {
+        if (skips.indexOf(index) !== -1) {
+          return val;
+        }
+
+        dimension.rowHashMap[index] = dimension.hashMap[val];
+        return dimension.hashMap[val];
+      });
       return;
     }
     if (dimension.where === 'row') {
-      table.headers.col[dimension.index] = dimension.dimension.name;
+      table.headers.col[dimension.index] = dimension.dimension.title;
       var index = parseInt(dimension.index, 10);
-      _.each(table.rows, function (row) {
-        row[index] = dimension.hashMap[row[index]];
+      _.each(table.rows, function (row, offset) {
+        dimension.rowHashMap[offset] = row[index] = dimension.hashMap[row[index]];
       });
       return;
     }
@@ -46,15 +55,55 @@ TableQuery.prototype.map = function map(dimensions) {
   return table;
 };
 
-function replaceByHashMap(row, selector) {
-  var skips = parseSkip(selector.skip) || [];
-  return _.map(row, function (val, index) {
-    if (skips.indexOf(index) !== -1) {
-      return val;
+TableQuery.isTableCanNotBeConvertedToTidyData = function tableCanBeConvertedToTidyData(table) {
+  if (!table) {
+    return {error: 'Table please'};
+  }
+
+  if (!table.dimensions) {
+    return {error: 'You should recognize dimensions first'};
+  }
+
+  if (table.dimensions.length !== 2) {
+    return {error: 'Table have to contain 2 dimensions'};
+  }
+
+  // if both dimension are rows, it is already tidy
+  if (table.dimensions[0].where === 'row' && table.dimensions[1].where === 'row') {
+    return {error: 'Table already tidy'};
+  }
+
+  // if both dimension are rows, it is already tidy
+  if (table.dimensions[0].where === 'col' && table.dimensions[1].where === 'col') {
+    return {error: 'Two dimensions in one column header, really?'};
+  }
+
+  return false;
+};
+
+TableQuery.prototype.convertToTidyData = function convertToTidyData() {
+  if (TableQuery.isTableCanNotBeConvertedToTidyData(this.table)) {
+    return false;
+  }
+
+  var resLength = this.table.rows.length * (this.table.headers.col.length - 1);
+  var d1 = this.table.dimensions[1];
+  var d2 = this.table.dimensions[0];
+  var headers = [d1.dimension.title, d2.dimension.title, 'value'];
+  var res = new Array(resLength);
+  for (var r = 0; r < this.table.rows.length; r++) {
+    var row = this.table.rows[r];
+    for (var c = 1; c < this.table.headers.col.length; c++) {
+      res[(r + 1) * c - 1] = [d1.rowHashMap[r], d2.rowHashMap[c], row[c]];
     }
-    return selector.hashMap[val];
-  });
-}
+  }
+  return {
+    type: 'table',
+    name: 'tidy data',
+    rows: res,
+    headers: {col: headers}
+  };
+};
 
 TableQuery.prototype.value = function () {
   return this.row;
@@ -108,7 +157,7 @@ function filterRow(row, selector) {
     res[index++] = row[i];
   }
 
-  return row;
+  return res;
 }
 
 module.exports = TableQuery;

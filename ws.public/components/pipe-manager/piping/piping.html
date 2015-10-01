@@ -11,8 +11,8 @@
     <div class="col-lg-6">
       <button ng-click="ctrl.pipe.createImportStep()">Import +</button>
       <button ng-click="ctrl.pipe.createExportDimensionStep()">Export Dim</button>
-      <button ng-click="ctrl.pipe.createRecognizeDimensions()">Recognize Dim</button>
-      <button ng-click="ctrl.pipe.createExportIndicatorStep()">Export Ind</button>
+      <!--<button ng-click="ctrl.pipe.createRecognizeDimensions()">Recognize Dim</button>-->
+      <!--<button ng-click="ctrl.pipe.createExportIndicatorStep()">Export Ind</button>-->
       <div class="ibox no-margins" ng-if="ctrl.pipe.steps.length">
         <div class="ibox-content">
           <accordion close-others="false">
@@ -23,8 +23,7 @@
                        style="text-align: left; !important;">
                     <span>{{step.displayName}}</span>
                   </div>
-
-                  <div class="col-lg-2 btn btn-xs"
+                  <div class="col-lg-2 col-lg-offset-1 btn btn-xs"
                        ng-class="{
                    'alert-info': step.ready === null,
                    'alert-success': step.ready === true,
@@ -34,42 +33,45 @@
                     step.ready === false && 'Please wait' ||
                     'Do something!'}}
                   </div>
-
                   <div class="col-lg-1">
-                    <button class="btn btn-success btn-xs"
-                            ng-disabled="step.ready === null"
-                            ng-click="ctrl.previewStep(step)">
-                      Preview
-                    </button>
-                  </div>
-                  <div class="col-lg-1 btn btn-xs">
                     <i class="pull-right glyphicon"
                        ng-class="{'glyphicon-chevron-down': step.active, 'glyphicon-chevron-right': !step.active}"></i>
                   </div>
                 </div>
               </accordion-heading>
-              <div >
+              <div>
                 <!-- step: import file -->
                 <div ng-if="step.name === 'import_file'">
                   <div class="form-horizontal">
                     <div class="form-group">
-                        <label class="col-lg-2 control-label">Source</label>
-                        <div class="col-lg-8">
-                          <ui-select ng-model="step.options.file"
-                               on-select="ctrl.runStep(step)"
-                               reset-search-input="false">
-                      <ui-select-match placeholder="Select file">{{$select.selected.name}}</ui-select-match>
-                      <ui-select-choices repeat="file in ctrl.files track by $index"
-                                         refresh="ctrl.refresh(step.type, $select.search)"
-                                         refresh-delay="0">
-                        <div ng-bind-html="file.name | highlight: $select.search"></div>
-                      </ui-select-choices>
-                    </ui-select>
-                        </div>
-                        <div class="col-log-2">
-                          <button class="btn btn-success" ng-disabled="!step.ready" ng-click="ctrl.previewStep(step)">Preview</button>
-                        </div>
+                      <label class="col-lg-2 control-label">Source</label>
+
+                      <div class="col-lg-8">
+                        <ui-select ng-model="step.options.file"
+                                   on-select="ctrl.runStep(step)"
+                                   reset-search-input="false">
+                          <ui-select-match placeholder="Select file">{{$select.selected.name}}</ui-select-match>
+                          <ui-select-choices repeat="file in ctrl.files track by $index"
+                                             refresh="ctrl.refresh(step.type, $select.search)"
+                                             refresh-delay="0">
+                            <div ng-bind-html="file.name | highlight: $select.search"></div>
+                          </ui-select-choices>
+                        </ui-select>
                       </div>
+                      <div class="col-lg-2">
+                        <button class="btn btn-success" ng-disabled="!step.ready" ng-click="ctrl.previewStep(step)">
+                          Preview
+                        </button>
+                      </div>
+                    </div>
+                    <div class="form-group" ng-if="step.ready">
+                      <div class="col-lg-2 col-lg-offset-2">
+                        <button class="btn btn-success"
+                                ng-click="ctrl.pipe.createRecognizeDimensions({step: step, table: step.tables[0], file: step.file})">
+                          Recognize
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -87,6 +89,11 @@
                                 ng-options="step1.displayName for step1 in ctrl.pipe.steps | filter: {group: 'data-source', ready: true}"
                                 ng-model="step.options.step">
                         </select>
+                      </div>
+                      <div class="col-lg-2">
+                        <button class="btn btn-success" ng-disabled="!step.ready" ng-click="ctrl.previewStep(step)">
+                          Preview
+                        </button>
                       </div>
                     </div>
                     <!--data table-->
@@ -144,9 +151,6 @@
                     <div class="panel-heading row">
                       <div class="col-lg-10">
                         <h3>Dimension values fields mapping</h3>
-                      </div>
-                      <div class="col-lg-2">
-                        <button class="btn btn-success pull-right" ng-click="ctrl.previewStep(step)">Preview</button>
                       </div>
                     </div>
 
@@ -228,6 +232,11 @@
                                 ng-model="step.options.step">
                         </select>
                       </div>
+                      <div class="col-lg-2">
+                        <button class="btn btn-success pull-right" ng-disabled="!step.ready"
+                                ng-click="ctrl.previewStep(step)">Preview
+                        </button>
+                      </div>
                     </div>
                     <!--data table-->
                     <div class="form-group" ng-if="step.options.step">
@@ -259,6 +268,7 @@
                     <div class="form-group">
                       <!-- selector where -->
                       <label class="col-lg-2 control-label">From</label>
+
                       <div class="col-lg-1">
                         <select name="input"
                                 ng-options="name for name in ['header', 'row']"
@@ -268,12 +278,14 @@
 
                       <!-- selector row -->
                       <label class="col-lg-2 control-label" ng-if="selector.where === 'row'">From</label>
+
                       <div class="col-lg-1" ng-if="selector.where === 'row'">
                         <input name="number" class="form-control" ng-model="selector.index"/>
                       </div>
 
                       <!-- selector skip -->
                       <label class="col-lg-2 control-label">Skip</label>
+
                       <div class="col-lg-1">
                         <input type="text" class="form-control"
                                ng-model="selector.skip"
@@ -283,10 +295,44 @@
                   </div>
 
                   <!--start extracting-->
-                  <div>
-                    <button class="btn btn-primary pull-right"
-                            ng-click="ctrl.runStep(step)">{{::step.displayName}}
-                    </button>
+                  <div class="form-horizonatal">
+                    <div class="col-lg-3 col-lg-offset-2">
+                      <button class="btn btn-primary"
+                              ng-click="ctrl.runStep(step)">{{::step.displayName}}
+                      </button>
+                    </div>
+                    <div class="col-lg-3" ng-if="step.ready && !!ctrl.isIndicatorCanNotBeExported(step.tables[0])">
+                      <button class="btn btn-success" ng-disabled="!step.ready"
+                              ng-click="ctrl.pipe.createExportIndicatorStep()">Export Indicator
+                      </button>
+                    </div>
+                    <div class="col-lg-3" ng-if="step.ready && !ctrl.isIndicatorCanNotBeExported(step.tables[0])">
+                      <button class="btn btn-success" ng-disabled="!step.ready"
+                              ng-click="ctrl.pipe.createConvertToTidyDataStep({step: step, table: step.tables[0], file: step.file})">
+                        Conver to Tidy Data
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div  ng-if="step.name === 'convert_to_tidy_data'">
+                  <div class="form-horizontal">
+                    <!--select step-->
+                    <div class="form-group">
+                      <label class="col-lg-2 control-label">Source</label>
+
+                      <div class="col-lg-8">
+                        <select name="input"
+                                class="form-control m-b"
+                                ng-options="step1.displayName for step1 in ctrl.pipe.steps | filter: {normalized: true, ready: true}"
+                                ng-model="step.options.step">
+                        </select>
+                      </div>
+                      <div class="col-lg-2">
+                        <button class="btn btn-success pull-right" ng-disabled="!step.ready" ng-click="ctrl.previewStep(step)">Preview
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 

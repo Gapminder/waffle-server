@@ -50,14 +50,16 @@ module.exports = function (serviceLocator) {
               if (err) {
                 return next(err);
               }
-
+              var hashMap = buildHashMap(keys, dimensionValues);
+              var notRecognized = buildNotRecognized(keys, hashMap);
               // todo: add unknown list
               return res.json({
                 success: true, data: {
                   dimension: dimension,
-                  hashMap: buildHashMap(keys, dimensionValues),
+                  hashMap: hashMap,
                   dimensionsCount: dimensions.length,
-                  recognized: Math.round(dimensionValues.length / keys.length * 100)
+                  recognized: (dimensionValues.length / keys.length * 100).toFixed(2),
+                  notRecognized: notRecognized
                 }
               });
             });
@@ -94,4 +96,8 @@ function buildHashMap(keys, dimensionValues) {
       return res;
     }
   }, {});
+}
+
+function buildNotRecognized(keys, hashMap) {
+
 }
