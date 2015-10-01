@@ -224,6 +224,7 @@ module.exports = function (app) {
         'recognize_dimensions': {
           name: 'recognize_dimensions',
           displayName: 'Recognize Dimensions',
+          defaultDisplayName: 'Recognize Dimensions',
           normalized: true,
           defaults: {
             selectors: [
@@ -239,6 +240,8 @@ module.exports = function (app) {
             ]
           },
           options: {
+            // file
+            file: {},
             // step to take data from
             step: {},
             // table to take data from,
@@ -263,6 +266,8 @@ module.exports = function (app) {
             }
           },
           action: function (cb) {
+            var file = this.options.file;
+            this.displayName = this.defaultDisplayName + ' ' + file.name;
             var recognizeResource = $resource('/api/dimensions/recognize', {}, {
               recognize: {method: 'POST', cache: true}
             });

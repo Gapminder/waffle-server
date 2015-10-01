@@ -11,8 +11,6 @@
     <div class="col-lg-6">
       <button ng-click="ctrl.pipe.createImportStep()">Import +</button>
       <button ng-click="ctrl.pipe.createExportDimensionStep()">Export Dim</button>
-      <!--<button ng-click="ctrl.pipe.createRecognizeDimensions()">Recognize Dim</button>-->
-      <!--<button ng-click="ctrl.pipe.createExportIndicatorStep()">Export Ind</button>-->
       <div class="ibox no-margins" ng-if="ctrl.pipe.steps.length">
         <div class="ibox-content">
           <accordion close-others="false">
@@ -67,7 +65,7 @@
                     <div class="form-group" ng-if="step.ready">
                       <div class="col-lg-2 col-lg-offset-2">
                         <button class="btn btn-success"
-                                ng-click="ctrl.pipe.createRecognizeDimensions({step: step, table: step.tables[0], file: step.file})">
+                                ng-click="ctrl.pipe.createRecognizeDimensions({step: step, table: step.tables[0], file: step.options.file})">
                           Recognize
                         </button>
                       </div>
@@ -269,8 +267,9 @@
                       <!-- selector where -->
                       <label class="col-lg-2 control-label">From</label>
 
-                      <div class="col-lg-1">
+                      <div class="col-lg-2">
                         <select name="input"
+                                class="form-control m-b"
                                 ng-options="name for name in ['header', 'row']"
                                 ng-model="selector.where">
                         </select>
@@ -279,14 +278,14 @@
                       <!-- selector row -->
                       <label class="col-lg-2 control-label" ng-if="selector.where === 'row'">From</label>
 
-                      <div class="col-lg-1" ng-if="selector.where === 'row'">
+                      <div class="col-lg-2" ng-if="selector.where === 'row'">
                         <input name="number" class="form-control" ng-model="selector.index"/>
                       </div>
 
                       <!-- selector skip -->
                       <label class="col-lg-2 control-label">Skip</label>
 
-                      <div class="col-lg-1">
+                      <div class="col-lg-2">
                         <input type="text" class="form-control"
                                ng-model="selector.skip"
                                placeholder="Indexes to skip">
