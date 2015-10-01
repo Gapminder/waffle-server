@@ -231,7 +231,8 @@
                         </select>
                       </div>
                       <div class="col-lg-2">
-                        <button class="btn btn-success pull-right" ng-disabled="!step.ready"
+                        <button class="btn btn-success pull-right"
+                                ng-disabled="!step.ready"
                                 ng-click="ctrl.previewStep(step)">Preview
                         </button>
                       </div>
@@ -301,9 +302,9 @@
                       </button>
                     </div>
                     <div class="col-lg-3" ng-if="step.ready && !!ctrl.isIndicatorCanNotBeExported(step.tables[0])">
-                      <button class="btn btn-success" ng-disabled="!step.ready"
-                              ng-click="ctrl.pipe.createExportIndicatorStep()">Export Indicator
-                      </button>
+                      <button class="btn btn-success"
+                              ng-disabled="!step.ready"
+                              ng-click="ctrl.pipe.createExportIndicatorStep({step: step, table: step.tables[0], file: step.options.file})">Export Indicator</button>
                     </div>
                     <div class="col-lg-3" ng-if="step.ready && !ctrl.isIndicatorCanNotBeExported(step.tables[0])">
                       <button class="btn btn-success" ng-disabled="!step.ready"
@@ -314,6 +315,7 @@
                   </div>
                 </div>
 
+                <!-- step: convert to tidy data -->
                 <div  ng-if="step.name === 'convert_to_tidy_data'">
                   <div class="form-horizontal">
                     <!--select step-->
@@ -336,17 +338,154 @@
                 </div>
 
                 <!-- step: export indicator  -->
-                <div ng-if=" step.name === 'export_indicator'">
-                  <label>Source: </label>
-                  <select name="input"
-                          ng-options="step1.displayName for step1 in ctrl.pipe.steps | filter: {group: 'data-source', ready: true}"
-                          ng-model="step.options.step">
-                  </select>
-                  <label>Table</label>
-                  <select name="input"
-                          ng-options="table.name for table in step.options.step.tables"
-                          ng-model="step.options.table">
-                  </select>
+                <div ng-if="step.name === 'export_indicator'">
+                  <!--data source-->
+                  <div class="form-horizontal">
+                    <!--select step-->
+                    <div class="form-group">
+                      <label class="col-lg-2 control-label">Source</label>
+
+                      <div class="col-lg-8">
+                        <select name="input"
+                                class="form-control m-b"
+                                ng-options="step1.displayName for step1 in ctrl.pipe.steps | filter: {name: 'recognize_dimensions', ready: true}"
+                                ng-model="step.options.step">
+                        </select>
+                      </div>
+                      <div class="col-lg-2">
+                        <button class="btn btn-success" ng-disabled="!step.ready" ng-click="ctrl.previewStep(step)">
+                          Preview
+                        </button>
+                      </div>
+                    </div>
+                    <!--data table-->
+                    <div class="form-group" ng-if="step.options.step">
+                      <label class="col-lg-2 control-label">Table</label>
+
+                      <div class="col-lg-8">
+                        <select name="input"
+                                class="form-control m-b"
+                                ng-options="table.name for table in step.options.step.tables"
+                                ng-model="step.options.table">
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!--todo: add option to select existing indicators-->
+                  <!--Dimension values-->
+                  <div class="form-horizontal" ng-if="step.options.table">
+                    <!--heading-->
+                    <div class="panel-heading row">
+                      <div class="col-lg-8">
+                        <h3>Indicator properties</h3>
+                      </div>
+                    </div>
+
+                    <!--indicator name-->
+                    <div class="form-group">
+                      <label class="col-lg-2 control-label">Name</label>
+
+                      <div class="col-lg-8">
+                        <input type="text" class="form-control"
+                               ng-model="step.options.indicator.name"
+                               placeholder="Indicator name">
+                        <span class="help-block m-b-none">Should be single(not plural), lowercase,unique, required, only [a-z_]</span>
+                      </div>
+                    </div>
+
+                    <!--indicator title-->
+                    <div class="form-group">
+                      <label class="col-lg-2 control-label">Title</label>
+
+                      <div class="col-lg-8">
+                        <input type="text" class="form-control"
+                               ng-model="step.options.indicator.title"
+                               placeholder="Indicator title">
+                      </div>
+                    </div>
+
+                    <!--indicator units-->
+                    <div class="form-group">
+                      <label class="col-lg-2 control-label">Units</label>
+
+                      <div class="col-lg-8">
+                        <input type="text" class="form-control"
+                               ng-model="step.options.indicator.units.name"
+                               placeholder="Indicator units">
+                      </div>
+                    </div>
+
+                    <!--indicator dimensions: readonly-->
+                    <div class="form-group">
+                      <label class="col-lg-2 control-label">Dimensions</label>
+
+                      <div class="col-lg-8">
+                        <input type="text" class="form-control"
+                               ng-readonly="true"
+                               ng-disabled="true"
+                               ng-model="step.options.dimensions"
+                               placeholder="Indicator dimensions">
+                      </div>
+                    </div>
+                  </div>
+
+                  <!--Indicator values mapping-->
+                  <div class="form-horizontal" ng-if="step.options.indicator.name">
+                    <!--heading-->
+                    <div class="panel-heading row">
+                      <div class="col-lg-10">
+                        <h3>Indicator values fields mapping</h3>
+                      </div>
+                    </div>
+
+                    <!-- todo: add catalog selection -->
+                    <!--indicator values-->
+                    <div class="form-group">
+                      <label class="col-lg-2 control-label">Values from:</label>
+
+                      <div class="col-lg-8">
+                        <input type="text" class="form-control"
+                               ng-model="step.options.map.value"
+                               ng-change="step.ready = true"
+                               typeahead="name for name in step.options.table.headers.col | filter:$viewValue | limitTo:8"
+                               placeholder="Indicator values selector">
+                        <small>
+                          Sample values:
+                           <span ng-repeat="row in ::step.options.table.rows | limitTo: 5">
+                             {{ ::row[step.options.table.headers.col.indexOf(step.options.map.value)] }}
+                          </span>
+                          ...
+                        </small>
+                      </div>
+                    </div>
+
+                    <!--indicator value title-->
+                    <div class="form-group">
+                      <label class="col-lg-2 control-label">Titles from:</label>
+
+                      <div class="col-lg-8">
+                        <input type="text" class="form-control"
+                               ng-model="step.options.map.title"
+                               typeahead="name for name in step.options.table.headers.col | filter:$viewValue | limitTo:8"
+                               placeholder="Indicator value title selector">
+                        <small>
+                          Sample titles:
+                           <span ng-repeat="row in ::step.options.table.rows | limitTo: 5">
+                             {{ ::row[step.options.table.headers.col.indexOf(step.options.map.title)] }}
+                          </span>
+                          ...
+                        </small>
+                      </div>
+                    </div>
+
+                    <!--start extracting-->
+                    <div>
+                      <button class="btn btn-primary pull-right"
+                              ng-click="ctrl.runStep(step)">{{::step.displayName}}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </accordion-group>

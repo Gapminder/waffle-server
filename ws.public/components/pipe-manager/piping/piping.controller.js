@@ -202,7 +202,8 @@ module.exports = function (app) {
               }
 
               var dimension = res.data.dimension;
-              dimensionValuesResource.save({id: dimension._id}, self.toJSON(dimension), function (res) {
+              var query = {id: dimension._id};
+              dimensionValuesResource.save(query, self.toJSON(dimension), function (res) {
                 if (res.error) {
                   return cb(res.error);
                 }
@@ -217,8 +218,96 @@ module.exports = function (app) {
         'export_indicator': {
           name: 'export_indicator',
           displayName: 'Export Indicator',
+          options: {
+            // file
+            file: {},
+            // step to take data from
+            step: {},
+            // table to take data from,
+            table: {
+              headers: {
+                // required
+                col: []
+              }
+            },
+            indicator: {
+              name: '',
+              title: '',
+              // {_id, name}
+              dimensions: [],
+              // todo: add _id
+              units: {name: ''}
+            }
+          },
+          onInit: function (step) {
+            step.options.dimensions = _.pluck(step.options.step.dimensions, 'title');
+            step.options.selectors = step.options.step.selectors;
+          },
+          toTable: function toTable() {
+            try {
+              // by performance reasons this could looks ugly
+              // dimensions count + indicator
+              var colHeadersLength = this.options.dimensions.length + 1;
+              var colHeaders = this.options.dimensions
+                .concat([this.options.indicator.title || this.options.indicator.name]);
+
+              var index = 0;
+              var rowMap = new Array(colHeadersLength);
+              // dimensions
+              if (_.isArray(this.options.dimensions)) {
+                for (var j = 0; j < this.options.dimensions.length; j++, index++) {
+                  rowMap[index] = parseInt(this.options.selectors[j].index, 10);
+                }
+              }
+              // indicators
+              rowMap[index] = this.options.table.headers.col
+                .indexOf(this.options.map.value);
+
+              function mapRow(row) {
+                var res = new Array(colHeadersLength);
+                for (var i = 0; i < colHeadersLength; i++) {
+                  res[i] = row[rowMap[i]];
+                }
+                return res;
+              }
+
+              var rows = _.map(this.options.table.rows, mapRow);
+              /** @typeof Table*/
+              return {
+                name: this.options.indicator.name,
+                headers: {col: colHeaders},
+                rows: rows
+              };
+            } catch (e) {
+              return false;
+            }
+          },
           action: function (cb) {
-            cb();
+            var self = this;
+            // todo: get dimension by name
+            // todo: if dimension has id do not recreate, -> update
+            // todo: update: dimension values idempotently
+            var indicatorsResource = $resource('/api/indicators');
+            var indicatorsValuesResource = $resource('/api/indicators/:id/values');
+            var body = this.options.indicator;
+
+            return indicatorsResource.save({}, body, function (res) {
+              if (res.error) {
+                return cb(res.error);
+              }
+
+              var indicator = res.data.indicator;
+              var query = {id: indicator._id};
+              indicatorsValuesResource.save(query, self.toTable(indicator), function (res) {
+                if (res.error) {
+                  return cb(res.error);
+                }
+
+                indicatorsValuesResource.get(query, function (res) {
+                  console.log(res.data);
+                }, cb);
+              }, cb);
+            }, cb);
           }
         },
         'recognize_dimensions': {
@@ -289,6 +378,8 @@ module.exports = function (app) {
                   }, cb);
                 },
                 function final(err, selectors) {
+                  self.dimensions = _.pluck(selectors, 'dimension');
+                  self.selectors = selectors;
                   var table = TableQuery.chain(self.options.table).map(selectors);
                   self.tables = [table];
                   self.ready = true;
@@ -368,7 +459,7 @@ module.exports = function (app) {
           self.previews[0].active = true;
           return;
         }
-        if (step.name === StepTypes.export_dimension.name) {
+        if (step.name === StepTypes.export_dimension.name || step.name === StepTypes.export_indicator.name) {
           var t = step.toTable();
           if (!t) {
             step.ready = null;
@@ -394,6 +485,10 @@ module.exports = function (app) {
         this.options = _.defaults(opts || {}, this.defaults || {});
         this.ready = null;
         this.active = true;
+        if (this.onInit) {
+          this.onInit(this);
+        }
+        console.log(this);
       }
 
       Step.prototype.run = function run(cb) {
@@ -437,8 +532,8 @@ module.exports = function (app) {
         return this;
       };
 
-      Pipe.prototype.createExportIndicatorStep = function createExportIndicatorStep() {
-        this.addStep(new Step(StepTypes.export_indicator.name));
+      Pipe.prototype.createExportIndicatorStep = function createExportIndicatorStep(opts) {
+        this.addStep(new Step(StepTypes.export_indicator.name, opts));
         return this;
       };
 
