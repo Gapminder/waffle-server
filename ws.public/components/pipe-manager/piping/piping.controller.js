@@ -290,7 +290,9 @@ module.exports = function (app) {
             var indicatorsResource = $resource('/api/indicators');
             var indicatorsValuesResource = $resource('/api/indicators/:id/values');
             var body = this.options.indicator;
-
+            body.dimensions = _.map(self.options.selectors, function (selector) {
+              return selector.dimension._id;
+            });
             return indicatorsResource.save({}, body, function (res) {
               if (res.error) {
                 return cb(res.error);

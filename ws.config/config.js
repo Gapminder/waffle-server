@@ -9,7 +9,7 @@ module.exports = function (app) {
     HOST: process.env.HOST || 'http://localhost',
     MONGODB_URL: 'mongodb://localhost/waffleserver',
     DEFAULT_NODE_ENV: 'development',
-    NEO4J_URL: 'http://neo4j:neo4j@localhost:7474',
+    NEO4J_URL: process.env.NEO4J_URL || 'http://neo4j:neo4j@localhost:7474',
 
     // NODE_ENV: devtest, development, beta, production; if test - silent:true
     NODE_ENV: process.env.NODE_ENV,

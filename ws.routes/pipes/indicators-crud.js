@@ -118,6 +118,7 @@ module.exports = function (serviceLocator) {
         body: {
           $set: {
             name: name,
+            dimensions: body.dimensions,
             // title: body.title || name,
             meta: body.meta || {}
           }
