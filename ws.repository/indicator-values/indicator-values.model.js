@@ -33,6 +33,7 @@ var IndicatorValues = new Schema({
   title: String,
 
   indicator: {type: Schema.Types.ObjectId, ref: 'Indicators'},
+  indicatorName: String,
   analysisSessions: [{type: Schema.Types.ObjectId, ref: 'AnalysisSessions', index: true}]
 });
 

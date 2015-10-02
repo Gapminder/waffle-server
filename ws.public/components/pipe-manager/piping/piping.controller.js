@@ -297,9 +297,16 @@ module.exports = function (app) {
               }
 
               var indicator = res.data.indicator;
+              indicator.type = 'indicator';
+
               var query = {id: indicator._id};
               var table = self.toTable(indicator);
-              table.headers = _.pluck(self.options.selectors, 'dimension')
+              table.headers = _
+                .map(self.options.selectors, function (selector) {
+                  var dimension = selector.dimension;
+                  dimension.type = 'dimension';
+                  return dimension;
+                })
                 .concat(indicator);
               indicatorsValuesResource.save(query, table, function (res) {
                 if (res.error) {

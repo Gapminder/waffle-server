@@ -15,6 +15,8 @@ module.exports = function (serviceLocator) {
 
   var Indicators = mongoose.model('Indicators');
   var IndicatorValues = mongoose.model('IndicatorValues');
+  var Dimensions = mongoose.model('Dimensions');
+  var DimensionValues = mongoose.model('DimensionValues');
 
   // resolve indicator by id
   router.param('did', function (req, res, next, id) {
@@ -150,49 +152,133 @@ module.exports = function (serviceLocator) {
     // todo: convert to hash maps _.indexBy
     // todo: create tasks to create indicators values
     try {
-      var indicator = req.indicator;
-      var arr = _.isArray(req.body) ? req.body : [req.body];
-      var tasks = _.map(arr, function (indicatorValue) {
-        var task = {
-          query: {
-            indicator: indicator._id,
-            value: indicatorValue.value},
-          body: {
-            $set: {
-              indicator: indicator._id,
-              indicatorName: indicator.name,
-              value: indicatorValue.value
-              // title: indicatorValue.title
+      async.waterfall([
+        function initWaterfall(cb) {
+          var indicator = req.indicator;
+          var headers = req.body.headers;
+          var rows = req.body.rows;
+
+          var pipe = {
+            indicator: indicator,
+            headers: headers,
+            rows: rows
+          };
+          return cb(null, pipe);
+        },
+        // load dimensions
+        function loadDimensions(pipe, cb) {
+          var headers = pipe.headers;
+          pipe.dimensions = [];
+          return async.eachLimit(headers, 10,
+            function iterator(def, iterCb) {
+              if (def.type !== 'dimension') {
+                return iterCb();
+              }
+
+              Dimensions.findOne({_id: def._id}).lean(true).exec(function (err, dimension) {
+                if (err) {
+                  return iterCb(err);
+                }
+
+                var index = _.indexOf(headers, def);
+                pipe.dimensions[index] = dimension;
+                return iterCb(err);
+              });
             },
-            $addToSet: {synonyms: {$each: indicatorValue.synonyms}}
-          }
-        };
+            function done(err) {
+              return cb(err, pipe);
+            });
+        },
+        // build dimension values hash map
+        function buildDimensionValuesHashMaps(pipe, cb) {
+          var dimensions = pipe.dimensions;
+          pipe.dimensionValues = new Array(dimensions.length);
+          pipe.dimensionHashMaps = new Array(dimensions.length);
+          async.eachLimit(dimensions, 10, function (dimension, iterCb) {
+            DimensionValues
+              .find({dimension: dimension._id}, {dimension: 1, value: 1, title: 1, dimensionName: 1})
+              .lean(true)
+              .exec(function (err, dimensionValues) {
+                if (err) {
+                  return iterCb(err);
+                }
 
-        if (indicatorValue.title) {
-          task.body.$set.title = indicatorValue.title;
+                var index = _.indexOf(dimensions, dimension);
+                pipe.dimensionValues[index] = dimensionValues;
+                pipe.dimensionHashMaps[index] = _.indexBy(dimensionValues, 'value');
+                return iterCb(err);
+              });
+          }, function done(err) {
+            return cb(err, pipe);
+          });
+        },
+        // write values to mongo
+        function updateIndicatorValues(pipe, cb) {
+          var indicator = pipe.indicator;
+          var dimensions = pipe.dimensions;
+          var dimensionHashMaps = pipe.dimensionHashMaps;
+          var saved = 0;
+          var start = Date.now();
+          async.eachLimit(pipe.rows, 100,
+            function iterator(row, iterCb) {
+              var indicatorValue = row[row.length - 1];
+              if (!indicatorValue && indicatorValue !== 0) {
+                return iterCb();
+              }
+              var coordinates = _.map(dimensionHashMaps, function (dhm, index) {
+                var value = row[index];
+                return {
+                  value: value,
+                  dimensionName: dimensions[index].name,
+
+                  dimension: dimensions[index]._id,
+                  dimensionValue: dhm[value]._id
+                };
+              });
+              var queryCoordinates = _.map(coordinates, function (c) {
+                return {
+                  $elemMatch: {
+                    dimension: c.dimension,
+                    value: c.value
+                  }
+                };
+              });
+              var query = {
+                indicator: indicator._id,
+                coordinates: {$all: queryCoordinates}
+              };
+              var body = {
+                $set: {
+                  coordinates: coordinates,
+                  value: indicatorValue,
+                  // title?
+                  indicator: indicator._id,
+                  indicatorName: indicator.name
+                }
+              };
+              IndicatorValues
+                .update(query, body, {upsert: true})
+                .hint({indicator: 1, 'coordinates.dimension': 1, 'coordinates.value': 1})
+                .exec(function (err) {
+                  saved++;
+                  if (saved % 1000 === 0) {
+                    console.log(saved, Date.now() - start, 'ms');
+                    start = Date.now();
+                  }
+                  return iterCb(err);
+                });
+            },
+            function done(err) {
+              return cb(err, pipe);
+            }
+          );
         }
-
-        return task;
-      });
-      var options = {upsert: true};
-      var createdValues = 0;
-      var updatedValues = 0;
-      async.eachLimit(tasks, 50, function create(task, cb) {
-        return IndicatorValues.update(task.query, task.body, options, function (err, result) {
-          createdValues += result.n;
-          updatedValues += result.nModified;
-          return cb(err);
-        });
-      }, function (err, indicatorValues) {
+      ], function done(err, pipe) {
         if (err) {
-          return next(err);
+          return res.throw(err);
         }
-
-        return res.json({
-          success: true,
-          data: {indicatorValues: indicatorValues},
-          stats: {created: createdValues, updated: updatedValues}
-        });
+        // todo: give response
+        return res.json({success: true});
       });
     } catch (e) {
       return next(e);
