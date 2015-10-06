@@ -29,9 +29,14 @@ module.exports = function (serviceLocator) {
         return cb(null, {});
       },
       cleanGraph,
+      // unique
       exportIndicators,
       exportDimensions,
       exportDimensionValues,
+      // dependant
+      exportIndicatorDimensions,
+      exportIndicatorDimensionValues,
+      // stats
       exportIndicatorValues,
       createIndexes
     ], function (err) {
@@ -39,6 +44,7 @@ module.exports = function (serviceLocator) {
         throw err;
       }
       console.timeEnd('Mission complete!');
+      isExportInProgress = false;
       return res.json({success: true, msg: 'Upload complete'});
     });
   }
@@ -96,13 +102,160 @@ module.exports = function (serviceLocator) {
             res[indicator._id.toString()] = indicator;
             return res;
           }, {});
+          // todo: update mongodb
           return cb(err, pipe);
         });
       });
   }
 
-// export indicator dimensions and build hash
+// export dimensions
   function exportDimensions(pipe, cb) {
+    var modelName = 'Dimensions';
+    console.log(modelName + 'export started');
+    console.time(modelName + ' exported');
+    var Dimensions = mongoose.model(modelName);
+    Dimensions.find({}, {name: 1, title: 1})
+      .lean()
+      .exec(function (err, dimensions) {
+        console.log('Exporting %s ' + modelName, dimensions.length);
+        // build indicators hash set
+        // indicators from mongo
+        pipe.dimensions = _.indexBy(dimensions, function (dimension) {
+          return dimension._id.toString();
+        });
+
+        var batchQuery = [];
+        var nodeMetas = [];
+        _.each(dimensions, function (dimension) {
+          // create indicator dimension node
+          var dimensionIndex = batchQuery.length;
+          nodeMetas.push({
+            dimensionIndex: dimensionIndex,
+            dimension: dimension,
+            dimensionId: dimension._id.toString()
+          });
+
+          batchQuery.push({
+            method: 'POST',
+            to: '/node',
+            body: {name: dimension.name, title: dimension.title},
+            id: batchQuery.length
+          });
+
+          // set label to dimension
+          batchQuery.push({
+            method: 'POST',
+            to: '{' + dimensionIndex + '}/labels',
+            id: batchQuery.length,
+            body: 'u' + modelName
+          });
+        });
+
+        return neo4jdb.batchQuery(batchQuery, function (err, dimensionNodes) {
+          console.timeEnd(modelName + ' exported');
+          // build indicator->dimension hash set
+          pipe.uniqueDimensionArray = _.map(nodeMetas, function (nodeMeta) {
+            return _.merge({
+              nodeId: dimensionNodes[nodeMeta.dimensionIndex].body.metadata.id
+            }, nodeMeta.dimension);
+          });
+          pipe.uniqueDimensionHash = _.indexBy(pipe.uniqueDimensionArray, 'dimensionId');
+          return cb(err, pipe);
+        });
+      });
+  }
+
+  // export indicator dimension values and build hash
+  function exportDimensionValues(pipe, cb) {
+    var modelName = 'DimensionValues';
+    console.log(modelName + ' export started');
+    console.time(modelName + ' all exported');
+    console.time(modelName + ' exported');
+    // create dimensions values per indicator -> per dimensions
+    // todo: add distinct value check for each indicator values?
+    async.waterfall([
+      function (cb) {
+        return cb(null, pipe);
+      },
+      function buildDimensionValuesHash(pipe, cb) {
+        var DimensionValues = mongoose.model(modelName);
+        DimensionValues.find({}, {dimension: 1, value: 1, title: 1})
+          .lean()
+          .exec(function (err, dimensionValues) {
+            console.log('Exporting %s ' + modelName, dimensionValues.length);
+            // build indicators hash set
+            // indicators from mongo
+            pipe.dimensionValues = _.groupBy(dimensionValues, function (dv){
+              return dv.dimension.toString();
+            });
+            return cb(err, pipe);
+          });
+      },
+      function createNodes(pipe, cb) {
+        // per each neo4j dimension
+        async.eachLimit(pipe.uniqueDimensionArray, 10, function (dimension, cb) {
+          // get corresponding dimension values
+          var dimValues = pipe.dimensionValues[dimension._id.toString()];
+
+          var batchQuery = [];
+          var nodesMeta = [];
+          _.each(dimValues, function (dimValue) {
+            var newNodeIndex = batchQuery.length;
+            // create dimension value node
+            nodesMeta.push({
+              nodeIndex: newNodeIndex,
+              dimensionValueId: dimValue._id.toString()
+            });
+            batchQuery.push({
+              method: 'POST',
+              to: '/node',
+              body: {value: dimValue.value, title: dimValue.title},
+              id: batchQuery.length
+            });
+
+            // set label to dimension
+            batchQuery.push({
+              method: 'POST',
+              to: '{' + newNodeIndex + '}/labels',
+              id: batchQuery.length,
+              body: 'u' + modelName
+            });
+
+            // set relation [:with_dimension_value] from dimension o dimension value
+            batchQuery.push({
+              method: 'POST',
+              to: '/node/' + dimension.nodeId + '/relationships',
+              id: batchQuery.length,
+              body: {
+                to: '{' + newNodeIndex + '}',
+                type: 'with_dimension_value'
+              }
+            });
+          });
+
+          return neo4jdb.batchQuery(batchQuery, function (err, dimValNodes) {
+            console.timeEnd(modelName + ' exported');
+            // build indicators hash set
+            // indicators from mongo
+            var dimValueTree = _.reduce(nodesMeta, function (res, nodeMeta) {
+              res[nodeMeta.dimensionValueId] = dimValNodes[nodeMeta.nodeIndex].body.metadata.id;
+              return res;
+            }, {});
+
+            pipe.uniqDimValueTree = pipe.uniqDimValueTree || {};
+            pipe.uniqDimValueTree[dimension._id.toString()] = dimValueTree;
+            return cb(err, pipe);
+          });
+        }, cb);
+      }
+    ], function (err) {
+      console.timeEnd(modelName + ' all exported');
+      return cb(err, pipe);
+    });
+  }
+
+// export indicator dimensions and build hash
+  function exportIndicatorDimensions(pipe, cb) {
     var modelName = 'Dimensions';
     console.log(modelName + 'export started');
     console.time(modelName + ' exported');
@@ -168,21 +321,13 @@ module.exports = function (serviceLocator) {
               indicatorId: nodeMeta.indicatorId
             }, nodeMeta.dimension);
           });
-          //pipe.indicatorDimensions = _.reduce(nodeMetas, function (res, nodeMeta) {
-          //  // get dimension node id from response
-          //  nodeMeta.dimension.nodeId = dimensionNodes[nodeMeta.dimensionIndex].body.metadata.id;
-          //  // set default value for indicator id
-          //  res[nodeMeta.indicatorId] = res[nodeMeta.indicatorId] || {};
-          //  res[nodeMeta.indicatorId][nodeMeta.dimensionId] = nodeMeta.dimension;
-          //  return res;
-          //}, {});
           return cb(err, pipe);
         });
       });
   }
 
 // export indicator dimension values and build hash
-  function exportDimensionValues(pipe, cb) {
+  function exportIndicatorDimensionValues(pipe, cb) {
     var modelName = 'DimensionValues';
     console.log(modelName + ' export started');
     console.time(modelName + ' all exported');
@@ -195,7 +340,7 @@ module.exports = function (serviceLocator) {
       },
       function buildDimensionValuesHash(pipe, cb) {
         var DimensionValues = mongoose.model(modelName);
-        DimensionValues.find({}, {dimension: 1, value: 1})
+        DimensionValues.find({}, {dimension: 1, value: 1, title: 1})
           .lean()
           .exec(function (err, dimensionValues) {
             console.log('Exporting %s ' + modelName, dimensionValues.length);
@@ -346,6 +491,18 @@ module.exports = function (serviceLocator) {
                   body: {
                     to: '{' + newNodeIndex + '}',
                     type: 'with_indicator_value'
+                  }
+                });
+
+                var dimNodeId = pipe.uniqDimValueTree[coordinate.dimension.toString()][coordinate.dimensionValue.toString()];
+
+                batchQuery.push({
+                  method: 'POST',
+                  to: '{' + newNodeIndex + '}' + '/relationships',
+                  id: batchQuery.length,
+                  body: {
+                    to: '/node/' + dimNodeId,
+                    type: 'with_dimension_value'
                   }
                 });
               });

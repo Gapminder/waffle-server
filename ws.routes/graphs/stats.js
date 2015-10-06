@@ -13,15 +13,14 @@ module.exports = function (serviceLocator) {
 
   var query =
     "MATCH (i1:Indicators)-[:with_dimension]->(:Dimensions{name: 'year'})-[:with_dimension_value]->(dv1:DimensionValues)-[:with_indicator_value]->(iv1:IndicatorValues), \
-      (:Dimensions)-[:with_dimension_value]->(dv2:DimensionValues)-[:with_indicator_value]->(iv1:IndicatorValues) \
+      (:Dimensions{name: 'country'})-[:with_dimension_value]->(dv2:DimensionValues)-[:with_indicator_value]->(iv1:IndicatorValues) \
     WHERE i1.name in ['pop', 'u5mr', 'gdp_per_cap', 'gini'] \
-    RETURN collect(i1.name) as indicator,dv1.value as year, dv2.value as country, collect(iv1.value) as value \
-    order by year, country";
+    RETURN collect(i1.name) as indicator,dv1.value as year, dv2.value as country, collect(iv1.value) as value";
 
   /*eslint new-cap:0*/
   var router = express.Router();
 
-  router.get('/api/graphs/stats/vizabi-tools', compression(), cache.route({expire: 300}), vizabiTools);
+  router.get('/api/graphs/stats/vizabi-tools', compression(),  cache.route({expire: 300}),vizabiTools);
 
   return app.use(router);
 
