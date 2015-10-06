@@ -46,6 +46,7 @@ var wConfig = {
     alias: {
       'angular-google-maps': 'angular-google-maps/dist/angular-google-maps.min.js',
       ngHandsontable: 'assets/ngHandsontable/dist/ngHandsontable.min.js',
+      'angular-ui-select': 'assets/angular-ui-select/dist/select.min.js',
       'ng-infinite-scroll': 'ng-infinite-scroll/build/ng-infinite-scroll.js'/*,
       datamaps: 'datamaps/dist/datamaps.all.js'*/
     }

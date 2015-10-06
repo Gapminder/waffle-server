@@ -12,15 +12,11 @@ var Schema = mongoose.Schema;
  * @param {String} v - value
  */
 var DimensionSchema = new Schema({
-  // todo: rename
-  dv: {type: Schema.Types.ObjectId, ref: 'DimensionValues'},
-  d: {type: Schema.Types.ObjectId, ref: 'Dimensions'},
-  v: String,
-  // todo: to
-  dimension: {type: Schema.Types.ObjectId, ref: 'Dimensions'},
-  dimensionValue: {type: Schema.Types.ObjectId, ref: 'DimensionValues'},
+  value: String,
   dimensionName: String,
-  value: String
+
+  dimension: {type: Schema.Types.ObjectId, ref: 'Dimensions'},
+  dimensionValue: {type: Schema.Types.ObjectId, ref: 'DimensionValues'}
 }, {_id: false});
 
 /**
@@ -32,15 +28,16 @@ var DimensionSchema = new Schema({
  * @property {Array<Models.AnalysisSessions>} analysisSessions - when this indicator was created and modified
  */
 var IndicatorValues = new Schema({
-  ds: [DimensionSchema],
-  v: String,
+  coordinates: [DimensionSchema],
+  value: String,
+  title: String,
 
-  coordinates: {type: Schema.Types.ObjectId, ref: 'Coordinates'},
   indicator: {type: Schema.Types.ObjectId, ref: 'Indicators'},
-
+  indicatorName: String,
   analysisSessions: [{type: Schema.Types.ObjectId, ref: 'AnalysisSessions', index: true}]
 });
 
-IndicatorValues.index({'ds.d': 1, 'ds.v': 1, v: 1, coordinates: 1, indicator: 1});
+IndicatorValues.index({indicator: 1, value: 1});
+IndicatorValues.index({indicator: 1, 'coordinates.dimension': 1, 'coordinates.value': 1});
 
 mongoose.model('IndicatorValues', IndicatorValues);

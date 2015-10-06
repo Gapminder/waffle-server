@@ -19,20 +19,27 @@
         </div>
       </li>
       <li ng-class="{active: $state.includes('files')}">
-        <a ui-sref="admin.files"><i class="fa fa-files-o"></i> <span class="nav-label">Files</span> <span
+        <a ui-sref="admin.file-list"><i class="fa fa-files-o"></i> <span class="nav-label">Files</span> <span
           class="fa arrow"></span></a>
         <ul class="nav nav-second-level" ng-class="{in: $state.includes('files')}">
           <li ui-sref-active="active"><a ui-sref="admin.file-upload">Upload</a></li>
           <li ui-sref-active="active"><a ui-sref="admin.file-list">Management</a></li>
         </ul>
       </li>
+      <li ng-class="{active: $state.includes('piping')}">
+        <a ui-sref="admin.piping"><i class="fa fa-files-o"></i> <span class="nav-label">Pipes</span> <span
+          class="fa arrow"></span></a>
+        <ul class="nav nav-second-level" ng-class="{in: $state.includes('files')}">
+          <li ui-sref-active="active"><a ui-sref="admin.piping">Piping</a></li>
+        </ul>
+      </li>
       <li ng-class="{active: $state.includes('home')}">
-        <a ui-sref="admin.landing"><i class="fa fa-files-o"></i> <span class="nav-label">{{ 'Home' }}</span> <span
+        <a ui-sref="admin.landing"><i class="fa fa-files-o"></i> <span class="nav-label">Home</span> <span
           class="fa arrow"></span></a>
         <ul class="nav nav-second-level" ng-class="{in: $state.includes('home')}">
-          <li ui-sref-active="active"><a ui-sref="admin.home.publishers.list">{{ 'Publishers' }}</a></li>
-          <li ui-sref-active="active"><a ui-sref="admin.home.publisherCatalogs.list">{{ 'Publisher Catalogs' }}</a></li>
-          <li ui-sref-active="active"><a ui-sref="admin.home.publisherCatalogVersions.list">{{ 'Publisher Catalog Versions' }}</a></li>
+          <li ui-sref-active="active"><a ui-sref="admin.home.publishers.list">Publishers</a></li>
+          <li ui-sref-active="active"><a ui-sref="admin.home.publisherCatalogs.list">Publisher Catalogs</a></li>
+          <li ui-sref-active="active"><a ui-sref="admin.home.publisherCatalogVersions.list">Publisher Catalog Versions</a></li>
         </ul>
       </li>
       <li ng-class="{active: $state.includes('collections')}">

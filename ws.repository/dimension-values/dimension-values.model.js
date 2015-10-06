@@ -16,7 +16,8 @@ var Schema = mongoose.Schema;
 var DimensionValues = new Schema({
   dimension: {type: Schema.Types.ObjectId, ref: 'Dimensions'},
   value: String,
-
+  title: String,
+  synonyms: [String],
   // todo: denormilized data
   dimensionName: String,
   dataSources: [{type: Schema.Types.ObjectId, ref: 'DataSources'}],
@@ -26,5 +27,8 @@ var DimensionValues = new Schema({
 });
 
 DimensionValues.index({dimension: 1, value: 1});
+DimensionValues.index({value: 1});
+DimensionValues.index({title: 1});
+DimensionValues.index({synonyms: 1});
 
 mongoose.model('DimensionValues', DimensionValues);

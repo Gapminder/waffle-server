@@ -16,4 +16,6 @@ module.exports = function (serviceLocator) {
   require('./users')(serviceLocator);
 
   require('./file-management')(serviceLocator);
+  require('./pipes')(serviceLocator);
+  require('./graphs')(serviceLocator);
 };

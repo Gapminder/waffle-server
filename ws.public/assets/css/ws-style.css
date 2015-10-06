@@ -17,3 +17,7 @@
   cursor: inherit;
   display: block;
 }
+
+.zebra .htCore > tbody > tr:nth-child(odd) > td {
+  background-color: #f9f9f9;
+}

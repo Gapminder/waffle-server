@@ -1,0 +1,513 @@
+<div class="row wrapper border-bottom white-bg page-heading">
+  <div class="col-lg-10">
+    <admin-breadcrumb></admin-breadcrumb>
+  </div>
+  <div class="col-lg-2">
+
+  </div>
+</div>
+<div class="page-wrapper wrapper-content animated fadeInRight">
+  <div class="row">
+    <div class="col-lg-6">
+      <button ng-click="ctrl.pipe.createImportStep()">Import +</button>
+      <button ng-click="ctrl.pipe.createExportDimensionStep()">Export Dim</button>
+      <div class="ibox no-margins" ng-if="ctrl.pipe.steps.length">
+        <div class="ibox-content">
+          <accordion close-others="false">
+            <accordion-group ng-repeat="step in ctrl.pipe.steps track by $index" is-open="step.active">
+              <accordion-heading>
+                <div class="row">
+                  <div class="col-lg-8 btn btn-xs"
+                       style="text-align: left; !important;">
+                    <span>{{step.displayName}}</span>
+                  </div>
+                  <div class="col-lg-2 col-lg-offset-1 btn btn-xs"
+                       ng-class="{
+                   'alert-info': step.ready === null,
+                   'alert-success': step.ready === true,
+                   'alert-danger': step.ready === false
+                   }"
+                  >{{step.ready === true && 'Status: ready' ||
+                    step.ready === false && 'Please wait' ||
+                    'Do something!'}}
+                  </div>
+                  <div class="col-lg-1">
+                    <i class="pull-right glyphicon"
+                       ng-class="{'glyphicon-chevron-down': step.active, 'glyphicon-chevron-right': !step.active}"></i>
+                  </div>
+                </div>
+              </accordion-heading>
+              <div>
+                <!-- step: import file -->
+                <div ng-if="step.name === 'import_file'">
+                  <div class="form-horizontal">
+                    <div class="form-group">
+                      <label class="col-lg-2 control-label">Source</label>
+
+                      <div class="col-lg-8">
+                        <ui-select ng-model="step.options.file"
+                                   on-select="ctrl.runStep(step)"
+                                   reset-search-input="false">
+                          <ui-select-match placeholder="Select file">{{$select.selected.name}}</ui-select-match>
+                          <ui-select-choices repeat="file in ctrl.files track by $index"
+                                             refresh="ctrl.refresh(step.type, $select.search)"
+                                             refresh-delay="0">
+                            <div ng-bind-html="file.name | highlight: $select.search"></div>
+                          </ui-select-choices>
+                        </ui-select>
+                      </div>
+                      <div class="col-lg-2">
+                        <button class="btn btn-success" ng-disabled="!step.ready" ng-click="ctrl.previewStep(step)">
+                          Preview
+                        </button>
+                      </div>
+                    </div>
+                    <div class="form-group" ng-if="step.ready">
+                      <div class="col-lg-2 col-lg-offset-2">
+                        <button class="btn btn-success"
+                                ng-click="ctrl.pipe.createRecognizeDimensions({step: step, table: step.tables[0], file: step.options.file})">
+                          Recognize
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- step: export dimension -->
+                <div ng-if="step.name === 'export_dimension'">
+                  <!--data source-->
+                  <div class="form-horizontal">
+                    <!--select step-->
+                    <div class="form-group">
+                      <label class="col-lg-2 control-label">Source</label>
+
+                      <div class="col-lg-8">
+                        <select name="input"
+                                class="form-control m-b"
+                                ng-options="step1.displayName for step1 in ctrl.pipe.steps | filter: {group: 'data-source', ready: true}"
+                                ng-model="step.options.step">
+                        </select>
+                      </div>
+                      <div class="col-lg-2">
+                        <button class="btn btn-success" ng-disabled="!step.ready" ng-click="ctrl.previewStep(step)">
+                          Preview
+                        </button>
+                      </div>
+                    </div>
+                    <!--data table-->
+                    <div class="form-group" ng-if="step.options.step">
+                      <label class="col-lg-2 control-label">Table</label>
+
+                      <div class="col-lg-8">
+                        <select name="input"
+                                class="form-control m-b"
+                                ng-options="table.name for table in step.options.step.tables"
+                                ng-model="step.options.table">
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!--todo: split dimension and dimension values-->
+                  <!--todo: add option to select existing dimension-->
+                  <!--Dimension values-->
+                  <div class="form-horizontal" ng-if="step.options.table">
+                    <!--heading-->
+                    <div class="panel-heading row">
+                      <div class="col-lg-8">
+                        <h3>Dimension properties</h3>
+                      </div>
+                    </div>
+
+                    <!--dimension name-->
+                    <div class="form-group">
+                      <label class="col-lg-2 control-label">Name</label>
+
+                      <div class="col-lg-8">
+                        <input type="text" class="form-control"
+                               ng-model="step.options.dimension.name"
+                               placeholder="Dimension name">
+                        <span class="help-block m-b-none">Should be single(not plural), lowercase,unique, required, only [a-z_]</span>
+                      </div>
+                    </div>
+
+                    <!--dimension title-->
+                    <div class="form-group">
+                      <label class="col-lg-2 control-label">Title</label>
+
+                      <div class="col-lg-8">
+                        <input type="text" class="form-control"
+                               ng-model="step.options.dimension.title"
+                               placeholder="Dimension title">
+                      </div>
+                    </div>
+                  </div>
+
+                  <!--Dimension values mapping-->
+                  <div class="form-horizontal" ng-if="step.options.dimension.name">
+                    <!--heading-->
+                    <div class="panel-heading row">
+                      <div class="col-lg-10">
+                        <h3>Dimension values fields mapping</h3>
+                      </div>
+                    </div>
+
+                    <!-- todo: add catalog selection -->
+                    <!--dimension values-->
+                    <div class="form-group">
+                      <label class="col-lg-2 control-label">Values from:</label>
+
+                      <div class="col-lg-8">
+                        <input type="text" class="form-control"
+                               ng-model="step.options.map.value"
+                               typeahead="name for name in step.options.table.headers.col | filter:$viewValue | limitTo:8"
+                               placeholder="Dimension values selector">
+                        <small>
+                          Sample values:
+                           <span ng-repeat="row in ::step.options.table.rows | limitTo: 5">
+                             {{ ::row[step.options.table.headers.col.indexOf(step.options.map.value)] }}
+                          </span>
+                          ...
+                        </small>
+                      </div>
+                    </div>
+
+                    <!--dimension value title-->
+                    <div class="form-group">
+                      <label class="col-lg-2 control-label">Titles from:</label>
+
+                      <div class="col-lg-8">
+                        <input type="text" class="form-control"
+                               ng-model="step.options.map.title"
+                               typeahead="name for name in step.options.table.headers.col | filter:$viewValue | limitTo:8"
+                               placeholder="Dimension value title selector">
+                        <small>
+                          Sample titles:
+                           <span ng-repeat="row in ::step.options.table.rows | limitTo: 5">
+                             {{ ::row[step.options.table.headers.col.indexOf(step.options.map.title)] }}
+                          </span>
+                          ...
+                        </small>
+                      </div>
+                    </div>
+
+                    <!-- dimension synonyms -->
+                    <div class="form-group">
+                      <label class="col-lg-2 control-label">Synonyms from:</label>
+
+                      <div class="col-lg-8">
+                        <ui-select multiple ng-model="step.options.map.synonyms">
+                          <ui-select-match placeholder="Select field...">{{$item}}</ui-select-match>
+                          <ui-select-choices
+                            repeat="field in step.options.table.headers.col | filter:$select.search">
+                            <div ng-bind-html="field | highlight: $select.search"></div>
+                          </ui-select-choices>
+                        </ui-select>
+                      </div>
+                    </div>
+
+                    <!--start extracting-->
+                    <div>
+                      <button class="btn btn-primary pull-right"
+                              ng-click="ctrl.runStep(step)">{{::step.displayName}}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- step: recognize dimensions -->
+                <div ng-if="step.name === 'recognize_dimensions'">
+                  <!--data source-->
+                  <div class="form-horizontal">
+                    <!--select step-->
+                    <div class="form-group">
+                      <label class="col-lg-2 control-label">Source</label>
+
+                      <div class="col-lg-8">
+                        <select name="input"
+                                class="form-control m-b"
+                                ng-options="step1.displayName for step1 in ctrl.pipe.steps | filter: {group: 'data-source', ready: true}"
+                                ng-model="step.options.step">
+                        </select>
+                      </div>
+                      <div class="col-lg-2">
+                        <button class="btn btn-success pull-right"
+                                ng-disabled="!step.ready"
+                                ng-click="ctrl.previewStep(step)">Preview
+                        </button>
+                      </div>
+                    </div>
+                    <!--data table-->
+                    <div class="form-group" ng-if="step.options.step">
+                      <label class="col-lg-2 control-label">Table</label>
+
+                      <div class="col-lg-8">
+                        <select name="input"
+                                class="form-control m-b"
+                                ng-options="table.name for table in step.options.step.tables"
+                                ng-model="step.options.table">
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!--Selectors heading-->
+                  <div class="form-horizontal" ng-if="step.options.table">
+                    <div class="panel-heading row">
+                      <div class="col-lg-8 col-of">
+                        <h3>Selectors:</h3>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!--Selectors-->
+                  <div class="form-horizontal" ng-if="step.options.table"
+                       ng-repeat="selector in step.options.selectors track by $index">
+                    <!--dimension name-->
+                    <div class="form-group">
+                      <!-- selector where -->
+                      <label class="col-lg-2 control-label">From</label>
+
+                      <div class="col-lg-2">
+                        <select name="input"
+                                class="form-control m-b"
+                                ng-options="name for name in ['header', 'row']"
+                                ng-model="selector.where">
+                        </select>
+                      </div>
+
+                      <!-- selector row -->
+                      <label class="col-lg-2 control-label" ng-if="selector.where === 'row'">From</label>
+
+                      <div class="col-lg-2" ng-if="selector.where === 'row'">
+                        <input name="number" class="form-control" ng-model="selector.index"/>
+                      </div>
+
+                      <!-- selector skip -->
+                      <label class="col-lg-2 control-label">Skip</label>
+
+                      <div class="col-lg-2">
+                        <input type="text" class="form-control"
+                               ng-model="selector.skip"
+                               placeholder="Indexes to skip">
+                      </div>
+                    </div>
+                  </div>
+
+                  <!--start extracting-->
+                  <div class="form-horizonatal">
+                    <div class="col-lg-3 col-lg-offset-2">
+                      <button class="btn btn-primary"
+                              ng-click="ctrl.runStep(step)">{{::step.displayName}}
+                      </button>
+                    </div>
+                    <div class="col-lg-3" ng-if="step.ready && !!ctrl.isIndicatorCanNotBeExported(step.tables[0])">
+                      <button class="btn btn-success"
+                              ng-disabled="!step.ready"
+                              ng-click="ctrl.pipe.createExportIndicatorStep({step: step, table: step.tables[0], file: step.options.file})">Export Indicator</button>
+                    </div>
+                    <div class="col-lg-3" ng-if="step.ready && !ctrl.isIndicatorCanNotBeExported(step.tables[0])">
+                      <button class="btn btn-success" ng-disabled="!step.ready"
+                              ng-click="ctrl.pipe.createConvertToTidyDataStep({step: step, table: step.tables[0], file: step.file})">
+                        Conver to Tidy Data
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- step: convert to tidy data -->
+                <div  ng-if="step.name === 'convert_to_tidy_data'">
+                  <div class="form-horizontal">
+                    <!--select step-->
+                    <div class="form-group">
+                      <label class="col-lg-2 control-label">Source</label>
+
+                      <div class="col-lg-8">
+                        <select name="input"
+                                class="form-control m-b"
+                                ng-options="step1.displayName for step1 in ctrl.pipe.steps | filter: {normalized: true, ready: true}"
+                                ng-model="step.options.step">
+                        </select>
+                      </div>
+                      <div class="col-lg-2">
+                        <button class="btn btn-success pull-right" ng-disabled="!step.ready" ng-click="ctrl.previewStep(step)">Preview
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- step: export indicator  -->
+                <div ng-if="step.name === 'export_indicator'">
+                  <!--data source-->
+                  <div class="form-horizontal">
+                    <!--select step-->
+                    <div class="form-group">
+                      <label class="col-lg-2 control-label">Source</label>
+
+                      <div class="col-lg-8">
+                        <select name="input"
+                                class="form-control m-b"
+                                ng-options="step1.displayName for step1 in ctrl.pipe.steps | filter: {name: 'recognize_dimensions', ready: true}"
+                                ng-model="step.options.step">
+                        </select>
+                      </div>
+                      <div class="col-lg-2">
+                        <button class="btn btn-success" ng-disabled="!step.ready" ng-click="ctrl.previewStep(step)">
+                          Preview
+                        </button>
+                      </div>
+                    </div>
+                    <!--data table-->
+                    <div class="form-group" ng-if="step.options.step">
+                      <label class="col-lg-2 control-label">Table</label>
+
+                      <div class="col-lg-8">
+                        <select name="input"
+                                class="form-control m-b"
+                                ng-options="table.name for table in step.options.step.tables"
+                                ng-model="step.options.table">
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!--todo: add option to select existing indicators-->
+                  <!--Dimension values-->
+                  <div class="form-horizontal" ng-if="step.options.table">
+                    <!--heading-->
+                    <div class="panel-heading row">
+                      <div class="col-lg-8">
+                        <h3>Indicator properties</h3>
+                      </div>
+                    </div>
+
+                    <!--indicator name-->
+                    <div class="form-group">
+                      <label class="col-lg-2 control-label">Name</label>
+
+                      <div class="col-lg-8">
+                        <input type="text" class="form-control"
+                               ng-model="step.options.indicator.name"
+                               placeholder="Indicator name">
+                        <span class="help-block m-b-none">Should be single(not plural), lowercase,unique, required, only [a-z_]</span>
+                      </div>
+                    </div>
+
+                    <!--indicator title-->
+                    <div class="form-group">
+                      <label class="col-lg-2 control-label">Title</label>
+
+                      <div class="col-lg-8">
+                        <input type="text" class="form-control"
+                               ng-model="step.options.indicator.title"
+                               placeholder="Indicator title">
+                      </div>
+                    </div>
+
+                    <!--indicator units-->
+                    <div class="form-group">
+                      <label class="col-lg-2 control-label">Units</label>
+
+                      <div class="col-lg-8">
+                        <input type="text" class="form-control"
+                               ng-model="step.options.indicator.units.name"
+                               placeholder="Indicator units">
+                      </div>
+                    </div>
+
+                    <!--indicator dimensions: readonly-->
+                    <div class="form-group">
+                      <label class="col-lg-2 control-label">Dimensions</label>
+
+                      <div class="col-lg-8">
+                        <input type="text" class="form-control"
+                               ng-readonly="true"
+                               ng-disabled="true"
+                               ng-model="step.options.dimensions"
+                               placeholder="Indicator dimensions">
+                      </div>
+                    </div>
+                  </div>
+
+                  <!--Indicator values mapping-->
+                  <div class="form-horizontal" ng-if="step.options.indicator.name">
+                    <!--heading-->
+                    <div class="panel-heading row">
+                      <div class="col-lg-10">
+                        <h3>Indicator values fields mapping</h3>
+                      </div>
+                    </div>
+
+                    <!-- todo: add catalog selection -->
+                    <!--indicator values-->
+                    <div class="form-group">
+                      <label class="col-lg-2 control-label">Values from:</label>
+
+                      <div class="col-lg-8">
+                        <input type="text" class="form-control"
+                               ng-model="step.options.map.value"
+                               ng-change="step.ready = true"
+                               typeahead="name for name in step.options.table.headers.col | filter:$viewValue | limitTo:8"
+                               placeholder="Indicator values selector">
+                        <small>
+                          Sample values:
+                           <span ng-repeat="row in ::step.options.table.rows | limitTo: 5">
+                             {{ ::row[step.options.table.headers.col.indexOf(step.options.map.value)] }}
+                          </span>
+                          ...
+                        </small>
+                      </div>
+                    </div>
+
+                    <!--indicator value title-->
+                    <div class="form-group">
+                      <label class="col-lg-2 control-label">Titles from:</label>
+
+                      <div class="col-lg-8">
+                        <input type="text" class="form-control"
+                               ng-model="step.options.map.title"
+                               typeahead="name for name in step.options.table.headers.col | filter:$viewValue | limitTo:8"
+                               placeholder="Indicator value title selector">
+                        <small>
+                          Sample titles:
+                           <span ng-repeat="row in ::step.options.table.rows | limitTo: 5">
+                             {{ ::row[step.options.table.headers.col.indexOf(step.options.map.title)] }}
+                          </span>
+                          ...
+                        </small>
+                      </div>
+                    </div>
+
+                    <!--start extracting-->
+                    <div>
+                      <button class="btn btn-primary pull-right"
+                              ng-click="ctrl.runStep(step)">{{::step.displayName}}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </accordion-group>
+          </accordion>
+        </div>
+      </div>
+    </div>
+
+    <!--preview-->
+    <div class="col-lg-6">
+      <p ng-if="ctrl.previews">Previews:</p>
+
+      <div ng-if="ctrl.previews">
+        <tabset>
+          <tab ng-repeat="table in ctrl.previews" heading="{{ ::table.name }}" active="table.active">
+          </tab>
+        </tabset>
+        <div ng-repeat="table in ctrl.previews" ng-if="table.active">
+          <hot-table settings="table.settings" datarows="table.rows"
+                     class="zebra hot handsontable htRowHeaders htColumnHeaders"></hot-table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
