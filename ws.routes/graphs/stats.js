@@ -50,6 +50,8 @@ module.exports = function (serviceLocator) {
       console.time('format');
       if (err) {
         console.error(err);
+        res.use_express_redis_cache = false;
+        return res.json({success: false, error: err});
       }
       var rows = _.map(resp.data, function (row) {
         var resRow = new Array(headers.length);
