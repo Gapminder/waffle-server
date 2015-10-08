@@ -29,7 +29,7 @@ module.exports = function (app) {
   config.social = {
     GOOGLE_CLIENT_ID: '267502081172-qcabnkcj1ns254hnu45gf67d0t5675e3.apps.googleusercontent.com',
     GOOGLE_CLIENT_SECRET: '-qvIG6hoI8a7IpsX1-7-uojr',
-    GOOGLE_CALLBACK_URL: config.HOST + ':' + config.PORT + '/api/auth/google/callback',
+    GOOGLE_CALLBACK_URL: (config.HOST_URL ? config.HOST_URL : config.HOST + ':' + config.PORT) + '/api/auth/google/callback',
     GOOGLE_SCOPE: [
       'https://www.googleapis.com/auth/userinfo.profile',
       'https://www.googleapis.com/auth/userinfo.email']
