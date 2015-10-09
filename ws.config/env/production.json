@@ -1,0 +1,11 @@
+{
+  "HOST_NAME": "waffle.com",
+  "PORT": 5000,
+  "LOG_LEVEL": "warn",
+  "DEFAULT_NODE_ENV": "production",
+  "NODE_ENV": "beta",
+  "SESSION_SECRET": "r02sbk9sodcb0r9l4d589b6aoqo11ub9",
+  "SESSION_TIMEOUT": 60000,
+
+  "MONGODB_URL": "mongodb://@localhost:27017/waffle"
+}

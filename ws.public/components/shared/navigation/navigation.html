@@ -1,0 +1,52 @@
+<nav class="navbar-default navbar-static-side" role="navigation">
+  <div class="sidebar-collapse">
+    <ul side-navigation class="nav metismenu" id="side-menu">
+      <li class="nav-header">
+
+        <div class="profile-element text-center">
+          <img alt="image" class="img-circle" ng-src="{{::user.image}}"/>
+          <a class="" href>
+            <span class="clear">
+              <span class="block m-t-xs">
+                <strong class="font-bold">{{::user.name || user.username}}</strong>
+              </span>
+            </span>
+          </a>
+        </div>
+
+        <div class="logo-element">
+          {{ tagline }}
+        </div>
+      </li>
+      <li ng-class="{active: $state.includes('files')}">
+        <a ui-sref="admin.file-list"><i class="fa fa-files-o"></i> <span class="nav-label">Files</span> <span
+          class="fa arrow"></span></a>
+        <ul class="nav nav-second-level" ng-class="{in: $state.includes('files')}">
+          <li ui-sref-active="active"><a ui-sref="admin.file-upload">Upload</a></li>
+          <li ui-sref-active="active"><a ui-sref="admin.file-list">Management</a></li>
+        </ul>
+      </li>
+      <li ng-class="{active: $state.includes('piping')}">
+        <a ui-sref="admin.piping"><i class="fa fa-files-o"></i> <span class="nav-label">Pipes</span> <span
+          class="fa arrow"></span></a>
+        <ul class="nav nav-second-level" ng-class="{in: $state.includes('files')}">
+          <li ui-sref-active="active"><a ui-sref="admin.piping">Piping</a></li>
+        </ul>
+      </li>
+      <li ng-class="{active: $state.includes('home')}">
+        <a ui-sref="admin.landing"><i class="fa fa-files-o"></i> <span class="nav-label">Home</span> <span
+          class="fa arrow"></span></a>
+        <ul class="nav nav-second-level" ng-class="{in: $state.includes('home')}">
+          <li ui-sref-active="active"><a ui-sref="admin.home.publishers.list">Publishers</a></li>
+          <li ui-sref-active="active"><a ui-sref="admin.home.publisherCatalogs.list">Publisher Catalogs</a></li>
+          <li ui-sref-active="active"><a ui-sref="admin.home.publisherCatalogVersions.list">Publisher Catalog Versions</a></li>
+        </ul>
+      </li>
+      <li ng-class="{active: $state.includes('collections')}">
+        <a ui-sref="admin.playground"><i class="fa fa-files-o"></i> <span class="nav-label">{{ 'Cyper Editor' }}</span> <span
+          class="fa arrow"></span></a>
+      </li>
+    </ul>
+
+  </div>
+</nav>
