@@ -39,7 +39,7 @@ module.exports = function (serviceLocator) {
         reqWhere += ' and dv1.value="' + time + '"';
       } else {
         time = JSON.parse(req.query.time);
-        reqWhere += [' and dv1.value>"', time.from, '" and dv1.value<"', time.to, '"'].join('');
+        reqWhere += [' and dv1.value>="', time.from, '" and dv1.value<="', time.to, '"'].join('');
       }
     }
     var reqQuery = [match, reqWhere, returner].join(' ');
