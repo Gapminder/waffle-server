@@ -57,7 +57,7 @@ module.exports = function (serviceLocator) {
         var resRow = new Array(headers.length);
         // [indicators], year, country, [values]
         resRow[0] = parseInt(row[1], 10); // time
-        resRow[1] = row[2]; // geo
+        resRow[1] = (row[2] || '').toLowerCase(); // geo
         resRow[2] = row[3]; // geo.name
         resRow[3] = 'country'; // geo.cat
         resRow[4] = regions[row[2]]; // geo.region
