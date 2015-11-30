@@ -4,7 +4,7 @@ import {
   CORE_DIRECTIVES, NgClass, FORM_DIRECTIVES
 } from 'angular2/angular2';
 import {HTTP_PROVIDERS, Http, Headers} from 'angular2/http';
-import {Location, RouteConfig, RouterLink, Router, ROUTER_DIRECTIVES} from 'angular2/router'
+import {RouteConfig, RouterLink, Router, ROUTER_DIRECTIVES} from 'angular2/router'
 
 import {DATA_LOCATION_URL} from '../config';
 
@@ -13,11 +13,10 @@ import {DATA_LOCATION_URL} from '../config';
   providers: [HTTP_PROVIDERS]
 })
 @View({
-  directives: [NgClass, NgIf, CORE_DIRECTIVES, FORM_DIRECTIVES, ROUTER_DIRECTIVES],
+  directives: [RouterLink, NgClass, NgIf, CORE_DIRECTIVES, FORM_DIRECTIVES, ROUTER_DIRECTIVES],
   template: `
 <div>
   <div class="centered">
-    <h1>Waffle Server</h1>
     <p>
       <a class="btn btn-primary" role="button" (click)="routeLogout()">Logout</a>
     </p>

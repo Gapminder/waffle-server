@@ -24,8 +24,8 @@ module.exports = {
     app: [
       // App
       /*
-      // * include any 3rd party js lib here
-      */
+       // * include any 3rd party js lib here
+       */
       './src/index'
     ]
   },
@@ -62,13 +62,13 @@ module.exports = {
   module: {
     loaders: [
       // Support for *.json files.
-      { test: /\.json$/,  loader: 'json' },
+      {test: /\.json$/, loader: 'json'},
 
       // Support for CSS as raw text
-      { test: /\.css$/,   loader: 'raw' },
+      {test: /\.css$/, loader: 'raw'},
 
       // support for .html as raw text
-      { test: /\.html$/,  loader: 'raw' },
+      {test: /\.html$/, loader: 'raw'},
 
       // Support for .ts files.
       {
@@ -88,7 +88,7 @@ module.exports = {
             // TS2309 -> An export assignment cannot be used in a module with other exported elements.
             2309
           ]
-        },
+        }
       }
     ],
     noParse: [
@@ -129,7 +129,7 @@ module.exports = {
   cache: true,
 
   context: __dirname,
-  stats: { colors: true, reasons: true }
+  stats: {colors: true, reasons: true}
 };
 
 function getBanner() {
