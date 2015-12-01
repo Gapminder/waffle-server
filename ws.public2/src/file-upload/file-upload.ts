@@ -4,7 +4,7 @@ import {Router, RouterLink, RouteParams} from 'angular2/router';
 import {HTTP_PROVIDERS, Http, Headers} from 'angular2/http';
 import {FileSelect, FileDrop, FileUploader} from 'ng2-file-upload';
 
-import {DATA_LOCATION_URL, SERVER_URL} from '../config';
+import {UPLOAD_URL, SERVER_URL} from '../config';
 
 @Component({
   selector: 'file-upload',
@@ -121,7 +121,7 @@ import {DATA_LOCATION_URL, SERVER_URL} from '../config';
 `
 })
 export class FileUpload {
-  private uploader:FileUploader = new FileUploader({url: DATA_LOCATION_URL});
+  private uploader:FileUploader = new FileUploader({url: UPLOAD_URL});
   private hasDropZoneOver:boolean = false;
 
   constructor(private fb:FormBuilder, rp:RouteParams, public router:Router, public http:Http) {
