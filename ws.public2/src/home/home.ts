@@ -17,11 +17,8 @@ import {DATA_LOCATION_URL} from '../config';
   template: `
 <div>
   <div class="centered">
-    <p>
-      <a class="btn btn-primary" role="button" (click)="routeLogout()">Logout</a>
-    </p>
+      <a class="btn btn-primary pull-right" role="button" (click)="routeLogout()">Logout</a>
   </div>
-
 </div>
 `
 })
@@ -39,7 +36,9 @@ export class Home implements OnInit {
 
   routeLogout() {
     localStorage.removeItem('jwt');
-    this.router.navigateByUrl('/login');
+    // this.router.navigateByUrl('/login');
+    window.location.href = '/login' ;
+
   }
 
   getData() {

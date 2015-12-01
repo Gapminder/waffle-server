@@ -1,4 +1,7 @@
 module.exports = function (serviceLocator) {
+  var app = serviceLocator.getApplication();
+  require('../../gapminder-modular/auth0-server/index')(app);
+
   require('./api/collections')(serviceLocator);
   require('./api/cyper')(serviceLocator);
   require('./api/dimensions')(serviceLocator);
