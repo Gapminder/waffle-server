@@ -67,7 +67,6 @@
     "stream-transform": "^0.1.0",
     "validator": "^3.41.2",
     "winston": "^1.0.1",
-    "multer": "^0.1.6",
     "xlsx": "alisonatwork/js-xlsx",
     "ya-csv": "*"
   },
