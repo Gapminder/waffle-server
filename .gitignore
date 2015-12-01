@@ -7,7 +7,6 @@ tmp
 logs
 *.log
 run
-uploads
 
 
 # Coverage directory used by tools like istanbul

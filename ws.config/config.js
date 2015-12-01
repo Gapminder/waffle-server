@@ -5,7 +5,7 @@ module.exports = function (app) {
   }
 
   var config = {
-    PORT: process.env.PORT || 5000,
+    PORT: process.env.PORT || 3000,
     HOST: process.env.HOST || 'http://localhost',
     HOST_URL: process.env.HOST_URL,
     MONGODB_URL: 'mongodb://localhost/waffleserver',

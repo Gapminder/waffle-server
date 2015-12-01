@@ -23,7 +23,6 @@
     "bootstrap": "3.3.5",
     "jwt-decode": "1.4.0",
     "ng2-bootstrap": "^0.44.6",
-    "ng2-file-upload": "0.44.0",
     "ng2-table": "git@github.com:valor-software/ng2-table.git",
     "raw-loader": "0.5.1",
     "reflect-metadata": "0.1.2",
