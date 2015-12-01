@@ -1,19 +1,21 @@
 <div id="wrapper">
-
   <!-- Navigation -->
-  <nav class="navbar-default navbar-static-side" role="navigation">
+
+  <nav class="navbar-default navbar-static-side" role="navigation" *ng-if="jwt" >
     <div class="sidebar-collapse">
       <ul side-navigation class="nav metismenu" id="side-menu">
         <li class="nav-header">
 
           <div class="profile-element text-center">
-            <img alt="image" class="img-circle" ng-src="::user.image"/>
+            <img alt="image" style="max-width: 70px;" class="img-circle" [src]="decodedJwt.picture"/>
             <a class="" href>
-            <span class="clear">
-              <span class="block m-t-xs">
-                <strong class="font-bold">User</strong>
+              <span class="clear">
+                <span class="block m-t-xs">
+                  <strong class="font-bold">
+                    {{decodedJwt.name ? decodedJwt.name : decodedJwt.email}}
+                  </strong>
+                </span>
               </span>
-            </span>
             </a>
           </div>
 
