@@ -16,7 +16,6 @@ var s3 = new AWS.S3({region: 'eu-west-1', params: {Bucket: 'digital-world'}});
 
 var awsS3Service = new AwsS3Service();
 
-var ensureAuthenticated = require('../utils').ensureAuthenticated;
 // put to config
 // bucket name
 // region
@@ -30,6 +29,9 @@ var corsOptions = {
 
 module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
+  var config = app.get('config');
+  var authLib = app.get('authLib');
+  var ensureAuthenticated = config.BUILD_TYPE === 'angular2' ? authLib.getAuthMiddleware : require('../utils').ensureAuthenticated;
 
   app.use(function (req, res, next) {
     res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
