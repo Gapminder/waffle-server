@@ -3,11 +3,13 @@ var passport = require('passport');
 var mongoose = require('mongoose');
 
 var loginPage = '/login';
-var ensureAuthenticated = require('./utils').ensureAuthenticated;
 module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
   var logger = app.get('log');
   var config = app.get('config');
+  var authLib = app.get('authLib');
+  var ensureAuthenticated = config.BUILD_TYPE === 'angular2' ? authLib.getAuthMiddleware : require('../utils').ensureAuthenticated;
+
   var Users = mongoose.model('Users');
 
   // google stategy
