@@ -25,6 +25,9 @@ var corsOptions = {
 
 module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
+  var config = app.get('config');
+  var authLib = app.get('authLib');
+  var ensureAuthenticated = config.BUILD_TYPE === 'angular2' ? authLib.getAuthMiddleware : require('../utils').ensureAuthenticated;
 
   var config = app.get('config');
   var authLib = app.get('authLib');
