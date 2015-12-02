@@ -7,6 +7,8 @@ var multiparty = require('connect-multiparty')();
 var mongoose = require('mongoose');
 var Files = mongoose.model('Files');
 
+var authUserSyncMiddleware = require('./sync-user');
+
 var s3 = new AWS.S3({region: 'eu-west-1', params: {Bucket: 'digital-world'}});
 
 // put to config
@@ -30,9 +32,8 @@ module.exports = function (serviceLocator) {
   var logger = app.get('log');
   app.options('/api/files/uploads', cors(corsOptions));
 
-  // todo: return it after ng2-file-upload modification ensureAuthenticated
-  app.post('/api/files/uploads', cors(corsOptions), multiparty, function (req, res) {
-    uploadPostProcessing(req.files.file, req.user);
+  app.post('/api/files/uploads', cors(corsOptions), ensureAuthenticated, multiparty, authUserSyncMiddleware, function (req, res) {
+    uploadPostProcessing(req.files.file, req.user._id);
     return res.json({answer: 'completed'});
   });
 

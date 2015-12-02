@@ -46,7 +46,7 @@ import {UPLOAD_URL, SERVER_URL} from '../config';
             <input type="file" ng2-file-select [uploader]="uploader" /><br/>
         </div>
 
-        <div class="col-md-9" style="margin-bottom: 40px">
+        <div class="col-md-10" style="margin-bottom: 40px">
 
             <p>Queue length: {{ uploader.queue.length }}</p>
 
@@ -121,10 +121,11 @@ import {UPLOAD_URL, SERVER_URL} from '../config';
 `
 })
 export class FileUpload {
-  private uploader:FileUploader = new FileUploader({url: UPLOAD_URL});
+  private uploader:FileUploader;
   private hasDropZoneOver:boolean = false;
 
   constructor(private fb:FormBuilder, rp:RouteParams, public router:Router, public http:Http) {
+    this.uploader = new FileUploader({url: UPLOAD_URL, authToken: 'bearer ' + localStorage.getItem('jwt')});
   }
 
   private fileOver(e:any) {
