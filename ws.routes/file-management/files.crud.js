@@ -3,6 +3,7 @@ var cors = require('cors');
 var async = require('async');
 var mongoose = require('mongoose');
 var AWS = require('aws-sdk');
+var authUserSyncMiddleware = require('./sync-user');
 
 var corsOptions = {
   origin: true,
@@ -28,7 +29,7 @@ module.exports = function (serviceLocator) {
 
   app.options('/api/files', cors(corsOptions));
 
-  app.get('/api/files', cors(corsOptions), ensureAuthenticated, function (req, res) {
+  app.get('/api/files', cors(corsOptions), ensureAuthenticated, authUserSyncMiddleware, function (req, res) {
     var user = req.user;
     var limit = req.query.limit || 10;
     var skip = req.query.skip || 0;
@@ -56,7 +57,7 @@ module.exports = function (serviceLocator) {
     });
   });
 
-  app.delete('/api/files', cors(corsOptions), ensureAuthenticated, function (req, res) {
+  app.delete('/api/files', cors(corsOptions), ensureAuthenticated, authUserSyncMiddleware, function (req, res) {
     var file = JSON.parse(req.query.file);
 
     s3.deleteObject({

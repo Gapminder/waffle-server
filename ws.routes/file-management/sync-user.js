@@ -5,12 +5,16 @@ var Users = mongoose.model('Users');
 
 module.exports = function authUserSyncMiddleware(req, res, next) {
   if (!req.user || !req.user._id) {
-    res.status(401).send('User is not found!');
+    return res.status(401).send('User is not found!');
   }
 
   Users.find({'social.googleId': req.user._id}, function (err, users) {
     if (err) {
-      res.status(500).send(err);
+      return res.status(500).send(err);
+    }
+
+    if (users.length > 1) {
+      return res.status(401).send('Too many users!');
     }
 
     if (users.length <= 0) {
@@ -19,23 +23,24 @@ module.exports = function authUserSyncMiddleware(req, res, next) {
         email: req.user.email,
         // todo: resolve it when it will be needed
         password: '123',
-        username: req.user.nickname,
+        username: req.user.nickname || req.user.name || req.user.email,
         image: req.user.picture,
         social: {
           googleId: req.user._id
         }
       });
 
-      return user.save(function (err, user) {
-        if (err) {
-          res.status(500).send(err);
+      return user.save(function (_err, _user) {
+        if (_err) {
+          return res.status(500).send(_err);
         }
 
-        req.user._id = user._id.toString();
-        next();
+        req.user._id = _user._id;
+        return next();
       });
     }
 
-    next();
+    req.user._id = users[0]._id;
+    return next();
   });
 };
