@@ -15,31 +15,27 @@ import {DATA_LOCATION_URL} from '../config';
 @View({
   directives: [RouterLink, NgClass, NgIf, CORE_DIRECTIVES, FORM_DIRECTIVES, ROUTER_DIRECTIVES],
   template: `
-<div>
-  <div class="centered">
-      <a class="btn btn-primary pull-right" role="button" (click)="routeLogout()">Logout</a>
+  <div>
+   Home page
   </div>
-</div>
-`
-})
-export class Home implements OnInit {
-  private jwt:string;
-  private decodedJwt:string;
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="wrapper wrapper-content">
+        <div class="middle-box text-center animated fadeInRightBig">
+          <h3 class="font-bold">Welcome to Waffle Server</h3>
+          <div class="error-desc">
+            You can update here any collection document you want. And try other actions:
+            get, delete, create.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+`})
+export class Home{
 
   constructor(public router:Router, public http:Http) {
-    this.jwt = localStorage.getItem('jwt');
-    this.decodedJwt = this.jwt && window.jwt_decode(this.jwt);
   }
 
-  onInit() {
-  }
-
-  routeLogout() {
-    localStorage.removeItem('jwt');
-    window.location.href = '/login' ;
-
-  }
-
-  getData() {
-  }
 }

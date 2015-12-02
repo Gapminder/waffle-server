@@ -15,7 +15,12 @@ let template = require('./app.html');
 })
 @View({
   template: template,
-  directives: [LoggedInRouterOutlet, NgIf]
+  directives: [LoggedInRouterOutlet, NgIf],
+  styles: [`
+    .color-grey {color: #999;}
+    .color-grey:hover {color: #333;}
+    .avatar {max-width: 70px;}
+  `]
 })
 @RouteConfig([
   {path: '/', redirectTo: '/home'},
@@ -32,6 +37,12 @@ export class App {
 
     this.jwt = localStorage.getItem('jwt');
     this.decodedJwt = this.jwt && window.jwt_decode(this.jwt);
+
+  }
+
+  routeLogout() {
+    localStorage.removeItem('jwt');
+    window.location.href = '/login';
 
   }
 }

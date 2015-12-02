@@ -1,10 +1,11 @@
-<div class="login jumbotron center-block">
+<div class="middle-box text-center loginscreen  animated fadeInDown">
   <h1>Login</h1>
+
   <form role="form" (submit)="login($event, email.value)">
-  <div class="form-group">
-    <label for="email">Email (...@gmail)</label>
-    <input type="text" #email class="form-control" id="email" placeholder="Email">
-  </div>
-  <button type="submit" class="btn btn-default">Submit</button>
-</form>
+    <div class="form-group">
+      <label for="email">Email (...@gmail)</label>
+      <input type="text" #email class="form-control" id="email" placeholder="Email">
+    </div>
+    <button type="submit" class="btn btn-primary block full-width m-b">Login</button>
+  </form>
 </div>
