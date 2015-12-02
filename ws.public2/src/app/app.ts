@@ -21,13 +21,12 @@ let template = require('./app.html');
   {path: '/', redirectTo: '/home'},
   {path: '/home', as: 'Home', component: Home},
   {path: '/login', as: 'Login', component: Login},
-  {path: '/file-upload', as: 'FileUpload', component: FileUpload},
+  {path: '/file-upload', as: 'FileUpload', component: File`Upload},
   {path: '/file-management', as: 'FileManagement', component: FileManagement}
 ])
 export class App {
   public jwt:string;
-  public aaa:boolean = true;
-  private decodedJwt:string;
+  private decodedJwt:any;
 
   constructor(public router:Router) {
 

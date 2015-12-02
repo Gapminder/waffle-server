@@ -35,7 +35,6 @@ export class Login {
       .subscribe(
         (response:any) => {
           localStorage.setItem('jwt', response.id_token);
-          // this.router.navigateByUrl('/home');
           window.location.href = '/home' ;
         },
         (error) => {

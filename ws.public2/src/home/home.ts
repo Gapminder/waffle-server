@@ -36,7 +36,6 @@ export class Home implements OnInit {
 
   routeLogout() {
     localStorage.removeItem('jwt');
-    // this.router.navigateByUrl('/login');
     window.location.href = '/login' ;
 
   }

@@ -7,9 +7,6 @@ var multiparty = require('connect-multiparty')();
 var mongoose = require('mongoose');
 var Files = mongoose.model('Files');
 
-var s3 = new AWS.S3({region: 'eu-west-1', params: {Bucket: 'digital-world'}});
-
-var awsS3Service = new AwsS3Service();
 
 // put to config
 // bucket name
