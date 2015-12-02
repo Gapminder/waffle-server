@@ -2,10 +2,13 @@ var _ = require('lodash');
 var async = require('async');
 var mongoose = require('mongoose');
 
-var ensureAuthenticated = require('../utils').ensureAuthenticated;
 
 module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
+  var config = app.get('config');
+  var authLib = app.get('authLib');
+  var ensureAuthenticated = config.BUILD_TYPE === 'angular2' ? authLib.getAuthMiddleware : require('../utils').ensureAuthenticated;
+
   var Files = mongoose.model('Files');
   app.get('/api/files', ensureAuthenticated, function (req, res) {
     var user = req.user;

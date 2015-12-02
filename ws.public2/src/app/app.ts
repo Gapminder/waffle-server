@@ -1,4 +1,4 @@
-import {View, Component} from 'angular2/angular2';
+import {Component, View, NgIf} from 'angular2/angular2';
 import {Location, RouteConfig, RouterLink, Router} from 'angular2/router';
 
 import {LoggedInRouterOutlet} from './LoggedInOutlet';
@@ -15,16 +15,26 @@ let template = require('./app.html');
 })
 @View({
   template: template,
-  directives: [ LoggedInRouterOutlet ]
+  directives: [LoggedInRouterOutlet, NgIf]
 })
 @RouteConfig([
-  { path: '/',       redirectTo: '/home' },
-  { path: '/home',   as: 'Home',   component: Home },
-  { path: '/login',  as: 'Login',  component: Login },
-  { path: '/file-upload',   as: 'FileUpload',   component: FileUpload},
-  { path: '/file-management',   as: 'FileManagement',   component: FileManagement}
+  {path: '/', redirectTo: '/home'},
+  {path: '/home', as: 'Home', component: Home},
+  {path: '/login', as: 'Login', component: Login},
+  {path: '/file-upload', as: 'FileUpload', component: File`Upload},
+  {path: '/file-management', as: 'FileManagement', component: FileManagement}
 ])
 export class App {
-  constructor(public router: Router) {
+  public jwt:string;
+  private decodedJwt:any;
+
+  constructor(public router:Router) {
+
+    this.jwt = localStorage.getItem('jwt');
+    this.decodedJwt = this.jwt && window.jwt_decode(this.jwt);
+
   }
+
+
+
 }

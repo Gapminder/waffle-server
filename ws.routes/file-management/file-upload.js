@@ -7,9 +7,7 @@ var multiparty = require('connect-multiparty')();
 var mongoose = require('mongoose');
 var Files = mongoose.model('Files');
 
-var s3 = new AWS.S3({region: 'eu-west-1', params: {Bucket: 'digital-world'}});
 
-var ensureAuthenticated = require('../utils').ensureAuthenticated;
 // put to config
 // bucket name
 // region
@@ -24,6 +22,10 @@ var corsOptions = {
 
 module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
+  var config = app.get('config');
+  var authLib = app.get('authLib');
+  var ensureAuthenticated = config.BUILD_TYPE === 'angular2' ? authLib.getAuthMiddleware : require('../utils').ensureAuthenticated;
+
   var logger = app.get('log');
   app.options('/api/files/uploads', cors(corsOptions));
 
