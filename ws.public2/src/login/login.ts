@@ -4,7 +4,6 @@ import {HTTP_PROVIDERS, Http, Headers} from 'angular2/http';
 
 import {USER_LOGIN_URL} from '../config';
 
-let styles   = require('./login.css');
 let template = require('./login.html');
 
 @Component({
@@ -14,7 +13,9 @@ let template = require('./login.html');
 @View({
   directives: [RouterLink],
   template: template,
-  styles: [ styles ]
+  styles: [`
+    .loginscreen h1 {font-size: 30px;}
+  `]
 })
 export class Login {
   constructor(public router: Router, public http: Http) {
