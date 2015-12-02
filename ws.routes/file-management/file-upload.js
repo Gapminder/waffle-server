@@ -7,6 +7,7 @@ var multiparty = require('connect-multiparty')();
 var mongoose = require('mongoose');
 var Files = mongoose.model('Files');
 
+var s3 = new AWS.S3({region: 'eu-west-1', params: {Bucket: 'digital-world'}});
 
 // put to config
 // bucket name
@@ -24,12 +25,12 @@ module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
   var config = app.get('config');
   var authLib = app.get('authLib');
-  var ensureAuthenticated = config.BUILD_TYPE === 'angular2' ? authLib.getAuthMiddleware : require('../utils').ensureAuthenticated;
+  var ensureAuthenticated = config.BUILD_TYPE === 'angular2' ? authLib.getAuthMiddleware() : require('../utils').ensureAuthenticated;
 
   var logger = app.get('log');
   app.options('/api/files/uploads', cors(corsOptions));
 
-  // todo: return it: ensureAuthenticated
+  // todo: return it after ng2-file-upload modification ensureAuthenticated
   app.post('/api/files/uploads', cors(corsOptions), multiparty, function (req, res) {
     uploadPostProcessing(req.files.file, req.user);
     return res.json({answer: 'completed'});
@@ -40,7 +41,7 @@ module.exports = function (serviceLocator) {
     var fileType = file.type || file.mimetype;
 
     process.nextTick(function postProcessing() {
-      var fileExt = (file.name.match(/\.[^\.]*$/) || [''])[0];
+      var fileExt = (fileName.match(/\.[^\.]*$/) || [''])[0];
       var key = uuid.v4() + fileExt;
       var prefix = 'original/';
       s3.upload({
@@ -53,7 +54,7 @@ module.exports = function (serviceLocator) {
         ContentLength: file.size,
         ContentType: fileType,
         Metadata: {
-          name: file.name,
+          name: fileName,
           size: file.size.toString()
         }
       }, function (err, s3Object) {

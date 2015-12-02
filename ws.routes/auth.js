@@ -8,7 +8,7 @@ module.exports = function (serviceLocator) {
   var logger = app.get('log');
   var config = app.get('config');
   var authLib = app.get('authLib');
-  var ensureAuthenticated = config.BUILD_TYPE === 'angular2' ? authLib.getAuthMiddleware : require('../utils').ensureAuthenticated;
+  var ensureAuthenticated = config.BUILD_TYPE === 'angular2' ? authLib.getAuthMiddleware() : require('./utils').ensureAuthenticated;
 
   var Users = mongoose.model('Users');
 

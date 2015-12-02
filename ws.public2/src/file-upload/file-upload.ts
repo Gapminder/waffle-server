@@ -43,7 +43,7 @@ import {UPLOAD_URL, SERVER_URL} from '../config';
                 Drop zone
             </div>
 
-            <input type="file" ng2-file-select [uploader]="uploader" multiple  /><br/>
+            <input type="file" ng2-file-select [uploader]="uploader" /><br/>
         </div>
 
         <div class="col-md-9" style="margin-bottom: 40px">

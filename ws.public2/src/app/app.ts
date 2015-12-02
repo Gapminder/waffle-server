@@ -21,7 +21,7 @@ let template = require('./app.html');
   {path: '/', redirectTo: '/home'},
   {path: '/home', as: 'Home', component: Home},
   {path: '/login', as: 'Login', component: Login},
-  {path: '/file-upload', as: 'FileUpload', component: File`Upload},
+  {path: '/file-upload', as: 'FileUpload', component: FileUpload},
   {path: '/file-management', as: 'FileManagement', component: FileManagement}
 ])
 export class App {
@@ -34,7 +34,4 @@ export class App {
     this.decodedJwt = this.jwt && window.jwt_decode(this.jwt);
 
   }
-
-
-
 }
