@@ -17,7 +17,7 @@ var s3 = new AWS.S3({region: 'eu-west-1', params: {Bucket: 'digital-world'}});
 var corsOptions = {
   origin: true,
   methods: ['POST'],
-  allowedHeaders: ['X-Requested-With', 'Content-Type'],
+  allowedHeaders: ['X-Requested-With', 'Content-Type', 'Authorization'],
   credentials: true
 };
 
