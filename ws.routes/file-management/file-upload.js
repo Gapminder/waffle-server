@@ -29,18 +29,6 @@ module.exports = function (serviceLocator) {
   var authLib = app.get('authLib');
   var ensureAuthenticated = config.BUILD_TYPE === 'angular2' ? authLib.getAuthMiddleware : require('../utils').ensureAuthenticated;
 
-  var config = app.get('config');
-  var authLib = app.get('authLib');
-  var ensureAuthenticated = config.BUILD_TYPE === 'angular2' ? authLib.getAuthMiddleware : require('../utils').ensureAuthenticated;
-
-  app.use(function (req, res, next) {
-    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
-    res.setHeader('Access-Control-Allow-Methods', 'POST');
-    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
-    res.setHeader('Access-Control-Allow-Credentials', true);
-    next();
-  });
-
   var logger = app.get('log');
   app.options('/api/files/uploads', cors(corsOptions));
 
