@@ -64,7 +64,6 @@ module.exports = function (serviceLocator) {
       Bucket: process.env.S3_BUCKET,
       Key: 'original' + file.uri.substring(file.uri.lastIndexOf('/'))
     }, function (err, result) {
-      console.log(err);
       if (err) {
         return res.json({success: !err, data: result, error: err});
       }

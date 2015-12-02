@@ -42,7 +42,6 @@ module.exports = function (serviceLocator) {
     var fileType = file.type || file.mimetype;
 
     process.nextTick(function postProcessing() {
-      console.log('USER!!!!!', user);
       var fileExt = (fileName.match(/\.[^\.]*$/) || [''])[0];
       var key = uuid.v4() + fileExt;
       var prefix = 'original/';
@@ -74,7 +73,6 @@ module.exports = function (serviceLocator) {
           createdBy: user._id
         }, function (err2) {
           if (err2) {
-            console.log(err2);
             logger.error(err2);
           }
 
