@@ -33,18 +33,9 @@ import {DATA_LOCATION_URL} from '../config';
   </div>
 
 `})
-export class Home implements OnInit {
-  private jwt:string;
-  private decodedJwt:string;
+export class Home{
 
   constructor(public router:Router, public http:Http) {
-    this.jwt = localStorage.getItem('jwt');
-    this.decodedJwt = this.jwt && window.jwt_decode(this.jwt);
   }
 
-  onInit() {
-  }
-
-  getData() {
-  }
 }
