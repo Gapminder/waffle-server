@@ -7,7 +7,7 @@
         <li class="nav-header">
 
           <div class="profile-element text-center">
-            <img alt="image" style="max-width: 70px;" class="img-circle" [src]="decodedJwt.picture"/>
+            <img alt="image" class="img-circle avatar" [src]="decodedJwt.picture"/>
             <a class="" href>
               <span class="clear">
                 <span class="block m-t-xs">
@@ -45,8 +45,18 @@
     <!-- Page wrapper -->
     <!--<div ui-view="topnavbar"></div>-->
 
+    <!-- Nav -->
+
+    <div class="row" *ng-if="jwt">
+      <a class="pull-right color-grey m" role="button" (click)="routeLogout()">
+        <i class="fa fa-sign-out"></i>
+        Log out
+      </a>
+    </div>
     <!-- Main view  -->
     <router-outlet></router-outlet>
+
+
 
   </div>
   <!-- End page wrapper-->
