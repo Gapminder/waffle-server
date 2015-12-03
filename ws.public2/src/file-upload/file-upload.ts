@@ -21,7 +21,7 @@ import {UPLOAD_URL, SERVER_URL} from '../config';
     html, body { height: 100%; }
 </style>
 
-<div class="container">
+<div class="wrapper wrapper-content animated fadeInRight">
 
     <div class="navbar navbar-default">
         <div class="navbar-header">
@@ -46,7 +46,7 @@ import {UPLOAD_URL, SERVER_URL} from '../config';
             <input type="file" ng2-file-select [uploader]="uploader" /><br/>
         </div>
 
-        <div class="col-md-10" style="margin-bottom: 40px">
+        <div class="col-md-12">
 
             <p>Queue length: {{ uploader.queue.length }}</p>
 

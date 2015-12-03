@@ -33,7 +33,7 @@ module.exports = function (serviceLocator) {
   app.options('/api/files/uploads', cors(corsOptions));
 
   app.post('/api/files/uploads', cors(corsOptions), ensureAuthenticated, multiparty, authUserSyncMiddleware, function (req, res) {
-    uploadPostProcessing(req.files.file, req.user._id);
+    uploadPostProcessing(req.files.file, req.user);
     return res.json({answer: 'completed'});
   });
 
@@ -67,10 +67,10 @@ module.exports = function (serviceLocator) {
           uri: s3Object.Location,
           name: fileName,
           ext: fileExt,
-          owners: [user],
+          owners: [user._id],
           type: fileType,
           size: file.size,
-          createdBy: user
+          createdBy: user._id
         }, function (err2) {
           if (err2) {
             logger.error(err2);
