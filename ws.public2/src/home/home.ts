@@ -6,8 +6,6 @@ import {
 import {HTTP_PROVIDERS, Http, Headers} from 'angular2/http';
 import {RouteConfig, RouterLink, Router, ROUTER_DIRECTIVES} from 'angular2/router'
 
-import {DATA_LOCATION_URL} from '../config';
-
 @Component({
   selector: 'home',
   providers: [HTTP_PROVIDERS]
@@ -34,8 +32,4 @@ import {DATA_LOCATION_URL} from '../config';
 
 `})
 export class Home{
-
-  constructor(public router:Router, public http:Http) {
-  }
-
 }

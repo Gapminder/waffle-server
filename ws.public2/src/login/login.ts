@@ -18,7 +18,7 @@ let template = require('./login.html');
   `]
 })
 export class Login {
-  constructor(public router: Router, public http: Http) {
+  constructor(public http: Http) {
   }
 
   login(event, email) {
@@ -39,8 +39,9 @@ export class Login {
           window.location.href = '/home' ;
         },
         (error) => {
-          alert(error.message);
-          console.log(error.message);
+          alert(error.message || 'Waffle server isn\'t started yet!');
+          console.log(error.message || 'Waffle server isn\'t started yet!');
+          window.location.href = '/login';
         });
   }
 }

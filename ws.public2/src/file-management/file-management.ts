@@ -100,7 +100,7 @@ export class FileManagement implements OnInit{
   private jwt:string;
   private decodedJwt:string;
 
-  constructor(public router:Router, public http: Http) {
+  constructor(public http: Http) {
     this.jwt = localStorage.getItem('jwt');
     this.decodedJwt = this.jwt && window.jwt_decode(this.jwt);
     this.length = this.data.length;
@@ -112,7 +112,22 @@ export class FileManagement implements OnInit{
 
   routeLogout() {
     localStorage.removeItem('jwt');
-    this.router.navigateByUrl('/login');
+    window.location.href = '/login';
+  }
+
+  onError (error) {
+    alert(error.message || 'Waffle server isn\'t started yet!');
+    console.error(error.message || 'Waffle server isn\'t started yet!');
+    this.routeLogout();
+  }
+
+  onProcessReceivedData(response) {
+    this.rows = response.data.files || [];
+    this.length = response.data.count || 0;
+  }
+
+  onMapJsonData(response) {
+    return response.json();
   }
 
   getData () {
@@ -131,28 +146,16 @@ export class FileManagement implements OnInit{
 
     let url = MANAGEMENT_URL + '?search=' + search + '&limit=' + limit + '&skip=' + skip + '&sort=' + sort;
 
-    let self = this;
-
-    self.http
+    this.http
       .get(url, {
         headers: new Headers({
           'Authorization': 'Bearer ' + this.jwt
         })
       })
-      .map(res => {
-        return res.json();
-      })
+      .map(this.onMapJsonData)
       .subscribe(
-        response => {
-          this.rows = response.data.files || [];
-          this.length = response.data.count || 0;
-        },
-        error => {
-          alert(error.message || 'Waffle server isn\'t started yet!');
-          console.error(error.message || 'Waffle server isn\'t started yet!');
-          this.routeLogout();
-        },
-        () => {});
+        this.onProcessReceivedData.bind(this),
+        this.onError.bind(this));
   }
 
   private onDeleteFile(file) {
@@ -163,15 +166,8 @@ export class FileManagement implements OnInit{
         })
       })
       .subscribe(
-        () => {
-          this.getData();
-        },
-        error => {
-          alert(error.message || 'Waffle server isn\'t started yet!');
-          console.error(error.message || 'Waffle server isn\'t started yet!');
-          this.routeLogout();
-        },
-        () => {});
+        this.getData.bind(this),
+        this.onError.bind(this));
   }
 
   onChangeTable(config) {

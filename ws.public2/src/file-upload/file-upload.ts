@@ -124,7 +124,7 @@ export class FileUpload {
   private uploader:FileUploader;
   private hasDropZoneOver:boolean = false;
 
-  constructor(private fb:FormBuilder, rp:RouteParams, public router:Router, public http:Http) {
+  constructor() {
     this.uploader = new FileUploader({url: UPLOAD_URL, authToken: 'bearer ' + localStorage.getItem('jwt')});
   }
 
