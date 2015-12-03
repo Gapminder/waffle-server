@@ -33,16 +33,13 @@ export class App {
   public jwt:string;
   private decodedJwt:any;
 
-  constructor(public router:Router) {
-
+  constructor() {
     this.jwt = localStorage.getItem('jwt');
     this.decodedJwt = this.jwt && window.jwt_decode(this.jwt);
-
   }
 
   routeLogout() {
     localStorage.removeItem('jwt');
     window.location.href = '/login';
-
   }
 }

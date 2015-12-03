@@ -59,7 +59,7 @@ export class Ng2Table extends Table {
   }
 
   private formatSize(size) {
-    // Formatted file size in Mb
-    return (size/1024/1024).toFixed(2);
+    var sizeInMb = size/1024/1024;
+    return sizeInMb.toFixed(2);
   }
 }
