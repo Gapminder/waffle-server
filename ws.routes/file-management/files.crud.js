@@ -3,7 +3,6 @@ var cors = require('cors');
 var async = require('async');
 var mongoose = require('mongoose');
 var AWS = require('aws-sdk');
-var authUserSyncMiddleware = require('./sync-user');
 
 var corsOptions = {
   origin: true,
@@ -20,10 +19,13 @@ module.exports = function (serviceLocator) {
   var ensureAuthenticated = config.BUILD_TYPE === 'angular2'
     ? authLib.getAuthMiddleware() : require('../utils').ensureAuthenticated;
 
-  var Files = mongoose.model('Files');
+  function returnNext (req, res, next) {
+    next();
+  }
+   var authUserSyncMiddleware = config.BUILD_TYPE === 'angular2' ? require('./sync-user') : returnNext ;
 
-  var config = app.get('config');
-  var authLib = app.get('authLib');
+
+  var Files = mongoose.model('Files');
 
   var s3 = new AWS.S3({region: 'eu-west-1', params: {Bucket: process.env.S3_BUCKET}});
 
