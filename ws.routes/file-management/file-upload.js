@@ -7,8 +7,6 @@ var multiparty = require('connect-multiparty')();
 var mongoose = require('mongoose');
 var Files = mongoose.model('Files');
 
-var authUserSyncMiddleware = require('./sync-user');
-
 var s3 = new AWS.S3({region: 'eu-west-1', params: {Bucket: 'digital-world'}});
 
 // put to config
@@ -28,6 +26,10 @@ module.exports = function (serviceLocator) {
   var config = app.get('config');
   var authLib = app.get('authLib');
   var ensureAuthenticated = config.BUILD_TYPE === 'angular2' ? authLib.getAuthMiddleware() : require('../utils').ensureAuthenticated;
+  function returnNext (req, res, next) {
+    next();
+  }
+  var authUserSyncMiddleware = config.BUILD_TYPE === 'angular2' ? require('./sync-user') : returnNext ;
 
   var logger = app.get('log');
   app.options('/api/files/uploads', cors(corsOptions));
@@ -59,6 +61,7 @@ module.exports = function (serviceLocator) {
           size: file.size.toString()
         }
       }, function (err, s3Object) {
+        console.log('dfgkjdsfkjgdsfk', err);
         if (err) {
           return logger.error(err);
         }
