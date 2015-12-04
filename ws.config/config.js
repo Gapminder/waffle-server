@@ -38,8 +38,8 @@ module.exports = function (app) {
   };
 
   config.aws = {
-    REGION: 'eu-west-1',
-    S3_BUCKET: process.env.S3_BUCKET
+    REGION: process.env.REGION || 'eu-west-1',
+    S3_BUCKET: process.env.S3_BUCKET || 'gapminder-files'
   };
 
   app.set('config', config);
