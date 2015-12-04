@@ -43,4 +43,6 @@ module.exports = function (serviceLocator) {
 
   // files
   require('./files.model');
+  // geo
+  require('./geo.model');
 };
