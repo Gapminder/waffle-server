@@ -37,5 +37,10 @@ module.exports = function (app) {
       'https://www.googleapis.com/auth/userinfo.email']
   };
 
+  config.aws = {
+    REGION: process.env.REGION || 'eu-west-1',
+    S3_BUCKET: process.env.S3_BUCKET || 'gapminder-files'
+  };
+
   app.set('config', config);
 };

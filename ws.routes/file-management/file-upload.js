@@ -1,40 +1,30 @@
 var fs = require('fs');
 var AWS = require('aws-sdk');
-var cors = require('cors');
 var uuid = require('node-uuid');
 var multiparty = require('connect-multiparty')();
 
 var mongoose = require('mongoose');
 var Files = mongoose.model('Files');
-
-var s3 = new AWS.S3({region: 'eu-west-1', params: {Bucket: 'digital-world'}});
+var cors = require('./cors')(['POST']);
 
 // put to config
 // bucket name
 // region
 // url prefix https://digital-world.s3-eu-west-1.amazonaws.com/
 
-var corsOptions = {
-  origin: true,
-  methods: ['POST'],
-  allowedHeaders: ['X-Requested-With', 'Content-Type', 'Authorization'],
-  credentials: true
-};
-
 module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
+  var buildTypeAwareAuth = require('./build-type-aware-auth')(serviceLocator);
+  var ensureAuthenticated = buildTypeAwareAuth.ensureAuthenticated;
+  var authUserSyncMiddleware = buildTypeAwareAuth.authUserSyncMiddleware;
+
   var config = app.get('config');
-  var authLib = app.get('authLib');
-  var ensureAuthenticated = config.BUILD_TYPE === 'angular2' ? authLib.getAuthMiddleware() : require('../utils').ensureAuthenticated;
-  function returnNext (req, res, next) {
-    next();
-  }
-  var authUserSyncMiddleware = config.BUILD_TYPE === 'angular2' ? require('./sync-user') : returnNext ;
+  var s3 = new AWS.S3({region: config.aws.REGION, params: {Bucket: config.aws.S3_BUCKET}});
 
   var logger = app.get('log');
-  app.options('/api/files/uploads', cors(corsOptions));
+  app.options('/api/files/uploads', cors);
 
-  app.post('/api/files/uploads', cors(corsOptions), ensureAuthenticated, multiparty, authUserSyncMiddleware, function (req, res) {
+  app.post('/api/files/uploads', cors, ensureAuthenticated, multiparty, authUserSyncMiddleware, function (req, res) {
     uploadPostProcessing(req.files.file, req.user);
     return res.json({answer: 'completed'});
   });
@@ -49,7 +39,7 @@ module.exports = function (serviceLocator) {
       var prefix = 'original/';
       s3.upload({
         ACL: 'public-read',
-        Bucket: process.env.S3_BUCKET,
+        Bucket: config.aws.S3_BUCKET,
         Key: prefix + key,
         Body: fs.createReadStream(file.path),
         CacheControl: 'max-age=86400',
@@ -61,7 +51,6 @@ module.exports = function (serviceLocator) {
           size: file.size.toString()
         }
       }, function (err, s3Object) {
-        console.log('dfgkjdsfkjgdsfk', err);
         if (err) {
           return logger.error(err);
         }
