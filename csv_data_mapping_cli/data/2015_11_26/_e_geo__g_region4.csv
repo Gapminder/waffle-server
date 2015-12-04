@@ -1,0 +1,5 @@
+geo,geo.is.g_region4,geo.name,geo.name_short,geo.description,geo.subdim,geo.lat,geo.lng,geo.color
+afr,TRUE,Africa,,The entire African continent plus Madagascar and some islands.,g_region,-14.33333,28.5,#00d5e9
+eur,TRUE,Europe,,"West and East Europe as defined by Gapmidner, to make up roughly a quarter of the world's total land surface.",g_region,50.75,4.5,#ffe700
+ame,TRUE,The Americas,America,"North and South America as defined by Gapmidner, to make up roughly a quarter of the world's total land surface.",g_region,8.9936,-79.51973,#7feb00
+asi,TRUE,Asia,,"Asia as defined by Gapmidner, to make up roughly a quarter of the world's total land surface.",g_region,16.16667,107.83333,#ff5872

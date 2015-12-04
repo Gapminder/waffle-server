@@ -1,0 +1,9 @@
+{
+  "name": "csv_data_mapping",
+  "version": "0.0.1",
+  "dependencies": {
+    "async": "1.5.0",
+    "lodash": "3.10.1",
+    "mongoose": "4.2.9"
+  }
+}

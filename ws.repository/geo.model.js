@@ -19,7 +19,7 @@ var Geo = new Schema({
   color: String,
 
   // planet, g_region4
-  subdim: String,
+  subdim: {type: String, index: true, sparse: true},
 
   // geo category
   isRegion4: Boolean,
