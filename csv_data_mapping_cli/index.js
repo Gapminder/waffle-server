@@ -8,7 +8,11 @@ var mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost:27017/ws_test');
 mongoose.set('debug', true);
 require('../ws.repository/geo.model');
+require('../ws.repository/dimensions/dimensions.model');
+require('../ws.repository/translations.model');
 var Geo = mongoose.model('Geo');
+var Dimensions = mongoose.model('Dimensions');
+var Translations = mongoose.model('Translations');
 
 var tasks = [
   // geo
@@ -19,13 +23,26 @@ var tasks = [
   ['./data/2015_11_26/_e_geo__territory.csv', ['gid', 'name', 'isTerritory', 'isUnState', 'geoRegion4', 'geoWestRest', 'lat', 'lng']],
 ];
 
-Geo.remove({}, function (err) {
+async.waterfall([
+  cleanGeo,
+  importGeo,
+  cleanDimensions,
+  createDimensions,
+  createTranslations
+], function (err) {
   if (err) {
-    console.log(err);
+    console.error(err);
   }
+});
 
+// geo region
+function cleanGeo(cb) {
+  return Geo.remove({}, cb);
+}
+
+function importGeo(cb) {
   async.eachLimit(tasks, 1, function (task, cb) {
-    parseGeo(task[0], task[1], function (err, dataArray) {
+    parseGeoFile(task[0], task[1], function (err, dataArray) {
       async.eachLimit(dataArray, 50, function (geoJson, cb) {
         return Geo.create(geoJson, cb);
       }, function () {
@@ -36,11 +53,12 @@ Geo.remove({}, function (err) {
     if (err) {
       console.error(err);
     }
-    console.log('Mission complete');
+    console.log('geo imported');
+    return cb(err);
   });
-});
+}
 
-function parseGeo(file, headers, cb) {
+function parseGeoFile(file, headers, cb) {
   var converter = new Converter({
     workerNum: 4,
     headers: headers,
@@ -68,4 +86,33 @@ function parseGeo(file, headers, cb) {
 
 // read from file
   fs.createReadStream(file).pipe(converter);
+}
+
+// dimensions region
+function cleanDimensions(cb) {
+  return Dimensions.remove({}, cb);
+}
+
+function createDimensions(cb) {
+  return Dimensions.create([
+    {name: 'year', title: 'Year'},
+    {name: 'geo', title: 'Geography'}], cb);
+}
+
+function createTranslations(cb) {
+  var en = require('./vizabi/en');
+  var se = require('./vizabi/se');
+  var translations = []
+    .concat(map(en, 'en'))
+    .concat(map(se, 'se'));
+  return Translations.remove({}, function (){
+    return Translations.create(translations, cb);
+  });
+
+  function map(json, lang) {
+    return _.reduce(json, function (res, value, key) {
+      res.push({key: key, value: value, language: lang});
+      return res;
+    }, []);
+  }
 }
