@@ -27,9 +27,9 @@ NEO4J_DB_URL: 'http://neo4j:<NEW_PASSWORD>@localhost:7474'
 ```
 npm i
 ```
-#####2. Rerun app.js:
+#####2. Run server:
 ```
-node app.js
+AWS_SECRET_ACCESS_KEY=<AWS_SECRET_ACCESS_KEY> AWS_ACCESS_KEY_ID=<AWS_ACCESS_KEY_ID> S3_BUCKET=<S3_BUCKET> node server.js
 ```
 
 #### Tests

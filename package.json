@@ -4,6 +4,8 @@
   "description": "Waffle server",
   "main": "app.js",
   "scripts": {
+    "ng2-serve": "BUILD_TYPE=angular2 PORT=3000 forever -w  --minUptime 1000 --spinSleepTime 1000 server.js",
+
     "test": "gulp lint",
     "dev": "npm run serve & npm start",
     "start": "NODE_ENV=development webpack-dev-server --inline --hot --progress --color",

@@ -1,6 +1,5 @@
 var _ = require('lodash');
 
-var ensureAuthenticated = require('./utils').ensureAuthenticated;
 module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
 

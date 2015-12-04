@@ -25,7 +25,8 @@ module.exports = function (app) {
       },
       EOL: '\n',
       PARSE_CSV_NUMBERS: false
-    }
+    },
+    BUILD_TYPE: process.env.BUILD_TYPE || 'angular'
   };
   config.social = {
     GOOGLE_CLIENT_ID: '267502081172-qcabnkcj1ns254hnu45gf67d0t5675e3.apps.googleusercontent.com',
@@ -34,6 +35,11 @@ module.exports = function (app) {
     GOOGLE_SCOPE: [
       'https://www.googleapis.com/auth/userinfo.profile',
       'https://www.googleapis.com/auth/userinfo.email']
+  };
+
+  config.aws = {
+    REGION: process.env.REGION || 'eu-west-1',
+    S3_BUCKET: process.env.S3_BUCKET || 'gapminder-files'
   };
 
   app.set('config', config);

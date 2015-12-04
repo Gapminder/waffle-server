@@ -1,13 +1,24 @@
 var _ = require('lodash');
 var async = require('async');
 var mongoose = require('mongoose');
+var AWS = require('aws-sdk');
 
-var ensureAuthenticated = require('../utils').ensureAuthenticated;
+var cors = require('./cors')(['POST', 'GET', 'DELETE']);
 
 module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
+  var buildTypeAwareAuth = require('./build-type-aware-auth')(serviceLocator);
+  var ensureAuthenticated = buildTypeAwareAuth.ensureAuthenticated;
+  var authUserSyncMiddleware = buildTypeAwareAuth.authUserSyncMiddleware;
+
   var Files = mongoose.model('Files');
-  app.get('/api/files', ensureAuthenticated, function (req, res) {
+
+  var config = app.get('config');
+  var s3 = new AWS.S3({region: config.aws.REGION, params: {Bucket: config.aws.S3_BUCKET}});
+
+  app.options('/api/files', cors);
+
+  app.get('/api/files', cors, ensureAuthenticated, authUserSyncMiddleware, function (req, res) {
     var user = req.user;
     var limit = req.query.limit || 10;
     var skip = req.query.skip || 0;
@@ -33,5 +44,23 @@ module.exports = function (serviceLocator) {
     }, function (err, results) {
       return res.json({success: !err, data: results, error: err});
     });
+  });
+
+  app.delete('/api/files', cors, ensureAuthenticated, authUserSyncMiddleware, function (req, res) {
+    var file = JSON.parse(req.query.file);
+
+    s3.deleteObject({
+      Bucket: config.aws.S3_BUCKET,
+      Key: 'original' + file.uri.substring(file.uri.lastIndexOf('/'))
+    }, function (err, result) {
+      if (err) {
+        return res.json({success: !err, data: result, error: err});
+      }
+
+      Files.remove({_id: file._id})
+        .exec(function (_err, _result) {
+          return res.json({success: !_err, data: _result, error: _err});
+        });
+    })
   });
 };
