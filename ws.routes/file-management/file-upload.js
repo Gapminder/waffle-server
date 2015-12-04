@@ -7,8 +7,6 @@ var mongoose = require('mongoose');
 var Files = mongoose.model('Files');
 var cors = require('./cors')(['POST']);
 
-var s3 = new AWS.S3({region: 'eu-west-1', params: {Bucket: 'digital-world'}});
-
 // put to config
 // bucket name
 // region
@@ -19,6 +17,9 @@ module.exports = function (serviceLocator) {
   var buildTypeAwareAuth = require('./build-type-aware-auth')(serviceLocator);
   var ensureAuthenticated = buildTypeAwareAuth.ensureAuthenticated;
   var authUserSyncMiddleware = buildTypeAwareAuth.authUserSyncMiddleware;
+
+  var config = app.get('config');
+  var s3 = new AWS.S3({region: config.aws.REGION, params: {Bucket: config.aws.S3_BUCKET}});
 
   var logger = app.get('log');
   app.options('/api/files/uploads', cors);
@@ -38,7 +39,7 @@ module.exports = function (serviceLocator) {
       var prefix = 'original/';
       s3.upload({
         ACL: 'public-read',
-        Bucket: process.env.S3_BUCKET,
+        Bucket: config.aws.S3_BUCKET,
         Key: prefix + key,
         Body: fs.createReadStream(file.path),
         CacheControl: 'max-age=86400',

@@ -13,7 +13,8 @@ module.exports = function (serviceLocator) {
 
   var Files = mongoose.model('Files');
 
-  var s3 = new AWS.S3({region: 'eu-west-1', params: {Bucket: process.env.S3_BUCKET}});
+  var config = app.get('config');
+  var s3 = new AWS.S3({region: config.aws.REGION, params: {Bucket: config.aws.S3_BUCKET}});
 
   app.options('/api/files', cors);
 
@@ -49,7 +50,7 @@ module.exports = function (serviceLocator) {
     var file = JSON.parse(req.query.file);
 
     s3.deleteObject({
-      Bucket: process.env.S3_BUCKET,
+      Bucket: config.aws.S3_BUCKET,
       Key: 'original' + file.uri.substring(file.uri.lastIndexOf('/'))
     }, function (err, result) {
       if (err) {
