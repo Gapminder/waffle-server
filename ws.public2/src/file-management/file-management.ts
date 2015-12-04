@@ -144,13 +144,11 @@ export class FileManagement implements OnInit{
 
     sort = JSON.stringify(sort);
 
-    let url = MANAGEMENT_URL + '?search=' + search + '&limit=' + limit + '&skip=' + skip + '&sort=' + sort;
+    let url = `${MANAGEMENT_URL}?search=${search}&limit=${limit}&skip=${skip}&sort=${sort}`;
 
     this.http
       .get(url, {
-        headers: new Headers({
-          'Authorization': 'Bearer ' + this.jwt
-        })
+        headers: this.createAuthHeaders(this.jwt)
       })
       .map(this.onMapJsonData)
       .subscribe(
@@ -160,14 +158,18 @@ export class FileManagement implements OnInit{
 
   private onDeleteFile(file) {
     this.http
-      .delete(MANAGEMENT_URL + '?file=' + JSON.stringify(file), {
-        headers: new Headers({
-          'Authorization': 'Bearer ' + this.jwt
-        })
+      .delete(`${MANAGEMENT_URL}?file=${JSON.stringify(file)}`, {
+        headers: this.createAuthHeaders(this.jwt)
       })
       .subscribe(
         this.getData.bind(this),
         this.onError.bind(this));
+  }
+
+  private createAuthHeaders(jwtToken: string) {
+    return new Headers({
+      'Authorization': `Bearer ${jwtToken}`
+    });
   }
 
   onChangeTable(config) {
