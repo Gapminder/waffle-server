@@ -125,7 +125,7 @@ export class FileUpload {
   private hasDropZoneOver:boolean = false;
 
   constructor() {
-    this.uploader = new FileUploader({url: UPLOAD_URL, authToken: 'bearer ' + localStorage.getItem('jwt')});
+    this.uploader = new FileUploader({url: UPLOAD_URL, authToken: `bearer ${localStorage.getItem('jwt')}`});
   }
 
   private fileOver(e:any) {
