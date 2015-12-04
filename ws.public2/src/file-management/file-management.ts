@@ -4,7 +4,8 @@ import {Router, RouterLink, RouteParams} from 'angular2/router';
 import {HTTP_PROVIDERS, Http, Headers} from 'angular2/http';
 
 import {MANAGEMENT_URL, SERVER_URL} from '../config';
-import {Ng2TableFilter, Ng2TablePaging, pagination} from '../../node_modules/ng2-table/components/index';
+import {Ng2TableFilter, Ng2TablePaging} from 'ng2-table/ng2-table';
+import {pagination} from 'ng2-bootstrap/ng2-bootstrap'
 import {Ng2Table} from './table';
 
 @Component({
@@ -73,7 +74,7 @@ import {Ng2Table} from './table';
   </div>
 </div>`
 })
-export class FileManagement implements OnInit{
+export class FileManagement implements OnInit {
   public rows:Array<any> = [];
   public columns:Array<any> = [
     {title: 'Name (click to download)', name: 'name', sort: false},
@@ -100,7 +101,7 @@ export class FileManagement implements OnInit{
   private jwt:string;
   private decodedJwt:string;
 
-  constructor(public http: Http) {
+  constructor(public http:Http) {
     this.jwt = localStorage.getItem('jwt');
     this.decodedJwt = this.jwt && window.jwt_decode(this.jwt);
     this.length = this.data.length;
@@ -115,22 +116,22 @@ export class FileManagement implements OnInit{
     window.location.href = '/login';
   }
 
-  onError (error) {
+  onError(error:any) {
     alert(error.message || 'Waffle server isn\'t started yet!');
     console.error(error.message || 'Waffle server isn\'t started yet!');
     this.routeLogout();
   }
 
-  onProcessReceivedData(response) {
+  onProcessReceivedData(response:any) {
     this.rows = response.data.files || [];
     this.length = response.data.count || 0;
   }
 
-  onMapJsonData(response) {
+  onMapJsonData(response:any) {
     return response.json();
   }
 
-  getData () {
+  getData() {
     let skip = this.itemsPerPage ? (this.page - 1) * this.itemsPerPage : 0;
     let limit = this.itemsPerPage || 10;
     let search = this.config.filtering.name;
@@ -158,7 +159,7 @@ export class FileManagement implements OnInit{
         this.onError.bind(this));
   }
 
-  private onDeleteFile(file) {
+  private onDeleteFile(file:any) {
     this.http
       .delete(MANAGEMENT_URL + '?file=' + JSON.stringify(file), {
         headers: new Headers({
@@ -170,7 +171,7 @@ export class FileManagement implements OnInit{
         this.onError.bind(this));
   }
 
-  onChangeTable(config) {
+  onChangeTable(config:any) {
     if (config.filtering) {
       this.config.filtering[config.filtering.columnName] = config.filtering.filterString;
     }

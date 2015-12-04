@@ -21,7 +21,7 @@ export class Login {
   constructor(public http: Http) {
   }
 
-  login(event, email) {
+  login(event:any, email:string) {
     event.preventDefault();
 
     this.http

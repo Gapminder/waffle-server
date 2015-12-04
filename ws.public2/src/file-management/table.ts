@@ -6,8 +6,8 @@ import {
 
 import {Location, RouteConfig, RouterLink, Router, ROUTER_DIRECTIVES} from 'angular2/router'
 
-import {Table} from '../../node_modules/ng2-table/components/index';
-import {Ng2ThSortable} from '../../node_modules/ng2-table/components/table/sorting';
+import {Table} from 'ng2-table/ng2-table';
+import {Ng2ThSortable} from 'ng2-table/components/table/sorting';
 
 @Component({
   selector: 'ng2-table, [ng2-table]',
@@ -50,15 +50,15 @@ export class Ng2Table extends Table {
     super();
   }
 
-  private doPreview(file) {
+  private doPreview(file:any) {
     window.location = file.uri;
   }
 
-  private doDelete(file) {
+  private doDelete(file:any) {
     this.deleteFile.next(file);
   }
 
-  private formatSize(size) {
+  private formatSize(size:any) {
     var sizeInMb = size/1024/1024;
     return sizeInMb.toFixed(2);
   }

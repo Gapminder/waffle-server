@@ -78,6 +78,7 @@ module.exports = {
           ignoreDiagnostics: [
             2304,
             2339,
+            2654,
             6053,
             // TS2305 -> Module ... has no exported member
             2305,

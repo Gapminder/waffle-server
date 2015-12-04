@@ -3,15 +3,15 @@
   "compilerOptions": {
     "target": "es5",
     "module": "commonjs",
+    "sourceMap": true,
     "declaration": true,
-    "noImplicitAny": false,
-    "removeComments": false,
-    "noLib": false,
+    "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "sourceMap": true,
-    "listFiles": true,
-    "outDir": "dist"
+    "listFiles": false,
+    "noLib": false,
+    "noImplicitAny": true,
+    "suppressImplicitAnyIndexErrors": true
   },
   "exclude": [
     "node_modules"
