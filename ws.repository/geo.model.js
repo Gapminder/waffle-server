@@ -3,7 +3,7 @@ var Schema = mongoose.Schema;
 
 var Geo = new Schema({
   // description
-  gid: {type: String, match: /^[a-z]+[a-z0-9_]*$/, index: true, unique: true, required: true },
+  gid: {type: String, match: /^[a-z0-9_]*$/, index: true, unique: true, required: true },
   name: String,
   description: String,
 
