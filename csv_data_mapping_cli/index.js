@@ -9,9 +9,11 @@ mongoose.connect('mongodb://localhost:27017/ws_test');
 //mongoose.set('debug', true);
 require('../ws.repository/geo.model');
 require('../ws.repository/dimensions/dimensions.model');
+require('../ws.repository/dimension-values/dimension-values.model');
 require('../ws.repository/translations.model');
 var Geo = mongoose.model('Geo');
 var Dimensions = mongoose.model('Dimensions');
+var DimensionValues = mongoose.model('DimensionValues');
 var Translations = mongoose.model('Translations');
 
 var geoTasks = [
@@ -31,7 +33,6 @@ var geoTasks = [
     headers: ['gid', 'name', 'isTerritory', 'isUnState', 'geoRegion4', 'geoWestRest', 'lat', 'lng']
   }
 ];
-
 // via rest API
 // 1. create dimensions
 // 2. create indicators with data (gdp, gdp_pc, lex, pop, tfr, u5mr)
@@ -42,11 +43,12 @@ async.waterfall([
   importGeo,
   createTranslations,
   cleanDimensions,
-  //createDimensions,
+  createDimensions,
 ], function (err) {
   if (err) {
     console.error(err);
   }
+  console.log('done');
 });
 
 // geo region
@@ -107,13 +109,46 @@ function parseGeoFile(file, headers, cb) {
 
 // dimensions region
 function cleanDimensions(cb) {
-  return Dimensions.remove({}, cb);
+  return Dimensions.remove({}, function (err) {
+    if (err) {
+      return cb(err);
+    }
+
+    DimensionValues.remove({}, function (err) {
+      return cb(err);
+    });
+  });
 }
 
 function createDimensions(cb) {
-  return Dimensions.create([
-    {name: 'year', title: 'Year'},
-    {name: 'geo', title: 'Geography'}], cb);
+  async.parallel([
+    function createYears(cb) {
+      Dimensions.create({name: 'year', title: 'Year'}, function (err, dimension) {
+        DimensionValues.create(_
+          .range(1800, 2050)
+          .map(function (year) {
+            return {
+              dimension: dimension.id,
+              value: year
+            };
+          }), function (err) {
+          return cb(err);
+        });
+      });
+    },
+    function createCountry(cb) {
+      Dimensions.create({name: 'country', title: 'Countries'}, function (err, dimension) {
+        Geo.find({isTerritory: true}, {_id: 0, gid: 1, name: 1}, function (err, countries) {
+          var cc = _.map(countries, function (country) {
+            return {value: country.gid, title: country.name, dimension: dimension.id};
+          });
+          return DimensionValues.create(cc, function (err) {
+            return cb(err);
+          });
+        });
+      });
+    }
+  ], cb);
 }
 
 function createTranslations(cb) {
@@ -123,7 +158,9 @@ function createTranslations(cb) {
     .concat(map(en, 'en'))
     .concat(map(se, 'se'));
   return Translations.remove({}, function () {
-    return Translations.create(translations, cb);
+    return Translations.create(translations, function(err){
+      return cb(err);
+    });
   });
 
   function map(json, lang) {
