@@ -15,7 +15,26 @@ var Schema = mongoose.Schema;
  * @property {Array<Models.AnalysisSessions>} analysisSessions - when this coordinates was created and modified
  */
 var Dimensions = new Schema({
+  concept: {type: String, match: /^[a-z0-9_]*$/, index: true, unique: true, required: true},
+  // name versions
   name: {type: String, required: true, unique: true, index: true},
+  nameShort: String,
+  nameLong: String,
+  // name in plural
+  plural: String,
+  pluralShort: String,
+  pluralLong: String,
+  // description
+  description: String,
+  tags: [String],
+
+  // 1 - easy, 2 - average, 3 - complex
+  complexity: Number,
+  type: {type: String, 'enum': 'dimension subdim'},
+  // parent dimension gid, only if type === subdim
+  parentDimension: String,
+
+  // deprecate title - same as name
   title: String,
 
   meta: {},
