@@ -1,0 +1,63 @@
+<div id="wrapper">
+  <!-- Navigation -->
+
+  <nav class="navbar-default navbar-static-side" role="navigation" *ng-if="jwt" >
+    <div class="sidebar-collapse">
+      <ul side-navigation class="nav metismenu" id="side-menu">
+        <li class="nav-header">
+
+          <div class="profile-element text-center">
+            <img alt="image" class="img-circle avatar" [src]="decodedJwt.picture"/>
+            <a class="" href>
+              <span class="clear">
+                <span class="block m-t-xs">
+                  <strong class="font-bold">
+                    {{decodedJwt.name ? decodedJwt.name : decodedJwt.email}}
+                  </strong>
+                </span>
+              </span>
+            </a>
+          </div>
+
+          <div class="logo-element">
+            <!--{{ tagline }}-->
+          </div>
+        </li>
+        <!-- ng-class="{active: $state.includes('files')}" -->
+        <li>
+          <a ui-sref="admin.file-list"><i class="fa fa-files-o"></i> <span class="nav-label">Files</span> <span
+                  class="fa arrow"></span></a>
+          <!--  ng-class="{in: $state.includes('files')}" -->
+          <ul class="nav nav-second-level">
+            <li ui-sref-active="active"><a href="file-upload">Upload</a></li>
+            <li ui-sref-active="active"><a href="file-management">Management</a></li>
+          </ul>
+        </li>
+      </ul>
+
+    </div>
+  </nav>
+
+  <!-- Page wraper -->
+  <!-- ng-class with current state name give you the ability to extended customization your view -->
+  <!-- {{$state.current.name}} -->
+  <div id="page-wrapper" class="gray-bg">
+    <!-- Page wrapper -->
+    <!--<div ui-view="topnavbar"></div>-->
+
+    <!-- Nav -->
+
+    <div class="row" *ng-if="jwt">
+      <a class="pull-right color-grey m" role="button" (click)="routeLogout()">
+        <i class="fa fa-sign-out"></i>
+        Log out
+      </a>
+    </div>
+    <!-- Main view  -->
+    <router-outlet></router-outlet>
+
+
+
+  </div>
+  <!-- End page wrapper-->
+</div>
