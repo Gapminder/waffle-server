@@ -1,9 +1,12 @@
 {
   "name": "csv_data_mapping",
   "version": "0.0.1",
+  "scripts": {
+    "preinstall": "cd .. && npm i"
+  },
   "dependencies": {
     "async": "1.5.0",
-    "lodash": "3.10.1",
-    "mongoose": "4.2.9"
+    "csvtojson": "0.4.6",
+    "lodash": "3.10.1"
   }
 }
