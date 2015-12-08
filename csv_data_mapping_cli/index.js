@@ -5,7 +5,7 @@ var async = require('async');
 var Converter = require('csvtojson').Converter;
 
 var mongoose = require('mongoose');
-mongoose.set('debug', true);
+//mongoose.set('debug', true);
 mongoose.connect('mongodb://localhost:27017/ws_test');
 
 var Geo = require('../ws.repository/geo.model');
@@ -47,20 +47,23 @@ var measureValuesTasks = [
     indicator: ''
   },
 ];
-
 // via rest API
 // 1. create dimensions
 // 2. create indicators with data (gdp, gdp_pc, lex, pop, tfr, u5mr)
 // 3. metadata.json - adaptor
 
 async.waterfall([
-  cleanGeo,
+  cb => Geo.remove({}, err => cb(err)),
+  cb => Dimensions.remove({}, err => cb(err)),
+  cb => DimensionValues.remove({}, err => cb(err)),
+  cb => Indicators.remove({}, err => cb(err)),
+  cb => IndicatorsValues.remove({}, err => cb(err)),
+  cb => Translations.remove({}, err => cb(err)),
   importGeo,
   createTranslations,
-  cleanDimensions,
-  createDimensions,
-  cleanIndicators,
-  createIndicators
+  createDimensionsAndValues,
+  createIndicators,
+  createIndicatorValues
 ], function (err) {
   if (err) {
     console.error(err);
@@ -128,20 +131,7 @@ function parseCsvFile(file, headers, cb) {
   fs.createReadStream(file).pipe(converter);
 }
 
-// dimensions region
-function cleanDimensions(cb) {
-  return Dimensions.remove({}, function (err) {
-    if (err) {
-      return cb(err);
-    }
-
-    DimensionValues.remove({}, function (err) {
-      return cb(err);
-    });
-  });
-}
-
-function createDimensions(cb) {
+function createDimensionsAndValues(cb) {
   async.parallel([
     function createYears(cb) {
       Dimensions.create({name: 'year', title: 'Year'}, function (err, dimension) {
@@ -152,9 +142,7 @@ function createDimensions(cb) {
               dimension: dimension.id,
               value: year
             };
-          }), function (err) {
-          return cb(err);
-        });
+          }), err => cb(err));
       });
     },
     function createCountry(cb) {
@@ -163,9 +151,7 @@ function createDimensions(cb) {
           var cc = _.map(countries, function (country) {
             return {value: country.gid, title: country.name, dimension: dimension.id};
           });
-          return DimensionValues.create(cc, function (err) {
-            return cb(err);
-          });
+          return DimensionValues.create(cc, err => cb(err));
         });
       });
     }
@@ -180,11 +166,7 @@ function createTranslations(cb) {
   var translations = []
     .concat(map(en, 'en'))
     .concat(map(se, 'se'));
-  return Translations.remove({}, function () {
-    return Translations.create(translations, function (err) {
-      return cb(err);
-    });
-  });
+  return Translations.create(translations, err => cb(err));
 
   function map(json, lang) {
     return _.reduce(json, function (res, value, key) {
@@ -194,18 +176,11 @@ function createTranslations(cb) {
   }
 }
 
-function cleanIndicators(cb) {
-  Indicators.remove({}, function (err) {
-    if (err) {
-      return cb(err);
-    }
-    IndicatorsValues.remove({}, function (err) {
-      return cb(err);
-    });
-  });
-}
-
 function createIndicators(cb) {
   // parseCsvFile()
+  cb();
+}
+
+function createIndicatorValues(cb) {
   cb();
 }
