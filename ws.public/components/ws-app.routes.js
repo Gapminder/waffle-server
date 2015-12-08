@@ -247,6 +247,21 @@ module.exports = function (app) {
             pageParentType: 'importSessions'
           }
         })
+        .state('admin.vizabi', {
+          'abstract': true,
+          url: '/vizabi',
+          template: '<ui-view/>'
+        })
+        .state('admin.vizabi.indexTree', {
+          url: '/index-tree',
+          templateUrl: '/components/vizabi/index-tree.html',
+          controller: 'IndexTreeController',
+          controllerAs: 'ctrl',
+          ncyBreadcrumb: {
+            label: 'Index Tree',
+            parent: 'admin.vizabi'
+          }
+        })
 
         //  AUTENTICATION
         .state('login', {

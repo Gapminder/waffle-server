@@ -17,6 +17,7 @@ var app = angular.module('admin', [
   'ncy-angular-breadcrumb',
   'ngHandsontable',
   'ui.select',
+  'ui.tree',
   fileManagementComponent,
   pipeManager
 ]);
@@ -70,5 +71,7 @@ require('./home/versions/version-details.controller')(app);
 require('./home/versions-registry/versions-registry.factories')(app);
 require('./home/versions-registry/versions-registry-list.controller')(app);
 require('./home/versions-registry/versions-registry-edit.controller')(app);
+
+require('./vizabi/index-tree.controller')(app);
 
 require('./ws-app.routes')(app);

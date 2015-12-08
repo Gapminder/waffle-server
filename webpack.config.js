@@ -28,7 +28,7 @@ var wConfig = {
   context: path.join(__dirname, config.src),
   entry: {
     'waffle-server': './components',
-    angular: ['jquery', 'angular', 'angular-resource',
+    angular: ['jquery', 'angular', 'angular-resource', 'angular-ui-tree',
       'angular-ui-router', 'angular-breadcrumb', 'oclazyload',
       'angular-ui-bootstrap', 'async', 'lodash', 'ngHandsontable'
     ]
@@ -46,6 +46,7 @@ var wConfig = {
     alias: {
       'angular-google-maps': 'angular-google-maps/dist/angular-google-maps.min.js',
       ngHandsontable: 'assets/ngHandsontable/dist/ngHandsontable.min.js',
+      'angular-ui-tree': 'assets/angular-ui-tree/dist/angular-ui-tree.js',
       'angular-ui-select': 'assets/angular-ui-select/dist/select.min.js',
       'ng-infinite-scroll': 'ng-infinite-scroll/build/ng-infinite-scroll.js'/*,
       datamaps: 'datamaps/dist/datamaps.all.js'*/
