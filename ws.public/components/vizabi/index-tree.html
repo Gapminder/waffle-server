@@ -77,20 +77,27 @@
 </style>
 <script type="text/ng-template" id="nodes_renderer.html" class="ng-scope">
     <div ui-tree-handle class="tree-node tree-node-content">
-        <a class="btn btn-success btn-xs" ng-if="node.nodes && node.nodes.length > 0" data-nodrag ng-click="toggle(this)"><span
-                class="glyphicon"
-                ng-class="{
-          'glyphicon-chevron-right': collapsed,
-          'glyphicon-chevron-down': !collapsed
-        }"></span></a>
-        {{node.title}}
+        <a class="btn btn-success btn-xs" ng-if="node.children && node.children.length > 0" data-nodrag ng-click="toggle(this)"><span
+                class="glyphicon" ng-class="{'glyphicon-chevron-right': collapsed, 'glyphicon-chevron-down': !collapsed}"></span></a>
+        {{node.id}}
         <a class="pull-right btn btn-danger btn-xs" data-nodrag ng-click="ctrl.remove(this)"><span
                 class="glyphicon glyphicon-remove"></span></a>
-        <a class="pull-right btn btn-primary btn-xs" data-nodrag ng-click="ctrl.open(this)" style="margin-right: 8px;"><span
-                class="glyphicon glyphicon-plus"></span></a>
+        <a ng-if="!ctrl.indexDb[node.id]"
+           class="pull-right btn btn-primary btn-xs"
+           data-nodrag
+           ng-click="ctrl.openIndicators(this)"
+           style="margin-right: 8px;">
+            <span class="glyphicon glyphicon-plus"></span>
+        </a>
+        <a ng-if="!ctrl.indexDb[node.id]"
+           class="pull-right btn btn-primary btn-xs"
+           data-nodrag ng-click="ctrl.openGroup(this)"
+           style="margin-right: 8px;">
+            <span class="glyphicon glyphicon-plus">group</span>
+        </a>
     </div>
-    <ol ui-tree-nodes="" ng-model="node.nodes" ng-class="{hidden: collapsed}">
-        <li ng-repeat="node in node.nodes" ui-tree-node ng-include="'nodes_renderer.html'">
+    <ol ui-tree-nodes="" ng-model="node.children" ng-class="{hidden: collapsed}">
+        <li ng-repeat="node in node.children" ui-tree-node ng-include="'nodes_renderer.html'">
         </li>
     </ol>
 </script>
@@ -116,13 +123,11 @@
         </div>
     </div>
 </div>
-<script type="text/ng-template" id="indexTreeEdit.html">
+<script type="text/ng-template" id="indexTreeIndicators.html">
     <div class="modal-header">
         <h3 class="modal-title">Index DB <button type="button" class="close" ng-click="vm.close()">x</button></h3>
     </div>
     <div class="modal-body">
-
-
 
         <div class="checkboxList">
             <div ng-repeat="item in vm.indexDb">
@@ -136,5 +141,17 @@
     <div class="modal-footer">
         <button class="btn btn-default" ng-click="vm.save()">Save</button>
         <button class="btn btn-default" ng-click="vm.close()">Cancel</button>
+    </div>
+</script>
+<script type="text/ng-template" id="indexTreeGroup.html">
+    <div class="modal-header">
+        <h3 class="modal-title">Add a new group <button type="button" class="close" ng-click="vmg.close()">x</button></h3>
+    </div>
+    <div class="modal-body">
+        Group name: <input ng-model="vmg.data.name" size="50">
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-default" ng-click="vmg.save()">Save</button>
+        <button class="btn btn-default" ng-click="vmg.close()">Cancel</button>
     </div>
 </script>

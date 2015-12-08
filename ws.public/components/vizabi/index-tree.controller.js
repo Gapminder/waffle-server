@@ -16,8 +16,6 @@ module.exports = function (app) {
         self.save = function () {
           var r = JSON.parse(JSON
             .stringify(self.data)
-            .replace(/"title":/g, '"id":')
-            .replace(/"nodes":/g, '"children":')
             .replace(/,?"..hashKey":"object:[0-9]+"/g, ''));
 
           var res = $http.put('http://localhost:8009/api/vizabi/index-tree', r[0]);
@@ -29,10 +27,10 @@ module.exports = function (app) {
           });
         };
 
-        self.open = function open(current) {
+        self.openIndicators = function openIndicators(current) {
           var modalInstance = $modal.open({
-            templateUrl: 'indexTreeEdit.html',
-            controller: 'IndexEditTreeController as vm',
+            templateUrl: 'indexTreeIndicators.html',
+            controller: 'IndexAddIndicatorsController as vm',
             resolve: {
               indexDb: self.indexDb
             }
@@ -42,33 +40,47 @@ module.exports = function (app) {
             var nodeData = current.$modelValue;
 
             if (!nodeData.nodes) {
-              nodeData.nodes = [];
+              nodeData.children = [];
             }
 
             _.each(data, function (item) {
-              nodeData.nodes.push({
-                title: item,
-                nodes: []
+              nodeData.children.push({
+                id: item,
+                children: []
               });
+            });
+          });
+        };
+
+        self.openGroup = function openGroup(current) {
+          var modalInstance = $modal.open({
+            templateUrl: 'indexTreeGroup.html',
+            controller: 'IndexAddGroupController as vmg'
+          });
+
+          modalInstance.result.then(function (data) {
+            var nodeData = current.$modelValue;
+
+            if (!nodeData.children) {
+              nodeData.children = [];
+            }
+
+            nodeData.children.push({
+              id: data,
+              children: []
             });
           });
         };
 
         $http.get('http://localhost:8007/api/vizabi/index-db').then(function (response) {
           self.indexDb = response.data.data.indicatorsDB;
-
           $http.get('http://localhost:8009/api/vizabi/index-tree').then(function (response) {
-            var r = JSON.parse(
-              JSON.stringify(response.data.data)
-                .replace(/"id":/g, '"title":')
-                .replace(/"children":/g, '"nodes":')
-            );
-            self.data = [r.indicatorsTree];
+            self.data = [response.data.data.indicatorsTree];
           });
         });
       }
     ])
-    .controller('IndexEditTreeController', ['$modalInstance', 'indexDb', function ($modalInstance, indexDb) {
+    .controller('IndexAddIndicatorsController', ['$modalInstance', 'indexDb', function ($modalInstance, indexDb) {
       var vm = this;
       vm.save = save;
       vm.close = close;
@@ -86,6 +98,23 @@ module.exports = function (app) {
             return item.name;
           });
         $modalInstance.close(res);
+      }
+
+      function close() {
+        $modalInstance.close();
+      }
+    }])
+    .controller('IndexAddGroupController', ['$modalInstance', function ($modalInstance) {
+      var vm = this;
+      vm.save = save;
+      vm.close = close;
+
+      vm.data = {
+        name: ''
+      };
+
+      function save() {
+        $modalInstance.close(vm.data.name);
       }
 
       function close() {
