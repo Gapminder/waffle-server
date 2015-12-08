@@ -1,3 +1,4 @@
+'use strict';
 // Converter Class
 var _ = require('lodash');
 var fs = require('fs');
@@ -42,13 +43,36 @@ var measuresTask = {
 };
 var measureValuesTasks = [
   {
-    file: './data/2015_11_26/_measures.csv',
-    headers: [],
-    indicator: ''
+    file: './data/2015_11_26/_s_gdp___geo__territory___year.csv',
+    headers: ['country', 'name', 'year', 'value'],
+    indicator: 'gdp'
   },
+  {
+    file: './data/2015_11_26/_s_gdp_pc___geo__territory___year.csv',
+    headers: ['country', 'name', 'year', 'value'],
+    indicator: 'gdp_pc'
+  },
+  {
+    file: './data/2015_11_26/_s_lex___geo__territory___year.csv',
+    headers: ['country', 'name', 'year', 'value'],
+    indicator: 'lex'
+  },
+  {
+    file: './data/2015_11_26/_s_pop___geo__territory___year.csv',
+    headers: ['country', 'name', 'year', 'value'],
+    indicator: 'pop'
+  },
+  {
+    file: './data/2015_11_26/_s_tfr___geo__territory___year.csv',
+    headers: ['country', 'name', 'year', 'value'],
+    indicator: 'tfr'
+  },
+  {
+    file: './data/2015_11_26/_s_u5mr___eo__territory___year.csv',
+    headers: ['country', 'name', 'year', 'value'],
+    indicator: 'u5mr'
+  }
 ];
-// via rest API
-// 1. create dimensions
 // 2. create indicators with data (gdp, gdp_pc, lex, pop, tfr, u5mr)
 // 3. metadata.json - adaptor
 
@@ -63,7 +87,7 @@ async.waterfall([
   createTranslations,
   createDimensionsAndValues,
   createIndicators,
-  //createIndicatorValues
+  createIndicatorValues
 ], function (err) {
   if (err) {
     console.error(err);
@@ -129,9 +153,10 @@ function createDimensionsAndValues(cb) {
     function createYears(cb) {
       Dimensions.create({name: 'year', title: 'Year'}, function (err, dimension) {
         DimensionValues.create(_
-          .range(1800, 2050)
+          .range(1700, 2100)
           .map(function (year) {
             return {
+              dimensionGid: 'year',
               dimension: dimension.id,
               value: year
             };
@@ -142,7 +167,12 @@ function createDimensionsAndValues(cb) {
       Dimensions.create({name: 'country', title: 'Countries'}, function (err, dimension) {
         Geo.find({isTerritory: true}, {_id: 0, gid: 1, name: 1}, function (err, countries) {
           var cc = _.map(countries, function (country) {
-            return {value: country.gid, title: country.name, dimension: dimension.id};
+            return {
+              dimensionGid: 'country',
+              dimension: dimension.id,
+              value: country.gid,
+              title: country.name
+            };
           });
           return DimensionValues.create(cc, err => cb(err));
         });
@@ -242,6 +272,79 @@ function createIndicators(ciCb) {
     err => ciCb(err));
 }
 
-function createIndicatorValues(cb) {
-  cb();
+function createIndicatorValues(civCb) {
+  async.eachLimit(measureValuesTasks, 1,
+    (task, elCb) => async.waterfall([
+      cb => cb(null, {}),
+      // load indicator
+      (pipe, cb) => Indicators.findOne({name: task.indicator}).lean()
+        .exec((err, indicator)=> {
+          pipe.indicator = indicator;
+          return cb(err, pipe);
+        }),
+      // load dimensions
+      (pipe, cb) => Dimensions.find({}).lean()
+        .exec((err, dimensions) => {
+          pipe.dimensions = dimensions;
+          return cb(err, pipe);
+        }),
+      // load dimension values
+      (pipe, cb) => DimensionValues.find({}).lean()
+        .exec((err, dimensionValues) => {
+          pipe.dimensionValues = dimensionValues;
+          return cb(err, pipe);
+        }),
+      // build dimension values hash map
+      // dv - dimension value
+      (pipe, cb) => {
+        pipe.dimensionValues = _.reduce(pipe.dimensionValues, (res, dv) => {
+          res[dv.dimensionGid] = res[dv.dimensionGid] || [];
+          res[dv.dimensionGid][dv.value] = dv;
+          return res;
+        }, {});
+        return cb(null, pipe);
+      },
+      // read indicator values from csv
+      (pipe, cb) => parseCsvFile(task.file, task.headers, (err, jsonArray) => {
+        pipe.jsonArray = jsonArray;
+        return cb(err, pipe);
+      }),
+      // map indicator values
+      (pipe, cb) => {
+        pipe.indicatorValues = _(pipe.jsonArray).map(row => {
+          let year = 'year';
+          let country = 'country';
+          if (!pipe.dimensionValues[year][row[year]] || !pipe.dimensionValues[country][row[country]]) {
+            console.log(task.file, row[year], row[country]);
+            return null;
+          }
+          return {
+            coordinates: [{
+              value: row[year],
+              dimensionName: year,
+
+              dimension: pipe.dimensionValues[year][row[year]].dimension,
+              dimensionValue: pipe.dimensionValues[year][row[year]]._id
+            }, {
+              value: row[country],
+              dimensionName: country,
+
+              dimension: pipe.dimensionValues[country][row[country]].dimension,
+              dimensionValue: pipe.dimensionValues[country][row[country]]._id
+            }],
+            value: row.value,
+            title: row.value,
+            indicator: pipe.indicator._id,
+            indicatorName: pipe.indicator.name
+          };
+          // _.map end
+        }).compact().value();
+        return cb(null, pipe);
+      },
+      // create indicator values
+      // iv - indicator value
+      // ivCb - eachLimit(indicatorValues) callback
+      (pipe, cb) => async.eachLimit(pipe.indicatorValues, 100,
+        (iv, ivCb) => IndicatorsValues.create(iv, err => ivCb(err)), err => cb(err))
+    ], err => elCb(err)), err => civCb(err));
 }

@@ -15,7 +15,7 @@ var Schema = mongoose.Schema;
  * @property {Array<Models.AnalysisSessions>} analysisSessions - when this coordinates was created and modified
  */
 var Dimensions = new Schema({
-  //concept: {type: String, match: /^[a-z0-9_]*$/, index: true, unique: true, required: true},
+  // concept: {type: String, match: /^[a-z0-9_]*$/, index: true, unique: true, required: true},
   // name versions
   name: {type: String, required: true, unique: true, index: true},
   nameShort: String,
