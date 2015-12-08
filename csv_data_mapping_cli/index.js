@@ -63,20 +63,13 @@ async.waterfall([
   createTranslations,
   createDimensionsAndValues,
   createIndicators,
-  createIndicatorValues
+  //createIndicatorValues
 ], function (err) {
   if (err) {
     console.error(err);
   }
   console.log('done');
 });
-
-// geo region
-function cleanGeo(cb) {
-  return Geo.remove({}, function (err) {
-    return cb(err);
-  });
-}
 
 function importGeo(cb) {
   async.eachLimit(geoTasks, 1, function (task, eachLimitCb) {
@@ -176,9 +169,77 @@ function createTranslations(cb) {
   }
 }
 
-function createIndicators(cb) {
-  // parseCsvFile()
-  cb();
+function createIndicators(ciCb) {
+  var measuresJson, dimensions;
+  async.waterfall(
+    [
+      // parse measures csv file into json
+      cb => parseCsvFile(measuresTask.file, measuresTask.headers, (err, dataArray) => {
+        measuresJson = dataArray;
+        return cb(err);
+      }),
+      // read all dimensions (year and country for now)
+      cb => Dimensions.find({}).lean().exec((err, ds) => {
+        dimensions = ds;
+        return cb(err);
+      }),
+      // create indicators in db
+      cb => async.eachLimit(measuresJson, 1, function (indJson, indMapCb) {
+        if (indJson.scale === 'lin') {
+          indJson.scale = 'linear';
+        }
+        var defaultScale = ['linear', 'log'];
+        var range = indJson.value_range.split('x');
+        (() => {
+          if (!range) {
+            return;
+          }
+          if (range[0] === '') {
+            range[0] = null;
+          }
+          if (range[0]) {
+            range[0] = +_.trim(_.trim(range[0], '='), '<');
+          }
+          if (range[1] === '') {
+            range[1] = 999999999;
+          }
+          if (range[1]) {
+            range[1] = +_.trim(_.trim(range[1], '<'), '=');
+          }
+        })();
+
+        var tags = _(indJson.tag.split(','))
+          .map(_.trim)
+          .compact()
+          .value();
+
+        var indicator = {
+          name: indJson.measure,
+          title: indJson.name,
+          meta: _.omit({
+            tags: tags,
+            range: range,
+            scale: indJson.scale ? [indJson.scale] : defaultScale,
+            allowCharts: ['*'],
+            use: 'indicator',
+            sourceLink: '_measures.csv',
+            formula: indJson.formula,
+            usability: indJson.usability,
+            valueType: indJson.value_type,
+            prototype: indJson.prototype,
+            'default': indJson.default,
+            nameShort: indJson.name_short,
+            nameLong: indJson.name_long,
+            description: indJson.description
+          }, _.isEmpty),
+          units: indJson.unit,
+          dimensions: dimensions
+        };
+
+        return Indicators.create(indicator, err => indMapCb(err));
+      }, err => cb(err))
+    ],
+    err => ciCb(err));
 }
 
 function createIndicatorValues(cb) {
