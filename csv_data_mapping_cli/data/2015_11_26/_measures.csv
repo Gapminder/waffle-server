@@ -6,7 +6,7 @@ gini,Income Inequality,,gini__,Inequality,"Gini, income inequality, Gini coeffic
 lex,Length of life,,,Lifespan,Life expectancy at birth,The average lifespan is useful for getting a simple idea of the complete health of the entire population. In reality very few die at exactly the average lifespan. Almost everyone live either longer or shorter.,"The average lifespan (Life expectancy at birth) is what a newborn child can expect if the current death rates remain stable during the babies life. Im most countries deathrates are decreasing. This gives a snapshot of the health situation in a populaiotn at a given point in time, expressed as expectaitons for new-born. In reality new born will live in the futur, and in most places death rates are decreasing, why the actual average lifespan of new borns will be longer than the present death rates imply.",,,gapminder_basic,1,float,0<=x,lin,,,,,,,,,,,,
 u5mr,Child mortality rate,,,Child Mortality,,,,,,"gapminder_basic, child_health,mortality",1,float,0<=x<=1000,lin,,,,,,,,,,,,
 tfr,Babies per woman,,,Babies per woman,Total fertility rate,,,,,,,float,0<=x,lin,,,,,,,,,,,,
-gdp_pc_growth,GDP growth,,,Income growth,,,,,,,,float,,,,,,,,,,,,,,
+gdp_growth,GDP growth,,,Income growth,,,,,,,,float,,,,,,,,,,,,,,
 map_detail_level,Map Detail Level,,,,,,,,,tech,5,integer,10<x=10000,lin,,,,,,,,,,,,
 gdp_pc_growth,GDP per capita growth,,,Income growth,,,,,,,,float,,,,,,,,,,,,,,
 lex__gender__f,Female Life Expectancy,lex,,Lifespan of women,Womens #prototype,,,,,,,float,,,lex__gender__f=lex[gender.f],,,,,,,,,,,
