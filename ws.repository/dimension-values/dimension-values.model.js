@@ -14,6 +14,8 @@ var Schema = mongoose.Schema;
  * was created and modified
  */
 var DimensionValues = new Schema({
+  // should be required
+  dimensionGid: String,
   dimension: {type: Schema.Types.ObjectId, ref: 'Dimensions'},
   value: String,
   title: String,
