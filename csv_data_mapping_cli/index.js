@@ -11,10 +11,15 @@ require('../ws.repository/geo.model');
 require('../ws.repository/dimensions/dimensions.model');
 require('../ws.repository/dimension-values/dimension-values.model');
 require('../ws.repository/translations.model');
+require('../ws.repository/indicators/indicators.model');
+require('../ws.repository/indicator-values/indicator-values.model');
+
 var Geo = mongoose.model('Geo');
 var Dimensions = mongoose.model('Dimensions');
 var DimensionValues = mongoose.model('DimensionValues');
 var Translations = mongoose.model('Translations');
+var Indicators = mongoose.model('Indicators');
+var IndicatorsValues = mongoose.model('IndicatorValues');
 
 var geoTasks = [
   // geo
@@ -26,13 +31,23 @@ var geoTasks = [
     file: './data/2015_11_26/_e_geo__g_region4.csv',
     headers: ['gid', 'isRegion', 'name', 'nameShort', 'description', 'subdim', 'lat', 'lng', 'color']
   },
-  {file: './data/2015_11_26/_e_geo__g_west_rest.csv', headers: ['gid', 'name', 'subdim']},
+  {
+    file: './data/2015_11_26/_e_geo__g_west_rest.csv',
+    headers: ['gid', 'name', 'subdim']
+  },
   // geo,geo.name,geo.is.territory,geo.is.un_state,geo.g_region4,geo.g_west_rest,geo.lat,geo.lng
   {
     file: './data/2015_11_26/_e_geo__territory.csv',
     headers: ['gid', 'name', 'isTerritory', 'isUnState', 'geoRegion4', 'geoWestRest', 'lat', 'lng']
   }
 ];
+
+var measuresTask = {
+  file: './data/2015_11_26/_measures.csv',
+  headers: ['measure', 'name', 'prototype', 'default', 'name_short', 'name_long', 'description', 'definition', 'link', 'unit', 'tag', 'usability', 'value_type', 'value_range', 'scale', 'formula', 'variant_attributes', 'disallow_operations', 'is_aggregated', 'allow_aggregation', 'aggregation_weight', 'custom_aggregation', 'numeric_class', 'max_precision', 'max_decimals', 'variant_measures', 'variant_of']
+};
+var measureValuesTasks = [];
+
 // via rest API
 // 1. create dimensions
 // 2. create indicators with data (gdp, gdp_pc, lex, pop, tfr, u5mr)
@@ -44,6 +59,8 @@ async.waterfall([
   createTranslations,
   cleanDimensions,
   createDimensions,
+  cleanIndicators,
+  createIndicators
 ], function (err) {
   if (err) {
     console.error(err);
@@ -61,7 +78,7 @@ function cleanGeo(cb) {
 function importGeo(cb) {
   console.log(arguments)
   async.eachLimit(geoTasks, 1, function (task, eachLimitCb) {
-    parseGeoFile(task.file, task.headers, function (err, dataArray) {
+    parseCsvFile(task.file, task.headers, function (err, dataArray) {
       async.eachLimit(dataArray, 50, function (geoJson, geoEachLimit) {
         return Geo.create(geoJson, geoEachLimit);
       }, function () {
@@ -77,7 +94,7 @@ function importGeo(cb) {
   });
 }
 
-function parseGeoFile(file, headers, cb) {
+function parseCsvFile(file, headers, cb) {
   var converter = new Converter({
     workerNum: 4,
     headers: headers,
@@ -158,7 +175,7 @@ function createTranslations(cb) {
     .concat(map(en, 'en'))
     .concat(map(se, 'se'));
   return Translations.remove({}, function () {
-    return Translations.create(translations, function(err){
+    return Translations.create(translations, function (err) {
       return cb(err);
     });
   });
@@ -169,4 +186,19 @@ function createTranslations(cb) {
       return res;
     }, []);
   }
+}
+
+function cleanIndicators(cb) {
+  Indicators.remove({}, function (err) {
+    if (err) {
+      return cb(err);
+    }
+    IndicatorsValues.remove({}, function (err){
+      return cb(err);
+    });
+  });
+}
+
+function createIndicators(cb) {
+  parseCsvFile()
 }
