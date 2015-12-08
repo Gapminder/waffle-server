@@ -31,4 +31,4 @@ DimensionValues.index({value: 1});
 DimensionValues.index({title: 1});
 DimensionValues.index({synonyms: 1});
 
-mongoose.model('DimensionValues', DimensionValues);
+module.exports = mongoose.model('DimensionValues', DimensionValues);

@@ -5,21 +5,15 @@ var async = require('async');
 var Converter = require('csvtojson').Converter;
 
 var mongoose = require('mongoose');
+mongoose.set('debug', true);
 mongoose.connect('mongodb://localhost:27017/ws_test');
-//mongoose.set('debug', true);
-require('../ws.repository/geo.model');
-require('../ws.repository/dimensions/dimensions.model');
-require('../ws.repository/dimension-values/dimension-values.model');
-require('../ws.repository/translations.model');
-require('../ws.repository/indicators/indicators.model');
-require('../ws.repository/indicator-values/indicator-values.model');
 
-var Geo = mongoose.model('Geo');
-var Dimensions = mongoose.model('Dimensions');
-var DimensionValues = mongoose.model('DimensionValues');
-var Translations = mongoose.model('Translations');
-var Indicators = mongoose.model('Indicators');
-var IndicatorsValues = mongoose.model('IndicatorValues');
+var Geo = require('../ws.repository/geo.model');
+var Dimensions = require('../ws.repository/dimensions/dimensions.model');
+var DimensionValues = require('../ws.repository/dimension-values/dimension-values.model');
+var Translations = require('../ws.repository/translations.model');
+var Indicators = require('../ws.repository/indicators/indicators.model');
+var IndicatorsValues = require('../ws.repository/indicator-values/indicator-values.model');
 
 var geoTasks = [
   // geo
@@ -46,7 +40,13 @@ var measuresTask = {
   file: './data/2015_11_26/_measures.csv',
   headers: ['measure', 'name', 'prototype', 'default', 'name_short', 'name_long', 'description', 'definition', 'link', 'unit', 'tag', 'usability', 'value_type', 'value_range', 'scale', 'formula', 'variant_attributes', 'disallow_operations', 'is_aggregated', 'allow_aggregation', 'aggregation_weight', 'custom_aggregation', 'numeric_class', 'max_precision', 'max_decimals', 'variant_measures', 'variant_of']
 };
-var measureValuesTasks = [];
+var measureValuesTasks = [
+  {
+    file: './data/2015_11_26/_measures.csv',
+    headers: [],
+    indicator: ''
+  },
+];
 
 // via rest API
 // 1. create dimensions
@@ -76,13 +76,17 @@ function cleanGeo(cb) {
 }
 
 function importGeo(cb) {
-  console.log(arguments)
   async.eachLimit(geoTasks, 1, function (task, eachLimitCb) {
     parseCsvFile(task.file, task.headers, function (err, dataArray) {
+      if (err) {
+        return cb(err);
+      }
       async.eachLimit(dataArray, 50, function (geoJson, geoEachLimit) {
-        return Geo.create(geoJson, geoEachLimit);
-      }, function () {
-        eachLimitCb();
+        return Geo.create(geoJson, function (err) {
+          geoEachLimit(err);
+        });
+      }, function (err) {
+        eachLimitCb(err);
       });
     });
   }, function (err) {
@@ -165,7 +169,9 @@ function createDimensions(cb) {
         });
       });
     }
-  ], cb);
+  ], function (err) {
+    return cb(err);
+  });
 }
 
 function createTranslations(cb) {
@@ -193,12 +199,13 @@ function cleanIndicators(cb) {
     if (err) {
       return cb(err);
     }
-    IndicatorsValues.remove({}, function (err){
+    IndicatorsValues.remove({}, function (err) {
       return cb(err);
     });
   });
 }
 
 function createIndicators(cb) {
-  parseCsvFile()
+  // parseCsvFile()
+  cb();
 }

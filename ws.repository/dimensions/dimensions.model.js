@@ -48,4 +48,4 @@ var Dimensions = new Schema({
   analysisSessions: [{type: Schema.Types.ObjectId, ref: 'AnalysisSessions'}]
 });
 
-mongoose.model('Dimensions', Dimensions);
+module.exports = mongoose.model('Dimensions', Dimensions);
