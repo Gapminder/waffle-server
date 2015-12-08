@@ -8,4 +8,4 @@ var Translations = new Schema({
 });
 
 Translations.index({1: true, key: 1});
-mongoose.model('Translations', Translations);
+module.exports = mongoose.model('Translations', Translations);

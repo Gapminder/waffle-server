@@ -32,4 +32,4 @@ var Indicators = new Schema({
   analysisSessions: [{type: Schema.Types.ObjectId, ref: 'AnalysisSessions'}]
 });
 
-mongoose.model('Indicators', Indicators);
+module.exports = mongoose.model('Indicators', Indicators);

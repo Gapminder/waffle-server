@@ -27,4 +27,4 @@ var Geo = new Schema({
   isUnState: Boolean
 });
 
-mongoose.model('Geo', Geo);
+module.exports = mongoose.model('Geo', Geo);
