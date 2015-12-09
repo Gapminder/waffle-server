@@ -16,6 +16,19 @@ var meta = {
   entities: require('./fixtures/entities.json')
 };
 
+describe('API geo properties', function() {
+  describe('when is requested list of all geos', function() {
+    it('should not get err', function() {
+    });
+
+    it('should be in JSON format', function() {
+    });
+
+    it('should be ', function() {
+    });
+  });
+});
+
 describe('Checking API geo properties', function () {
   it('list', function (done) {
     request("/api/geo/", function (err, res, body) {
