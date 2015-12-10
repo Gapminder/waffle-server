@@ -39,7 +39,7 @@ module.exports = function (app) {
           modalInstance.result.then(function (data) {
             var nodeData = current.$modelValue;
 
-            if (!nodeData.nodes) {
+            if (!nodeData.children) {
               nodeData.children = [];
             }
 
@@ -72,6 +72,19 @@ module.exports = function (app) {
           });
         };
 
+        self.removeRow = function removeRow(scope) {
+          var modalInstance = $modal.open({
+            templateUrl: 'removeRow.html',
+            controller: 'DeleteController as vmr',
+            resolve: {
+              global: {
+                remove: self.remove,
+                row: scope
+              }
+            }
+          });
+        };
+
         $http.get('http://localhost:8007/api/vizabi/index-db').then(function (response) {
           self.indexDb = response.data.data.indicatorsDB;
           $http.get('http://localhost:8009/api/vizabi/index-tree').then(function (response) {
@@ -80,6 +93,20 @@ module.exports = function (app) {
         });
       }
     ])
+    .controller('DeleteController', ['$modalInstance', 'global', function ($modalInstance, global) {
+      var vmr = this;
+      vmr.remove = remove;
+      vmr.close = close;
+
+      function remove() {
+        global.remove(global.row);
+        close();
+      }
+
+      function close() {
+        $modalInstance.close();
+      }
+    }])
     .controller('IndexAddIndicatorsController', ['$modalInstance', 'indexDb', function ($modalInstance, indexDb) {
       var vm = this;
       vm.save = save;
