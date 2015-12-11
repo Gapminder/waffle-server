@@ -9,12 +9,15 @@ var mongoose = require('mongoose');
 //mongoose.set('debug', true);
 mongoose.connect('mongodb://localhost:27017/ws_test');
 
+var metadata = require('./vizabi/metadata.json');
 var Geo = require('../ws.repository/geo.model');
 var Dimensions = require('../ws.repository/dimensions/dimensions.model');
 var DimensionValues = require('../ws.repository/dimension-values/dimension-values.model');
 var Translations = require('../ws.repository/translations.model');
 var Indicators = require('../ws.repository/indicators/indicators.model');
 var IndicatorsValues = require('../ws.repository/indicator-values/indicator-values.model');
+var IndexTree = require('../ws.repository/indexTree.model');
+var IndexDb = require('../ws.repository/indexDb.model');
 
 var geoTasks = [
   // geo
@@ -83,6 +86,8 @@ async.waterfall([
   cb => Indicators.remove({}, err => cb(err)),
   cb => IndicatorsValues.remove({}, err => cb(err)),
   cb => Translations.remove({}, err => cb(err)),
+  importIndicatorsDb,
+  importIndicatorsTree,
   importGeo,
   createTranslations,
   createDimensionsAndValues,
@@ -92,8 +97,46 @@ async.waterfall([
   if (err) {
     console.error(err);
   }
+
   console.log('done');
+  process.exit(0);
 });
+
+function importIndicatorsDb(cb) {
+  var indicatorsDB = _.keys(metadata.indicatorsDB)
+    .map(function (key) {
+      return _.extend(metadata.indicatorsDB[key], {name: key});
+    });
+
+  IndexDb.collection.insert(indicatorsDB, function (err, docs) {
+    if (err) {
+      return cb(err);
+    }
+
+    return cb();
+  });
+}
+
+function importIndicatorsTree(cb) {
+  IndexTree
+    .findOne({}, {_id: 0, __v: 0})
+    .exec(function (err, tree) {
+      if (err) {
+        return cb(err);
+      }
+
+      if (!tree) {
+        var indexTree = new IndexTree(metadata.indicatorsTree);
+        return indexTree.save(function (_err) {
+          return cb(_err);
+        });
+      }
+
+      IndexTree.update({}, {$set: metadata.indicatorsTree}, function (_err) {
+        return cb(_err);
+    });
+  });
+}
 
 function importGeo(cb) {
   async.eachLimit(geoTasks, 1, function (task, eachLimitCb) {
@@ -262,7 +305,7 @@ function createIndicators(ciCb) {
             nameLong: indJson.name_long,
             description: indJson.description
           }, _.isEmpty),
-          units: indJson.unit,
+          units: {name: indJson.unit},
           dimensions: dimensions
         };
 
