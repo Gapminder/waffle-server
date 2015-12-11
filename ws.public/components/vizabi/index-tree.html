@@ -5,7 +5,10 @@
       class="glyphicon" ng-class="{'glyphicon-chevron-right': collapsed, 'glyphicon-chevron-down': !collapsed}"></span>
     </a>
     {{node.id}}
-    <a class="pull-right btn btn-danger btn-xs" data-nodrag ng-click="ctrl.removeRow(this)">
+    <a class="pull-right btn btn-danger btn-xs"
+       ng-disabled="ctrl.isReadOnly(node.id)"
+       data-nodrag
+       ng-click="ctrl.removeRow(this, node.id)">
       <span class="glyphicon glyphicon-remove"></span>
     </a>
     <a ng-if="!ctrl.indexDb[node.id]"
@@ -28,6 +31,7 @@
   </ol>
 </script>
 
+<div alert ng-repeat="alert in ctrl.alerts" type="{{alert.type}}" close="ctrl.closeAlert($index)">{{alert.msg}}</div>
 
 <div class="row wrapper border-bottom white-bg page-heading">
   <div class="col-lg-10">
@@ -39,8 +43,9 @@
 </div>
 <div class="wrapper wrapper-content animated fadeInRight">
   <button class="btn btn-default" ng-click="ctrl.save()">Save</button>
+  <button class="btn btn-default" ng-click="ctrl.refresh()">Refresh</button>
 
-  <div class="row" ng-if="ctrl.data">
+  <div class="row" ng-if="ctrl.data && ctrl.readOnly">
     <div class="col-sm-6">
       <div ui-tree id="tree-root" class="angular-ui-tree">
         <ol ui-tree-nodes ng-model="ctrl.data" class="angular-ui-tree-nodes">
@@ -95,7 +100,7 @@
 <!-- delete -->
 <script type="text/ng-template" id="removeRow.html">
   <div class="modal-body">
-    sure?
+    Are you sure?
   </div>
   <div class="modal-footer">
     <button class="btn btn-default" ng-click="vmr.remove()">Remote</button>

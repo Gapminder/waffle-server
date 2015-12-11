@@ -1,29 +1,44 @@
 module.exports = function (app) {
   app
+    .constant('IndexTreeSettings', {
+      INDEX_TREE: 'http://localhost:8009/api/vizabi/index-tree',
+      INDEX_DB: 'http://localhost:8007/api/vizabi/index-db',
+      INDEX_TREE_READ_ONLY: 'http://localhost:8009/api/vizabi/index-tree/read-only'
+    })
     .controller('IndexTreeController', [
-      '$state', '$http', '$modal',
-      function ($state, $http, $modal) {
+      '$state', '$http', '$modal', 'IndexTreeSettings',
+      function ($state, $http, $modal, IndexTreeSettings) {
         var self = this;
 
-        self.remove = function (scope) {
+        self.alerts = [];
+
+        self.closeAlert = function(index) {
+          self.alerts.splice(index, 1);
+        };
+
+        self.remove = function remove(scope) {
           scope.remove();
         };
 
-        self.toggle = function (scope) {
+        self.toggle = function toggle(scope) {
           scope.toggle();
         };
 
-        self.save = function () {
+        self.refresh = function refresh() {
+          location.href = location.href;
+        };
+
+        self.save = function save() {
           var r = JSON.parse(JSON
             .stringify(self.data)
             .replace(/,?"..hashKey":"object:[0-9]+"/g, ''));
 
-          var res = $http.put('http://localhost:8009/api/vizabi/index-tree', r[0]);
+          var res = $http.put(IndexTreeSettings.INDEX_TREE, r[0]);
           res.success(function (data) {
-            console.log(1, data);
+            self.alerts.push({type: 'success', msg: 'Tree was saved successfully.'});
           });
           res.error(function (data, status, headers, config) {
-            console.log(2, data, status, headers, config);
+            self.alerts.push({type: 'danger', msg: data.error.replace(/\\n/g, '<br>')});
           });
         };
 
@@ -72,23 +87,32 @@ module.exports = function (app) {
           });
         };
 
-        self.removeRow = function removeRow(scope) {
-          var modalInstance = $modal.open({
-            templateUrl: 'removeRow.html',
-            controller: 'DeleteController as vmr',
-            resolve: {
-              global: {
-                remove: self.remove,
-                row: scope
+        self.removeRow = function removeRow(scope, id) {
+          if (!self.isReadOnly(id)) {
+            $modal.open({
+              templateUrl: 'removeRow.html',
+              controller: 'DeleteController as vmr',
+              resolve: {
+                global: {
+                  remove: self.remove,
+                  row: scope
+                }
               }
-            }
-          });
+            });
+          }
         };
 
-        $http.get('http://localhost:8007/api/vizabi/index-db').then(function (response) {
+        self.isReadOnly = function isReadOnly(key) {
+          return self.readOnly.indexOf(key) >= 0;
+        };
+
+        $http.get(IndexTreeSettings.INDEX_DB).then(function (response) {
           self.indexDb = response.data.data.indicatorsDB;
-          $http.get('http://localhost:8009/api/vizabi/index-tree').then(function (response) {
-            self.data = [response.data.data.indicatorsTree];
+          $http.get(IndexTreeSettings.INDEX_TREE_READ_ONLY).then(function (response) {
+            self.readOnly = response.data.data;
+            $http.get(IndexTreeSettings.INDEX_TREE).then(function (response) {
+              self.data = [response.data.data.indicatorsTree];
+            });
           });
         });
       }
