@@ -6,8 +6,8 @@ var async = require('async');
 var Converter = require('csvtojson').Converter;
 
 var mongoose = require('mongoose');
-//mongoose.set('debug', true);
-mongoose.connect('mongodb://localhost:27017/ws_test');
+mongoose.set('debug', true);
+mongoose.connect('mongodb://localhost:27017/_test');
 
 var Geo = require('../ws.repository/geo.model');
 var Dimensions = require('../ws.repository/dimensions/dimensions.model');
@@ -262,7 +262,7 @@ function createIndicators(ciCb) {
             nameLong: indJson.name_long,
             description: indJson.description
           }, _.isEmpty),
-          units: indJson.unit,
+          units: {name: indJson.unit},
           dimensions: dimensions
         };
 

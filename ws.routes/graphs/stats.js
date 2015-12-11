@@ -30,8 +30,8 @@ module.exports = function (serviceLocator) {
 
   function vizabiTools(req, res, next) {
     // some time later
-    // req.query.select ? _.difference(JSON.parse(req.query.select), ['geo','time']) : ['pop'];
-    var select = ['pop', 'u5mr', 'gdp_per_cap', 'gini'];
+   var select = req.query.select ? _.difference(JSON.parse(req.query.select), ['geo','time']) : ['pop'];
+    //var select = ['pop', 'u5mr', 'gdp_per_cap', 'gini'];
     var reqWhere = 'WHERE i1.name in ' + JSON.stringify(select);
     if (req.query.time) {
       var time = parseInt(req.query.time, 10);
