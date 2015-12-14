@@ -81,7 +81,7 @@ function validateMeasureValues(measureValuesValidationTask) {
           async.parallelLimit(comparisonActions, 200, (err, comparedMeasureValues) => {
             let groupedByMeasureNameValues =
               _.chain(comparedMeasureValues)
-              .filter()//filters out undefined
+              .compact()
               .groupBy(measure => measure.indicator)
               .value();
 
