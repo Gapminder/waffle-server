@@ -11,7 +11,7 @@ mongoose.connect('mongodb://localhost:27017/ws_test');
 let Geo = require('../../ws.repository/geo.model');
 
 console.time('validationTime');
-Geo.find({}, {__v: 0, _id: 0, isUnState: 0, isTerritory: 0, geoWestRest: 0}).lean().exec((err, geos) => {
+Geo.find({}, {gid: 1, name: 1, geoRegion4: 1, lat: 1, lng: 1, subdim: 1, _id: 0}).lean().exec((err, geos) => {
   if (err) {
     throw err;
   }
@@ -114,7 +114,7 @@ Geo.find({}, {__v: 0, _id: 0, isUnState: 0, isTerritory: 0, geoWestRest: 0}).lea
             async.series(comparisonActions, (err, comparedGeos) => {
               let groupedByGidGeoResults =
                 _.chain(comparedGeos)
-                  .filter() // empty filter will get rid of undefined
+                  .compact()
                   .groupBy(comparedGeo => comparedGeo.gid)
                   .value();
 
