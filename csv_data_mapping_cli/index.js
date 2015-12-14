@@ -97,7 +97,9 @@ async.waterfall([
   if (err) {
     console.error(err);
   }
+
   console.log('done');
+  process.exit(0);
 });
 
 function importIndicatorsDb(cb) {
