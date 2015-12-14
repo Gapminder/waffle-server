@@ -8,7 +8,7 @@ module.exports = function (app) {
     PORT: process.env.PORT || 3000,
     HOST: process.env.HOST || 'http://localhost',
     HOST_URL: process.env.HOST_URL,
-    MONGODB_URL: 'mongodb://localhost/waffleserver',
+    MONGODB_URL: 'mongodb://localhost/ws_test',
     DEFAULT_NODE_ENV: 'development',
     NEO4J_URL: process.env.NEO4J_URL || 'http://neo4j:neo4j@localhost:7474',
 

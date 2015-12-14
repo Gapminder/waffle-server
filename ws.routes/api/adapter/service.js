@@ -102,7 +102,8 @@ module.exports = function (serviceLocator) {
       if (err) {
         console.error(err);
       }
-      return res.json(metadataFile);
+
+      return res.json(metadata);
     });
   }
 
@@ -118,26 +119,26 @@ module.exports = function (serviceLocator) {
           return cb(err, result);
         });
       },
-      function updateIndicatorsMeta(indexDb, cb) {
-        Indicators.find({}).lean().exec(function (err, indicators) {
-          _.forEach(indicators, function (ind) {
-            ind.meta = ind.meta || {};
-
-            if (!indexDb[ind.name]) {
-              indexDb[ind.name] = ind.meta;
-              indexDb[ind.name].unit = (ind.units && ind.units.name) || '';
-            }
-
-            indexDb[ind.name].unit = (ind.units && ind.units.name) || indexDb[ind.name].unit;
-            indexDb[ind.name].use = ind.meta.use || indexDb[ind.name].use || 'indicator';
-            indexDb[ind.name].allowCharts = ind.meta.allowCharts || indexDb[ind.name].allowCharts;
-            indexDb[ind.name].scale = ind.meta.scale || indexDb[ind.name].scale;
-            indexDb[ind.name].domain = ind.meta.range || indexDb[ind.name].domain;
-          });
-
-          return cb(err, indexDb);
-        });
-      }
+      //function updateIndicatorsMeta(indexDb, cb) {
+      //  Indicators.find({}).lean().exec(function (err, indicators) {
+      //    _.forEach(indicators, function (ind) {
+      //      ind.meta = ind.meta || {};
+      //
+      //      if (!indexDb[ind.name]) {
+      //        indexDb[ind.name] = ind.meta;
+      //        indexDb[ind.name].unit = (ind.units && ind.units.name) || '';
+      //      }
+      //
+      //      indexDb[ind.name].unit = (ind.units && ind.units.name) || indexDb[ind.name].unit;
+      //      indexDb[ind.name].use = ind.meta.use || indexDb[ind.name].use || 'indicator';
+      //      indexDb[ind.name].allowCharts = ind.meta.allowCharts || indexDb[ind.name].allowCharts;
+      //      indexDb[ind.name].scale = ind.meta.scale || indexDb[ind.name].scale;
+      //      indexDb[ind.name].domain = ind.meta.range || indexDb[ind.name].domain;
+      //    });
+      //
+      //    return cb(err, indexDb);
+      //  });
+      //}
     ], function (err, indexDb) {
       return done(err, indexDb);
     });
