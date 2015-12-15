@@ -6,7 +6,7 @@ var async = require('async');
 var Converter = require('csvtojson').Converter;
 
 var mongoose = require('mongoose');
-mongoose.set('debug', true);
+//mongoose.set('debug', true);
 mongoose.connect('mongodb://localhost:27017/ws_test');
 
 var metadata = require('./vizabi/metadata.json');
