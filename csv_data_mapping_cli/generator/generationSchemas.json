@@ -1,0 +1,17 @@
+[
+  {
+    "file": "geos.csv",
+    "headers": ["geo","geo.name","geo.cat","geo.region","geo.lat","geo.lng"],
+    "wsProperties": ["geo","geo.name","geo.cat","geo.region","geo.lat","geo.lng"],
+    "endpoint": "geos"
+  },
+  {
+    "file": "measureValues.csv",
+    "headers": ["geo","time","pop", "gdp_pc", "gini", "u5mr"],
+    "wsProperties": ["geo","time","pop", "gdp_pc", "gini", "u5mr"],
+    "endpoint": "measureValues",
+    "query": "time=2015"
+  }
+]
+
+
