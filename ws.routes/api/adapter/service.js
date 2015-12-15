@@ -35,7 +35,7 @@ module.exports = function (serviceLocator) {
 
   router.get('/api/vizabi/translation/:lang.json', compression(), u.getCacheConfig('translations'), cache.route(), getTranslations);
 
-  router.get('/api/vizabi/mc_precomputed_shapes.json', compression(), u.getCacheConfig('mc-precomputed-shapes'), cache.route(),  function (req, res) {
+  router.get('/api/vizabi/mc_precomputed_shapes.json', compression(), u.getCacheConfig('mc-precomputed-shapes'), cache.route(), function (req, res) {
     return res.json(mcPrecomputedShapes);
   });
 
@@ -49,11 +49,11 @@ module.exports = function (serviceLocator) {
 
   return app.use(router);
 
-  function getTranslations (req, res) {
+  function getTranslations(req, res) {
     var lang = (req.params && req.params.lang) || 'en';
 
     Translations.find({language: lang}, function (err, items) {
-      var result = _.reduce(items, function(result, item) {
+      var result = _.reduce(items, function (result, item) {
         result[item.key] = item.value;
         return result;
       }, {});
@@ -62,7 +62,7 @@ module.exports = function (serviceLocator) {
     });
   }
 
-  function adoptGeoProperties (req, res) {
+  function adoptGeoProperties(req, res) {
     geoController.listGeoProperties(function (err, result) {
       if (err) {
         res.status(404).send(err);
@@ -70,12 +70,15 @@ module.exports = function (serviceLocator) {
 
       var fields = _.keys(result[0]);
 
-      json2csv({ data: result, fields: fields }, function(err, csv) {
+      json2csv({data: result, fields: fields}, function (err, csv) {
         if (err) {
           return console.err(err);
         }
 
-        res.set({'Content-Disposition': 'attachment; filename=dont-panic-poverty-geo-properties.csv','Content-type': 'text/csv'});
+        res.set({
+          'Content-Disposition': 'attachment; filename=dont-panic-poverty-geo-properties.csv',
+          'Content-type': 'text/csv'
+        });
         return res.send(csv);
       });
 
@@ -91,12 +94,26 @@ module.exports = function (serviceLocator) {
       indicatorsTree: function getIndicatorsTree(cb) {
         IndexTree.findOne({}).lean().exec(function (err, indexTree) {
           return cb(err, indexTree);
-        })
+        });
       },
-      entities: function getGeoEntities(cb) {
-        geoController.listCountriesProperties(function (err, result) {
-          return cb(err, result);
-        })
+      entities: (cb) => {
+        return Geo.find({isTerritory: true}, {_id: 0, gid: 1, name: 1})
+          .sort('gid')
+          .lean()
+          .exec((err, geoProps) => {
+            if (err) {
+              return cb(err);
+            }
+
+            var result = _.map(geoProps, prop => {
+              return {
+                geo: prop.gid,
+                name: prop.name
+              };
+            });
+
+            return cb(null, result);
+          });
       }
     }, function (err, metadata) {
       if (err) {
@@ -110,7 +127,7 @@ module.exports = function (serviceLocator) {
   function getIndicatorsDB(done) {
     async.waterfall([
       function getIndexDb(cb) {
-        IndexDb.find({}).lean().exec(function(err, indexDb) {
+        IndexDb.find({}).lean().exec(function (err, indexDb) {
           var result = _.reduce(indexDb, function (result, item) {
             result[item.name] = item;
             return result;
