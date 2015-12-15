@@ -92,9 +92,7 @@ module.exports = function (serviceLocator) {
       },
       indicatorsDB: getIndicatorsDB,
       indicatorsTree: function getIndicatorsTree(cb) {
-        IndexTree.findOne({}).lean().exec(function (err, indexTree) {
-          return cb(err, indexTree);
-        });
+        IndexTree.findOne({}, {_id: 0, __v: 0}).lean().exec(cb);
       },
       entities: (cb) => {
         return Geo.find({isTerritory: true}, {_id: 0, gid: 1, name: 1})
@@ -127,35 +125,16 @@ module.exports = function (serviceLocator) {
   function getIndicatorsDB(done) {
     async.waterfall([
       function getIndexDb(cb) {
-        IndexDb.find({}).lean().exec(function (err, indexDb) {
+        IndexDb.find({}, {_id: 0}).lean().exec(function (err, indexDb) {
           var result = _.reduce(indexDb, function (result, item) {
             result[item.name] = item;
+            delete item.name;
             return result;
           }, {});
 
           return cb(err, result);
         });
-      },
-      //function updateIndicatorsMeta(indexDb, cb) {
-      //  Indicators.find({}).lean().exec(function (err, indicators) {
-      //    _.forEach(indicators, function (ind) {
-      //      ind.meta = ind.meta || {};
-      //
-      //      if (!indexDb[ind.name]) {
-      //        indexDb[ind.name] = ind.meta;
-      //        indexDb[ind.name].unit = (ind.units && ind.units.name) || '';
-      //      }
-      //
-      //      indexDb[ind.name].unit = (ind.units && ind.units.name) || indexDb[ind.name].unit;
-      //      indexDb[ind.name].use = ind.meta.use || indexDb[ind.name].use || 'indicator';
-      //      indexDb[ind.name].allowCharts = ind.meta.allowCharts || indexDb[ind.name].allowCharts;
-      //      indexDb[ind.name].scale = ind.meta.scale || indexDb[ind.name].scale;
-      //      indexDb[ind.name].domain = ind.meta.range || indexDb[ind.name].domain;
-      //    });
-      //
-      //    return cb(err, indexDb);
-      //  });
-      //}
+      }
     ], function (err, indexDb) {
       return done(err, indexDb);
     });
