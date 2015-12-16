@@ -56,8 +56,8 @@ function listCountriesProperties(cb) {
           'geo.name': prop.name,
           'geo.cat': mappingCategories[prop.subdim],
           'geo.region': prop.geoRegion4 || prop.gid,
-          lat: prop.lat,
-          lng: prop.lng
+          'geo.lat': prop.lat,
+          'geo.lng': prop.lng
         };
       });
 
