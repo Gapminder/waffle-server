@@ -30,6 +30,16 @@ cd gapminder-tools-vizabi
 npm i
 cd ..
 
+# get Vizabi
+git clone https://github.com/Gapminder/vizabi.git -b feature-graph-reader-update
+cd vizabi
+npm link
+cd ..
+
+# Set expected Vizabi version for Vizabi Tools
+cd gapminder-tools-vizabi
+npm link vizabi
+
 # set DB for Vizabi Tools
 mongorestore --drop
 
