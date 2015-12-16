@@ -21,12 +21,22 @@ let client = request.createClient(WS_URL);
 
 let endpoints = {
   geos: {
-    path: '/api/geo/countries'
+    path: '/api/geo/countries',
+    preProcessData: data => {
+      return _.chain(data)
+        .filter(geo => {
+          return _.every(_.keys(geo), key => !!geo[key]);
+        })
+        .value();
+    }
   },
   measureValues: {
     path: '/api/graphs/stats/vizabi-tools',
     preProcessData: data => {
       return _.chain(data.rows)
+        .filter(row => {
+          return _.every(row, value => !!value);
+        })
         .map(row => _.zipObject(data.headers, row))
         .value();
     }
@@ -67,7 +77,7 @@ function generateCsv(schema, data, cb) {
     fields: schema.wsProperties,
     fieldNames: schema.headers,
     data: preProcessData(data),
-    quotes: ''
+    quotes: '"'
   }, cb);
 }
 
