@@ -5,6 +5,7 @@ var async = require('async');
 var express = require('express');
 var mongoose = require('mongoose');
 var compression = require('compression');
+var listCountriesProperties = require('../api/adapter/geo-properties.controller').listCountriesProperties;
 
 var ensureAuthenticated = require('../utils').ensureAuthenticated;
 var getCacheConfig = require('../utils').getCacheConfig;
@@ -28,41 +29,31 @@ module.exports = function (serviceLocator) {
   return app.use(router);
 
   function vizabiTools(req, res, next) {
+    var query = req.query.select || '';
+    if (req.query.select && req.query.select.match(/pop/)) {
+      query = query.replace('pop', 'u5mr,gdp_pc,pop');
+    }
+    var select = query.split(',');
+    select = _.all(select, v=>/^geo/.test(v)) || select;
+    console.log(select);
+
     // some time later
     async.waterfall([
-      // parse query
-      cb => cb(null, req.query.select.split(',')),
-      // is geo properties request
-      (select, cb) => cb(null, _.all(select, v=>/^geo/.test(v)) || select),
-
-      (select, cb) => {
+      //// parse query
+      //cb => cb(null, query.split(',')),
+      //// is geo properties request
+      //(select, cb) => cb(null, _.all(select, v=>/^geo/.test(v)) || select),
+      (cb) => {
         if (select === true) {
-          // do geo properties request
-          Geo.find({}, {_id: 0})
-            .lean(true)
-            .exec((err, geos) => {
-              // geo,geo.name,geo.cat,geo.region,geo.lat,geo.lng
-              var data = {
-                headers: ['geo', 'geo.name', 'geo.cat', 'geo.region', 'geo.lat', 'geo.lng'],
-                rows: _.map(geos, geo => [
-                  geo.gid, geo.name, geoToCat(geo), geo.geoRegion4 || geo.gid, geo.lat, geo.lng
-                ])
-              };
-              return cb(err, data);
-
-              function geoToCat(geo) {
-                switch (geo.subdim) {
-                  case 'g_region':
-                    return 'region';
-                  case 'planet':
-                    return 'planet';
-                  case 'territory':
-                  default:
-                    return 'country';
-                }
-              }
-            });
-
+          listCountriesProperties((err, geos) => {
+            var header = ['geo', 'geo.name', 'geo.cat', 'geo.region', 'geo.lat', 'geo.lng'];
+            var data = {
+              headers: header,
+              rows: _.map(geos, geo => _.map(header, column => geo[column]))
+            };
+            console.log(data);
+            return cb(err, data);
+          });
           return;
         }
         // do measures request
@@ -73,6 +64,8 @@ module.exports = function (serviceLocator) {
         }
 
         var reqWhere = 'WHERE i1.name in ' + JSON.stringify(measuresSelect);
+
+	      reqWhere += ' and dv1.value>="1950"';
 
         if (req.query.time) {
           var time = parseInt(req.query.time, 10);
@@ -109,6 +102,31 @@ module.exports = function (serviceLocator) {
           });
           console.timeEnd('format');
           return cb(null, {headers: headers, rows: rows});
+        });
+      },
+      function (data, cb) {
+        if (select === true) {
+          return cb(null, data);
+        }
+
+        console.log(data)
+        listCountriesProperties((err, geos) => {
+          if (err) {
+            return cb(err);
+          }
+
+          var geoProps = _.reduce(geos, (result, geo) => {
+            result[geo.geo] = {'lat': geo['geo.lat'], 'lng': geo['geo.lng']};
+
+            return result;
+          }, {});
+
+          _.each(data.rows, row => {
+            row[row.length - 2] = geoProps[row[1]].lat;
+            row[row.length - 1] = geoProps[row[1]].lng;
+          });
+
+          return cb(null, data);
         });
       }
     ], (err, result) => {
