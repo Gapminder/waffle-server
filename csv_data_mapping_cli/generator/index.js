@@ -15,7 +15,9 @@ if (process.argv.length > 3) {
 }
 
 let request = require('request-json');
-let client = request.createClient('http://localhost:3000/');
+
+const WS_URL = process.env.WS_URL || 'http://localhost:3000';
+let client = request.createClient(WS_URL);
 
 let endpoints = {
   geos: {
@@ -37,7 +39,7 @@ let generationSchemas = require(path.resolve(__dirname, generationSchemaFile));
 let generationTasks = _.map(generationSchemas, schema => {
   return cb => {
     async.waterfall([
-      cb => client.get(createUrl(schema), (err, res, body) => cb(err, body.data)),
+      cb => client.get(createUrl(schema), (err, res, body) =>  cb(err, body.data)),
       (docs, cb) => generateCsv(schema, docs, cb),
       (csv, cb) => fs.writeFile(schema.file, csv, 'utf8', cb)
     ], (error) => {
