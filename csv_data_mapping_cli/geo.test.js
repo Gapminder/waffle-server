@@ -5,7 +5,7 @@ var RequestProxy = require("request-proxy");
 var request = RequestProxy({
   host: "localhost",
   port: 3000
-})
+});
 
 var sampleMeta = require('./vizabi/metadata.json');
 
@@ -70,7 +70,7 @@ describe('Checking API geo properties', function () {
       expect(body.success).to.be.true;
       var data = body.data;
       var keys = _.keys(data[0]);
-      var expectedKeys = ['geo', 'geo.name', 'geo.cat', 'geo.region', 'lat', 'lng'];
+      var expectedKeys = ['geo', 'geo.name', 'geo.cat', 'geo.region', 'geo.lat', 'geo.lng'];
       var notExpectedCategories = ['region', 'g_west_rest', 'planet'];
       var expectedCategory = 'country';
 
@@ -78,12 +78,12 @@ describe('Checking API geo properties', function () {
       _.forEach(data, function (row) {
         expect(notExpectedCategories).to.not.include(row['geo.cat']);
         expect(row['geo.cat']).to.eql(expectedCategory);
-        expect(row.lat).to.not.be.undefined;
-        expect(+row.lat).to.be.a('number');
-        expect(isNaN(+row.lat)).to.be.false;
-        expect(row.lng).to.not.be.undefined;
-        expect(+row.lng).to.be.a('number');
-        expect(isNaN(+row.lng)).to.be.false;
+        expect(row['geo.lat']).to.not.be.undefined;
+        expect(+row['geo.lat']).to.be.a('number');
+        expect(isNaN(+row['geo.lat'])).to.be.false;
+        expect(row['geo.lng']).to.not.be.undefined;
+        expect(+row['geo.lng']).to.be.a('number');
+        expect(isNaN(+row['geo.lng'])).to.be.false;
       });
       return done();
     });
