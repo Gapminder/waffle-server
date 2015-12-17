@@ -19,6 +19,8 @@ var IndicatorsValues = require('../ws.repository/indicator-values/indicator-valu
 var IndexTree = require('../ws.repository/indexTree.model');
 var IndexDb = require('../ws.repository/indexDb.model');
 
+var geoMappingHash = require('./geo-mapping.json');
+
 var geoTasks = [
   // geo
   {
@@ -74,6 +76,11 @@ var measureValuesTasks = [
     file: './data/2015_11_26/_s_u5mr___eo__territory___year.csv',
     headers: ['country', 'name', 'year', 'value'],
     indicator: 'u5mr'
+  },
+  {
+    file: './vizabi/dont-panic-poverty.csv',
+    headers: ['country', 'year', 'pop', 'gdp_pc', 'value', 'u5mr'],
+    indicator: 'gini'
   }
 ];
 // 2. create indicators with data (gdp, gdp_pc, lex, pop, tfr, u5mr)
@@ -134,8 +141,8 @@ function importIndicatorsTree(cb) {
 
       IndexTree.update({}, {$set: metadata.indicatorsTree}, function (_err) {
         return cb(_err);
+      });
     });
-  });
 }
 
 function importGeo(cb) {
@@ -357,7 +364,9 @@ function createIndicatorValues(civCb) {
         pipe.indicatorValues = _(pipe.jsonArray).map(row => {
           let year = 'year';
           let country = 'country';
-          if (!pipe.dimensionValues[year][row[year]] || !pipe.dimensionValues[country][row[country]]) {
+          // map old vizabi geo ids to WS
+          var countryValue = geoMappingHash[row[country].trim()] || row[country];
+          if (!pipe.dimensionValues[year][row[year]] || !pipe.dimensionValues[country][countryValue]) {
             console.log(task.file, row[year], row[country]);
             return null;
           }
@@ -372,8 +381,8 @@ function createIndicatorValues(civCb) {
               value: row[country],
               dimensionName: country,
 
-              dimension: pipe.dimensionValues[country][row[country]].dimension,
-              dimensionValue: pipe.dimensionValues[country][row[country]]._id
+              dimension: pipe.dimensionValues[country][countryValue].dimension,
+              dimensionValue: pipe.dimensionValues[country][countryValue]._id
             }],
             value: row.value,
             title: row.value,
