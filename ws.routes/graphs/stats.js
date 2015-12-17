@@ -30,10 +30,10 @@ module.exports = function (serviceLocator) {
 
   function vizabiTools(req, res, next) {
     var query = req.query.select || '';
-    if (req.query.select && req.query.select.match(/pop/) && !req.query.select.match(/u5mr/).length) {
+    if (req.query.select && req.query.select.match(/pop/) && !req.query.select.match(/u5mr/)) {
       query = query.replace('pop', 'u5mr,pop');
     }
-    if (req.query.select && req.query.select.match(/pop/) && !req.query.select.match(/gdp_pc/).length) {
+    if (req.query.select && req.query.select.match(/pop/) && !req.query.select.match(/gdp_pc/)) {
       query = query.replace('pop', 'gdp_pc,pop');
     }
     var select = query.split(',');
