@@ -5,10 +5,43 @@ var async = require('async');
 var express = require('express');
 var mongoose = require('mongoose');
 var compression = require('compression');
-var listCountriesProperties = require('../api/adapter/geo-properties.controller').listCountriesProperties;
+var GeoPropCtrl = require('../api/adapter/geo-properties.controller');
+var md5 = require('md5');
 
 var ensureAuthenticated = require('../utils').ensureAuthenticated;
-var getCacheConfig = require('../utils').getCacheConfig;
+//var getCacheConfig = require('../utils').getCacheConfig;
+
+// HARDCODE: to remove, after splitting routes
+function cacheConfigMiddleware() {
+  return function (req, res, next) {
+    var prefix;
+    var referer = req.headers.referer || '';
+
+    switch(true) {
+      case /map/.test(referer):
+        req.chartType = 'map';
+        break;
+      case /mountain/.test(referer):
+        req.chartType = 'mountain';
+        break;
+      case /bubbles/.test(referer):
+      default:
+        req.chartType = 'bubbles';
+        break;
+    }
+    prefix = req.chartType;
+
+    /*eslint camelcase:0*/
+    if (req.query.force === true) {
+      res.use_express_redis_cache = false;
+      return next();
+    }
+
+    var hash = md5(prefix + '-' + req.method + req.url);
+    res.express_redis_cache_name = hash;
+    next();
+  };
+};
 
 var Geo = mongoose.model('Geo');
 
@@ -24,40 +57,57 @@ module.exports = function (serviceLocator) {
   /*eslint new-cap:0*/
   var router = express.Router();
 
-  router.get('/api/graphs/stats/vizabi-tools', getCacheConfig(), cors(), compression(), cache.route({expire: 86400}), vizabiTools);
+  router.get('/api/graphs/stats/vizabi-tools', cacheConfigMiddleware(), cors(), compression(), cache.route({expire: 86400}), vizabiTools);
 
   return app.use(router);
 
   function vizabiTools(req, res, next) {
-    var query = req.query.select || '';
-    if (req.query.select && req.query.select.match(/pop/) && !req.query.select.match(/u5mr/)) {
-      query = query.replace('pop', 'u5mr,pop');
+    var select = (req.query.select || '').split(',');
+    var getGeoProps = GeoPropCtrl.listGeoProperties;
+    var filterNullData = (arr) => arr;
+    var charType = req.chartType;
+    var isNeededRealData = req.query.real === 'true';
+
+    switch(charType) {
+      case 'map':
+        if (select.indexOf('geo.region') === -1) {
+          // TODO: remove when geo props will extend data in Graph Reader
+          if (isNeededRealData) {
+            select.splice(select.length - 2, 2);
+          }
+        }
+        getGeoProps = GeoPropCtrl.listCountriesProperties;
+        filterNullData = isNeededRealData
+          ? filterNullData
+          : (arr) => {
+            return _.filter(arr, row => _.every(row, value => !!value));
+          };
+        break;
+      case 'mountain':
+        getGeoProps = isNeededRealData ? getGeoProps : GeoPropCtrl.listCountriesProperties;
+        filterNullData = isNeededRealData
+          ? filterNullData
+          : (arr) => {
+          return _.filter(arr, row => _.every(row, value => !!value));
+        };
+        break;
+      case 'bubbles':
+      default:
+        break;
     }
-    if (req.query.select && req.query.select.match(/pop/) && !req.query.select.match(/gdp_pc/)) {
-      query = query.replace('pop', 'gdp_pc,pop');
-    }
-    var select = query.split(',');
     select = _.all(select, v=>/^geo/.test(v)) || select;
-    console.log(select);
 
     // some time later
     async.waterfall([
-      //// parse query
-      //cb => cb(null, query.split(',')),
-      //// is geo properties request
-      //(select, cb) => cb(null, _.all(select, v=>/^geo/.test(v)) || select),
       (cb) => {
         if (select === true) {
-          listCountriesProperties((err, geos) => {
+          getGeoProps((err, geos) => {
             var header = ['geo', 'geo.name', 'geo.cat', 'geo.region', 'geo.lat', 'geo.lng'];
-            var rows = _.map(geos, geo => _.map(header, column => geo[column]))
-              .filter(row => _.every(row, value => !!value));
+            var rows = _.map(geos, geo => _.map(header, column => geo[column]));
             var data = {
               headers: header,
-              rows: rows
+              rows: filterNullData(rows)
             };
-
-            console.log(rows);
 
             return cb(err, data);
           });
@@ -72,7 +122,10 @@ module.exports = function (serviceLocator) {
 
         var reqWhere = 'WHERE i1.name in ' + JSON.stringify(measuresSelect);
 
-	      reqWhere += ' and dv1.value>="1950"';
+        // TODO: HARDCODE - Filter gaps in data
+	      if (!isNeededRealData) {
+          reqWhere += ' and dv1.value>="1950"';
+        }
 
         if (req.query.time) {
           var time = parseInt(req.query.time, 10);
@@ -85,7 +138,7 @@ module.exports = function (serviceLocator) {
         }
         var reqQuery = [match, reqWhere, returner].join(' ');
 
-        var headers = ['time', 'geo'].concat(measuresSelect);
+        var headers = ['geo', 'time'].concat(measuresSelect);
 
         console.time('cypher');
         neo4jdb.cypherQuery(reqQuery, function (err, resp) {
@@ -99,14 +152,16 @@ module.exports = function (serviceLocator) {
             var resRow = new Array(headers.length);
             // [indicators], year, country, [values]
             // time - year
-            resRow[0] = parseInt(row[1], 10);
+            resRow[1] = parseInt(row[1], 10);
             // geo - country
-            resRow[1] = row[2];
+            resRow[0] = row[2];
             for (var i = 0; i < row[0].length; i++) {
               resRow[headers.indexOf(row[0][i])] = parseFloat(row[3][i]);
             }
             return resRow;
           });
+          rows = (isNeededRealData) ? rows : _.sortBy(rows, '1');
+
           console.timeEnd('format');
           return cb(null, {headers: headers, rows: rows});
         });
@@ -116,24 +171,31 @@ module.exports = function (serviceLocator) {
           return cb(null, data);
         }
 
-        listCountriesProperties((err, geos) => {
+        getGeoProps((err, geos) => {
           if (err) {
             return cb(err);
           }
 
-          var geoProps = _.reduce(geos, (result, geo) => {
-            result[geo.geo] = {'lat': geo['geo.lat'], 'lng': geo['geo.lng']};
+          var geoProps = _.indexBy(geos, 'geo');
 
-            return result;
-          }, {});
 
           _.each(data.rows, row => {
-            row[row.length - 2] = geoProps[row[1]].lat;
-            row[row.length - 1] = geoProps[row[1]].lng;
+            if (charType === 'map') {
+              row.pop();
+              row.pop();
+              if (!isNeededRealData) {
+                row.push(geoProps[row[0]]['geo.lat']);
+                row.push(geoProps[row[0]]['geo.lng']);
+                //
+                //row.push(geoProps[row[0]]['geo.name']);
+                //row.push(geoProps[row[0]]['geo.cat']);
+                //row.push(geoProps[row[0]]['geo.region']);
+              }
+            }
           });
 
-          data.rows = _.filter(data.rows, row => _.every(row, value => !!value));
-
+          data.rows = filterNullData(data.rows);
+          //data.headers = data.headers.concat(['geo.name','geo.cat','geo.region']);
           return cb(null, data);
         });
       }
