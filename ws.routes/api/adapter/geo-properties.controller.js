@@ -32,7 +32,9 @@ function listGeoProperties(cb) {
           geo: prop.gid,
           'geo.name': prop.name,
           'geo.cat': mappingCategories[prop.subdim],
-          'geo.region': prop.geoRegion4 || prop.gid
+          'geo.region': prop.geoRegion4 || prop.gid,
+          'geo.lat': prop.lat,
+          'geo.lng': prop.lng
         };
       });
 
