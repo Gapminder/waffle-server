@@ -30,8 +30,11 @@ module.exports = function (serviceLocator) {
 
   function vizabiTools(req, res, next) {
     var query = req.query.select || '';
-    if (req.query.select && req.query.select.match(/pop/)) {
-      query = query.replace('pop', 'u5mr,gdp_pc,pop');
+    if (req.query.select && req.query.select.match(/pop/) && !req.query.select.match(/u5mr/).length) {
+      query = query.replace('pop', 'u5mr,pop');
+    }
+    if (req.query.select && req.query.select.match(/pop/) && !req.query.select.match(/gdp_pc/).length) {
+      query = query.replace('pop', 'gdp_pc,pop');
     }
     var select = query.split(',');
     select = _.all(select, v=>/^geo/.test(v)) || select;
@@ -47,11 +50,15 @@ module.exports = function (serviceLocator) {
         if (select === true) {
           listCountriesProperties((err, geos) => {
             var header = ['geo', 'geo.name', 'geo.cat', 'geo.region', 'geo.lat', 'geo.lng'];
+            var rows = _.map(geos, geo => _.map(header, column => geo[column]))
+              .filter(row => _.every(row, value => !!value));
             var data = {
               headers: header,
-              rows: _.map(geos, geo => _.map(header, column => geo[column]))
+              rows: rows
             };
-            console.log(data);
+
+            console.log(rows);
+
             return cb(err, data);
           });
           return;
@@ -109,7 +116,6 @@ module.exports = function (serviceLocator) {
           return cb(null, data);
         }
 
-        console.log(data)
         listCountriesProperties((err, geos) => {
           if (err) {
             return cb(err);
@@ -125,6 +131,8 @@ module.exports = function (serviceLocator) {
             row[row.length - 2] = geoProps[row[1]].lat;
             row[row.length - 1] = geoProps[row[1]].lng;
           });
+
+          data.rows = _.filter(data.rows, row => _.every(row, value => !!value));
 
           return cb(null, data);
         });
