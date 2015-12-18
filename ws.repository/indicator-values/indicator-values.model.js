@@ -22,19 +22,13 @@ var DimensionSchema = new Schema({
 /**
  * @typeof {Object} IndicatorValues
  * @memberof Models
- *
- *
- *
- * @property {Array<Models.AnalysisSessions>} analysisSessions - when this indicator was created and modified
  */
 var IndicatorValues = new Schema({
   coordinates: [DimensionSchema],
   value: String,
-  title: String,
 
   indicator: {type: Schema.Types.ObjectId, ref: 'Indicators'},
-  indicatorName: String,
-  analysisSessions: [{type: Schema.Types.ObjectId, ref: 'AnalysisSessions', index: true}]
+  indicatorName: String
 });
 
 IndicatorValues.index({indicator: 1, value: 1});
