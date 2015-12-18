@@ -18,18 +18,42 @@ var Schema = mongoose.Schema;
 
  */
 var Indicators = new Schema({
-  name: {type: String, unique: true, required: true, index: true},
+  gid: {type: String, match: /^[a-z0-9_]*$/, index: true, unique: true, required: true},
   title: String,
+
+  name: String,
+  nameShort: String,
+  nameLong: String,
+
+  description: String,
+  definitionSnippet: String,
+
+  lowLabelShort: String,
+  lowLabel: String,
+
+  highLabelShort: String,
+  highLabel: String,
+
+  goodDirection: String,
+
+  usability: Number,
+
+  valueInterval: String,
+  scales: [String],
+  precisionMaximum: Number,
+  decimalsMaximum: Number,
+
+  tags: [String],
   meta: {},
 
   // todo: separate collection to manage units?
-  units: {name: String},
+  unit: String,
+  // ???
   dimensions: [{type: Schema.Types.ObjectId, ref: 'Dimensions'}],
 
   // system marks
   dataSources: [{type: Schema.Types.ObjectId, ref: 'DataSources'}],
-  catalogVersions: [{type: Schema.Types.ObjectId, ref: 'PublisherCatalogVersions'}],
-  analysisSessions: [{type: Schema.Types.ObjectId, ref: 'AnalysisSessions'}]
+  catalogVersions: [{type: Schema.Types.ObjectId, ref: 'PublisherCatalogVersions'}]
 });
 
 module.exports = mongoose.model('Indicators', Indicators);

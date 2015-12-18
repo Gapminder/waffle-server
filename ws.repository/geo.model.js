@@ -3,17 +3,18 @@ var Schema = mongoose.Schema;
 
 var Geo = new Schema({
   // description
-  gid: {type: String, match: /^[a-z0-9_]*$/, index: true, unique: true, required: true },
+  gid: {type: String, match: /^[a-z0-9_]*$/, index: true, unique: true, required: true},
   name: String,
+  nameShort: String,
+  nameLong: String,
+
   description: String,
 
   // location
   lat: Number,
   lng: Number,
 
-  // categories (populate via gid)?
-  geoRegion4: String,
-  geoWestRest: String,
+  region4: String,
 
   // color should not be here
   color: String,
@@ -22,8 +23,9 @@ var Geo = new Schema({
   subdim: {type: String, index: true, sparse: true},
 
   // geo category
+  isGlobal: Boolean,
   isRegion4: Boolean,
-  isTerritory: Boolean,
+  isCountry: Boolean,
   isUnState: Boolean
 });
 

@@ -15,7 +15,7 @@ var Schema = mongoose.Schema;
  * @property {Array<Models.AnalysisSessions>} analysisSessions - when this coordinates was created and modified
  */
 var Dimensions = new Schema({
-  // concept: {type: String, match: /^[a-z0-9_]*$/, index: true, unique: true, required: true},
+  gid: {type: String, match: /^[a-z0-9_]*$/, index: true, unique: true, required: true},
   // name versions
   name: {type: String, required: true, unique: true, index: true},
   nameShort: String,
@@ -26,16 +26,25 @@ var Dimensions = new Schema({
   pluralLong: String,
   // description
   description: String,
-  tags: [String],
+  link: String,
 
   // 1 - easy, 2 - average, 3 - complex
-  complexity: Number,
-  type: {type: String, 'enum': 'dimension subdim'},
+  usability: Number,
+  type: {type: String, 'enum': ['dimension', 'subdim']},
   // parent dimension gid, only if type === subdim
-  parentDimension: String,
+  subdimOf: String,
 
-  // deprecate title - same as name
-  title: String,
+  defaultEntities: [String],
+  drilldowns: String,
+  drillups: String,
+  incompleteDrillups: String,
+
+  ordinal: Number,
+  measure: Number,
+  interval: Number,
+  cardinality: Number,
+
+  aliases: [String],
 
   meta: {},
 
@@ -43,9 +52,7 @@ var Dimensions = new Schema({
 
   // system marks
   dataSources: [{type: Schema.Types.ObjectId, ref: 'DataSources'}],
-  catalogVersions: [{type: Schema.Types.ObjectId, ref: 'PublisherCatalogVersions'}],
-
-  analysisSessions: [{type: Schema.Types.ObjectId, ref: 'AnalysisSessions'}]
+  catalogVersions: [{type: Schema.Types.ObjectId, ref: 'PublisherCatalogVersions'}]
 });
 
 module.exports = mongoose.model('Dimensions', Dimensions);
