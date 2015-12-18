@@ -7,7 +7,9 @@ let async = require('async');
 let mongoose = require('mongoose');
 let Converter = require('csvtojson').Converter;
 
-mongoose.connect('mongodb://localhost:27017/ws_test');
+const WS_MONGO_URL = process.env.WS_MONGO_URL || 'mongodb://localhost:27017/ws_test';
+mongoose.connect(WS_MONGO_URL);
+
 let Geo = require('../../ws.repository/geo.model');
 
 console.time('validationTime');

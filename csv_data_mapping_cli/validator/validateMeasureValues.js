@@ -7,22 +7,24 @@ let async = require('async');
 let mongoose = require('mongoose');
 let Converter = require('csvtojson').Converter;
 
-mongoose.connect('mongodb://localhost:27017/ws_test');
+const WS_MONGO_URL = process.env.WS_MONGO_URL || 'mongodb://localhost:27017/ws_test';
+mongoose.connect(WS_MONGO_URL);
+
 let IndicatorsValues = require('../../ws.repository/indicator-values/indicator-values.model');
 
 let measureValuesTasks = _.range(1800, 2016).map((year) => {
   return {
     file: path.resolve(__dirname, `../data/vizabi/waffles/dont-panic-poverty-${year}.csv`),
-    headers: ['geo','time','pop','gdp_per_cap','gini','u5mr'],
-    measureNames: ['pop','gdp_per_cap','gini','u5mr']
+    headers: ['geo','time','pop','gdp_pc','gini','u5mr'],
+    measureNames: ['pop','gdp_pc','gini','u5mr']
   };
 });
 
 measureValuesTasks = measureValuesTasks.concat([
   {
     file: path.resolve(__dirname, '../data/vizabi/waffles/dont-panic-poverty.csv'),
-    headers: ['geo','time','pop','gdp_per_cap','gini','u5mr'],
-    measureNames: ['pop','gdp_per_cap','gini','u5mr']
+    headers: ['geo','time','pop','gdp_pc','gini','u5mr'],
+    measureNames: ['pop','gdp_pc','gini','u5mr']
   },
   {
     file: path.resolve(__dirname, '../data/vizabi/waffles/dont-panic-poverty-withmini.csv'),
@@ -33,12 +35,12 @@ measureValuesTasks = measureValuesTasks.concat([
       'geo.region',
       'time',
       'pop',
-      'gdp_per_cap',
+      'gdp_pc',
       'gini',
       'u5mr',
       'size'
     ],
-    measureNames: ['pop','gdp_per_cap','gini','u5mr']
+    measureNames: ['pop','gdp_pc','gini','u5mr']
   },
   {
     file: path.resolve(__dirname, '../data/vizabi/waffles/swe.csv'),
@@ -52,8 +54,8 @@ measureValuesTasks = measureValuesTasks.concat([
   },
   {
     file: path.resolve(__dirname, '../data/vizabi/waffles/basic-indicators.csv'),
-    headers: ['geo','time','gdp_per_cap','lex','pop'],
-    measureNames: ['gdp_per_cap','lex','pop']
+    headers: ['geo','time','gdp_pc','lex','pop'],
+    measureNames: ['gdp_pc','lex','pop']
   }
 ]);
 
