@@ -22,30 +22,7 @@ function listGeoProperties(cb) {
   return Geo.find({})
     .sort('gid')
     .lean()
-    .exec(function (err, geoProps) {
-      if (err) {
-        return cb(err);
-      }
-
-      var headers = ['geo', 'geo.name', 'geo.cat', 'geo.region', 'geo.lat', 'geo.lng'];
-      var rows = _.map(geoProps, function (prop) {
-        return [
-          prop.gid,
-          prop.name,
-          mappingCategories[prop.subdim],
-          prop.geoRegion4 || prop.gid,
-          prop.lat,
-          prop.lng
-        ];
-      });
-
-      var data = {
-        headers: headers,
-        rows: rows
-      };
-
-      return cb(null, data);
-    });
+    .exec(mapGeoData(cb));
 }
 
 // list of countries in VT metadata.json format
@@ -53,30 +30,7 @@ function listCountriesProperties(cb) {
   return Geo.find({isTerritory: true})
     .sort('gid')
     .lean()
-    .exec(function (err, geoProps) {
-      if (err) {
-        return cb(err);
-      }
-
-      var headers = ['geo', 'geo.name', 'geo.cat', 'geo.region', 'geo.lat', 'geo.lng'];
-      var rows = _.map(geoProps, function (prop) {
-        return [
-          prop.gid,
-          prop.name,
-          mappingCategories[prop.subdim],
-          prop.geoRegion4 || prop.gid,
-          prop.lat,
-          prop.lng
-        ];
-      });
-
-      var data = {
-        headers: headers,
-        rows: rows
-      };
-
-      return cb(null, data);
-    });
+    .exec(mapGeoData(cb));
 }
 
 // list of all geo properties
@@ -84,28 +38,32 @@ function listRegionsProperties(cb) {
   Geo.find({subdim : {$in: ['g_region', 'planet', 'g_west_rest']}})
     .sort('gid')
     .lean()
-    .exec(function (err, geoProps) {
-      if (err) {
-        return cb(err);
-      }
+    .exec(mapGeoData(cb));
+}
 
-      var headers = ['geo', 'geo.name', 'geo.cat', 'geo.region', 'geo.lat', 'geo.lng'];
-      var rows = _.map(geoProps, function (prop) {
-        return [
-          prop.gid,
-          prop.name,
-          mappingCategories[prop.subdim],
-          prop.geoRegion4 || prop.gid,
-          prop.lat,
-          prop.lng
-        ];
-      });
+function mapGeoData(cb) {
+  return function (err, geoProps) {
+    if (err) {
+      return cb(err);
+    }
 
-      var data = {
-        headers: headers,
-        rows: rows
-      };
-
-      return cb(null, data);
+    var headers = ['geo', 'geo.name', 'geo.cat', 'geo.region', 'geo.lat', 'geo.lng'];
+    var rows = _.map(geoProps, function (prop) {
+      return [
+        prop.gid,
+        prop.name,
+        mappingCategories[prop.subdim],
+        prop.geoRegion4 || prop.gid,
+        prop.lat,
+        prop.lng
+      ];
     });
+
+    var data = {
+      headers: headers,
+      rows: rows
+    };
+
+    return cb(null, data);
+  }
 }
