@@ -5,43 +5,9 @@ var async = require('async');
 var express = require('express');
 var mongoose = require('mongoose');
 var compression = require('compression');
-var GeoPropCtrl = require('../api/adapter/geo-properties.controller');
 var md5 = require('md5');
 
-var ensureAuthenticated = require('../utils').ensureAuthenticated;
-//var getCacheConfig = require('../utils').getCacheConfig;
-
-// HARDCODE: to remove, after splitting routes
-function cacheConfigMiddleware() {
-  return function (req, res, next) {
-    var prefix;
-    var referer = req.headers.referer || req.query.chartType || '';
-
-    switch(true) {
-      case /map/.test(referer):
-        req.chartType = 'map';
-        break;
-      case /mountain/.test(referer):
-        req.chartType = 'mountain';
-        break;
-      case /bubbles/.test(referer):
-      default:
-        req.chartType = 'bubbles';
-        break;
-    }
-    prefix = req.chartType;
-
-    /*eslint camelcase:0*/
-    if (req.query.force === true) {
-      res.use_express_redis_cache = false;
-      return next();
-    }
-
-    var hash = md5(prefix + '-' + req.method + req.url);
-    res.express_redis_cache_name = hash;
-    next();
-  };
-};
+var getCacheConfig = require('../utils').getCacheConfig;
 
 var Geo = mongoose.model('Geo');
 
@@ -57,54 +23,16 @@ module.exports = function (serviceLocator) {
   /*eslint new-cap:0*/
   var router = express.Router();
 
-  router.get('/api/graphs/stats/vizabi-tools', cacheConfigMiddleware(), cors(), compression(), cache.route({expire: 86400}), vizabiTools);
+  router.get('/api/graphs/stats/vizabi-tools', getCacheConfig(), cors(), compression(), cache.route({expire: 86400}), vizabiTools);
 
   return app.use(router);
 
-  function vizabiTools(req, res, next) {
+  function vizabiTools(req, res) {
     var select = (req.query.select || '').split(',');
-    var getGeoProps = GeoPropCtrl.listGeoProperties;
-    var chartType = req.chartType;
-    var isNeededRealData = req.query.real === 'true';
-    var isNeededGeoProps = _.all(select, v=>/^geo/.test(v));
-    var filterNullData = isNeededRealData
-      ? (arr) => arr
-      : (arr) => {
-      return _.filter(arr, row => _.every(row, value => !!value));
-    };
-
-    switch(chartType) {
-      case 'map':
-        if (!isNeededGeoProps && isNeededRealData) {
-          // TODO: remove when geo props will extend data in Graph Reader
-          //select.splice(select.length - 2, 2);
-        }
-        getGeoProps = GeoPropCtrl.listCountriesProperties;
-        break;
-      case 'mountain':
-        getGeoProps = GeoPropCtrl.listCountriesProperties;
-        break;
-      case 'bubbles':
-      default:
-        break;
-    }
 
     // some time later
     async.waterfall([
       (cb) => {
-        if (isNeededGeoProps) {
-          getGeoProps((err, geos) => {
-            var header = ['geo', 'geo.name', 'geo.cat', 'geo.region', 'geo.lat', 'geo.lng'];
-            var rows = _.map(geos, geo => _.map(header, column => geo[column]));
-            var data = {
-              headers: header,
-              rows: rows
-            };
-
-            return cb(err, data);
-          });
-          return;
-        }
         // do measures request
         // prepare cypher query
         var measuresSelect = _.difference(select, ['geo', 'time']);
@@ -113,11 +41,6 @@ module.exports = function (serviceLocator) {
         }
 
         var reqWhere = 'WHERE i1.name in ' + JSON.stringify(measuresSelect);
-
-        // TODO: HARDCODE - Filter gaps in data
-	      if (!isNeededRealData) {
-          reqWhere += ' and dv1.value>="1950"';
-        }
 
         if (req.query.time) {
           var time = parseInt(req.query.time, 10);
@@ -152,15 +75,10 @@ module.exports = function (serviceLocator) {
             }
             return resRow;
           });
-          rows = (isNeededRealData) ? rows : _.sortBy(rows, '1');
 
           console.timeEnd('format');
           return cb(null, {headers: headers, rows: rows});
         });
-      },
-      function (data, cb) {
-        data.rows = filterNullData(data.rows);
-        return cb(null, data);
       }
     ], (err, result) => {
       if (err) {
