@@ -15,7 +15,7 @@ var ensureAuthenticated = require('../utils').ensureAuthenticated;
 function cacheConfigMiddleware() {
   return function (req, res, next) {
     var prefix;
-    var referer = req.headers.referer || '';
+    var referer = req.headers.referer || req.query.chartType || '';
 
     switch(true) {
       case /map/.test(referer):
@@ -64,49 +64,41 @@ module.exports = function (serviceLocator) {
   function vizabiTools(req, res, next) {
     var select = (req.query.select || '').split(',');
     var getGeoProps = GeoPropCtrl.listGeoProperties;
-    var filterNullData = (arr) => arr;
-    var charType = req.chartType;
+    var chartType = req.chartType;
     var isNeededRealData = req.query.real === 'true';
+    var isNeededGeoProps = _.all(select, v=>/^geo/.test(v));
+    var filterNullData = isNeededRealData
+      ? (arr) => arr
+      : (arr) => {
+      return _.filter(arr, row => _.every(row, value => !!value));
+    };
 
-    switch(charType) {
+    switch(chartType) {
       case 'map':
-        if (select.indexOf('geo.region') === -1) {
+        if (!isNeededGeoProps && isNeededRealData) {
           // TODO: remove when geo props will extend data in Graph Reader
-          if (isNeededRealData) {
-            select.splice(select.length - 2, 2);
-          }
+          //select.splice(select.length - 2, 2);
         }
         getGeoProps = GeoPropCtrl.listCountriesProperties;
-        filterNullData = isNeededRealData
-          ? filterNullData
-          : (arr) => {
-            return _.filter(arr, row => _.every(row, value => !!value));
-          };
         break;
       case 'mountain':
-        getGeoProps = isNeededRealData ? getGeoProps : GeoPropCtrl.listCountriesProperties;
-        filterNullData = isNeededRealData
-          ? filterNullData
-          : (arr) => {
-          return _.filter(arr, row => _.every(row, value => !!value));
-        };
+        getGeoProps = GeoPropCtrl.listCountriesProperties;
         break;
       case 'bubbles':
       default:
         break;
     }
-    select = _.all(select, v=>/^geo/.test(v)) || select;
 
     // some time later
     async.waterfall([
       (cb) => {
-        if (select === true) {
+        if (isNeededGeoProps) {
           getGeoProps((err, geos) => {
             var header = ['geo', 'geo.name', 'geo.cat', 'geo.region', 'geo.lat', 'geo.lng'];
             var rows = _.map(geos, geo => _.map(header, column => geo[column]));
             var data = {
               headers: header,
-              rows: filterNullData(rows)
+              rows: rows
             };
 
             return cb(err, data);
@@ -167,37 +159,8 @@ module.exports = function (serviceLocator) {
         });
       },
       function (data, cb) {
-        if (select === true) {
-          return cb(null, data);
-        }
-
-        getGeoProps((err, geos) => {
-          if (err) {
-            return cb(err);
-          }
-
-          var geoProps = _.indexBy(geos, 'geo');
-
-
-          _.each(data.rows, row => {
-            if (charType === 'map') {
-              row.pop();
-              row.pop();
-              if (!isNeededRealData) {
-                row.push(geoProps[row[0]]['geo.lat']);
-                row.push(geoProps[row[0]]['geo.lng']);
-                //
-                //row.push(geoProps[row[0]]['geo.name']);
-                //row.push(geoProps[row[0]]['geo.cat']);
-                //row.push(geoProps[row[0]]['geo.region']);
-              }
-            }
-          });
-
-          data.rows = filterNullData(data.rows);
-          //data.headers = data.headers.concat(['geo.name','geo.cat','geo.region']);
-          return cb(null, data);
-        });
+        data.rows = filterNullData(data.rows);
+        return cb(null, data);
       }
     ], (err, result) => {
       if (err) {
