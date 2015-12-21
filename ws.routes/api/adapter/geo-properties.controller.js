@@ -27,18 +27,24 @@ function listGeoProperties(cb) {
         return cb(err);
       }
 
-      var result = _.map(geoProps, function (prop) {
-        return {
-          geo: prop.gid,
-          'geo.name': prop.name,
-          'geo.cat': mappingCategories[prop.subdim],
-          'geo.region': prop.geoRegion4 || prop.gid,
-          'geo.lat': prop.lat,
-          'geo.lng': prop.lng
-        };
+      var headers = ['geo', 'geo.name', 'geo.cat', 'geo.region', 'geo.lat', 'geo.lng'];
+      var rows = _.map(geoProps, function (prop) {
+        return [
+          prop.gid,
+          prop.name,
+          mappingCategories[prop.subdim],
+          prop.geoRegion4 || prop.gid,
+          prop.lat,
+          prop.lng
+        ];
       });
 
-      return cb(null, result);
+      var data = {
+        headers: headers,
+        rows: rows
+      };
+
+      return cb(null, data);
     });
 }
 
@@ -52,18 +58,24 @@ function listCountriesProperties(cb) {
         return cb(err);
       }
 
-      var result = _.map(geoProps, function (prop) {
-        return {
-          geo: prop.gid,
-          'geo.name': prop.name,
-          'geo.cat': mappingCategories[prop.subdim],
-          'geo.region': prop.geoRegion4 || prop.gid,
-          'geo.lat': prop.lat,
-          'geo.lng': prop.lng
-        };
+      var headers = ['geo', 'geo.name', 'geo.cat', 'geo.region', 'geo.lat', 'geo.lng'];
+      var rows = _.map(geoProps, function (prop) {
+        return [
+          prop.gid,
+          prop.name,
+          mappingCategories[prop.subdim],
+          prop.geoRegion4 || prop.gid,
+          prop.lat,
+          prop.lng
+        ];
       });
 
-      return cb(null, result);
+      var data = {
+        headers: headers,
+        rows: rows
+      };
+
+      return cb(null, data);
     });
 }
 
@@ -77,15 +89,23 @@ function listRegionsProperties(cb) {
         return cb(err);
       }
 
-      var result = _.map(geoProps, function (prop) {
-        return {
-          geo: prop.gid,
-          'geo.name': prop.name,
-          'geo.cat': mappingCategories[prop.subdim],
-          'geo.region': prop.geoRegion4 || prop.gid
-        };
+      var headers = ['geo', 'geo.name', 'geo.cat', 'geo.region', 'geo.lat', 'geo.lng'];
+      var rows = _.map(geoProps, function (prop) {
+        return [
+          prop.gid,
+          prop.name,
+          mappingCategories[prop.subdim],
+          prop.geoRegion4 || prop.gid,
+          prop.lat,
+          prop.lng
+        ];
       });
 
-      return cb(null, result);
+      var data = {
+        headers: headers,
+        rows: rows
+      };
+
+      return cb(null, data);
     });
 }
