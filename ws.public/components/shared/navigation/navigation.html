@@ -42,6 +42,13 @@
           <li ui-sref-active="active"><a ui-sref="admin.home.publisherCatalogVersions.list">Publisher Catalog Versions</a></li>
         </ul>
       </li>
+      <li ng-class="{active: $state.includes('vizabi')}">
+        <a ui-sref="admin.landing"><i class="fa fa-files-o"></i> <span class="nav-label">Vizabi</span> <span
+                class="fa arrow"></span></a>
+        <ul class="nav nav-second-level" ng-class="{in: $state.includes('vizabi')}">
+          <li ui-sref-active="active"><a ui-sref="admin.vizabi.indexTree">Index Tree</a></li>
+        </ul>
+      </li>
       <li ng-class="{active: $state.includes('collections')}">
         <a ui-sref="admin.playground"><i class="fa fa-files-o"></i> <span class="nav-label">{{ 'Cyper Editor' }}</span> <span
           class="fa arrow"></span></a>

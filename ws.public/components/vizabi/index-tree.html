@@ -1,0 +1,109 @@
+<script type="text/ng-template" id="nodes_renderer.html" class="ng-scope">
+  <div ui-tree-handle class="tree-node tree-node-content">
+    <a class="btn-xs" ng-if="node.children && node.children.length > 0" data-nodrag
+       ng-click="toggle(this)"><span
+      class="glyphicon" ng-class="{'glyphicon-chevron-right': collapsed, 'glyphicon-chevron-down': !collapsed}"></span>
+    </a>
+    {{node.id}}
+    <a class="pull-right btn btn-danger btn-xs"
+       ng-disabled="ctrl.isReadOnly(node.id)"
+       data-nodrag
+       ng-click="ctrl.removeRow(this, node.id)">
+      <span class="glyphicon glyphicon-remove"></span>
+    </a>
+    <a ng-if="!ctrl.indexDb[node.id]"
+       class="pull-right btn btn-primary btn-xs"
+       data-nodrag
+       ng-click="ctrl.openIndicators(this)"
+       style="margin-right: 8px;">
+      <span class="glyphicon glyphicon-plus"></span>
+    </a>
+    <a ng-if="!ctrl.indexDb[node.id]"
+       class="pull-right btn btn-primary btn-xs"
+       data-nodrag ng-click="ctrl.openGroup(this)"
+       style="margin-right: 8px;">
+      Add group
+    </a>
+  </div>
+  <ol ui-tree-nodes="" ng-model="node.children" ng-class="{hidden: collapsed}">
+    <li ng-repeat="node in node.children" ui-tree-node ng-include="'nodes_renderer.html'">
+    </li>
+  </ol>
+</script>
+
+<div alert ng-repeat="alert in ctrl.alerts" type="{{alert.type}}" close="ctrl.closeAlert($index)">{{alert.msg}}</div>
+
+<div class="row wrapper border-bottom white-bg page-heading">
+  <div class="col-lg-10">
+    <admin-breadcrumb></admin-breadcrumb>
+  </div>
+  <div class="col-lg-2">
+
+  </div>
+</div>
+<div class="wrapper wrapper-content animated fadeInRight">
+  <button class="btn btn-default" ng-click="ctrl.save()">Save</button>
+  <button class="btn btn-default" ng-click="ctrl.refresh()">Refresh</button>
+
+  <div class="row" ng-if="ctrl.data && ctrl.readOnly">
+    <div class="col-sm-6">
+      <div ui-tree id="tree-root" class="angular-ui-tree">
+        <ol ui-tree-nodes ng-model="ctrl.data" class="angular-ui-tree-nodes">
+          <li ng-repeat="node in ctrl.data" ui-tree-node ng-include="'nodes_renderer.html'"
+              class="angular-ui-tree-node"></li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- indexTreeIndicators -->
+<script type="text/ng-template" id="indexTreeIndicators.html">
+  <div class="modal-header">
+    <h3 class="modal-title">Index DB
+      <button type="button" class="close" ng-click="vm.close()">x</button>
+    </h3>
+  </div>
+  <div class="modal-body">
+
+    <div class="checkboxList">
+      <div ng-repeat="item in vm.indexDb" class="col-md-6">
+        <label>
+          <input type="checkbox" ng-model="item.isChecked"/>
+          <span>{{item.name}}</span>
+        </label>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-primary" ng-click="vm.save()">Save</button>
+    <button class="btn btn-default" ng-click="vm.close()">Cancel</button>
+  </div>
+</script>
+
+<!-- indexTreeGroup -->
+<script type="text/ng-template" id="indexTreeGroup.html">
+  <div class="modal-header">
+    <h3 class="modal-title">Add a new group
+      <button type="button" class="close" ng-click="vmg.close()">x</button>
+    </h3>
+  </div>
+  <div class="modal-body">
+    Group name: <input ng-model="vmg.data.name" size="50">
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-primary" ng-click="vmg.save()">Save</button>
+    <button class="btn btn-default" ng-click="vmg.close()">Cancel</button>
+  </div>
+</script>
+
+<!-- delete -->
+<script type="text/ng-template" id="removeRow.html">
+  <div class="modal-body">
+    Are you sure?
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-default" ng-click="vmr.remove()">Remote</button>
+    <button class="btn btn-default" ng-click="vmr.close()">Cancel</button>
+  </div>
+</script>
