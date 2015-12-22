@@ -5,8 +5,10 @@ var async = require('async');
 var express = require('express');
 var mongoose = require('mongoose');
 var compression = require('compression');
+var GeoPropCtrl = require('../api/adapter/geo-properties.controller');
 var md5 = require('md5');
 
+var ensureAuthenticated = require('../utils').ensureAuthenticated;
 var getCacheConfig = require('../utils').getCacheConfig;
 
 var Geo = mongoose.model('Geo');
@@ -29,10 +31,31 @@ module.exports = function (serviceLocator) {
 
   function vizabiTools(req, res) {
     var select = (req.query.select || '').split(',');
+    var category = (req.query['geo.cat'] || '').split(',')[0];
+    var getGeoProps = GeoPropCtrl.listGeoProperties;
+
+    switch(category) {
+      case 'country':
+        getGeoProps = GeoPropCtrl.listCountriesProperties;
+        break;
+      case 'regions':
+        getGeoProps = GeoPropCtrl.listRegionsProperties;
+        break;
+      case 'global':
+      default:
+        break;
+    }
+    select = _.all(select, v=>/^geo/.test(v)) || select;
 
     // some time later
     async.waterfall([
       (cb) => {
+        if (select === true) {
+          getGeoProps((err, geos) => {
+            return cb(err, geos);
+          });
+          return;
+        }
         // do measures request
         // prepare cypher query
         var measuresSelect = _.difference(select, ['geo', 'time']);
