@@ -46,4 +46,6 @@ module.exports = function (serviceLocator) {
   // geo
   require('./geo.model');
   require('./translations.model');
+  require('./indexTree.model');
+  require('./indexDb.model');
 };

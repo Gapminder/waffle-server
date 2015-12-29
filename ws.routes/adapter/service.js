@@ -1,37 +1,31 @@
 var express = require('express');
-var bodyParser = require('body-parser');
-//var request = require('request-json');
-var fs = require('fs');
-var path = require('path');
 var _ = require('lodash');
-var url = require('url');
 var json2csv = require('json2csv');
 
 var async = require('async');
 
-var geoController = require('../../geo/geo-properties.controller');
+var geoController = require('../geo/geo-properties.controller');
 var mongoose = require('mongoose');
 
-var Geo = require('../../../ws.repository/geo.model');
-var Translations = require('../../../ws.repository/translations.model');
-var Indicators = require('../../../ws.repository/indicators/indicators.model');
-var IndexTree = require('../../../ws.repository/indexTree.model');
-var IndexDb = require('../../../ws.repository/indexDb.model');
+var Geo = mongoose.model('Geo');
+var Translations = mongoose.model('Translations');
+var IndexTree = mongoose.model('IndexTree');
+var IndexDb = mongoose.model('IndexDb');
 
 var cache = require('express-redis-cache')();
 var compression = require('compression');
 
-var u = require('../../utils');
+var u = require('../utils');
 
 module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
   /*eslint new-cap:0*/
   var router = express.Router();
 
-  var metadataFile = require('../../../csv_data_mapping_cli/vizabi/metadata.json');
+  var metadataFile = require('../../csv_data_mapping_cli/vizabi/metadata.json');
 
-  var mcPrecomputedShapes = require('../../../csv_data_mapping_cli/fixtures/mc_precomputed_shapes.json');
-  var world50m = require('../../../csv_data_mapping_cli/fixtures/world-50m.json');
+  var mcPrecomputedShapes = require('../../csv_data_mapping_cli/fixtures/mc_precomputed_shapes.json');
+  var world50m = require('../../csv_data_mapping_cli/fixtures/world-50m.json');
 
   router.get('/api/vizabi/translation/:lang.json', compression(), u.getCacheConfig('translations'), cache.route(), getTranslations);
 
