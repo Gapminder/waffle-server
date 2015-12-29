@@ -1,3 +1,3 @@
 module.exports = function (serviceLocator) {
-  require('./service')(serviceLocator);
+  require('./geo-properties')(serviceLocator);
 };

@@ -9,7 +9,7 @@ var json2csv = require('json2csv');
 
 var async = require('async');
 
-var geoController = require('./geo-properties.controller');
+var geoController = require('../../geo/geo-properties.controller');
 var mongoose = require('mongoose');
 
 var Geo = require('../../../ws.repository/geo.model');
