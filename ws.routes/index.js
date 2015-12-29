@@ -11,7 +11,7 @@ module.exports = function (serviceLocator) {
   require('./api/publisher-catalogs')(serviceLocator);
   require('./api/publisher-catalog-versions')(serviceLocator);
   require('./api/charts')(serviceLocator);
-  require('./api/adapter')(serviceLocator);
+  require('./adapter')(serviceLocator);
   require('./geo')(serviceLocator);
 
   require('./auth')(serviceLocator);
