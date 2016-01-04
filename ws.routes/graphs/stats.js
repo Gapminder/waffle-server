@@ -19,11 +19,6 @@ module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
   var neo4jdb = app.get('neo4jDb');
 
-  var match =
-    "MATCH (i1:Indicators)-[:with_dimension]->(:Dimensions{name: 'year'})-[:with_dimension_value]->(dv1:DimensionValues)-[:with_indicator_value]->(iv1:IndicatorValues), \
-      (i1:Indicators)-[:with_dimension]->(:Dimensions{name: 'country'})-[:with_dimension_value]->(dv2:DimensionValues)-[:with_indicator_value]->(iv1:IndicatorValues)";
-  var returner = "RETURN collect(i1.name) as indicator,dv1.value as year, dv2.value as country, collect(iv1.value) as value";
-
   /*eslint new-cap:0*/
   var router = express.Router();
 
@@ -80,8 +75,7 @@ module.exports = function (serviceLocator) {
 
     // do measures request
     // prepare cypher query
-    var reqWhere = 'WHERE i1.name in ' + JSON.stringify(pipe.measuresSelect);
-
+    var reqWhere = 'WHERE i1.gid in ' + JSON.stringify(pipe.measuresSelect);
     if (pipe.time) {
       var time = parseInt(pipe.time, 10);
       if (time) {
@@ -91,8 +85,14 @@ module.exports = function (serviceLocator) {
         reqWhere += [' and dv1.value>="', time.from, '" and dv1.value<="', time.to, '"'].join('');
       }
     }
-    var reqQuery = [match, reqWhere, returner].join(' ');
+    var dim1 = 'year';
+    var dim2 = 'country';
+    var match =
+      `MATCH (i1:Indicators)-[:with_dimension]->(:Dimensions{gid: '${dim1}'})-[:with_dimension_value]->(dv1:DimensionValues)-[:with_indicator_value]->(iv1:IndicatorValues),
+        (i1:Indicators)-[:with_dimension]->(:Dimensions{gid: '${dim2}'})-[:with_dimension_value]->(dv2:DimensionValues)-[:with_indicator_value]->(iv1:IndicatorValues)`;
 
+    var returner = `RETURN collect(i1.gid) as indicator,dv1.value as year, dv2.value as country, collect(iv1.value) as value`;
+    var reqQuery = [match, reqWhere, returner].join(' ');
     console.time('cypher');
     neo4jdb.cypherQuery(reqQuery, function (err, resp) {
       console.timeEnd('cypher');
