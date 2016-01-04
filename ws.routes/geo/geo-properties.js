@@ -15,14 +15,19 @@ module.exports = function (serviceLocator) {
   // lists
   router.get('/api/geo',
     compression(), u.getCacheConfig('geo'), cache.route(),
-    controller.parseQueryParams, controller.sendGeoResponse
+    u.decodeQuery, sendGeoResponse
   );
 
   router.get('/api/geo/:category',
     compression(), u.getCacheConfig('geo-category'), cache.route(),
-    controller.parseQueryParams, controller.sendGeoResponse
+    u.decodeQuery, sendGeoResponse
   );
 
   return app.use(router);
-
 };
+
+function sendGeoResponse(req, res) {
+  controller.projectGeoProperties(req.decodedQuery.select, req.decodedQuery.where, function (err, result) {
+    return res.json({success: !err, data: result, error: err});
+  });
+}
