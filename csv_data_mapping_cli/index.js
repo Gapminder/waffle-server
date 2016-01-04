@@ -164,9 +164,9 @@ function createMeasureValues(ddf_index_file) {
   return pipeWaterfall([
     // load all measures and dimensions from DB
     (pipe, pcb) => async.parallel({
-      measures: cb=>Indicators.find({}, {gid: 1}).lean().exec(cb),
+      measures: cb=> Indicators.find({}, {gid: 1}).lean().exec(cb),
       dimensions: cb=> Dimensions.find({}, {gid: 1}).lean().exec(cb),
-      filesIndex: cb=>readCsvFile(ddf_index_file)({}, cb)
+      filesIndex: cb=> readCsvFile(ddf_index_file)({}, cb)
     }, pcb),
     // group file entries from ddf-index my measure id
     (pipe, cb) => {
@@ -190,10 +190,11 @@ function createMeasureValues(ddf_index_file) {
           console.log(`Importing measure values from '${fileEntry.file}' with dim-s: '${fileEntry.geo},${fileEntry.time}'`);
           //
           async.parallel({
+            _addDimensionsToMeasure: cb => addDimensionsToMeasure(measure._id, [fileEntry.geo, fileEntry.time], cb),
             // build dimension values hash
             dimensionValues: cb => buildDimensionValuesHash([fileEntry.geo, fileEntry.time], cb),
             // and load measure values from csv
-            measureValues: readCsvFile(fileEntry.file)
+            measureValues: cb => readCsvFile(fileEntry.file)({}, cb)
           }, (err, res) => {
             var newPipe = Object.assign({}, pipe, res);
             if (err) {
@@ -276,7 +277,10 @@ function createMeasureValues(ddf_index_file) {
                 return async.waterfall([
                   cb=>cb(null, pipe),
                   // find dimensions in db
-                  (pipe, cb) => Dimensions.find({gid: {$in: dimensions}}, {gid: 1, subdimOf: 1}).lean().exec((err, dims) => {
+                  (pipe, cb) => Dimensions.find({gid: {$in: dimensions}}, {
+                    gid: 1,
+                    subdimOf: 1
+                  }).lean().exec((err, dims) => {
                     // build dimensions hash map
                     pipe.dimensions = _.indexBy(dims, 'gid');
                     return cb(err, pipe);
@@ -306,13 +310,13 @@ function createMeasureValues(ddf_index_file) {
                   }
                 ], cmcb);
               }
-            // end of waterfall
+              // end of waterfall
             ], err => cb(err, pipe));
-          // end of parallel
+            // end of parallel
           });
-        // end of eachSeries2
+          // end of eachSeries2
         }, err => escb(err, pipe));
-      // end of eachSeries1
+        // end of eachSeries1
       }, err=>pcb(err, mPipe));
     }
     // end return pipeWaterfall([
@@ -335,6 +339,15 @@ function buildDimensionValuesHash(dimensions, bcb) {
       }, dimsHash));
     }
   ], bcb);
+}
+
+// add dimensions to measure entries
+function addDimensionsToMeasure(id, dimensionsArr, adcb) {
+  return async.waterfall([
+    cb => Dimensions.find({gid: {$in: dimensionsArr}}, {_id: 1}).lean().exec(cb),
+    (dimensions, cb) => cb(null, _.pluck(dimensions, '_id')),
+    (dimensions, cb) => Indicators.update({_id: id}, {$addToSet: {dimensions: {$each: dimensions}}}, cb)
+  ], adcb);
 }
 
 // mappers

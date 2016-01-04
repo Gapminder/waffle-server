@@ -18,6 +18,7 @@ var Schema = mongoose.Schema;
 
  */
 var Indicators = new Schema({
+  nodeId: {type: Number, index: true},
   gid: {type: String, match: /^[a-z0-9_]*$/, index: true, unique: true, required: true},
   title: String,
 
