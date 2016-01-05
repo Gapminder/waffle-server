@@ -41,7 +41,7 @@ module.exports = function (serviceLocator) {
     var geoPosition = select.indexOf('geo');
     var timePosition = select.indexOf('time');
     var headers = select;
-    var time = req.query.time;
+    var time = req.decodedQuery.where.time || [];
 
     var isGeoPropsReq = _.all(select, v=>/^geo/.test(v)) || select;
     var options = {select, where, category, headers, geoPosition, timePosition, measuresSelect, time};
@@ -81,15 +81,16 @@ module.exports = function (serviceLocator) {
     // do measures request
     // prepare cypher query
     var reqWhere = 'WHERE i1.gid in ' + JSON.stringify(pipe.measuresSelect);
-    if (pipe.time) {
-      var time = parseInt(pipe.time, 10);
-      if (time) {
-        reqWhere += ' and dv1.value="' + time + '"';
-      } else {
-        time = JSON.parse(pipe.time);
-        reqWhere += [' and dv1.value>="', time.from, '" and dv1.value<="', time.to, '"'].join('');
-      }
+
+    if (pipe.where.time && pipe.where.time.length) {
+      reqWhere += ' and ( ' + _.map(pipe.where.time, time => {
+        if (time.length) {
+          return `( dv1.value>="${time[0]}" and dv1.value<="${time[1]}" )`;
+        }
+        return `dv1.value="${time}"`;
+      }).join(' or ') + ' )';
     }
+
     var dim1 = 'year';
     var dim2 = 'country';
     var match =
@@ -98,6 +99,7 @@ module.exports = function (serviceLocator) {
 
     var returner = `RETURN collect(i1.gid) as indicator,dv1.value as year, dv2.value as country, collect(iv1.value) as value`;
     var reqQuery = [match, reqWhere, returner].join(' ');
+
     console.time('cypher');
     neo4jdb.cypherQuery(reqQuery, function (err, resp) {
       console.timeEnd('cypher');
@@ -142,7 +144,7 @@ module.exports = function (serviceLocator) {
   function getGeoProperties(pipe, cb) {
     let select = pipe.select;
     let where = pipe.where;
-    let category = pipe.category;
+
     return GeoPropCtrl.projectGeoProperties(select, where, function (err, geoData) {
       pipe.geoData = geoData;
 
@@ -155,24 +157,36 @@ module.exports = function (serviceLocator) {
   }
 
   function makeFlattenGeoProps(pipe, cb) {
-    var resolvedGeos = _.flatten(pipe.geoData.rows);
+    var resolvedGeos = _.chain(pipe.geoData.rows).flatten().compact().value();
     pipe.resolvedGeos = resolvedGeos;
     return cb(null, pipe);
   }
 
   function getGeoTime(pipe, cb) {
+    if (pipe.where.time) {
+
+    }
+
+    return doCartesianProductOfGeoTime(pipe, cb);
+  }
+
+  function doCartesianProductOfGeoTime(pipe, cb) {
     let headers = pipe.headers;
     let geoPosition = pipe.geoPosition;
     let timePosition = pipe.timePosition;
     let resolvedGeos = pipe.resolvedGeos;
 
-    return doCartesianProductOfGeoTime(resolvedGeos, headers, geoPosition, timePosition, cb);
-  }
-
-  function doCartesianProductOfGeoTime(resolvedGeos, headers, geoPosition, timePosition, cb) {
     async.waterfall([
       (_cb) => {
-        DimensionValues.distinct('value', {'dimensionGid': 'year'})
+        var query = {$or: _.map(pipe.where.time, time => {
+          if (time.length) {
+            return {'dimensionGid': 'year', 'value': {$gte: time[0], $lte: time[1]}};
+          }
+
+          return {'dimensionGid': 'year', 'value': time};
+        })};
+
+        DimensionValues.distinct('value', query)
           .sort()
           .lean()
           .exec((err, dvs) => {
@@ -184,13 +198,13 @@ module.exports = function (serviceLocator) {
         var powerSet = _.chain(resolvedGeos)
           .map(geo => {
             return _.map(resolvedYears, year => {
-              var result = new Array(2);
+              var result = new Array(headers.length);
               result[geoPosition] = geo;
               result[timePosition] = year;
 
               return result;
             });
-          }).flatten().value();
+          }).uniq(item => item.join(':')).flatten().value();
 
         return _cb(null, powerSet);
       }
