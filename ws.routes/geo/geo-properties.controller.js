@@ -7,17 +7,16 @@ let Geo = mongoose.model('Geo');
 
 // TODO: fix mapping categories hardcode
 let mappingCategories = {
-  g_region: 'region',
-  g_west_rest: 'g_west_rest',
-  planet: 'global',
-  territory: 'country'
+  isRegion4: 'region',
+  isGlobal: 'global',
+  isCountry: 'country',
+  isUnState: 'unstate'
 };
 
 let mappingHeaders = {
   geo: 'gid',
   'geo.name': 'name',
-  'geo.cat': 'subdim',
-  'geo.region.country': 'geoRegion4',
+  'geo.region.country': 'region4',
   'geo.region': 'gid',
   'geo.lat': 'lat',
   'geo.lng': 'lng'
@@ -43,12 +42,16 @@ function projectGeoProperties(select, where, cb) {
       let key = mappingHeaders[item + '.' + cat] || mappingHeaders[item] || item;
       result[key] = 1;
       return result;
-    }, { '_id': 0 });
+    }, { '_id': 0, isGlobal: 1, isRegion4: 1, isCountry: 1, isUnState: 1 });
 
     return cb => {
       let query = mappingQueries[cat] || {};
       if (where && where.geo) {
         query.gid = {$in: where.geo};
+      }
+
+      if (where && where['geo.region']) {
+        query.region4 = {$in: where['geo.region']};
       }
 
       listGeoProperties(query, projection, cb);
@@ -80,7 +83,26 @@ function mapGeoData(headers, category, cb) {
       return _.map(headers, header => {
         let key = mappingHeaders[header + '.' + category] || mappingHeaders[header];
 
-        return mappingCategories[prop[key]] || prop[key] || null;
+        // fixme: hardcode for geo.cat
+        if (header === 'geo.cat') {
+          switch (true) {
+            case prop.isGlobal:
+              return mappingCategories.isGlobal;
+              break;
+            case prop.isRegion4:
+              return mappingCategories.isRegion4;
+              break;
+            case prop.isUnState:
+              return mappingCategories.isUnState;
+              break;
+            case prop.isCountry:
+            default:
+              return mappingCategories.isCountry;
+              break;
+          }
+        }
+
+        return prop[key] || null;
       });
     });
 
