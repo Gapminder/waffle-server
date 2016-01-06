@@ -2,5 +2,6 @@
 
 module.exports = {
   format: require('./format'),
-  toPrecision: require('./toPrecision')
+  toPrecision: require('./toPrecision'),
+  gapfilling: require('./gapfilling')
 };
