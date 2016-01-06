@@ -16,6 +16,8 @@ var getCacheConfig = require('../utils').getCacheConfig;
 var Geo = mongoose.model('Geo');
 var DimensionValues = mongoose.model('DimensionValues');
 
+var dataPostProcessors = require('../data-post-processors');
+
 module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
   var neo4jdb = app.get('neo4jDb');
@@ -29,11 +31,14 @@ module.exports = function (serviceLocator) {
     compression(),
     cache.route({expire: 86400}),
     decodeQuery,
-    vizabiTools);
+    vizabiTools,
+    dataPostProcessors.toPrecision,
+    dataPostProcessors.format
+  );
 
   return app.use(router);
 
-  function vizabiTools(req, res) {
+  function vizabiTools(req, res, next) {
     var select = req.decodedQuery.select;
     var category = req.decodedQuery.where['geo.cat'];
     var where = req.decodedQuery.where;
@@ -71,7 +76,8 @@ module.exports = function (serviceLocator) {
         return res.json({success: false, error: err});
       }
 
-      return res.json({success: !err, data: result, error: err});
+      req.wsJson = result;
+      return next();
     });
   }
 
