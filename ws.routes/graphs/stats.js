@@ -32,6 +32,7 @@ module.exports = function (serviceLocator) {
     cache.route({expire: 86400}),
     decodeQuery,
     vizabiTools,
+    dataPostProcessors.gapfilling,
     dataPostProcessors.toPrecision,
     dataPostProcessors.format
   );
@@ -52,7 +53,7 @@ module.exports = function (serviceLocator) {
     var options = {select, where, category, headers, geoPosition, timePosition, measuresSelect, time};
     var actions = [ cb => cb(null, options) ];
 
-    // &where={geo:['afr', 'chn'], time:'1950:2000'}&geo.cat=country,region
+    // ?select=geo,time,population&geo=afr,chn&time=1800,1950:2000,2015&geo.cat=country,region
     switch (true) {
       // /api/geo
       case (isGeoPropsReq):
