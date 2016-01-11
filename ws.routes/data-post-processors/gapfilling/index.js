@@ -1,15 +1,17 @@
 'use strict';
+
 const _ = require('lodash');
-const interpolate = require("./interpolation");
-const extrapolate = require("./extrapolation");
-const expandYears = require("./yearsExpander");
+
+let interpolate = require("./interpolation.processor");
+let extrapolate = require("./extrapolation.processor");
+let expandYears = require("./yearsExpander.processor");
 
 module.exports = (req, res, next) => {
-  if (req.wsJson && req.wsJson.rows && req.decodedQuery.gapfilling) {
+  if (req.wsJson && req.wsJson.rows && req.decodedQuery && req.decodedQuery.gapfilling) {
     let headers = req.wsJson.headers;
     let geoColumnIndex = headers.indexOf('geo');
     let yearColumnIndex = headers.indexOf('time');
-    let measureColumnIndexes = _.chain(headers).keys().difference([geoColumnIndex, yearColumnIndex]).value();
+    let measureColumnIndexes = _.chain(headers).keys().map(toNumber).difference([geoColumnIndex, yearColumnIndex]).value();
 
     let gapfilling = req.decodedQuery.gapfilling;
     let options = {
@@ -18,7 +20,9 @@ module.exports = (req, res, next) => {
       yearColumnIndex: yearColumnIndex
     };
 
-    req.wsJson.rows = _.chain(req.decodedQuery.where.time)
+    let time = req.decodedQuery.where && req.decodedQuery.where.time ? req.decodedQuery.where.time : [];
+
+    req.wsJson.rows = _.chain(time)
       .filter(_.isArray)
       .reduce((result, range) => {
         return expandYears(result, {from: range[0], to: range[1]});
@@ -46,3 +50,7 @@ module.exports = (req, res, next) => {
 
   return next();
 };
+
+function toNumber(k) {
+  return parseInt(k, 10);
+}
