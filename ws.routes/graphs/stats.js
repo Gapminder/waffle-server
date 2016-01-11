@@ -10,6 +10,7 @@ var GeoPropCtrl = require('../geo/geo-properties.controller');
 var md5 = require('md5');
 
 var ensureAuthenticated = require('../utils').ensureAuthenticated;
+var decodeQuery = require('../utils').decodeQuery;
 var getCacheConfig = require('../utils').getCacheConfig;
 
 var Geo = mongoose.model('Geo');
@@ -23,15 +24,19 @@ module.exports = function (serviceLocator) {
   var router = express.Router();
 
   router.get('/api/graphs/stats/vizabi-tools',
-    getCacheConfig(), cors(), compression(), cache.route({expire: 86400}),
-    GeoPropCtrl.parseQueryParams, vizabiTools);
+    getCacheConfig(),
+    cors(),
+    compression(),
+    cache.route({expire: 86400}),
+    decodeQuery,
+    vizabiTools);
 
   return app.use(router);
 
   function vizabiTools(req, res) {
-    var select = req.select;
-    var category = req.category;
-    var where = req.where;
+    var select = req.decodedQuery.select;
+    var category = req.decodedQuery.where['geo.cat'];
+    var where = req.decodedQuery.where;
     var measuresSelect = _.difference(select, ['geo', 'time']);
     var geoPosition = select.indexOf('geo');
     var timePosition = select.indexOf('time');
@@ -138,7 +143,7 @@ module.exports = function (serviceLocator) {
     let select = pipe.select;
     let where = pipe.where;
     let category = pipe.category;
-    return GeoPropCtrl.projectGeoProperties(select, where, category, function (err, geoData) {
+    return GeoPropCtrl.projectGeoProperties(select, where, function (err, geoData) {
       pipe.geoData = geoData;
 
       return cb(err, pipe);

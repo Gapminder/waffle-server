@@ -34,40 +34,11 @@ let mappingQueries = {
 
 module.exports = {
   listGeoProperties: listGeoProperties,
-  projectGeoProperties: projectGeoProperties,
-  sendGeoResponse: sendGeoResponse,
-  parseQueryParams: parseQueryParams
+  projectGeoProperties: projectGeoProperties
 };
 
-function sendGeoResponse(req, res) {
-  controller.projectGeoProperties(req.select, req.where, req.category, function (err, result) {
-    return res.json({success: !err, data: result, error: err});
-  });
-}
-
-// TODO: refactor it, when geo will be got from neo4j
-function parseQueryParams(req, res, next) {
-  // for supporting previous and new api for geo: select && default response header
-  let select = (req.query.select || '').split(',');
-  select = !!select.join('') ? select : ['geo', 'geo.name', 'geo.cat', 'geo.region'];
-
-  // for supporting previous and new api for geo: geo.cat && :category
-  var category = !!req.params.category ? [req.params.category] : null;
-  category = category || (req.query['geo.cat'] || '').split(',');
-  category = !!category.join('') ? category : ['geo'];
-
-  // for supporting previous and new api for geo: filtering response by gid
-  var where = req.query.where ? JSON.parse(req.query.where) : null;
-
-  req.select = select;
-  req.where = where;
-  req.category = category;
-
-  return next();
-}
-
-function projectGeoProperties(select, where, category, cb) {
-  let fns = _.map(category, cat => {
+function projectGeoProperties(select, where, cb) {
+  let fns = _.map(where['geo.cat'], cat => {
     let projection = _.reduce(select, (result, item) => {
       let key = mappingHeaders[item + '.' + cat] || mappingHeaders[item] || item;
       result[key] = 1;
@@ -84,7 +55,7 @@ function projectGeoProperties(select, where, category, cb) {
     };
   });
 
-  async.parallel(fns, mapGeoData(select, category, cb));
+  async.parallel(fns, mapGeoData(select, where['geo.cat'], cb));
 }
 
 // list of all geo properties
