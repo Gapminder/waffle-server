@@ -28,6 +28,10 @@ module.exports = function (serviceLocator) {
 
 function sendGeoResponse(req, res) {
   controller.projectGeoProperties(req.decodedQuery.select, req.decodedQuery.where, function (err, result) {
-    return res.json({success: !err, data: result, error: err});
+    if (err) {
+      return res.json({success: !err, error: err});
+    }
+
+    return res.json(result);
   });
 }
