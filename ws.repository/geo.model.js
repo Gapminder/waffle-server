@@ -11,8 +11,8 @@ var Geo = new Schema({
   description: String,
 
   // location
-  lat: Number,
-  lng: Number,
+  latitude: Number,
+  longitude: Number,
 
   region4: String,
 
