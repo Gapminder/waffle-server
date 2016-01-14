@@ -18,8 +18,8 @@ let mappingHeaders = {
   'geo.name': 'name',
   'geo.region.country': 'region4',
   'geo.region': 'region4',
-  'geo.lat': 'lat',
-  'geo.lng': 'lng'
+  'geo.latitude': 'latitude',
+  'geo.longitude': 'longitude'
 };
 
 let mappingQueries = {
