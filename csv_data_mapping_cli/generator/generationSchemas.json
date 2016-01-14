@@ -1,0 +1,24 @@
+[
+  {
+    "file": "dont-panic-poverty-geo-properties.csv",
+    "headers": ["geo","geo.name","geo.cat","geo.region","geo.lat","geo.lng"],
+    "wsProperties": ["geo","geo.name","geo.cat","geo.region","geo.lat","geo.lng"],
+    "endpoint": "geos"
+  },
+  {
+    "file": "dont-panic-poverty.csv",
+    "headers": ["geo","time","pop", "gdp_pc", "u5mr", "geo.lat", "geo.lng"],
+    "wsProperties": ["geo","time","pop", "gdp_pc", "u5mr", "geo.lat", "geo.lng"],
+    "endpoint": "measureValues",
+    "query": "select=geo,time,pop,geo.lat,geo.lng"
+  },
+  {
+    "file": "dont-panic-poverty-2000.csv",
+    "headers": ["geo","time","pop", "gdp_pc", "u5mr", "geo.lat", "geo.lng"],
+    "wsProperties": ["geo","time","pop", "gdp_pc", "u5mr", "geo.lat", "geo.lng"],
+    "endpoint": "measureValues",
+    "query": "select=geo,time,pop,geo.lat,geo.lng&time=2000"
+  }
+]
+
+

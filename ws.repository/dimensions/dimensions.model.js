@@ -15,18 +15,45 @@ var Schema = mongoose.Schema;
  * @property {Array<Models.AnalysisSessions>} analysisSessions - when this coordinates was created and modified
  */
 var Dimensions = new Schema({
+  gid: {type: String, match: /^[a-z0-9_]*$/, index: true, unique: true, required: true},
+  // name versions
   name: {type: String, required: true, unique: true, index: true},
-  title: String,
+  nameShort: String,
+  nameLong: String,
+  // name in plural
+  plural: String,
+  pluralShort: String,
+  pluralLong: String,
+  // description
+  description: String,
+  link: String,
 
+  // 1 - easy, 2 - average, 3 - complex
+  usability: Number,
+  type: {type: String, 'enum': ['dimension', 'subdim']},
+  // parent dimension gid, only if type === subdim
+  subdimOf: String,
+
+  defaultEntities: [String],
+  drilldowns: String,
+  drillups: String,
+  incompleteDrillups: String,
+
+  ordinal: Number,
+  measure: String,
+  interval: Number,
+  cardinality: Number,
+
+  aliases: [String],
+  pattern: String,
+  ddfInheritance: String,
   meta: {},
 
   // todo: should be linked from dataSource, catalogVersion, analysisSessions
 
   // system marks
   dataSources: [{type: Schema.Types.ObjectId, ref: 'DataSources'}],
-  catalogVersions: [{type: Schema.Types.ObjectId, ref: 'PublisherCatalogVersions'}],
-
-  analysisSessions: [{type: Schema.Types.ObjectId, ref: 'AnalysisSessions'}]
+  catalogVersions: [{type: Schema.Types.ObjectId, ref: 'PublisherCatalogVersions'}]
 });
 
-mongoose.model('Dimensions', Dimensions);
+module.exports = mongoose.model('Dimensions', Dimensions);

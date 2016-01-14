@@ -14,21 +14,16 @@ var Schema = mongoose.Schema;
  * was created and modified
  */
 var DimensionValues = new Schema({
+  // should be required
+  dimensionGid: String,
   dimension: {type: Schema.Types.ObjectId, ref: 'Dimensions'},
   value: String,
-  title: String,
-  synonyms: [String],
-  // todo: denormilized data
-  dimensionName: String,
-  dataSources: [{type: Schema.Types.ObjectId, ref: 'DataSources'}],
-  catalogVersions: [{type: Schema.Types.ObjectId, ref: 'PublisherCatalogVersions'}],
-
-  analysisSessions: [{type: Schema.Types.ObjectId, ref: 'AnalysisSessions'}]
+  title: String
 });
 
 DimensionValues.index({dimension: 1, value: 1});
+DimensionValues.index({dimensionGid: 1, value: 1});
 DimensionValues.index({value: 1});
 DimensionValues.index({title: 1});
-DimensionValues.index({synonyms: 1});
 
-mongoose.model('DimensionValues', DimensionValues);
+module.exports = mongoose.model('DimensionValues', DimensionValues);

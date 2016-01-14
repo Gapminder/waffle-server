@@ -36,3 +36,6 @@ Before this script use please, read carefully the next comments:
  4. Edit [run script](./run) script: put into this script AWS S3 credentials (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, S3_BUCKET).
  5. Get MongoDB dump with `gapminder-tools` DB and put it (unpacked `dump` directory) into the directory.
  6. Run this script.
+
+## Specification of query accepted by WS API
+please read [query specification accepted by WS Public API](ws-public-api.md)
