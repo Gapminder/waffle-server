@@ -40,12 +40,13 @@ var Dimensions = new Schema({
   incompleteDrillups: String,
 
   ordinal: Number,
-  measure: Number,
+  measure: String,
   interval: Number,
   cardinality: Number,
 
   aliases: [String],
-
+  pattern: String,
+  ddfInheritance: String,
   meta: {},
 
   // todo: should be linked from dataSource, catalogVersion, analysisSessions

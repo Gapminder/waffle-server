@@ -67,6 +67,7 @@
     "indicator/gni_pc_u_usd_cu": "GNI per capita",
     "indicator/population": "Population",
     "indicator/child_mortality_rate_percent": "Child mortality rate",
+    "indicator/child_mortality_rate_per1000": "Child mortality rate (per 1000)",
     "indicator/gini": "Gini coefficient",
     "indicator/_default": "Constant",
     "indicator/_indicators": "Indicators",

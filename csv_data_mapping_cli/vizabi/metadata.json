@@ -78,14 +78,14 @@
             "scales": ["ordinal"],
             "sourceLink": "https://docs.google.com/spreadsheets/d/1OxmGUNWeADbPJkQxVPupSOK5MbAECdqThnvyPrwG5Os/pub"
         },
-        "geo.lat": {
+        "geo.latitude": {
             "allowCharts": ["*"],
             "use": "property",
             "unit": "",
             "scales": ["linear"],
             "sourceLink": "https://gapminder.org"
         },
-        "geo.lng": {
+        "geo.longitude": {
             "allowCharts": ["*"],
             "use": "property",
             "unit": "",
@@ -169,6 +169,13 @@
             "sourceLink": "http://www.gapminder.org/news/data-sources-dont-panic-end-poverty",
             "domain": [0, 550]
         },
+      "child_mortality_rate_per1000": {
+            "allowCharts": ["bubblechart", "bubblemap"],
+            "use": "indicator",
+            "unit": "child_mortality_rate_per1000",
+            "scales": ["linear", "log"],
+            "sourceLink": "http://www.gapminder.org/news/data-sources-dont-panic-end-poverty"
+        },
         "_default": {
             "allowCharts": ["*"],
             "use": "constant",
@@ -198,6 +205,7 @@
                 "children": [
                     {"id": "life_expectancy"},
                     {"id": "child_mortality_rate_percent"},
+                    {"id": "child_mortality_rate_per1000"},
                     {"id": "fertility_rate"}
                 ]
             }, {

@@ -57,6 +57,7 @@ async.waterfall([
 });
 
 function importIndicatorsDb(cb) {
+  console.log('Importing indicator db');
   var indicatorsDB = _.keys(metadata.indicatorsDB)
     .map(function (key) {
       return _.extend(metadata.indicatorsDB[key], {name: key});
@@ -72,6 +73,7 @@ function importIndicatorsDb(cb) {
 }
 
 function importIndicatorsTree(cb) {
+  console.log('importing indicators tree');
   IndexTree
     .findOne({}, {_id: 0, __v: 0})
     .exec(function (err, tree) {
@@ -93,6 +95,7 @@ function importIndicatorsTree(cb) {
 }
 
 function createDimensions(ddf_dimensions_file) {
+  console.log('create dimensions');
   return pipeWaterfall([
     readCsvFile(ddf_dimensions_file),
     pipeMapSync(mapDdfDimensionsToWsModel),
@@ -101,6 +104,7 @@ function createDimensions(ddf_dimensions_file) {
 }
 
 function createDimensionValues(ddf_dimension_values_pattern) {
+  console.log('create dimension values');
   return pipeWaterfall([
     (pipe, cb) => Dimensions.find({}, {gid: 1, subdimOf: 1}).lean().exec(cb),
     pipeMapSync(dim=>Object.assign(dim, {file: ddf_dimension_values_pattern(dim)})),
@@ -127,6 +131,7 @@ function createDimensionValues(ddf_dimension_values_pattern) {
 }
 
 function createMeasures(ddf_measures_file) {
+  console.log('create measures');
   return pipeWaterfall([
     readCsvFile(ddf_measures_file),
     pipeMapSync(mapDdfMeasureToWsModel),
@@ -135,6 +140,7 @@ function createMeasures(ddf_measures_file) {
 }
 
 function createTranslations(cb) {
+  console.log('create translations');
   var en = require('./vizabi/en');
   var se = require('./vizabi/se');
   var translations = []
@@ -170,7 +176,7 @@ function createMeasureValues(ddf_index_file) {
     }, pcb),
     // group file entries from ddf-index my measure id
     (pipe, cb) => {
-      pipe.filesIndex = _.groupBy(pipe.filesIndex, v=>v.measure);
+      pipe.filesIndex = _.groupBy(pipe.filesIndex, v=>v.value_concept);
       return cb(null, pipe);
     },
     // do all other? WTF? REALLY?
@@ -187,6 +193,10 @@ function createMeasureValues(ddf_index_file) {
 
         // for each measure entries from ddf-index.csv
         async.eachSeries(pipe.filesIndex[measure.gid], (fileEntry, cb)=> {
+          if (!fileEntry.geo || !fileEntry.time){
+            console.log(`Skipping ${fileEntry.file} - already imported`);
+            return cb();
+          }
           console.log(`Importing measure values from '${fileEntry.file}' with dim-s: '${fileEntry.geo},${fileEntry.time}'`);
           //
           async.parallel({
@@ -353,7 +363,7 @@ function addDimensionsToMeasure(id, dimensionsArr, adcb) {
 // mappers
 function mapDdfDimensionsToWsModel(entry) {
   return {
-    gid: entry.dimension,
+    gid: entry.concept,
     type: entry.type,
     subdimOf: entry.subdim_of,
     name: entry.name,
@@ -372,7 +382,9 @@ function mapDdfDimensionsToWsModel(entry) {
     measure: entry.measure,
     interval: entry.interval,
     cardinality: entry.cardinality,
-    aliases: entry.aliases ? entry.aliases.split('","').map(v=>v.replace(/"/g, '')) : []
+    aliases: entry.aliases ? entry.aliases.split('","').map(v=>v.replace(/"/g, '')) : [],
+    pattern: entry.pattern,
+    ddfInheritance: entry.ddf_inheritance
   };
 }
 
@@ -395,8 +407,8 @@ function mapDdfDimensionsToGeoWsModel(entry) {
 
     description: entry.description,
 
-    lat: entry.lat,
-    lng: entry.lng,
+    latitude: entry.latitude,
+    longitude: entry.longitude,
     region4: entry.world_4region,
     color: entry.color,
 
