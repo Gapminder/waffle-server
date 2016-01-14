@@ -1,6 +1,6 @@
 'use strict';
 
-var gulp = require('gulp');
+const gulp = require('gulp');
 
 gulp.paths = {
   src: ['**/*.js', '!node_modules/**/*', '!ws.public/libs/**/*']
@@ -8,6 +8,4 @@ gulp.paths = {
 
 require('require-dir')('./gulp');
 
-gulp.task('default', function () {
-  gulp.start('lint');
-});
+gulp.task('default', ['lint', 'test']);
