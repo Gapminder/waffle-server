@@ -17,15 +17,15 @@ let mappingHeaders = {
   geo: 'gid',
   'geo.name': 'name',
   'geo.region.country': 'region4',
-  'geo.region': 'gid',
+  'geo.region': 'region4',
   'geo.lat': 'lat',
   'geo.lng': 'lng'
 };
 
 let mappingQueries = {
   global: {isGlobal: true},
-  world_4region: {isRegion4 : true},
-  region: {isRegion4 : true},
+  world_4region: {isRegion4: true},
+  region: {isRegion4: true},
   country: {isCountry: true},
   unstate: {isUnState: true},
   geo: {}
@@ -42,7 +42,7 @@ function projectGeoProperties(select, where, cb) {
       let key = mappingHeaders[item + '.' + cat] || mappingHeaders[item] || item;
       result[key] = 1;
       return result;
-    }, { '_id': 0, isGlobal: 1, isRegion4: 1, isCountry: 1, isUnState: 1 });
+    }, {_id: 0, isGlobal: 1, isRegion4: 1, isCountry: 1, isUnState: 1});
 
     return cb => {
       let query = mappingQueries[cat] || {};
