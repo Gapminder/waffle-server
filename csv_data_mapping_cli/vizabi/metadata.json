@@ -55,7 +55,6 @@
             "geo.region": false
         }
     },
-
     "indicatorsDB": {
         "time": {
             "allowCharts": ["*"],
@@ -109,7 +108,7 @@
         "population": {
             "allowCharts": ["mountainchart", "bubblechart", "bubblemap", "linechart", "barchart", "barrankchart"],
             "use": "indicator",
-            "unit": "",
+            "unit": "population",
             "scaleType": "log",
             "scales": ["linear", "log"],
             "sourceLink": "http://www.gapminder.org/news/data-sources-dont-panic-end-poverty",
@@ -127,7 +126,8 @@
             "allowCharts": ["mountainchart", "bubblechart", "bubblemap", "linechart", "barchart", "barrankchart"],
             "use": "indicator",
             "unit": "fertility_rate",
-            "scales": ["linear", "log"],
+            "scales": ["linear"],
+            "domain": [0, 10],
             "sourceLink": "https://gapminder.org"
         },
         "gini": {
@@ -154,27 +154,28 @@
             "scales": ["log", "linear"],
             "sourceLink": "https://gapminder.org"
         },
-        "gni_pc_u_usd_cu": {
-            "allowCharts": ["mountainchart", "bubblechart", "bubblemap", "linechart", "barchart", "barrankchart"],
+        "child_mortality_rate_per1000": {
+            "allowCharts": ["bubblechart", "mountainchart", "bubblemap"],
             "use": "indicator",
-            "unit": "gni_pc_u_usd_cu",
-            "scales": ["linear", "log"],
-            "sourceLink": "https://gapminder.org"
-        },
-        "child_mortality_rate_percent": {
-            "allowCharts": ["bubblechart", "bubblemap"],
-            "use": "indicator",
-            "unit": "child_mortality_rate_percent",
+            "unit": "child_mortality_rate_per1000",
             "scales": ["linear", "log"],
             "sourceLink": "http://www.gapminder.org/news/data-sources-dont-panic-end-poverty",
             "domain": [0, 550]
         },
-      "child_mortality_rate_per1000": {
-            "allowCharts": ["bubblechart", "bubblemap"],
+        "child_mortality_rate_percent": {
+          "allowCharts": ["bubblechart", "mountainchart", "bubblemap"],
+          "use": "indicator",
+          "unit": "child_mortality_rate_per1000",
+          "scales": ["linear", "log"],
+          "sourceLink": "http://www.gapminder.org/news/data-sources-dont-panic-end-poverty",
+          "domain": [0, 550]
+        },
+        "age": {
+            "allowCharts": ["popbyage"],
             "use": "indicator",
-            "unit": "child_mortality_rate_per1000",
+            "unit": "year",
             "scales": ["linear", "log"],
-            "sourceLink": "http://www.gapminder.org/news/data-sources-dont-panic-end-poverty"
+            "sourceLink": ""
         },
         "_default": {
             "allowCharts": ["*"],
@@ -197,8 +198,7 @@
                 "children": [
                     {"id": "inequality", "children": [{"id":"gini"}]},
                     {"id": "gdp_p_cap_const_ppp2011_dollar"},
-                    {"id": "gdp_const_ppp2011_dollar"},
-                    {"id": "gni_pc_u_usd_cu"}
+                    {"id": "gdp_const_ppp2011_dollar"}
                 ]
             }, {
                 "id": "health",
