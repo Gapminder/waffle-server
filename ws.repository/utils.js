@@ -3,9 +3,6 @@ var _ = require('lodash');
 var async = require('async');
 var mongoose = require('mongoose');
 
-var AnalysisSessions = mongoose.model('AnalysisSessions');
-var ImportSessions = mongoose.model('ImportSessions');
-
 exports.actionFactory = function actionFactory(actionType) {
   var options = {
     update: function update(Model, obj) {
@@ -97,16 +94,4 @@ exports.actionFactory = function actionFactory(actionType) {
   };
 
   return options[actionType];
-};
-
-exports.getActualAnalysisSessions = function getActualAnalysisSessions(params, cb) {
-  return ImportSessions
-    .distinct('_id', {catalogVersion: params.versionId})
-    .lean()
-    .exec(function (err, importSessions) {
-      return AnalysisSessions
-        .distinct('_id', {importSession: {$in: importSessions}})
-        .lean(true)
-        .exec(cb);
-    });
 };
