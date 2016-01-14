@@ -23,10 +23,10 @@ var Geo = new Schema({
   subdim: {type: String, index: true, sparse: true},
 
   // geo category
-  isGlobal: Boolean,
-  isRegion4: Boolean,
-  isCountry: Boolean,
-  isUnState: Boolean
+  isGlobal: {type: Boolean, default: false},
+  isRegion4: {type: Boolean, default: false},
+  isCountry: {type: Boolean, default: false},
+  isUnState: {type: Boolean, default: false}
 });
 
 module.exports = mongoose.model('Geo', Geo);

@@ -1,4 +1,5 @@
 'use strict';
+console.time('done');
 // Converter Class
 const _ = require('lodash');
 const fs = require('fs');
@@ -52,7 +53,7 @@ async.waterfall([
     console.error(err);
   }
 
-  console.log('done');
+  console.timeEnd('done');
   process.exit(0);
 });
 
@@ -297,9 +298,13 @@ function createMeasureValues(ddf_index_file) {
                   }),
                   (pipe, cb) => {
 
-                    async.eachLimit(pipe.measureValues, 20, (measureValue, cb) => {
+                    async.eachLimit(pipe.measureValues, 20, (measureValueEntry, cb) => {
+                      var measureValue = measureValueEntry[pipe.measure.gid];
+                      if (!measureValue && measureValue !== 0) {
+                        return setImmediate(cb);
+                      }
                       var coordinates = _.map(pipe.dimensions, (dimension) => {
-                        var value = measureValue[dimension.subdimOf] || measureValue[dimension.gid];
+                        var value = measureValueEntry[dimension.subdimOf] || measureValueEntry[dimension.gid];
                         return {
                           value: value,
                           dimensionName: dimension.gid,
@@ -310,7 +315,7 @@ function createMeasureValues(ddf_index_file) {
                       });
                       var dbMeasureValue = {
                         coordinates: coordinates,
-                        value: measureValue[pipe.measure.gid],
+                        value: measureValue,
 
                         indicator: pipe.measure._id,
                         indicatorName: pipe.measure.gid
