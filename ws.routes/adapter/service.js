@@ -89,7 +89,7 @@ module.exports = function (serviceLocator) {
         IndexTree.findOne({}, {_id: 0, __v: 0}).lean().exec(cb);
       },
       entities: (cb) => {
-        return Geo.find({isTerritory: true}, {_id: 0, gid: 1, name: 1})
+        return Geo.find({}, {_id: 0, gid: 1, name: 1})
           .sort('gid')
           .lean()
           .exec((err, geoProps) => {
