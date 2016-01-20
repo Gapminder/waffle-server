@@ -14,7 +14,8 @@ describe('decodeQuery-middleware', () => {
         'geo.region': 'afr,europe',
         'geo.cat': 'region,country',
         time: '1800,2000:2010,2015',
-        gapfilling: 'interpolation:log,extrapolation:3'
+        gapfilling: 'interpolation:log,extrapolation:3',
+        sort: 'geo:asc,time:desc'
       }
     };
 
@@ -26,6 +27,7 @@ describe('decodeQuery-middleware', () => {
         'geo.cat':['region', 'country'],
         time:[1800,[2000, 2010],2015]
       },
+      sort: {geo: 'asc',time: 'desc'},
       gapfilling: {interpolation: 'log',extrapolation: 3}
     };
 
@@ -37,6 +39,63 @@ describe('decodeQuery-middleware', () => {
     //assert
     assert.ok(next.calledOnce);
     assert.deepEqual(req.decodedQuery, expected);
+  });
+
+  it('should decode incoming query sort param - "true" as value for property should be substituted with "asc"', () => {
+    //arrange
+    let req = {
+      query: {
+        sort: 'geo,time:desc'
+      }
+    };
+
+    let expected = {
+      sort: {geo: 'asc',time: 'desc'}
+    };
+
+    //act
+    utils.decodeQuery(req, null, () => {});
+
+    //assert
+    assert.deepEqual(req.decodedQuery.sort, expected.sort);
+  });
+
+  it('should decode incoming query sort param - incoming sort request param will be sanitized (omit all invalid values)', () => {
+    //arrange
+    let req = {
+      query: {
+        sort: 'geo:bla-bla-bla,some:true,time:desc'
+      }
+    };
+
+    let expected = {
+      sort: {time: 'desc'}
+    };
+
+    //act
+    utils.decodeQuery(req, null, () => {});
+
+    //assert
+    assert.deepEqual(req.decodedQuery.sort, expected.sort);
+  });
+
+  it('should decode incoming query sort param - empty sort param will spawn empty object', () => {
+    //arrange
+    let req = {
+      query: {
+        sort: ''
+      }
+    };
+
+    let expected = {
+      sort: {}
+    };
+
+    //act
+    utils.decodeQuery(req, null, () => {});
+
+    //assert
+    assert.deepEqual(req.decodedQuery.sort, expected.sort);
   });
 
   it('should apply default values for decoded query and call next middleware', () => {

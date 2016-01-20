@@ -23,10 +23,10 @@ schemas.push({
 
 schemas.push({
   file: "dont-panic-poverty-geo-properties.csv",
-  headers: ["geo","geo.name","geo.cat","geo.region","geo.lat","geo.lng"],
-  wsProperties: ["geo","geo.name","geo.cat","geo.region.country","geo.lat","geo.lng"],
+  headers: ["geo","geo.name","geo.cat","geo.region","geo.latitude","geo.longitude"],
+  wsProperties: ["geo","geo.name","geo.cat","geo.region.country","geo.latitude","geo.longitude"],
   endpoint: "geos",
-  query: "select=geo,geo.name,geo.cat,geo.region.country,geo.lat,geo.lng"
+  query: "select=geo,geo.name,geo.cat,geo.region.country,geo.latitude,geo.longitude"
 });
 
 module.exports = schemas;

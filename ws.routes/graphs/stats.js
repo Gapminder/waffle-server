@@ -43,6 +43,7 @@ module.exports = function (serviceLocator) {
     var select = req.decodedQuery.select;
     var category = req.decodedQuery.where['geo.cat'];
     var where = req.decodedQuery.where;
+    var sort = req.decodedQuery.sort;
     var measuresSelect = _.difference(select, ['geo', 'time']);
     var geoPosition = select.indexOf('geo');
     var timePosition = select.indexOf('time');
@@ -50,7 +51,7 @@ module.exports = function (serviceLocator) {
     var time = req.decodedQuery.where.time || [];
 
     var isGeoPropsReq = _.all(select, v=>/^geo/.test(v)) || select;
-    var options = {select, where, category, headers, geoPosition, timePosition, measuresSelect, time};
+    var options = {select, where, category, headers, geoPosition, timePosition, measuresSelect, time, sort};
     var actions = [ cb => cb(null, options) ];
 
     // ?select=geo,time,population&geo=afr,chn&time=1800,1950:2000,2015&geo.cat=country,region
@@ -105,7 +106,10 @@ module.exports = function (serviceLocator) {
         (i1:Indicators)-[:with_dimension]->(:Dimensions{gid: '${dim2}'})-[:with_dimension_value]->(dv2:DimensionValues)-[:with_indicator_value]->(iv1:IndicatorValues)`;
 
     var returner = `RETURN collect(i1.gid) as indicator,dv1.value as year, dv2.value as country, collect(iv1.value) as value`;
-    var reqQuery = [match, reqWhere, returner].join(' ');
+
+    let sort = sortParamToCypher(pipe.sort, {geo: 'dv2.value', time: 'dv1.value'});
+
+    var reqQuery = [match, reqWhere, returner, sort].join(' ');
 
     console.time('cypher');
     neo4jdb.cypherQuery(reqQuery, function (err, resp) {
@@ -146,6 +150,19 @@ module.exports = function (serviceLocator) {
       console.timeEnd('format');
       return cb(null, {headers: pipe.headers, rows: rows});
     });
+  }
+
+  function sortParamToCypher(sortParam, dimensionsToCypherAliases) {
+    let valuesWithOrdering = _.chain(sortParam)
+      .keys()
+      .reduce((result, dimension) => {
+        result.push(`${dimensionsToCypherAliases[dimension]} ${sortParam[dimension]}`);
+        return result;
+      }, [])
+      .value()
+      .join(',');
+
+    return valuesWithOrdering ? `ORDER BY ${valuesWithOrdering}` : '' ;
   }
 
   function getGeoProperties(pipe, cb) {
