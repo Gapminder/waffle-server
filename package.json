@@ -1,6 +1,6 @@
 {
   "name": "waffle-implementation",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Waffle server",
   "main": "app.js",
   "scripts": {
