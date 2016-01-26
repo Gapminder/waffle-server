@@ -1,5 +1,4 @@
-var regions = {"AFG":"asi","ALB":"eur","DZA":"afr","AGO":"afr","AIA":"ame","ATG":"ame","ARG":"ame","ARM":"eur","AUT":"eur","AZE":"eur","BHS":"ame","BHR":"asi","BGD":"asi","BRB":"ame","BLR":"eur","BEL":"eur","BEN":"afr","BMU":"ame","BTN":"asi","BOL":"ame","BIH":"eur","BWA":"afr","_BV":"asi","BRA":"ame","BGR":"eur","BFA":"afr","BDI":"afr","KHM":"asi","CMR":"afr","CAN":"ame","CPV":"afr","CYM":"ame","TCD":"afr","CHL":"ame","CHN":"asi","COL":"ame","COM":"afr","CRI":"ame","HRV":"eur","CUB":"ame","CYP":"eur","CZE":"eur","DNK":"eur","DJI":"afr","DMA":"ame","DOM":"ame","ECU":"ame","EGY":"afr","SLV":"ame","GNQ":"afr","ERI":"afr","EST":"eur","ETH":"afr","FLK":"ame","FJI":"asi","FIN":"eur","FRA":"eur","GUF":"ame","GAB":"afr","GMB":"afr","GEO":"eur","DEU":"eur","GHA":"afr","GIB":"eur","GRC":"eur","GRD":"ame","GTM":"ame","GBG":"eur","GIN":"afr","GNB":"afr","GUY":"ame","HTI":"ame","HOS":"eur","HND":"ame","HUN":"eur","ISL":"eur","IND":"asi","IDN":"asi","IRQ":"asi","IRL":"eur","GBM":"eur","ISR":"asi","ITA":"eur","JAM":"ame","JPN":"asi","JEY":"eur","JOR":"asi","KAZ":"asi","KGZ":"asi","KEN":"afr","KIR":"asi","KWT":"asi","LVA":"eur","LBN":"asi","LSO":"afr","LBR":"afr","LIE":"eur","LTU":"eur","LUX":"eur","MDG":"afr","MWI":"afr","MYS":"asi","MLI":"afr","MLT":"eur","MHL":"asi","CXR":"asi","MRT":"afr","MUS":"afr","MYT":"afr","MEX":"ame","MCO":"eur","MNG":"asi","MSR":"ame","MAR":"afr","MOZ":"afr","MMR":"asi","NAM":"afr","NPL":"asi","NLD":"eur","NIC":"ame","NER":"afr","NGA":"afr","NOR":"eur","OMN":"asi","PAK":"asi","PLW":"asi","PAN":"ame","PRY":"ame","PER":"ame","PHL":"asi","POL":"eur","PRT":"eur","PRI":"ame","QAT":"asi","REU":"afr","ROU":"eur","RWA":"afr","SHN":"afr","KNA":"ame","LCA":"ame","VCT":"ame","WSM":"asi","SMR":"eur","STP":"afr","SAU":"asi","SEN":"afr","SYC":"afr","SLE":"afr","SGP":"asi","SVK":"eur","SVN":"eur","SLB":"asi","SOM":"afr","_GS":"ame","ESP":"eur","LKA":"asi","SDN":"afr","SUR":"ame","SWZ":"afr","SWE":"eur","CHE":"eur","TJK":"asi","THA":"asi","TLS":"asi","TGO":"afr","TON":"asi","TTO":"ame","TUN":"afr","TUR":"eur","TKM":"asi","TCA":"ame","TUV":"asi","UGA":"afr","UKR":"eur","ARE":"asi","GBR":"eur","USA":"ame","URY":"ame","UZB":"asi","VUT":"asi","VEN":"ame","VNM":"asi","ESH":"afr","YEM":"asi","ZMB":"afr","ZWE":"afr","PNG":"asi","MDA":"eur","PRK":"asi","RUS":"eur","NZL":"asi","GRL":"eur","IRN":"asi","TWN":"asi","KOR":"asi","MNE":"eur","SDS":"afr","LBY":"afr","LAO":"asi","SYR":"asi","FR_TF":"asi","NCL":"asi","BLZ":"ame","BRN":"asi","CIV":"afr","PSE_WEB":"asi","_SOL":"afr","_UNK":"eur","_NCY":"asi","MKD":"eur","COD":"afr","ZAF":"afr","TZA":"afr","AUS":"asi","SRB":"eur","CAF":"afr","PSE":"asi","COG":"afr"};
-
+'use strict';
 var _ = require('lodash');
 var cache = require('express-redis-cache')();
 var cors = require('cors');
@@ -7,67 +6,234 @@ var async = require('async');
 var express = require('express');
 var mongoose = require('mongoose');
 var compression = require('compression');
+var GeoPropCtrl = require('../geo/geo-properties.controller');
+var md5 = require('md5');
 
 var ensureAuthenticated = require('../utils').ensureAuthenticated;
+var decodeQuery = require('../utils').decodeQuery;
 var getCacheConfig = require('../utils').getCacheConfig;
+
+var Geo = mongoose.model('Geo');
+var DimensionValues = mongoose.model('DimensionValues');
+
+var dataPostProcessors = require('../data-post-processors');
 
 module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
   var neo4jdb = app.get('neo4jDb');
 
-  var match =
-    "MATCH (i1:Indicators)-[:with_dimension]->(:Dimensions{name: 'year'})-[:with_dimension_value]->(dv1:DimensionValues)-[:with_indicator_value]->(iv1:IndicatorValues), \
-      (i1:Indicators)-[:with_dimension]->(:Dimensions{name: 'country'})-[:with_dimension_value]->(dv2:DimensionValues)-[:with_indicator_value]->(iv1:IndicatorValues)";
-  var where = "WHERE i1.name in ['pop', 'u5mr', 'gdp_per_cap', 'gini']";
-  var returner = "RETURN collect(i1.name) as indicator,dv1.value as year, dv2.value as country, dv2.title, collect(iv1.value) as value";
-
   /*eslint new-cap:0*/
   var router = express.Router();
 
-  router.get('/api/graphs/stats/vizabi-tools', getCacheConfig(), cors(), compression(), cache.route({expire: 86400}), vizabiTools);
+  router.get('/api/graphs/stats/vizabi-tools',
+    getCacheConfig(),
+    cors(),
+    compression(),
+    cache.route({expire: 86400}),
+    decodeQuery,
+    vizabiTools,
+    dataPostProcessors.gapfilling,
+    dataPostProcessors.toPrecision,
+    dataPostProcessors.format
+  );
 
   return app.use(router);
 
   function vizabiTools(req, res, next) {
-    // some time later
-    // req.query.select ? _.difference(JSON.parse(req.query.select), ['geo','time']) : ['pop'];
-    var select = ['pop', 'u5mr', 'gdp_per_cap', 'gini'];
-    var reqWhere = 'WHERE i1.name in ' + JSON.stringify(select);
-    if (req.query.time) {
-      var time = parseInt(req.query.time, 10);
-      if (time) {
-        reqWhere += ' and dv1.value="' + time + '"';
-      } else {
-        time = JSON.parse(req.query.time);
-        reqWhere += [' and dv1.value>="', time.from, '" and dv1.value<="', time.to, '"'].join('');
-      }
+    var select = req.decodedQuery.select;
+    var category = req.decodedQuery.where['geo.cat'];
+    var where = req.decodedQuery.where;
+    var sort = req.decodedQuery.sort;
+    var measuresSelect = _.difference(select, ['geo', 'time']);
+    var geoPosition = select.indexOf('geo');
+    var timePosition = select.indexOf('time');
+    var headers = select;
+    var time = req.decodedQuery.where.time || [];
+
+    var isGeoPropsReq = _.all(select, v=>/^geo/.test(v)) || select;
+    var options = {select, where, category, headers, geoPosition, timePosition, measuresSelect, time, sort};
+    var actions = [ cb => cb(null, options) ];
+
+    // ?select=geo,time,population&geo=afr,chn&time=1800,1950:2000,2015&geo.cat=country,region
+    switch (true) {
+      // /api/geo
+      case (isGeoPropsReq):
+        actions.push(getGeoProperties, prepareGeoResponse);
+        break;
+      // ?select=geo,time
+      case (!measuresSelect.length):
+        options.select = ['geo'];
+        actions.push(getGeoProperties, makeFlattenGeoProps, getGeoTime);
+        break;
+      // ?select=geo,time,[<measure>[,<measure>...]]
+      default:
+        actions.push(getGeoProperties, makeFlattenGeoProps, getMeasures);
+        break;
     }
-    var reqQuery = [match, reqWhere, returner].join(' ');
-    var headers = ['time', 'geo', 'geo.name', 'geo.cat', 'geo.region'].concat(select);
-    console.time('cypher');
-    neo4jdb.cypherQuery(reqQuery, function (err, resp) {
-      console.timeEnd('cypher');
-      console.time('format');
+
+    async.waterfall(actions, (err, result) => {
       if (err) {
         console.error(err);
         res.use_express_redis_cache = false;
         return res.json({success: false, error: err});
       }
-      var rows = _.map(resp.data, function (row) {
-        var resRow = new Array(headers.length);
-        // [indicators], year, country, [values]
-        resRow[0] = parseInt(row[1], 10); // time
-        resRow[1] = (row[2] || '').toLowerCase(); // geo
-        resRow[2] = row[3]; // geo.name
-        resRow[3] = 'country'; // geo.cat
-        resRow[4] = regions[row[2]]; // geo.region
-        for (var i = 0; i < row[0].length; i++) {
-          resRow[headers.indexOf(row[0][i])] = parseFloat(row[4][i]);
+
+      req.wsJson = result;
+      return next();
+    });
+  }
+
+  function getMeasures(pipe, cb) {
+    var resolvedGeos = pipe.resolvedGeos;
+
+    // do measures request
+    // prepare cypher query
+    var reqWhere = 'WHERE i1.gid in ' + JSON.stringify(pipe.measuresSelect);
+
+    if (pipe.where.time && pipe.where.time.length) {
+      reqWhere += ' and ( ' + _.map(pipe.where.time, time => {
+        if (time.length) {
+          return `( dv1.value>="${time[0]}" and dv1.value<="${time[1]}" )`;
         }
-        return resRow;
-      });
+        return `dv1.value="${time}"`;
+      }).join(' or ') + ' )';
+    }
+
+    var dim1 = 'year';
+    var dim2 = 'country';
+    var match =
+      `MATCH (i1:Indicators)-[:with_dimension]->(:Dimensions{gid: '${dim1}'})-[:with_dimension_value]->(dv1:DimensionValues)-[:with_indicator_value]->(iv1:IndicatorValues),
+        (i1:Indicators)-[:with_dimension]->(:Dimensions{gid: '${dim2}'})-[:with_dimension_value]->(dv2:DimensionValues)-[:with_indicator_value]->(iv1:IndicatorValues)`;
+
+    var returner = `RETURN collect(i1.gid) as indicator,dv1.value as year, dv2.value as country, collect(iv1.value) as value`;
+
+    let sort = sortParamToCypher(pipe.sort, {geo: 'dv2.value', time: 'dv1.value'});
+
+    var reqQuery = [match, reqWhere, returner, sort].join(' ');
+
+    console.time('cypher');
+    neo4jdb.cypherQuery(reqQuery, function (err, resp) {
+      console.timeEnd('cypher');
+      if (err) {
+        return cb(err);
+      }
+
+      console.time('format');
+      var rows = _.reduce(resp.data, function (result, row) {
+        var measuresValuesPosition = 3;
+        var measuresNamesPosition = 0;
+
+        var resRow = new Array(pipe.headers.length);
+        // [indicators], year, country, [values]
+        // time - year
+        if (pipe.timePosition !== -1) {
+          resRow[pipe.timePosition] = parseInt(row[1], 10);
+        }
+        // geo - country
+        if (pipe.geoPosition !== -1) {
+          resRow[pipe.geoPosition] = row[2];
+        }
+
+        for (var i = 0; i < row[measuresNamesPosition].length; i++) {
+          var currentMeasureName = row[measuresNamesPosition][i];
+          var currentMeasureValue = parseFloat(row[measuresValuesPosition][i]);
+          resRow[pipe.headers.indexOf(currentMeasureName)] = currentMeasureValue;
+        }
+
+        if (pipe.geoPosition === -1 ||
+          (pipe.geoPosition !== -1 && resolvedGeos.indexOf(resRow[pipe.geoPosition]) > -1)) {
+          result.push(resRow);
+        }
+        return result;
+      }, []);
+
       console.timeEnd('format');
-      return res.json({success: !err, data: {headers: headers, rows: rows}, error: err});
+      return cb(null, {headers: pipe.headers, rows: rows});
+    });
+  }
+
+  function sortParamToCypher(sortParam, dimensionsToCypherAliases) {
+    let valuesWithOrdering = _.chain(sortParam)
+      .keys()
+      .reduce((result, dimension) => {
+        result.push(`${dimensionsToCypherAliases[dimension]} ${sortParam[dimension]}`);
+        return result;
+      }, [])
+      .value()
+      .join(',');
+
+    return valuesWithOrdering ? `ORDER BY ${valuesWithOrdering}` : '' ;
+  }
+
+  function getGeoProperties(pipe, cb) {
+    let select = pipe.select;
+    let where = pipe.where;
+
+    return GeoPropCtrl.projectGeoProperties(select, where, function (err, geoData) {
+      pipe.geoData = geoData;
+
+      return cb(err, pipe);
+    });
+  }
+
+  function prepareGeoResponse(pipe, cb) {
+    return cb(null, {headers: pipe.geoData.headers, rows: pipe.geoData.rows});
+  }
+
+  function makeFlattenGeoProps(pipe, cb) {
+    var resolvedGeos = _.chain(pipe.geoData.rows).flatten().compact().value();
+    pipe.resolvedGeos = resolvedGeos;
+    return cb(null, pipe);
+  }
+
+  function getGeoTime(pipe, cb) {
+    if (pipe.where.time) {
+
+    }
+
+    return doCartesianProductOfGeoTime(pipe, cb);
+  }
+
+  function doCartesianProductOfGeoTime(pipe, cb) {
+    let headers = pipe.headers;
+    let geoPosition = pipe.geoPosition;
+    let timePosition = pipe.timePosition;
+    let resolvedGeos = pipe.resolvedGeos;
+
+    async.waterfall([
+      (_cb) => {
+        var query = {$or: _.map(pipe.where.time, time => {
+          if (time.length) {
+            return {'dimensionGid': 'year', 'value': {$gte: time[0], $lte: time[1]}};
+          }
+
+          return {'dimensionGid': 'year', 'value': time};
+        })};
+
+        DimensionValues.distinct('value', query)
+          .sort()
+          .lean()
+          .exec((err, dvs) => {
+            return _cb(err, dvs);
+          });
+      },
+      (resolvedYears, _cb) => {
+
+        var powerSet = _.chain(resolvedGeos)
+          .map(geo => {
+            return _.map(resolvedYears, year => {
+              var result = new Array(headers.length);
+              result[geoPosition] = geo;
+              result[timePosition] = year;
+
+              return result;
+            });
+          }).uniq(item => item.join(':')).flatten().value();
+
+        return _cb(null, powerSet);
+      }
+    ], (err, rows) => {
+      return cb(null, {headers: headers, rows: rows});
     });
   }
 };

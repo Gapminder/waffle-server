@@ -1,0 +1,74 @@
+# Attention!
+
+# Please read carefully the next comments:
+# Next soft should be alive:
+# 1. MongoDB
+# 2. Redis
+# 3. Neo4J (!password=neo4j)
+# 4. WS and Vizabi Tools should not be alive
+
+# you can use next command for stop all of `node` instances (WS or Vizabi Tools):
+# kill $(ps aux | grep 'node ' | awk '{print $2}')
+
+# Usage:
+# Create a separate directory.
+# Put this script into the directory.
+# Put `run` script from current directory into the directory.
+# Edit `run` script: put into this script AWS S3 credentials.
+# Get MongoDB dump with `gapminder-tools` DB and put it (unpacked) into the directory.
+# Run this script.
+
+# get & install WS
+git clone https://github.com/valor-software/waffle-server.git -b feature-adapter-service
+cd waffle-server
+npm i
+cd ..
+
+# get & install Vizabi Tools
+git clone https://github.com/Gapminder/gapminder-tools-vizabi.git -b feature-proxy-adapter-service
+cd gapminder-tools-vizabi
+npm i
+cd ..
+
+# get Vizabi
+git clone https://github.com/Gapminder/vizabi.git -b feature-graph-reader-update
+cd vizabi
+npm link
+cd ..
+
+# Set expected Vizabi version for Vizabi Tools
+cd gapminder-tools-vizabi
+npm link vizabi
+
+# set DB for Vizabi Tools
+mongorestore --drop
+
+# fill MongoDB base for WS by complete of CSV's
+cd ./waffle-server/csv_data_mapping_cli
+npm i
+node index.js
+cd ../..
+
+timeout 3 sleep 3
+
+# clear Redis cache
+redis-cli flushall
+
+# run WS
+cp ./run ./waffle-server
+cd ./waffle-server
+./run &
+cd ..
+
+timeout 10 sleep 10
+
+# export MongoDB to Neo4J for WS
+curl -i -H "Accept: application/json" -H "Content-Type: application/json" http://localhost:3000/api/graphs/export
+
+timeout 3 sleep 3
+
+# start Vizabi Tools
+cd gapminder-tools-vizabi
+MONGO_URL=mongodb://localhost:27017/gapminder-tools npm start
+
+# Now you can try http://localhost:3001

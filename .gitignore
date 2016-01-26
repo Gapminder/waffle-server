@@ -21,3 +21,5 @@ ws.public/index.html
 ws.public/dest
 
 dumps
+# excel lock files
+.~*
