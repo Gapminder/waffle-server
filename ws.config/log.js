@@ -1,54 +1,50 @@
 var _ = require('lodash');
 var path = require('path');
 var winston = require('winston');
+var dailyRotateFile = require('winston-daily-rotate-file');
 
 module.exports = function (app) {
   var config = app.get('config');
 
   var consoleTransport = new (winston.transports.Console)({
-    level: 'info',
+    name: 'console',
+    level: config.LOG_LEVEL,
+    handleExceptions: true,
     timestamp: true,
+    colorize: true,
     json: false
   });
-  var dailyRotateFileTransport = new (winston.transports.DailyRotateFile)({
+
+  var dailyRotateFileTransport = new (dailyRotateFile)({
     name: 'file',
     datePattern: '.yyyy-MM-ddTHH',
     filename: path.join(__dirname, '/../logs/waffle.log'),
-    level: 'beta',
+    level: config.LOG_LEVEL,
     timestamp: true,
     json: false,
+    handleExceptions: true,
     prettyPrint: true
   });
-  var nodeEnvs = {
-    devtest: {level: 'log', transports: [consoleTransport]},
-    development: {level: 'info', transports: [consoleTransport]},
-    beta: {level: 'warn', transports: [consoleTransport, dailyRotateFileTransport]},
-    production: {level: 'error', transports: [dailyRotateFileTransport]}
+
+  var defaultTransports = {
+    console: consoleTransport,
+    file: dailyRotateFileTransport
   };
-  var nodeEnv = config.NODE_ENV || config.DEFAULT_NODE_ENV;
-  var logLevel = config.LOG_LEVEL || nodeEnvs[nodeEnv].level;
-  _.each(nodeEnvs[nodeEnv].transports, function (transport) {
-    if (logLevel === 'devtest') {
-      transport.silent = true;
+
+  var transports = config.LOG_TRANSPORTS.map(transportName => {
+    var transport = defaultTransports[transportName];
+
+    if (!transport) {
+      throw new Error('Given LOG_TRANSPORTS contains not supported value');
     }
-    transport.level = logLevel;
+
+    return transport;
   });
 
-  function expandErrors(logger) {
-    var oldLogFunc = logger.log;
-    logger.log = function () {
-      var args = Array.prototype.slice.call(arguments, 0);
-
-      if (args.length >= 2 && args[1] instanceof Error) {
-        args[1] = args[1].stack;
-      }
-
-      return oldLogFunc.apply(this, args);
-    };
-    return logger;
-  }
-
-  var logger = expandErrors(new (winston.Logger)({ transports: nodeEnvs[nodeEnv].transports }));
+  var logger = new (winston.Logger)({
+    exitOnError: false,
+    transports: transports
+  });
 
   app.set('log', logger);
 };
