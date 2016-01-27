@@ -45,7 +45,7 @@ function projectGeoProperties(select, where, cb) {
     }, {_id: 0, isGlobal: 1, isRegion4: 1, isCountry: 1, isUnState: 1});
 
     return cb => {
-      let query = mappingQueries[cat] || {};
+      let query = _.clone(mappingQueries[cat]) || {};
       if (where && where.geo) {
         query.gid = {$in: where.geo};
       }
