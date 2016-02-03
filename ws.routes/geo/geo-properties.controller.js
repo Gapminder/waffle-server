@@ -39,7 +39,7 @@ module.exports = {
 function projectGeoProperties(select, where, cb) {
   let fns = _.map(where['geo.cat'], cat => {
     let projection = _.reduce(select, (result, item) => {
-      let key = mappingHeaders[item + '.' + cat] || mappingHeaders[item] || item;
+      let key = mappingHeaders[item] || item;
       result[key] = 1;
       return result;
     }, {_id: 0, isGlobal: 1, isRegion4: 1, isCountry: 1, isUnState: 1});
@@ -81,7 +81,7 @@ function mapGeoData(headers, category, cb) {
 
     let rows = _.map(flattedGeo, function (prop) {
       return _.map(headers, header => {
-        let key = mappingHeaders[header + '.' + category] || mappingHeaders[header];
+        let key = mappingHeaders[header];
 
         // fixme: hardcode for geo.cat
         if (header === 'geo.cat') {
