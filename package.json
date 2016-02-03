@@ -49,7 +49,7 @@
     "lodash": "^3.10.1",
     "md5": "^2.0.0",
     "method-override": "^2.3.4",
-    "mongoose": "4.2.9",
+    "mongoose": "4.3.7",
     "morgan": "^1.6.1",
     "neo4j": "^1.1.1",
     "ng-file-upload": "^7.0.17",

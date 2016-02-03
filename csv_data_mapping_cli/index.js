@@ -37,6 +37,7 @@ async.waterfall([
   cb => Indicators.remove({}, err => cb(err)),
   cb => IndicatorsValues.remove({}, err => cb(err)),
   cb => Translations.remove({}, err => cb(err)),
+  cb => IndexDb.remove({}, err => cb(err)),
 
   importIndicatorsDb,
   importIndicatorsTree,
