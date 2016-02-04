@@ -53,8 +53,7 @@ function projectGeoProperties(select, where, cb) {
       if (where && where['geo.region']) {
         query.region4 = {$in: where['geo.region']};
       }
-
-      listGeoProperties(query, projection, cb);
+      this.listGeoProperties(query, projection, cb);
     };
   });
 
