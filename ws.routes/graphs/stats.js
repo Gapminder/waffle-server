@@ -67,7 +67,7 @@ module.exports = function (serviceLocator) {
       // ?select=geo,time
       case (!measuresSelect.length):
         options.select = ['geo'];
-        actions.push(getGeoProperties, makeFlattenGeoProps, getGeoTime);
+        actions.push(getGeoProperties, makeFlattenGeoProps, doCartesianProductOfGeoTime);
         break;
       // ?select=geo,time,[<measure>[,<measure>...]]
       default:
@@ -207,14 +207,6 @@ module.exports = function (serviceLocator) {
     return cb(null, pipe);
   }
 
-  function getGeoTime(pipe, cb) {
-    if (pipe.where.time) {
-
-    }
-
-    return doCartesianProductOfGeoTime(pipe, cb);
-  }
-
   function doCartesianProductOfGeoTime(pipe, cb) {
     let headers = pipe.headers;
     let geoPosition = pipe.geoPosition;
@@ -223,13 +215,16 @@ module.exports = function (serviceLocator) {
 
     async.waterfall([
       (_cb) => {
-        var query = {$or: _.map(pipe.where.time, time => {
-          if (time.length) {
-            return {'dimensionGid': 'year', 'value': {$gte: time[0], $lte: time[1]}};
-          }
+        var query = {'dimensionGid': 'year'};
+        if (pipe.where && pipe.where.time && pipe.where.time.length) {
+          query.$or = _.map(pipe.where.time, time => {
+            if (time.length) {
+              return {'value': {$gte: time[0], $lte: time[1]}};
+            }
 
-          return {'dimensionGid': 'year', 'value': time};
-        })};
+            return {'value': time};
+          });
+        }
 
         DimensionValues.distinct('value', query)
           .sort()
