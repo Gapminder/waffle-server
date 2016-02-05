@@ -1,21 +1,41 @@
 /*eslint no-process-env:0 */
+'use strict';
+
+const path = require('path');
+const _ = require('lodash');
+const fs = require('fs');
+const DEFAULT_CONFIG = require('./environment.config');
+
 module.exports = function (app) {
-  if (!process.env.AWS_SECRET_ACCESS_KEY) {
-    throw new Error('You need to set up AWS access keys');
-  }
+  const REQUIRED_ENVIRONMENT_VARIABLES = Object.freeze([
+    'SESSION_SECRET',
+    'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET',
+    'AWS_SECRET_ACCESS_KEY', 'AWS_ACCESS_KEY_ID', 'S3_BUCKET',
+    'MONGODB_URL', 'NEO4J_URL'
+  ]);
 
-  var config = {
-    PORT: process.env.PORT || 3000,
-    HOST: process.env.HOST || 'http://localhost',
-    HOST_URL: process.env.HOST_URL,
-    MONGODB_URL: 'mongodb://localhost/ws_test',
-    DEFAULT_NODE_ENV: 'development',
-    NEO4J_URL: process.env.NEO4J_URL || 'http://neo4j:neo4j@localhost:7474',
+  // Check that all the REQUIRED VARIABLES was setup.
+  _.each(REQUIRED_ENVIRONMENT_VARIABLES, function (CURRENT_VARIABLE) {
+    if (!process.env[CURRENT_VARIABLE] && !DEFAULT_CONFIG[CURRENT_VARIABLE]) {
+      throw new Error(`You need to set up ${CURRENT_VARIABLE}`);
+    }
+  });
 
-    // NODE_ENV: devtest, development, beta, production; if test - silent:true
-    NODE_ENV: process.env.NODE_ENV,
-    // LOG_LEVEL: log, info, warn, error
-    LOG_LEVEL: process.env.LOG_LEVEL,
+  const config = {
+    NODE_ENV: process.env.NODE_ENV || DEFAULT_CONFIG.NODE_ENV,
+    PORT: process.env.PORT || DEFAULT_CONFIG.PORT,
+    HOST_URL: process.env.HOST_URL || DEFAULT_CONFIG.HOST_URL,
+
+    MONGODB_URL: process.env.MONGODB_URL || DEFAULT_CONFIG.MONGODB_URL,
+    NEO4J_URL: process.env.NEO4J_URL || DEFAULT_CONFIG.NEO4J_URL,
+
+    // is used npm logging levels (prioritized from 0 to 5, from highest to lowest):
+    // { error: 0, warn: 1, info: 2, verbose: 3, debug: 4, silly: 5 }
+    LOG_LEVEL: process.env.LOG_LEVEL || DEFAULT_CONFIG.LOG_LEVEL,
+    LOG_TRANSPORTS: process.env.LOG_TRANSPORTS
+      ? process.env.LOG_TRANSPORTS.split(',')
+      : DEFAULT_CONFIG.LOG_TRANSPORTS,
+    LOG_TABS: process.env.LOG_TABS || DEFAULT_CONFIG.LOG_TABS,
 
     DEFAULT_OPTIONS_CONVERTING_JSON_TO_CSV: {
       DELIMITER: {
@@ -25,12 +45,17 @@ module.exports = function (app) {
       },
       EOL: '\n',
       PARSE_CSV_NUMBERS: false
-    }
+    },
+
+    AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY || DEFAULT_CONFIG.AWS_SECRET_ACCESS_KEY,
+    AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID || DEFAULT_CONFIG.AWS_ACCESS_KEY_ID,
+    S3_BUCKET: process.env.S3_BUCKET || DEFAULT_CONFIG.S3_BUCKET
   };
+
   config.social = {
-    GOOGLE_CLIENT_ID: '267502081172-qcabnkcj1ns254hnu45gf67d0t5675e3.apps.googleusercontent.com',
-    GOOGLE_CLIENT_SECRET: '-qvIG6hoI8a7IpsX1-7-uojr',
-    GOOGLE_CALLBACK_URL: (config.HOST_URL ? config.HOST_URL : config.HOST + ':' + config.PORT) + '/api/auth/google/callback',
+    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || DEFAULT_CONFIG.GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || DEFAULT_CONFIG.GOOGLE_CLIENT_SECRET,
+    GOOGLE_CALLBACK_URL: `${config.HOST_URL}:${config.PORT}/api/auth/google/callback`,
     GOOGLE_SCOPE: [
       'https://www.googleapis.com/auth/userinfo.profile',
       'https://www.googleapis.com/auth/userinfo.email']

@@ -9,7 +9,6 @@ var compression = require('compression');
 var GeoPropCtrl = require('../geo/geo-properties.controller');
 var md5 = require('md5');
 
-var ensureAuthenticated = require('../utils').ensureAuthenticated;
 var decodeQuery = require('../utils').decodeQuery;
 var getCacheConfig = require('../utils').getCacheConfig;
 
@@ -21,6 +20,8 @@ var dataPostProcessors = require('../data-post-processors');
 module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
   var neo4jdb = app.get('neo4jDb');
+  var logger = app.get('log');
+  var config = app.get('config');
 
   /*eslint new-cap:0*/
   var router = express.Router();
@@ -50,8 +51,11 @@ module.exports = function (serviceLocator) {
     var headers = select;
     var time = req.decodedQuery.where.time || [];
 
+    logger.debug('URL: \n%s%s', config.LOG_TABS, req.originalUrl);
+
     var isGeoPropsReq = _.all(select, v=>/^geo/.test(v)) || select;
-    var options = {select, where, category, headers, geoPosition, timePosition, measuresSelect, time, sort};
+    var options = {select, where, category, headers, geoPosition,
+      timePosition, measuresSelect, time, sort};
     var actions = [ cb => cb(null, options) ];
 
     // ?select=geo,time,population&geo=afr,chn&time=1800,1950:2000,2015&geo.cat=country,region
@@ -112,13 +116,18 @@ module.exports = function (serviceLocator) {
     var reqQuery = [match, reqWhere, returner, sort].join(' ');
 
     console.time('cypher');
+
     neo4jdb.cypherQuery(reqQuery, function (err, resp) {
+      logger.debug('NEO4J QUERY: \n%s%s', config.LOG_TABS, reqQuery);
       console.timeEnd('cypher');
       if (err) {
+        logger.error('ERROR: %s',  err);
         return cb(err);
       }
 
       console.time('format');
+      var uniqTimeValues = new Set();
+      var uniqGeoValues = new Set();
       var rows = _.reduce(resp.data, function (result, row) {
         var measuresValuesPosition = 3;
         var measuresNamesPosition = 0;
@@ -128,10 +137,12 @@ module.exports = function (serviceLocator) {
         // time - year
         if (pipe.timePosition !== -1) {
           resRow[pipe.timePosition] = parseInt(row[1], 10);
+          uniqTimeValues.add(row[1]);
         }
         // geo - country
         if (pipe.geoPosition !== -1) {
           resRow[pipe.geoPosition] = row[2];
+          uniqGeoValues.add(row[2]);
         }
 
         for (var i = 0; i < row[measuresNamesPosition].length; i++) {
@@ -147,6 +158,13 @@ module.exports = function (serviceLocator) {
         return result;
       }, []);
 
+      let columnsNum = resp.data && resp.data[0] ? resp.data[0].length : 0;
+      let rowsNum = resp.data ? resp.data.length : 0;
+      logger.debug('NEO4J ANSWER: \n%s%s/%s (columns/rows), %s (geos), %s (years)',
+        config.LOG_TABS,
+        columnsNum, rowsNum,
+        uniqGeoValues.size,
+        uniqTimeValues.size);
       console.timeEnd('format');
       return cb(null, {headers: pipe.headers, rows: rows});
     });
@@ -182,6 +200,9 @@ module.exports = function (serviceLocator) {
 
   function makeFlattenGeoProps(pipe, cb) {
     var resolvedGeos = _.chain(pipe.geoData.rows).flatten().compact().value();
+
+    logger.debug('MONGODB GEO ANSWER: \n%s%s (geos)', config.LOG_TABS, resolvedGeos.length);
+
     pipe.resolvedGeos = resolvedGeos;
     return cb(null, pipe);
   }

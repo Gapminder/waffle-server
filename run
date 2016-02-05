@@ -1,1 +1,0 @@
-BUILD_TYPE=angular1 AWS_SECRET_ACCESS_KEY=<your secret access> AWS_ACCESS_KEY_ID=<your access key> S3_BUCKET=<your S3 bucket> node ./server.js
