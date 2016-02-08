@@ -7,57 +7,72 @@ let Geo = mongoose.model('Geo');
 
 // TODO: fix mapping categories hardcode
 let mappingCategories = {
-  isRegion4: 'region',
+  isRegion4: 'world_4region',
   isGlobal: 'global',
   isCountry: 'country',
-  isUnState: 'unstate'
+  isUnState: 'un_state'
 };
 
-let mappingHeaders = {
-  geo: 'gid',
-  'geo.name': 'name',
-  'geo.region.country': 'region4',
-  'geo.region': 'region4',
-  'geo.latitude': 'latitude',
-  'geo.longitude': 'longitude'
-};
-
-let mappingQueries = {
-  global: {isGlobal: true},
-  world_4region: {isRegion4: true},
-  region: {isRegion4: true},
-  country: {isCountry: true},
-  unstate: {isUnState: true},
-  geo: {}
-};
+// TODO: hardcode mapping geo for ddf (fix it when we will have more formats)
+let geoMapping = require('./geo-mapping').ddf;
+let defaultSelect = ['geo','geo.name','geo.cat','geo.region'];
 
 module.exports = {
   listGeoProperties: listGeoProperties,
   projectGeoProperties: projectGeoProperties
 };
 
-function projectGeoProperties(select, where, cb) {
-  let fns = _.map(where['geo.cat'], cat => {
-    let projection = _.reduce(select, (result, item) => {
-      let key = mappingHeaders[item] || item;
-      result[key] = 1;
+function _isGeoCatFilter(where, category) {
+  return where && !_.isEmpty(where['geo.cat']) && _.includes(where['geo.cat'], category);
+}
+
+function _isCategoryFilter(where, category) {
+  return !_.isNil(where[category]) && category.match(/^geo\.is/);
+}
+function projectGeoProperties(_select, where, cb) {
+  let select = _.isEmpty(_select) ? defaultSelect : _select;
+  let selectedCategories = _.chain(geoMapping)
+    .reduce((result, queryKey, category) => {
+      // TODO hardcode for compatibility (remove _isGeoCatFilter when `geo.cat` will be depricated on Vizabi)
+      if (_isGeoCatFilter(where, category) || _isCategoryFilter(where, category)) {
+        let queryField = {};
+        queryField[queryKey] = true;
+        result.push(queryField);
+      }
+
       return result;
-    }, {_id: 0, isGlobal: 1, isRegion4: 1, isCountry: 1, isUnState: 1});
+    }, [])
+    .uniqWith(_.isEqual)
+    .value();
 
-    return cb => {
-      let query = _.clone(mappingQueries[cat]) || {};
-      if (where && where.geo) {
-        query.gid = {$in: where.geo};
-      }
+  let query = {};
+  if (where) {
+    if (!_.isEmpty(selectedCategories)) {
+      query = { $or: selectedCategories };
+    }
+    if (!_.isEmpty(where.geo)) {
+      query.gid = {$in: where.geo};
+    }
+    if (!_.isEmpty(where['geo.region'])) {
+      query.region4 = {$in: where['geo.region']};
+    }
+  }
 
-      if (where && where['geo.region']) {
-        query.region4 = {$in: where['geo.region']};
-      }
-      this.listGeoProperties(query, projection, cb);
-    };
-  });
+  let projection = _.reduce(select, (result, item) => {
+    // TODO hardcode for compatibility (remove when `geo.cat` will be depricated on Vizabi)
+    if (item === 'geo.cat') {
+      let defaultCategoryProjections = {isGlobal: 1, isRegion4: 1, isUnState: 1, isCountry: 1};
+      result = _.assign(result, defaultCategoryProjections);
+      return result;
+    }
 
-  async.parallel(fns, mapGeoData(select, where['geo.cat'], cb));
+    let key = geoMapping[item] || item;
+    result[key] = 1;
+    return result;
+  }, {_id: 0});
+
+
+  this.listGeoProperties(query, projection, mapGeoData(select, cb));
 }
 
 // list of all geo properties
@@ -68,21 +83,17 @@ function listGeoProperties(query, projection, cb) {
     .exec(cb);
 }
 
-function mapGeoData(headers, category, cb) {
+function mapGeoData(headers, cb) {
   return (err, geoProps) => {
     if (err) {
       console.error(err);
     }
 
-    let flattedGeo = _.reduce(geoProps, (result, geo) => {
-      return result.concat(geo);
-    }, []);
-
-    let rows = _.map(flattedGeo, function (prop) {
+    let rows = _.map(geoProps, function (prop) {
       return _.map(headers, header => {
-        let key = mappingHeaders[header];
+        let key = geoMapping[header];
 
-        // fixme: hardcode for geo.cat
+        // TODO hardcode for compatibility (remove when `geo.cat` will be depricated on Vizabi)
         if (header === 'geo.cat') {
           switch (true) {
             case prop.isGlobal:
@@ -107,7 +118,7 @@ function mapGeoData(headers, category, cb) {
 
     var data = {
       headers: headers,
-      rows: headers.indexOf('geo') > -1 ? _.uniq(rows, '' + headers.indexOf('geo')) : rows
+      rows: rows
     };
 
     return cb(null, data);

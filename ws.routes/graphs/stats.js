@@ -53,7 +53,7 @@ module.exports = function (serviceLocator) {
 
     logger.debug('URL: \n%s%s', config.LOG_TABS, req.originalUrl);
 
-    var isGeoPropsReq = _.all(select, v=>/^geo/.test(v)) || select;
+    var isGeoPropsReq = _.every(select, v=>/^geo/.test(v)) || select;
     var options = {select, where, category, headers, geoPosition,
       timePosition, measuresSelect, time, sort};
     var actions = [ cb => cb(null, options) ];

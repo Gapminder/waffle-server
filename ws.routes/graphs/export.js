@@ -119,7 +119,7 @@ module.exports = function (serviceLocator) {
       // find all dimensions
       cb => Dimensions.find({}, {name: 1, gid: 1}).lean().exec(cb),
       // build dimensions hash map
-      (dimensions, cb) => cb(null, _.indexBy(dimensions, (dimension) => dimension._id.toString())),
+      (dimensions, cb) => cb(null, _.keyBy(dimensions, (dimension) => dimension._id.toString())),
       // save hash map to pipe
       (dimensions, cb) => {
         pipe.dimensions = dimensions;

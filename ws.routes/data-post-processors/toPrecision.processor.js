@@ -16,7 +16,7 @@ module.exports = (matrix, columns, precisionLevel) => {
 
   return _.map(matrix, row => {
     return _.map(row, (cell, column) => {
-      if (_.isNumber(cell) && _.contains(columnsToProcess, column)) {
+      if (_.isNumber(cell) && _.includes(columnsToProcess, column)) {
         return parseFloat(cell.toFixed(precision), 10)
       }
       return cell;

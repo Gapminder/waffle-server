@@ -1,0 +1,22 @@
+{
+  "ddf": {
+    "geo": "gid",
+    "geo.name": "name",
+    "geo.region": "region4",
+    "geo.latitude": "latitude",
+    "geo.longitude": "longitude",
+    "geo.is--global": "isGlobal",
+    "geo.is--world_4region": "isRegion4",
+    "geo.is--country": "isCountry",
+    "geo.is--un_state": "isUnState",
+    "global": "isGlobal",
+    "world_4region": "isRegion4",
+    "region": "isRegion4",
+    "country": "isCountry",
+    "unstate": "isUnState",
+    "geo.isGlobal": "isGlobal",
+    "geo.isRegion4": "isRegion4",
+    "geo.isCountry": "isCountry",
+    "geo.isUnState": "isUnState"
+  }
+}

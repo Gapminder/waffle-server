@@ -52,10 +52,10 @@ exports.decodeQuery = function(req, res, next) {
   // TODO: refactor it, when geo will be got from neo4j
 
   // for supporting previous and new api for geo: select && default response header
-  req.decodedQuery.select = req.decodedQuery.select || ['geo','geo.name','geo.cat','geo.region'];
+  req.decodedQuery.select = req.decodedQuery.select || [];
 
   // for supporting previous and new api for geo: geo.cat && :category
-  req.decodedQuery.where['geo.cat'] = req.decodedQuery.where['geo.cat'] || ['geo'];
+  req.decodedQuery.where['geo.cat'] = req.decodedQuery.where['geo.cat'] || [];
 
   return next();
 };
