@@ -87,8 +87,8 @@ describe('WS Stats endpoint', () => {
           .value();
 
         expect(actuaGeolCategories).to.have.length(3);
-        expect(actuaGeolCategories).to.contain('unstate');
-        expect(actuaGeolCategories).to.contain('region');
+        expect(actuaGeolCategories).to.contain('un_state');
+        expect(actuaGeolCategories).to.contain('world_4region');
         expect(actuaGeolCategories).to.contain('country');
 
         done();
@@ -115,8 +115,8 @@ describe('WS Stats endpoint', () => {
 
         expect(actuaGeolCategories).to.have.length(1);
 
-        //FIXME: chn should be country but it is stored like unstate currently. This test will fail and need to be fixed when it comes back to country
-        expect(actuaGeolCategories).to.contain('unstate');
+        //FIXME: chn should be country but it is stored like un_state currently. This test will fail and need to be fixed when it comes back to country
+        expect(actuaGeolCategories).to.contain('un_state');
 
         done();
       })
