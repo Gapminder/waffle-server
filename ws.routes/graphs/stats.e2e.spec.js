@@ -16,6 +16,8 @@ describe('WS Stats endpoint', () => {
       .set('Accept', 'application/json')
       .expect(200)
       .end((err, res) => {
+        expect(res).to.be.not.empty;
+        expect(res.body).to.be.not.empty;
         expect(res.body).to.have.property('headers');
         expect(res.body.headers).to.deep.equal(['geo','geo.name','geo.cat','geo.region']);
 

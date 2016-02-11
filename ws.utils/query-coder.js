@@ -1,6 +1,6 @@
 'use strict';
 
-var zipObject = require('lodash').zipObject;
+var fromPairs = require('lodash').fromPairs;
 
 module.exports = {
   decodeParam,
@@ -88,5 +88,5 @@ function toObject(array) {
     return [value, true];
   });
 
-  return zipObject(keyValuePairs);
+  return fromPairs(keyValuePairs);
 }

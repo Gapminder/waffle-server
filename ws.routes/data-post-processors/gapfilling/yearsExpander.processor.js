@@ -12,7 +12,7 @@ module.exports = (dataToExpandYears, neededRange, options) => {
     .map(row => {
       let firstRecord = _.first(row);
 
-      let yearsThatShouldBeAdded = _.difference(_.range(neededRange.from, neededRange.to + 1), _.pluck(row, yearColumnIndex));
+      let yearsThatShouldBeAdded = _.difference(_.range(neededRange.from, neededRange.to + 1), _.map(row, yearColumnIndex));
       let extraRecords = yearsThatShouldBeAdded.map(year => {
         let templateRecord = new Array(firstRecord.length).fill(null);
         templateRecord[geoColumnIndex] = firstRecord[geoColumnIndex];
