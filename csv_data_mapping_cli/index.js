@@ -20,6 +20,7 @@ var Indicators = require('../ws.repository/indicators/indicators.model');
 var IndicatorsValues = require('../ws.repository/indicator-values/indicator-values.model');
 var IndexTree = require('../ws.repository/indexTree.model');
 var IndexDb = require('../ws.repository/indexDb.model');
+var Metadata = require('../ws.repository/metadata.model');
 
 // var geoMappingHash = require('./geo-mapping.json');
 
@@ -38,12 +39,14 @@ async.waterfall([
   cb => IndicatorsValues.remove({}, err => cb(err)),
   cb => Translations.remove({}, err => cb(err)),
   cb => IndexDb.remove({}, err => cb(err)),
+  cb => Metadata.remove({}, err => cb(err)),
 
   importIndicatorsDb,
   importIndicatorsTree,
   createTranslations,
 
   cb => cb(null, {}),
+  createMetadata(ddfDimensionsFile, ddfMeasuresFile),
   createDimensions(ddfDimensionsFile),
   // and geo
   createDimensionValues(v=>v.subdimOf ? `ddf--list--${v.subdimOf}--${v.gid}.csv` : `ddf--list--${v.gid}.csv`),
@@ -94,6 +97,18 @@ function importIndicatorsTree(cb) {
         return cb(_err);
       });
     });
+}
+
+function createMetadata(ddf_dimensions_file, ddf_measures_file) {
+  console.log('create metadata');
+  return pipeWaterfall([
+    readCsvFile(ddf_dimensions_file),
+    pipeMapSync(mapDdfDimensionsToWsModel),
+    pipeEachLimit((v, cb)=>Metadata.create(v, (err)=>cb(err, v))),
+    readCsvFile(ddf_measures_file),
+    pipeMapSync(mapDdfMeasureToWsModel),
+    pipeEachLimit((v, cb)=>Metadata.create(v, (err)=>cb(err, v)))
+  ]);
 }
 
 function createDimensions(ddf_dimensions_file) {
@@ -465,12 +480,11 @@ function mapDdfMeasureToWsModel(entry) {
     precisionMaximum: entry.precision_maximum,
     decimalsMaximum: entry.decimals_maximum,
 
-    tags: tags,
-
-    meta: {
+    tags: tags
+/*    meta: {
       allowCharts: ['*'],
       use: 'indicator'
-    }
+    }*/
   };
 }
 
