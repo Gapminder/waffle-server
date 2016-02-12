@@ -48,7 +48,12 @@ async.waterfall([
   // and geo
   createDimensionValues(v=>v.subdimOf ? `ddf--list--${v.subdimOf}--${v.gid}.csv` : `ddf--list--${v.gid}.csv`),
   createMeasures(ddfMeasuresFile),
-  createMeasureValues(ddfIndexFile)
+  createMeasureValues(ddfIndexFile),
+
+  (pipe, cb) => cb(),
+  cb => DimensionValues.remove({value: ''}, err => cb(err)),
+  cb => Dimensions.update({gid: 'world_4region'}, {$set: {drillups: 'global'}}, err => cb(err)),
+  cb => Dimensions.update({gid: 'world_4region'}, {$set: {drilldowns: 'country,un_state'}}, err => cb(err)),
 ], function (err) {
   if (err) {
     console.error(err);
@@ -396,6 +401,7 @@ function mapDdfDimensionsToWsModel(entry) {
 
 function mapDdfDimensionValuesToWsModel(dim, entry) {
   return {
+    parentGid: entry.world_4region || 'world',
     dimensionGid: dim.gid,
     dimension: dim._id,
     value: entry.geo,

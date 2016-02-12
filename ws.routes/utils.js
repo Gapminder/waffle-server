@@ -1,10 +1,12 @@
 'use strict';
 
+var _ = require('lodash');
 var md5 = require('md5');
 var queryCoder = require('../ws.utils/query-coder');
+
 var loginPage = '/login';
 
-exports.getCacheConfig = function getCacheConfig(prefix) {
+exports.getCacheConfig = function getCacheConfig(cacheName) {
   return function (req, res, next) {
     /*eslint camelcase:0*/
     if (req.query.force === true) {
@@ -12,8 +14,8 @@ exports.getCacheConfig = function getCacheConfig(prefix) {
       return next();
     }
 
-    var hash = md5(prefix + '-' + req.method + req.url);
-    res.express_redis_cache_name = hash;
+    var redisCacheName = (_.isFunction(cacheName) ? cacheName(req) : cacheName + '-' + req.method + req.url);
+    res.express_redis_cache_name = md5(redisCacheName);
     next();
   };
 };
@@ -78,5 +80,3 @@ function sanitizeSortValues(sortParam) {
     return result;
   }, {});
 }
-
-
