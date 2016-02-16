@@ -263,4 +263,109 @@ describe('WS Stats endpoint', () => {
         done();
       })
   });
+
+  it('should respond to "geo,time,population,gini" select, given "geo=africa,usa&time=1800,2000:2005,2015"', (done) => {
+    api.get('/api/graphs/stats/vizabi-tools?select=geo,time,population,gini&geo=africa,usa&time=1800,2000:2005,2015')
+      .set('Accept', 'application/json')
+      .expect(200)
+      .end((err, res) => {
+        expect(res).to.be.not.empty;
+        expect(res.body).to.be.not.empty;
+        expect(res.body).to.have.property('headers');
+        expect(res.body.headers).to.deep.equal(['geo', 'time', 'population', 'gini']);
+
+        expect(res.body).to.have.property('rows');
+        expect(res.body.rows).to.be.not.empty;
+
+        _.forEach(res.body.rows, (row) => {
+          expect(row).to.have.length(4);
+          expect(row[0]).to.be.a('string');
+          expect(row[1]).to.be.a('number');
+          expect(row[2]).to.satisfy(isNumberOrNull);
+          expect(row[3]).to.satisfy(isNumberOrNull);
+        });
+
+        const uniqTimeValues =_.chain(res.body.rows).map('1').uniq().sort().value();
+        const expectedYears = [1800, 2000, 2001, 2002, 2003, 2004, 2005, 2015];
+
+        expect(uniqTimeValues).to.have.length(8);
+        expect(uniqTimeValues).to.deep.equal(expectedYears);
+
+        const uniqGeoValues =_.chain(res.body.rows).map('0').uniq().sort().value();
+        const expectedGeos = ["africa", "usa"];
+
+        expect(uniqGeoValues).to.have.length(2);
+        expect(uniqGeoValues).to.deep.equal(expectedGeos);
+
+        done();
+      })
+  });
+
+  it('should respond to "geo,time,population,gini" select, given "geo.cat=global,world_4region"', (done) => {
+    api.get('/api/graphs/stats/vizabi-tools?select=geo,time,population,gini&geo.cat=global,world_4region')
+      .set('Accept', 'application/json')
+      .expect(200)
+      .end((err, res) => {
+        expect(res.body).to.have.property('headers');
+        expect(res.body.headers).to.deep.equal(['geo', 'time', 'population', 'gini']);
+
+        expect(res.body).to.have.property('rows');
+        expect(res.body.rows).to.be.not.empty;
+
+        _.forEach(res.body.rows, (row) => {
+          expect(row).to.have.length(4);
+          expect(row[0]).to.be.a('string');
+          expect(row[1]).to.be.a('number');
+          expect(row[2]).to.satisfy(isNumberOrNull);
+          expect(row[3]).to.satisfy(isNumberOrNull);
+        });
+
+        const uniqTimeValues =_.chain(res.body.rows).map('1').uniq().value();
+
+        expect(uniqTimeValues).to.have.length.of.at.least(1);
+
+        const uniqGeoValues =_.chain(res.body.rows).map('0').uniq().sort().value();
+        const expectedGeos = ["africa", "americas", "asia", "europe", "world"];
+        expect(uniqGeoValues).to.have.length(5);
+        expect(uniqGeoValues).to.deep.equal(expectedGeos);
+
+        done();
+      })
+  });
+
+  it('should respond to "geo,time,population,gini" select, given "geo.region=asia&time=1800"', (done) => {
+    api.get('/api/graphs/stats/vizabi-tools?select=time,population,gini,geo&geo.region=asia&time=1800')
+      .set('Accept', 'application/json')
+      .expect(200)
+      .end((err, res) => {
+        expect(res.body).to.have.property('headers');
+        expect(res.body.headers).to.deep.equal(['time', 'population', 'gini', 'geo']);
+
+        expect(res.body).to.have.property('rows');
+        expect(res.body.rows).to.be.not.empty;
+
+        _.forEach(res.body.rows, (row) => {
+          expect(row).to.have.length(4);
+          expect(row[0]).to.be.a('number');
+          expect(row[1]).to.satisfy(isNumberOrNull);
+          expect(row[2]).to.satisfy(isNumberOrNull);
+          expect(row[3]).to.be.a('string');
+        });
+
+
+        const uniqTimeValues =_.chain(res.body.rows).map('0').uniq().value();
+
+        expect(uniqTimeValues).to.have.length(1);
+        expect(uniqTimeValues[0]).to.equal(1800);
+
+        const uniqGeoValues =_.chain(res.body.rows).map('3').uniq().sort().value();
+        expect(uniqGeoValues).to.have.length.of.at.least(1);
+
+        done();
+      })
+  });
+
+  function isNumberOrNull (item) {
+    return typeof item === 'number' || item === null;
+  }
 });

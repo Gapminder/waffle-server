@@ -88,32 +88,29 @@ module.exports = function (serviceLocator) {
   }
 
   function getMeasures(pipe, cb) {
-    var resolvedGeos = pipe.resolvedGeos;
+    let dimensionsToCypherAliases = {geo: 'dv2.value', time: 'dv1.value'};
+    let resolvedMeasures = JSON.stringify(pipe.measuresSelect);
+    let resolvedCyperGeos = geoParamToCyper(pipe.resolvedGeos, dimensionsToCypherAliases);
+    let resolvedCyperTime = timeParamToCyper(pipe.where.time, dimensionsToCypherAliases);
+    let resolvedCyperSort = sortParamToCypher(pipe.sort, dimensionsToCypherAliases);
+    let dim1 = pipe.dim1 || 'year';
 
     // do measures request
     // prepare cypher query
-    var reqWhere = 'WHERE i1.gid in ' + JSON.stringify(pipe.measuresSelect);
-
-    if (pipe.where.time && pipe.where.time.length) {
-      reqWhere += ' and ( ' + _.map(pipe.where.time, time => {
-        if (time.length) {
-          return `( dv1.value>="${time[0]}" and dv1.value<="${time[1]}" )`;
-        }
-        return `dv1.value="${time}"`;
-      }).join(' or ') + ' )';
-    }
-
-    var dim1 = 'year';
-    var dim2 = 'country';
-    var match =
-      `MATCH (i1:Indicators)-[:with_dimension]->(:Dimensions{gid: '${dim1}'})-[:with_dimension_value]->(dv1:DimensionValues)-[:with_indicator_value]->(iv1:IndicatorValues),
-        (i1:Indicators)-[:with_dimension]->(:Dimensions{gid: '${dim2}'})-[:with_dimension_value]->(dv2:DimensionValues)-[:with_indicator_value]->(iv1:IndicatorValues)`;
-
-    var returner = `RETURN collect(i1.gid) as indicator,dv1.value as year, dv2.value as country, collect(iv1.value) as value`;
-
-    let sort = sortParamToCypher(pipe.sort, {geo: 'dv2.value', time: 'dv1.value'});
-
-    var reqQuery = [match, reqWhere, returner, sort].join(' ');
+    let reqQuery = `MATCH (i1:Indicators)-[:with_dimension]->(:Dimensions{gid: '${dim1}'})-[:with_dimension_value]
+      ->(dv1:DimensionValues)-[:with_indicator_value]->(iv1:IndicatorValues),
+      (i1:Indicators)-[:with_dimension]->(d2:Dimensions)-[:with_dimension_value]
+      ->(dv2:DimensionValues)-[:with_indicator_value]->(iv1:IndicatorValues)
+      WHERE
+        i1.gid in ${resolvedMeasures}
+        ${resolvedCyperGeos}
+        ${resolvedCyperTime}
+      RETURN
+        collect(i1.gid) as indicator,
+        dv1.value as year,
+        dv2.value as country,
+        collect(iv1.value) as value
+      ${resolvedCyperSort}`;
 
     console.time('cypher');
 
@@ -128,7 +125,8 @@ module.exports = function (serviceLocator) {
       console.time('format');
       var uniqTimeValues = new Set();
       var uniqGeoValues = new Set();
-      var rows = _.reduce(resp.data, function (result, row) {
+
+      var rows = _.map(resp.data, function (row) {
         var measuresValuesPosition = 3;
         var measuresNamesPosition = 0;
 
@@ -151,12 +149,8 @@ module.exports = function (serviceLocator) {
           resRow[pipe.headers.indexOf(currentMeasureName)] = currentMeasureValue;
         }
 
-        if (pipe.geoPosition === -1 ||
-          (pipe.geoPosition !== -1 && resolvedGeos.indexOf(resRow[pipe.geoPosition]) > -1)) {
-          result.push(resRow);
-        }
-        return result;
-      }, []);
+        return resRow;
+      });
 
       let columnsNum = resp.data && resp.data[0] ? resp.data[0].length : 0;
       let rowsNum = resp.data ? resp.data.length : 0;
@@ -170,6 +164,34 @@ module.exports = function (serviceLocator) {
     });
   }
 
+  function geoParamToCyper(geoParam, dimensionsToCypherAliases) {
+    if (_.isEmpty(geoParam)) {
+      return '';
+    }
+
+    let resolvedGeo = JSON.stringify(geoParam);
+
+    return `and ${dimensionsToCypherAliases.geo} in ${resolvedGeo}`;
+  }
+
+  function timeParamToCyper(timeParam, dimensionsToCypherAliases) {
+    if (_.isEmpty(timeParam)) {
+      return '';
+    }
+
+    let resolvedTime = _.chain(timeParam)
+      .reduce((result, timeRange) => {
+        let start = timeRange[0] || timeRange;
+        let end = (timeRange[1] || timeRange) + 1;
+        return _.concat(result, _.range(start, end))
+      }, [])
+      .uniq()
+      .map(String)
+      .value();
+
+    return `and ${dimensionsToCypherAliases.time} in ${JSON.stringify(resolvedTime)}`;
+  }
+
   function sortParamToCypher(sortParam, dimensionsToCypherAliases) {
     let valuesWithOrdering = _.chain(sortParam)
       .keys()
@@ -180,7 +202,7 @@ module.exports = function (serviceLocator) {
       .value()
       .join(',');
 
-    return valuesWithOrdering ? `ORDER BY ${valuesWithOrdering}` : '' ;
+    return valuesWithOrdering ? `ORDER BY ${valuesWithOrdering}` : '';
   }
 
   function getGeoProperties(pipe, cb) {
