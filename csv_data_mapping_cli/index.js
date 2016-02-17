@@ -481,7 +481,8 @@ function mapDdfMeasureToWsModel(entry) {
     decimalsMaximum: entry.decimals_maximum,
 
     tags: tags
-/*    meta: {
+    // now, vizabi not need these data from WS
+    /* meta: {
       allowCharts: ['*'],
       use: 'indicator'
     }*/

@@ -5,7 +5,7 @@ var cache = require('express-redis-cache')();
 var compression = require('compression');
 
 var u = require('../utils');
-var controller = require('./metadata.controller');
+var controller = require('./metadata.service');
 
 
 module.exports = function (serviceLocator) {

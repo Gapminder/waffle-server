@@ -2,14 +2,14 @@
 const mongoose = require('mongoose');
 require('../../ws.repository/metadata.model');
 
-let metaController = require('./metadata.controller');
+let metaService= require('./metadata.service');
 
 const sinon = require('sinon');
 const assert = require('assert');
 const _ = require('lodash');
 
 
-describe('Metadata controller', () => {
+describe('Metadata service', () => {
   context('when comes empty select in query', () => {
     it('should return empty data', () => {
       let select = {};
@@ -135,13 +135,13 @@ describe('Metadata controller', () => {
   function checkResult(expectedQuery, expectedProjection, expectedWsJson, dataDb, select) {
 
 
-    let listMetadataStub = sinon.stub(metaController, 'listMetadata', (query, projection, cb) => {
+    let listMetadataStub = sinon.stub(metaService, 'listMetadata', (query, projection, cb) => {
       assert.deepEqual(query, expectedQuery);
       assert.deepEqual(projection, expectedProjection);
       return cb(null, dataDb);
     });
 
-    metaController.projectMetadata(select, (err, wsJson) => {
+    metaService.projectMetadata(select, (err, wsJson) => {
       assert.deepEqual(wsJson, expectedWsJson);
       listMetadataStub.restore();
     });

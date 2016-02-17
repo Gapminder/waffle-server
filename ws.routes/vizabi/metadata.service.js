@@ -8,11 +8,9 @@ module.exports = {
   listMetadata: listMetadata,
   projectMetadata: projectMetadata
 };
-//TODO
-let defaultSelect = [];
 
 function projectMetadata(_select, cb) {
-  let select = _.isEmpty(_select) ? defaultSelect : _select;
+  let select = _select;
 
   let selectedCategories = _.chain(select)
     .reduce(function (result, item) {
@@ -31,7 +29,7 @@ function projectMetadata(_select, cb) {
   return this.listMetadata(query, projection, mapMetadata(select, cb));
 }
 
-// list of all geo properties
+// list of all meta properties
 function listMetadata(query, projection, cb) {
   return metadataVizabi.find(query, projection)
     .sort('gid')
@@ -41,17 +39,34 @@ function listMetadata(query, projection, cb) {
 
 function mapMetadata(select, cb) {
   return (err, dataDb) => {
-    let data = _.chain(dataDb)
-      .keyBy('gid')
-      .at(select)
-      .value();
-    let formatData = _.zipObjectDeep(select, data);
-    let result = {
-      success: !err,
-      error: err,
-      data: formatData
-    };
+    if (_.isEmpty(select)) {
 
-    return cb(null, result);
+      let data = _.chain(dataDb)
+        .keyBy('gid')
+        .value();
+
+      let result = {
+        success: !err,
+        error: err,
+        data: data
+      };
+      return cb(null, result);
+    }
+    if (!err) {
+      let data = _.chain(dataDb)
+        .keyBy('gid')
+        .at(select)
+        .value();
+      let formatData = _.zipObjectDeep(select, data);
+      let result = {
+        success: !err,
+        error: err,
+        data: formatData
+      };
+      return cb(null, result);
+    }
+    if (err) {
+      console.error(err);
+    }
   };
 }
