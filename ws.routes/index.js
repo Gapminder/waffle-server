@@ -1,6 +1,7 @@
 module.exports = function (serviceLocator) {
   require('./adapter')(serviceLocator);
   require('./geo')(serviceLocator);
+  require('./vizabi')(serviceLocator);
 
   require('./auth')(serviceLocator);
   require('./users')(serviceLocator);

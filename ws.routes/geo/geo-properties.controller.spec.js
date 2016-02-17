@@ -568,7 +568,7 @@ describe('Geo properties controller', () => {
     let listGeoPropertiesStub = sinon.stub(geoController, 'listGeoProperties', (query, projection, cb) => {
       assert.deepEqual(query, expectedQuery);
       assert.deepEqual(projection, expectedProjection);
-      cb(null, rows);
+      return cb(null, rows);
     });
 
     geoController.projectGeoProperties(select, where, (err, wsJson) => {

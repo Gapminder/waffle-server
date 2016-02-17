@@ -20,6 +20,9 @@ module.exports = function (serviceLocator) {
   require('./indicator-values')(serviceLocator.repositories);
   require('./indicators')(serviceLocator.repositories);
 
+  // metadata
+  require('./metadata.model');
+
   // geo
   require('./geo.model');
   require('./translations.model');
