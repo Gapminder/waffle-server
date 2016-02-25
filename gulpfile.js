@@ -6,4 +6,4 @@ gulp.paths = {
 
 require('require-dir')('./gulp');
 
-gulp.task('default', ['lint', 'test']);
+gulp.task('default', ['lint', 'test', 'swagger']);

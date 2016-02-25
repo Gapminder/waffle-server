@@ -6,7 +6,7 @@ var cors = require('cors');
 
 var async = require('async');
 
-var geoController = require('../geo/geo-properties.controller');
+var geoController = require('../geo/geo-properties.service');
 var mongoose = require('mongoose');
 
 var Geo = mongoose.model('Geo');
@@ -33,19 +33,132 @@ module.exports = function (serviceLocator) {
   var mcPrecomputedShapes = require('../../csv_data_mapping_cli/fixtures/mc_precomputed_shapes.json');
   var world50m = require('../../csv_data_mapping_cli/fixtures/world-50m.json');
 
+
+  /**
+   * @swagger
+   * /api/vizabi/translation/{lang}.json:
+   *   get:
+   *    description: Translation file
+   *    produces:
+   *      - application/json
+   *    parameters:
+   *      - name: "lang"
+   *        in: "path"
+   *        required: true
+   *        description: specify the language
+   *        type: string
+   *    tags:
+   *      - Translation
+   *    responses:
+   *      200:
+   *        description: Translation file
+   *      304:
+   *        description: cache
+   *      default:
+   *        description: Unexpected error
+   *        schema:
+   *          $ref: '#/definitions/Error'
+   *
+   *
+   */
   router.get('/api/vizabi/translation/:lang.json', cors(), compression(), u.getCacheConfig('translations'), cache.route(), getTranslations);
 
+
+  /**
+   * @swagger
+   * /api/vizabi/mc_precomputed_shapes.json:
+   *   get:
+   *    description: mc_precomputed_shapes for mountain chart
+   *    produces:
+   *      - application/json
+   *    tags:
+   *      - McPecomputedShapes
+   *    responses:
+   *      200:
+   *        description: McPecomputedShapes
+   *      304:
+   *        description: cache
+   *      default:
+   *        description: Unexpected error
+   *        schema:
+   *          $ref: '#/definitions/Error'
+   *
+   *
+   */
   router.get('/api/vizabi/mc_precomputed_shapes.json', cors(), compression(), u.getCacheConfig('mc-precomputed-shapes'), cache.route(), function (req, res) {
     return res.json(mcPrecomputedShapes);
   });
 
+  /**
+   * @swagger
+   * /api/vizabi/world-50m.json:
+   *   get:
+   *    description: world-50m.json for bubbleMap chart
+   *    produces:
+   *      - application/json
+   *    tags:
+   *      - World-50m
+   *    responses:
+   *      200:
+   *        description: world-50m.json
+   *      304:
+   *        description: cache
+   *      default:
+   *        description: Unexpected error
+   *        schema:
+   *          $ref: '#/definitions/Error'
+   *
+   *
+   */
   router.get('/api/vizabi/world-50m.json', cors(), compression(), u.getCacheConfig('world-50m'), cache.route(), function (req, res) {
     return res.json(world50m);
   });
 
+  /**
+   * @swagger
+   * /api/vizabi/metadata.json:
+   *   get:
+   *    description: metadata.json for all charts
+   *    produces:
+   *      - application/json
+   *    tags:
+   *      - Metadata
+   *    responses:
+   *      200:
+   *        description: metadata.json
+   *      304:
+   *        description: cache
+   *      default:
+   *        description: Unexpected error
+   *        schema:
+   *          $ref: '#/definitions/Error'
+   *
+   *
+   */
   router.get('/api/vizabi/metadata.json', cors(), compression(), u.getCacheConfig('metadata'), cache.route(), getMetadata);
 
-  router.get('/api/vizabi/geo_properties.csv', compression(), u.getCacheConfig('geo-properties'), cache.route(), adoptGeoProperties);
+  /**
+   * @swagger
+   * /api/vizabi/geo_properties.csv:
+   *   get:
+   *    description: geo_properties.csv
+   *    produces:
+   *      - text/csv
+   *    tags:
+   *      - geo_properties
+   *    responses:
+   *      200:
+   *        description: geo_properties.csv
+   *      304:
+   *        description: cache
+   *      default:
+   *        description: Unexpected error
+   *        schema:
+   *          $ref: '#/definitions/Error'
+   *
+   *
+   */
+  router.get('/api/vizabi/geo_properties.csv', cors(), compression(), u.getCacheConfig('geo-properties'), cache.route(), adoptGeoProperties);
 
   router.get('/api/vizabi/gapminder_tools/related_items/', cors(), compression(), u.getCacheConfig('related-items'), cache.route(), getRelatedItems);
 
