@@ -26,9 +26,16 @@ const DEFAULT_HOST_URLS = Object.freeze({
   production: 'https://waffle-server.gapminderdev.org'
 });
 
+const DEFAULT_PORTS = Object.freeze({
+  local: 3000,
+  development: 443,
+  stage: 443,
+  production: 443
+});
+
 module.exports = Object.freeze({
   HOST_URL: DEFAULT_HOST_URLS[NODE_ENV] || DEFAULT_HOST_URLS[DEFAULT_NODE_ENV],
-  PORT: 3000,
+  PORT: DEFAULT_PORTS[NODE_ENV] || DEFAULT_PORTS[DEFAULT_NODE_ENV],
 
   LOG_LEVEL: DEFAULT_LOG_LEVELS[NODE_ENV] || DEFAULT_LOG_LEVELS[DEFAULT_NODE_ENV],
   LOG_TRANSPORTS: DEFAULT_LOG_TRANSPORTS[NODE_ENV] || DEFAULT_LOG_TRANSPORTS[DEFAULT_NODE_ENV],
