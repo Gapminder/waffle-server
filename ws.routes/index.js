@@ -1,6 +1,7 @@
 module.exports = function (serviceLocator) {
   require('./adapter')(serviceLocator);
   require('./geo')(serviceLocator);
+  require('./suggestions')(serviceLocator);
 
   require('./auth')(serviceLocator);
   require('./users')(serviceLocator);
