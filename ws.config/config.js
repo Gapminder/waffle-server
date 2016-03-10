@@ -24,6 +24,7 @@ module.exports = function (app) {
   const config = {
     NODE_ENV: process.env.NODE_ENV || DEFAULT_CONFIG.NODE_ENV,
     PORT: process.env.PORT || DEFAULT_CONFIG.PORT,
+    INNER_PORT: process.env.INNER_PORT || DEFAULT_CONFIG.INNER_PORT,
     HOST_URL: process.env.HOST_URL || DEFAULT_CONFIG.HOST_URL,
 
     MONGODB_URL: process.env.MONGODB_URL || DEFAULT_CONFIG.MONGODB_URL,

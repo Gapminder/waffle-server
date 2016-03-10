@@ -24,10 +24,10 @@ app.get('*', function(req, res) {
   res.sendFile('index.html', {root: path.join(__dirname, './ws.public')});
 });
 
-app.listen(config.PORT);
+app.listen(config.INNER_PORT);
 
 // shoutout to the user
-console.log('\nExpress server listening on port %d in %s mode', config.PORT, app.settings.env);
+console.log('\nExpress server listening on port %d in %s mode', config.INNER_PORT, app.settings.env);
 
 // expose app
 exports = module.exports = app;
