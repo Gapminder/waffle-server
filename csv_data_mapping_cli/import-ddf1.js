@@ -384,29 +384,16 @@ function addDimensionsToMeasure(id, dimensionsArr, adcb) {
 
 // mappers
 function mapDdfConceptsToWsModel(entry) {
+  // let drillups = _.chain(entry.drill_up).trim('[').trim(']').words(/[^\'\, \']+/g).value();
+
   return {
     gid: entry.concept,
-    type: entry.concept_type,
-    subdimOf: entry.subdim_of || null,
     name: entry.name,
-    nameShort: entry.name_short,
-    nameLong: entry.name_long || null,
-    link: entry.link || null,
-    description: entry.description || null,
-    usability: entry.usability,
-    totalEntity: entry.total_entity || null,
-    totalName: entry.total_name || null,
-    defaultEntities: entry.default_entities ? entry.default_entities.split(',') : [],
-    drilldowns: entry.drilldowns || null,
-    drillups: entry.drillups || null,
-    incompleteDrillups: entry.incomplete_drillups || null,
-    ordinal: entry.ordinal === '' ? null : entry.ordinal,
-    measure: entry.measure || null,
-    interval: entry.interval === '' ? null : entry.interval,
-    cardinality: entry.cardinality,
-    aliases: entry.aliases ? entry.aliases.split('","').map(v=>v.replace(/"/g, '')) : [],
-    pattern: entry.pattern || null,
-    ddfInheritance: entry.ddf_inheritance
+    type: entry.concept_type,
+    tooltip: entry.tooltip || null,
+    link: entry.indicator_url || null,
+    drillups: entry.drill_up || null,
+    subdimOf: entry.domain || null
   };
 }
 
