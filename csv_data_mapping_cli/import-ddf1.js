@@ -1,4 +1,6 @@
-/* eslint camelcase:0 */
+/*eslint camelcase: 1*/
+'use strict';
+
 console.time('done');
 // Converter Class
 const _ = require('lodash');
@@ -7,28 +9,18 @@ const path = require('path');
 const async = require('async');
 const Converter = require('csvtojson').Converter;
 
-const mongoose = require('mongoose');
-//mongoose.set('debug', true);
-mongoose.connect('mongodb://localhost:27017/ws_test');
-
 const metadata = require('./vizabi/metadata.json');
-const Geo = require('../ws.repository/geo.model');
-const Dimensions = require('../ws.repository/dimensions/dimensions.model');
-const DimensionValues = require('../ws.repository/dimension-values/dimension-values.model');
-const Translations = require('../ws.repository/translations.model');
-const Indicators = require('../ws.repository/indicators/indicators.model');
-const IndicatorsValues = require('../ws.repository/indicator-values/indicator-values.model');
-const IndexTree = require('../ws.repository/indexTree.model');
-const IndexDb = require('../ws.repository/indexDb.model');
+const mongoose = require('mongoose');
 
 // const geoMappingHash = require('./geo-mapping.json');
-
-// take from args
-const pathToDdfFolder = '../../open-numbers/ddf--gapminder--systema_globalis';
-const resolvePath = (filename) => path.resolve(pathToDdfFolder, filename);
-const ddfConceptsFile = 'ddf--concepts.csv';
-const ddfMeasuresFile = 'ddf--measures.csv';
-const ddfIndexFile = 'ddf--index.csv';
+const Geo = mongoose.model('Geo');
+const Dimensions = mongoose.model('Dimensions');
+const DimensionValues = mongoose.model('DimensionValues');
+const Indicators = mongoose.model('Indicators');
+const IndicatorsValues = mongoose.model('IndicatorValues');
+const Translations = mongoose.model('Translations');
+const IndexTree = mongoose.model('IndexTree');
+const IndexDb = mongoose.model('IndexDb');
 
 // entityDomains
 const entityTypes = {
@@ -36,36 +28,53 @@ const entityTypes = {
   entity_domain: 'entity_domain'
 };
 
-async.waterfall([
-  cb => Geo.remove({}, err => cb(err)),
-  cb => Dimensions.remove({}, err => cb(err)),
-  cb => DimensionValues.remove({}, err => cb(err)),
-  cb => Indicators.remove({}, err => cb(err)),
-  cb => IndicatorsValues.remove({}, err => cb(err)),
-  cb => Translations.remove({}, err => cb(err)),
-  cb => IndexDb.remove({}, err => cb(err)),
+// take from args
+let logger;
+let config;
+let pathToDdfFolder;
+let resolvePath;
+let ddfConceptsFile;
+let ddfMeasuresFile;
+let ddfIndexFile;
 
-  importIndicatorsDb,
-  importIndicatorsTree,
-  createTranslations,
+module.exports = function (app, done) {
+  logger = app.get('log');
+  config = app.get('config');
 
-  cb => cb(null, {}),
-  createEntityDomainsAndSets(ddfConceptsFile),
-  // and geo
-  // createDimensionValues(v=>v.subdimOf ? `ddf--list--${v.subdimOf}--${v.gid}.csv` : `ddf--list--${v.gid}.csv`),
-  // createMeasures(ddfMeasuresFile),
-  // createMeasureValues(ddfIndexFile)
-], function (err) {
-  if (err) {
-    console.error(err);
-  }
+  pathToDdfFolder = config.PATH_TO_DDF_FOLDER;
+  resolvePath = (filename) => path.resolve('..', pathToDdfFolder, filename);
+  ddfConceptsFile = 'ddf--concepts.csv';
+  ddfMeasuresFile = 'ddf--measures.csv';
+  ddfIndexFile = 'ddf--index.csv';
 
-  console.timeEnd('done');
-  process.exit(0);
-});
+  async.waterfall([
+    cb => Geo.remove({}, err => cb(err)),
+    cb => Dimensions.remove({}, err => cb(err)),
+    cb => DimensionValues.remove({}, err => cb(err)),
+    cb => Indicators.remove({}, err => cb(err)),
+    cb => IndicatorsValues.remove({}, err => cb(err)),
+    cb => Translations.remove({}, err => cb(err)),
+    cb => IndexDb.remove({}, err => cb(err)),
+
+    importIndicatorsDb,
+    importIndicatorsTree,
+    createTranslations,
+
+    cb => cb(null, {}),
+    createEntityDomainsAndSets(ddfConceptsFile),
+    // and geo
+    // createDimensionValues(v=>v.subdimOf ? `ddf--list--${v.subdimOf}--${v.gid}.csv` : `ddf--list--${v.gid}.csv`),
+    // createMeasures(ddfMeasuresFile),
+    // createMeasureValues(ddfIndexFile)
+  ], (err) => {
+    console.timeEnd('done');
+
+    return done(err);
+  });
+};
 
 function importIndicatorsDb(cb) {
-  console.log('Importing indicator db');
+  logger.info('Importing indicator db');
   const indicatorsDB = _.keys(metadata.indicatorsDB)
     .map(function (key) {
       return _.extend(metadata.indicatorsDB[key], {name: key});
@@ -81,7 +90,7 @@ function importIndicatorsDb(cb) {
 }
 
 function importIndicatorsTree(cb) {
-  console.log('importing indicators tree');
+  logger.info('importing indicators tree');
   IndexTree
     .findOne({}, {_id: 0, __v: 0})
     .exec(function (err, tree) {
@@ -103,17 +112,17 @@ function importIndicatorsTree(cb) {
 }
 
 function createEntityDomainsAndSets(ddf_dimensions_file) {
-  console.log('create dimensions');
+  logger.info('create dimensions');
   return pipeWaterfall([
     readCsvFile(ddf_dimensions_file),
-    pipeMapSync(mapDdfDimensionsToWsModel),
-    (pipe, cb) => cb(null, pipe.filter(entry => entry.conceptType && entry.conceptType in entityTypes)),
+    pipeMapSync(mapDdfConceptsToWsModel),
+    (concepts, cb) => cb(null, concepts.filter(concept => concept.type && concept.type in entityTypes)),
     pipeEachLimit((v, cb)=>Dimensions.create(v, (err)=>cb(err, v)))
   ]);
 }
 
 function createDimensionValues(ddf_dimension_values_pattern) {
-  console.log('create dimension values');
+  logger.info('create dimension values');
   return pipeWaterfall([
     (pipe, cb) => Dimensions.find({}, {gid: 1, subdimOf: 1}).lean().exec(cb),
     pipeMapSync(dim=>Object.assign(dim, {file: ddf_dimension_values_pattern(dim)})),
@@ -140,7 +149,7 @@ function createDimensionValues(ddf_dimension_values_pattern) {
 }
 
 function createMeasures(ddf_measures_file) {
-  console.log('create measures');
+  logger.info('create measures');
   return pipeWaterfall([
     readCsvFile(ddf_measures_file),
     pipeMapSync(mapDdfMeasureToWsModel),
@@ -149,7 +158,7 @@ function createMeasures(ddf_measures_file) {
 }
 
 function createTranslations(cb) {
-  console.log('create translations');
+  logger.info('create translations');
   const en = require('./vizabi/en');
   const se = require('./vizabi/se');
   const translations = []
@@ -175,7 +184,7 @@ function createTranslations(cb) {
 // 6. recheck that dimension values added correctly
 // 7. save measure values to DB
 function createMeasureValues(ddf_index_file) {
-  console.log('Start: create indicator values');
+  logger.info('Start: create indicator values');
   return pipeWaterfall([
     // load all measures and dimensions from DB
     (pipe, pcb) => async.parallel({
@@ -203,10 +212,10 @@ function createMeasureValues(ddf_index_file) {
         // for each measure entries from ddf-index.csv
         async.eachSeries(pipe.filesIndex[measure.gid], (fileEntry, cb)=> {
           if (!fileEntry.geo || !fileEntry.time){
-            console.log(`Skipping ${fileEntry.file} - already imported`);
+            logger.info(`Skipping ${fileEntry.file} - already imported`);
             return cb();
           }
-          console.log(`Importing measure values from '${fileEntry.file}' with dim-s: '${fileEntry.geo},${fileEntry.time}'`);
+          logger.info(`Importing measure values from '${fileEntry.file}' with dim-s: '${fileEntry.geo},${fileEntry.time}'`);
           //
           async.parallel({
             _addDimensionsToMeasure: cb => addDimensionsToMeasure(measure._id, [fileEntry.geo, fileEntry.time], cb),
@@ -240,7 +249,7 @@ function createMeasureValues(ddf_index_file) {
                       return res;
                     }
                     res[key] = keys;
-                    console.log(`Need to add missing '${key}' dimension values: '${keys.join(',')}'`);
+                    logger.info(`Need to add missing '${key}' dimension values: '${keys.join(',')}'`);
                     return res;
                   }, {})
                   .value();
@@ -301,7 +310,7 @@ function createMeasureValues(ddf_index_file) {
                     subdimOf: 1
                   }).lean().exec((err, dims) => {
                     // build dimensions hash map
-                    pipe.dimensions = _.indexBy(dims, 'gid');
+                    pipe.dimensions = _.keyBy(dims, 'gid');
                     return cb(err, pipe);
                   }),
                   (pipe, cb) => {
@@ -368,41 +377,42 @@ function buildDimensionValuesHash(dimensions, bcb) {
 function addDimensionsToMeasure(id, dimensionsArr, adcb) {
   return async.waterfall([
     cb => Dimensions.find({gid: {$in: dimensionsArr}}, {_id: 1}).lean().exec(cb),
-    (dimensions, cb) => cb(null, _.pluck(dimensions, '_id')),
+    (dimensions, cb) => cb(null, _.map(dimensions, '_id')),
     (dimensions, cb) => Indicators.update({_id: id}, {$addToSet: {dimensions: {$each: dimensions}}}, cb)
   ], adcb);
 }
 
 // mappers
-function mapDdfDimensionsToWsModel(entry) {
+function mapDdfConceptsToWsModel(entry) {
   return {
     gid: entry.concept,
     type: entry.concept_type,
-    subdimOf: entry.subdim_of,
+    subdimOf: entry.subdim_of || null,
     name: entry.name,
     nameShort: entry.name_short,
-    nameLong: entry.name_long,
-    link: entry.link,
-    description: entry.description,
+    nameLong: entry.name_long || null,
+    link: entry.link || null,
+    description: entry.description || null,
     usability: entry.usability,
-    totalEntity: entry.total_entity,
-    totalName: entry.total_name,
+    totalEntity: entry.total_entity || null,
+    totalName: entry.total_name || null,
     defaultEntities: entry.default_entities ? entry.default_entities.split(',') : [],
-    drilldowns: entry.drilldowns,
-    drillups: entry.drillups,
-    incompleteDrillups: entry.incomplete_drillups,
-    ordinal: entry.ordinal,
-    measure: entry.measure,
-    interval: entry.interval,
+    drilldowns: entry.drilldowns || null,
+    drillups: entry.drillups || null,
+    incompleteDrillups: entry.incomplete_drillups || null,
+    ordinal: entry.ordinal === '' ? null : entry.ordinal,
+    measure: entry.measure || null,
+    interval: entry.interval === '' ? null : entry.interval,
     cardinality: entry.cardinality,
     aliases: entry.aliases ? entry.aliases.split('","').map(v=>v.replace(/"/g, '')) : [],
-    pattern: entry.pattern,
+    pattern: entry.pattern || null,
     ddfInheritance: entry.ddf_inheritance
   };
 }
 
 function mapDdfDimensionValuesToWsModel(dim, entry) {
   return {
+    parentGid: entry.world_4region || 'world',
     dimensionGid: dim.gid,
     dimension: dim._id,
     value: entry.geo,
@@ -509,5 +519,7 @@ function pipeEachLimit(fn, limit) {
 }
 
 function pipeMapSync(fn) {
-  return (pipe, cb) => cb(null, _.map(pipe, fn));
+  return (pipe, cb) => {
+    return cb(null, _.map(pipe, fn));
+  }
 }

@@ -1,3 +1,5 @@
+'use strict';
+
 const appStub = {
   get: function (moduleName) {
     return this[moduleName];
@@ -23,7 +25,7 @@ require('../ws.repository/indicator-values/indicator-values.model');
 require('../ws.repository/indexTree.model');
 require('../ws.repository/indexDb.model');
 
-require('./import')(appStub, (err) => {
+require('./import-ddf1')(appStub, (err) => {
   if (err) {
     logger.error(err);
   }
