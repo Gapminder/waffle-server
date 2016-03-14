@@ -8,9 +8,9 @@ const DEFAULT_CONFIG = require('./environment.config');
 
 module.exports = function (app) {
   const REQUIRED_ENVIRONMENT_VARIABLES = Object.freeze([
-    'SESSION_SECRET',
-    'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET',
-    'AWS_SECRET_ACCESS_KEY', 'AWS_ACCESS_KEY_ID', 'S3_BUCKET',
+    // 'SESSION_SECRET',
+    // 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET',
+    // 'AWS_SECRET_ACCESS_KEY', 'AWS_ACCESS_KEY_ID', 'S3_BUCKET',
     'MONGODB_URL', 'NEO4J_URL'
   ]);
 
@@ -31,6 +31,7 @@ module.exports = function (app) {
     NEO4J_URL: process.env.NEO4J_URL || DEFAULT_CONFIG.NEO4J_URL,
 
     MONGOOSE_DEBUG: process.env.MONGOOSE_DEBUG || DEFAULT_CONFIG.MONGOOSE_DEBUG,
+    CLEAR_MONGO_DB_COLLECTIONS: process.env.CLEAR_MONGO_DB_COLLECTIONS || DEFAULT_CONFIG.CLEAR_MONGO_DB_COLLECTIONS,
     PATH_TO_DDF_FOLDER: process.env.PATH_TO_DDF_FOLDER || DEFAULT_CONFIG.PATH_TO_DDF_FOLDER,
 
     // is used npm logging levels (prioritized from 0 to 5, from highest to lowest):

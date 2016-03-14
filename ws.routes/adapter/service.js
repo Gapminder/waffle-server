@@ -33,7 +33,6 @@ module.exports = function (serviceLocator) {
   var mcPrecomputedShapes = require('../../csv_data_mapping_cli/fixtures/mc_precomputed_shapes.json');
   var world50m = require('../../csv_data_mapping_cli/fixtures/world-50m.json');
 
-
   /**
    * @swagger
    * /api/vizabi/translation/{lang}.json:
@@ -61,7 +60,8 @@ module.exports = function (serviceLocator) {
    *
    *
    */
-  router.get('/api/vizabi/translation/:lang.json', cors(), compression(), u.getCacheConfig('translations'), cache.route(), getTranslations);
+  //TODO: uncomment caching as soon as this new-import-ddf-gapminder-world-#176 branch is stable
+  router.get('/api/vizabi/translation/:lang.json', cors(), compression(), /*u.getCacheConfig('translations'), cache.route(),*/ getTranslations);
 
 
   /**
@@ -135,7 +135,8 @@ module.exports = function (serviceLocator) {
    *
    *
    */
-  router.get('/api/vizabi/metadata.json', cors(), compression(), u.getCacheConfig('metadata'), cache.route(), getMetadata);
+  //TODO: uncomment caching as soon as this new-import-ddf-gapminder-world-#176 branch is stable
+  router.get('/api/vizabi/metadata.json', cors(), compression(), /*u.getCacheConfig('metadata'), cache.route(),*/ getMetadata);
 
   /**
    * @swagger
@@ -162,7 +163,8 @@ module.exports = function (serviceLocator) {
 
   router.get('/api/vizabi/gapminder_tools/related_items/', cors(), compression(), u.getCacheConfig('related-items'), cache.route(), getRelatedItems);
 
-  router.get('/api/vizabi/gapminder_tools/menu_items/', cors(), compression(), u.getCacheConfig('menu-items'), cache.route(), (req, res) => res.json(gapminderMenuItems));
+  //TODO: uncomment caching as soon as this new-import-ddf-gapminder-world-#176 branch is stable
+  router.get('/api/vizabi/gapminder_tools/menu_items/', cors(), compression(), /*u.getCacheConfig('menu-items'), cache.route(),*/ (req, res) => res.json(gapminderMenuItems));
 
   return app.use(router);
 
@@ -204,31 +206,9 @@ module.exports = function (serviceLocator) {
 
   function getMetadata(req, res) {
     async.parallel({
-      color: function getColors(cb) {
-        return cb(null, metadataFile.color);
-      },
       indicatorsDB: getIndicatorsDB,
       indicatorsTree: function getIndicatorsTree(cb) {
         IndexTree.findOne({}, {_id: 0, __v: 0}).lean().exec(cb);
-      },
-      entities: (cb) => {
-        return Geo.find({}, {_id: 0, gid: 1, name: 1})
-          .sort('gid')
-          .lean()
-          .exec((err, geoProps) => {
-            if (err) {
-              return cb(err);
-            }
-
-            var result = _.map(geoProps, prop => {
-              return {
-                geo: prop.gid,
-                name: prop.name
-              };
-            });
-
-            return cb(null, result);
-          });
       }
     }, function (err, metadata) {
       if (err) {
