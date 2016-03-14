@@ -47,5 +47,5 @@ module.exports = Object.freeze({
 
   MONGOOSE_DEBUG: false,
 
-  PATH_TO_DDF_FOLDER: '../open-numbers/ddf--gapminder--systema_globalis'
+  PATH_TO_DDF_FOLDER: '../open-numbers/ddf--gapminder_world/output'
 });
