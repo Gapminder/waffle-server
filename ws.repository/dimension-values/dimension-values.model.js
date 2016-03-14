@@ -19,7 +19,8 @@ var DimensionValues = new Schema({
   dimensionGid: String,
   dimension: {type: Schema.Types.ObjectId, ref: 'Dimensions'},
   value: String,
-  title: String
+  title: String,
+  properties: {}
 });
 
 DimensionValues.index({dimension: 1, value: 1});

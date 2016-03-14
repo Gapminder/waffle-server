@@ -22,6 +22,9 @@ const Translations = mongoose.model('Translations');
 const IndexTree = mongoose.model('IndexTree');
 const IndexDb = mongoose.model('IndexDb');
 
+// geo mapping
+const geoMapping = require('./geo-mapping.json');
+
 // entityDomains
 const entityTypes = {
   entity_set: 'entity_set',
@@ -63,7 +66,7 @@ module.exports = function (app, done) {
     cb => cb(null, {}),
     createEntityDomainsAndSets(ddfConceptsFile),
     // and geo
-    // createDimensionValues(v=>v.subdimOf ? `ddf--list--${v.subdimOf}--${v.gid}.csv` : `ddf--list--${v.gid}.csv`),
+    createEntityDomainsValues(v=>v.subdimOf ? `ddf--entities--${v.subdimOf}--${v.gid}.csv` : `ddf--list--${v.gid}.csv`),
     // createMeasures(ddfMeasuresFile),
     // createMeasureValues(ddfIndexFile)
   ], (err) => {
@@ -121,7 +124,7 @@ function createEntityDomainsAndSets(ddf_dimensions_file) {
   ]);
 }
 
-function createDimensionValues(ddf_dimension_values_pattern) {
+function createEntityDomainsValues(ddf_dimension_values_pattern) {
   logger.info('create dimension values');
   return pipeWaterfall([
     (pipe, cb) => Dimensions.find({}, {gid: 1, subdimOf: 1}).lean().exec(cb),
@@ -132,13 +135,13 @@ function createDimensionValues(ddf_dimension_values_pattern) {
         return cb();
       }
       async.eachLimit(jsonArr, 10, (row, ecb) => {
-        DimensionValues.create(mapDdfDimensionValuesToWsModel(dim, row), (errD)=> {
+        DimensionValues.create(mapDdfEntityValuesToWsModel(dim, row), (errD)=> {
           if (errD) {
             return ecb(errD);
           }
           // create geo values
           if (dim.gid === 'geo' || dim.subdimOf === 'geo') {
-            return Geo.create(mapDdfDimensionsToGeoWsModel(row), (errG) => ecb(errG));
+            // return Geo.create(mapDdfDimensionsToGeoWsModel(dim, row), (errG) => ecb(errG));
           }
 
           return ecb();
@@ -397,18 +400,45 @@ function mapDdfConceptsToWsModel(entry) {
   };
 }
 
-function mapDdfDimensionValuesToWsModel(dim, entry) {
+function mapDdfEntityValuesToWsModel(dim, entry) {
+  let key;
+  if (entry[dim.gid]) {
+    key = dim.gid;
+  } else if (entry[dim.subdimOf]) {
+    key = dim.subdimOf;
+  }
+  let value = entry[key] && geoMapping[entry[key]] || geoMapping[entry.geo] || entry[key];
+  if (!value) {
+    console.log(dim, entry, key, value);
+  }
   return {
-    parentGid: entry.world_4region || 'world',
+    parentGid: entry.world_4region || entry.geographic_regions_in_4_colors || 'world',
     dimensionGid: dim.gid,
     dimension: dim._id,
-    value: entry.geo,
-    title: entry.name
+    value: value,
+    title: entry.name,
+    properties: entry
   };
 }
 
-function mapDdfDimensionsToGeoWsModel(entry) {
+function mapDdfDimensionsToGeoWsModel(dim, entry) {
+  let key;
+  if (entry[dim.gid]) {
+    key = dim.gid;
+  } else if (entry[dim.subdimOf]) {
+    key = dim.subdimOf;
+  }
+  let value = entry[key] && geoMapping[entry[key]] || geoMapping[entry.geo] || entry[key];
+
   return {
+    parentGid: entry.world_4region || entry.geographic_regions_in_4_colors || 'world',
+    dimensionGid: dim.gid,
+    dimension: dim._id,
+    value: value,
+    title: entry.name,
+    properties: entry
+  };
+  /*return {
     gid: entry.geo,
     name: entry.name,
 
@@ -426,7 +456,7 @@ function mapDdfDimensionsToGeoWsModel(entry) {
     isRegion4: entry['is.world_4region'],
     isCountry: entry['is.country'],
     isUnState: entry['is.un_state']
-  };
+  };*/
 }
 
 function mapDdfMeasureToWsModel(entry) {
