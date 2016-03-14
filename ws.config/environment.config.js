@@ -43,5 +43,9 @@ module.exports = Object.freeze({
   LOG_TABS: '\t\t\t',
 
   NODE_ENV: NODE_ENV,
-  SESSION_TIMEOUT: 60000
+  SESSION_TIMEOUT: 60000,
+
+  MONGOOSE_DEBUG: false,
+
+  PATH_TO_DDF_FOLDER: '../open-numbers/ddf--gapminder--systema_globalis'
 });

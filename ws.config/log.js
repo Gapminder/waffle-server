@@ -47,4 +47,6 @@ module.exports = function (app) {
   });
 
   app.set('log', logger);
+
+  return logger;
 };

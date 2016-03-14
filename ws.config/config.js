@@ -30,6 +30,9 @@ module.exports = function (app) {
     MONGODB_URL: process.env.MONGODB_URL || DEFAULT_CONFIG.MONGODB_URL,
     NEO4J_URL: process.env.NEO4J_URL || DEFAULT_CONFIG.NEO4J_URL,
 
+    MONGOOSE_DEBUG: process.env.MONGOOSE_DEBUG || DEFAULT_CONFIG.MONGOOSE_DEBUG,
+    PATH_TO_DDF_FOLDER: process.env.PATH_TO_DDF_FOLDER || DEFAULT_CONFIG.PATH_TO_DDF_FOLDER,
+
     // is used npm logging levels (prioritized from 0 to 5, from highest to lowest):
     // { error: 0, warn: 1, info: 2, verbose: 3, debug: 4, silly: 5 }
     LOG_LEVEL: process.env.LOG_LEVEL || DEFAULT_CONFIG.LOG_LEVEL,
@@ -63,4 +66,6 @@ module.exports = function (app) {
   };
 
   app.set('config', config);
+
+  return config;
 };
