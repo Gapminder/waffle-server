@@ -41,13 +41,13 @@ async.waterfall([
   importIndicatorsDb,
   importIndicatorsTree,
   createTranslations,
-
-  cb => cb(null, {}),
-  createDimensions(ddfDimensionsFile),
+  //
+  // cb => cb(null, {}),
+  // createDimensions(ddfDimensionsFile),
   // and geo
-  createDimensionValues(v=>v.subdimOf ? `ddf--list--${v.subdimOf}--${v.gid}.csv` : `ddf--list--${v.gid}.csv`),
-  createMeasures(ddfMeasuresFile),
-  createMeasureValues(ddfIndexFile)
+  // createDimensionValues(v=>v.subdimOf ? `ddf--list--${v.subdimOf}--${v.gid}.csv` : `ddf--list--${v.gid}.csv`),
+  // createMeasures(ddfMeasuresFile),
+  // createMeasureValues(ddfIndexFile)
 ], function (err) {
   if (err) {
     console.error(err);
