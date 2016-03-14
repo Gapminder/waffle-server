@@ -1,4 +1,4 @@
-/*eslint camelcase: 1*/
+/*eslint camelcase: 0*/
 'use strict';
 
 console.time('done');
@@ -28,7 +28,8 @@ const geoMapping = require('./geo-mapping.json');
 // entityDomains
 const entityTypes = {
   entity_set: 'entity_set',
-  entity_domain: 'entity_domain'
+  entity_domain: 'entity_domain',
+  time: 'time'
 };
 // measure types
 const measureTypes = {
@@ -70,10 +71,10 @@ module.exports = function (app, done) {
     // and geo
     createEntityDomainsValues(v=>v.subdimOf ? `ddf--entities--${v.subdimOf}--${v.gid}.csv` : `ddf--list--${v.gid}.csv`),
     createMeasures(ddfConceptsFile),
-    // createMeasureValues(ddfIndexFile)
+    createDataPoints(ddfIndexFile)
   ], (err) => {
     console.timeEnd('done');
-
+    console.log(err);
     return done(err);
   });
 };
@@ -189,18 +190,43 @@ function createTranslations(cb) {
 // 5. find missing dimensions values in DB and add them
 // 6. recheck that dimension values added correctly
 // 7. save measure values to DB
-function createMeasureValues(ddf_index_file) {
+function createDataPoints(ddf_index_file) {
   logger.info('Start: create indicator values');
   return pipeWaterfall([
     // load all measures and dimensions from DB
     (pipe, pcb) => async.parallel({
       measures: cb=> Indicators.find({}, {gid: 1}).lean().exec(cb),
       dimensions: cb=> Dimensions.find({}, {gid: 1}).lean().exec(cb),
-      filesIndex: cb=> readCsvFile(ddf_index_file)({}, cb)
+      // filesIndex: cb=> readCsvFile(ddf_index_file)({}, cb),
+      fileList: cb => {
+        fs.readdir(path.resolve('..', pathToDdfFolder), (err, fileNames) => {
+          if (err) {
+            return cb(err);
+          }
+          const START_INDEX = 2;
+          const dataPoints = fileNames
+            .filter(fileName => fileName.indexOf('ddf--datapoints--') !== -1)
+            .map(fileName => {
+              const spl = fileName.split(/--|\.{1}/);
+              const allConcepts = spl.slice(START_INDEX);
+              const posForBy = allConcepts.indexOf('by');
+              const details = {
+                file: fileName,
+                measure: allConcepts.slice(0, posForBy)[0],
+                concepts: allConcepts.slice(posForBy + 1, allConcepts.length - 1),
+                geo: 'geo',
+                time: 'time'
+              };
+              return details;
+            });
+          return cb(null, dataPoints);
+        });
+      }
     }, pcb),
     // group file entries from ddf-index my measure id
     (pipe, cb) => {
-      pipe.filesIndex = _.groupBy(pipe.filesIndex, v=>v.value_concept);
+      // pipe.filesIndex = _.groupBy(pipe.filesIndex, v=>v.value_concept);
+      pipe.filesIndex = _.groupBy(pipe.fileList, v=>v.measure);
       return cb(null, pipe);
     },
     // do all other? WTF? REALLY?
@@ -211,13 +237,13 @@ function createMeasureValues(ddf_index_file) {
         // check entry in ddf-index.csv
         if (!pipe.filesIndex[measure.gid]) {
           // produce warning and exit
-          console.warn(`File for measure ${measure.gid} not found in ${ddf_index_file}`);
+          console.warn(`File for measure ${measure.gid} not found`/* in ${ddf_index_file}`*/);
           return escb();
         }
 
         // for each measure entries from ddf-index.csv
         async.eachSeries(pipe.filesIndex[measure.gid], (fileEntry, cb)=> {
-          if (!fileEntry.geo || !fileEntry.time){
+          if (!fileEntry.geo || !fileEntry.time) {
             logger.info(`Skipping ${fileEntry.file} - already imported`);
             return cb();
           }
