@@ -30,6 +30,10 @@ const entityTypes = {
   entity_set: 'entity_set',
   entity_domain: 'entity_domain'
 };
+// measure types
+const measureTypes = {
+  measure: 'measure'
+};
 
 // take from args
 let logger;
@@ -37,7 +41,6 @@ let config;
 let pathToDdfFolder;
 let resolvePath;
 let ddfConceptsFile;
-let ddfMeasuresFile;
 let ddfIndexFile;
 
 module.exports = function (app, done) {
@@ -47,7 +50,6 @@ module.exports = function (app, done) {
   pathToDdfFolder = config.PATH_TO_DDF_FOLDER;
   resolvePath = (filename) => path.resolve('..', pathToDdfFolder, filename);
   ddfConceptsFile = 'ddf--concepts.csv';
-  ddfMeasuresFile = 'ddf--measures.csv';
   ddfIndexFile = 'ddf--index.csv';
 
   async.waterfall([
@@ -67,7 +69,7 @@ module.exports = function (app, done) {
     createEntityDomainsAndSets(ddfConceptsFile),
     // and geo
     createEntityDomainsValues(v=>v.subdimOf ? `ddf--entities--${v.subdimOf}--${v.gid}.csv` : `ddf--list--${v.gid}.csv`),
-    // createMeasures(ddfMeasuresFile),
+    createMeasures(ddfConceptsFile),
     // createMeasureValues(ddfIndexFile)
   ], (err) => {
     console.timeEnd('done');
@@ -151,12 +153,13 @@ function createEntityDomainsValues(ddf_dimension_values_pattern) {
   ]);
 }
 
-function createMeasures(ddf_measures_file) {
+function createMeasures(ddfConceptsFile) {
   logger.info('create measures');
   return pipeWaterfall([
-    readCsvFile(ddf_measures_file),
+    readCsvFile(ddfConceptsFile),
     pipeMapSync(mapDdfMeasureToWsModel),
-    pipeEachLimit((v, cb)=>Indicators.create(v, (err)=>cb(err, v)))
+    (concepts, cb) => cb(null, concepts.filter(concept => concept.type && concept.type in measureTypes)),
+    pipeEachLimit((v, cb)=>Indicators.create(v, (err) => cb(err, v)))
   ]);
 }
 
@@ -465,42 +468,46 @@ function mapDdfMeasureToWsModel(entry) {
   }
   const defaultScale = ['linear', 'log'];
 
-  const tags = _((entry.tag || '').split(','))
+  const tags = [];/*_((entry.tag || '').split(','))
     .map(_.trim)
     .compact()
     .values();
-
+*/
   return {
-    gid: entry.measure,
-    title: entry.title,
-
+    gid: entry.concept,
     name: entry.name,
-    nameShort: entry.name_short,
-    nameLong: entry.name_long,
+    type: entry.concept_type,
+    tooltip: entry.tooltip || null,
+    link: entry.indicator_url || null,
+    properties: entry,
+    // title: entry.title,
 
-    description: entry.description,
-    definitionSnippet: entry.definition_snippet,
+    // nameShort: entry.name_short,
+    // nameLong: entry.name_long,
 
-    lowLabelShort: entry.low_label_short,
-    lowLabel: entry.low_label,
+    // description: entry.description,
+    // definitionSnippet: entry.definition_snippet,
 
-    highLabelShort: entry.high_label_short,
-    highLabel: entry.high_label,
-
-    goodDirection: entry.good_direction,
-
-    link: entry.link,
-
-    usability: entry.usability,
-
-    unit: entry.unit,
-    valueInterval: entry.value_interval,
-    scales: entry.scales ? [entry.scales] : defaultScale,
-    precisionMaximum: entry.precision_maximum,
-    decimalsMaximum: entry.decimals_maximum,
-
-    tags: tags,
-
+    // lowLabelShort: entry.low_label_short,
+    // lowLabel: entry.low_label,
+    //
+    // highLabelShort: entry.high_label_short,
+    // highLabel: entry.high_label,
+    //
+    // goodDirection: entry.good_direction,
+    //
+    // link: entry.link,
+    //
+    // usability: entry.usability,
+    //
+    // unit: entry.unit,
+    // valueInterval: entry.value_interval,
+    // scales: entry.scales ? [entry.scales] : defaultScale,
+    // precisionMaximum: entry.precision_maximum,
+    // decimalsMaximum: entry.decimals_maximum,
+    //
+    // tags: tags,
+    //
     meta: {
       allowCharts: ['*'],
       use: 'indicator'
