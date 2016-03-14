@@ -30,18 +30,21 @@ var Dimensions = new Schema({
 
   // 1 - easy, 2 - average, 3 - complex
   usability: Number,
-  type: {type: String, 'enum': ['dimension', 'subdim']},
+  type: {type: String, 'enum': ['dimension', 'subdim'], required: true},
   // parent dimension gid, only if type === subdim
   subdimOf: String,
+
+  totalEntity: String,
+  totalName: String,
 
   defaultEntities: [String],
   drilldowns: String,
   drillups: String,
   incompleteDrillups: String,
 
-  ordinal: Number,
+  ordinal: Boolean,
   measure: String,
-  interval: Number,
+  interval: Boolean,
   cardinality: Number,
 
   aliases: [String],

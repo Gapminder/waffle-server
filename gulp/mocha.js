@@ -4,11 +4,11 @@ const gulp = require('gulp');
 const mocha = require('gulp-mocha');
 
 gulp.task('test', () => {
-  return runMochaOn(['!**/*e2e.spec.js', '**/*.spec.js']);
+  return runMochaOn(['**/*.spec.js']);
 });
 
 gulp.task('test:e2e', () => {
-  return runMochaOn(['**/*e2e.spec.js']);
+  return runMochaOn(['**/*.e2e.js']);
 });
 
 function runMochaOn(path) {
