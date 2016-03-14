@@ -1,3 +1,4 @@
+/* eslint camelcase:0 */
 console.time('done');
 // Converter Class
 const _ = require('lodash');
@@ -25,9 +26,15 @@ const IndexDb = require('../ws.repository/indexDb.model');
 // take from args
 const pathToDdfFolder = '../../open-numbers/ddf--gapminder--systema_globalis';
 const resolvePath = (filename) => path.resolve(pathToDdfFolder, filename);
-const ddfDimensionsFile = 'ddf--dimensions.csv';
+const ddfConceptsFile = 'ddf--concepts.csv';
 const ddfMeasuresFile = 'ddf--measures.csv';
 const ddfIndexFile = 'ddf--index.csv';
+
+// entityDomains
+const entityTypes = {
+  entity_set: 'entity_set',
+  entity_domain: 'entity_domain'
+};
 
 async.waterfall([
   cb => Geo.remove({}, err => cb(err)),
@@ -41,9 +48,9 @@ async.waterfall([
   importIndicatorsDb,
   importIndicatorsTree,
   createTranslations,
-  //
-  // cb => cb(null, {}),
-  // createDimensions(ddfDimensionsFile),
+
+  cb => cb(null, {}),
+  createEntityDomainsAndSets(ddfConceptsFile),
   // and geo
   // createDimensionValues(v=>v.subdimOf ? `ddf--list--${v.subdimOf}--${v.gid}.csv` : `ddf--list--${v.gid}.csv`),
   // createMeasures(ddfMeasuresFile),
@@ -95,11 +102,12 @@ function importIndicatorsTree(cb) {
     });
 }
 
-function createDimensions(ddf_dimensions_file) {
+function createEntityDomainsAndSets(ddf_dimensions_file) {
   console.log('create dimensions');
   return pipeWaterfall([
     readCsvFile(ddf_dimensions_file),
     pipeMapSync(mapDdfDimensionsToWsModel),
+    (pipe, cb) => cb(null, pipe.filter(entry => entry.conceptType && entry.conceptType in entityTypes)),
     pipeEachLimit((v, cb)=>Dimensions.create(v, (err)=>cb(err, v)))
   ]);
 }
@@ -369,7 +377,7 @@ function addDimensionsToMeasure(id, dimensionsArr, adcb) {
 function mapDdfDimensionsToWsModel(entry) {
   return {
     gid: entry.concept,
-    type: entry.type,
+    type: entry.concept_type,
     subdimOf: entry.subdim_of,
     name: entry.name,
     nameShort: entry.name_short,

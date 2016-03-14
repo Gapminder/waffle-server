@@ -30,8 +30,7 @@ var Dimensions = new Schema({
 
   // 1 - easy, 2 - average, 3 - complex
   usability: Number,
-  type: {type: String, 'enum': ['dimension', 'subdim'], required: true},
-  // parent dimension gid, only if type === subdim
+  type: {type: String, 'enum': ['entity_domain', 'entity_set']},
   subdimOf: String,
 
   totalEntity: String,
