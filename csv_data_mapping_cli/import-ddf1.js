@@ -76,6 +76,7 @@ module.exports = function (app, done) {
     // and geo
     createEntityDomainsValues(v=>v.subdimOf ? `ddf--entities--${v.subdimOf}--${v.gid}.csv` : `ddf--list--${v.gid}.csv`),
     updateEntityDomainsValuesLatLng(v=> `ddf--list--${v.gid}.csv`),
+    createGeoProperties(),
     createMeasures(ddfConceptsFile),
     createDataPoints(ddfIndexFile)
   ], (err) => {
@@ -164,8 +165,6 @@ function createEntityDomainsValues(ddf_dimension_values_pattern) {
 function updateEntityDomainsValuesLatLng(ddf_dimension_values_pattern) {
   logger.info('update dimension values (lat/lng)');
   return pipeWaterfall([
-    (pipe, cb) => cb(null, ddfEntityDomainsValuesLatLng),
-    pipeMapSync(dim=>Object.assign(dim, {file: ddf_dimension_values_pattern(dim)})),
     pipeEachLimit((dim, cb)=>readCsvFile(dim.file)({}, function (err, jsonArr) {
       if (err) {
         console.warn(`dimensions file not found: ${err.message}`);
@@ -194,6 +193,23 @@ function updateEntityDomainsValuesLatLng(ddf_dimension_values_pattern) {
       }, cb);
     }))
   ]);
+}
+
+// hardcode for consistency between ddf v0.2 and ddf v1
+function createGeoProperties() {
+  logger.info('create geo properties');
+  return (pipe, cbw) => {
+    let dimsGids = [
+      'geographic_region', 'income_group', 'landlocked',
+      'g77_and_oecd_countries', 'geographic_regions_in_4_colors', 'main_religion_2008',
+      'country', 'global'
+    ];
+    return DimensionValues.find({dimensionGid:{ $in: dimsGids }}, (errD, dvs)=> {
+      return async.eachLimit(dvs, 10, (dv, ecb) => {
+        return Geo.findOneAndUpdate({gid: dv.value}, mapDdfDimensionsToGeoWsModel(dv), {upsert: true}, ecb);
+      }, cbw);
+    });
+  };
 }
 
 function createMeasures(ddfConceptsFile) {
@@ -501,42 +517,29 @@ function mapDdfEntityValuesToWsModel(dim, entry) {
   };
 }
 
-function mapDdfDimensionsToGeoWsModel(dim, entry) {
-  let key;
-  if (entry[dim.gid]) {
-    key = dim.gid;
-  } else if (entry[dim.subdimOf]) {
-    key = dim.subdimOf;
-  }
-  let value = entry[key] && geoMapping[entry[key]] || geoMapping[entry.geo] || entry[key];
-
+function mapDdfDimensionsToGeoWsModel(entry) {
   return {
-    parentGid: entry.world_4region || entry.geographic_regions_in_4_colors || 'world',
-    dimensionGid: dim.gid,
-    dimension: dim._id,
-    value: value,
-    title: entry.name,
-    properties: entry
+    gid: entry.value,
+    name: entry.title,
+
+    nameShort: entry.title,
+    nameLong: entry.title,
+
+    latitude: entry.value === 'world' ? 0 : entry.properties.latitude,
+    longitude: entry.value === 'world' ? 0 : entry.properties.longitude,
+    region4: entry.properties.geographic_regions_in_4_colors,
+    color: entry.properties.color,
+
+    isGlobal: entry.value === 'world',
+    isRegion4: entry.properties['is--geographic_regions_in_4_colors'],
+    isCountry: entry.properties['is--country'],
+    isUnState: entry['is--un_state'],
+    g77_and_oecd_countries: entry.properties.g77_and_oecd_countries,
+    geographic_regions: entry.properties.geographic_regions,
+    income_groups: entry.properties.income_groups,
+    landlocked: entry.properties.landlocked,
+    main_religion_2008: entry.properties.main_religion_2008
   };
-  /*return {
-    gid: entry.geo,
-    name: entry.name,
-
-    nameShort: entry.name_short,
-    nameLong: entry.name_long,
-
-    description: entry.description,
-
-    latitude: entry.latitude,
-    longitude: entry.longitude,
-    region4: entry.world_4region,
-    color: entry.color,
-
-    isGlobal: entry['is.global'],
-    isRegion4: entry['is.world_4region'],
-    isCountry: entry['is.country'],
-    isUnState: entry['is.un_state']
-  };*/
 }
 
 function mapDdfMeasureToWsModel(entry) {
