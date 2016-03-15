@@ -189,7 +189,6 @@ function updateEntityDomainsValuesLatLng(ddf_dimension_values_pattern) {
           model.properties.latitude = row.latitude || null;
           model.properties.longitude = row.longitude || null;
           model.properties.color = row.color || null;
-          console.log(model.value, row.latitude, row.longitude, row.color);
           return model.save(ecb);
         });
       }, cb);
@@ -257,8 +256,8 @@ function createDataPoints(ddf_index_file) {
                 file: fileName,
                 measure: allConcepts.slice(0, posForBy)[0],
                 concepts: allConcepts.slice(posForBy + 1, allConcepts.length - 1),
-                geo: 'geo',
-                time: 'time'
+                geo: 'country',
+                time: 'year'
               };
               return details;
             });
@@ -385,6 +384,7 @@ function createDataPoints(ddf_index_file) {
                 // and again we have 2 dims hardcode
                 const hardcodedDims = ['geo', 'time'];
                 const dimensions = _.map(hardcodedDims, v=>fileEntry[v]);
+
                 return async.waterfall([
                   cb=>cb(null, pipe),
                   // find dimensions in db
@@ -488,9 +488,6 @@ function mapDdfEntityValuesToWsModel(dim, entry) {
     key = dim.subdimOf;
   }
   let value = entry[key] && geoMapping[entry[key]] || geoMapping[entry.geo] || entry[key];
-  if (!value) {
-    console.log(dim, entry, key, value);
-  }
   entry.latitude = entry.latitude || null;
   entry.longitude = entry.latitude || null;
   entry.color = entry.latitude || null;

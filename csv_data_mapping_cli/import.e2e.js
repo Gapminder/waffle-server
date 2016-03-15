@@ -32,7 +32,7 @@ require('../ws.repository/indexTree.model');
 require('../ws.repository/indexDb.model');
 
 const collections = [
-  // 'Geo',
+  'Geo',
   'Dimensions', 'DimensionValues',
   'Indicators', 'IndicatorValues',
   'Translations', 'IndexTree', 'IndexDb'
