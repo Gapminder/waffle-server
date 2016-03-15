@@ -205,7 +205,7 @@ function createDataPoints(ddf_index_file) {
           }
           const START_INDEX = 2;
           const dataPoints = fileNames
-            .filter(fileName => fileName.indexOf('ddf--datapoints--') !== -1)
+            .filter(fileName => /^ddf--datapoints--/.test(fileName))
             .map(fileName => {
               const spl = fileName.split(/--|\.{1}/);
               const allConcepts = spl.slice(START_INDEX);
@@ -226,6 +226,10 @@ function createDataPoints(ddf_index_file) {
     // group file entries from ddf-index my measure id
     (pipe, cb) => {
       // pipe.filesIndex = _.groupBy(pipe.filesIndex, v=>v.value_concept);
+      // todo: use this only for debugging to import single measure file
+      if (process.env.DEBUG_IMPORT) {
+        pipe.fileList.length = 1;
+      }
       pipe.filesIndex = _.groupBy(pipe.fileList, v=>v.measure);
       return cb(null, pipe);
     },
@@ -266,12 +270,16 @@ function createDataPoints(ddf_index_file) {
               (pipe, cb) => {
                 // 2 dimensional only for now
                 pipe.missingValues = _.chain(pipe.measureValues)
+                  .map(entry => {
+                    entry.geo = geoMapping[entry.geo] || entry.geo;
+                    return entry;
+                  })
                   .reduce((res, val) => {
                     if (!pipe.dimensionValues[fileEntry.geo] || !pipe.dimensionValues[fileEntry.geo][val.geo]) {
                       res[fileEntry.geo][val.geo] = true;
                     }
-                    if (!pipe.dimensionValues[fileEntry.time] || !pipe.dimensionValues[fileEntry.time][val.year]) {
-                      res[fileEntry.time][val.year] = true;
+                    if (!pipe.dimensionValues[fileEntry.time] || !pipe.dimensionValues[fileEntry.time][val.time]) {
+                      res[fileEntry.time][val.time] = true;
                     }
                     return res;
                   }, {[fileEntry.geo]: {}, [fileEntry.time]: {}})
