@@ -93,7 +93,7 @@ module.exports = function (serviceLocator) {
     let resolvedCyperGeos = geoParamToCyper(pipe.resolvedGeos, dimensionsToCypherAliases);
     let resolvedCyperTime = timeParamToCyper(pipe.where.time, dimensionsToCypherAliases);
     let resolvedCyperSort = sortParamToCypher(pipe.sort, dimensionsToCypherAliases);
-    let dim1 = pipe.dim1 || 'year';
+    let dim1 = pipe.dim1 || 'time';
 
     // do measures request
     // prepare cypher query
