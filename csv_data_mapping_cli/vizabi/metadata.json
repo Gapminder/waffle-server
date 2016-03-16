@@ -102,13 +102,6 @@
         2011
       ]
     },
-    "gini": {
-      "sourceLink": "http://www.gapminder.org/news/data-sources-dont-panic-end-poverty",
-      "use": "indicator",
-      "scales": [
-        "linear"
-      ]
-    },
     "colonandrectum_cancer_number_of_male_deaths": {
       "scales": [
         "linear"
@@ -314,13 +307,6 @@
       "availability": [
         1950,
         2004
-      ]
-    },
-    "size": {
-      "sourceLink": "",
-      "use": "property",
-      "scales": [
-        "ordinal"
       ]
     },
     "pneumonia_deaths_in_newborn_total_deaths": {
@@ -1231,17 +1217,6 @@
       "availability": [
         1950,
         2002
-      ]
-    },
-    "life_expectancy": {
-      "sourceLink": "https://docs.google.com/spreadsheets/d/1H3nzTwbn8z4lJ5gJ_WfDgCeGEXK3PVGcNjQ_U5og8eo/pub?gid=1",
-      "use": "indicator",
-      "scales": [
-        "linear"
-      ],
-      "domain": [
-        10,
-        83
       ]
     },
     "mean_years_in_school_women_25_to_34_years": {
@@ -3186,14 +3161,6 @@
         2011
       ]
     },
-    "age": {
-      "sourceLink": "",
-      "use": "indicator",
-      "scales": [
-        "linear",
-        "log"
-      ]
-    },
     "suicide_age_15_29_per_100000_people": {
       "scales": [
         "linear"
@@ -3448,27 +3415,6 @@
         1948,
         2006
       ]
-    },
-    "gdp_p_cap_const_ppp2011_dollar": {
-      "sourceLink": "http://www.gapminder.org/news/data-sources-dont-panic-end-poverty",
-      "scales": [
-        "log",
-        "linear"
-      ],
-      "interpolation": "exp",
-      "domain": [
-        300,
-        140000
-      ],
-      "use": "indicator",
-      "color": {
-        "palette": {
-          "0": "#62CCE3",
-          "1": "#B4DE79",
-          "2": "#E1CE00",
-          "3": "#F77481"
-        }
-      }
     },
     "extreme_temperature___deaths_annual_number": {
       "scales": [
@@ -4226,18 +4172,6 @@
         2010
       ]
     },
-    "child_mortality_rate_per1000": {
-      "sourceLink": "http://www.gapminder.org/news/data-sources-dont-panic-end-poverty",
-      "use": "indicator",
-      "scales": [
-        "linear",
-        "log"
-      ],
-      "domain": [
-        0,
-        550
-      ]
-    },
     "broadband_subscribers_per_100_people": {
       "scales": [
         "linear"
@@ -4333,17 +4267,6 @@
       "availability": [
         1950,
         2050
-      ]
-    },
-    "fertility_rate": {
-      "sourceLink": "https://gapminder.org",
-      "use": "indicator",
-      "scales": [
-        "linear"
-      ],
-      "domain": [
-        0,
-        10
       ]
     },
     "improved_sanitation_rural_access_percent": {
@@ -7275,19 +7198,6 @@
         2008
       ]
     },
-    "gdp_const_ppp2011_dollar": {
-      "sourceLink": "https://gapminder.org",
-      "scales": [
-        "log",
-        "linear"
-      ],
-      "use": "indicator",
-      "interpolation": "exp",
-      "domain": [
-        1000000,
-        100000000000000
-      ]
-    },
     "total_number_of_dollar_billionaires": {
       "scales": [
         "linear"
@@ -8113,20 +8023,6 @@
           {
             "children": [
               {
-                "id": "gini"
-              }
-            ],
-            "id": "inequality"
-          },
-          {
-            "id": "gdp_p_cap_const_ppp2011_dollar"
-          },
-          {
-            "id": "gdp_const_ppp2011_dollar"
-          },
-          {
-            "children": [
-              {
                 "id": "aid_given_2007_us"
               },
               {
@@ -8368,15 +8264,6 @@
       },
       {
         "children": [
-          {
-            "id": "life_expectancy"
-          },
-          {
-            "id": "child_mortality_rate_per1000"
-          },
-          {
-            "id": "fertility_rate"
-          },
           {
             "children": [
               {
@@ -8949,9 +8836,6 @@
           }
         ],
         "id": "health"
-      },
-      {
-        "id": "population"
       },
       {
         "id": "_default"

@@ -12,7 +12,7 @@
             "which": "population_total" 
           },
           "axis_s": {
-            "which": "gini" 
+            "which": "inequality_index_gini" 
           }
         }
       },
