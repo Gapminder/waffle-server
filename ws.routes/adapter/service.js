@@ -33,7 +33,7 @@ module.exports = function (serviceLocator) {
   var mcPrecomputedShapes = require('../../csv_data_mapping_cli/fixtures/mc_precomputed_shapes.json');
   var world50m = require('../../csv_data_mapping_cli/fixtures/world-50m.json');
 
-  router.get('/api/vizabi/translation/:lang.json', cors(), compression(), u.getCacheConfig('translations'), cache.route(), getTranslations);
+  router.get('/api/vizabi/translation/:lang.json', cors(), compression(), /*u.getCacheConfig('translations'), cache.route(),*/ getTranslations);
 
   router.get('/api/vizabi/mc_precomputed_shapes.json', cors(), compression(), u.getCacheConfig('mc-precomputed-shapes'), cache.route(), function (req, res) {
     return res.json(mcPrecomputedShapes);
@@ -43,7 +43,7 @@ module.exports = function (serviceLocator) {
     return res.json(world50m);
   });
 
-  router.get('/api/vizabi/metadata.json', cors(), compression(), u.getCacheConfig('metadata'), cache.route(), getMetadata);
+  router.get('/api/vizabi/metadata.json', cors(), compression(), /*u.getCacheConfig('metadata'), cache.route(),*/ getMetadata);
 
   router.get('/api/vizabi/geo_properties.csv', compression(), u.getCacheConfig('geo-properties'), cache.route(), adoptGeoProperties);
 
