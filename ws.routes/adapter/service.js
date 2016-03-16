@@ -49,8 +49,7 @@ module.exports = function (serviceLocator) {
 
   router.get('/api/vizabi/geo_properties.csv', compression(), u.getCacheConfig('geo-properties'), cache.route(), adoptGeoProperties);
 
-  //TODO: uncomment caching as soon as this new-import-ddf-gapminder-world-#176 branch is stable
-  router.get('/api/vizabi/gapminder_tools/related_items/', cors(), compression(), /*u.getCacheConfig('related-items'), cache.route(),*/ getRelatedItems);
+  router.get('/api/vizabi/gapminder_tools/related_items/', cors(), compression(), u.getCacheConfig('related-items'), cache.route(), getRelatedItems);
 
   //TODO: uncomment caching as soon as this new-import-ddf-gapminder-world-#176 branch is stable
   router.get('/api/vizabi/gapminder_tools/menu_items/', cors(), compression(), /*u.getCacheConfig('menu-items'), cache.route(),*/ (req, res) => res.json(gapminderMenuItems));
