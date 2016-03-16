@@ -33,6 +33,7 @@ module.exports = function (serviceLocator) {
   var mcPrecomputedShapes = require('../../csv_data_mapping_cli/fixtures/mc_precomputed_shapes.json');
   var world50m = require('../../csv_data_mapping_cli/fixtures/world-50m.json');
 
+  //TODO: uncomment caching as soon as this new-import-ddf-gapminder-world-#176 branch is stable
   router.get('/api/vizabi/translation/:lang.json', cors(), compression(), /*u.getCacheConfig('translations'), cache.route(),*/ getTranslations);
 
   router.get('/api/vizabi/mc_precomputed_shapes.json', cors(), compression(), u.getCacheConfig('mc-precomputed-shapes'), cache.route(), function (req, res) {
@@ -43,13 +44,16 @@ module.exports = function (serviceLocator) {
     return res.json(world50m);
   });
 
+  //TODO: uncomment caching as soon as this new-import-ddf-gapminder-world-#176 branch is stable 
   router.get('/api/vizabi/metadata.json', cors(), compression(), /*u.getCacheConfig('metadata'), cache.route(),*/ getMetadata);
 
   router.get('/api/vizabi/geo_properties.csv', compression(), u.getCacheConfig('geo-properties'), cache.route(), adoptGeoProperties);
 
-  router.get('/api/vizabi/gapminder_tools/related_items/', cors(), compression(), u.getCacheConfig('related-items'), cache.route(), getRelatedItems);
+  //TODO: uncomment caching as soon as this new-import-ddf-gapminder-world-#176 branch is stable
+  router.get('/api/vizabi/gapminder_tools/related_items/', cors(), compression(), /*u.getCacheConfig('related-items'), cache.route(),*/ getRelatedItems);
 
-  router.get('/api/vizabi/gapminder_tools/menu_items/', cors(), compression(), u.getCacheConfig('menu-items'), cache.route(), (req, res) => res.json(gapminderMenuItems));
+  //TODO: uncomment caching as soon as this new-import-ddf-gapminder-world-#176 branch is stable
+  router.get('/api/vizabi/gapminder_tools/menu_items/', cors(), compression(), /*u.getCacheConfig('menu-items'), cache.route(),*/ (req, res) => res.json(gapminderMenuItems));
 
   return app.use(router);
 
