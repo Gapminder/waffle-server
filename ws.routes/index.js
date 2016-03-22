@@ -4,8 +4,10 @@ module.exports = function (serviceLocator) {
 
   require('./auth')(serviceLocator);
   require('./users')(serviceLocator);
+  require('./swagger-jsdoc')(serviceLocator);
 
   require('./file-management')(serviceLocator);
   require('./pipes')(serviceLocator);
   require('./graphs')(serviceLocator);
 };
+

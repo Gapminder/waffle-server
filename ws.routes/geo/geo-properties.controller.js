@@ -1,126 +1,118 @@
 'use strict';
-let _ = require('lodash');
-let async = require('async');
-let mongoose = require('mongoose');
 
-let Geo = mongoose.model('Geo');
+var express = require('express');
+var cache = require('express-redis-cache')();
+var compression = require('compression');
+var cors = require('cors');
 
-// TODO: fix mapping categories hardcode
-let mappingCategories = {
-  isRegion4: 'world_4region',
-  isGlobal: 'global',
-  isCountry: 'country',
-  isUnState: 'un_state'
+var u = require('../utils');
+var controller = require('./geo-properties.service');
+
+
+/**
+ * @swagger
+ * definition:
+ *  Geo:
+ *     type: object
+ *     properties:
+ *       geo:
+ *         type: string
+ *         description: Result will consist only from unique geo-props, filtered by geo values.
+ *       geo.name:
+ *         type: string
+ *         description: Result will consist only from name country or region
+ *       geo.cat:
+ *         type: string
+ *         description: May contain some or all of the given values - 'global,region,country,un_state,world_4region,geo'
+ *       geo.region:
+ *         type: string
+ *         description: May contain some or all of the given value - 'asia,americas,europe,africa'
+ *       geo.latitude:
+ *         type: string
+ *         description: Result will consist only from  coordinate (latitude) of the country
+ *       geo.longitude:
+ *         type: string
+ *         description: Result will consist only from coordinate (longitude) of the country
+ *
+ *  Error:
+ *    type: object
+ *    properties:
+ *      code:
+ *        type: integer
+ *        format: int32
+ *      message:
+ *        type: string
+ */
+
+module.exports = function (serviceLocator) {
+  var app = serviceLocator.getApplication();
+  /*eslint new-cap:0*/
+  var router = express.Router();
+
+  // lists
+  /**
+   * @swagger
+   * /api/geo:
+   *   get:
+   *    description: Geo-poroperties
+   *    produces:
+   *      - application/json
+   *      - text/csv
+   *    parameters:
+   *      - name: select
+   *        in: query
+   *        description: array of columns. (by default following columns are used ['geo', 'geo.name', 'geo.cat', 'geo.region'] Order of columns is important)
+   *        type: string
+   *      - name: where
+   *        in: query
+   *        description:  list of filters for dimensions
+   *        type: string
+   *      - name: gapfilling
+   *        in: query
+   *        description: list of methods for post processing of measures data (isn't supported yet)
+   *        type: string
+   *    tags:
+   *      - Geo
+   *    responses:
+   *      200:
+   *        description: An array of products
+   *        schema:
+   *         type: array
+   *         items:
+   *            $ref: '#/definitions/Geo'
+   *      304:
+   *        description: cache
+   *        schema:
+   *          type: array
+   *          items:
+   *            $ref: '#/definitions/Geo'
+   *      default:
+   *        description: Unexpected error
+   *        schema:
+   *          $ref: '#/definitions/Error'
+   *
+   *
+   */
+
+  router.get('/api/geo',
+    compression(), u.getCacheConfig('geo'), cors(), cache.route(),
+    u.decodeQuery, sendGeoResponse
+  );
+
+  router.get('/api/geo/:category',
+    compression(), u.getCacheConfig('geo-category'), cache.route(),
+    u.decodeQuery, sendGeoResponse
+  );
+
+  return app.use(router);
 };
 
-// TODO: hardcode mapping geo for ddf (fix it when we will have more formats)
-let geoMapping = require('./geo-mapping').ddf;
-let defaultSelect = ['geo','geo.name','geo.cat','geo.region'];
-
-module.exports = {
-  listGeoProperties: listGeoProperties,
-  projectGeoProperties: projectGeoProperties
-};
-
-function _isGeoCatFilter(where, category) {
-  return where && !_.isEmpty(where['geo.cat']) && _.includes(where['geo.cat'], category);
-}
-
-function _isCategoryFilter(where, category) {
-  return !_.isNil(where[category]) && category.match(/^geo\.is/);
-}
-function projectGeoProperties(_select, where, cb) {
-  let select = _.isEmpty(_select) ? defaultSelect : _select;
-  let selectedCategories = _.chain(geoMapping)
-    .reduce((result, queryKey, category) => {
-      // TODO hardcode for compatibility (remove _isGeoCatFilter when `geo.cat` will be depricated on Vizabi)
-      if (_isGeoCatFilter(where, category) || _isCategoryFilter(where, category)) {
-        let queryField = {};
-        queryField[queryKey] = true;
-        result.push(queryField);
-      }
-
-      return result;
-    }, [])
-    .uniqWith(_.isEqual)
-    .value();
-
-  let query = {};
-  if (where) {
-    if (!_.isEmpty(selectedCategories)) {
-      query = { $or: selectedCategories };
-    }
-    if (!_.isEmpty(where.geo)) {
-      query.gid = {$in: where.geo};
-    }
-    if (!_.isEmpty(where['geo.region'])) {
-      query.region4 = {$in: where['geo.region']};
-    }
-  }
-
-  let projection = _.reduce(select, (result, item) => {
-    // TODO hardcode for compatibility (remove when `geo.cat` will be depricated on Vizabi)
-    if (item === 'geo.cat') {
-      let defaultCategoryProjections = {isGlobal: 1, isRegion4: 1, isUnState: 1, isCountry: 1};
-      result = _.assign(result, defaultCategoryProjections);
-      return result;
-    }
-
-    let key = geoMapping[item] || item;
-    result[key] = 1;
-    return result;
-  }, {_id: 0});
-
-
-  this.listGeoProperties(query, projection, mapGeoData(select, cb));
-}
-
-// list of all geo properties
-function listGeoProperties(query, projection, cb) {
-  return Geo.find(query, projection)
-    .sort('gid')
-    .lean()
-    .exec(cb);
-}
-
-function mapGeoData(headers, cb) {
-  return (err, geoProps) => {
+function sendGeoResponse(req, res) {
+  controller.projectGeoProperties(req.decodedQuery.select, req.decodedQuery.where, function (err, result) {
     if (err) {
-      console.error(err);
+      return res.json({success: !err, error: err});
     }
 
-    let rows = _.map(geoProps, function (prop) {
-      return _.map(headers, header => {
-        let key = geoMapping[header];
-
-        // TODO hardcode for compatibility (remove when `geo.cat` will be depricated on Vizabi)
-        if (header === 'geo.cat') {
-          switch (true) {
-            case prop.isGlobal:
-              return mappingCategories.isGlobal;
-              break;
-            case prop.isRegion4:
-              return mappingCategories.isRegion4;
-              break;
-            case prop.isUnState:
-              return mappingCategories.isUnState;
-              break;
-            case prop.isCountry:
-            default:
-              return mappingCategories.isCountry;
-              break;
-          }
-        }
-
-        return prop[key] || null;
-      });
-    });
-
-    var data = {
-      headers: headers,
-      rows: rows
-    };
-
-    return cb(null, data);
-  }
+    return res.json(result);
+  });
 }

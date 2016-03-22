@@ -15,4 +15,4 @@ GOOGLE_CLIENT_ID= \
 GOOGLE_CLIENT_SECRET= \
 MONGODB_URL= \
 NEO4J_URL= \
-forever start --logFile forever.log --outFile logs/out.log --errFile logs/err.log -a -p logs --minUptime 1000 --spinSleepTime 1000000 ./server.js
+npm start

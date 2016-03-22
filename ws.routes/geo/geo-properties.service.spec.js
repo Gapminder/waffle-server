@@ -3,7 +3,7 @@
 const mongoose = require('mongoose');
 require('../../ws.repository/geo.model');
 
-const geoController = require('./geo-properties.controller');
+const geoController = require('./geo-properties.service');
 
 const sinon = require('sinon');
 const assert = require('assert');

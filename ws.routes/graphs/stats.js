@@ -6,7 +6,7 @@ var async = require('async');
 var express = require('express');
 var mongoose = require('mongoose');
 var compression = require('compression');
-var GeoPropCtrl = require('../geo/geo-properties.controller');
+var GeoPropCtrl = require('../geo/geo-properties.service');
 var md5 = require('md5');
 
 var decodeQuery = require('../utils').decodeQuery;
@@ -25,6 +25,75 @@ module.exports = function (serviceLocator) {
 
   /*eslint new-cap:0*/
   var router = express.Router();
+
+  /**
+   * @swagger
+   * definition:
+   *  Graph:
+   *     type: object
+   *     properties:
+   *       geo-props:
+   *         type: string
+   *         description: Result will consist only from unique geo-props, filtered by geo values. Example query `?select=geo.latitude,geo.name,geo&geo.cat=country,region`
+   *       geo-time:
+   *         type: string
+   *         description:  Result will consist only from unique geo-time, filtered by time values. Example query `?select=geo,time`
+   *       geo-time-measure:
+   *         type: string
+   *         description:  Example query `?select=geo,time,population,gini`
+   *       geo-time-measure (filter by geo):
+   *         type: string
+   *         description: Example query `?select=geo,time,population,gini&geo=chn`
+   *       geo-time-measure (filter time):
+   *         type: string
+   *         description: Example query `?select=geo,time,population,gini&time=1800`, `?select=geo,time,population,gini&time=2000:2010`
+   *
+   */
+
+  /**
+   * @swagger
+   * /api/graphs/stats/vizabi-tools:
+   *   get:
+   *    description: For getting geo-props, geo-time, geo-time-measure
+   *    produces:
+   *      - application/json
+   *      - text/csv
+   *    parameters:
+   *      - name: select
+   *        in: query
+   *        description: array of columns.
+   *        type: string
+   *      - name: where
+   *        in: query
+   *        description:  list of filters
+   *        type: string
+   *      - name: gapfilling
+   *        in: query
+   *        description: list of methods for post processing of measures data (isn't supported yet)
+   *        type: string
+   *    tags:
+   *      - Graph
+   *    responses:
+   *      200:
+   *        description: An array of products
+   *        schema:
+   *         type: array
+   *         items:
+   *            $ref: '#/definitions/Graph'
+   *      304:
+   *        description: cache
+   *        schema:
+   *          type: array
+   *          items:
+   *            $ref: '#/definitions/Graph'
+   *      default:
+   *        description: Unexpected error
+   *        schema:
+   *          $ref: '#/definitions/Error'
+   *
+   *
+   */
+
 
   router.get('/api/graphs/stats/vizabi-tools',
     getCacheConfig(),
