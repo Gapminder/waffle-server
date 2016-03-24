@@ -42,11 +42,6 @@ let config;
 let pathToDdfFolder;
 let resolvePath;
 let ddfConceptsFile;
-let ddfEntityDomainsValuesLatLng = [
-  {gid: 'country', subdimOf: 'geo'},
-  {gid: 'global', subdimOf: 'geo'},
-  {gid: 'geographic_regions_in_4_colors', subdimOf: 'geo'}
-];
 
 let dimensionsGids = [
   'geographic_regions', 'income_groups', 'landlocked',
@@ -71,7 +66,6 @@ module.exports = function (app, done) {
     createEntityDomainsValues(v=>v.subdimOf ? `ddf--entities--${v.subdimOf}--${v.gid}.csv` : `ddf--list--${v.gid}.csv`),
     createMeasures(ddfConceptsFile),
     createDataPoints(),
-    updateEntityDomainsValuesLatLng(v=> `ddf--list--${v.gid}.csv`),
     createGeoProperties()
   ], (err) => {
     console.timeEnd('done');
@@ -127,48 +121,13 @@ function createEntityDomainsValues(ddf_dimension_values_pattern) {
 }
 
 // hardcode for consistency between ddf v0.2 and ddf v1
-function updateEntityDomainsValuesLatLng(ddf_dimension_values_pattern) {
-  logger.info('update dimension values (lat/lng)');
-  return pipeWaterfall([
-    (pipe, cb) => cb(null, ddfEntityDomainsValuesLatLng),
-    pipeMapSync(dim=>Object.assign(dim, {file: ddf_dimension_values_pattern(dim)})),
-    pipeEachLimit((dim, cb)=>readCsvFile(dim.file)({}, function (err, jsonArr) {
-      if (err) {
-        console.warn(`dimensions file not found: ${err.message}`);
-        return cb();
-      }
-      async.eachLimit(jsonArr, 10, (row, ecb) => {
-        DimensionValues.findOne({value: row.geo}, (errD, dv)=> {
-          if (errD) {
-            return ecb(errD);
-          }
-
-          let model = dv;
-          if (!model) {
-            model = new DimensionValues(mapDdfEntityValuesToWsModel(dim, row));
-            return model.save(ecb);
-          }
-
-          model.markModified('properties');
-          model.properties = model.properties || {};
-          model.properties.latitude = row.latitude || null;
-          model.properties.longitude = row.longitude || null;
-          model.properties.color = row.color || null;
-          return model.save(ecb);
-        });
-      }, cb);
-    }))
-  ]);
-}
-
-// hardcode for consistency between ddf v0.2 and ddf v1
 function createGeoProperties() {
   logger.info('create geo properties');
   return (pipe, cbw) => {
     return DimensionValues.find({dimensionGid:{ $in: dimensionsGids }}, (errD, dvs)=> {
       return async.eachLimit(dvs, 10, (dv, ecb) => {
         let model = mapDdfDimensionsToGeoWsModel(dv);
-        return Geo.findOneAndUpdate({gid: model.gid}, model, {upsert: true}, ecb);
+        return Geo.findOneAndUpdate({gid: model.gid}, {$set: model}, {upsert: true}, ecb);
       }, cbw);
     });
   };
@@ -483,7 +442,7 @@ function mapDdfDimensionsToGeoWsModel(entry) {
 
     latitude: entry.value === 'world' ? 0 : entry.properties.latitude,
     longitude: entry.value === 'world' ? 0 : entry.properties.longitude,
-    region4: entry.properties.geographic_regions_in_4_colors,
+    region4: entry.properties.world_4region,
     color: entry.properties.color,
 
     isGlobal: entry.value === 'world',
