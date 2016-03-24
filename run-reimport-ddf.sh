@@ -1,7 +1,6 @@
 #NODE_ENV=development \
 #LOG_LEVEL=debug \
 #LOG_TRANSPORTS=console,file \
-PATH_TO_DDF_FOLDER=~/Projects/open-numbers/ddf--gapminder_world_semio/output/ddf \
 MONGODB_URL=mongodb://@localhost:27017/ws_test \
 NEO4J_URL=http://neo4j:neo4j@localhost:7474 \
 DATA_VERSION=ddf-world \
