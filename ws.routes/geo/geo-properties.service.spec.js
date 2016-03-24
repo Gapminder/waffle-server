@@ -129,6 +129,32 @@ describe('Geo properties controller', () => {
         checkResult(expectedQuery, expectedProjection, expectedWsJson, select);
       });
     });
+
+    context('when comes select with new ddf properties `geo.geographic_regions_in_4_colors, geo.g77_and_oecd_countries, geo.geographic_regions, geo.income_groups, geo.landlocked, geo.main_religion_2008` in query', () => {
+      it('should return object with headers in expected random order `geographic_regions_in_4_colors, g77_and_oecd_countries, geographic_regions, income_groups, landlocked, main_religion_2008`', () => {
+        let expectedProjection = {
+          _id: 0,
+          'geographic_regions_in_4_colors': 1,
+          'g77_and_oecd_countries': 1,
+          'geographic_regions': 1,
+          'income_groups': 1,
+          'landlocked': 1,
+          'main_religion_2008': 1
+        };
+        let select = [
+          'geographic_regions_in_4_colors', 'geo.g77_and_oecd_countries',
+          'geo.geographic_regions', 'geo.income_groups', 'geo.landlocked',
+          'geo.main_religion_2008'
+        ];
+        let expectedQuery = {};
+        let expectedWsJson = {
+          headers: select,
+          rows: defaultRows
+        };
+
+        checkResult(expectedQuery, expectedProjection, expectedWsJson, select);
+      });
+    });
   });
 
   describe('#where', () => {
@@ -166,6 +192,21 @@ describe('Geo properties controller', () => {
         let expectedQuery = {
           region4: {
             $in: where['geo.region']
+          }
+        };
+
+        checkResult(expectedQuery, expectedProjection, expectedWsJson, defaultSelect, where);
+      });
+    });
+
+    context('when comes geo.income_groups with list of values in query', () => {
+      it('should apply all received regions to db query', () => {
+        let where = _.assign({
+          'geo.income_groups': ['low_income', 'upper_middle_income', 'NaN', '']
+        }, defaultWhere);
+        let expectedQuery = {
+          income_groups: {
+            $in: where['geo.income_groups']
           }
         };
 
@@ -416,12 +457,14 @@ describe('Geo properties controller', () => {
         let where = {
           'geo.cat': ['world_4region'],
           'geo.region': ['americas', 'africa'],
+          'geo.geographic_regions': ['america', 'middle_east_north_africa'],
           'geo': ['dza', 'usa', 'chn', 'ago', 'cmr']
         };
         let expectedQuery = {
           $or: [{ isRegion4: true }],
           gid: { $in: where.geo },
-          region4: { $in: where['geo.region'] }
+          region4: { $in: where['geo.region'] },
+          geographic_regions: { $in: where['geo.geographic_regions'] }
         };
 
         checkResult(expectedQuery, expectedProjection, expectedWsJson, select, where);
@@ -433,12 +476,14 @@ describe('Geo properties controller', () => {
         let where = {
           'geo.is--world_4region': '',
           'geo.region': ['americas', 'africa'],
+          'geo.geographic_regions_in_4_colors': ['americas', 'africa'],
           'geo': ['dza', 'usa', 'chn', 'ago', 'cmr']
         };
         let expectedQuery = {
           $or: [{ isRegion4: true }],
           gid: { $in: where.geo },
-          region4: { $in: where['geo.region'] }
+          region4: { $in: where['geo.region'] },
+          geographic_regions_in_4_colors: { $in: where['geo.geographic_regions_in_4_colors'] }
         };
 
         checkResult(expectedQuery, expectedProjection, expectedWsJson, select, where);
@@ -450,12 +495,14 @@ describe('Geo properties controller', () => {
         let where = {
           'geo.isRegion4': '',
           'geo.region': ['americas', 'africa'],
+          'geo.main_religion_2008': ['muslim', 'eastern_religions'],
           'geo': ['dza', 'usa', 'chn', 'ago', 'cmr']
         };
         let expectedQuery = {
           $or: [{ isRegion4: true }],
           gid: { $in: where.geo },
-          region4: { $in: where['geo.region'] }
+          region4: { $in: where['geo.region'] },
+          main_religion_2008: { $in: where['geo.main_religion_2008'] }
         };
 
         checkResult(expectedQuery, expectedProjection, expectedWsJson, select, where);

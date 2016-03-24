@@ -420,8 +420,9 @@ function mapDdfEntityValuesToWsModel(dim, entry) {
   }
   let value = entry[key] && geoMapping[entry[key]] || geoMapping[entry.geo] || entry[key];
   entry.latitude = entry.latitude || null;
-  entry.longitude = entry.latitude || null;
-  entry.color = entry.latitude || null;
+  entry.longitude = entry.longitude || null;
+  entry.color = entry.color || null;
+
   return {
     parentGid: entry.world_4region || entry.geographic_regions_in_4_colors || 'world',
     dimensionGid: dim.gid,
@@ -433,6 +434,40 @@ function mapDdfEntityValuesToWsModel(dim, entry) {
 }
 
 function mapDdfDimensionsToGeoWsModel(entry) {
+  if (!entry.properties) {
+    console.error('Empty `properties` in dimension value entity: ', entry);
+  }
+
+  let latitude = entry.latitude || null;
+  let longitude = entry.longitude || null;
+  let region4 = entry.world_4region || null;
+  let color = entry.color || null;
+  let isRegion4 = entry['is--geographic_regions_in_4_colors'] || null;
+  let isCountry = entry['is--country'] || null;
+  let isUnState = entry['is--un_state'] || null;
+  let geographicRegionsIn4Colors = entry.geographic_regions_in_4_colors || null;
+  let g77AndOecdCountries = entry.g77_and_oecd_countries || null;
+  let geographicRegions = entry.geographic_regions || null;
+  let incomeGroups = entry.income_groups || null;
+  let landlocked = entry.landlocked || null;
+  let mainReligion2008 = entry.main_religion_2008 || null;
+
+  if (entry.properties) {
+    latitude = latitude || entry.properties.latitude || null;
+    longitude = longitude || entry.properties.longitude || null;
+    region4 = region4 || entry.properties.world_4region || null;
+    color = color || entry.properties.color || null;
+    isRegion4 = isRegion4 || entry.properties['is--geographic_regions_in_4_colors'] || null;
+    isCountry = isCountry || entry.properties['is--country'] || null;
+    isUnState = isUnState || entry.properties['is--un_state'] || null;
+    geographicRegionsIn4Colors = geographicRegionsIn4Colors || entry.properties.geographic_regions_in_4_colors || null;
+    g77AndOecdCountries = g77AndOecdCountries || entry.properties.g77_and_oecd_countries || null;
+    geographicRegions = geographicRegions || entry.properties.geographic_regions || null;
+    incomeGroups = incomeGroups || entry.properties.income_groups || null;
+    landlocked = landlocked || entry.properties.landlocked || null;
+    mainReligion2008 = mainReligion2008 || entry.properties.main_religion_2008 || null;
+  }
+
   return {
     gid: entry.value,
     name: entry.title,
@@ -440,21 +475,21 @@ function mapDdfDimensionsToGeoWsModel(entry) {
     nameShort: entry.title,
     nameLong: entry.title,
 
-    latitude: entry.value === 'world' ? 0 : entry.properties.latitude,
-    longitude: entry.value === 'world' ? 0 : entry.properties.longitude,
-    region4: entry.properties.world_4region,
-    color: entry.properties.color,
+    latitude: entry.value === 'world' ? 0 : latitude,
+    longitude: entry.value === 'world' ? 0 : longitude,
+    region4: region4,
+    color: color,
 
     isGlobal: entry.value === 'world',
-    isRegion4: entry.properties['is--geographic_regions_in_4_colors'],
-    isCountry: entry.properties['is--country'],
-    isUnState: entry['is--un_state'],
-    geographic_regions_in_4_colors: entry.properties.geographic_regions_in_4_colors,
-    g77_and_oecd_countries: entry.properties.g77_and_oecd_countries,
-    geographic_regions: entry.properties.geographic_regions,
-    income_groups: entry.properties.income_groups,
-    landlocked: entry.properties.landlocked,
-    main_religion_2008: entry.properties.main_religion_2008
+    isRegion4: isRegion4,
+    isCountry: isCountry,
+    isUnState: isUnState,
+    geographic_regions_in_4_colors: geographicRegionsIn4Colors,
+    g77_and_oecd_countries: g77AndOecdCountries,
+    geographic_regions: geographicRegions,
+    income_groups: incomeGroups,
+    landlocked: landlocked,
+    main_religion_2008: mainReligion2008
   };
 }
 

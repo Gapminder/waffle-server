@@ -199,8 +199,8 @@ describe('WS Stats endpoint', () => {
 
         expect(res.body.rows[0][0]).to.be.a('string');
         expect(res.body.rows[0][1]).to.be.a('number');
-        expect(res.body.rows[0][2]).to.be.a('number');
-        expect(res.body.rows[0][3]).to.be.a('number');
+        expect(res.body.rows[0][2]).to.satisfy(isNumberOrNull);
+        expect(res.body.rows[0][3]).to.satisfy(isNumberOrNull);
 
         const uniqCountryValues =_.chain(res.body.rows)
           .map('0')
@@ -228,8 +228,8 @@ describe('WS Stats endpoint', () => {
 
         expect(res.body.rows[0][0]).to.be.a('string');
         expect(res.body.rows[0][1]).to.be.a('number');
-        expect(res.body.rows[0][2]).to.be.a('number');
-        expect(res.body.rows[0][3]).to.be.a('number');
+        expect(res.body.rows[0][2]).to.satisfy(isNumberOrNull);
+        expect(res.body.rows[0][3]).to.satisfy(isNumberOrNull);
 
         const uniqTimeValues =_.chain(res.body.rows)
           .map('1')
@@ -291,26 +291,26 @@ describe('WS Stats endpoint', () => {
         const uniqTimeValues =_.chain(res.body.rows).map('1').uniq().sort().value();
         const expectedYears = [1800, 2000, 2001, 2002, 2003, 2004, 2005, 2015];
 
-        expect(uniqTimeValues).to.have.length(8);
-        expect(uniqTimeValues).to.deep.equal(expectedYears);
+        expect(uniqTimeValues).to.have.length.below(expectedYears.length + 1);
+        expect(_.pullAll(uniqTimeValues, expectedYears)).to.be.empty;
 
         const uniqGeoValues =_.chain(res.body.rows).map('0').uniq().sort().value();
         const expectedGeos = ["africa", "usa"];
 
-        expect(uniqGeoValues).to.have.length(2);
-        expect(uniqGeoValues).to.deep.equal(expectedGeos);
+        expect(uniqGeoValues).to.have.length.below(expectedGeos.length + 1);
+        expect(_.pullAll(uniqGeoValues,expectedGeos)).to.be.empty;
 
         done();
       })
   });
 
-  it('should respond to "geo,time,population,gini" select, given "geo.cat=global,world_4region"', (done) => {
-    api.get('/api/graphs/stats/vizabi-tools?select=geo,time,population,gini&geo.cat=global,world_4region')
+  it('should respond to "geo,time,sg_population,sg_gini" select, given "geo.cat=global,world_4region"', (done) => {
+    api.get('/api/graphs/stats/vizabi-tools?select=geo,time,sg_population,sg_gini&geo.cat=global,world_4region')
       .set('Accept', 'application/json')
       .expect(200)
       .end((err, res) => {
         expect(res.body).to.have.property('headers');
-        expect(res.body.headers).to.deep.equal(['geo', 'time', 'population', 'gini']);
+        expect(res.body.headers).to.deep.equal(['geo', 'time', 'sg_population', 'sg_gini']);
 
         expect(res.body).to.have.property('rows');
         expect(res.body.rows).to.be.not.empty;
@@ -329,8 +329,8 @@ describe('WS Stats endpoint', () => {
 
         const uniqGeoValues =_.chain(res.body.rows).map('0').uniq().sort().value();
         const expectedGeos = ["africa", "americas", "asia", "europe", "world"];
-        expect(uniqGeoValues).to.have.length(5);
-        expect(uniqGeoValues).to.deep.equal(expectedGeos);
+        expect(uniqGeoValues).to.have.length.below(expectedGeos.length + 1);
+        expect(_.pullAll(uniqGeoValues, expectedGeos)).to.be.empty;
 
         done();
       })
