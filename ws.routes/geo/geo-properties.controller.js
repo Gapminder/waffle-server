@@ -1,7 +1,6 @@
 'use strict';
 
 var express = require('express');
-var cache = require('express-redis-cache')();
 var compression = require('compression');
 var cors = require('cors');
 
@@ -49,6 +48,8 @@ module.exports = function (serviceLocator) {
   /*eslint new-cap:0*/
   var router = express.Router();
 
+  const cache = require('../../ws.utils/redis-cache')(app.get('config'));
+  
   // lists
   /**
    * @swagger

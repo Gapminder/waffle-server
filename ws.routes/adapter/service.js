@@ -14,7 +14,6 @@ var Translations = mongoose.model('Translations');
 var IndexTree = mongoose.model('IndexTree');
 var IndexDb = mongoose.model('IndexDb');
 
-var cache = require('express-redis-cache')();
 var compression = require('compression');
 
 var u = require('../utils');
@@ -27,6 +26,7 @@ module.exports = function (serviceLocator) {
   /*eslint new-cap:0*/
   var router = express.Router();
   var config = app.get('config');
+  const cache = require('../../ws.utils/redis-cache')(config);
 
   var metadataFile = require('../../csv_data_mapping_cli/vizabi/metadata.json');
 
