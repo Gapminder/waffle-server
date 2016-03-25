@@ -8,8 +8,8 @@ const DEFAULT_CONFIG = require('./environment.config');
 
 module.exports = function (app) {
   const REQUIRED_ENVIRONMENT_VARIABLES = Object.freeze([
-    // 'SESSION_SECRET',
-    // 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET',
+    'SESSION_SECRET',
+    'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET',
     // 'AWS_SECRET_ACCESS_KEY', 'AWS_ACCESS_KEY_ID', 'S3_BUCKET',
     'MONGODB_URL', 'NEO4J_URL'
   ]);
@@ -29,7 +29,7 @@ module.exports = function (app) {
 
     MONGODB_URL: process.env.MONGODB_URL || DEFAULT_CONFIG.MONGODB_URL,
     NEO4J_URL: process.env.NEO4J_URL || DEFAULT_CONFIG.NEO4J_URL,
-    
+
     REDIS_HOST: process.env.REDIS_HOST || DEFAULT_CONFIG.REDIS_HOST,
     REDIS_PORT: process.env.REDIS_PORT || DEFAULT_CONFIG.REDIS_PORT,
 
