@@ -26,7 +26,6 @@ var DimensionValues = new Schema({
 DimensionValues.index({dimension: 1, value: 1});
 DimensionValues.index({parentGid: 1, value: 1});
 DimensionValues.index({dimensionGid: 1, value: 1});
-DimensionValues.index({dimensionGid: 1});
 DimensionValues.index({value: 1});
 DimensionValues.index({title: 1});
 
