@@ -91,7 +91,7 @@ describe('Import ddf', () => {
     });
   });
 
-  context('#geo collection', () => {
+  xcontext('#geo collection', () => {
     let _mappingSourceValuesFn = (value) => {
       switch (value) {
         case 'TRUE':
@@ -153,7 +153,7 @@ describe('Import ddf', () => {
 
   });
 
-  context('#dimensions collection', () => {
+  xcontext('#dimensions collection', () => {
     let _mappingSourceValuesFn = (value, key) => {
       switch (true) {
         case (key === 'default_entities'):
