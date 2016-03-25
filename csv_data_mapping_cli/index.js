@@ -1,3 +1,5 @@
+'use strict';
+
 const appStub = {
   get: function (moduleName) {
     return this[moduleName];
@@ -8,10 +10,9 @@ const appStub = {
 };
 const config = require('../ws.config/config')(appStub);
 const logger = require('../ws.config/log')(appStub);
+require('../ws.config/db.config')(appStub);
 
 var mongoose = require('mongoose');
-mongoose.set('debug', config.MONGOOSE_DEBUG);
-mongoose.connect(config.MONGODB_URL);
 
 // import models
 require('../ws.repository/geo.model');
@@ -23,11 +24,21 @@ require('../ws.repository/indicator-values/indicator-values.model');
 require('../ws.repository/indexTree.model');
 require('../ws.repository/indexDb.model');
 
-require('./import')(appStub, (err) => {
+const mappingImporters = {
+  'ddf-world': 'import-ddf1',
+  'ddf-open-numbers': 'import',
+  'metadata': 'import-metadata',
+  'export-neo4j': '../ws.routes/graphs/export.service'
+};
+const defaultImporter = 'ddf-world';
+let selectedImporter = mappingImporters[process.env.DATA_VERSION] || mappingImporters[defaultImporter];
+
+require('./' + selectedImporter)(appStub, (err) => {
   if (err) {
     logger.error(err);
   }
 
   mongoose.disconnect();
+
   process.exit(0);
 });

@@ -30,8 +30,8 @@ var Dimensions = new Schema({
 
   // 1 - easy, 2 - average, 3 - complex
   usability: Number,
-  type: {type: String, 'enum': ['dimension', 'subdim'], required: true},
-  // parent dimension gid, only if type === subdim
+  type: {type: String, 'enum': ['entity_domain', 'entity_set', 'time'], required: true},
+  tooltip: String,
   subdimOf: String,
 
   totalEntity: String,
@@ -59,4 +59,5 @@ var Dimensions = new Schema({
   catalogVersions: [{type: Schema.Types.ObjectId, ref: 'PublisherCatalogVersions'}]
 });
 
+Dimensions.index({gid: 1});
 module.exports = mongoose.model('Dimensions', Dimensions);

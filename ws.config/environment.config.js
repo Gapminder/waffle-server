@@ -42,10 +42,14 @@ module.exports = Object.freeze({
   LOG_TRANSPORTS: DEFAULT_LOG_TRANSPORTS[NODE_ENV] || DEFAULT_LOG_TRANSPORTS[DEFAULT_NODE_ENV],
   LOG_TABS: '\t\t\t',
 
+  REDIS_HOST: 'localhost',
+  REDIS_PORT: 6379,
+  
   NODE_ENV: NODE_ENV,
   SESSION_TIMEOUT: 60000,
 
   MONGOOSE_DEBUG: false,
+  CLEAR_MONGO_DB_COLLECTIONS: false,
 
-  PATH_TO_DDF_FOLDER: '../open-numbers/ddf--gapminder--systema_globalis'
+  PATH_TO_DDF_FOLDER: '../open-numbers/ddf--gapminder_world/output'
 });

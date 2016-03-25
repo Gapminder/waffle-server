@@ -29,6 +29,7 @@ function _isGeoCatFilter(where, category) {
 function _isCategoryFilter(where, category) {
   return !_.isNil(where[category]) && category.match(/^geo\.is/);
 }
+
 function projectGeoProperties(_select, where, cb) {
   let select = _.isEmpty(_select) ? defaultSelect : _select;
   let selectedCategories = _.chain(geoMapping)
@@ -50,12 +51,13 @@ function projectGeoProperties(_select, where, cb) {
     if (!_.isEmpty(selectedCategories)) {
       query = { $or: selectedCategories };
     }
-    if (!_.isEmpty(where.geo)) {
-      query.gid = {$in: where.geo};
-    }
-    if (!_.isEmpty(where['geo.region'])) {
-      query.region4 = {$in: where['geo.region']};
-    }
+    query = _.reduce(geoMapping, (result, item, key) => {
+      if (!_.isEmpty(where[key])) {
+        query[item] = {$in: where[key]};
+      }
+
+      return result;
+    }, query);
   }
 
   let projection = _.reduce(select, (result, item) => {
@@ -85,6 +87,7 @@ function listGeoProperties(query, projection, cb) {
 
 function mapGeoData(headers, cb) {
   return (err, geoProps) => {
+
     if (err) {
       console.error(err);
     }

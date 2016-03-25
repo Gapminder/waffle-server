@@ -12,6 +12,9 @@ module.exports = function (app) {
     handleExceptions: true,
     timestamp: true,
     colorize: true,
+    // prettyPrint: true,
+    humanReadableUnhandledException: true,
+    showLevel: true,
     json: false
   });
 

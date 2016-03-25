@@ -18,8 +18,12 @@ var Schema = mongoose.Schema;
 
  */
 var Indicators = new Schema({
-  nodeId: {type: Number, index: true},
+  nodeId: {type: Number, index: true, sparse: true},
   gid: {type: String, match: /^[a-z0-9_]*$/, index: true, unique: true, required: true},
+  tooltip: String,
+  link: String,
+  properties: {},
+
   title: String,
 
   name: String,
@@ -57,4 +61,5 @@ var Indicators = new Schema({
   catalogVersions: [{type: Schema.Types.ObjectId, ref: 'PublisherCatalogVersions'}]
 });
 
+Indicators.index({gid: 1});
 module.exports = mongoose.model('Indicators', Indicators);

@@ -3,7 +3,7 @@ var Schema = mongoose.Schema;
 
 var Geo = new Schema({
   // description
-  gid: {type: String, match: /^[a-z0-9_]*$/, index: true, unique: true, required: true},
+  gid: {type: String, match: /^[a-z0-9_\-]*$/, index: true, unique: true, required: true},
   name: String,
   nameShort: String,
   nameLong: String,
@@ -26,7 +26,13 @@ var Geo = new Schema({
   isGlobal: {type: Boolean, default: false},
   isRegion4: {type: Boolean, default: false},
   isCountry: {type: Boolean, default: false},
-  isUnState: {type: Boolean, default: false}
+  isUnState: {type: Boolean, default: false},
+  geographic_regions_in_4_colors: String,
+  g77_and_oecd_countries: String,
+  geographic_regions: String,
+  income_groups: String,
+  landlocked: String,
+  main_religion_2008: String
 });
 
 module.exports = mongoose.model('Geo', Geo);

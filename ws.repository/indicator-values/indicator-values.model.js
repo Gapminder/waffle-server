@@ -31,6 +31,7 @@ var IndicatorValues = new Schema({
   indicatorName: String
 });
 
+IndicatorValues.index({value: 1, 'coordinates.dimensionName': 1, 'coordinates.value': 1});
 IndicatorValues.index({indicator: 1, value: 1});
 IndicatorValues.index({indicator: 1, 'coordinates.dimension': 1, 'coordinates.value': 1});
 IndicatorValues.index({indicatorName: 1, 'coordinates.dimensionName': 1, 'coordinates.value': 1});

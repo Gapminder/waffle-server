@@ -1,6 +1,5 @@
 'use strict';
 var _ = require('lodash');
-var cache = require('express-redis-cache')();
 var cors = require('cors');
 var async = require('async');
 var express = require('express');
@@ -22,6 +21,7 @@ module.exports = function (serviceLocator) {
   var neo4jdb = app.get('neo4jDb');
   var logger = app.get('log');
   var config = app.get('config');
+  const cache = require('../../ws.utils/redis-cache')(config);
 
   /*eslint new-cap:0*/
   var router = express.Router();

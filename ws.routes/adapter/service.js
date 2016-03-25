@@ -2,8 +2,6 @@ var express = require('express');
 var _ = require('lodash');
 var json2csv = require('json2csv');
 var cors = require('cors');
-
-
 var async = require('async');
 
 var geoController = require('../geo/geo-properties.service');
@@ -14,25 +12,19 @@ var Translations = mongoose.model('Translations');
 var IndexTree = mongoose.model('IndexTree');
 var IndexDb = mongoose.model('IndexDb');
 
-var cache = require('express-redis-cache')();
 var compression = require('compression');
 
 var u = require('../utils');
-
-var gapminderRelatedItems = require('./static-data/gapminder-related-items.json');
-var gapminderMenuItems = require('./static-data/gapminder-menu-items.json');
 
 module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
   /*eslint new-cap:0*/
   var router = express.Router();
   var config = app.get('config');
-
-  var metadataFile = require('../../csv_data_mapping_cli/vizabi/metadata.json');
+  const cache = require('../../ws.utils/redis-cache')(config);
 
   var mcPrecomputedShapes = require('../../csv_data_mapping_cli/fixtures/mc_precomputed_shapes.json');
   var world50m = require('../../csv_data_mapping_cli/fixtures/world-50m.json');
-
 
   /**
    * @swagger
@@ -160,10 +152,6 @@ module.exports = function (serviceLocator) {
    */
   router.get('/api/vizabi/geo_properties.csv', cors(), compression(), u.getCacheConfig('geo-properties'), cache.route(), adoptGeoProperties);
 
-  router.get('/api/vizabi/gapminder_tools/related_items/', cors(), compression(), u.getCacheConfig('related-items'), cache.route(), getRelatedItems);
-
-  router.get('/api/vizabi/gapminder_tools/menu_items/', cors(), compression(), u.getCacheConfig('menu-items'), cache.route(), (req, res) => res.json(gapminderMenuItems));
-
   return app.use(router);
 
   function getTranslations(req, res) {
@@ -204,31 +192,9 @@ module.exports = function (serviceLocator) {
 
   function getMetadata(req, res) {
     async.parallel({
-      color: function getColors(cb) {
-        return cb(null, metadataFile.color);
-      },
       indicatorsDB: getIndicatorsDB,
       indicatorsTree: function getIndicatorsTree(cb) {
         IndexTree.findOne({}, {_id: 0, __v: 0}).lean().exec(cb);
-      },
-      entities: (cb) => {
-        return Geo.find({}, {_id: 0, gid: 1, name: 1})
-          .sort('gid')
-          .lean()
-          .exec((err, geoProps) => {
-            if (err) {
-              return cb(err);
-            }
-
-            var result = _.map(geoProps, prop => {
-              return {
-                geo: prop.gid,
-                name: prop.name
-              };
-            });
-
-            return cb(null, result);
-          });
       }
     }, function (err, metadata) {
       if (err) {
@@ -255,12 +221,5 @@ module.exports = function (serviceLocator) {
     ], function (err, indexDb) {
       return done(err, indexDb);
     });
-  }
-
-  function getRelatedItems (req, res) {
-    _.forEach(gapminderRelatedItems, item => {
-      item.opts.data.path = `${config.HOST_URL}:${config.PORT}${item.opts.data.path}`;
-    });
-    return res.json(gapminderRelatedItems);
   }
 };

@@ -8,7 +8,7 @@
     "doc": "gulp swagger",
     "dev": "NODE_ENV=development npm run start & webpack-dev-server --inline --hot --progress --color",
     "prestart": "gulp swagger",
-    "start": "forever start --logFile forever.log --outFile logs/out.log --errFile logs/err.log -a -p logs --minUptime 1000 --spinSleepTime 1000000 server.js",
+    "start": "forever stopall && gulp swagger && forever start --logFile forever.log --outFile logs/out.log --errFile logs/err.log -a -p logs --minUptime 1000 --spinSleepTime 1000000 server.js",
     "deploy": "NODE_ENV=production webpack -p --progress --color --optimize-minimize --optimize-dedupe --optimize-occurence-order"
   },
   "dependencies": {
