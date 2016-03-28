@@ -1,3 +1,31 @@
+<a name="0.3.0"></a>
+# [0.3.0](https://github.com/valor-software/waffle-server/compare/v0.2.1...v0.3.0) (2016-03-28)
+
+
+### Bug Fixes
+
+* **config-env:** add config for default inner port in server.js process ([0419fda](https://github.com/valor-software/waffle-server/commit/0419fda))
+* **config-env:** update config for default ports for each environment local|dev|stage|prod ([3b941f9](https://github.com/valor-software/waffle-server/commit/3b941f9))
+* **geo-time:** fix empty response for geo time route ([1e052bb](https://github.com/valor-software/waffle-server/commit/1e052bb)), closes [#135](https://github.com/valor-software/waffle-server/issues/135)
+* **import ddf:** remove custom import path ([19f9ce5](https://github.com/valor-software/waffle-server/commit/19f9ce5))
+* **integ-test:** fix integration tests after updating geo controller ([fe45072](https://github.com/valor-software/waffle-server/commit/fe45072))
+* **metadata and translations:** add missing entries and remove redundant ones ([f4ded0e](https://github.com/valor-software/waffle-server/commit/f4ded0e))
+* **translations:** update en.json ([f03eb65](https://github.com/valor-software/waffle-server/commit/f03eb65))
+* **translations:** update translation strings ([f9ced19](https://github.com/valor-software/waffle-server/commit/f9ced19))
+
+### Features
+
+* **doc:** create  documentation on swagger ([dadff7a](https://github.com/valor-software/waffle-server/commit/dadff7a))
+* **geo-cat:** implement new syntax for category of geo prop in request to WS (.is--, camelCase ([a35f1e4](https://github.com/valor-software/waffle-server/commit/a35f1e4)), closes [#138](https://github.com/valor-software/waffle-server/issues/138)
+* **geo-props:** add mapping for new entities sets ([924f551](https://github.com/valor-software/waffle-server/commit/924f551))
+* **import-ddf:** add integration tests for ddf file importer ([4c92d20](https://github.com/valor-software/waffle-server/commit/4c92d20))
+* **import-export:** implement import data to mongodb and export data from mongodb to neo4j for new d ([ea617fa](https://github.com/valor-software/waffle-server/commit/ea617fa))
+* **mocha-e2e:** update integration tests calling in gulp ([a434628](https://github.com/valor-software/waffle-server/commit/a434628)), closes [#140](https://github.com/valor-software/waffle-server/issues/140)
+* **routes:** migrate routes and Data to WS ([793e25a](https://github.com/valor-software/waffle-server/commit/793e25a))
+* **stats-route:** update stats route for getting data from neo4j with specified geos (global, regi ([19e7e5b](https://github.com/valor-software/waffle-server/commit/19e7e5b)), closes [#117](https://github.com/valor-software/waffle-server/issues/117)
+
+
+
 <a name="0.2.1"></a>
 ## 0.2.1 (2016-02-03)
 
