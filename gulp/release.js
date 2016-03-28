@@ -12,6 +12,7 @@ let conventionalGithubReleaser = require('conventional-github-releaser');
 let argv = require('yargs').argv;
 
 const RELEASE_COMMIT_GROUP_NAME = 'Release';
+const CONVENTIONAL_CHANGELOG_PRESET = 'angular';
 
 let paths = {
   dest: '.',
@@ -22,7 +23,8 @@ let paths = {
 gulp.task('github-release', done => {
   conventionalGithubReleaser({
     type: "oauth",
-    token: process.env.GITHUB_RELEASE_TOKEN
+    token: process.env.GITHUB_RELEASE_TOKEN,
+    preset: CONVENTIONAL_CHANGELOG_PRESET
   }, null, null, null, null, {
     finalizeContext: context => {
       context.commitGroups = context.commitGroups.filter(group => group.title != RELEASE_COMMIT_GROUP_NAME);
@@ -34,7 +36,9 @@ gulp.task('github-release', done => {
 
 gulp.task('changelog', () => {
   return gulp.src(paths.changelog, {buffer: false})
-    .pipe(conventionalChangelog())
+    .pipe(conventionalChangelog({
+      preset: CONVENTIONAL_CHANGELOG_PRESET,
+    }))
     .pipe(gulp.dest(paths.dest));
 });
 
