@@ -7,7 +7,7 @@ let Schema = mongoose.Schema;
  * @typedef {Object} DataSets
  * @memberof Models
  *
- * @property {String} dsuid - unique data set `id` within DataSets space
+ * @property {String} dsId - unique data set `id` within DataSets space
  * @property {String} dataSetType - github commit, local storage, etc
  * @property {String} uri - uri to Data Set (if exists)
  *
@@ -20,7 +20,7 @@ let Schema = mongoose.Schema;
  * @property {Date} createdAt - timestamp when this DataSet was created
  */
 let DataSets = new Schema({
-  dsuid: {type: String, required: true, unique: true, index: true},
+  dsId: {type: String, required: true, unique: true, index: true},
   dataSetType: {type: String, required: true},
   uri: {type: String, required: true, sparse: true},
 
@@ -33,7 +33,7 @@ let DataSets = new Schema({
   createdAt: {type: Date, 'default': new Date(), required: true}
 });
 
-DataSets.index({dsuid: 1, versions: 1});
+DataSets.index({dsId: 1, versions: 1});
 DataSets.index({versions: 1});
 
 mongoose.model('DataSets', DataSets);

@@ -4,14 +4,14 @@ let mongoose = require('mongoose');
 let Schema = mongoose.Schema;
 
 /**
- * @typedef EntitySchema
+ * @typedef CoordinateSchema
  * @memberof Models
  * @class
  *
  * @param {String} entityName - established entity name
  * @param {String} value - of entity
  */
-let EntitySchema = new Schema({
+let CoordinateSchema = new Schema({
   value: String,
   entityName: String,
 
@@ -22,15 +22,21 @@ let EntitySchema = new Schema({
 /**
  * @typedef {Object} DataPoints
  * @memberof Models
+ *
+ * @param {String} coordinates - contains objects that are define point for the data
+ * @param {String} value - data this DataPoint contains at the given coordinates
+ * @param {String} measure - points to measure this DataPoint has value for
+ * @param {String} measureName - name of the measure this DataPoint has value for
+ * @param {Object} previous - a link to previous version of the current entity
  */
 let DataPoints = new Schema({
-  coordinates: [EntitySchema],
+  coordinates: [CoordinateSchema],
   value: String,
 
   measure: {type: Schema.Types.ObjectId, ref: 'Measures'},
-  measureName: String
+  measureName: String,
 
-  previousValue: {type: Schema.Types.ObjectId, ref: 'DataPoints', sparse: true}
+  previous: {type: Schema.Types.ObjectId, ref: 'DataPoints', sparse: true}
 });
 
 DataPoints.index({value: 1, 'coordinates.entityName': 1, 'coordinates.value': 1});
