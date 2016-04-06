@@ -96,10 +96,10 @@ module.exports = function (serviceLocator) {
 
 
   router.get('/api/graphs/stats/vizabi-tools',
-    getCacheConfig(),
     cors(),
     compression(),
-    cache.route({expire: 86400}),
+    getCacheConfig('stats'),
+    cache.route(),
     decodeQuery,
     vizabiTools,
     dataPostProcessors.gapfilling,
