@@ -1,6 +1,7 @@
 'use strict';
 
 let mongoose = require('mongoose');
+
 let DataPoints = mongoose.model('DataPoints');
 
 let utils = require('../utils');

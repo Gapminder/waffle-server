@@ -9,6 +9,4 @@ let Repository = require('./entity-groups.repository');
  * @param {ServiceLocator} serviceLocator - repository service locator
  * @returns {ServiceLocator} - instance of locator
  */
-module.exports = function (serviceLocator) {
-  return serviceLocator.set(name, new Repository());
-};
+module.exports = serviceLocator => serviceLocator.set(name, new Repository());
