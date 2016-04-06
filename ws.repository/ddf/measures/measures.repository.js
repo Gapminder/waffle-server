@@ -3,7 +3,6 @@
 let mongoose = require('mongoose');
 
 let Measures = mongoose.model('Measures');
-let DataPoints = mongoose.model('DataPoints');
 
 let utils = require('../../utils');
 

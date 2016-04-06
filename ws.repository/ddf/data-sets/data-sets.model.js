@@ -26,7 +26,7 @@ let DataSets = new Schema({
 
   meta: {},
 
-  dataProvider: {type: Schema.Types.ObjectId, ref: 'DataProviders', required: true},
+  dataProvider: {type: String, required: true, sparse: true},
   versions: [{type: Schema.Types.ObjectId, ref: 'DataSetVersions', required: true}],
 
   createdBy: {type: Schema.Types.ObjectId, ref: 'Users', required: true},

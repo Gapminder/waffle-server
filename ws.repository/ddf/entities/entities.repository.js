@@ -1,6 +1,7 @@
 'use strict';
 
 let mongoose = require('mongoose');
+
 let Entities = mongoose.model('Entities');
 
 let utils = require('../utils');
