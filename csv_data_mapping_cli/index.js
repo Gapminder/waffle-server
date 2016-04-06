@@ -31,7 +31,7 @@ const mappingImporters = {
   'export-neo4j': '../ws.routes/graphs/export.service'
 };
 const defaultImporter = 'ddf-world';
-let selectedImporter = mappingImporters[process.env.DATA_VERSION] || mappingImporters[defaultImporter];
+let selectedImporter = mappingImporters[process.env.ACTION] || mappingImporters[defaultImporter];
 
 require('./' + selectedImporter)(appStub, (err) => {
   if (err) {
