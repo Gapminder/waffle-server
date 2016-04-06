@@ -1,8 +1,8 @@
 'use strict';
 
-var name = 'DataPoints';
+let name = 'DataPoints';
 require('./data-points.model');
-var Repository = require('./data-points.repository');
+let Repository = require('./data-points.repository');
 
 /**
  * Register Data Points repository and MongoDB model

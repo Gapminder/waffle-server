@@ -1,7 +1,7 @@
 'use strict';
 
-var mongoose = require('mongoose');
-var Schema = mongoose.Schema;
+let mongoose = require('mongoose');
+let Schema = mongoose.Schema;
 
 /**
  * @typedef {Object} Entities
@@ -20,7 +20,7 @@ var Schema = mongoose.Schema;
  * @property {Array<Models.DataSetVersions>} dataSetVersions - all versions of data set in which the entity was added
  * @property {Models.Entity} previousValue - of current entity (could be null)
  */
-var Entities = new Schema({
+let Entities = new Schema({
   gid: {type: String, match: /^[a-z0-9_]*$/, index: true, required: true},
   title: String,
   properties: {},
