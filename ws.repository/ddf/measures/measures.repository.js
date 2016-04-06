@@ -4,7 +4,7 @@ let mongoose = require('mongoose');
 
 let Measures = mongoose.model('Measures');
 
-let utils = require('../../utils');
+let utils = require('../utils');
 
 function MeasuresRepository() {
 }
