@@ -1,8 +1,8 @@
 'use strict';
 
 const mongoose = require('mongoose');
-const Versions = mongoose.model('Versions');
-const utils = require('../../utils');
+const Versions = mongoose.model('DataSetVersions');
+const utils = require('../utils');
 
 function VersionsRepository() {
 }

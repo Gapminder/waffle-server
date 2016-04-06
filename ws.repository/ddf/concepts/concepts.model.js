@@ -9,7 +9,9 @@ const ConceptsSchema = new Schema({
   type: { type: String, enum: ['entity_set', 'entity_domain', 'time', 'string', 'measure'], default: 'string'},
   tooltip: String,
   indicatorUrl: String,
-  domain: String
+  domain: String,
+
+  previousValue: {type: Schema.Types.ObjectId, ref: 'Concepts', sparse: true}
 });
 
 ConceptsSchema.index({type: 1});

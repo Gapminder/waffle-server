@@ -32,7 +32,7 @@ let Entities = new Schema({
   drillup: {type: Schema.Types.ObjectId, ref: 'Entities'},
 
   dataSetVersions: [{type: Schema.Types.ObjectId, ref: 'DataSetVersions'}],
-  previousValue: {type: Schema.Types.ObjectId, ref: 'EntityGroups', sparse: true}
+  previousValue: {type: Schema.Types.ObjectId, ref: 'Entities', sparse: true}
 });
 
 Entities.index({gid: 1, parent: 1});
