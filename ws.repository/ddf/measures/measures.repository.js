@@ -1,16 +1,16 @@
 'use strict';
 
-var mongoose = require('mongoose');
+let mongoose = require('mongoose');
 
-var Measures = mongoose.model('Measures');
-var DataPoints = mongoose.model('DataPoints');
+let Measures = mongoose.model('Measures');
+let DataPoints = mongoose.model('DataPoints');
 
-var utils = require('../../utils');
+let utils = require('../../utils');
 
 function MeasuresRepository() {
 }
 
-['pagedList', 'update', 'findById', 'deleteRecord'].forEach(function (actionName) {
+['pagedList', 'update', 'findById', 'deleteRecord'].forEach(actionName => {
   MeasuresRepository.prototype[actionName] = utils.actionFactory(actionName)(Measures, this);
 });
 

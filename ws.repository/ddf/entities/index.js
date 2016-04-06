@@ -1,8 +1,8 @@
 'use strict';
 
-var name = 'Entities';
+let name = 'Entities';
 require('./entities.model');
-var Repository = require('./entities.repository');
+let Repository = require('./entities.repository');
 
 /**
  * Register Entities repository and MongoDB model

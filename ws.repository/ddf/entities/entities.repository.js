@@ -1,14 +1,14 @@
 'use strict';
 
-var mongoose = require('mongoose');
-var Entities = mongoose.model('Entities');
+let mongoose = require('mongoose');
+let Entities = mongoose.model('Entities');
 
-var utils = require('../utils');
+let utils = require('../utils');
 
 function EntitiesRepository() {
 }
 
-['pagedList', 'update', 'findById', 'deleteRecord'].forEach(function (actionName) {
+['pagedList', 'update', 'findById', 'deleteRecord'].forEach(actionName => {
   EntitiesRepository.prototype[actionName] = utils.actionFactory(actionName)(Entities, this);
 });
 

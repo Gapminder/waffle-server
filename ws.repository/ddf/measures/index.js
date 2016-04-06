@@ -1,8 +1,8 @@
 'use strict';
 
-var name = 'Measures';
+let name = 'Measures';
 require('./measures.model');
-var Repository = require('./measures.repository');
+let Repository = require('./measures.repository');
 
 /**
  * Register Measures repository and MongoDB model

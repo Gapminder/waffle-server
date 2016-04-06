@@ -1,7 +1,7 @@
 'use strict';
 
-var mongoose = require('mongoose');
-var Schema = mongoose.Schema;
+let mongoose = require('mongoose');
+let Schema = mongoose.Schema;
 
 /**
  * @typedef {Object} Measures
@@ -17,7 +17,7 @@ var Schema = mongoose.Schema;
  * @property {Array<Models.DataSetVersions>} dataSetVersions - all versions of data set in which the measure was added
  * @property {<Models.Measures>} previousValue - of current measure (could be null)
  */
-var Measures = new Schema({
+let Measures = new Schema({
   nodeId: {type: Number, index: true, sparse: true},
   gid: {type: String, match: /^[a-z0-9_]*$/, index: true, required: true},
   name: String,
