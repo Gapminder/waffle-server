@@ -1,7 +1,7 @@
 'use strict';
 
-var mongoose = require('mongoose');
-var Schema = mongoose.Schema;
+let mongoose = require('mongoose');
+let Schema = mongoose.Schema;
 
 /**
  * @typedef {Object} EntityGroups
@@ -20,7 +20,7 @@ var Schema = mongoose.Schema;
  * @property {Models.EntityGroup} previousValue - of current entityGroup (could be null)
  */
 
-var EntityGroups = new Schema({
+let EntityGroups = new Schema({
   gid: {type: String, match: /^[a-z0-9_]*$/, index: true, required: true},
 
   name: {type: String, required: true, index: true},

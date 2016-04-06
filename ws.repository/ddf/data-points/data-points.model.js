@@ -1,7 +1,7 @@
 'use strict';
 
-var mongoose = require('mongoose');
-var Schema = mongoose.Schema;
+let mongoose = require('mongoose');
+let Schema = mongoose.Schema;
 
 /**
  * @typedef EntitySchema
@@ -11,7 +11,7 @@ var Schema = mongoose.Schema;
  * @param {String} entityName - established entity name
  * @param {String} value - of entity
  */
-var EntitySchema = new Schema({
+let EntitySchema = new Schema({
   value: String,
   entityName: String,
 
@@ -23,7 +23,7 @@ var EntitySchema = new Schema({
  * @typedef {Object} DataPoints
  * @memberof Models
  */
-var DataPoints = new Schema({
+let DataPoints = new Schema({
   coordinates: [EntitySchema],
   value: String,
 

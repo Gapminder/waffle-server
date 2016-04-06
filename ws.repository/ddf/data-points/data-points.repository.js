@@ -1,14 +1,15 @@
 'use strict';
 
-var mongoose = require('mongoose');
-var DataPoints = mongoose.model('DataPoints');
+let mongoose = require('mongoose');
 
-var utils = require('../utils');
+let DataPoints = mongoose.model('DataPoints');
+
+let utils = require('../utils');
 
 function DataPointsRepository() {
 }
 
-['pagedList', 'update', 'findById', 'deleteRecord'].forEach(function (actionName) {
+['pagedList', 'update', 'findById', 'deleteRecord'].forEach(actionName => {
   DataPointsRepository.prototype[actionName] = utils.actionFactory(actionName)(DataPoints, this);
 });
 
