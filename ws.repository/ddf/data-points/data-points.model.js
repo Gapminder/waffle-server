@@ -29,6 +29,8 @@ let DataPoints = new Schema({
 
   measure: {type: Schema.Types.ObjectId, ref: 'Measures'},
   measureName: String
+
+  previousValue: {type: Schema.Types.ObjectId, ref: 'DataPoints', sparse: true}
 });
 
 DataPoints.index({value: 1, 'coordinates.entityName': 1, 'coordinates.value': 1});
