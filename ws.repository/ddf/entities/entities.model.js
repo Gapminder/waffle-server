@@ -12,13 +12,13 @@ let Schema = mongoose.Schema;
  *
  * @property {Object} properties - all properties from data set
  *
- * @property {Models.EntityGroups} parent - of entity, reference to entity domain or entity set
- * @property {Models.EntityGroups} parents - of entity, reference to entities group in which entity takes part of
+ * @property {Models.EntityGroups} domain - of entity, reference to only one entity domain from EntityGroups collection
+ * @property {Models.EntityGroups} sets - of entity, in which entity takes part of
  * @property {Models.Entities} drilldown - to lower-tier authorities (entity)
  * @property {Models.Entities} drillup - to higher authorities (entity)
  *
  * @property {Array<Models.DataSetVersions>} dataSetVersions - all versions of data set in which the entity was added
- * @property {Models.Entity} previousValue - of current entity (could be null)
+ * @property {Models.Entity} previous - of current entity (could be null)
  */
 let Entities = new Schema({
   gid: {type: String, match: /^[a-z0-9_]*$/, index: true, required: true},
@@ -26,17 +26,17 @@ let Entities = new Schema({
   properties: {},
 
   // should be required
-  parent: {type: Schema.Types.ObjectId, ref: 'EntityGroups'},
-  parents: [{type: Schema.Types.ObjectId, ref: 'EntityGroups'}],
+  domain: {type: Schema.Types.ObjectId, ref: 'EntityGroups'},
+  sets: [{type: Schema.Types.ObjectId, ref: 'EntityGroups'}],
   drilldown: {type: Schema.Types.ObjectId, ref: 'Entities'},
   drillup: {type: Schema.Types.ObjectId, ref: 'Entities'},
 
   dataSetVersions: [{type: Schema.Types.ObjectId, ref: 'DataSetVersions'}],
-  previousValue: {type: Schema.Types.ObjectId, ref: 'Entities', sparse: true}
+  previous: {type: Schema.Types.ObjectId, ref: 'Entities', sparse: true}
 });
 
-Entities.index({gid: 1, parent: 1});
-Entities.index({gid: 1, parents: 1});
+Entities.index({gid: 1, domain: 1});
+Entities.index({gid: 1, sets: 1});
 Entities.index({gid: 1, dataSetVersions: 1});
 Entities.index({gid: 1, drilldown: 1});
 Entities.index({gid: 1, drillup: 1});

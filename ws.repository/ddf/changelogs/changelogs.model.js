@@ -17,7 +17,7 @@ const ChangelogsSchema = new Schema({
   document: {},
   createdAt: {type: Date, 'default': new Date(), required: true},
   action: {type: String, enum: ['INSERT', 'UPDATE', 'REMOVE'], required: true},
-  session: {type: Schema.Types.ObjectId, ref: 'Sessions', required: true}
+  session: {type: Schema.Types.ObjectId, ref: 'DataSetSessions', required: true}
 });
 
 ChangelogsSchema.index({collectionName: 1});

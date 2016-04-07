@@ -6,7 +6,9 @@ let Schema = mongoose.Schema;
 let Translations = new Schema({
   key: {type: String, index: true, required: true},
   language: {type: String, required: true},
-  value: String
+  value: {type: String, required: true, sparse: true},
+
+  dataSet: {type: Schema.Types.ObjectId, ref: 'DataSets'}
 });
 
 Translations.index({1: true, key: 1});
