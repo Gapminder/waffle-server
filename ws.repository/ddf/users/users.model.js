@@ -25,4 +25,4 @@ let Users = new Schema({
   salt: {type: String, required: true, 'private': true}*/
 });
 
-mongoose.model('Users', Users);
+module.exports = mongoose.model('Users', Users);

@@ -16,8 +16,8 @@ let Schema = mongoose.Schema;
  * @property {Object} properties - all properties from data set
  * @property {Object} meta - any meta for entityGroup
  *
- * @property {Array<Models.DataSetVersions>} dataSetVersions - all versions of data set in which the entityGroup was added
- * @property {Models.EntityGroup} previousValue - of current entityGroup (could be null)
+ * @property {Array<Models.DataSetVersions>} versions - all versions of data set in which the entityGroup was added
+ * @property {Models.EntityGroup} previous - of current entityGroup (could be null)
  */
 
 let EntityGroups = new Schema({
@@ -35,12 +35,12 @@ let EntityGroups = new Schema({
   meta: {},
 
   // system marks
-  dataSetVersions: [{type: Schema.Types.ObjectId, ref: 'DataSetVersions'}],
+  versions: [{type: Schema.Types.ObjectId, ref: 'DataSetVersions'}],
 
-  previousValue: {type: Schema.Types.ObjectId, ref: 'EntityGroups', sparse: true}
+  previous: {type: Schema.Types.ObjectId, ref: 'EntityGroups', sparse: true}
 });
 
-EntityGroups.index({dataSetVersions: 1});
-EntityGroups.index({gid: 1, dataSetVersions: 1});
+EntityGroups.index({versions: 1});
+EntityGroups.index({gid: 1, versions: 1});
 
 module.exports = mongoose.model('EntityGroups', EntityGroups);
