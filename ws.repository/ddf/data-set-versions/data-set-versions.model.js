@@ -18,12 +18,13 @@ const VersionsSchema = new Schema({
   value: String,
   status: { type: String, enum: ['IMPORTED', 'PUBLISHED', 'WORK_IN_PROGRESS'], 'default': 'WORK_IN_PROGRESS'},
 
-  isCurrent: Boolean,
+  isCurrent: {type: Boolean, 'default': false},
 
   createdBy: {type: Schema.Types.ObjectId, ref: 'Users', required: true},
   createdAt: {type: Date, 'default': new Date(), required: true},
 
-  basedOn: {type: Schema.Types.ObjectId, ref: 'Versions'}
+  dataSet: {type: Schema.Types.ObjectId, ref: 'DataSets'},
+  basedOn: {type: Schema.Types.ObjectId, ref: 'DataSetVersions'}
 });
 
 VersionsSchema.index({value: 1});
