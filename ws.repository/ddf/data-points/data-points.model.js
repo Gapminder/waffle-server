@@ -10,10 +10,12 @@ let Schema = mongoose.Schema;
  *
  * @param {String} entityName - established entity name
  * @param {String} value - of entity
+
+ * @param {String} entityGroup - of entity which was specified in ddf's file name
  */
 let CoordinateSchema = new Schema({
-  value: String,
-  entityName: String,
+  gid: String,
+  entityGroupName: String,
 
   entityGroup: {type: Schema.Types.ObjectId, ref: 'EntityGroups'},
   entity: {type: Schema.Types.ObjectId, ref: 'Entities'}

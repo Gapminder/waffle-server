@@ -2,61 +2,81 @@
 
 const _ = require('lodash');
 const async = require('async');
+const mongoose = require('mongoose');
 
 _.forEach([
   'concepts',
   'data-points',
   'data-set-versions',
+  'data-set-sessions',
   'data-sets',
   'entities',
   'entity-groups',
   'measures',
   'translations',
   'users',
-  'changelogs',
-  'sessions'
+  'changelogs'
 ], model => require(`./${model}/${model}.model`));
 
-require('mongoose').connect('mongodb://localhost:27017/ws_ddf', (err) => {
+mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
   if (err) {
     throw err;
   }
 
   async.waterfall([
     (done) => done(null, {}),
+    (pipe, done) => removeData(pipe, done),
     (pipe, done) => createUser(pipe, done),
     (pipe, done) => createDataSet(pipe, done),
     (pipe, done) => createVersion(pipe, done),
     (pipe, done) => createSession(pipe, done),
-    (pipe, done) => createEntityGroup(pipe, done),
-    (pipe, done) => createEntity(pipe, done),
-    (pipe, done) => createMeasure(pipe, done),
-    (pipe, done) => createDataPoint(pipe, done),
-    (pipe, done) => createConcept(pipe, done),
-    (pipe, done) => createTranslation(pipe, done),
-    (pipe, done) => createChangelog(pipe, done)
+    (pipe, done) => createEntityGroups(pipe, done),
+    (pipe, done) => createEntities(pipe, done),
+    (pipe, done) => createMeasures(pipe, done),
+    (pipe, done) => createDataPoints(pipe, done),
+    // (pipe, done) => createConcepts(pipe, done),
+    // (pipe, done) => createTranslations(pipe, done),
+    // (pipe, done) => createChangelog(pipe, done)
   ], (err, result) => {
     if (err) {
       throw err;
     }
 
     console.log(result, 'done!');
+
+    process.exit(0);
   });
 
+  function removeData(pipe, done) {
+    async.parallel([
+      cb => mongoose.model('Concepts').remove({}, cb),
+      cb => mongoose.model('DataPoints').remove({}, cb),
+      cb => mongoose.model('DataSetVersions').remove({}, cb),
+      cb => mongoose.model('DataSetSessions').remove({}, cb),
+      cb => mongoose.model('DataSets').remove({}, cb),
+      cb => mongoose.model('Entities').remove({}, cb),
+      cb => mongoose.model('EntityGroups').remove({}, cb),
+      cb => mongoose.model('Measures').remove({}, cb),
+      cb => mongoose.model('Translations').remove({}, cb),
+      cb => mongoose.model('Users').remove({}, cb),
+      cb => mongoose.model('Changelogs').remove({}, cb)
+    ], (err) => done(err, pipe));
+  }
+
   function createUser(pipe, done) {
-    mongoose.model('Users').insert({
+    mongoose.model('Users').create({
       name: 'Vasya Pupkin',
       email: 'email@email.com',
       username: 'VPup',
       password: 'VPup'
     }, (err, res) => {
       pipe.user = res;
-      return done(null, pipe);
+      return done(err, pipe);
     });
   }
 
   function createDataSet(pipe, done) {
-    mongoose.model('DataSets').insert({
+    mongoose.model('DataSets').create({
       dsId: Math.random().toString(),
       type: 'local',
       uri: '/c/users',
@@ -64,90 +84,291 @@ require('mongoose').connect('mongodb://localhost:27017/ws_ddf', (err) => {
       createdBy: pipe.user._id
     }, (err, res) => {
       pipe.dataSet = res;
-      return done(null, pipe);
+      return done(err, pipe);
     });
   }
 
   function createVersion(pipe, done) {
-    mongoose.model('DataSetVersions').insert({
+    mongoose.model('DataSetVersions').create({
       value: Math.random().toString(),
       createdBy: pipe.user._id,
       dataSet: pipe.dataSet._id
     }, (err, res) => {
       pipe.version = res;
-      return done(null, pipe);
+      return done(err, pipe);
     });
   }
 
   function createSession(pipe, done) {
-    mongoose.model('Sessions').insert({
+    mongoose.model('DataSetSessions').create({
       version: pipe.version._id,
       createdBy: pipe.user._id
     }, (err, res) => {
       pipe.session = res;
-      return done(null, pipe);
+      return done(err, pipe);
     });
   }
 
-  function createEntityGroup(pipe, done) {
-    function createGeo(pipe, done) {
-      mongoose.model('EntityGroups').insert({
+  function createEntityGroups(pipe, done) {
+    pipe.entityGroups = {};
+
+    async.waterfall([
+      (done) => done(null, pipe),
+      (pipe, done) => _createGeo(pipe, done),
+      (pipe, done) => _createCountry(pipe, done),
+      (pipe, done) => _createCity(pipe, done),
+      (pipe, done) => _createTime(pipe, done),
+      (pipe, done) => _createYear(pipe, done)
+    ], done);
+
+    function _createGeo(pipe, done) {
+      mongoose.model('EntityGroups').create({
         gid: 'geo',
         name: 'Geo',
         type: 'entity_domain',
         versions: [pipe.version._id]
       }, (err, res) => {
-        pipe.geo = res;
-        return done(null, pipe);
+        pipe.entityGroups.geo = res;
+        return done(err, pipe);
       });
     }
 
-    function createCountry(pipe, done) {
-      mongoose.model('EntityGroups').insert({
+    function _createCountry(pipe, done) {
+      mongoose.model('EntityGroups').create({
         gid: 'country',
         name: 'Country',
         type: 'entity_set',
-        parent: pipe.geo._id,
+        parent: pipe.entityGroups.geo._id,
         versions: [pipe.version._id]
       }, (err, res) => {
-        pipe.country = res;
-        return done(null, pipe);
+        pipe.entityGroups.country = res;
+        return done(err, pipe);
       });
     }
 
-    function createTime(pipe, done) {
-      mongoose.model('EntityGroups').insert({
+    function _createCity(pipe, done) {
+      mongoose.model('EntityGroups').create({
+        gid: 'city',
+        name: 'City',
+        type: 'entity_set',
+        parent: pipe.entityGroups.geo._id,
+        versions: [pipe.version._id]
+      }, (err, res) => {
+        pipe.entityGroups.city = res;
+        return done(err, pipe);
+      });
+    }
+
+    function _createTime(pipe, done) {
+      mongoose.model('EntityGroups').create({
         gid: 'time',
         name: 'Time',
         type: 'entity_domain',
         versions: [pipe.version._id]
       }, (err, res) => {
-        pipe.time = res;
-        return done(null, pipe);
+        pipe.entityGroups.time = res;
+        return done(err, pipe);
       });
     }
 
+    function _createYear(pipe, done) {
+      mongoose.model('EntityGroups').create({
+        gid: 'year',
+        name: 'Year',
+        type: 'entity_set',
+        parent: pipe.entityGroups.time._id,
+        versions: [pipe.version._id]
+      }, (err, res) => {
+        pipe.entityGroups.year = res;
+        return done(err, pipe);
+      });
+    }
+  }
+
+  function createEntities(pipe, done) {
+    pipe.entities = {};
+
     async.waterfall([
-      (done) => done(null, {}),
-      (pipe, done) => createGeo(pipe, done),
-      (pipe, done) => createCountry(pipe, done),
-      (pipe, done) => createTime(pipe, done)
-    ], (err, res) => {
-      pipe.entityGroups = res;
-      return done(null, pipe);
+      (done) => done(null, pipe),
+      (pipe, done) => _createKharkiv(pipe, done),
+      (pipe, done) => _createUkraine(pipe, done),
+      (pipe, done) => _updateKharkivDrillup(pipe, done),
+      (pipe, done) => _createHongKong(pipe, done),
+      (pipe, done) => _createAbc(pipe, done),
+      (pipe, done) => _createYear1900(pipe, done),
+      (pipe, done) => _createYear2000(pipe, done),
+      // (pipe, done) => _createTime1900s(pipe, done)
+    ], done);
+
+    function _createKharkiv(pipe, done) {
+      mongoose.model('Entities').create({
+        gid: 'kharkiv',
+        title: 'Kharkiv',
+        domain: pipe.entityGroups.geo._id,
+        sets: [pipe.entityGroups.city._id],
+        versions: [pipe.version._id]
+      }, (err, res) => {
+        pipe.entities.kharkiv = res;
+        return done(err, pipe);
+      });
+    }
+
+    function _createUkraine(pipe, done) {
+      mongoose.model('Entities').create({
+        gid: 'ukraine',
+        title: 'Ukraine',
+        domain: pipe.entityGroups.geo._id,
+        sets: [pipe.entityGroups.country._id],
+        drilldown: pipe.entities.kharkiv._id,
+        versions: [pipe.version._id]
+      }, (err, res) => {
+        pipe.entities.ukraine = res;
+        return done(err, pipe);
+      });
+    }
+
+    function _updateKharkivDrillup(pipe, done) {
+      mongoose.model('Entities').update({
+        _id: pipe.entities.kharkiv._id
+      }, {$set: {drillup: pipe.entities.ukraine._id}}, (err) => {
+        pipe.entities.kharkiv.drillup = pipe.entities.ukraine._id;
+        done(err, pipe);
+      })
+    }
+
+    function _createHongKong(pipe, done) {
+      mongoose.model('Entities').create({
+        gid: 'hongkong',
+        title: 'Hong Kong',
+        domain: pipe.entityGroups.geo._id,
+        sets: [pipe.entityGroups.country._id, pipe.entityGroups.city._id],
+        versions: [pipe.version._id]
+      }, (err, res) => {
+        pipe.entities.hongkong = res;
+        return done(err, pipe);
+      });
+    }
+
+    function _createAbc(pipe, done) {
+      mongoose.model('Entities').create({
+        gid: '_abc',
+        title: 'Abc',
+        domain: pipe.entityGroups.geo._id,
+        versions: [pipe.version._id]
+      }, (err, res) => {
+        pipe.entities._abc = res;
+        return done(err, pipe);
+      });
+    }
+
+    function _createYear1900(pipe, done) {
+      mongoose.model('Entities').create({
+        gid: '1900',
+        domain: pipe.entityGroups.time._id,
+        sets: [pipe.entityGroups.year._id],
+        versions: [pipe.version._id]
+      }, (err, res) => {
+        pipe.entities['1900'] = res;
+        return done(err, pipe);
+      });
+    }
+
+    function _createYear2000(pipe, done) {
+      mongoose.model('Entities').create({
+        gid: '2000',
+        domain: pipe.entityGroups.time._id,
+        sets: [pipe.entityGroups.year._id],
+        versions: [pipe.version._id]
+      }, (err, res) => {
+        pipe.entities['2000'] = res;
+        return done(err, pipe);
+      });
+    }
+
+    // function _createTime1900s(pipe, done) {
+    //   mongoose.model('Entities').create({
+    //     gid: '1900s',
+    //     domain: pipe.entityGroups.time._id,
+    //     versions: [pipe.version._id]
+    //   }, (err, res) => {
+    //     pipe.entities['1900s'] = res;
+    //     return done(err, pipe);
+    //   });
+    // }
+  }
+
+  function createMeasures(pipe, done) {
+    async.parallel({
+      gini: (done) => _createGini(pipe, done),
+      population: (done) => _createPopulation(pipe, done)
+    }, (err, res) => {
+      pipe.measures = res;
+      done(err, pipe);
+    });
+
+    function _createGini(pipe, done) {
+      mongoose.model('Measures').create({
+        gid: 'gini',
+        name: 'Gini',
+        dataSetVersions: [pipe.version._id]
+      }, done);
+    }
+
+    function _createPopulation(pipe, done) {
+      mongoose.model('Measures').create({
+        gid: 'population',
+        name: 'Population',
+        dataSetVersions: [pipe.version._id]
+      }, done);
+    }
+  }
+
+  function createDataPoints(pipe, done) {
+    let coordKharkivGeo = {gid: pipe.entities.kharkiv.gid, entityGroupName: pipe.entityGroups.geo.gid, entity: pipe.entities.kharkiv._id, entityGroup: pipe.entityGroups.geo._id};
+    let coordKharkivCity = {gid: pipe.entities.kharkiv.gid, entityGroupName: pipe.entityGroups.city.gid, entity: pipe.entities.kharkiv._id, entityGroup: pipe.entityGroups.city._id};
+    let coordUkraineGeo = {gid: pipe.entities.ukraine.gid, entityGroupName: pipe.entityGroups.geo.gid, entity: pipe.entities.ukraine._id, entityGroup: pipe.entityGroups.geo._id};
+    let coordUkraineCountry = {gid: pipe.entities.ukraine.gid, entityGroupName: pipe.entityGroups.country.gid, entity: pipe.entities.ukraine._id, entityGroup: pipe.entityGroups.country._id};
+    let coordHongKongGeo = {gid: pipe.entities.hongkong.gid, entityGroupName: pipe.entityGroups.geo.gid, entity: pipe.entities.hongkong._id, entityGroup: pipe.entityGroups.geo._id};
+    let coordHongKongCountry = {gid: pipe.entities.hongkong.gid, entityGroupName: pipe.entityGroups.country.gid, entity: pipe.entities.hongkong._id, entityGroup: pipe.entityGroups.country._id};
+    let coordHongKongCity = {gid: pipe.entities.hongkong.gid, entityGroupName: pipe.entityGroups.city.gid, entity: pipe.entities.hongkong._id, entityGroup: pipe.entityGroups.city._id};
+    let coordAbcGeo = {gid: pipe.entities._abc.gid, entityGroupName: pipe.entityGroups.geo.gid, entity: pipe.entities._abc._id, entityGroup: pipe.entityGroups.geo._id};
+    let coordYear1900 = {gid: pipe.entities['1900'].gid, entityGroupName: pipe.entityGroups.year.gid, entity: pipe.entities['1900']._id, entityGroup: pipe.entityGroups.year._id};
+    let coordYear2000 = {gid: pipe.entities['2000'].gid, entityGroupName: pipe.entityGroups.year.gid, entity: pipe.entities['2000']._id, entityGroup: pipe.entityGroups.year._id};
+
+    let dataPoints = _.reduce(pipe.measures, (result, measure) => {
+      return result.concat([
+        {coordinates: [coordKharkivGeo, coordYear1900], value: getMV(), measureName: measure.gid, measure: measure._id},
+        {coordinates: [coordKharkivGeo, coordYear2000], value: getMV(), measureName: measure.gid, measure: measure._id},
+
+        {coordinates: [coordKharkivCity, coordYear1900], value: getMV(), measureName: measure.gid, measure: measure._id},
+        {coordinates: [coordKharkivCity, coordYear2000], value: getMV(), measureName: measure.gid, measure: measure._id},
+
+        {coordinates: [coordUkraineGeo, coordYear1900], value: getMV(), measureName: measure.gid, measure: measure._id},
+        {coordinates: [coordUkraineGeo, coordYear2000], value: getMV(), measureName: measure.gid, measure: measure._id},
+
+        {coordinates: [coordUkraineCountry, coordYear1900], value: getMV(), measureName: measure.gid, measure: measure._id},
+        {coordinates: [coordUkraineCountry, coordYear2000], value: getMV(), measureName: measure.gid, measure: measure._id},
+
+        {coordinates: [coordHongKongGeo, coordYear1900], value: getMV(), measureName: measure.gid, measure: measure._id},
+        {coordinates: [coordHongKongGeo, coordYear2000], value: getMV(), measureName: measure.gid, measure: measure._id},
+
+        {coordinates: [coordHongKongCountry, coordYear1900], value: getMV(), measureName: measure.gid, measure: measure._id},
+        {coordinates: [coordHongKongCountry, coordYear2000], value: getMV(), measureName: measure.gid, measure: measure._id},
+
+        {coordinates: [coordHongKongCity, coordYear1900], value: getMV(), measureName: measure.gid, measure: measure._id},
+        {coordinates: [coordHongKongCity, coordYear2000], value: getMV(), measureName: measure.gid, measure: measure._id},
+
+        {coordinates: [coordAbcGeo, coordYear1900], value: getMV(), measureName: measure.gid, measure: measure._id},
+        {coordinates: [coordAbcGeo, coordYear2000], value: getMV(), measureName: measure.gid, measure: measure._id}
+      ]);
+    }, []);
+
+    mongoose.model('DataPoints').create(dataPoints, (err) => {
+      done(err, pipe);
     });
   }
 
-  function createEntity(pipe, done) {
-    function createCountry() {
-
-    }
-
-    async.parallel(
-
-    );
+  function getMV() {
+    return Math.random().toFixed(5) * 100000;
   }
 });
-
-
-
