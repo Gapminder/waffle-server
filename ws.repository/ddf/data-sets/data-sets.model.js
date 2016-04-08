@@ -32,7 +32,6 @@ let DataSets = new Schema({
   createdAt: {type: Date, 'default': new Date(), required: true},
 });
 
-DataSets.index({dsId: 1, versions: 1});
-DataSets.index({versions: 1});
+DataSets.index({dsId: 1});
 
 module.exports = mongoose.model('DataSets', DataSets);
