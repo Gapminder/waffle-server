@@ -8,13 +8,16 @@ const Schema = mongoose.Schema;
  * @memberof Concepts
  * @class
  *
- * @param {String} gid - concept identificator
- * @param {String} name - human-readable name of the concept
- * @param {String} tooltip - additional information regarding concept
- * @param {String} indicatorUrl - url that points to concept definition and explanation
- * @param {String} domain - name of the domain concept belongs to
- * @param {String} type - can be on of the following: 'entity_set', 'entity_domain', 'time', 'string', 'measure'. By default 'string' will be used
- * @param {Object} previous - a link to previous version of the current entity 
+ * @property {String} gid - concept identificator
+ *
+ * @property {String} name - human-readable name of the concept
+ * @property {String} type - can be on of the following: 'entity_set', 'entity_domain', 'time', 'string', 'measure'. By default 'string' will be used
+ * @property {String} tooltip - additional information regarding concept
+ * @property {String} indicatorUrl - url that points to concept definition and explanation
+ * @property {String} domain - name of the domain concept belongs to
+ * @property {Object} properties - all properties from source
+ *
+ * @property {Object} previous - a link to previous version of the current entity
  */
 const ConceptsSchema = new Schema({
   gid: String,
@@ -23,6 +26,7 @@ const ConceptsSchema = new Schema({
   tooltip: String,
   indicatorUrl: String,
   domain: String,
+  properties: {},
 
   previous: {type: Schema.Types.ObjectId, ref: 'Concepts', sparse: true}
 });
