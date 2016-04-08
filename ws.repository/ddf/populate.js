@@ -34,15 +34,15 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
     (pipe, done) => createEntities(pipe, done),
     (pipe, done) => createMeasures(pipe, done),
     (pipe, done) => createDataPoints(pipe, done),
-    // (pipe, done) => createConcepts(pipe, done),
-    // (pipe, done) => createTranslations(pipe, done),
+    (pipe, done) => createConcepts(pipe, done),
+    (pipe, done) => createTranslations(pipe, done)
     // (pipe, done) => createChangelog(pipe, done)
   ], (err, result) => {
     if (err) {
       throw err;
     }
 
-    console.log(result, 'done!');
+    console.log('done!');
 
     process.exit(0);
   });
@@ -81,6 +81,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
       type: 'local',
       uri: '/c/users',
       dataProvider: 'hands',
+      defaultLanguage: 'en',
       createdBy: pipe.user._id
     }, (err, res) => {
       pipe.dataSet = res;
@@ -152,8 +153,8 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
         name: 'City',
         type: 'entity_set',
         domain: pipe.entityGroups.geo._id,
-        // emulated only drillup property from current ddf--concept.csv
-        drillup: [pipe.entityGroups.country._id],
+        // emulated only drill_up property from current ddf--concept.csv
+        drillups: [pipe.entityGroups.country._id],
         versions: [pipe.version._id]
       }, (err, res) => {
         pipe.entityGroups.city = res;
@@ -221,7 +222,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
         title: 'Ukraine',
         domain: pipe.entityGroups.geo._id,
         sets: [pipe.entityGroups.country._id],
-        drilldown: pipe.entities.kharkiv._id,
+        drilldowns: [pipe.entities.kharkiv._id],
         versions: [pipe.version._id]
       }, (err, res) => {
         pipe.entities.ukraine = res;
@@ -232,8 +233,8 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
     function _updateKharkivDrillup(pipe, done) {
       mongoose.model('Entities').update({
         _id: pipe.entities.kharkiv._id
-      }, {$set: {drillup: pipe.entities.ukraine._id}}, (err) => {
-        pipe.entities.kharkiv.drillup = pipe.entities.ukraine._id;
+      }, {$set: {drillups: [pipe.entities.ukraine._id]}}, (err) => {
+        pipe.entities.kharkiv.drillups = [pipe.entities.ukraine._id];
         done(err, pipe);
       })
     }
@@ -312,7 +313,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
       mongoose.model('Measures').create({
         gid: 'gini',
         name: 'Gini',
-        dataSetVersions: [pipe.version._id]
+        versions: [pipe.version._id]
       }, done);
     }
 
@@ -320,57 +321,106 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
       mongoose.model('Measures').create({
         gid: 'population',
         name: 'Population',
-        dataSetVersions: [pipe.version._id]
+        versions: [pipe.version._id]
       }, done);
     }
   }
 
   function createDataPoints(pipe, done) {
-    let coordKharkivGeo = {gid: pipe.entities.kharkiv.gid, entityGroupName: pipe.entityGroups.geo.gid, entity: pipe.entities.kharkiv._id, entityGroup: pipe.entityGroups.geo._id};
-    let coordKharkivCity = {gid: pipe.entities.kharkiv.gid, entityGroupName: pipe.entityGroups.city.gid, entity: pipe.entities.kharkiv._id, entityGroup: pipe.entityGroups.city._id};
-    let coordUkraineGeo = {gid: pipe.entities.ukraine.gid, entityGroupName: pipe.entityGroups.geo.gid, entity: pipe.entities.ukraine._id, entityGroup: pipe.entityGroups.geo._id};
-    let coordUkraineCountry = {gid: pipe.entities.ukraine.gid, entityGroupName: pipe.entityGroups.country.gid, entity: pipe.entities.ukraine._id, entityGroup: pipe.entityGroups.country._id};
-    let coordHongKongGeo = {gid: pipe.entities.hongkong.gid, entityGroupName: pipe.entityGroups.geo.gid, entity: pipe.entities.hongkong._id, entityGroup: pipe.entityGroups.geo._id};
-    let coordHongKongCountry = {gid: pipe.entities.hongkong.gid, entityGroupName: pipe.entityGroups.country.gid, entity: pipe.entities.hongkong._id, entityGroup: pipe.entityGroups.country._id};
-    let coordHongKongCity = {gid: pipe.entities.hongkong.gid, entityGroupName: pipe.entityGroups.city.gid, entity: pipe.entities.hongkong._id, entityGroup: pipe.entityGroups.city._id};
-    let coordAbcGeo = {gid: pipe.entities._abc.gid, entityGroupName: pipe.entityGroups.geo.gid, entity: pipe.entities._abc._id, entityGroup: pipe.entityGroups.geo._id};
-    let coordYear1900 = {gid: pipe.entities['1900'].gid, entityGroupName: pipe.entityGroups.year.gid, entity: pipe.entities['1900']._id, entityGroup: pipe.entityGroups.year._id};
-    let coordYear2000 = {gid: pipe.entities['2000'].gid, entityGroupName: pipe.entityGroups.year.gid, entity: pipe.entities['2000']._id, entityGroup: pipe.entityGroups.year._id};
+    let dataPoints = generateDataPoints(pipe);
 
-    let dataPoints = _.reduce(pipe.measures, (result, measure) => {
-      return result.concat([
-        {coordinates: _.shuffle([coordKharkivGeo, coordYear1900]), value: getMV(), measureName: measure.gid, measure: measure._id},
-        {coordinates: _.shuffle([coordKharkivGeo, coordYear2000]), value: getMV(), measureName: measure.gid, measure: measure._id},
+    mongoose.model('DataPoints').create(dataPoints, (err, res) => {
+      pipe.dataPoints = res;
+      done(err, pipe);
+    });
 
-        {coordinates: _.shuffle([coordKharkivCity, coordYear1900]), value: getMV(), measureName: measure.gid, measure: measure._id},
-        {coordinates: _.shuffle([coordKharkivCity, coordYear2000]), value: getMV(), measureName: measure.gid, measure: measure._id},
+    function generateMeasureValue() {
+      return Math.random().toFixed(5) * 100000;
+    }
 
-        {coordinates: _.shuffle([coordUkraineGeo, coordYear1900]), value: getMV(), measureName: measure.gid, measure: measure._id},
-        {coordinates: _.shuffle([coordUkraineGeo, coordYear2000]), value: getMV(), measureName: measure.gid, measure: measure._id},
+    function generateCoordinates(pipe) {
+      let coordKharkivGeo = {gid: pipe.entities.kharkiv.gid, entityGroupName: pipe.entityGroups.geo.gid, entity: pipe.entities.kharkiv._id, entityGroup: pipe.entityGroups.geo._id};
+      let coordKharkivCity = {gid: pipe.entities.kharkiv.gid, entityGroupName: pipe.entityGroups.city.gid, entity: pipe.entities.kharkiv._id, entityGroup: pipe.entityGroups.city._id};
+      let coordUkraineGeo = {gid: pipe.entities.ukraine.gid, entityGroupName: pipe.entityGroups.geo.gid, entity: pipe.entities.ukraine._id, entityGroup: pipe.entityGroups.geo._id};
+      let coordUkraineCountry = {gid: pipe.entities.ukraine.gid, entityGroupName: pipe.entityGroups.country.gid, entity: pipe.entities.ukraine._id, entityGroup: pipe.entityGroups.country._id};
+      let coordHongKongGeo = {gid: pipe.entities.hongkong.gid, entityGroupName: pipe.entityGroups.geo.gid, entity: pipe.entities.hongkong._id, entityGroup: pipe.entityGroups.geo._id};
+      let coordHongKongCountry = {gid: pipe.entities.hongkong.gid, entityGroupName: pipe.entityGroups.country.gid, entity: pipe.entities.hongkong._id, entityGroup: pipe.entityGroups.country._id};
+      let coordHongKongCity = {gid: pipe.entities.hongkong.gid, entityGroupName: pipe.entityGroups.city.gid, entity: pipe.entities.hongkong._id, entityGroup: pipe.entityGroups.city._id};
+      let coordAbcGeo = {gid: pipe.entities._abc.gid, entityGroupName: pipe.entityGroups.geo.gid, entity: pipe.entities._abc._id, entityGroup: pipe.entityGroups.geo._id};
+      let coordYear1900 = {gid: pipe.entities['1900'].gid, entityGroupName: pipe.entityGroups.year.gid, entity: pipe.entities['1900']._id, entityGroup: pipe.entityGroups.year._id};
+      let coordYear2000 = {gid: pipe.entities['2000'].gid, entityGroupName: pipe.entityGroups.year.gid, entity: pipe.entities['2000']._id, entityGroup: pipe.entityGroups.year._id};
 
-        {coordinates: _.shuffle([coordUkraineCountry, coordYear1900]), value: getMV(), measureName: measure.gid, measure: measure._id},
-        {coordinates: _.shuffle([coordUkraineCountry, coordYear2000]), value: getMV(), measureName: measure.gid, measure: measure._id},
+      return [
+        _.shuffle([coordKharkivGeo, coordYear1900]),
+        _.shuffle([coordKharkivGeo, coordYear2000]),
+        _.shuffle([coordKharkivCity, coordYear1900]),
+        _.shuffle([coordKharkivCity, coordYear2000]),
+        _.shuffle([coordUkraineGeo, coordYear1900]),
+        _.shuffle([coordUkraineGeo, coordYear2000]),
+        _.shuffle([coordUkraineCountry, coordYear1900]),
+        _.shuffle([coordUkraineCountry, coordYear2000]),
+        _.shuffle([coordHongKongGeo, coordYear1900]),
+        _.shuffle([coordHongKongGeo, coordYear2000]),
+        _.shuffle([coordHongKongCountry, coordYear1900]),
+        _.shuffle([coordHongKongCountry, coordYear2000]),
+        _.shuffle([coordHongKongCity, coordYear1900]),
+        _.shuffle([coordHongKongCity, coordYear2000]),
+        _.shuffle([coordAbcGeo, coordYear1900]),
+        _.shuffle([coordAbcGeo, coordYear2000])
+      ];
 
-        {coordinates: _.shuffle([coordHongKongGeo, coordYear1900]), value: getMV(), measureName: measure.gid, measure: measure._id},
-        {coordinates: _.shuffle([coordHongKongGeo, coordYear2000]), value: getMV(), measureName: measure.gid, measure: measure._id},
+    }
 
-        {coordinates: _.shuffle([coordHongKongCountry, coordYear1900]), value: getMV(), measureName: measure.gid, measure: measure._id},
-        {coordinates: _.shuffle([coordHongKongCountry, coordYear2000]), value: getMV(), measureName: measure.gid, measure: measure._id},
+    function generateDataPoints(pipe) {
+      return _.reduce(pipe.measures, (result, measure) => {
+        let coordinates = generateCoordinates(pipe);
 
-        {coordinates: _.shuffle([coordHongKongCity, coordYear1900]), value: getMV(), measureName: measure.gid, measure: measure._id},
-        {coordinates: _.shuffle([coordHongKongCity, coordYear2000]), value: getMV(), measureName: measure.gid, measure: measure._id},
+        let dataPointTemplate = {
+          coordinates: null,
+          value: null,
+          measureName: measure.gid,
+          measure: measure._id,
+          versions: [pipe.version._id]
+        };
+        let _dataPoints = _.map(coordinates, (_coordinates) => {
+          var dataPoint = _.clone(dataPointTemplate);
+          dataPoint.coordinates = _coordinates;
+          dataPoint.value = generateMeasureValue();
+          return dataPoint;
+        });
 
-        {coordinates: _.shuffle([coordAbcGeo, coordYear1900]), value: getMV(), measureName: measure.gid, measure: measure._id},
-        {coordinates: _.shuffle([coordAbcGeo, coordYear2000]), value: getMV(), measureName: measure.gid, measure: measure._id}
-      ]);
-    }, []);
+        return result.concat(_dataPoints);
+      }, []);
+    }
+  }
 
-    mongoose.model('DataPoints').create(dataPoints, (err) => {
+  function createConcepts(pipe, done) {
+    let concepts = [
+      {gid: 'unit', name: 'Unit', versions: [pipe.version._id]},
+      {gid: 'description', name: 'Description', type: 'string', versions: [pipe.version._id]},
+      {gid: 'geographic_regions', name: 'Geographic regions', type: 'entity_set', versions: [pipe.version._id]},
+      {gid: 'geo', name: 'Geo', type: 'entity_domain', versions: [pipe.version._id]},
+      {gid: 'time', name: 'Time', type: 'time', versions: [pipe.version._id]},
+      {gid: 'children_per_woman_total_fertility', name: 'Babies per woman', type: 'measure', versions: [pipe.version._id]}
+    ];
+
+    mongoose.model('Concepts').create(concepts, (err, res) => {
+      pipe.concepts = res;
       done(err, pipe);
     });
   }
 
-  function getMV() {
-    return Math.random().toFixed(5) * 100000;
+  function createTranslations(pipe, done) {
+    let translations = [
+      {key: 'indicator/gini', value: 'Gini', language: 'en', dataset: pipe.dataSet._id},
+      {key: 'indicator/population', value: 'Population', language: 'en', dataset: pipe.dataSet._id},
+      {key: 'indicator/gini', value: 'Gini-ru', language: 'ru', dataset: pipe.dataSet._id},
+      {key: 'indicator/population', value: 'Population-ru', language: 'ru', dataset: pipe.dataSet._id},
+    ];
+
+    mongoose.model('Translations').create(translations, (err, res) => {
+      pipe.translations = res;
+      done(err, pipe);
+    });
   }
 });
