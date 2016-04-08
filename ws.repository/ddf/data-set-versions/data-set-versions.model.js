@@ -14,7 +14,7 @@ const Schema = mongoose.Schema;
  * @property {Date} createdAt - timestamp when this DataSet was created
  * @property {Object} basedOn - version from which current version is originate or in other words - parent version or origin.
  */
-const VersionsSchema = new Schema({
+const DataSetVersions = new Schema({
   value: String,
   status: { type: String, enum: ['IMPORTED', 'PUBLISHED', 'WORK_IN_PROGRESS'], 'default': 'WORK_IN_PROGRESS'},
 
@@ -27,7 +27,7 @@ const VersionsSchema = new Schema({
   basedOn: {type: Schema.Types.ObjectId, ref: 'DataSetVersions'}
 });
 
-VersionsSchema.index({value: 1});
-VersionsSchema.index({status: 1});
+DataSetVersions.index({value: 1});
+DataSetVersions.index({status: 1});
 
-module.exports = mongoose.model('DataSetVersions', VersionsSchema);
+module.exports = mongoose.model('DataSetVersions', DataSetVersions);

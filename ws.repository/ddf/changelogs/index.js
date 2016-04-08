@@ -1,3 +1,11 @@
+'use strict';
+
+require('./changelogs.model');
+const Repository = require('./changelogs.repository');
+
 /**
- * Created by geo on 4/6/16.
+ * Register Changelogs repository and MongoDB model
+ * @param {ServiceLocator} serviceLocator - repository service locator
+ * @returns {ServiceLocator} - instance of locator
  */
+module.exports = serviceLocator => serviceLocator.set('Changelogs', new Repository());
