@@ -8,10 +8,16 @@ let Schema = mongoose.Schema;
  * @memberof Models
  *
  * @property {String} gid - unique entityGroup gid within dataSetVersion
+ *
  * @property {String} name - unique entityGroup name within dataSetVersion
+ * @property {String} type - signifies a type of entity group - might be one of the following: 'entity_domain', 'entity_set', 'time'
+ *
  * @property {String} tooltip - nice name for entityGroup
-
- * @property {Models.EntityGroup} parent - of current entityGroup (could be null)
+ * @property {String} link - link to source of entityGroup
+ *
+ * @property {Models.EntityGroup} domain - of current entity set (could be null only for entity domain)
+ * @property {Array<Models.EntityGroup>} drillup - to lower-tier authorities, entity sets (could be null)
+ * @property {Array<Models.EntityGroup>} drilldown - to higher authorities, entity sets (could be null)
  *
  * @property {Object} properties - all properties from data set
  * @property {Object} meta - any meta for entityGroup
@@ -29,14 +35,15 @@ let EntityGroups = new Schema({
   tooltip: String,
   link: String,
 
-  parent: {type: Schema.Types.ObjectId, ref: 'EntityGroups', sparse: true},
+  domain: {type: Schema.Types.ObjectId, ref: 'EntityGroups', sparse: true},
+  drillup: [{type: Schema.Types.ObjectId, ref: 'EntityGroups'}],
+  drilldown: [{type: Schema.Types.ObjectId, ref: 'EntityGroups'}],
 
   properties: {},
   meta: {},
 
   // system marks
   versions: [{type: Schema.Types.ObjectId, ref: 'DataSetVersions'}],
-
   previous: {type: Schema.Types.ObjectId, ref: 'EntityGroups', sparse: true}
 });
 

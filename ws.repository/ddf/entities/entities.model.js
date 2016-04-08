@@ -13,11 +13,11 @@ let Schema = mongoose.Schema;
  * @property {Object} properties - all properties from data set
  *
  * @property {Models.EntityGroups} domain - of entity, reference to only one entity domain from EntityGroups collection
- * @property {Models.EntityGroups} sets - of entity, in which entity takes part of
+ * @property {Array<Models.EntityGroups>} sets - of entity, in which entity takes part of
  * @property {Models.Entities} drilldown - to lower-tier authorities (entity)
  * @property {Models.Entities} drillup - to higher authorities (entity)
  *
- * @property {Array<Models.DataSetVersions>} dataSetVersions - all versions of data set in which the entity was added
+ * @property {Array<Models.DataSetVersions>} versions - all versions of data set in which the entity was added
  * @property {Models.Entity} previous - of current entity (could be null)
  */
 let Entities = new Schema({
@@ -31,13 +31,13 @@ let Entities = new Schema({
   drilldown: {type: Schema.Types.ObjectId, ref: 'Entities'},
   drillup: {type: Schema.Types.ObjectId, ref: 'Entities'},
 
-  dataSetVersions: [{type: Schema.Types.ObjectId, ref: 'DataSetVersions'}],
+  versions: [{type: Schema.Types.ObjectId, ref: 'DataSetVersions'}],
   previous: {type: Schema.Types.ObjectId, ref: 'Entities', sparse: true}
 });
 
 Entities.index({gid: 1, domain: 1});
 Entities.index({gid: 1, sets: 1});
-Entities.index({gid: 1, dataSetVersions: 1});
+Entities.index({gid: 1, versions: 1});
 Entities.index({gid: 1, drilldown: 1});
 Entities.index({gid: 1, drillup: 1});
 

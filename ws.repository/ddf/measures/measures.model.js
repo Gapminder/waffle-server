@@ -13,7 +13,7 @@ let Schema = mongoose.Schema;
  * @property {Object} meta - any meta for measure
  * @property {Object} properties - all properties from data set
  *
- * @property {Array<Models.DataSetVersions>} dataSetVersions - all versions of data set in which the measure was added
+ * @property {Array<Models.DataSetVersions>} versions - all versions of data set in which the measure was added
  * @property {<Models.Measures>} previous - of current measure (could be null)
  */
 let Measures = new Schema({
@@ -31,12 +31,11 @@ let Measures = new Schema({
   unit: String,
   scales: [String],
 
-  dataSetVersions: [{type: Schema.Types.ObjectId, ref: 'DataSetVersions'}],
-
+  versions: [{type: Schema.Types.ObjectId, ref: 'DataSetVersions'}],
   previous: {type: Schema.Types.ObjectId, ref: 'Measures', sparse: true}
 });
 
-Measures.index({dataSetVersions: 1});
-Measures.index({gid: 1, dataSetVersions: 1});
+Measures.index({versions: 1});
+Measures.index({gid: 1, versions: 1});
 
 module.exports = mongoose.model('Measures', Measures);

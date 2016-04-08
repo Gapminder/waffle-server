@@ -138,7 +138,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
         gid: 'country',
         name: 'Country',
         type: 'entity_set',
-        parent: pipe.entityGroups.geo._id,
+        domain: pipe.entityGroups.geo._id,
         versions: [pipe.version._id]
       }, (err, res) => {
         pipe.entityGroups.country = res;
@@ -151,7 +151,9 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
         gid: 'city',
         name: 'City',
         type: 'entity_set',
-        parent: pipe.entityGroups.geo._id,
+        domain: pipe.entityGroups.geo._id,
+        // emulated only drillup property from current ddf--concept.csv
+        drillup: [pipe.entityGroups.country._id],
         versions: [pipe.version._id]
       }, (err, res) => {
         pipe.entityGroups.city = res;
@@ -176,7 +178,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
         gid: 'year',
         name: 'Year',
         type: 'entity_set',
-        parent: pipe.entityGroups.time._id,
+        domain: pipe.entityGroups.time._id,
         versions: [pipe.version._id]
       }, (err, res) => {
         pipe.entityGroups.year = res;
@@ -337,29 +339,29 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
 
     let dataPoints = _.reduce(pipe.measures, (result, measure) => {
       return result.concat([
-        {coordinates: [coordKharkivGeo, coordYear1900], value: getMV(), measureName: measure.gid, measure: measure._id},
-        {coordinates: [coordKharkivGeo, coordYear2000], value: getMV(), measureName: measure.gid, measure: measure._id},
+        {coordinates: _.shuffle([coordKharkivGeo, coordYear1900]), value: getMV(), measureName: measure.gid, measure: measure._id},
+        {coordinates: _.shuffle([coordKharkivGeo, coordYear2000]), value: getMV(), measureName: measure.gid, measure: measure._id},
 
-        {coordinates: [coordKharkivCity, coordYear1900], value: getMV(), measureName: measure.gid, measure: measure._id},
-        {coordinates: [coordKharkivCity, coordYear2000], value: getMV(), measureName: measure.gid, measure: measure._id},
+        {coordinates: _.shuffle([coordKharkivCity, coordYear1900]), value: getMV(), measureName: measure.gid, measure: measure._id},
+        {coordinates: _.shuffle([coordKharkivCity, coordYear2000]), value: getMV(), measureName: measure.gid, measure: measure._id},
 
-        {coordinates: [coordUkraineGeo, coordYear1900], value: getMV(), measureName: measure.gid, measure: measure._id},
-        {coordinates: [coordUkraineGeo, coordYear2000], value: getMV(), measureName: measure.gid, measure: measure._id},
+        {coordinates: _.shuffle([coordUkraineGeo, coordYear1900]), value: getMV(), measureName: measure.gid, measure: measure._id},
+        {coordinates: _.shuffle([coordUkraineGeo, coordYear2000]), value: getMV(), measureName: measure.gid, measure: measure._id},
 
-        {coordinates: [coordUkraineCountry, coordYear1900], value: getMV(), measureName: measure.gid, measure: measure._id},
-        {coordinates: [coordUkraineCountry, coordYear2000], value: getMV(), measureName: measure.gid, measure: measure._id},
+        {coordinates: _.shuffle([coordUkraineCountry, coordYear1900]), value: getMV(), measureName: measure.gid, measure: measure._id},
+        {coordinates: _.shuffle([coordUkraineCountry, coordYear2000]), value: getMV(), measureName: measure.gid, measure: measure._id},
 
-        {coordinates: [coordHongKongGeo, coordYear1900], value: getMV(), measureName: measure.gid, measure: measure._id},
-        {coordinates: [coordHongKongGeo, coordYear2000], value: getMV(), measureName: measure.gid, measure: measure._id},
+        {coordinates: _.shuffle([coordHongKongGeo, coordYear1900]), value: getMV(), measureName: measure.gid, measure: measure._id},
+        {coordinates: _.shuffle([coordHongKongGeo, coordYear2000]), value: getMV(), measureName: measure.gid, measure: measure._id},
 
-        {coordinates: [coordHongKongCountry, coordYear1900], value: getMV(), measureName: measure.gid, measure: measure._id},
-        {coordinates: [coordHongKongCountry, coordYear2000], value: getMV(), measureName: measure.gid, measure: measure._id},
+        {coordinates: _.shuffle([coordHongKongCountry, coordYear1900]), value: getMV(), measureName: measure.gid, measure: measure._id},
+        {coordinates: _.shuffle([coordHongKongCountry, coordYear2000]), value: getMV(), measureName: measure.gid, measure: measure._id},
 
-        {coordinates: [coordHongKongCity, coordYear1900], value: getMV(), measureName: measure.gid, measure: measure._id},
-        {coordinates: [coordHongKongCity, coordYear2000], value: getMV(), measureName: measure.gid, measure: measure._id},
+        {coordinates: _.shuffle([coordHongKongCity, coordYear1900]), value: getMV(), measureName: measure.gid, measure: measure._id},
+        {coordinates: _.shuffle([coordHongKongCity, coordYear2000]), value: getMV(), measureName: measure.gid, measure: measure._id},
 
-        {coordinates: [coordAbcGeo, coordYear1900], value: getMV(), measureName: measure.gid, measure: measure._id},
-        {coordinates: [coordAbcGeo, coordYear2000], value: getMV(), measureName: measure.gid, measure: measure._id}
+        {coordinates: _.shuffle([coordAbcGeo, coordYear1900]), value: getMV(), measureName: measure.gid, measure: measure._id},
+        {coordinates: _.shuffle([coordAbcGeo, coordYear2000]), value: getMV(), measureName: measure.gid, measure: measure._id}
       ]);
     }, []);
 
