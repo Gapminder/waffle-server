@@ -17,6 +17,7 @@ const Schema = mongoose.Schema;
  * @property {String} domain - name of the domain concept belongs to
  * @property {Object} properties - all properties from source
  *
+ * @property {Array<Models.DataSetVersions>} versions - all versions of data set in which the entity was added
  * @property {Object} previous - a link to previous version of the current entity
  */
 const ConceptsSchema = new Schema({
@@ -28,6 +29,7 @@ const ConceptsSchema = new Schema({
   domain: String,
   properties: {},
 
+  versions: [{type: Schema.Types.ObjectId, ref: 'DataSetVersions'}],
   previous: {type: Schema.Types.ObjectId, ref: 'Concepts', sparse: true}
 });
 
