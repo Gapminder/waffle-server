@@ -10,6 +10,22 @@ const appStub = {
 };
 const config = require('../ws.config/config')(appStub);
 const logger = require('../ws.config/log')(appStub);
+const _ = require('lodash');
+const ddfModels = [
+  'concepts',
+  'data-points',
+  'data-set-versions',
+  'data-set-sessions',
+  'data-sets',
+  'entities',
+  'entity-groups',
+  'measures',
+  'translations',
+  'users',
+  'changelogs'
+];
+appStub.set('ddfModels', ddfModels);
+
 require('../ws.config/db.config')(appStub);
 
 var mongoose = require('mongoose');
@@ -18,11 +34,13 @@ var mongoose = require('mongoose');
 require('../ws.repository/geo.model');
 require('../ws.repository/dimensions/dimensions.model');
 require('../ws.repository/dimension-values/dimension-values.model');
-require('../ws.repository/translations.model');
+// require('../ws.repository/translations.model');
 require('../ws.repository/indicators/indicators.model');
 require('../ws.repository/indicator-values/indicator-values.model');
 require('../ws.repository/indexTree.model');
 require('../ws.repository/indexDb.model');
+
+_.forEach(ddfModels, model => require(`../ws.repository/ddf/${model}/${model}.model`));
 
 const mappingImporters = {
   'ddf-world': 'import-ddf1',

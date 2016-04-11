@@ -12,46 +12,22 @@ const Converter = require('csvtojson').Converter;
 const metadata = require('./vizabi/metadata.json');
 const mongoose = require('mongoose');
 
-const geoMappingHash = require('./geo-mapping.json');
-const Geo = mongoose.model('Geo');
-const Dimensions = mongoose.model('Dimensions');
-const DimensionValues = mongoose.model('DimensionValues');
-const Indicators = mongoose.model('Indicators');
-const IndicatorsValues = mongoose.model('IndicatorValues');
-const Translations = mongoose.model('Translations');
-const IndexTree = mongoose.model('IndexTree');
-const IndexDb = mongoose.model('IndexDb');
-
 // geo mapping
 const geoMapping = require('./geo-mapping.json');
-
-// entityDomains
-const entityTypes = {
-  entity_set: 'entity_set',
-  entity_domain: 'entity_domain',
-  time: 'time'
-};
-// measure types
-const measureTypes = {
-  measure: 'measure'
-};
+const defaultEntityGroupTypes = ['entity_domain', 'entity_set', 'time'];
 
 // take from args
 let logger;
 let config;
+let ddfModels;
 let pathToDdfFolder;
 let resolvePath;
 let ddfConceptsFile;
 
-let dimensionsGids = [
-  'geographic_regions', 'income_groups', 'landlocked',
-  'g77_and_oecd_countries', 'geographic_regions_in_4_colors', 'main_religion_2008',
-  'country', 'global'
-];
-
 module.exports = function (app, done) {
   logger = app.get('log');
   config = app.get('config');
+  ddfModels = app.get('ddfModels');
 
   pathToDdfFolder = config.PATH_TO_DDF_FOLDER;
   resolvePath = (filename) => path.resolve(pathToDdfFolder, filename);
@@ -59,14 +35,18 @@ module.exports = function (app, done) {
 
   async.waterfall([
     clearAllDbs,
-
-    (pipe, cb) => cb(),
-    createEntityDomainsAndSets(ddfConceptsFile),
-    // and geo
-    createEntityDomainsValues(v=>v.subdimOf ? `ddf--entities--${v.subdimOf}--${v.gid}.csv` : `ddf--list--${v.gid}.csv`),
-    createMeasures(ddfConceptsFile),
-    createDataPoints(),
-    createGeoProperties()
+    createUser,
+    createDataSet,
+    createVersion,
+    createSession,
+    loadEntityGroups,
+    createEntityGroups
+    // createEntityDomainsAndSets(ddfConceptsFile),
+    // // and geo
+    // createEntityDomainsValues(v=>v.subdimOf ? `ddf--entities--${v.subdimOf}--${v.gid}.csv` : `ddf--list--${v.gid}.csv`),
+    // createMeasures(ddfConceptsFile),
+    // createDataPoints(),
+    // createGeoProperties()
   ], (err) => {
     console.timeEnd('done');
     return done(err);
@@ -75,16 +55,147 @@ module.exports = function (app, done) {
 
 function clearAllDbs(cb) {
   if (process.env.CLEAR_ALL_MONGO_DB_COLLECTIONS_BEFORE_IMPORT === 'true') {
-    return async.parallel([
-      cb => Geo.remove({}, err => cb(err)),
-      cb => Dimensions.remove({}, err => cb(err)),
-      cb => DimensionValues.remove({}, err => cb(err)),
-      cb => Indicators.remove({}, err => cb(err)),
-      cb => IndicatorsValues.remove({}, err => cb(err))
-    ], cb);
+    let collectionsFn = _.map(ddfModels, model => {
+      let modelName = _.chain(model).camelCase().upperFirst();
+      return _cb => mongoose.model(modelName).remove({}, _cb);
+    });
+
+    return async.parallel(collectionsFn, (err) => cb(err, {raw: {}}));
   }
 
-  return cb(null, {});
+  return cb(null, {raw: {}});
+}
+
+function createUser(pipe, done) {
+  mongoose.model('Users').create({
+    name: 'Vasya Pupkin',
+    email: 'email@email.com',
+    username: 'VPup',
+    password: 'VPup'
+  }, (err, res) => {
+    pipe.user = res;
+    return done(err, pipe);
+  });
+}
+
+function createDataSet(pipe, done) {
+  mongoose.model('DataSets').create({
+    dsId: 'ddf-gapminder-world-v2',
+    type: 'local',
+    uri: pathToDdfFolder,
+    dataProvider: 'semio',
+    defaultLanguage: 'en',
+    createdBy: pipe.user._id
+  }, (err, res) => {
+    pipe.dataSet = res;
+    return done(err, pipe);
+  });
+}
+
+function createVersion(pipe, done) {
+  mongoose.model('DataSetVersions').create({
+    value: Math.random().toString(),
+    createdBy: pipe.user._id,
+    dataSet: pipe.dataSet._id
+  }, (err, res) => {
+    pipe.version = res;
+    return done(err, pipe);
+  });
+}
+
+function createSession(pipe, done) {
+  mongoose.model('DataSetSessions').create({
+    version: pipe.version._id,
+    createdBy: pipe.user._id
+  }, (err, res) => {
+    pipe.session = res;
+    return done(err, pipe);
+  });
+}
+
+function loadEntityGroups(pipe, done) {
+  defaultEntityGroupTypes;
+
+  pipe.raw = {entityGroups: []};
+
+  done(null, pipe);
+}
+
+function createEntityGroups(pipe, done) {
+  pipe.entityGroups = {};
+
+  let waterfallFns = _
+    .reduce(pipe.raw.entityGroups, eg => {
+      return (pipe, cb) => eg;
+    })
+    .unshift(async.constant(pipe));
+
+  async.waterfall(waterfallFns, done);
+
+  function _createGeo(pipe, done) {
+    mongoose.model('EntityGroups').create({
+      gid: 'geo',
+      name: 'Geo',
+      type: 'entity_domain',
+      versions: [pipe.version._id]
+    }, (err, res) => {
+      pipe.entityGroups.geo = res;
+      return done(err, pipe);
+    });
+  }
+
+  function _createCountry(pipe, done) {
+    mongoose.model('EntityGroups').create({
+      gid: 'country',
+      name: 'Country',
+      type: 'entity_set',
+      domain: pipe.entityGroups.geo._id,
+      versions: [pipe.version._id]
+    }, (err, res) => {
+      pipe.entityGroups.country = res;
+      return done(err, pipe);
+    });
+  }
+
+  function _createCity(pipe, done) {
+    mongoose.model('EntityGroups').create({
+      gid: 'city',
+      name: 'City',
+      type: 'entity_set',
+      domain: pipe.entityGroups.geo._id,
+      // emulated only drill_up property from current ddf--concept.csv
+      drillups: [pipe.entityGroups.country._id],
+      versions: [pipe.version._id]
+    }, (err, res) => {
+      pipe.entityGroups.city = res;
+      return done(err, pipe);
+    });
+  }
+
+  function _createTime(pipe, done) {
+    mongoose.model('EntityGroups').create({
+      gid: 'time',
+      name: 'Time',
+      type: 'entity_domain',
+      versions: [pipe.version._id]
+    }, (err, res) => {
+      pipe.entityGroups.time = res;
+      return done(err, pipe);
+    });
+  }
+
+  function _createYear(pipe, done) {
+    mongoose.model('EntityGroups').create({
+      gid: 'year',
+      name: 'Year',
+      type: 'entity_set',
+      domain: pipe.entityGroups.time._id,
+      versions: [pipe.version._id]
+    }, (err, res) => {
+      pipe.entityGroups.year = res;
+      return done(err, pipe);
+    });
+  }
 }
 
 function createEntityDomainsAndSets(ddf_dimensions_file) {
