@@ -4,14 +4,29 @@ var express = require('express');
 var Neo4j = require('node-neo4j');
 var mongoose = require('mongoose');
 
-var neo4jdb = new Neo4j('http://neo4j:neo4j@localhost:7474');
+_.forEach([
+  'concepts',
+  'data-points',
+  'data-set-versions',
+  'data-set-sessions',
+  'data-sets',
+  'entities',
+  'entity-groups',
+  'measures',
+  'translations',
+  'users',
+  'changelogs'
+], model => require(`./${model}/${model}.model`));
+
+
+var neo4jdb = new Neo4j('http://neo4j:root@localhost:7474');
 
 mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
   if (err) {
     throw err;
   }
 
-  var logger = console.log.bind(console);
+  var logger = console;
 
   console.time('Mission complete!');
   async.waterfall([
@@ -20,11 +35,11 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
     },
     cleanGraph,
     // unique
-    exportIndicators,
+    exportMeasures,
     // dependant
-    exportIndicatorDimensions,
-    exportMeasureValues,
-    createIndexes
+    exportEntityGroups,
+    // exportMeasureValues,
+    // createIndexes
   ], function (err) {
     if (err) {
       logger.error(err);
@@ -58,27 +73,28 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
   }
 
 // export indicators and build _it to node_id hash set
-  function exportIndicators(pipe, eiCb) {
-    console.log('Indicators export started');
-    console.time('Indicators exported');
-    var modelName = 'Indicators';
-    var Indicators = mongoose.model(modelName);
+  function exportMeasures(pipe, emCb) {
+    var modelName = 'Measures';
+
+    console.log(`${modelName} export started`);
+    console.time(`${modelName} exported`);
+    var Measures = mongoose.model(modelName);
     async.waterfall([
-      cb => Indicators.find({}, {gid: 1, name: 1, unit: 1}).lean().exec(cb),
-      (indicators, cb) => {
-        console.log('Exporting %s indicators', indicators.length);
+      cb => Measures.find({}, {gid: 1, name: 1}).lean().exec(cb),
+      (measures, cb) => {
+        console.log(`Exporting %s ${modelName}`, measures.length);
         // create indicators
-        var batchQuery = _.map(indicators, function (indicator, index) {
+        var batchQuery = _.map(measures, function (measure, index) {
           return {
             method: 'POST',
             to: '/node',
-            body: {gid: indicator.gid, name: indicator.name},
+            body: {gid: measure.gid, name: measure.name},
             id: index
           };
         });
 
         // set label to indicators
-        _.each(indicators, function (entry, index) {
+        _.each(measures, function (measure, index) {
           batchQuery.push({
             method: 'POST',
             to: '{' + index + '}/labels',
@@ -86,32 +102,35 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
             body: modelName
           });
         });
-        return neo4jdb.batchQuery(batchQuery, (err, indicatorNodes) => {
-          console.timeEnd('Indicators exported');
-          return cb(err, {indicatorNodes, indicators});
+        return neo4jdb.batchQuery(batchQuery, (err, measureNodes) => {
+          console.timeEnd(`${modelName} exported`);
+          return cb(err, {measureNodes, measures});
         });
       },
-      (indiPipe, cb) => {
+      (measuresPipe, cb) => {
         // build indicators hash set
         // indicators from mongo
-        async.reduce(indiPipe.indicators, {}, (memo, indicator, cb)=> {
-          var index = _.findIndex(indiPipe.indicatorNodes, node => indicator.gid === node.body.data.gid);
-          indicator.nodeId = indiPipe.indicatorNodes[index].body.metadata.id;
-          memo[indicator._id.toString()] = indicator;
-          return Indicators.update({_id: indicator._id}, {$set: {nodeId: indicator.nodeId}}, err => cb(err, memo));
+        async.reduce(measuresPipe.measures, {}, (memo, measure, cb)=> {
+          var index = _.findIndex(measuresPipe.measureNodes, node => measure.gid === node.body.data.gid);
+          measure.nodeId = measuresPipe.measureNodes[index].body.metadata.id;
+          memo[measure._id.toString()] = measure;
+          return Measures.update({_id: measure._id}, {$set: {nodeId: measure.nodeId}}, err => cb(err, memo));
         }, (err, res) => {
-          pipe.indicators = res;
+          pipe.measures = res;
           return cb(err);
         });
       }
-    ], (err) => eiCb(err, pipe));
+    ], (err) => {
+      emCb(err, pipe)
+    });
   }
 
 // export indicator dimensions and build hash
-  function exportIndicatorDimensions(pipe, eidCb) {
-    var modelName = 'Dimensions';
-    console.log(modelName + ' export started');
-    console.time(modelName + ' exported');
+  function exportEntityGroups(pipe, eidCb) {
+    var modelName = 'EntityGroups';
+
+    console.log(`${modelName} export started`);
+    console.time(`${modelName} exported`);
     var Dimensions = mongoose.model(modelName);
     var Indicators = mongoose.model('Indicators');
     async.waterfall([
@@ -174,7 +193,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
       // run cypher batch query
       (batchQuery, nodeMetas, cb) => {
         return neo4jdb.batchQuery(batchQuery, function (err, dimensionNodes) {
-          console.timeEnd(modelName + ' exported');
+          console.timeEnd(`${modelName} exported`);
 
           return cb(err, dimensionNodes, nodeMetas);
         });
