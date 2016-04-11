@@ -26,6 +26,7 @@ require('../ws.repository/indexDb.model');
 
 const mappingImporters = {
   'ddf-world': 'import-ddf1',
+  'ddf-world2': 'import-ddf2',
   'ddf-open-numbers': 'import',
   'metadata': 'import-metadata',
   'export-neo4j': '../ws.routes/graphs/export.service'
