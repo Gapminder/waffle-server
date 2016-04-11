@@ -24,7 +24,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
   }
 
   async.waterfall([
-    (done) => done(null, {}),
+    async.constant({}),
     (pipe, done) => getUser(pipe, done),
     (pipe, done) => getDataSet(pipe, done),
     (pipe, done) => getOldVersion(pipe, done),

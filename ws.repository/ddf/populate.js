@@ -24,7 +24,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
   }
 
   async.waterfall([
-    (done) => done(null, {}),
+    async.constant({}),
     (pipe, done) => removeData(pipe, done),
     (pipe, done) => createUser(pipe, done),
     (pipe, done) => createDataSet(pipe, done),
@@ -36,7 +36,6 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
     (pipe, done) => createDataPoints(pipe, done),
     (pipe, done) => createConcepts(pipe, done),
     (pipe, done) => createTranslations(pipe, done)
-    // (pipe, done) => createChangelog(pipe, done)
   ], (err, result) => {
     if (err) {
       throw err;
@@ -114,7 +113,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
     pipe.entityGroups = {};
 
     async.waterfall([
-      (done) => done(null, pipe),
+      async.constant(pipe),
       (pipe, done) => _createGeo(pipe, done),
       (pipe, done) => _createCountry(pipe, done),
       (pipe, done) => _createCity(pipe, done),
@@ -192,7 +191,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
     pipe.entities = {};
 
     async.waterfall([
-      (done) => done(null, pipe),
+      async.constant(pipe),
       (pipe, done) => _createKharkiv(pipe, done),
       (pipe, done) => _createUkraine(pipe, done),
       (pipe, done) => _updateKharkivDrillup(pipe, done),
