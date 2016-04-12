@@ -131,62 +131,67 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
 
     console.log(`${modelName} export started`);
     console.time(`${modelName} exported`);
-    var Dimensions = mongoose.model(modelName);
-    var Indicators = mongoose.model('Indicators');
+
+    var EntityGroups = mongoose.model(modelName);
+    // var Indicators = mongoose.model('Indicators');
+
     async.waterfall([
       // find all dimensions
-      cb => Dimensions.find({}, {name: 1, gid: 1}).lean().exec(cb),
+      cb => EntityGroups.find({}, {name: 1, gid: 1, type: 1, drilldowns: 1, drillups: 1, _id: 1, domain: 1}).lean().exec(cb),
       // build dimensions hash map
-      (dimensions, cb) => cb(null, _.keyBy(dimensions, (dimension) => dimension._id.toString())),
+      (entityGroups, cb) => cb(null, _.keyBy(entityGroups, entityGroup => entityGroup._id.toString())),
       // save hash map to pipe
-      (dimensions, cb) => {
-        pipe.dimensions = dimensions;
-        cb();
+      (entityGroups, cb) => {
+        pipe.entityGroups = entityGroups;
+        cb(null, pipe);
       },
       // find all indicators
-      cb => Indicators.find({}, {dimensions: 1, nodeId: 1}).lean().exec(cb),
+      // cb => Indicators.find({}, {dimensions: 1, nodeId: 1}).lean().exec(cb),
       // build cypher batch query and meta
-      (indicators, cb) => {
+      (pipe, cb) => {
         var batchQuery = [];
-        var nodeMetas = [];
-        _.each(indicators, function (indicator) {
-          _.each(indicator.dimensions, function (dimensionId) {
-            // create indicator dimension node
-            var dimension = pipe.dimensions[dimensionId.toString()];
-            var dimensionIndex = batchQuery.length;
-            var indicatorNodeId = indicator.nodeId;
-            nodeMetas.push({
-              dimensionIndex: dimensionIndex,
-              indicatorId: indicator._id.toString(),
-              dimension: dimension,
-              dimensionId: dimension._id.toString()
-            });
-            batchQuery.push({
-              method: 'POST',
-              to: '/node',
-              body: {name: dimension.name, gid: dimension.gid},
-              id: batchQuery.length
-            });
+        var nodeMetas = {};
+        _.each(pipe.entityGroups, function (entityGroupId) {
+          // create indicator dimension node
+          var entityGroup = pipe.entityGroups[entityGroupId._id.toString()];
 
-            // set label to dimension
-            batchQuery.push({
-              method: 'POST',
-              to: '{' + dimensionIndex + '}/labels',
-              id: batchQuery.length,
-              body: modelName
-            });
+          var entityGroupIndex = batchQuery.length;
+          // var indicatorNodeId = indicator.nodeId;
 
-            // set relation [:with_dimension] from indicator to dimension
-            batchQuery.push({
-              method: 'POST',
-              to: '/node/' + indicatorNodeId + '/relationships',
-              id: batchQuery.length,
-              body: {
-                to: '{' + dimensionIndex + '}',
-                type: 'with_dimension'
-              }
-            });
+          // nodeMetas.push({
+          //   dimensionIndex: entityGroupIndex,
+          //   indicatorId: indicator._id.toString(),
+          //   dimension: entityGroup,
+          //   dimensionId: entityGroup._id.toString()
+          // });
+          batchQuery.push({
+            method: 'POST',
+            to: '/node',
+            body: {name: entityGroup.name, gid: entityGroup.gid, type: entityGroup.type},
+            id: batchQuery.length
           });
+
+          // set label to dimension
+          batchQuery.push({
+            method: 'POST',
+            to: '{' + entityGroupIndex + '}/labels',
+            id: batchQuery.length,
+            body: modelName
+          });
+
+          // set relation [:with_dimension] from indicator to dimension
+
+          nodeMetas[entityGroupId._id.toString()] = {entityGroupIndex, gid: entityGroup.gid, batchQueryId: batchQuery.length};
+
+          // batchQuery.push({
+          //   method: 'POST',
+          //   to: '/node/' + indicatorNodeId + '/relationships',
+          //   id: batchQuery.length,
+          //   body: {
+          //     to: '{' + entityGroupIndex + '}',
+          //     type: 'drilldown'
+          //   }
+          // });
         });
         return cb(null, batchQuery, nodeMetas);
       },
@@ -195,11 +200,60 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
         return neo4jdb.batchQuery(batchQuery, function (err, dimensionNodes) {
           console.timeEnd(`${modelName} exported`);
 
+          _.reduce(dimensionNodes, (prev, current) => {
+            const node = _.find(nodeMetas, node => {
+              return current.body && node.gid === current.body.data.gid
+            });
+            if (node) {
+              node.neoId = current.body.metadata.id;
+            }
+          }, {});
+
           return cb(err, dimensionNodes, nodeMetas);
         });
       },
-      // build map of {indicator,dimension} with cypher nodeId
       (dimensionNodes, nodeMetas, cb) => {
+        console.log(pipe);
+
+        var batchQuery = [];
+
+        _.each(pipe.entityGroups, entityGroup => {
+          _.each(entityGroup.drilldowns, drilldownEntityGroup => {
+            batchQuery.push({
+              method: 'POST',
+              to: '/node/' + nodeMetas[entityGroup._id.toString()].neoId + '/relationships',
+              id: 0,
+              body: {
+                to: '' + nodeMetas[drilldownEntityGroup.toString()].neoId + '',
+                type: 'drilldown'
+              }
+            });
+          });
+        });
+
+        _.each(pipe.entityGroups, entityGroup => {
+          _.each(entityGroup.drillups, drillupEntityGroup => {
+            batchQuery.push({
+              method: 'POST',
+              to: '/node/' + nodeMetas[entityGroup._id.toString()].neoId + '/relationships',
+              id: 0,
+              body: {
+                to: '' + nodeMetas[drillupEntityGroup.toString()].neoId + '',
+                type: 'drillup'
+              }
+            });
+          });
+        });
+
+        cb(null, batchQuery);
+      },
+      (batchQuery, cb) => {
+        return neo4jdb.batchQuery(batchQuery, function (err, dimensionNodes) {
+          return cb(err, dimensionNodes);
+        });
+      }
+      // build map of {indicator,dimension} with cypher nodeId
+      /*(dimensionNodes, nodeMetas, cb) => {
         // build indicator->dimension hash set
         pipe.dimensionArray = _.map(nodeMetas, function (nodeMeta) {
           return _.merge({
@@ -208,7 +262,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
           }, nodeMeta.dimension);
         });
         cb();
-      }
+      }*/
     ], err => eidCb(err, pipe));
   }
 

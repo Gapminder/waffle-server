@@ -117,6 +117,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
       (pipe, done) => _createGeo(pipe, done),
       (pipe, done) => _createCountry(pipe, done),
       (pipe, done) => _createCity(pipe, done),
+      (pipe, done) => _createCountryToCityDrilldown(pipe, done),
       (pipe, done) => _createTime(pipe, done),
       (pipe, done) => _createYear(pipe, done)
     ], done);
@@ -183,6 +184,16 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
       }, (err, res) => {
         pipe.entityGroups.year = res;
         return done(err, pipe);
+      });
+    }
+
+    function _createCountryToCityDrilldown(pipe, done) {
+      mongoose.model('EntityGroups').findOne({gid: 'city'}).lean().exec((error, city) => {
+        mongoose.model('EntityGroups').update({
+          gid: 'country'
+        }, {$push: {drilldowns: city._id}}, (err, res) => {
+          return done(err, pipe);
+        });
       });
     }
   }
