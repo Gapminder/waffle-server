@@ -489,7 +489,10 @@ function mapDdfDimensionsToGeoWsModel(entry) {
     geographic_regions: geographicRegions,
     income_groups: incomeGroups,
     landlocked: landlocked,
-    main_religion_2008: mainReligion2008
+    main_religion_2008: mainReligion2008,
+    god_id: entry.properties.god_id,
+    code: entry.properties.code,
+    properties: entry.properties
   };
 }
 
