@@ -32,7 +32,10 @@ var Geo = new Schema({
   geographic_regions: String,
   income_groups: String,
   landlocked: String,
-  main_religion_2008: String
+  main_religion_2008: String,
+  god_id: String,
+  code: String,
+  properties: {}
 });
 
 module.exports = mongoose.model('Geo', Geo);

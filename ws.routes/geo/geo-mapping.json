@@ -22,6 +22,8 @@
     "region": "isRegion4",
     "country": "isCountry",
     "unstate": "isUnState",
+    "geo.god_id": "god_id",
+    "geo.code": "code",
     "geo.isGlobal": "isGlobal",
     "geo.isRegion4": "isRegion4",
     "geo.isCountry": "isCountry",
