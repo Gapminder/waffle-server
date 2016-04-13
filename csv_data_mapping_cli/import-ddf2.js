@@ -15,6 +15,7 @@ const mongoose = require('mongoose');
 // geo mapping
 const geoMapping = require('./geo-mapping.json');
 const defaultEntityGroupTypes = ['entity_domain', 'entity_set', 'time'];
+const defaultMeasureTypes = ['measure'];
 
 // take from args
 let logger;
@@ -31,16 +32,25 @@ module.exports = function (app, done) {
 
   pathToDdfFolder = config.PATH_TO_DDF_FOLDER;
   resolvePath = (filename) => path.resolve(pathToDdfFolder, filename);
-  ddfConceptsFile = 'ddf--concepts.csv';
+  ddfConceptsFile = resolvePath('ddf--concepts.csv');
+
+  let pipe = {
+    ddfConceptsFile,
+    raw: {},
+    defaultEntityGroupTypes,
+    defaultMeasureTypes,
+    pathToDdfFolder
+  };
 
   async.waterfall([
+    async.constant(pipe),
     clearAllDbs,
     createUser,
     createDataSet,
     createVersion,
     createSession,
     loadEntityGroups,
-    createEntityGroups
+    // createEntityGroups
     // createEntityDomainsAndSets(ddfConceptsFile),
     // // and geo
     // createEntityDomainsValues(v=>v.subdimOf ? `ddf--entities--${v.subdimOf}--${v.gid}.csv` : `ddf--list--${v.gid}.csv`),
@@ -53,20 +63,24 @@ module.exports = function (app, done) {
   });
 };
 
-function clearAllDbs(cb) {
+function clearAllDbs(pipe, cb) {
   if (process.env.CLEAR_ALL_MONGO_DB_COLLECTIONS_BEFORE_IMPORT === 'true') {
+    logger.info('clear all collections');
+
     let collectionsFn = _.map(ddfModels, model => {
       let modelName = _.chain(model).camelCase().upperFirst();
       return _cb => mongoose.model(modelName).remove({}, _cb);
     });
 
-    return async.parallel(collectionsFn, (err) => cb(err, {raw: {}}));
+    return async.parallel(collectionsFn, (err) => cb(err, pipe));
   }
 
-  return cb(null, {raw: {}});
+  return cb(null, pipe);
 }
 
 function createUser(pipe, done) {
+  logger.info('create user');
+
   mongoose.model('Users').create({
     name: 'Vasya Pupkin',
     email: 'email@email.com',
@@ -79,6 +93,8 @@ function createUser(pipe, done) {
 }
 
 function createDataSet(pipe, done) {
+  logger.info('create data set');
+
   mongoose.model('DataSets').create({
     dsId: 'ddf-gapminder-world-v2',
     type: 'local',
@@ -93,6 +109,8 @@ function createDataSet(pipe, done) {
 }
 
 function createVersion(pipe, done) {
+  logger.info('create version');
+
   mongoose.model('DataSetVersions').create({
     value: Math.random().toString(),
     createdBy: pipe.user._id,
@@ -104,6 +122,8 @@ function createVersion(pipe, done) {
 }
 
 function createSession(pipe, done) {
+  logger.info('create session');
+
   mongoose.model('DataSetSessions').create({
     version: pipe.version._id,
     createdBy: pipe.user._id
@@ -113,15 +133,34 @@ function createSession(pipe, done) {
   });
 }
 
-function loadEntityGroups(pipe, done) {
-  defaultEntityGroupTypes;
+function loadConcepts(pipe, done) {
+  logger.info('load entity groups');
 
-  pipe.raw = {entityGroups: []};
+  readCsvFile(pipe.ddfConceptsFile, {}, (err, res) => {
+    let concepts = _.chain(res)
+      .map(mapDdfConceptsToWsModel)
+      .groupBy(concept.type);
 
-  done(null, pipe);
+    let entityGroups = _.chain(res)
+      .map(mapDdfConceptsToWsModel)
+      .filter(concept => concept.type && concept.type in pipe.defaultEntityGroupTypes)
+      .value();
+
+    let measures = _.chain(res)
+      .map(mapDdfConceptsToWsModel)
+      .filter(concept => concept.type && concept.type in pipe.defaultMeasureTypes)
+      .value();
+
+    let strings
+
+    pipe.raw.entityGroups = entityGroups;
+    return done(err, pipe);
+  });
 }
 
 function createEntityGroups(pipe, done) {
+  logger.info('create entity groups');
+
   pipe.entityGroups = {};
 
   let waterfallFns = _
@@ -508,17 +547,25 @@ function addDimensionsToMeasure(id, dimensionsArr, adcb) {
   ], adcb);
 }
 
-// mappers
-function mapDdfConceptsToWsModel(entry) {
-  // let drillups = _.chain(entry.drill_up).trim('[').trim(']').words(/[^\'\, \']+/g).value();
+//*** Mappers ***
+function mapDdfConceptsToWsModel(pipe, data) {
+  let drillups = _.chain(entry.drill_up).trim('[').trim(']').words(/[^\'\, \']+/g).value();
+  let drilldowns = _.chain(entry.drill_down).trim('[').trim(']').words(/[^\'\, \']+/g).value();
+
   return {
     gid: entry.concept,
+
     name: entry.name,
     type: entry.concept_type,
+
     tooltip: entry.tooltip || null,
     link: entry.indicator_url || null,
-    drillups: entry.drill_up || null,
-    subdimOf: entry.domain || null
+
+    drillups: drillups || null,
+    drilldowns: drilldowns || null,
+
+    properties: entry,
+    versions: [pipe.version._id]
   };
 }
 
@@ -657,26 +704,23 @@ function mapDdfMeasureToWsModel(entry) {
   };
 }
 
-// utils
-function readCsvFile(file, options) {
-  return (pipe, cb) => {
-    if (!cb) {
-      cb = pipe;
-      pipe = {};
-    }
-    const converter = new Converter(Object.assign({}, {
-      workerNum: 4,
-      flatKeys: true
-    }, options));
+//*** Utils ***
+function readCsvFile(file, options, cb) {
+  const converter = new Converter(Object.assign({}, {
+    workerNum: 4,
+    flatKeys: true
+  }, options));
 
-    converter.fromFile(resolvePath(file), cb);
-  };
+  return converter.fromFile(file, (err, data) => {
+    return cb(err, data);
+  });
 }
 
 function pipeWaterfall(tasks) {
   return (pipe, cbw) => {
-    const _cb = cbw || pipe;
-    async.waterfall([cb=>cb(null, cbw ? pipe : {})].concat(tasks), err => _cb(err, {}));
+    async.waterfall(
+      [async.constant(pipe)].concat(tasks),
+      err => cbw(err, {}));
   };
 }
 
@@ -695,6 +739,7 @@ function insertWhenEntityDoesNotExist(model, query, entity, cb) {
     if (err) {
       return cb(err);
     }
+
     if (document) {
       return cb();
     }
