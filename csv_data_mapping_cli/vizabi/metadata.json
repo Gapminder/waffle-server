@@ -131,7 +131,6 @@
     },
     "sg_population": {
       "use": "indicator",
-      "scaleType": "log",
       "scales": ["linear", "log"],
       "sourceLink": "http://www.gapminder.org/news/data-sources-dont-panic-end-poverty",
       "domain": [14000, 1400000000],
@@ -4194,8 +4193,8 @@
       ],
       "use": "indicator",
       "domain": [
-        1.0,
-        84.1
+        25,
+        83
       ],
       "availability": [
         1800,
@@ -8676,13 +8675,13 @@
         "id": "_properties",
         "children": [
           {
-            "id": "geo"
-          },
-          {
-            "id": "geo.name"
+            "id": "geo.world_4region"
           },
           {
             "id": "geo.geographic_regions"
+          },
+          {
+            "id": "geo.name"
           },
           {
             "id": "geo.income_groups"
@@ -8694,13 +8693,10 @@
             "id": "geo.g77_and_oecd_countries"
           },
           {
-            "id": "geo.geographic_regions_in_4_colors"
-          },
-          {
             "id": "geo.main_religion_2008"
           },
           {
-            "id": "geo.world_4region"
+            "id": "geo"
           }
         ]
       },
