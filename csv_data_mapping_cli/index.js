@@ -14,15 +14,16 @@ const _ = require('lodash');
 const ddfModels = [
   'concepts',
   'data-points',
-  'data-set-versions',
-  'data-set-sessions',
-  'data-sets',
+  'dataset-versions',
+  'dataset-transactions',
+  'datasets',
   'entities',
   'entity-groups',
   'measures',
   'translations',
   'users',
-  'changelogs'
+  'changelogs',
+  'eventlogs'
 ];
 appStub.set('ddfModels', ddfModels);
 

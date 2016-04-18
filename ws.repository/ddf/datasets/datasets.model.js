@@ -4,10 +4,10 @@ let mongoose = require('mongoose');
 let Schema = mongoose.Schema;
 
 /**
- * @typedef {Object} DataSets
+ * @typedef {Object} Datasets
  * @memberof Models
  *
- * @property {String} dsId - unique data set `id` within DataSets space
+ * @property {String} dsId - unique data set `id` within Datasets space
  * @property {String} type - github commit, local storage, etc
  * @property {String} uri - uri to Data Set (if exists)
  *
@@ -17,21 +17,26 @@ let Schema = mongoose.Schema;
  * @property {Models.DataProviders} dataProvider - of data set
  *
  * @property {Models.User} createdBy - user who added this Data Set entry
- * @property {Date} createdAt - timestamp when this DataSet was created
+ * @property {Date} createdAt - timestamp when this Dataset was created
  */
-let DataSets = new Schema({
+let Datasets = new Schema({
   dsId: {type: String, required: true, unique: true, index: true},
   type: {type: String, required: true},
-  uri: {type: String, required: true},
+  url: {type: String, required: true},
+  commit: {type: String},
 
-  defaultLanguage: {type: String},
-  meta: {},
+  defaultLanguage: {type: String, required: true},
+  metadata: {},
+
+  isLocked: {type: Boolean, default: false},
+  lockedAt: {type: Date, 'default': new Date()},
+  lockedBy: {type: Schema.Types.ObjectId, ref: 'Users'},
 
   dataProvider: {type: String, required: true, sparse: true},
   createdBy: {type: Schema.Types.ObjectId, ref: 'Users', required: true},
-  createdAt: {type: Date, 'default': new Date(), required: true},
+  createdAt: {type: Date, 'default': new Date(), required: true}
 });
 
-DataSets.index({dsId: 1});
+Datasets.index({dsId: 1});
 
-module.exports = mongoose.model('DataSets', DataSets);
+module.exports = mongoose.model('Datasets', Datasets);

@@ -1,8 +1,8 @@
 'use strict';
 
-let name = 'DataSets';
-require('./data-sets.model');
-let Repository = require('./data-sets.repository');
+let name = 'Datasets';
+require('./datasets.model');
+let Repository = require('./datasets.repository');
 
 /**
  * Register Data Sets repository and MongoDB model

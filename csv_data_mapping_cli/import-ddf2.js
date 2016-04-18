@@ -46,10 +46,10 @@ module.exports = function (app, done) {
     async.constant(pipe),
     clearAllDbs,
     createUser,
-    createDataSet,
+    createDataset,
     createVersion,
-    createSession,
-    loadEntityGroups,
+    createTransaction,
+    // loadEntityGroups,
     // createEntityGroups
     // createEntityDomainsAndSets(ddfConceptsFile),
     // // and geo
@@ -92,13 +92,13 @@ function createUser(pipe, done) {
   });
 }
 
-function createDataSet(pipe, done) {
+function createDataset(pipe, done) {
   logger.info('create data set');
 
-  mongoose.model('DataSets').create({
+  mongoose.model('Datasets').create({
     dsId: 'ddf-gapminder-world-v2',
     type: 'local',
-    uri: pathToDdfFolder,
+    url: pathToDdfFolder,
     dataProvider: 'semio',
     defaultLanguage: 'en',
     createdBy: pipe.user._id
@@ -111,8 +111,8 @@ function createDataSet(pipe, done) {
 function createVersion(pipe, done) {
   logger.info('create version');
 
-  mongoose.model('DataSetVersions').create({
-    value: Math.random().toString(),
+  mongoose.model('DatasetVersions').create({
+    name: Math.random().toString(),
     createdBy: pipe.user._id,
     dataSet: pipe.dataSet._id
   }, (err, res) => {
@@ -121,10 +121,10 @@ function createVersion(pipe, done) {
   });
 }
 
-function createSession(pipe, done) {
+function createTransaction(pipe, done) {
   logger.info('create session');
 
-  mongoose.model('DataSetSessions').create({
+  mongoose.model('DatasetTransactions').create({
     version: pipe.version._id,
     createdBy: pipe.user._id
   }, (err, res) => {

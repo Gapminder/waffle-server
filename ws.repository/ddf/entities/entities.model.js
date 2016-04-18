@@ -9,6 +9,7 @@ let Schema = mongoose.Schema;
  *
  * @property {String} gid - entity value
  * @property {String} title - nice name for entity
+ * @property {String} source - filename of source item
  *
  * @property {Object} properties - all properties from data set
  *
@@ -17,12 +18,13 @@ let Schema = mongoose.Schema;
  * @property {Array<Models.Entities>} drilldowns - to lower-tier authorities (entity)
  * @property {Array<Models.Entities>} drillups - to higher authorities (entity)
  *
- * @property {Array<Models.DataSetVersions>} versions - all versions of data set in which the entity was added
+ * @property {Array<Models.DatasetVersions>} versions - all versions of data set in which the entity was added
  * @property {Models.Entity} previous - of current entity (could be null)
  */
 let Entities = new Schema({
   gid: {type: String, match: /^[a-z0-9_]*$/, index: true, required: true},
   title: String,
+  source: String,
   properties: {},
 
   // should be required
@@ -31,7 +33,7 @@ let Entities = new Schema({
   drilldowns: [{type: Schema.Types.ObjectId, ref: 'Entities'}],
   drillups: [{type: Schema.Types.ObjectId, ref: 'Entities'}],
 
-  versions: [{type: Schema.Types.ObjectId, ref: 'DataSetVersions'}],
+  versions: [{type: Schema.Types.ObjectId, ref: 'DatasetVersions'}],
   previous: {type: Schema.Types.ObjectId, ref: 'Entities', sparse: true}
 });
 

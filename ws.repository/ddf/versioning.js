@@ -7,15 +7,16 @@ const mongoose = require('mongoose');
 _.forEach([
   'concepts',
   'data-points',
-  'data-set-versions',
-  'data-set-sessions',
-  'data-sets',
+  'dataset-versions',
+  'dataset-transactions',
+  'datasets',
   'entities',
   'entity-groups',
   'measures',
   'translations',
   'users',
-  'changelogs'
+  'changelogs',
+  'eventlogs'
 ], model => require(`./${model}/${model}.model`));
 
 mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
@@ -26,10 +27,10 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
   async.waterfall([
     async.constant({}),
     (pipe, done) => getUser(pipe, done),
-    (pipe, done) => getDataSet(pipe, done),
+    (pipe, done) => getDataset(pipe, done),
     (pipe, done) => getOldVersion(pipe, done),
     (pipe, done) => createVersion(pipe, done),
-    (pipe, done) => createSession(pipe, done),
+    (pipe, done) => createTransaction(pipe, done),
     (pipe, done) => getEntityGroups(pipe, done),
     (pipe, done) => getEntities(pipe, done),
     (pipe, done) => getMeasures(pipe, done),
@@ -53,23 +54,23 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
     });
   }
 
-  function getDataSet(pipe, done) {
-    mongoose.model('DataSets').findOne({}, (err, res) => {
+  function getDataset(pipe, done) {
+    mongoose.model('Datasets').findOne({}, (err, res) => {
       pipe.dataSet = res;
       return done(err, pipe);
     });
   }
 
   function getOldVersion(pipe, done) {
-    mongoose.model('DataSetVersions').findOne({}, (err, res) => {
+    mongoose.model('DatasetVersions').findOne({}, (err, res) => {
       pipe.oldVersion = res;
       return done(err, pipe);
     });
   }
 
   function createVersion(pipe, done) {
-    mongoose.model('DataSetVersions').create({
-      value: Math.random().toString(),
+    mongoose.model('DatasetVersions').create({
+      name: Math.random().toString(),
       createdBy: pipe.user._id,
       dataSet: pipe.dataSet._id,
       basedOn: pipe.oldVersion._id
@@ -79,8 +80,8 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
     });
   }
 
-  function createSession(pipe, done) {
-    mongoose.model('DataSetSessions').create({
+  function createTransaction(pipe, done) {
+    mongoose.model('DatasetTransactions').create({
       version: pipe.version._id,
       createdBy: pipe.user._id
     }, (err, res) => {
