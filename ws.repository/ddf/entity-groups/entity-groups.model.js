@@ -22,7 +22,7 @@ let Schema = mongoose.Schema;
  * @property {Object} properties - all properties from data set
  * @property {Object} meta - any meta for entityGroup
  *
- * @property {Array<Models.DataSetVersions>} versions - all versions of data set in which the entityGroup was added
+ * @property {Array<Models.DatasetVersions>} versions - all versions of data set in which the entityGroup was added
  * @property {Models.EntityGroup} previous - of current entityGroup (could be null)
  */
 
@@ -40,10 +40,10 @@ let EntityGroups = new Schema({
   drilldowns: [{type: Schema.Types.ObjectId, ref: 'EntityGroups'}],
 
   properties: {},
-  meta: {},
+  metadata: {},
 
   // system marks
-  versions: [{type: Schema.Types.ObjectId, ref: 'DataSetVersions'}],
+  versions: [{type: Schema.Types.ObjectId, ref: 'DatasetVersions'}],
   previous: {type: Schema.Types.ObjectId, ref: 'EntityGroups', sparse: true}
 });
 

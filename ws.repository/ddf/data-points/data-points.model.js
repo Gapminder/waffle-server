@@ -30,7 +30,7 @@ let CoordinateSchema = new Schema({
  * @property {String} measure - points to measure this DataPoint has value for
  * @property {String} measureName - name of the measure this DataPoint has value for
  * 
- * @property {Array<Models.DataSetVersions>} versions - all versions of data set in which the entity was added
+ * @property {Array<Models.DatasetVersions>} versions - all versions of data set in which the entity was added
  * @property {Object} previous - a link to previous version of the current entity
  */
 let DataPoints = new Schema({
@@ -40,7 +40,7 @@ let DataPoints = new Schema({
   measure: {type: Schema.Types.ObjectId, ref: 'Measures'},
   measureName: String,
 
-  versions: [{type: Schema.Types.ObjectId, ref: 'DataSetVersions'}],
+  versions: [{type: Schema.Types.ObjectId, ref: 'DatasetVersions'}],
   previous: {type: Schema.Types.ObjectId, ref: 'DataPoints', sparse: true}
 });
 

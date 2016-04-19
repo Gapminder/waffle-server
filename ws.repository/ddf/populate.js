@@ -7,16 +7,18 @@ const mongoose = require('mongoose');
 _.forEach([
   'concepts',
   'data-points',
-  'data-set-versions',
-  'data-set-sessions',
-  'data-sets',
+  'dataset-versions',
+  'dataset-transactions',
+  'datasets',
   'entities',
   'entity-groups',
   'measures',
   'translations',
   'users',
-  'changelogs'
+  'changelogs',
+  'eventlogs'
 ], model => require(`./${model}/${model}.model`));
+
 
 mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
   if (err) {
@@ -27,9 +29,9 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
     async.constant({}),
     (pipe, done) => removeData(pipe, done),
     (pipe, done) => createUser(pipe, done),
-    (pipe, done) => createDataSet(pipe, done),
+    (pipe, done) => createDataset(pipe, done),
     (pipe, done) => createVersion(pipe, done),
-    (pipe, done) => createSession(pipe, done),
+    (pipe, done) => createTransaction(pipe, done),
     (pipe, done) => createEntityGroups(pipe, done),
     (pipe, done) => createEntities(pipe, done),
     (pipe, done) => createMeasures(pipe, done),
@@ -50,15 +52,16 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
     async.parallel([
       cb => mongoose.model('Concepts').remove({}, cb),
       cb => mongoose.model('DataPoints').remove({}, cb),
-      cb => mongoose.model('DataSetVersions').remove({}, cb),
-      cb => mongoose.model('DataSetSessions').remove({}, cb),
-      cb => mongoose.model('DataSets').remove({}, cb),
+      cb => mongoose.model('DatasetVersions').remove({}, cb),
+      cb => mongoose.model('DatasetTransactions').remove({}, cb),
+      cb => mongoose.model('Datasets').remove({}, cb),
       cb => mongoose.model('Entities').remove({}, cb),
       cb => mongoose.model('EntityGroups').remove({}, cb),
       cb => mongoose.model('Measures').remove({}, cb),
       cb => mongoose.model('Translations').remove({}, cb),
       cb => mongoose.model('Users').remove({}, cb),
-      cb => mongoose.model('Changelogs').remove({}, cb)
+      cb => mongoose.model('Changelogs').remove({}, cb),
+      cb => mongoose.model('Eventlogs').remove({}, cb)
     ], (err) => done(err, pipe));
   }
 
@@ -74,11 +77,11 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
     });
   }
 
-  function createDataSet(pipe, done) {
-    mongoose.model('DataSets').create({
+  function createDataset(pipe, done) {
+    mongoose.model('Datasets').create({
       dsId: Math.random().toString(),
       type: 'local',
-      uri: '/c/users',
+      url: '/c/users',
       dataProvider: 'hands',
       defaultLanguage: 'en',
       createdBy: pipe.user._id
@@ -89,8 +92,8 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
   }
 
   function createVersion(pipe, done) {
-    mongoose.model('DataSetVersions').create({
-      value: Math.random().toString(),
+    mongoose.model('DatasetVersions').create({
+      name: Math.random().toString(),
       createdBy: pipe.user._id,
       dataSet: pipe.dataSet._id
     }, (err, res) => {
@@ -99,8 +102,8 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
     });
   }
 
-  function createSession(pipe, done) {
-    mongoose.model('DataSetSessions').create({
+  function createTransaction(pipe, done) {
+    mongoose.model('DatasetTransactions').create({
       version: pipe.version._id,
       createdBy: pipe.user._id
     }, (err, res) => {
@@ -411,10 +414,10 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
 
   function createTranslations(pipe, done) {
     let translations = [
-      {key: 'indicator/gini', value: 'Gini', language: 'en', dataset: pipe.dataSet._id},
-      {key: 'indicator/population', value: 'Population', language: 'en', dataset: pipe.dataSet._id},
-      {key: 'indicator/gini', value: 'Gini-ru', language: 'ru', dataset: pipe.dataSet._id},
-      {key: 'indicator/population', value: 'Population-ru', language: 'ru', dataset: pipe.dataSet._id},
+      {key: 'indicator/gini', value: 'Gini', language: 'en', dataset: pipe.dataSet._id, updatedBy: pipe.user._id},
+      {key: 'indicator/population', value: 'Population', language: 'en', dataset: pipe.dataSet._id, updatedBy: pipe.user._id},
+      {key: 'indicator/gini', value: 'Gini-ru', language: 'ru', dataset: pipe.dataSet._id, updatedBy: pipe.user._id},
+      {key: 'indicator/population', value: 'Population-ru', language: 'ru', dataset: pipe.dataSet._id, updatedBy: pipe.user._id},
     ];
 
     mongoose.model('Translations').create(translations, (err, res) => {
