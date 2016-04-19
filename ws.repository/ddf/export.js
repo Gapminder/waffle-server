@@ -1,3 +1,5 @@
+'use strict';
+
 var _ = require('lodash');
 var async = require('async');
 var express = require('express');
@@ -34,10 +36,9 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
       return cb(null, {});
     },
     cleanGraph,
-    // unique
     exportMeasures,
-    // dependant
     exportEntityGroups,
+    exportEntities,
     // exportMeasureValues,
     // createIndexes
   ], function (err) {
@@ -47,9 +48,9 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
     }
 
     console.timeEnd('Mission complete!');
+    process.exit(0);
   });
 
-// todo: implement full neo4j cleanup
   function cleanGraph(pipe, cb) {
     logger.log(`Removing all relationships between nodes`);
     neo4jdb.cypherQuery('match ()-[r]-() delete r;', function (err) {
@@ -72,7 +73,6 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
     });
   }
 
-// export indicators and build _it to node_id hash set
   function exportMeasures(pipe, emCb) {
     var modelName = 'Measures';
 
@@ -83,7 +83,6 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
       cb => Measures.find({}, {gid: 1, name: 1}).lean().exec(cb),
       (measures, cb) => {
         console.log(`Exporting %s ${modelName}`, measures.length);
-        // create indicators
         var batchQuery = _.map(measures, function (measure, index) {
           return {
             method: 'POST',
@@ -93,7 +92,6 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
           };
         });
 
-        // set label to indicators
         _.each(measures, function (measure, index) {
           batchQuery.push({
             method: 'POST',
@@ -108,8 +106,6 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
         });
       },
       (measuresPipe, cb) => {
-        // build indicators hash set
-        // indicators from mongo
         async.reduce(measuresPipe.measures, {}, (memo, measure, cb)=> {
           var index = _.findIndex(measuresPipe.measureNodes, node => measure.gid === node.body.data.gid);
           measure.nodeId = measuresPipe.measureNodes[index].body.metadata.id;
@@ -125,7 +121,6 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
     });
   }
 
-// export indicator dimensions and build hash
   function exportEntityGroups(pipe, eidCb) {
     var modelName = 'EntityGroups';
 
@@ -133,45 +128,35 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
     console.time(`${modelName} exported`);
 
     var EntityGroups = mongoose.model(modelName);
-    // var Indicators = mongoose.model('Indicators');
 
     async.waterfall([
-      // find all dimensions
       cb => EntityGroups.find({}, {name: 1, gid: 1, type: 1, drilldowns: 1, drillups: 1, _id: 1, domain: 1}).lean().exec(cb),
-      // build dimensions hash map
       (entityGroups, cb) => cb(null, _.keyBy(entityGroups, entityGroup => entityGroup._id.toString())),
-      // save hash map to pipe
       (entityGroups, cb) => {
         pipe.entityGroups = entityGroups;
         cb(null, pipe);
       },
-      // find all indicators
-      // cb => Indicators.find({}, {dimensions: 1, nodeId: 1}).lean().exec(cb),
-      // build cypher batch query and meta
       (pipe, cb) => {
         var batchQuery = [];
         var nodeMetas = {};
         _.each(pipe.entityGroups, function (entityGroupId) {
-          // create indicator dimension node
           var entityGroup = pipe.entityGroups[entityGroupId._id.toString()];
 
           var entityGroupIndex = batchQuery.length;
-          // var indicatorNodeId = indicator.nodeId;
 
-          // nodeMetas.push({
-          //   dimensionIndex: entityGroupIndex,
-          //   indicatorId: indicator._id.toString(),
-          //   dimension: entityGroup,
-          //   dimensionId: entityGroup._id.toString()
-          // });
+          var entityGroupNode = {name: entityGroup.name, gid: entityGroup.gid, type: entityGroup.type};
+
+          if (entityGroup.domain) {
+            entityGroupNode.domain = pipe.entityGroups[entityGroup.domain.toString()].gid;
+          }
+
           batchQuery.push({
             method: 'POST',
             to: '/node',
-            body: {name: entityGroup.name, gid: entityGroup.gid, type: entityGroup.type},
+            body: entityGroupNode,
             id: batchQuery.length
           });
 
-          // set label to dimension
           batchQuery.push({
             method: 'POST',
             to: '{' + entityGroupIndex + '}/labels',
@@ -179,23 +164,10 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
             body: modelName
           });
 
-          // set relation [:with_dimension] from indicator to dimension
-
           nodeMetas[entityGroupId._id.toString()] = {entityGroupIndex, gid: entityGroup.gid, batchQueryId: batchQuery.length};
-
-          // batchQuery.push({
-          //   method: 'POST',
-          //   to: '/node/' + indicatorNodeId + '/relationships',
-          //   id: batchQuery.length,
-          //   body: {
-          //     to: '{' + entityGroupIndex + '}',
-          //     type: 'drilldown'
-          //   }
-          // });
         });
         return cb(null, batchQuery, nodeMetas);
       },
-      // run cypher batch query
       (batchQuery, nodeMetas, cb) => {
         return neo4jdb.batchQuery(batchQuery, function (err, dimensionNodes) {
           console.timeEnd(`${modelName} exported`);
@@ -213,10 +185,9 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
         });
       },
       (dimensionNodes, nodeMetas, cb) => {
-        console.log(pipe);
-
         var batchQuery = [];
 
+        pipe.nodeMetas = nodeMetas;
         _.each(pipe.entityGroups, entityGroup => {
           _.each(entityGroup.drilldowns, drilldownEntityGroup => {
             batchQuery.push({
@@ -225,7 +196,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
               id: 0,
               body: {
                 to: '' + nodeMetas[drilldownEntityGroup.toString()].neoId + '',
-                type: 'drilldown'
+                type: 'DRILLDOWN'
               }
             });
           });
@@ -239,7 +210,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
               id: 0,
               body: {
                 to: '' + nodeMetas[drillupEntityGroup.toString()].neoId + '',
-                type: 'drillup'
+                type: 'DRILLUP'
               }
             });
           });
@@ -252,21 +223,111 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
           return cb(err, dimensionNodes);
         });
       }
-      // build map of {indicator,dimension} with cypher nodeId
-      /*(dimensionNodes, nodeMetas, cb) => {
-        // build indicator->dimension hash set
-        pipe.dimensionArray = _.map(nodeMetas, function (nodeMeta) {
-          return _.merge({
-            nodeId: dimensionNodes[nodeMeta.dimensionIndex].body.metadata.id,
-            indicatorId: nodeMeta.indicatorId
-          }, nodeMeta.dimension);
-        });
-        cb();
-      }*/
     ], err => eidCb(err, pipe));
   }
 
-// create indexes and unique constrains
+  function exportEntities(pipe, done) {
+    async.waterfall([
+      eeDone => mongoose.model('Entities').find().lean().exec(eeDone),
+      (entities, eeDone) => {
+        pipe.entities = entities;
+        let batchQuery = [];
+
+        _.each(entities, entity => {
+          const indexId = batchQuery.length;
+          batchQuery.push({
+            method: 'POST',
+            to: '/node',
+            body: {gid: entity.gid},
+            id: indexId
+          });
+
+          batchQuery.push({
+            method: 'POST',
+            to: '{' + indexId  + '}/labels',
+            id: indexId ,
+            body: 'Entities'
+          });
+        });
+        eeDone(null, batchQuery)
+      },
+      (batchQuery, cb) => {
+        return neo4jdb.batchQuery(batchQuery, function (err, entityNodes) {
+          return cb(err, entityNodes);
+        });
+      },
+      (entityNodes, cb) => {
+
+        _.reduce(entityNodes, (prev, current) => {
+          const node = _.find(pipe.entities, node => {
+            return current.body && node.gid === current.body.data.gid
+          });
+          if (node) {
+            node.neoId = current.body.metadata.id;
+          }
+        }, {});
+
+        var batchQuery = [];
+        _.each(pipe.entities, entity => {
+          _.each(pipe.entityGroups, group => {
+            const foundEntitySet = _.find(entity.sets, entitySet => entitySet.toString() === group._id.toString());
+            if (foundEntitySet) {
+              batchQuery.push({
+                method: 'POST',
+                to: '/node/' + pipe.nodeMetas[foundEntitySet.toString()].neoId + '/relationships',
+                body: {
+                  to: '' + entity.neoId + '',
+                  type: 'CONTAINS'
+                }
+              });
+            } else if (group._id.toString() === entity.domain.toString()) {
+              batchQuery.push({
+                method: 'POST',
+                to: '/node/' + pipe.nodeMetas[group._id.toString()].neoId + '/relationships',
+                body: {
+                  to: '' + entity.neoId + '',
+                  type: 'CONTAINS'
+                }
+              });
+            }
+          });
+        });
+        cb(null, batchQuery);
+      },
+      (batchQuery, cb) => {
+        return neo4jdb.batchQuery(batchQuery, function (err, entityRelations) {
+          return cb(err, entityRelations);
+        });
+      }
+    ], (error, result) => {
+      if (error) {
+        throw error;
+      }
+      return done(err, pipe);
+    });
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   function createIndexes(pipe, cb) {
     async.eachSeries([
       'create index on :Indicators(gid)',
