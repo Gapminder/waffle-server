@@ -32,14 +32,12 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
 
   console.time('Mission complete!');
   async.waterfall([
-    function (cb) {
-      return cb(null, {});
-    },
+    async.constant({}),
     cleanGraph,
     exportMeasures,
     exportEntityGroups,
     exportEntities,
-    // exportMeasureValues,
+    exportDatapoints,
     // createIndexes
   ], function (err) {
     if (err) {
@@ -196,7 +194,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
               id: 0,
               body: {
                 to: '' + nodeMetas[drilldownEntityGroup.toString()].neoId + '',
-                type: 'DRILLDOWN'
+                type: 'WITH_DRILLDOWN'
               }
             });
           });
@@ -210,7 +208,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
               id: 0,
               body: {
                 to: '' + nodeMetas[drillupEntityGroup.toString()].neoId + '',
-                type: 'DRILLUP'
+                type: 'WITH_DRILLUP'
               }
             });
           });
@@ -230,10 +228,10 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
     async.waterfall([
       eeDone => mongoose.model('Entities').find().lean().exec(eeDone),
       (entities, eeDone) => {
-        pipe.entities = entities;
+        pipe.entities = _.keyBy(entities, entity => entity._id.toString());
         let batchQuery = [];
 
-        _.each(entities, entity => {
+        _.each(pipe.entities, entity => {
           const indexId = batchQuery.length;
           batchQuery.push({
             method: 'POST',
@@ -269,6 +267,32 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
 
         var batchQuery = [];
         _.each(pipe.entities, entity => {
+          _.each(entity.drillups, entityDrillup => {
+              batchQuery.push({
+                method: 'POST',
+                to: '/node/' + entity.neoId + '/relationships',
+                body: {
+                  to: '' + pipe.entities[entityDrillup.toString()].neoId  + '',
+                  type: 'WITH_DRILLUP'
+                }
+              });
+          });
+        });
+
+        _.each(pipe.entities, (entity) => {
+          _.each(entity.drilldowns, entityDrilldown => {
+            batchQuery.push({
+              method: 'POST',
+              to: '/node/' + entity.neoId + '/relationships',
+              body: {
+                to: '' + pipe.entities[entityDrilldown.toString()].neoId  + '',
+                type: 'WITH_DRILLDOWN'
+              }
+            });
+          });
+        });
+
+        _.each(pipe.entities, entity => {
           _.each(pipe.entityGroups, group => {
             const foundEntitySet = _.find(entity.sets, entitySet => entitySet.toString() === group._id.toString());
             if (foundEntitySet) {
@@ -277,7 +301,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
                 to: '/node/' + pipe.nodeMetas[foundEntitySet.toString()].neoId + '/relationships',
                 body: {
                   to: '' + entity.neoId + '',
-                  type: 'CONTAINS'
+                  type: 'WITH_ENTITY'
                 }
               });
             } else if (group._id.toString() === entity.domain.toString()) {
@@ -286,7 +310,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
                 to: '/node/' + pipe.nodeMetas[group._id.toString()].neoId + '/relationships',
                 body: {
                   to: '' + entity.neoId + '',
-                  type: 'CONTAINS'
+                  type: 'WITH_ENTITY'
                 }
               });
             }
@@ -303,30 +327,94 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
       if (error) {
         throw error;
       }
-      return done(err, pipe);
+      return done(error, pipe);
     });
   }
 
+  function exportDatapoints(pipe, edDone) {
+    const modelName = 'DataPoints';
+    console.log(`${modelName} export started`);
+    console.time(`${modelName} exported`);
+    const Datapoints = mongoose.model(modelName);
 
+    async.waterfall([
+      (cb) => Datapoints.find({}).lean().exec(cb),
+      (datapoints, cb) => {
+        pipe.datapoints = _.keyBy(datapoints, datapoint => datapoint._id.toString());
 
+        const batchQuery = [];
 
+        const meta = {};
+        _.each(pipe.datapoints, datapoint => {
+          const id = batchQuery.length;
 
+          meta[datapoint._id.toString()] = id;
+          batchQuery.push({
+            method: 'POST',
+            body: {
+              value: datapoint.value
+            },
+            id: id,
+            to: '/node',
+            metadata: {s: "hello"}
+          });
 
+          batchQuery.push({
+            method: 'POST',
+            to: '{' + id  + '}/labels',
+            id: batchQuery.length ,
+            body: 'MeasureValues'
+          });
+        });
+        cb(null, meta, batchQuery);
+      },
+      (meta, batchQuery, cb) => {
+        return neo4jdb.batchQuery(batchQuery, function (err, nodes) {
+          _.each(pipe.datapoints, datapoint => {
+            const datapointNode = _.find(nodes, node => node.id === meta[datapoint._id.toString()]);
+            datapoint.neoId = datapointNode.body.metadata.id;
+          });
 
+          return cb(err, nodes);
+        });
+      },
+      (nodes, cb) => {
+        const batchQuery = [];
+        _.each(pipe.datapoints, datapoint => {
+          batchQuery.push({
+            method: 'POST',
+            to: '/node/' + pipe.measures[datapoint.measure.toString()].nodeId + '/relationships',
+            body: {
+              to: '' + datapoint.neoId + '',
+              type: 'HAS_MEASURE_VALUE'
+            }
+          });
+          _.each(datapoint.coordinates, coordinate => {
+            batchQuery.push({
+              method: 'POST',
+              to: '/node/' + pipe.entities[coordinate.entity.toString()].neoId + '/relationships',
+              body: {
+                to: '' + datapoint.neoId + '',
+                type: 'HAS_MEASURE_VALUE'
+              }
+            });
+          });
+        });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+        return cb(null, batchQuery);
+      },
+      (batchQuery, cb) => {
+        return neo4jdb.batchQuery(batchQuery, function (err, nodes) {
+          return cb(err, nodes);
+        });
+      }
+    ], (error) => {
+      if (error) {
+        throw error;
+      }
+      return edDone(error, pipe);
+    });
+  }
 
   function createIndexes(pipe, cb) {
     async.eachSeries([
@@ -340,196 +428,5 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
         return cb(err);
       });
     }, cb);
-  }
-
-  function exportMeasureValues(pipe, emvCb) {
-    var Indicators = mongoose.model('Indicators');
-    var IndicatorValues = mongoose.model('IndicatorValues');
-    var Dimensions = mongoose.model('Dimensions');
-    async.waterfall([
-      wcb => async.parallel({
-        // find all indicators
-        indicators: cb => Indicators.find({}, {nodeId: 1, gid: 1}).lean().exec(cb),
-        // find all dimensions
-        dimension: cb => Dimensions.find({}, {gid: 1}).lean().exec(cb)
-      }, wcb),
-      // export dimension values
-      (indAndDims, wcb) => {
-        async.eachSeries(indAndDims.indicators, (indicator, escb) => {
-          var modelName = 'DimensionValues';
-          console.time(`${modelName} exported for indicator '${indicator.gid}'`);
-          async.parallel({
-            // get distinct coordinates
-            coordinates: cb => IndicatorValues.distinct('coordinates', {indicator: indicator._id}).lean().exec(cb),
-            // get all indicators+dimensions from neo4j
-            dimensionNodes: cb => neo4jdb.cypherQuery(`MATCH (i:Indicators {gid: '${indicator.gid}'})-[r:with_dimension]->(d:Dimensions) RETURN i, d`, cb)
-          }, (err, coordAndDimNodes) => {
-            if (!coordAndDimNodes.coordinates.length) {
-              return escb();
-            }
-            // todo: waterfall step 1
-            // map coordinates to batch query
-            //var dims = _.groupBy(res.coordinates, c=>c.dimensionName);
-            var dimensionsNodeId = _.reduce(coordAndDimNodes.dimensionNodes.data,
-              (memo, pair) => {
-                memo[pair[1].gid] = pair[1]._id;
-                return memo;
-              }, {});
-
-            var batchQuery = [];
-            var nodesMeta = [];
-            _.each(coordAndDimNodes.coordinates, function (dimValue) {
-              var newNodeIndex = batchQuery.length;
-              // create dimension value node
-              nodesMeta.push({
-                nodeIndex: newNodeIndex,
-                dimension: dimValue.dimensionName,
-                value: dimValue.value
-              });
-              batchQuery.push({
-                method: 'POST',
-                to: '/node',
-                body: {value: dimValue.value},
-                id: batchQuery.length
-              });
-
-              // set label to dimension
-              batchQuery.push({
-                method: 'POST',
-                to: '{' + newNodeIndex + '}/labels',
-                id: batchQuery.length,
-                body: modelName
-              });
-
-              // set relation [:with_dimension_value] from dimension o dimension value
-              batchQuery.push({
-                method: 'POST',
-                to: '/node/' + dimensionsNodeId[dimValue.dimensionName] + '/relationships',
-                id: batchQuery.length,
-                body: {
-                  to: '{' + newNodeIndex + '}',
-                  type: 'with_dimension_value'
-                }
-              });
-            });
-            return neo4jdb.batchQuery(batchQuery, function (err) {
-              console.timeEnd(`${modelName} exported for indicator '${indicator.gid}'`);
-              return escb(err);
-            });
-          });
-        }, err => wcb(err, indAndDims));
-      },
-      // export indicator values
-      (indAndDims, wcb) => {
-        var modelName = 'IndicatorValues';
-        async.eachSeries(indAndDims.indicators, (indicator, escb) => {
-          console.log(`Exporting of '${indicator.gid}' measure values STARTED`);
-          console.time(`Exporting of '${indicator.gid}' measure values DONE`);
-          // 3. load paged portion of indicators values
-          // 4. build batch query and add data to neo4j
-          // build dimension values hash map
-          // and count indicator values
-          async.parallel({
-            nodeIdsHash: pcb => async.waterfall([
-              // 1. load dimensions and dimension values from neo4j
-              cb => neo4jdb.cypherQuery(`MATCH (n:Indicators{gid:'${indicator.gid}'})-->(d:Dimensions)-->(dv:DimensionValues) RETURN id(d),d.gid,id(dv),dv.value`, cb),
-              // 2. build a hash map [dimension][value] -> nodeId
-              (res, cb) => cb(null, _.reduce(res.data, (memo, row)=>{
-                memo[row[1]] = memo[row[1]] || {};
-                memo[row[1]][row[3]] = row[2];
-                return memo;
-              }, {}))
-            ], pcb),
-            count: pcb => IndicatorValues.count({indicator: indicator._id},pcb)
-          }, (err, hashAndCount) => {
-            if (err || !hashAndCount.count) {
-              return escb(err);
-            }
-
-            var tasks = [];
-            var page = 1500;
-
-            var pages = Math.floor(hashAndCount.count / page);
-            var lastPage = hashAndCount.count % page;
-            var i;
-            for (i = 0; i < pages; i++) {
-              tasks.push({skip: i * page, limit: page});
-            }
-            tasks.push({skip: i * page, limit: lastPage});
-
-            var counter = pages + 1;
-            console.log(`${indicator.gid} values to save: ${counter}`);
-            async.eachSeries(tasks, function (task, cb) {
-              var currentCounter = counter--;
-              console.time(`${indicator.gid} values left to save: ${currentCounter}`);
-              IndicatorValues.find({indicator: indicator._id}, {value: 1, 'coordinates.value': 1,'coordinates.dimensionName': 1, indicatorName: 1, _id: 0})
-                .skip(task.skip)
-                .limit(task.limit)
-                .lean()
-                .exec(function (err, indicatorValues) {
-                  var batchQuery = [];
-                  _.each(indicatorValues, function (indValue) {
-                    var newNodeIndex = batchQuery.length;
-
-                    batchQuery.push({
-                      method: 'POST',
-                      to: '/node',
-                      body: {value: indValue.value},
-                      id: batchQuery.length
-                    });
-
-                    // set label to indicator value
-                    batchQuery.push({
-                      method: 'POST',
-                      to: '{' + newNodeIndex + '}/labels',
-                      id: batchQuery.length,
-                      body: modelName
-                    });
-
-                    _.each(indValue.coordinates, function (coordinate) {
-                      // set relation [:with_dimension_value] from dimension value to indicator value
-                      var nodeId = hashAndCount.nodeIdsHash[coordinate.dimensionName][coordinate.value] ||
-                        hashAndCount.nodeIdsHash[coordinate.dimensionName][null];
-                      batchQuery.push({
-                        method: 'POST',
-                        to: '/node/' + nodeId + '/relationships',
-                        id: batchQuery.length,
-                        body: {
-                          to: '{' + newNodeIndex + '}',
-                          type: 'with_indicator_value'
-                        }
-                      });
-                    });
-                  });
-
-                  var retries = 0;
-                  followTheWhiteRabbit();
-                  function followTheWhiteRabbit() {
-                    return neo4jdb.batchQuery(batchQuery, function (err, dimensionNodes) {
-                      if (err && retries++ < 4) {
-                        console.log('Retry: ' + retries);
-                        return setTimeout(followTheWhiteRabbit, 500);
-                      }
-
-                      if (err) {
-                        return cb(err);
-                      }
-
-                      console.timeEnd(`${indicator.gid} values left to save: ${currentCounter}`);
-                      return cb();
-                    });
-                  }
-                });
-            }, function (err) {
-              console.timeEnd(`Exporting of '${indicator.gid}' measure values DONE`);
-              return escb(err, pipe);
-            });
-          });
-          // end for this indicator
-        }, wcb);
-        // end for each indicators
-      }
-      // end of main exportMeasureValues waterfall
-    ], err => emvCb(err, pipe));
   }
 });
