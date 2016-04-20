@@ -13,8 +13,8 @@ let Schema = mongoose.Schema;
  *
  * @property {Object} properties - all properties from data set
  *
- * @property {Models.EntityGroups} domain - of entity, reference to only one entity domain from EntityGroups collection
- * @property {Array<Models.EntityGroups>} sets - of entity, in which entity takes part of
+ * @property {Models.Concepts} domain - of entity, reference to only one entity domain from Concepts collection
+ * @property {Array<Models.Concepts>} groups - of entity, in which entity takes part of
  * @property {Array<Models.Entities>} drilldowns - to lower-tier authorities (entity)
  * @property {Array<Models.Entities>} drillups - to higher authorities (entity)
  *
@@ -22,14 +22,14 @@ let Schema = mongoose.Schema;
  * @property {Models.Entity} previous - of current entity (could be null)
  */
 let Entities = new Schema({
-  gid: {type: String, match: /^[a-z0-9_]*$/, index: true, required: true},
+  gid: {type: String, match: /^[a-zA-Z0-9_-]*$/, index: true, required: true},
   title: String,
   source: String,
   properties: {},
 
   // should be required
-  domain: {type: Schema.Types.ObjectId, ref: 'EntityGroups'},
-  sets: [{type: Schema.Types.ObjectId, ref: 'EntityGroups'}],
+  domain: {type: Schema.Types.ObjectId, ref: 'Concepts'},
+  groups: [{type: Schema.Types.ObjectId, ref: 'Concepts'}],
   drilldowns: [{type: Schema.Types.ObjectId, ref: 'Entities'}],
   drillups: [{type: Schema.Types.ObjectId, ref: 'Entities'}],
 
