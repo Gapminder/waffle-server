@@ -9,8 +9,8 @@ var mongoose = require('mongoose');
 _.forEach([
   'concepts',
   'data-points',
-  'data-set-versions',
-  'data-set-sessions',
+  'dataset-versions',
+  'dataset-transactions',
   'data-sets',
   'entities',
   'entity-groups',
