@@ -49,7 +49,7 @@ module.exports = function (app, done) {
     createDataset,
     createVersion,
     createTransaction,
-    // loadEntityGroups,
+    loadConcepts,
     // createEntityGroups
     // createEntityDomainsAndSets(ddfConceptsFile),
     // // and geo
@@ -136,24 +136,10 @@ function createTransaction(pipe, done) {
 function loadConcepts(pipe, done) {
   logger.info('load entity groups');
 
-  readCsvFile(pipe.ddfConceptsFile, {}, (err, res) => {
-    let concepts = _.chain(res)
-      .map(mapDdfConceptsToWsModel)
-      .groupBy(concept.type);
+  return readCsvFile(pipe.ddfConceptsFile, {}, (err, res) => {
+    let concepts = _.map(res, mapDdfConceptsToWsModel(pipe));
 
-    let entityGroups = _.chain(res)
-      .map(mapDdfConceptsToWsModel)
-      .filter(concept => concept.type && concept.type in pipe.defaultEntityGroupTypes)
-      .value();
-
-    let measures = _.chain(res)
-      .map(mapDdfConceptsToWsModel)
-      .filter(concept => concept.type && concept.type in pipe.defaultMeasureTypes)
-      .value();
-
-    let strings
-
-    pipe.raw.entityGroups = entityGroups;
+    pipe.raw.concepts = concepts;
     return done(err, pipe);
   });
 }
@@ -548,24 +534,31 @@ function addDimensionsToMeasure(id, dimensionsArr, adcb) {
 }
 
 //*** Mappers ***
-function mapDdfConceptsToWsModel(pipe, data) {
-  let drillups = _.chain(entry.drill_up).trim('[').trim(']').words(/[^\'\, \']+/g).value();
-  let drilldowns = _.chain(entry.drill_down).trim('[').trim(']').words(/[^\'\, \']+/g).value();
+function mapDdfConceptsToWsModel(pipe) {
+  return function (entry, rowNumber) {
+    let _entry = validateConcept(entry, rowNumber);
 
-  return {
-    gid: entry.concept,
+    return {
+      gid: _entry.concept,
 
-    name: entry.name,
-    type: entry.concept_type,
+      name: _entry.name,
+      type: _entry.concept_type,
 
-    tooltip: entry.tooltip || null,
-    link: entry.indicator_url || null,
+      tooltip: _entry.tooltip || null,
+      indicatorUrl: _entry.indicator_url || null,
 
-    drillups: drillups || null,
-    drilldowns: drilldowns || null,
+      tags: _entry.tags,
+      color: _entry.color,
+      domain: null,
+      unit: _entry.unit,
+      scales: _entry.scales,
 
-    properties: entry,
-    versions: [pipe.version._id]
+      drillups: _entry.drill_up || null,
+      drilldowns: _entry.drill_down || null,
+
+      properties: entry,
+      versions: [pipe.version._id]
+    };
   };
 }
 
@@ -704,14 +697,38 @@ function mapDdfMeasureToWsModel(entry) {
   };
 }
 
+//*** Validators ***
+function validateConcept(entry, rowNumber) {
+  let resolvedJSONColumns = ['color', 'scales', 'drill_up', 'drill_down'];
+  let _entry = _.mapValues(entry, (value, columnName) => {
+    if (!value) {
+      return null;
+    }
+
+    let isResolvedJSONColumn = resolvedJSONColumns.indexOf(columnName) > -1;
+    let _value;
+
+    try {
+      _value = value && isResolvedJSONColumn && typeof value !== 'object' ? JSON.parse(value) : value;
+    } catch (e) {
+      console.error(`[${rowNumber}, ${columnName}] Validation error: The cell value isn't valid JSON, fix it please!\nError message : ${e}\nGiven value: ${value}`);
+      return null;
+    }
+
+    return _value;
+  });
+
+  return _entry;
+}
+
 //*** Utils ***
 function readCsvFile(file, options, cb) {
   const converter = new Converter(Object.assign({}, {
-    workerNum: 4,
+    workerNum: 1,
     flatKeys: true
   }, options));
 
-  return converter.fromFile(file, (err, data) => {
+  converter.fromFile(file, (err, data) => {
     return cb(err, data);
   });
 }

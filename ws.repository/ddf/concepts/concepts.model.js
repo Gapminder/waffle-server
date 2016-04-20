@@ -20,13 +20,22 @@ const Schema = mongoose.Schema;
  * @property {Array<Models.DatasetVersions>} versions - all versions of data set in which the entity was added
  * @property {Object} previous - a link to previous version of the current entity
  */
+
 const ConceptsSchema = new Schema({
-  gid: String,
-  name: String,
-  type: { type: String, enum: ['entity_set', 'entity_domain', 'time', 'string', 'measure'], 'default': 'string'},
+  nodeId: {type: Number, index: true, sparse: true},
+  gid: {type: String, match: /^[a-z0-9_]*$/, index: true, required: true},
+  name: {type: String, required: true, index: true},
+  type: {type: String, enum: ['entity_set', 'entity_domain', 'time', 'string', 'measure'], 'default': 'string', required: true},
+  tags: [String],
   tooltip: String,
   indicatorUrl: String,
-  domain: String,
+  color: {},
+  domain: {type: Schema.Types.ObjectId, ref: 'Concepts', sparse: true},
+  drillups: [{type: Schema.Types.ObjectId, ref: 'Concepts'}],
+  drilldowns: [{type: Schema.Types.ObjectId, ref: 'Concepts'}],
+  unit: String,
+  scales: [String],
+  metadata: {},
   properties: {},
 
   versions: [{type: Schema.Types.ObjectId, ref: 'DatasetVersions'}],
