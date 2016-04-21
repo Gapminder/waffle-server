@@ -30,8 +30,7 @@ let Entities = new Schema({
   // should be required
   domain: {type: Schema.Types.ObjectId, ref: 'Concepts'},
   groups: [{type: Schema.Types.ObjectId, ref: 'Concepts'}],
-  drilldowns: [{type: Schema.Types.ObjectId, ref: 'Entities'}],
-  drillups: [{type: Schema.Types.ObjectId, ref: 'Entities'}],
+  childOf: [{type: Schema.Types.ObjectId, ref: 'Entities'}],
 
   versions: [{type: Schema.Types.ObjectId, ref: 'DatasetVersions'}],
   previous: {type: Schema.Types.ObjectId, ref: 'Entities', sparse: true}

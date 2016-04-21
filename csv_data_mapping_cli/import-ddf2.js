@@ -59,7 +59,10 @@ module.exports = function (app, done) {
     addConceptDomains,
     findAllConcepts,
     createEntities,
-    // createDataPoints
+    findAllEntities,
+    addEntityChildOf,
+    findAllEntities,
+    createDataPoints
   ], (err) => {
     console.timeEnd('done');
     return done(err);
@@ -164,7 +167,7 @@ function createConcepts(pipe, done) {
 }
 
 function findAllConcepts(pipe, done) {
-  logger.info('create concepts');
+  logger.info('find all concepts');
 
   mongoose.model('Concepts').find({})
     .populate('domain')
@@ -197,7 +200,7 @@ function addConceptDrillups(pipe, done) {
       escb
     );
   }, (err, res) => {
-    console.log(res);
+    console.log('addConceptDrillups', res);
     return done(err, pipe);
   });
 }
@@ -249,19 +252,24 @@ function addConceptDomains(pipe, done) {
 function createEntities(pipe, done) {
   let entityGroups = _.filter(pipe.concepts, concept => defaultEntityGroupTypes.indexOf(concept.type) > -1);
 
-  async.eachSeries(
+  async.eachLimit(
     entityGroups,
-    (eg, escb) => async.waterfall([
-      async.constant({eg, concepts: pipe.concepts, version: pipe.version}),
-      loadEntities,
-      createEntities
-    ], escb),
+    10,
+    processEntities(pipe),
     (err, res) => {
-      console.log(res);
+      console.log('createEntities', res);
       return done(err, pipe);
     });
 
-  function loadEntities(_pipe, cb) {
+  function processEntities(pipe) {
+    return (eg, cb) => async.waterfall([
+      async.constant({eg, concepts: pipe.concepts, version: pipe.version}),
+      _loadEntities,
+      _createEntities
+    ], cb);
+  }
+
+  function _loadEntities(_pipe, cb) {
     logger.info(`load entities for ${_pipe.eg.gid} from file ${ddfEntitiesFileTemplate(_pipe.eg)}`);
 
     readCsvFile(ddfEntitiesFileTemplate(_pipe.eg), {}, (err, res) => {
@@ -272,13 +280,13 @@ function createEntities(pipe, done) {
         return done('All entity gid\'s should be unique within the Entity Set or Entity Domain!');
       }
 
-      _pipe.entities = entities;
+      _pipe.raw = {entities};
       return cb(err, _pipe);
     });
   }
 
-  function createEntities(_pipe, cb) {
-    if (_.isEmpty(_pipe.entities)) {
+  function _createEntities(_pipe, cb) {
+    if (_.isEmpty(_pipe.raw.entities)) {
       logger.error(`file '${ddfEntitiesFileTemplate(_pipe.eg)}' is empty or doesn't exist.`);
 
       return async.setImmediate(cb);
@@ -286,7 +294,123 @@ function createEntities(pipe, done) {
 
     logger.info(`create entities`);
 
-    mongoose.model('Entities').create(_pipe.entities, (err) => {
+    mongoose.model('Entities').create(_pipe.raw.entities, (err) => {
+      return cb(err, _pipe);
+    });
+  }
+}
+
+function findAllEntities(pipe, done) {
+  logger.info('find all entities');
+
+  mongoose.model('Entities').find({})
+    .populate('domain')
+    .populate('groups')
+    .populate('childOf')
+    .populate('versions')
+    .populate('previous')
+    .lean()
+    .exec((err, res) => {
+      pipe.entities = res;
+      return done(err, pipe);
+    });
+}
+
+function addEntityChildOf(pipe, done) {
+  logger.info('add entity childOf');
+  let relations = flatEntityRelations(pipe.entities);
+
+  async.eachSeries(relations, (relation, escb) => {
+    let parent = _.find(pipe.entities, {gid: relation.parentEntityGid});
+
+    if (!parent) {
+      console.error(`Entity parent with gid '${relation.parentEntityGid}' of entity set with gid '${relation.entityGroupGid}' for entity child with gid '${relation.childEntityGid}' isn't exist!`);
+      return async.setImmediate(escb);
+    }
+
+    let query = {};
+    query['properties.' + relation.entityGroupGid] = relation.parentEntityGid;
+
+    mongoose.model('Entities').update(
+      {gid: relation.childEntityGid},
+      {$addToSet: {'childOf': parent._id}},
+      {multi: true},
+      escb
+    );
+  }, (err) => {
+    return done(err, pipe);
+  });
+}
+
+// Logic is a bit complicated
+// so here is logic steps overview
+// 1. for each measure entry from db
+// 2. find corresponding entries in ddf index file
+// 3. for each entry from ddf index (per measure)
+// 4. read measure values from csv
+// 5. find missing dimensions values in DB and add them
+// 6. recheck that dimension values added correctly
+// 7. save measure values to DB
+function createDataPoints(pipe, done) {
+
+  fs.readdir(path.resolve(pathToDdfFolder), (err, _fileNames) => {
+    const fileNames = _fileNames.filter(fileName => /^ddf--datapoints--/.test(fileName));
+
+    async.eachLimit(
+      fileNames,
+      10,
+      processDataPoints(pipe),
+      (err, res) => {
+        console.log('createEntities', res);
+        return done(err, pipe);
+      });
+  });
+
+  function processDataPoints(pipe) {
+    return (fileName, cb) => async.waterfall([
+      async.constant({fileName, entities: pipe.entities, concepts: pipe.concepts, version: pipe.version}),
+      _parseFileName,
+      _loadDataPoints,
+      _createDataPoints
+    ], cb);
+  }
+
+  function _parseFileName(_pipe, cb) {
+    let parsedFileName = _pipe.fileName.replace(/^ddf--datapoints--|\.csv$/g, '').split('--by--');
+    _pipe.measureGids = _.first(parsedFileName).split('--');
+    _pipe.dimensionGids = _.last(parsedFileName).split('--');
+    _pipe.measures = _.chain(_pipe.concepts)
+      .filter(concept => _pipe.measureGids.indexOf(concept.gid) > -1)
+      .keyBy('gid')
+      .value();
+    _pipe.dimensions = _.chain(_pipe.concepts)
+      .filter(concept => _pipe.dimensionGids.indexOf(concept.gid) > -1)
+      .keyBy('gid')
+      .value();
+
+    return async.setImmediate(() => cb(null, _pipe));
+  }
+
+  function _loadDataPoints(_pipe, cb) {
+    logger.info(`load datapoints for measure(s) '${_pipe.measureGids}' from file ${_pipe.fileName}`);
+
+    readCsvFile(_pipe.fileName, {}, (err, res) => {
+      _pipe.dataPoints = _.flatMap(res, mapDdfDataPointToWsModel(_pipe));
+
+      return cb(err, _pipe);
+    });
+  }
+
+  function _createDataPoints(_pipe, cb) {
+    if (_.isEmpty(_pipe.raw.entities)) {
+      logger.error(`file '${ddfEntitiesFileTemplate(_pipe.eg)}' is empty or doesn't exist.`);
+
+      return async.setImmediate(cb);
+    }
+
+    logger.info(`create entities`);
+
+    mongoose.model('Entities').create(_pipe.raw.entities, (err) => {
       return cb(err, _pipe);
     });
   }
@@ -301,220 +425,220 @@ function createEntities(pipe, done) {
 // 5. find missing dimensions values in DB and add them
 // 6. recheck that dimension values added correctly
 // 7. save measure values to DB
-function createDataPoints() {
-  logger.info('Start: create indicator values');
-  return pipeWaterfall([
-    // load all measures and dimensions from DB
-    (pipe, pcb) => async.parallel({
-      measures: cb=> Indicators.find({}, {gid: 1}).lean().exec(cb),
-      dimensions: cb=> Dimensions.find({}, {gid: 1}).lean().exec(cb),
-      // filesIndex: cb=> readCsvFile(ddf_index_file)({}, cb),
-      fileList: cb => {
-        fs.readdir(path.resolve(pathToDdfFolder), (err, fileNames) => {
-          if (err) {
-            return cb(err);
-          }
-          const START_INDEX = 2;
-          const dataPoints = fileNames
-            .filter(fileName => /^ddf--datapoints--/.test(fileName))
-            .map(fileName => {
-              const spl = fileName.split(/--|\.{1}/);
-              const allConcepts = spl.slice(START_INDEX);
-              const posForBy = allConcepts.indexOf('by');
-              const details = {
-                file: fileName,
-                measure: allConcepts.slice(0, posForBy)[0],
-                concepts: allConcepts.slice(posForBy + 1, allConcepts.length - 1),
-                geo: 'country',
-                time: 'year'
-              };
-              return details;
-            });
-          return cb(null, dataPoints);
-        });
-      }
-    }, pcb),
-    // group file entries from ddf-index my measure id
-    (pipe, cb) => {
-      // pipe.filesIndex = _.groupBy(pipe.filesIndex, v=>v.value_concept);
-      // todo: use this only for debugging to import single measure file
-      if (process.env.DEBUG_IMPORT) {
-        pipe.fileList.length = 1;
-      }
-      pipe.filesIndex = _.groupBy(pipe.fileList, v=>v.measure);
-      return cb(null, pipe);
-    },
-    // do all other? WTF? REALLY?
-    (mPipe, pcb) => {
-      // for each measure entry from DB
-      async.eachSeries(mPipe.measures, (measure, escb) => {
-        const pipe = Object.assign({}, mPipe, {measure});
-        // check entry in ddf-index.csv
-        if (!pipe.filesIndex[measure.gid]) {
-          // produce warning and exit
-          console.warn(`File for measure ${measure.gid} not found`/* in ${ddf_index_file}`*/);
-          return escb();
-        }
-
-        // for each measure entries from ddf-index.csv
-        async.eachSeries(pipe.filesIndex[measure.gid], (fileEntry, cb)=> {
-          if (!fileEntry.geo || !fileEntry.time) {
-            logger.info(`Skipping ${fileEntry.file} - already imported`);
-            return cb();
-          }
-          logger.info(`Importing measure values from '${fileEntry.file}' with dim-s: '${fileEntry.geo},${fileEntry.time}'`);
-          //
-          async.parallel({
-            _addDimensionsToMeasure: cb => addDimensionsToMeasure(measure._id, [fileEntry.geo, fileEntry.time], cb),
-            // build dimension values hash
-            dimensionValues: cb => buildDimensionValuesHash([fileEntry.geo, fileEntry.time], cb),
-            // and load measure values from csv
-            measureValues: cb => readCsvFile(fileEntry.file)({}, cb)
-          }, (err, res) => {
-            const newPipe = Object.assign({}, pipe, res);
-            if (err) {
-              return cb(err);
-            }
-            return async.waterfall([
-              cb => cb(null, newPipe),
-              // find out all missing dimension values
-              (pipe, cb) => {
-                // 2 dimensional only for now
-                pipe.missingValues = _.chain(pipe.measureValues)
-                  .map(entry => {
-                    entry.geo = geoMapping[entry.geo] || entry.geo;
-                    return entry;
-                  })
-                  .reduce((res, val) => {
-                    if (!pipe.dimensionValues[fileEntry.geo] || !pipe.dimensionValues[fileEntry.geo][val.geo]) {
-                      res[fileEntry.geo][val.geo] = true;
-                    }
-                    if (!pipe.dimensionValues[fileEntry.time] || !pipe.dimensionValues[fileEntry.time][val.time]) {
-                      res[fileEntry.time][val.time] = true;
-                    }
-                    return res;
-                  }, {[fileEntry.geo]: {}, [fileEntry.time]: {}})
-                  .reduce((res, val, key) => {
-                    const keys = Object.keys(val);
-                    if (!keys.length) {
-                      return res;
-                    }
-                    res[key] = keys;
-                    logger.info(`Need to add missing '${key}' dimension values: '${keys.join(',')}'`);
-                    return res;
-                  }, {})
-                  .value();
-                pipe.missingValues = Object.keys(pipe.missingValues) ? pipe.missingValues : null;
-                return cb(null, pipe);
-              },
-              // create missing dimension values
-              (pipe, pipeCb) => {
-                if (!pipe.missingValues) {
-                  return pipeCb(null, pipe);
-                }
-                // for each dimension
-                async.forEachOfSeries(pipe.missingValues, (val, key, cb) => {
-                  // find dimension from DB
-                  Dimensions.findOne({gid: key}, {gid: 1}).lean().exec((err, dim) => {
-                    if (err) {
-                      return cb(err);
-                    }
-
-                    // if dimension is not in DB it means its missing in ddf-dimensions csv
-                    if (!dim) {
-                      return cb(new Error(`Dimension '${key}' not found!`));
-                    }
-
-                    // map dimension values to DB schema
-                    const dimValsToAdd = _.map(val, v=> {
-                      return {
-                        dimensionGid: dim.gid,
-                        dimension: dim._id,
-                        value: v,
-                        title: v
-                      };
-                    });
-                    // create dimension values in DB
-                    async.eachLimit(dimValsToAdd, 10, (entity, cb) => {
-                      let query = {value: entity.value};
-                      return insertWhenEntityDoesNotExist(DimensionValues, query, entity, err=>cb(err));
-                    }, cb);
-                  });
-                }, err => {
-                  if (err) {
-                    return pipeCb(err);
-                  }
-                  // rebuild dimension values hash
-                  buildDimensionValuesHash([fileEntry.geo, fileEntry.time], (err, dimValues) => {
-                    pipe.dimensionValues = dimValues;
-                    return pipeCb(err, pipe);
-                  });
-                });
-              },
-              // create measure values
-              (pipe, cmcb) => {
-                // and again we have 2 dims hardcode
-                const hardcodedDims = ['geo', 'time'];
-                const dimensions = _.map(hardcodedDims, v=>fileEntry[v]);
-
-                return async.waterfall([
-                  cb=>cb(null, pipe),
-                  // find dimensions in db
-                  (pipe, cb) => Dimensions.find({gid: {$in: dimensions}}, {
-                    gid: 1,
-                    subdimOf: 1
-                  }).lean().exec((err, dims) => {
-                    // build dimensions hash map
-                    pipe.dimensions = _.keyBy(dims, 'gid');
-                    return cb(err, pipe);
-                  }),
-                  (pipe, cb) => {
-
-                    async.eachLimit(pipe.measureValues, 20, (measureValueEntry, cb) => {
-                      const measureValue = measureValueEntry[pipe.measure.gid];
-                      if (!measureValue && measureValue !== 0) {
-                        return setImmediate(cb);
-                      }
-                      let query = {
-                        value: measureValue,
-                        coordinates: { $all: [] }
-                      };
-                      const coordinates = _.map(pipe.dimensions, (dimension) => {
-                        const value = measureValueEntry[dimension.subdimOf] || measureValueEntry[dimension.gid];
-                        query.coordinates.$all.push({$elemMatch: {dimensionName: dimension.gid, value: value}});
-                        return {
-                          value: value,
-                          dimensionName: dimension.gid,
-
-                          dimension: dimension._id,
-                          dimensionValue: pipe.dimensionValues[dimension.gid][value]
-                        };
-                      });
-                      const dbMeasureValue = {
-                        coordinates: coordinates,
-                        value: measureValue,
-
-                        indicator: pipe.measure._id,
-                        indicatorName: pipe.measure.gid
-                      };
-
-                      return insertWhenEntityDoesNotExist(IndicatorsValues, query, dbMeasureValue, err => cb(err));
-                    }, cb);
-                  }
-                ], cmcb);
-              }
-              // end of waterfall
-            ], err => cb(err, pipe));
-            // end of parallel
-          });
-          // end of eachSeries2
-        }, err => escb(err, pipe));
-        // end of eachSeries1
-      }, err=>pcb(err, mPipe));
-    }
-    // end return pipeWaterfall([
-  ]);
-}
+// function createDataPoints() {
+//   logger.info('Start: create indicator values');
+//   return pipeWaterfall([
+//     // load all measures and dimensions from DB
+//     (pipe, pcb) => async.parallel({
+//       measures: cb=> Indicators.find({}, {gid: 1}).lean().exec(cb),
+//       dimensions: cb=> Dimensions.find({}, {gid: 1}).lean().exec(cb),
+//       // filesIndex: cb=> readCsvFile(ddf_index_file)({}, cb),
+//       fileList: cb => {
+//         fs.readdir(path.resolve(pathToDdfFolder), (err, fileNames) => {
+//           if (err) {
+//             return cb(err);
+//           }
+//           const START_INDEX = 2;
+//           const dataPoints = fileNames
+//             .filter(fileName => /^ddf--datapoints--/.test(fileName))
+//             .map(fileName => {
+//               const spl = fileName.split(/--|\.{1}/);
+//               const allConcepts = spl.slice(START_INDEX);
+//               const posForBy = allConcepts.indexOf('by');
+//               const details = {
+//                 file: fileName,
+//                 measure: allConcepts.slice(0, posForBy)[0],
+//                 concepts: allConcepts.slice(posForBy + 1, allConcepts.length - 1),
+//                 geo: 'country',
+//                 time: 'year'
+//               };
+//               return details;
+//             });
+//           return cb(null, dataPoints);
+//         });
+//       }
+//     }, pcb),
+//     // group file entries from ddf-index my measure id
+//     (pipe, cb) => {
+//       // pipe.filesIndex = _.groupBy(pipe.filesIndex, v=>v.value_concept);
+//       // todo: use this only for debugging to import single measure file
+//       if (process.env.DEBUG_IMPORT) {
+//         pipe.fileList.length = 1;
+//       }
+//       pipe.filesIndex = _.groupBy(pipe.fileList, v=>v.measure);
+//       return cb(null, pipe);
+//     },
+//     // do all other? WTF? REALLY?
+//     (mPipe, pcb) => {
+//       // for each measure entry from DB
+//       async.eachSeries(mPipe.measures, (measure, escb) => {
+//         const pipe = Object.assign({}, mPipe, {measure});
+//         // check entry in ddf-index.csv
+//         if (!pipe.filesIndex[measure.gid]) {
+//           // produce warning and exit
+//           console.warn(`File for measure ${measure.gid} not found`/* in ${ddf_index_file}`*/);
+//           return escb();
+//         }
+//
+//         // for each measure entries from ddf-index.csv
+//         async.eachSeries(pipe.filesIndex[measure.gid], (fileEntry, cb)=> {
+//           if (!fileEntry.geo || !fileEntry.time) {
+//             logger.info(`Skipping ${fileEntry.file} - already imported`);
+//             return cb();
+//           }
+//           logger.info(`Importing measure values from '${fileEntry.file}' with dim-s: '${fileEntry.geo},${fileEntry.time}'`);
+//           //
+//           async.parallel({
+//             _addDimensionsToMeasure: cb => addDimensionsToMeasure(measure._id, [fileEntry.geo, fileEntry.time], cb),
+//             // build dimension values hash
+//             dimensionValues: cb => buildDimensionValuesHash([fileEntry.geo, fileEntry.time], cb),
+//             // and load measure values from csv
+//             measureValues: cb => readCsvFile(fileEntry.file)({}, cb)
+//           }, (err, res) => {
+//             const newPipe = Object.assign({}, pipe, res);
+//             if (err) {
+//               return cb(err);
+//             }
+//             return async.waterfall([
+//               cb => cb(null, newPipe),
+//               // find out all missing dimension values
+//               (pipe, cb) => {
+//                 // 2 dimensional only for now
+//                 pipe.missingValues = _.chain(pipe.measureValues)
+//                   .map(entry => {
+//                     entry.geo = geoMapping[entry.geo] || entry.geo;
+//                     return entry;
+//                   })
+//                   .reduce((res, val) => {
+//                     if (!pipe.dimensionValues[fileEntry.geo] || !pipe.dimensionValues[fileEntry.geo][val.geo]) {
+//                       res[fileEntry.geo][val.geo] = true;
+//                     }
+//                     if (!pipe.dimensionValues[fileEntry.time] || !pipe.dimensionValues[fileEntry.time][val.time]) {
+//                       res[fileEntry.time][val.time] = true;
+//                     }
+//                     return res;
+//                   }, {[fileEntry.geo]: {}, [fileEntry.time]: {}})
+//                   .reduce((res, val, key) => {
+//                     const keys = Object.keys(val);
+//                     if (!keys.length) {
+//                       return res;
+//                     }
+//                     res[key] = keys;
+//                     logger.info(`Need to add missing '${key}' dimension values: '${keys.join(',')}'`);
+//                     return res;
+//                   }, {})
+//                   .value();
+//                 pipe.missingValues = Object.keys(pipe.missingValues) ? pipe.missingValues : null;
+//                 return cb(null, pipe);
+//               },
+//               // create missing dimension values
+//               (pipe, pipeCb) => {
+//                 if (!pipe.missingValues) {
+//                   return pipeCb(null, pipe);
+//                 }
+//                 // for each dimension
+//                 async.forEachOfSeries(pipe.missingValues, (val, key, cb) => {
+//                   // find dimension from DB
+//                   Dimensions.findOne({gid: key}, {gid: 1}).lean().exec((err, dim) => {
+//                     if (err) {
+//                       return cb(err);
+//                     }
+//
+//                     // if dimension is not in DB it means its missing in ddf-dimensions csv
+//                     if (!dim) {
+//                       return cb(new Error(`Dimension '${key}' not found!`));
+//                     }
+//
+//                     // map dimension values to DB schema
+//                     const dimValsToAdd = _.map(val, v=> {
+//                       return {
+//                         dimensionGid: dim.gid,
+//                         dimension: dim._id,
+//                         value: v,
+//                         title: v
+//                       };
+//                     });
+//                     // create dimension values in DB
+//                     async.eachLimit(dimValsToAdd, 10, (entity, cb) => {
+//                       let query = {value: entity.value};
+//                       return insertWhenEntityDoesNotExist(DimensionValues, query, entity, err=>cb(err));
+//                     }, cb);
+//                   });
+//                 }, err => {
+//                   if (err) {
+//                     return pipeCb(err);
+//                   }
+//                   // rebuild dimension values hash
+//                   buildDimensionValuesHash([fileEntry.geo, fileEntry.time], (err, dimValues) => {
+//                     pipe.dimensionValues = dimValues;
+//                     return pipeCb(err, pipe);
+//                   });
+//                 });
+//               },
+//               // create measure values
+//               (pipe, cmcb) => {
+//                 // and again we have 2 dims hardcode
+//                 const hardcodedDims = ['geo', 'time'];
+//                 const dimensions = _.map(hardcodedDims, v=>fileEntry[v]);
+//
+//                 return async.waterfall([
+//                   cb=>cb(null, pipe),
+//                   // find dimensions in db
+//                   (pipe, cb) => Dimensions.find({gid: {$in: dimensions}}, {
+//                     gid: 1,
+//                     subdimOf: 1
+//                   }).lean().exec((err, dims) => {
+//                     // build dimensions hash map
+//                     pipe.dimensions = _.keyBy(dims, 'gid');
+//                     return cb(err, pipe);
+//                   }),
+//                   (pipe, cb) => {
+//
+//                     async.eachLimit(pipe.measureValues, 20, (measureValueEntry, cb) => {
+//                       const measureValue = measureValueEntry[pipe.measure.gid];
+//                       if (!measureValue && measureValue !== 0) {
+//                         return setImmediate(cb);
+//                       }
+//                       let query = {
+//                         value: measureValue,
+//                         coordinates: { $all: [] }
+//                       };
+//                       const coordinates = _.map(pipe.dimensions, (dimension) => {
+//                         const value = measureValueEntry[dimension.subdimOf] || measureValueEntry[dimension.gid];
+//                         query.coordinates.$all.push({$elemMatch: {dimensionName: dimension.gid, value: value}});
+//                         return {
+//                           value: value,
+//                           dimensionName: dimension.gid,
+//
+//                           dimension: dimension._id,
+//                           dimensionValue: pipe.dimensionValues[dimension.gid][value]
+//                         };
+//                       });
+//                       const dbMeasureValue = {
+//                         coordinates: coordinates,
+//                         value: measureValue,
+//
+//                         indicator: pipe.measure._id,
+//                         indicatorName: pipe.measure.gid
+//                       };
+//
+//                       return insertWhenEntityDoesNotExist(IndicatorsValues, query, dbMeasureValue, err => cb(err));
+//                     }, cb);
+//                   }
+//                 ], cmcb);
+//               }
+//               // end of waterfall
+//             ], err => cb(err, pipe));
+//             // end of parallel
+//           });
+//           // end of eachSeries2
+//         }, err => escb(err, pipe));
+//         // end of eachSeries1
+//       }, err=>pcb(err, mPipe));
+//     }
+//     // end return pipeWaterfall([
+//   ]);
+// }
 
 // measure values helper
 function buildDimensionValuesHash(dimensions, bcb) {
@@ -574,25 +698,9 @@ function mapDdfConceptsToWsModel(pipe) {
 
 function mapDdfEntityToWsModel(pipe) {
   return (entry) => {
-    let _value = entry[pipe.eg.gid] || (pipe.eg.domain && entry[pipe.eg.domain.gid]);
-    if (!_value) {
-      console.error(`Either '${pipe.eg.gid}' or '${pipe.eg.domain.gid}' columns weren't found in file '${ddfEntitiesFileTemplate(pipe.eg)}'`);
-    }
-
-    let gid = process.env.USE_GEO_MAPPING === 'true' ? geoMapping[_value] || _value : _value;
-    // var entry = [{'test': '123'}, {'is--test2': '3254'}];
-    let resolvedColumns = _.chain(entry)
-      .keys()
-      .map(setName => _.trimStart(setName, 'is--'))
-      .uniq()
-      .value();
-
-    let resolvedGroups = _.chain(pipe.concepts)
-      .filter(concept => defaultEntityGroupTypes.indexOf(concept.type) > -1 && resolvedColumns.indexOf(concept.gid) > -1)
-      .map(concept => concept._id)
-      .union([pipe.eg.domain ? pipe.eg.domain._id : pipe.eg._id])
-      .uniq()
-      .value();
+    let gid = passGeoMapping(pipe, entry);
+    let resolvedColumns = mapResolvedColumns(entry);
+    let resolvedGroups = mapResolvedGroups(pipe, resolvedColumns);
 
     return {
       gid: gid,
@@ -602,12 +710,63 @@ function mapDdfEntityToWsModel(pipe) {
 
       domain: pipe.eg.domain ? pipe.eg.domain._id : pipe.eg._id,
       groups: resolvedGroups,
-
-      drilldowns: [],
-      drillups: [],
+      childOf: [],
 
       versions: [pipe.version._id]
     };
+  };
+}
+
+function mapResolvedGroups(pipe, resolveGids) {
+  return _.chain(pipe.concepts)
+    .filter(concept => defaultEntityGroupTypes.indexOf(concept.type) > -1 && resolveGids.indexOf(concept.gid) > -1)
+    .map(concept => concept._id)
+    .union([pipe.eg.domain ? pipe.eg.domain._id : pipe.eg._id])
+    .uniq()
+    .value();
+}
+
+function mapResolvedColumns(entry) {
+  return _.chain(entry)
+    .keys()
+    .map(setName => _.trimStart(setName, 'is--'))
+    .uniq()
+    .value();
+}
+
+function mapDdfDataPointToWsModel(pipe) {
+  return function (entry) {
+    // validateDataPoint(entry);
+
+    let dimensions = _.chain(entry)
+      .keys()
+      .filter(conceptGid => pipe.dimensionGids.indexOf(conceptGid) > -1)
+      .map(conceptGid => {
+        let entity = _.find(pipe.entities, (_entity) => {
+          return _entity.gid === entry[conceptGid];
+        });
+        return {
+          gid: entry[conceptGid],
+          conceptGid: conceptGid,
+          concept: pipe.dimensions[conceptGid]._id,
+          entity: entity._id
+        }
+      })
+      .value();
+
+    return _.chain(entry)
+      .keys()
+      .filter(conceptGid => pipe.measureGids.indexOf(conceptGid) > -1)
+      .map((measureGid) => {
+        return {
+          value: entry[measureGid],
+          measure: pipe.measures[measureGid]._id,
+          measureGid: measureGid,
+
+          dimensions: dimensions,
+          versions: [pipe.version._id],
+        }
+      });
   };
 }
 
@@ -644,6 +803,37 @@ function reduceUniqueNestedValues(data, propertyName) {
     .value();
 }
 
+function passGeoMapping(pipe, entry) {
+  let _value = entry[pipe.eg.gid] || (pipe.eg.domain && entry[pipe.eg.domain.gid]);
+
+  if (!_value) {
+    console.error(`Either '${pipe.eg.gid}' or '${pipe.eg.domain.gid}' columns weren't found in file '${ddfEntitiesFileTemplate(pipe.eg)}'`);
+  }
+
+  let gid = process.env.USE_GEO_MAPPING === 'true' ? geoMapping[_value] || _value : _value;
+
+  return gid;
+}
+
+function flatEntityRelations(entities) {
+  return _.chain(entities)
+    .flatMap(_getFlattenRelations)
+    .filter(relation => relation.parentEntityGid !== undefined)
+    .value();
+
+  function _getFlattenRelations(entity) {
+    let groups = _.map(entity.groups, group => group.gid);
+
+    return _.map(groups, (entityGroupGid) => {
+      return {
+        entityGroupGid: entityGroupGid,
+        childEntityGid: entity.gid,
+        parentEntityGid: entity.properties[entityGroupGid]
+      }
+    });
+  }
+}
+
 function readCsvFile(file, options, cb) {
   const converter = new Converter(Object.assign({}, {
     workerNum: 1,
@@ -651,7 +841,9 @@ function readCsvFile(file, options, cb) {
   }, options));
 
   converter.fromFile(resolvePath(file), (err, data) => {
-    console.error(err);
+    if (err) {
+      console.error(err);
+    }
 
     return cb(null, data);
   });
