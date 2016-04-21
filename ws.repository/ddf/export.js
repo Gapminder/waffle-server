@@ -11,7 +11,7 @@ _.forEach([
   'data-points',
   'dataset-versions',
   'dataset-transactions',
-  'data-sets',
+  'datasets',
   'entities',
   'entity-groups',
   'measures',
@@ -34,10 +34,14 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
   async.waterfall([
     async.constant({}),
     cleanGraph,
+    exportCurrentDatasetVersion,
+    exportDataset,
+    exportTranslations,
+    exportConcepts,
     exportMeasures,
     exportEntityGroups,
     exportEntities,
-    exportDatapoints,
+    exportDatapoints
     // createIndexes
   ], function (err) {
     if (err) {
@@ -68,6 +72,112 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
 
         return cb(null, pipe);
       });
+    });
+  }
+
+  function exportCurrentDatasetVersion(pipe, ecdvDone) {
+    const DatasetVersions = mongoose.model('DatasetVersions');
+
+    async.waterfall([
+      cb => DatasetVersions.findOne({isCurrent: true}).lean().exec(cb),
+      (version, cb) => {
+        pipe.version = version;
+
+        const batchQuery = [];
+        const batchId = batchQuery.length;
+
+        batchQuery.push({
+          body: {name: version.name},
+          to: '/node',
+          id: batchId,
+          method: 'POST'
+        });
+
+        batchQuery.push({
+          method: 'POST',
+          to: '{' + batchId + '}/labels',
+          id: batchQuery.length,
+          body: 'DatasetVersions'
+        });
+
+        cb(null, batchQuery);
+      },
+      (batchQuery, cb) => {
+        return neo4jdb.batchQuery(batchQuery, function (err, versionNodes) {
+          const versionNode = _.find(versionNodes, node => node.body.data.name === pipe.version.name);
+          pipe.version.neoId = versionNode.body.metadata.id;
+
+          return cb(err, versionNodes);
+        });
+      }
+    ],
+    (error) => {
+      if (error) {
+        ecdvDone(error);
+      }
+
+      ecdvDone(null, pipe);
+    });
+  }
+
+  function exportDataset(pipe, edDone) {
+    const Datasets = mongoose.model('Datasets');
+
+    async.waterfall([
+      cb => Datasets.findOne({_id: pipe.version.dataset.toString()}).lean().exec(cb),
+      (dataset, cb) => {
+        pipe.dataset = dataset;
+
+        const batchQuery = [];
+        const batchId = batchQuery.length;
+        batchQuery.push({
+          body: {dsId: dataset.dsId},
+          to: '/node',
+          id: batchId,
+          method: 'POST'
+        });
+
+        batchQuery.push({
+          method: 'POST',
+          to: '{' + batchId + '}/labels',
+          id: batchQuery.length,
+          body: 'Datasets'
+        });
+
+        cb(null, batchQuery);
+      },
+      (batchQuery, cb) => {
+        return neo4jdb.batchQuery(batchQuery, function (err, datasetNodes) {
+          const datasetNode = _.find(datasetNodes, node => node.body.data.dsId === pipe.dataset.dsId);
+          pipe.dataset.neoId = datasetNode.body.metadata.id;
+
+          return cb(err, datasetNodes);
+        });
+      },
+      (datasetNodes, cb) => {
+        const batchQuery = [];
+        batchQuery.push({
+          method: 'POST',
+          to: '/node/' + pipe.dataset.neoId + '/relationships',
+          id: 0,
+          body: {
+            to: '' + pipe.version.neoId + '',
+            type: 'WITH_VERSION'
+          }
+        });
+        cb(null, batchQuery);
+      },
+      (batchQuery, cb) => {
+        return neo4jdb.batchQuery(batchQuery, function (err) {
+          return cb(err);
+        });
+      }
+    ],
+    (error) => {
+      if (error) {
+        edDone(error);
+      }
+      edDone(null, pipe);
     });
   }
 
@@ -111,6 +221,23 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
           return Measures.update({_id: measure._id}, {$set: {nodeId: measure.nodeId}}, err => cb(err, memo));
         }, (err, res) => {
           pipe.measures = res;
+          return cb(err);
+        });
+      },
+      (cb) => {
+        const batchQuery = [];
+        _.each(pipe.measures, measure => {
+          batchQuery.push({
+            method: 'POST',
+            to: '/node/' + pipe.version.neoId + '/relationships',
+            id: 0,
+            body: {
+              to: '' + measure.nodeId + '',
+              type: 'WITH_MEASURE'
+            }
+          });
+        });
+        return neo4jdb.batchQuery(batchQuery, function (err) {
           return cb(err);
         });
       }
@@ -159,7 +286,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
             method: 'POST',
             to: '{' + entityGroupIndex + '}/labels',
             id: batchQuery.length,
-            body: modelName
+            body: entityGroup.domain ? 'EntitySets' : 'EntityDomains'
           });
 
           nodeMetas[entityGroupId._id.toString()] = {entityGroupIndex, gid: entityGroup.gid, batchQueryId: batchQuery.length};
@@ -187,13 +314,37 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
 
         pipe.nodeMetas = nodeMetas;
         _.each(pipe.entityGroups, entityGroup => {
+          if (!entityGroup.domain) {
+            batchQuery.push({
+              method: 'POST',
+              to: `/node/${pipe.version.neoId}/relationships`,
+              id: batchQuery.length,
+              body: {
+                to: `${nodeMetas[entityGroup._id.toString()].neoId}`,
+                type: 'WITH_ENTITY_DOMAIN'
+              }
+            });
+          }
+
+          if (entityGroup.domain) {
+            batchQuery.push({
+              method: 'POST',
+              to: `/node/${nodeMetas[entityGroup.domain.toString()].neoId}/relationships`,
+              id: batchQuery.length,
+              body: {
+                to: `${nodeMetas[entityGroup._id.toString()].neoId}`,
+                type: 'WITH_ENTITY_SET'
+              }
+            });
+          }
+
           _.each(entityGroup.drilldowns, drilldownEntityGroup => {
             batchQuery.push({
               method: 'POST',
-              to: '/node/' + nodeMetas[entityGroup._id.toString()].neoId + '/relationships',
+              to: `/node/${nodeMetas[entityGroup._id.toString()].neoId}/relationships`,
               id: 0,
               body: {
-                to: '' + nodeMetas[drilldownEntityGroup.toString()].neoId + '',
+                to: `${nodeMetas[drilldownEntityGroup.toString()].neoId}`,
                 type: 'WITH_DRILLDOWN'
               }
             });
@@ -266,19 +417,6 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
         }, {});
 
         var batchQuery = [];
-        _.each(pipe.entities, entity => {
-          _.each(entity.drillups, entityDrillup => {
-              batchQuery.push({
-                method: 'POST',
-                to: '/node/' + entity.neoId + '/relationships',
-                body: {
-                  to: '' + pipe.entities[entityDrillup.toString()].neoId  + '',
-                  type: 'WITH_DRILLUP'
-                }
-              });
-          });
-        });
-
         _.each(pipe.entities, (entity) => {
           _.each(entity.drilldowns, entityDrilldown => {
             batchQuery.push({
@@ -286,7 +424,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
               to: '/node/' + entity.neoId + '/relationships',
               body: {
                 to: '' + pipe.entities[entityDrilldown.toString()].neoId  + '',
-                type: 'WITH_DRILLDOWN'
+                type: 'WITH_CHILD_ENTITY'
               }
             });
           });
@@ -323,7 +461,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
           return cb(err, entityRelations);
         });
       }
-    ], (error, result) => {
+    ], (error) => {
       if (error) {
         throw error;
       }
@@ -355,13 +493,12 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
               value: datapoint.value
             },
             id: id,
-            to: '/node',
-            metadata: {s: "hello"}
+            to: '/node'
           });
 
           batchQuery.push({
             method: 'POST',
-            to: '{' + id  + '}/labels',
+            to: `{${id}}/labels`,
             id: batchQuery.length ,
             body: 'MeasureValues'
           });
@@ -385,8 +522,8 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
             method: 'POST',
             to: '/node/' + pipe.measures[datapoint.measure.toString()].nodeId + '/relationships',
             body: {
-              to: '' + datapoint.neoId + '',
-              type: 'HAS_MEASURE_VALUE'
+              to: `${datapoint.neoId}`,
+              type: 'WITH_MEASURE_VALUE'
             }
           });
           _.each(datapoint.coordinates, coordinate => {
@@ -394,8 +531,8 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
               method: 'POST',
               to: '/node/' + pipe.entities[coordinate.entity.toString()].neoId + '/relationships',
               body: {
-                to: '' + datapoint.neoId + '',
-                type: 'HAS_MEASURE_VALUE'
+                to: `${datapoint.neoId}`,
+                type: 'IS_DIMENSION_KEY_FOR_MEASURE_VALUE'
               }
             });
           });
@@ -413,6 +550,144 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
         throw error;
       }
       return edDone(error, pipe);
+    });
+  }
+
+  function exportTranslations(pipe, etDone) {
+    const Translations = mongoose.model('Translations');
+
+    async.waterfall([
+      cb => Translations.find({dataset: pipe.dataset._id.toString()}).lean().exec(cb),
+      (translations, cb) => {
+        pipe.translations = _.keyBy(translations, translation => translation._id.toString());
+        const batchQuery = [];
+
+        _.each(pipe.translations, translation => {
+
+          const batchId = batchQuery.length;
+
+          batchQuery.push({
+            method: 'POST',
+            body: {
+              key: translation.key,
+              value: translation.value,
+              language: translation.language
+            },
+            id: batchId,
+            to: '/node'
+          });
+
+          batchQuery.push({
+            method: 'POST',
+            to: `{${batchId}}/labels`,
+            id: batchQuery.length,
+            body: 'Translations'
+          });
+        });
+
+        cb(null, batchQuery);
+      },
+      (batchQuery, cb) => {
+        return neo4jdb.batchQuery(batchQuery, function (err, translationNodes) {
+          _.each(pipe.translations, translation => {
+            const translationNode = _.find(translationNodes, node => node.body && node.body.data.language === translation.language && node.body.data.key === translation.key);
+            translation.neoId = translationNode.body.metadata.id;
+          });
+          return cb(err);
+        });
+      },
+      cb => {
+        const batchQuery = [];
+        _.each(pipe.translations, translation => {
+          batchQuery.push({
+            method: 'POST',
+            to: '/node/' + pipe.dataset.neoId + '/relationships',
+            body: {
+              to: `${translation.neoId}`,
+              type: 'WITH_TRANSLATION'
+            }
+          });
+        });
+        cb(null, batchQuery);
+      },
+      (batchQuery, cb) => {
+        return neo4jdb.batchQuery(batchQuery, function (err) {
+          return cb(err);
+        });
+      }
+    ], error => {
+      if (error) {
+        etDone(error);
+      }
+      etDone(null, pipe);
+    });
+  }
+
+  function exportConcepts(pipe, ecDone) {
+    const Concepts = mongoose.model('Concepts');
+
+    async.waterfall([
+      cb => Concepts.find({versions: pipe.version._id.toString()}).lean().exec(cb),
+      (concepts, cb) => {
+        pipe.concepts = _.keyBy(concepts, concept => concept._id.toString());
+        const batchQuery = [];
+
+        _.each(pipe.concepts, concept => {
+
+          const batchId = batchQuery.length;
+
+          batchQuery.push({
+            method: 'POST',
+            body: {
+              gid: concept.gid
+            },
+            id: batchId,
+            to: '/node'
+          });
+
+          batchQuery.push({
+            method: 'POST',
+            to: `{${batchId}}/labels`,
+            id: batchQuery.length,
+            body: 'Concepts'
+          });
+        });
+
+        cb(null, batchQuery);
+      },
+      (batchQuery, cb) => {
+        return neo4jdb.batchQuery(batchQuery, function (err, conceptNodes) {
+          _.each(pipe.concepts, concept => {
+            const conceptNode = _.find(conceptNodes, node => node.body && node.body.data.gid === concept.gid);
+            concept.neoId = conceptNode.body.metadata.id;
+          });
+          return cb(err);
+        });
+      },
+      cb => {
+        const batchQuery = [];
+        _.each(pipe.concepts, concept => {
+          batchQuery.push({
+            method: 'POST',
+            to: '/node/' + pipe.version.neoId + '/relationships',
+            body: {
+              to: `${concept.neoId}`,
+              type: 'WITH_CONCEPT'
+            }
+          });
+        });
+        cb(null, batchQuery);
+      },
+      (batchQuery, cb) => {
+        return neo4jdb.batchQuery(batchQuery, function (err) {
+          return cb(err);
+        });
+      }
+    ], error => {
+      if (error) {
+        ecDone(error);
+      }
+      ecDone(null, pipe);
     });
   }
 

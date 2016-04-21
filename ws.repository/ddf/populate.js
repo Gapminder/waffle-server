@@ -95,7 +95,8 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
     mongoose.model('DatasetVersions').create({
       name: Math.random().toString(),
       createdBy: pipe.user._id,
-      dataSet: pipe.dataSet._id
+      dataset: pipe.dataSet._id,
+      isCurrent: true
     }, (err, res) => {
       pipe.version = res;
       return done(err, pipe);
@@ -122,7 +123,9 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
       (pipe, done) => _createCity(pipe, done),
       (pipe, done) => _createCountryToCityDrilldown(pipe, done),
       (pipe, done) => _createTime(pipe, done),
-      (pipe, done) => _createYear(pipe, done)
+      (pipe, done) => _createYear(pipe, done),
+      (pipe, done) => _createGeoToCountryDrilldown(pipe, done),
+      (pipe, done) => _createTimeToYearDrilldown(pipe, done)
     ], done);
 
     function _createGeo(pipe, done) {
@@ -143,6 +146,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
         name: 'Country',
         type: 'entity_set',
         domain: pipe.entityGroups.geo._id,
+        drillups: [pipe.entityGroups.geo._id],
         versions: [pipe.version._id]
       }, (err, res) => {
         pipe.entityGroups.country = res;
@@ -183,10 +187,31 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
         name: 'Year',
         type: 'entity_set',
         domain: pipe.entityGroups.time._id,
+        drillups: [pipe.entityGroups.time._id],
         versions: [pipe.version._id]
       }, (err, res) => {
         pipe.entityGroups.year = res;
         return done(err, pipe);
+      });
+    }
+
+    function _createGeoToCountryDrilldown(pipe, done) {
+      mongoose.model('EntityGroups').findOne({gid: 'country'}).lean().exec((error, country) => {
+        mongoose.model('EntityGroups').update({
+          gid: 'geo'
+        }, {$push: {drilldowns: country._id}}, (err, res) => {
+          return done(err, pipe);
+        });
+      });
+    }
+
+    function _createTimeToYearDrilldown(pipe, done) {
+      mongoose.model('EntityGroups').findOne({gid: 'year'}).lean().exec((error, year) => {
+        mongoose.model('EntityGroups').update({
+          gid: 'time'
+        }, {$push: {drilldowns: year._id}}, (err, res) => {
+          return done(err, pipe);
+        });
       });
     }
 
