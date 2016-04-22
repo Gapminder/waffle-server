@@ -7,7 +7,7 @@ let Schema = mongoose.Schema;
  * @typedef {Object} Datasets
  * @memberof Models
  *
- * @property {String} dsId - unique data set `id` within Datasets space
+ * @property {String} dsId - unique data set `id` within Datasets space (human readable)
  * @property {String} type - github commit, local storage, etc
  * @property {String} uri - uri to Data Set (if exists)
  *
