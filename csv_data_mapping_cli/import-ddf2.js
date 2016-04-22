@@ -58,7 +58,7 @@ module.exports = function (app, done) {
     addConceptDrilldowns,
     addConceptDomains,
     findAllConcepts,
-    createEntities,
+    processEntities,
     findAllEntities,
     addEntityChildOf,
     findAllEntities,
@@ -185,7 +185,7 @@ function findAllConcepts(pipe, done) {
 function addConceptDrillups(pipe, done) {
   logger.info('add concept drillups');
 
-  async.eachSeries(pipe.raw.drillups, (drillup, escb) => {
+  async.eachLimit(pipe.raw.drillups, 10, (drillup, escb) => {
     let drillupConcept = _.find(pipe.concepts, {gid: drillup});
 
     if (!drillupConcept) {
@@ -200,7 +200,7 @@ function addConceptDrillups(pipe, done) {
       escb
     );
   }, (err, res) => {
-    console.log('addConceptDrillups', res);
+    // console.log('addConceptDrillups', res);
     return done(err, pipe);
   });
 }
@@ -208,7 +208,7 @@ function addConceptDrillups(pipe, done) {
 function addConceptDrilldowns(pipe, done) {
   logger.info('add concept drilldowns');
 
-  async.eachSeries(pipe.raw.drilldowns, (drilldown, escb) => {
+  async.eachLimit(pipe.raw.drilldowns, 10, (drilldown, escb) => {
     let drilldownConcept = _.find(pipe.concepts, {gid: drilldown});
 
     if (!drilldownConcept) {
@@ -230,7 +230,7 @@ function addConceptDrilldowns(pipe, done) {
 function addConceptDomains(pipe, done) {
   logger.info('add entity domains to related concepts');
 
-  async.eachSeries(pipe.raw.domains, (domainName, escb) => {
+  async.eachLimit(pipe.raw.domains, 10, (domainName, escb) => {
     let domain = _.find(pipe.concepts, {gid: domainName});
 
     if (!domain) {
@@ -249,55 +249,55 @@ function addConceptDomains(pipe, done) {
   });
 }
 
-function createEntities(pipe, done) {
+function processEntities(pipe, done) {
   let entityGroups = _.filter(pipe.concepts, concept => defaultEntityGroupTypes.indexOf(concept.type) > -1);
 
   async.eachLimit(
     entityGroups,
     10,
-    processEntities(pipe),
+    _processEntities(pipe),
     (err, res) => {
-      console.log('createEntities', res);
+      // console.log('createEntities', res);
       return done(err, pipe);
     });
 
-  function processEntities(pipe) {
+  function _processEntities(pipe) {
     return (eg, cb) => async.waterfall([
       async.constant({eg, concepts: pipe.concepts, version: pipe.version}),
-      _loadEntities,
-      _createEntities
+      loadEntities,
+      createEntities
     ], cb);
   }
+}
 
-  function _loadEntities(_pipe, cb) {
-    logger.info(`load entities for ${_pipe.eg.gid} from file ${ddfEntitiesFileTemplate(_pipe.eg)}`);
+function loadEntities(_pipe, cb) {
+  logger.info(`load entities for ${_pipe.eg.gid} from file ${ddfEntitiesFileTemplate(_pipe.eg)}`);
 
-    readCsvFile(ddfEntitiesFileTemplate(_pipe.eg), {}, (err, res) => {
-      let entities = _.map(res, mapDdfEntityToWsModel(_pipe));
-      let uniqEntities = _.uniqBy(entities, 'gid');
+  readCsvFile(ddfEntitiesFileTemplate(_pipe.eg), {}, (err, res) => {
+    let entities = _.map(res, mapDdfEntityToWsModel(_pipe));
+    let uniqEntities = _.uniqBy(entities, 'gid');
 
-      if (uniqEntities.length !== entities.length) {
-        return done('All entity gid\'s should be unique within the Entity Set or Entity Domain!');
-      }
-
-      _pipe.raw = {entities};
-      return cb(err, _pipe);
-    });
-  }
-
-  function _createEntities(_pipe, cb) {
-    if (_.isEmpty(_pipe.raw.entities)) {
-      logger.error(`file '${ddfEntitiesFileTemplate(_pipe.eg)}' is empty or doesn't exist.`);
-
-      return async.setImmediate(cb);
+    if (uniqEntities.length !== entities.length) {
+      return done('All entity gid\'s should be unique within the Entity Set or Entity Domain!');
     }
 
-    logger.info(`create entities`);
+    _pipe.raw = {entities};
+    return cb(err, _pipe);
+  });
+}
 
-    mongoose.model('Entities').create(_pipe.raw.entities, (err) => {
-      return cb(err, _pipe);
-    });
+function createEntities(_pipe, cb) {
+  if (_.isEmpty(_pipe.raw.entities)) {
+    logger.error(`file '${ddfEntitiesFileTemplate(_pipe.eg)}' is empty or doesn't exist.`);
+
+    return async.setImmediate(cb);
   }
+
+  logger.info(`create entities`);
+
+  mongoose.model('Entities').create(_pipe.raw.entities, (err) => {
+    return cb(err, _pipe);
+  });
 }
 
 function findAllEntities(pipe, done) {
@@ -320,7 +320,7 @@ function addEntityChildOf(pipe, done) {
   logger.info('add entity childOf');
   let relations = flatEntityRelations(pipe.entities);
 
-  async.eachSeries(relations, (relation, escb) => {
+  async.eachLimit(relations, 10, (relation, escb) => {
     let parent = _.find(pipe.entities, {gid: relation.parentEntityGid});
 
     if (!parent) {
@@ -356,35 +356,37 @@ function createDataPoints(pipe, done) {
   fs.readdir(path.resolve(pathToDdfFolder), (err, _fileNames) => {
     const fileNames = _fileNames.filter(fileName => /^ddf--datapoints--/.test(fileName));
 
-    async.eachLimit(
+    async.eachSeries(
       fileNames,
-      10,
       processDataPoints(pipe),
       (err, res) => {
-        console.log('createEntities', res);
+        // console.log('createEntities', res);
         return done(err, pipe);
       });
   });
 
   function processDataPoints(pipe) {
     return (fileName, cb) => async.waterfall([
-      async.constant({fileName, entities: pipe.entities, concepts: pipe.concepts, version: pipe.version}),
+      async.constant({fileName, concepts: pipe.concepts, version: pipe.version}),
       _parseFileName,
+      findAllEntities,
       _loadDataPoints,
+      createEntities,
+      findAllEntities,
       _createDataPoints
     ], cb);
   }
 
   function _parseFileName(_pipe, cb) {
     let parsedFileName = _pipe.fileName.replace(/^ddf--datapoints--|\.csv$/g, '').split('--by--');
-    _pipe.measureGids = _.first(parsedFileName).split('--');
-    _pipe.dimensionGids = _.last(parsedFileName).split('--');
+    let measureGids = _.first(parsedFileName).split('--');
+    let dimensionGids = _.last(parsedFileName).split('--');
     _pipe.measures = _.chain(_pipe.concepts)
-      .filter(concept => _pipe.measureGids.indexOf(concept.gid) > -1)
+      .filter(concept => measureGids.indexOf(concept.gid) > -1)
       .keyBy('gid')
       .value();
     _pipe.dimensions = _.chain(_pipe.concepts)
-      .filter(concept => _pipe.dimensionGids.indexOf(concept.gid) > -1)
+      .filter(concept => dimensionGids.indexOf(concept.gid) > -1)
       .keyBy('gid')
       .value();
 
@@ -395,22 +397,50 @@ function createDataPoints(pipe, done) {
     logger.info(`load datapoints for measure(s) '${_pipe.measureGids}' from file ${_pipe.fileName}`);
 
     readCsvFile(_pipe.fileName, {}, (err, res) => {
-      _pipe.dataPoints = _.flatMap(res, mapDdfDataPointToWsModel(_pipe));
+      let mapEntities = entry => _.chain(_pipe.dimensions)
+        .keys()
+        .map(entityGroupGid => {
+          let domain = _pipe.dimensions[entityGroupGid].domain
+            ? _pipe.dimensions[entityGroupGid].domain._id
+            : _pipe.dimensions[entityGroupGid]._id;
+
+          return {
+            gid: entry[entityGroupGid],
+            source: _pipe.fileName,
+            domain: domain,
+            groups: _pipe.dimensions[entityGroupGid].domain ? [_pipe.dimensions[entityGroupGid]._id] : [],
+            versions: [_pipe.version._id]
+          };
+        })
+        .value();
+
+      let entities = _.chain(res)
+        .flatMap(mapEntities)
+        .uniqWith(_.isEqual)
+        .filter(entity => !_.find(_pipe.entities, {gid: entity.gid}))
+        .value();
+
+      _pipe.raw = {
+        dataPoints: res,
+        entities: entities
+      };
 
       return cb(err, _pipe);
     });
   }
 
   function _createDataPoints(_pipe, cb) {
-    if (_.isEmpty(_pipe.raw.entities)) {
-      logger.error(`file '${ddfEntitiesFileTemplate(_pipe.eg)}' is empty or doesn't exist.`);
+    let dataPoints = _.flatMap(_pipe.raw.dataPoints, mapDdfDataPointToWsModel(_pipe));
+
+    if (_.isEmpty(dataPoints)) {
+      logger.error(`file '${ddfEntitiesFileTemplate(_pipe.fileName)}' is empty or doesn't exist.`);
 
       return async.setImmediate(cb);
     }
 
-    logger.info(`create entities`);
+    logger.info(`create data points`);
 
-    mongoose.model('Entities').create(_pipe.raw.entities, (err) => {
+    mongoose.model('DataPoints').create(dataPoints, (err) => {
       return cb(err, _pipe);
     });
   }
@@ -735,28 +765,46 @@ function mapResolvedColumns(entry) {
 }
 
 function mapDdfDataPointToWsModel(pipe) {
-  return function (entry) {
+  return function (entry, key) {
     // validateDataPoint(entry);
+    // console.log(_.values(entry));
+    let isValidEntry = _.values(entry)
+      .every(value => !_.isNil(value));
+
+
+    if (!isValidEntry) {
+      console.error(`[${key}] Validation error: There is empty value(s) in file '${pipe.fileName}'`);
+      return [];
+    }
 
     let dimensions = _.chain(entry)
       .keys()
-      .filter(conceptGid => pipe.dimensionGids.indexOf(conceptGid) > -1)
-      .map(conceptGid => {
+      .filter(conceptGid => _.keys(pipe.dimensions).indexOf(conceptGid) > -1)
+      .reduce((result, conceptGid) => {
         let entity = _.find(pipe.entities, (_entity) => {
-          return _entity.gid === entry[conceptGid];
+          return _entity.gid == entry[conceptGid];
         });
-        return {
-          gid: entry[conceptGid],
-          conceptGid: conceptGid,
-          concept: pipe.dimensions[conceptGid]._id,
-          entity: entity._id
+
+        if (!entity) {
+          console.error(`There is no entity with gid '${entry[conceptGid]}' from file '${pipe.fileName}'`);
         }
-      })
+
+        if (entity) {
+          result.push({
+            gid: entry[conceptGid],
+            conceptGid: conceptGid,
+            concept: pipe.dimensions[conceptGid]._id,
+            entity: entity._id
+          });
+        }
+
+        return result;
+      }, [])
       .value();
 
     return _.chain(entry)
       .keys()
-      .filter(conceptGid => pipe.measureGids.indexOf(conceptGid) > -1)
+      .filter(conceptGid => _.keys(pipe.measures).indexOf(conceptGid) > -1)
       .map((measureGid) => {
         return {
           value: entry[measureGid],
@@ -766,7 +814,8 @@ function mapDdfDataPointToWsModel(pipe) {
           dimensions: dimensions,
           versions: [pipe.version._id],
         }
-      });
+      })
+      .value();
   };
 }
 
