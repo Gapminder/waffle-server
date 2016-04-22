@@ -28,8 +28,6 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
     throw err;
   }
 
-  var logger = console;
-
   console.time('Mission complete!');
   async.waterfall([
     async.constant({}),
@@ -45,7 +43,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
     // createIndexes
   ], function (err) {
     if (err) {
-      logger.error(err);
+      console.error(err);
       return;
     }
 
@@ -54,21 +52,21 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
   });
 
   function cleanGraph(pipe, cb) {
-    logger.log(`Removing all relationships between nodes`);
+    console.log(`Removing all relationships between nodes`);
     neo4jdb.cypherQuery('match ()-[r]-() delete r;', function (err) {
       if (err) {
         return cb(err);
       }
 
-      logger.log(`done!`);
-      logger.log(`Removing all nodes`);
+      console.log(`done!`);
+      console.log(`Removing all nodes`);
 
       neo4jdb.cypherQuery('match (n) delete n;', function (err) {
         if (err) {
           return cb(err);
         }
 
-        logger.log(`done!`);
+        console.log(`done!`);
 
         return cb(null, pipe);
       });
@@ -194,16 +192,21 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
     });
   }
 
-  function exportMeasures(pipe, emCb) {
-    var modelName = 'Measures';
 
-    console.log(`${modelName} export started`);
-    console.time(`${modelName} exported`);
-    var Measures = mongoose.model(modelName);
+
+
+
+
+
+
+
+
+  function exportMeasures(pipe, emCb) {
+    var Concepts = mongoose.model('Concepts');
+
     async.waterfall([
-      cb => Measures.find({}, {gid: 1, name: 1}).lean().exec(cb),
+      cb => Concepts.find({type: 'measure'}, {gid: 1, name: 1}).lean().exec(cb),
       (measures, cb) => {
-        console.log(`Exporting %s ${modelName}`, measures.length);
         var batchQuery = _.map(measures, function (measure, index) {
           return {
             method: 'POST',
@@ -218,11 +221,10 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
             method: 'POST',
             to: '{' + index + '}/labels',
             id: batchQuery.length,
-            body: modelName
+            body: 'Measures'
           });
         });
         return neo4jdb.batchQuery(batchQuery, (err, measureNodes) => {
-          console.timeEnd(`${modelName} exported`);
           return cb(err, {measureNodes, measures});
         });
       },
@@ -260,15 +262,10 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
   }
 
   function exportEntityGroups(pipe, eidCb) {
-    var modelName = 'EntityGroups';
-
-    console.log(`${modelName} export started`);
-    console.time(`${modelName} exported`);
-
-    var EntityGroups = mongoose.model(modelName);
+    var Concepts = mongoose.model('Concepts');
 
     async.waterfall([
-      cb => EntityGroups.find({}, {name: 1, gid: 1, type: 1, drilldowns: 1, drillups: 1, _id: 1, domain: 1}).lean().exec(cb),
+      cb => Concepts.find({type: {$or: ['entity_set', 'entity_domain']}}, {name: 1, gid: 1, type: 1, drilldowns: 1, drillups: 1, _id: 1, domain: 1}).lean().exec(cb),
       (entityGroups, cb) => cb(null, _.keyBy(entityGroups, entityGroup => entityGroup._id.toString())),
       (entityGroups, cb) => {
         pipe.entityGroups = entityGroups;
@@ -308,8 +305,6 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
       },
       (batchQuery, nodeMetas, cb) => {
         return neo4jdb.batchQuery(batchQuery, function (err, dimensionNodes) {
-          console.timeEnd(`${modelName} exported`);
-
           _.reduce(dimensionNodes, (prev, current) => {
             const node = _.find(nodeMetas, node => {
               return current.body && node.gid === current.body.data.gid
