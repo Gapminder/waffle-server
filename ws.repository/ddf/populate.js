@@ -79,7 +79,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
 
   function createDataset(pipe, done) {
     mongoose.model('Datasets').create({
-      dsId: Math.random().toString(),
+      dsId: 'ddf-world',
       type: 'local',
       url: '/c/users',
       dataProvider: 'hands',
@@ -93,7 +93,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
 
   function createVersion(pipe, done) {
     mongoose.model('DatasetVersions').create({
-      name: Math.random().toString(),
+      name: 'v1',
       createdBy: pipe.user._id,
       dataset: pipe.dataSet._id,
       isCurrent: true
@@ -235,7 +235,8 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
       (pipe, done) => _createUkraine(pipe, done),
       (pipe, done) => _updateKharkivDrillup(pipe, done),
       (pipe, done) => _createHongKong(pipe, done),
-      (pipe, done) => _createAbc(pipe, done),
+      (pipe, done) => _updateHongKongDrilldown(pipe, done),
+      (pipe, done) => _createAfrica(pipe, done),
       (pipe, done) => _createYear1900(pipe, done),
       (pipe, done) => _createYear2000(pipe, done),
       // (pipe, done) => _createTime1900s(pipe, done)
@@ -290,14 +291,23 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
       });
     }
 
-    function _createAbc(pipe, done) {
+    function _updateHongKongDrilldown(pipe, done) {
+      mongoose.model('Entities').update({
+        _id: pipe.entities.hongkong._id
+      }, {$set: {drilldowns: [pipe.entities.hongkong._id]}}, (err) => {
+        pipe.entities.hongkong.drilldowns = [pipe.entities.hongkong._id];
+        done(err, pipe);
+      })
+    }
+
+    function _createAfrica(pipe, done) {
       mongoose.model('Entities').create({
-        gid: '_abc',
-        title: 'Abc',
+        gid: 'africa',
+        title: 'Africa',
         domain: pipe.entityGroups.geo._id,
         versions: [pipe.version._id]
       }, (err, res) => {
-        pipe.entities._abc = res;
+        pipe.entities.africa = res;
         return done(err, pipe);
       });
     }
@@ -384,7 +394,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
       let coordHongKongGeo = {gid: pipe.entities.hongkong.gid, entityGroupName: pipe.entityGroups.geo.gid, entity: pipe.entities.hongkong._id, entityGroup: pipe.entityGroups.geo._id};
       let coordHongKongCountry = {gid: pipe.entities.hongkong.gid, entityGroupName: pipe.entityGroups.country.gid, entity: pipe.entities.hongkong._id, entityGroup: pipe.entityGroups.country._id};
       let coordHongKongCity = {gid: pipe.entities.hongkong.gid, entityGroupName: pipe.entityGroups.city.gid, entity: pipe.entities.hongkong._id, entityGroup: pipe.entityGroups.city._id};
-      let coordAbcGeo = {gid: pipe.entities._abc.gid, entityGroupName: pipe.entityGroups.geo.gid, entity: pipe.entities._abc._id, entityGroup: pipe.entityGroups.geo._id};
+      let coordAbcGeo = {gid: pipe.entities.africa.gid, entityGroupName: pipe.entityGroups.geo.gid, entity: pipe.entities.africa._id, entityGroup: pipe.entityGroups.geo._id};
       let coordYear1900 = {gid: pipe.entities['1900'].gid, entityGroupName: pipe.entityGroups.year.gid, entity: pipe.entities['1900']._id, entityGroup: pipe.entityGroups.year._id};
       let coordYear2000 = {gid: pipe.entities['2000'].gid, entityGroupName: pipe.entityGroups.year.gid, entity: pipe.entities['2000']._id, entityGroup: pipe.entityGroups.year._id};
 

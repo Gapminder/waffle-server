@@ -165,6 +165,19 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
             type: 'WITH_VERSION'
           }
         });
+
+        if (pipe.version.isCurrent) {
+          batchQuery.push({
+            method: 'POST',
+            to: '/node/' + pipe.dataset.neoId + '/relationships',
+            id: 0,
+            body: {
+              to: '' + pipe.version.neoId + '',
+              type: 'WITH_CURRENT_VERSION'
+            }
+          });
+        }
+
         cb(null, batchQuery);
       },
       (batchQuery, cb) => {
@@ -329,40 +342,14 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
           if (entityGroup.domain) {
             batchQuery.push({
               method: 'POST',
-              to: `/node/${nodeMetas[entityGroup.domain.toString()].neoId}/relationships`,
+              to: `/node/${nodeMetas[entityGroup._id.toString()].neoId}/relationships`,
               id: batchQuery.length,
               body: {
-                to: `${nodeMetas[entityGroup._id.toString()].neoId}`,
-                type: 'WITH_ENTITY_SET'
+                to: `${nodeMetas[entityGroup.domain.toString()].neoId}`,
+                type: 'IS_SUBSET_OF_ENTITY_DOMAIN'
               }
             });
           }
-
-          _.each(entityGroup.drilldowns, drilldownEntityGroup => {
-            batchQuery.push({
-              method: 'POST',
-              to: `/node/${nodeMetas[entityGroup._id.toString()].neoId}/relationships`,
-              id: 0,
-              body: {
-                to: `${nodeMetas[drilldownEntityGroup.toString()].neoId}`,
-                type: 'WITH_DRILLDOWN'
-              }
-            });
-          });
-        });
-
-        _.each(pipe.entityGroups, entityGroup => {
-          _.each(entityGroup.drillups, drillupEntityGroup => {
-            batchQuery.push({
-              method: 'POST',
-              to: '/node/' + nodeMetas[entityGroup._id.toString()].neoId + '/relationships',
-              id: 0,
-              body: {
-                to: '' + nodeMetas[drillupEntityGroup.toString()].neoId + '',
-                type: 'WITH_DRILLUP'
-              }
-            });
-          });
         });
 
         cb(null, batchQuery);
@@ -387,7 +374,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
           batchQuery.push({
             method: 'POST',
             to: '/node',
-            body: {gid: entity.gid},
+            body: {gid: entity.gid, 'properties.name': 'hello'},
             id: indexId
           });
 
@@ -424,7 +411,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
               to: '/node/' + entity.neoId + '/relationships',
               body: {
                 to: '' + pipe.entities[entityDrilldown.toString()].neoId  + '',
-                type: 'WITH_CHILD_ENTITY'
+                type: 'WITH_DRILLDOWN'
               }
             });
           });
@@ -672,7 +659,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
             to: '/node/' + pipe.version.neoId + '/relationships',
             body: {
               to: `${concept.neoId}`,
-              type: 'WITH_CONCEPT'
+              type: 'HAS_CONCEPT'
             }
           });
         });
