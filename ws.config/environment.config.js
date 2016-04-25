@@ -51,5 +51,5 @@ module.exports = Object.freeze({
   MONGOOSE_DEBUG: false,
   CLEAR_MONGO_DB_COLLECTIONS: false,
 
-  PATH_TO_DDF_FOLDER: '../open-numbers/ddf--gapminder_world/output'
+  PATH_TO_DDF_FOLDER: '../open-numbers/ddf--gapminder_world_valor/output/ddf-full-stub'
 });
