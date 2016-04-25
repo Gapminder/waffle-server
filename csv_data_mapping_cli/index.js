@@ -18,8 +18,6 @@ const ddfModels = [
   'dataset-transactions',
   'datasets',
   'entities',
-  'entity-groups',
-  'measures',
   'translations',
   'users',
   'changelogs',

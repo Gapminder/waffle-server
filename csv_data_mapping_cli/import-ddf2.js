@@ -319,18 +319,23 @@ function addEntityChildOf(pipe, done) {
   let relations = flatEntityRelations(pipe.entities);
 
   async.eachLimit(relations, 10, (relation, escb) => {
-    let parent = _.find(pipe.entities, {gid: relation.parentEntityGid});
+    let parent = _.find(pipe.entities, entity => {
+      return entity.gid === relation.parentEntityGid;
+    });
 
     if (!parent) {
       console.error(`Entity parent with gid '${relation.parentEntityGid}' of entity set with gid '${relation.entityGroupGid}' for entity child with gid '${relation.childEntityGid}' isn't exist!`);
       return async.setImmediate(escb);
     }
 
-    let query = {};
-    query['properties.' + relation.entityGroupGid] = relation.parentEntityGid;
+    // let query = {};
+    // query['properties.' + relation.entityGroupGid] = relation.parentEntityGid;
 
     mongoose.model('Entities').update(
-      {gid: relation.childEntityGid},
+      {$or: [
+        {gid: relation.childEntityGid, groups: relation.entityGroupId},
+        {gid: relation.childEntityGid, domain: relation.entityGroupId}
+      ]},
       {$addToSet: {'childOf': parent._id}},
       {multi: true},
       escb
@@ -601,13 +606,14 @@ function flatEntityRelations(entities) {
     .value();
 
   function _getFlattenRelations(entity) {
-    let groups = _.map(entity.groups, group => group.gid);
+    // let groups = _.map(entity.groups, group => group.gid);
 
-    return _.map(groups, (entityGroupGid) => {
+    return _.map(entity.groups, (entityGroup) => {
       return {
-        entityGroupGid: entityGroupGid,
+        entityGroupGid: entityGroup.gid,
+        entityGroupId: entityGroup._id,
         childEntityGid: entity.gid,
-        parentEntityGid: entity.properties[entityGroupGid]
+        parentEntityGid: entity.properties[entityGroup.gid]
       }
     });
   }
