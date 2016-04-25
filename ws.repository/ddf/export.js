@@ -25,28 +25,53 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
 
   console.time('Mission complete!');
   async.waterfall([
-    async.constant({}),
     cleanGraph,
-    exportCurrentDatasetVersion,
-    exportDataset,
-    exportTranslations,
-    exportConcepts,
-    exportMeasures,
-    exportEntityGroups,
-    exportEntities,
-    exportDatapoints
-    // createIndexes
+    exportConceptsTree,
+    exportDataTree
   ], function (err) {
     if (err) {
       console.error(err);
       return;
     }
-
     console.timeEnd('Mission complete!');
     process.exit(0);
   });
 
-  function cleanGraph(pipe, cb) {
+
+  function exportDataTree(done) {
+    return async.waterfall([
+      async.constant({}),
+      exportCurrentDatasetVersion,
+      exportDataset,
+      exportConcepts,
+      exportMeasures,
+      exportEntityGroups,
+      exportEntities,
+      exportDatapoints
+      // createIndexes
+    ], function (err) {
+      console.log('Data tree is completed!');
+      done(err)
+    });
+  }
+
+  function exportConceptsTree(done) {
+    return async.waterfall([
+      async.constant({}),
+      exportCurrentDatasetVersion,
+      exportDataset,
+      exportTranslations,
+      exportConcepts,
+      exportMeasures,
+      exportEntityGroups,
+      exportEntities
+    ], function (err) {
+      console.log('Concepts tree is completed!');
+      done(err)
+    });
+  }
+
+  function cleanGraph(cb) {
     console.log(`Removing all relationships between nodes`);
     neo4jdb.cypherQuery('match ()-[r]-() delete r;', function (err) {
       if (err) {
@@ -63,7 +88,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
 
         console.log(`done!`);
 
-        return cb(null, pipe);
+        return cb(null);
       });
     });
   }
@@ -159,7 +184,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
           }
         });
 
-        if (pipe.version.isCurrent) {
+        if (/*pipe.version.isCurrent*/ true) {
           batchQuery.push({
             method: 'POST',
             to: '/node/' + pipe.dataset.neoId + '/relationships',
@@ -186,15 +211,6 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
       edDone(null, pipe);
     });
   }
-
-
-
-
-
-
-
-
-
 
   function exportMeasures(pipe, emCb) {
     var Concepts = mongoose.model('Concepts');
@@ -405,7 +421,6 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
           };
           return result;
         }, {});
-
 
         var batchQuery = [];
         _.each(pipe.entitiesNeo, (entity, key) => {
