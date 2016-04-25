@@ -27,7 +27,8 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
   async.waterfall([
     cleanGraph,
     exportConceptsTree,
-    exportDataTree
+    exportDataTree,
+    // createIndexes
   ], function (err) {
     if (err) {
       console.error(err);
@@ -37,23 +38,6 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
     process.exit(0);
   });
 
-
-  function exportDataTree(done) {
-    return async.waterfall([
-      async.constant({}),
-      exportCurrentDatasetVersion,
-      exportDataset,
-      exportConcepts,
-      exportMeasures,
-      exportEntityGroups,
-      exportEntities,
-      exportDatapoints
-      // createIndexes
-    ], function (err) {
-      console.log('Data tree is completed!');
-      done(err)
-    });
-  }
 
   function exportConceptsTree(done) {
     return async.waterfall([
@@ -69,6 +53,122 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
       console.log('Concepts tree is completed!');
       done(err)
     });
+  }
+
+  function exportDataTree(done) {
+    return async.waterfall([
+      async.constant({}),
+      exportCurrentDatasetVersion,
+      exportDataset,
+      exportMeasures,
+      exportEntityGroups2,
+      // exportEntities,
+      // exportDatapoints
+    ], function (err) {
+      console.log('Data tree is completed!');
+      done(err)
+    });
+  }
+
+  function exportEntityGroups2(pipe, eidCb) {
+    var Datapoints = mongoose.model('DataPoints');
+
+
+    return async.waterfall([
+      cb => async.each(pipe.measures, (measure, done) => {
+        Datapoints.distinct('dimensions.concept', {measure: measure._id.toString()}).lean().exec((error, dimensionObjectIds) => {
+          console.log(measure.gid);
+          console.log(dimensionObjectIds);
+          done();
+        });
+      }, err => {
+        cb(err);
+      })
+    ], eidCb);
+
+    //db.getCollection('datapoints').distinct('dimensions.concept', {measureGid: 'energy_use_total'})
+
+    // var Concepts = mongoose.model('Concepts');
+    //db.getCollection('datapoints').distinct('dimensions.conceptGid', {measureGid: 'energy_use_total'})
+    /*
+    async.waterfall([
+      cb => Concepts.find({$or: [{type: 'entity_set'}, {type: 'entity_domain'}]}, {name: 1, gid: 1, type: 1, drilldowns: 1, drillups: 1, _id: 1, domain: 1}).lean().exec(cb),
+      (entityGroups, cb) => cb(null, _.keyBy(entityGroups, entityGroup => entityGroup._id.toString())),
+      (entityGroups, cb) => {
+        pipe.entityGroups = entityGroups;
+        cb(null, pipe);
+      },
+      (pipe, cb) => {
+        var batchQuery = [];
+        var nodeMetas = {};
+        _.each(pipe.entityGroups, function (entityGroupId) {
+          var entityGroup = pipe.entityGroups[entityGroupId._id.toString()];
+
+          var entityGroupIndex = batchQuery.length;
+
+          var entityGroupNode = {name: entityGroup.name, gid: entityGroup.gid, type: entityGroup.type};
+
+          if (entityGroup.domain) {
+            entityGroupNode.domain = pipe.entityGroups[entityGroup.domain.toString()].gid;
+          }
+
+          batchQuery.push({
+            method: 'POST',
+            to: '/node',
+            body: entityGroupNode,
+            id: batchQuery.length
+          });
+
+          batchQuery.push({
+            method: 'POST',
+            to: '{' + entityGroupIndex + '}/labels',
+            id: batchQuery.length,
+            body: entityGroup.domain ? 'EntitySets' : 'EntityDomains'
+          });
+
+          nodeMetas[entityGroupId._id.toString()] = {entityGroupIndex, gid: entityGroup.gid, batchQueryId: batchQuery.length};
+        });
+        return cb(null, batchQuery, nodeMetas);
+      },
+      (batchQuery, nodeMetas, cb) => {
+        return neo4jdb.batchQuery(batchQuery, function (err, dimensionNodes) {
+          _.reduce(dimensionNodes, (prev, current) => {
+            const node = _.find(nodeMetas, node => {
+              return current.body && node.gid === current.body.data.gid
+            });
+            if (node) {
+              node.neoId = current.body.metadata.id;
+            }
+          }, {});
+
+          return cb(err, dimensionNodes, nodeMetas);
+        });
+      },
+      (dimensionNodes, nodeMetas, cb) => {
+        var batchQuery = [];
+
+        pipe.nodeMetas = nodeMetas;
+        _.each(pipe.entityGroups, entityGroup => {
+          batchQuery.push({
+            method: 'POST',
+            to: `/node/${pipe.version.neoId}/relationships`,
+            id: batchQuery.length,
+            body: {
+              to: `${nodeMetas[entityGroup._id.toString()].neoId}`,
+              type: 'WITH_DIMENSION'
+            }
+          });
+        });
+
+        cb(null, batchQuery);
+      },
+      (batchQuery, cb) => {
+        return neo4jdb.batchQuery(batchQuery, function (err, dimensionNodes) {
+          return cb(err, dimensionNodes);
+        });
+      }
+    ], err => eidCb(err, pipe));
+    */
   }
 
   function cleanGraph(cb) {
