@@ -1,24 +1,20 @@
-// todo: convert types
-var _ = require('lodash');
-var async = require('async');
-var express = require('express');
-var mongoose = require('mongoose');
+'use strict';
+
+const express = require('express');
+const exportDdf = require('./export.service');
 
 //var ensureAuthenticated = require('../utils').ensureAuthenticated;
-var ensureAuthenticated = function (req, res, next) {
-  return next();
-};
+const ensureAuthenticated = (req, res, next) => next();
 
-module.exports = function (serviceLocator) {
-  // fix: single thread hack :)
-  var isExportInProgress = false;
+module.exports = serviceLocator => {
+  // FIXME: single thread hack :)
+  let isExportInProgress = false;
 
-  var app = serviceLocator.getApplication();
-  var logger = app.get('log');
-  var exportAllGraphs = require('./export.service');
+  const app = serviceLocator.getApplication();
+  const logger = app.get('log');
 
   /*eslint new-cap:0*/
-  var router = express.Router();
+  const router = express.Router();
 
   /** Outdated
    * //@swagger
@@ -39,25 +35,22 @@ module.exports = function (serviceLocator) {
    *          $ref: '#/definitions/Error'
    *
    */
-  // router.get('/api/graphs/export', ensureAuthenticated, runExportAllGraphs);
+  router.get('/api/graphs/export', ensureAuthenticated, runExportDdf);
 
   return app.use(router);
 
-  function runExportAllGraphs(req, res, next) {
+  function runExportDdf(req, res) {
     if (isExportInProgress) {
       return res.json({success: true, msg: 'Export is already in progress!'});
     }
 
     isExportInProgress = true;
-
-    exportAllGraphs(app, (err, msg) => {
-      if (err) {
-        logger.error(err);
+    return exportDdf(app, error => {
+      if (error) {
+        logger.error(error);
       }
-
       isExportInProgress = false;
-
-      return res.json({success: !err, msg: msg, error: err});
+      return res.json({success: !error, msg, error});
     });
   }
 };
