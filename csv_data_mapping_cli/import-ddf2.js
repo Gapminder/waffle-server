@@ -189,7 +189,7 @@ function addConceptDrillups(pipe, done) {
     let drillupConcept = _.find(pipe.concepts, {gid: drillup});
 
     if (!drillupConcept) {
-      console.error(`Drill up concept gid '${drillup}' isn't exist!`);
+      logger.warn(`Drill up concept gid '${drillup}' isn't exist!`);
       return async.setImmediate(escb);
     }
 
@@ -211,7 +211,7 @@ function addConceptDrilldowns(pipe, done) {
     let drilldownConcept = _.find(pipe.concepts, {gid: drilldown});
 
     if (!drilldownConcept) {
-      console.error(`Drill down concept gid '${drilldown}' isn't exist!`);
+      logger.warn(`Drill down concept gid '${drilldown}' isn't exist!`);
       return async.setImmediate(escb);
     }
 
@@ -233,7 +233,7 @@ function addConceptDomains(pipe, done) {
     let domain = _.find(pipe.concepts, {gid: domainName});
 
     if (!domain) {
-      console.error(`Entity domain concept gid '${domainName}' isn't exist!`);
+      logger.warn(`Entity domain concept gid '${domainName}' isn't exist!`);
       return async.setImmediate(escb);
     }
 
@@ -286,7 +286,7 @@ function loadEntities(_pipe, cb) {
 
 function createEntities(_pipe, cb) {
   if (_.isEmpty(_pipe.raw.entities)) {
-    logger.error(`file '${ddfEntitiesFileTemplate(_pipe.eg)}' is empty or doesn't exist.`);
+    logger.warn(`file '${ddfEntitiesFileTemplate(_pipe.eg)}' is empty or doesn't exist.`);
 
     return async.setImmediate(cb);
   }
@@ -324,17 +324,14 @@ function addEntityChildOf(pipe, done) {
     });
 
     if (!parent) {
-      console.error(`Entity parent with gid '${relation.parentEntityGid}' of entity set with gid '${relation.entityGroupGid}' for entity child with gid '${relation.childEntityGid}' isn't exist!`);
+      logger.warn(`Entity parent with gid '${relation.parentEntityGid}' of entity set with gid '${relation.parentEntityGroupGid}' for entity child with gid '${relation.childEntityGid}' isn't exist!`);
       return async.setImmediate(escb);
     }
 
-    // let query = {};
-    // query['properties.' + relation.entityGroupGid] = relation.parentEntityGid;
-
     mongoose.model('Entities').update(
       {$or: [
-        {gid: relation.childEntityGid, groups: relation.entityGroupId},
-        {gid: relation.childEntityGid, domain: relation.entityGroupId}
+        {gid: relation.childEntityGid, groups: relation.parentEntityGroupId},
+        {gid: relation.childEntityGid, domain: relation.parentEntityGroupId}
       ]},
       {$addToSet: {'childOf': parent._id}},
       {multi: true},
@@ -362,6 +359,7 @@ function createDataPoints(pipe, done) {
     return (fileName, cb) => async.waterfall([
       async.constant({fileName, concepts: pipe.concepts, version: pipe.version}),
       _parseFileName,
+      _updateConceptsDimensions,
       findAllEntities,
       _loadDataPoints,
       createEntities,
@@ -384,6 +382,21 @@ function createDataPoints(pipe, done) {
       .value();
 
     return async.setImmediate(() => cb(null, _pipe));
+  }
+
+  function _updateConceptsDimensions(_pipe, cb) {
+    if (_.isEmpty(_pipe.dimensions)) {
+      logger.warn(`file '${ddfEntitiesFileTemplate(_pipe.fileName)}' doesn't have any dimensions.`);
+
+      return async.setImmediate(cb);
+    }
+
+    logger.info(`update property dimension of concept`);
+    let dimensions = _.chain(_pipe.dimensions).mapValues(dm => dm._id).values().value();
+    mongoose.model('Concepts').update(
+      {gid: {$in: _.keys(_pipe.measures)} },
+      {$addToSet: {dimensions: {$each: dimensions}}},
+      (err) => cb(err, _pipe));
   }
 
   function _loadDataPoints(_pipe, cb) {
@@ -451,7 +464,7 @@ function mapDdfConceptsToWsModel(pipe) {
       type: _entry.concept_type,
 
       tooltip: _entry.tooltip,
-      indicatorUrl: _entry.indicator_url,
+      link: _entry.indicator_url,
 
       tags: _entry.tags,
       color: _entry.color,
@@ -514,7 +527,7 @@ function mapDdfDataPointToWsModel(pipe) {
 
 
     if (!isValidEntry) {
-      console.error(`[${key}] Validation error: There is empty value(s) in file '${pipe.fileName}'`);
+      logger.error(`[${key}] Validation error: There is empty value(s) in file '${pipe.fileName}'`);
       return [];
     }
 
@@ -568,7 +581,7 @@ function validateConcept(entry, rowNumber) {
     try {
       _value = value && isResolvedJSONColumn && typeof value !== 'object' ? JSON.parse(value) : value;
     } catch (e) {
-      console.error(`[${rowNumber}, ${columnName}] Validation error: The cell value isn't valid JSON, fix it please!\nError message : ${e}\nGiven value: ${value}`);
+      logger.error(`[${rowNumber}, ${columnName}] Validation error: The cell value isn't valid JSON, fix it please!\nError message : ${e}\nGiven value: ${value}`);
       return null;
     }
 
@@ -581,7 +594,7 @@ function validateConcept(entry, rowNumber) {
 //*** Utils ***
 function reduceUniqueNestedValues(data, propertyName) {
   return _.chain(data)
-    .reduce((result, item) => result.concat(_.get(item, propertyName)), [])
+    .flatMap(item => _.get(item, propertyName))
     .uniq()
     .compact()
     .value();
@@ -591,7 +604,7 @@ function passGeoMapping(pipe, entry) {
   let _value = entry[pipe.eg.gid] || (pipe.eg.domain && entry[pipe.eg.domain.gid]);
 
   if (!_value) {
-    console.error(`Either '${pipe.eg.gid}' or '${pipe.eg.domain.gid}' columns weren't found in file '${ddfEntitiesFileTemplate(pipe.eg)}'`);
+    logger.warn(`Either '${pipe.eg.gid}' or '${pipe.eg.domain.gid}' columns weren't found in file '${ddfEntitiesFileTemplate(pipe.eg)}'`);
   }
 
   let gid = process.env.USE_GEO_MAPPING === 'true' ? geoMapping[_value] || _value : _value;
@@ -610,8 +623,8 @@ function flatEntityRelations(entities) {
 
     return _.map(entity.groups, (entityGroup) => {
       return {
-        entityGroupGid: entityGroup.gid,
-        entityGroupId: entityGroup._id,
+        parentEntityGroupGid: entityGroup.gid,
+        parentEntityGroupId: entityGroup._id,
         childEntityGid: entity.gid,
         parentEntityGid: entity.properties[entityGroup.gid]
       }
@@ -626,8 +639,11 @@ function readCsvFile(file, options, cb) {
   }, options));
 
   converter.fromFile(resolvePath(file), (err, data) => {
-    if (err) {
-      console.error(err);
+    if (err && err.toString().indexOf("cannot be found.") > -1) {
+      logger.warn(err);
+    }
+    if (err && err.toString().indexOf("cannot be found.") === -1) {
+      logger.error(err);
     }
 
     return cb(null, data);
