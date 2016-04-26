@@ -18,6 +18,8 @@ _.forEach([
 
 var neo4jdb = new Neo4j('http://neo4j:root@localhost:7474');
 
+var exportData = require('../../ws.routes/graphs/export.service');
+
 mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
   if (err) {
     throw err;
@@ -27,7 +29,8 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
   async.waterfall([
     cleanGraph,
     exportConceptsTree,
-    exportDataTree,
+    // exportDataTree,
+    cb => exportData(neo4jdb, cb),
     // createIndexes
   ], function (err) {
     if (err) {
@@ -77,13 +80,15 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
     return async.waterfall([
       cb => async.each(pipe.measures, (measure, done) => {
         Datapoints.distinct('dimensions.concept', {measure: measure._id.toString()}).lean().exec((error, dimensionObjectIds) => {
-          console.log(measure.gid);
-          console.log(dimensionObjectIds);
+          pipe.dimensionObjIds = dimensionObjectIds;
           done();
         });
       }, err => {
         cb(err);
-      })
+      }),
+      cb => {
+
+      }
     ], eidCb);
 
     //db.getCollection('datapoints').distinct('dimensions.concept', {measureGid: 'energy_use_total'})
