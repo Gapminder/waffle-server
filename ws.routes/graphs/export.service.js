@@ -20,7 +20,7 @@ module.exports = function (neo4jdb, done) {
     exportIndicators,
     // dependant
     exportIndicatorDimensions,
-    exportMeasureValues
+    exportMeasureValues,
     createIndexes
   ], function (err) {
     if (err) {
