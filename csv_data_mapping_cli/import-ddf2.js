@@ -59,7 +59,8 @@ module.exports = function (app, done) {
     addConceptDomains,
     findAllConcepts,
     processEntities,
-    findAllEntities,
+    findAllOriginalEntities,
+    createEntities,
     addEntityChildOf,
     findAllEntities,
     createDataPoints
@@ -262,39 +263,71 @@ function processEntities(pipe, done) {
   function _processEntities(pipe) {
     return (eg, cb) => async.waterfall([
       async.constant({eg, concepts: pipe.concepts, version: pipe.version}),
-      loadEntities,
-      createEntities
+      loadOriginalEntities,
+      createOriginalEntities
     ], cb);
   }
 }
 
-function loadEntities(_pipe, cb) {
+function loadOriginalEntities(_pipe, cb) {
   logger.info(`load entities for ${_pipe.eg.gid} from file ${ddfEntitiesFileTemplate(_pipe.eg)}`);
 
   readCsvFile(ddfEntitiesFileTemplate(_pipe.eg), {}, (err, res) => {
-    let entities = _.map(res, mapDdfEntityToWsModel(_pipe));
-    let uniqEntities = _.uniqBy(entities, 'gid');
+    let originalEntities = _.map(res, mapDdfOriginalEntityToWsModel(_pipe));
+    let uniqOriginalEntities = _.uniqBy(originalEntities, 'gid');
 
-    if (uniqEntities.length !== entities.length) {
+    if (uniqOriginalEntities.length !== originalEntities.length) {
       return done('All entity gid\'s should be unique within the Entity Set or Entity Domain!');
     }
 
-    _pipe.raw = {entities};
+    _pipe.raw = {originalEntities};
     return cb(err, _pipe);
   });
 }
 
-function createEntities(_pipe, cb) {
-  if (_.isEmpty(_pipe.raw.entities)) {
+function createOriginalEntities(_pipe, cb) {
+  if (_.isEmpty(_pipe.raw.originalEntities)) {
     logger.warn(`file '${ddfEntitiesFileTemplate(_pipe.eg)}' is empty or doesn't exist.`);
 
     return async.setImmediate(cb);
   }
 
-  logger.info(`create entities`);
+  logger.info(`create original entities from file ${ddfEntitiesFileTemplate(_pipe.eg)}`);
 
-  mongoose.model('Entities').create(_pipe.raw.entities, (err) => {
+  mongoose.model('OriginalEntities').create(_pipe.raw.originalEntities, (err) => {
     return cb(err, _pipe);
+  });
+}
+
+function findAllOriginalEntities(pipe, done) {
+  logger.info('find all original entities');
+
+  mongoose.model('OriginalEntities').find({})
+    .populate('domain')
+    .populate('groups')
+    .populate('versions')
+    .lean()
+    .exec((err, res) => {
+      pipe.originalEntities = res;
+      return done(err, pipe);
+    });
+}
+
+function createEntities(pipe, cb) {
+  if (_.isEmpty(pipe.originalEntities)) {
+    logger.warn(`There is no original entities.`);
+
+    return async.setImmediate(() => cb(null, pipe));
+  }
+
+  logger.info(`create entities`);
+  let entities = _.chain(pipe.originalEntities)
+    .groupBy('gid')
+    .flatMap(mapDdfEntityToWsModel(pipe))
+    .value();
+
+  mongoose.model('Entities').create(entities, (err) => {
+    return cb(err, pipe);
   });
 }
 
@@ -392,11 +425,15 @@ function createDataPoints(pipe, done) {
     }
 
     logger.info(`update property dimension of concept`);
+
     let dimensions = _.chain(_pipe.dimensions).mapValues(dm => dm._id).values().value();
+
     mongoose.model('Concepts').update(
       {gid: {$in: _.keys(_pipe.measures)} },
       {$addToSet: {dimensions: {$each: dimensions}}},
-      (err) => cb(err, _pipe));
+      (err) => {
+        return cb(err, _pipe);
+      });
   }
 
   function _loadDataPoints(_pipe, cb) {
@@ -481,24 +518,65 @@ function mapDdfConceptsToWsModel(pipe) {
   };
 }
 
-function mapDdfEntityToWsModel(pipe) {
+function mapDdfOriginalEntityToWsModel(pipe) {
   return (entry) => {
     let gid = passGeoMapping(pipe, entry);
     let resolvedColumns = mapResolvedColumns(entry);
-    let resolvedGroups = mapResolvedGroups(pipe, resolvedColumns);
+    let resolvedGroups = mapResolvedGroups(pipe, _.first(resolvedColumns));
 
     return {
       gid: gid,
       title: entry.name,
-      source: ddfEntitiesFileTemplate(pipe.eg),
+      sources: [ddfEntitiesFileTemplate(pipe.eg)],
       properties: entry,
 
       domain: pipe.eg.domain ? pipe.eg.domain._id : pipe.eg._id,
       groups: resolvedGroups,
-      childOf: [],
 
       versions: [pipe.version._id]
     };
+  };
+}
+
+function mapDdfEntityToWsModel(pipe) {
+  return (entries) => {
+    let gid  = _.first(entries).gid;
+    let _result = _.partition(entries, (entry) => {
+      let groups = _.map(entry.groups, 'gid');
+      return _.chain(entry.properties)
+        .keys()
+        .intersection(groups)
+        .some(group => {
+          return entry.properties[group] === gid;
+        })
+        .value();
+    });
+
+    let result = _.chain(_result)
+      .first()
+      .reduce((result, current) => {
+        return _.mergeWith(result, current, customizer);
+      })
+      .value();
+
+    if (_.first(_result).length > 1) {
+      result.isOwnParent = true;
+    }
+
+    return _.concat(result, _.last(_result));
+
+    function customizer(objValue, srcValue) {
+      if (_.isArray(objValue)) {
+        return _.chain(objValue)
+          .concat(srcValue)
+          .uniqWith(_.isEqual)
+          .map(item => {
+            return item._id || item;
+          })
+          .value();
+      }
+      return srcValue._id || srcValue;
+    }
   };
 }
 
@@ -507,7 +585,7 @@ function mapResolvedGroups(pipe, resolvedGids) {
     .filter(concept => defaultEntityGroupTypes.indexOf(concept.type) > -1 && resolvedGids.indexOf(concept.gid) > -1)
     .filter(concept => concept.type !== 'entity_domain')
     .map(concept => concept._id)
-    .union([pipe.eg.domain ? pipe.eg.domain._id : pipe.eg._id])
+    // .union([pipe.eg.domain ? pipe.eg.domain._id : pipe.eg._id])
     .uniq()
     .value();
 }
@@ -515,7 +593,7 @@ function mapResolvedGroups(pipe, resolvedGids) {
 function mapResolvedColumns(entry) {
   return _.chain(entry)
     .keys()
-    .map(setName => _.trimStart(setName, 'is--'))
+    .filter(name => name.indexOf('is--') > -1 && entry[name])
     .uniq()
     .value();
 }
@@ -615,18 +693,25 @@ function passGeoMapping(pipe, entry) {
 function flatEntityRelations(entities) {
   return _.chain(entities)
     .flatMap(_getFlattenRelations)
-    .filter(relation => relation.parentEntityGid !== undefined)
+    .filter(relation =>
+      relation.parentEntityGid !== undefined
+      || (relation.childEntityGid !== relation.parentEntityGid &&
+      relation.childEntityGroupsGids.indexOf(relation.parentEntityGroupGid) === -1))
     .value();
 
   function _getFlattenRelations(entity) {
     // let groups = _.map(entity.groups, group => group.gid);
 
-    return _.map(entity.groups, (entityGroup) => {
+    return _.chain(entity.groups)
+      .concat([entity.domain])
+      .map(entityGroup => {
       return {
-        parentEntityGroupGid: entityGroup.gid,
-        parentEntityGroupId: entityGroup._id,
         childEntityGid: entity.gid,
-        parentEntityGid: entity.properties[entityGroup.gid]
+        childEntityGroupsIds: _.map(entity.groups, group => group._id),
+        childEntityGroupsGids: _.map(entity.groups, group => group.gid),
+        parentEntityGid: entity.properties[entityGroup.gid],
+        parentEntityGroupGid: entityGroup.gid,
+        parentEntityGroupId: entityGroup._id
       }
     });
   }
