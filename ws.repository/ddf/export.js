@@ -18,7 +18,7 @@ _.forEach([
 
 var neo4jdb = new Neo4j('http://neo4j:root@localhost:7474');
 
-var exportData = require('../../ws.routes/graphs/export.service');
+var exportDataTree = require('../../ws.routes/graphs/export.service');
 
 mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
   if (err) {
@@ -30,7 +30,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
     cleanGraph,
     exportConceptsTree,
     // exportDataTree,
-    cb => exportData(neo4jdb, cb),
+    cb => exportDataTree(neo4jdb, cb),
     // createIndexes
   ], function (err) {
     if (err) {
@@ -64,7 +64,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
       exportCurrentDatasetVersion,
       exportDataset,
       exportMeasures,
-      exportEntityGroups2,
+      // exportEntityGroups2,
       // exportEntities,
       // exportDatapoints
     ], function (err) {
@@ -73,7 +73,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
     });
   }
 
-  function exportEntityGroups2(pipe, eidCb) {
+ /* function exportEntityGroups2(pipe, eidCb) {
     var Datapoints = mongoose.model('DataPoints');
 
 
@@ -95,7 +95,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
 
     // var Concepts = mongoose.model('Concepts');
     //db.getCollection('datapoints').distinct('dimensions.conceptGid', {measureGid: 'energy_use_total'})
-    /*
+    /!*
     async.waterfall([
       cb => Concepts.find({$or: [{type: 'entity_set'}, {type: 'entity_domain'}]}, {name: 1, gid: 1, type: 1, drilldowns: 1, drillups: 1, _id: 1, domain: 1}).lean().exec(cb),
       (entityGroups, cb) => cb(null, _.keyBy(entityGroups, entityGroup => entityGroup._id.toString())),
@@ -173,8 +173,8 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
         });
       }
     ], err => eidCb(err, pipe));
-    */
-  }
+    *!/
+  }*/
 
   function cleanGraph(cb) {
     console.log(`Removing all relationships between nodes`);
