@@ -58,22 +58,22 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
     });
   }
 
-  function exportDataTree(done) {
-    return async.waterfall([
-      async.constant({}),
-      exportCurrentDatasetVersion,
-      exportDataset,
-      exportMeasures,
-      // exportEntityGroups2,
-      // exportEntities,
-      // exportDatapoints
-    ], function (err) {
-      console.log('Data tree is completed!');
-      done(err)
-    });
-  }
+  // function exportDataTree(done) {
+  //   return async.waterfall([
+  //     async.constant({}),
+  //     exportCurrentDatasetVersion,
+  //     exportDataset,
+  //     exportMeasures,
+  //     // exportEntityGroups2,
+  //     // exportEntities,
+  //     // exportDatapoints
+  //   ], function (err) {
+  //     console.log('Data tree is completed!');
+  //     done(err)
+  //   });
+  // }
 
- /* function exportEntityGroups2(pipe, eidCb) {
+  function exportEntityGroups2(pipe, eidCb) {
     var Datapoints = mongoose.model('DataPoints');
 
 
@@ -95,7 +95,7 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
 
     // var Concepts = mongoose.model('Concepts');
     //db.getCollection('datapoints').distinct('dimensions.conceptGid', {measureGid: 'energy_use_total'})
-    /!*
+    /*
     async.waterfall([
       cb => Concepts.find({$or: [{type: 'entity_set'}, {type: 'entity_domain'}]}, {name: 1, gid: 1, type: 1, drilldowns: 1, drillups: 1, _id: 1, domain: 1}).lean().exec(cb),
       (entityGroups, cb) => cb(null, _.keyBy(entityGroups, entityGroup => entityGroup._id.toString())),
@@ -173,8 +173,8 @@ mongoose.connect('mongodb://localhost:27017/ws_ddf', (err) => {
         });
       }
     ], err => eidCb(err, pipe));
-    *!/
-  }*/
+    */
+  }
 
   function cleanGraph(cb) {
     console.log(`Removing all relationships between nodes`);
