@@ -336,6 +336,8 @@ module.exports = (app, done) => {
         var batchQuery = [];
         _.each(pipe.entitiesNeo, (entity, key) => {
           _.each(pipe.entities[key].childOf, parent => {
+            if (!parent) return;
+
             batchQuery.push({
               method: 'POST',
               to: `/node/${entity.neoId}/relationships`,

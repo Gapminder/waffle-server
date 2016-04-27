@@ -457,7 +457,7 @@ function createDataPoints(pipe, done) {
             gid: entry[entityGroupGid],
             source: _pipe.fileName,
             domain: domain,
-            groups: _pipe.dimensions[entityGroupGid].domain ? [_pipe.dimensions[entityGroupGid]._id] : [],
+            groups: domain ? [] : [_pipe.dimensions[entityGroupGid]._id],
             versions: [_pipe.version._id]
           };
         })
@@ -636,9 +636,11 @@ function mapDdfEntityToWsModel(pipe) {
   return (entry) => {
     let _entry = _.first(entry);
     let egGid = _.findKey(pipe.dimensions, (dm) => {
-      return dm._id.toString() === _entry.domain.toString() ||
-        dm._id.toString() === _.first(_entry.groups).toString();
-    });
+      let first = _.first(_entry.groups);
+      return (first && dm._id.toString() === first.toString());
+    }) || _.findKey(pipe.dimensions, (dm) => {
+        return dm._id.toString() === _entry.domain.toString();
+      });
     pipe.eg = pipe.dimensions[egGid];
     let gid = process.env.USE_GEO_MAPPING === 'true' ? geoMapping[_entry.gid] || _entry.gid : _entry.gid;
     let resolvedColumns = mapResolvedColumns(_entry);
