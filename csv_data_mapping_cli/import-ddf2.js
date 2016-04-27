@@ -571,7 +571,8 @@ function mapDdfEntityBasedOnOriginalEntityToWsModel() {
           .value();
 
         if (isEntryAllowedToMerge || isEntryAllowedToMergeResult) {
-          _.mergeWith(result, entry, customizer);
+          result = _.mergeWith(result, entry, customizer);
+          result.isOwnParent = true;
         } else {
           leftovers.push(entry);
         }
@@ -583,7 +584,7 @@ function mapDdfEntityBasedOnOriginalEntityToWsModel() {
     leftovers.push(mergedEntry);
 
     if (leftovers.length === entries.length) {
-      return leftovers;
+      return _.map(leftovers, item => _.omit(item, ['_id', '__v']));
     } else {
       return mergeEntries(leftovers);
     }
@@ -626,7 +627,7 @@ function mapDdfEntityBasedOnOriginalEntityToWsModel() {
           })
           .value();
       }
-      return srcValue._id || srcValue;
+      return srcValue._id;
     }
   };
 }
