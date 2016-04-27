@@ -545,34 +545,76 @@ function mapDdfOriginalEntityToWsModel(pipe) {
 }
 
 function mapDdfEntityBasedOnOriginalEntityToWsModel() {
-  return (entries) => {
-    let gid  = _.first(entries).gid;
-    let _result = _.partition(entries, (entry) => {
-      let groups = _.map(entry.groups, 'gid');
-      return _.chain(entry.properties)
-        .keys()
-        .intersection(groups)
-        .some(group => {
-          return entry.properties[group] === gid;
-        })
-        .value();
-    });
+  return function mergeEntries(entries) {
 
-    let result = _.chain(_result)
-      .first()
-      .reduce((result, current) => {
-        return _.mergeWith(result, current, customizer);
+
+    const leftovers = [];
+    const mergedEntry = _.chain(entries)
+      .reduce((result, entry) => {
+        let groups = _.map(entry.groups, 'gid');
+        let groupsResult = _.map(result.groups, 'gid');
+
+        let isEntryAllowedToMerge = _.chain(entry.properties)
+          .keys()
+          .intersection(groups)
+          .some(group => {
+            return result.properties[group] === entry.gid;
+          })
+          .value();
+
+        let isEntryAllowedToMergeResult = _.chain(result.properties)
+          .keys()
+          .intersection(groupsResult)
+          .some(group => {
+            return entry.properties[group] === result.gid;
+          })
+          .value();
+
+        if (isEntryAllowedToMerge || isEntryAllowedToMergeResult) {
+          _.mergeWith(result, entry, customizer);
+        } else {
+          leftovers.push(entry);
+        }
+
+        return result;
       })
       .value();
 
-    if (_.first(_result).length > 1) {
-      result.isOwnParent = true;
+    leftovers.push(mergedEntry);
+
+    if (leftovers.length === entries.length) {
+      return leftovers;
+    } else {
+      return mergeEntries(leftovers);
     }
 
-    return _.chain(result)
-      .concat(_.last(_result))
-      .map(item => _.omit(item, ['_id', '__v']))
-      .value();
+    // let gid  = _.first(entries).gid;
+    // let _result = _.partition(entries, (entry) => {
+    //   let groups = _.map(entry.groups, 'gid');
+    //   return _.chain(entry.properties)
+    //     .keys()
+    //     .intersection(groups)
+    //     .some(group => {
+    //       return entry.properties[group] === gid;
+    //     })
+    //     .value();
+    // });
+    //
+    // let result = _.chain(_result)
+    //   .first()
+    //   .reduce((result, current) => {
+    //     return _.mergeWith(result, current, customizer);
+    //   })
+    //   .value();
+    //
+    // if (_.first(_result).length > 1) {
+    //   result.isOwnParent = true;
+    // }
+    //
+    // return _.chain(result)
+    //   .concat(_.last(_result))
+    //   .map(item => _.omit(item, ['_id', '__v']))
+    //   .value();
 
     function customizer(objValue, srcValue) {
       if (_.isArray(objValue)) {
@@ -618,7 +660,7 @@ function mapDdfEntityToWsModel(pipe) {
 
 function mapResolvedGroups(pipe, resolvedGids) {
   return _.chain(pipe.concepts)
-    .filter(concept => defaultEntityGroupTypes.indexOf(concept.type) > -1 && resolvedGids.indexOf(concept.gid) > -1)
+    .filter(concept => defaultEntityGroupTypes.indexOf(concept.type) > -1 && resolvedGids === `is--${concept.gid}`)
     .filter(concept => concept.type !== 'entity_domain')
     .map(concept => concept._id)
     // .union([pipe.eg.domain ? pipe.eg.domain._id : pipe.eg._id])
@@ -742,7 +784,7 @@ function flatEntityRelations(pipe) {
       if (entity.isOwnParent) {
         result[entity._id].push(entity._id);
       }
-      
+
       return result;
     }, {})
     .value();
