@@ -35,7 +35,6 @@
     "body-parser": "1.14.2",
     "bootstrap": "3.3.6",
     "compression": "1.6.1",
-    "connect-formidable": "valorkin/connect-formidable",
     "connect-multiparty": "2.0.0",
     "connect-redis": "2.5.1",
     "cookie-parser": "1.4.1",
