@@ -36,6 +36,8 @@ module.exports = function (app, done) {
   pathToDdfFolder = config.PATH_TO_DDF_FOLDER;
   resolvePath = (filename) => path.resolve(pathToDdfFolder, filename);
   ddfConceptsFile = resolvePath('ddf--concepts.csv');
+  const ddfEnTranslations = require(resolvePath('../vizabi/en.json'));
+  const ddfSeTranslations = require(resolvePath('../vizabi/se.json'));
   ddfEntitiesFileTemplate = _.template('ddf--entities${ domainGid }--${ gid }.csv');
 
   let pipe = {
@@ -43,7 +45,9 @@ module.exports = function (app, done) {
     raw: {},
     defaultEntityGroupTypes,
     defaultMeasureTypes,
-    pathToDdfFolder
+    pathToDdfFolder,
+    ddfEnTranslations,
+    ddfSeTranslations
   };
 
   async.waterfall([
@@ -53,7 +57,9 @@ module.exports = function (app, done) {
     createDataset,
     createVersion,
     createTransaction,
+    // findLastVersion,
     createConcepts,
+    createTranslations,
     createEntities,
     createDataPoints
   ], (err) => {
@@ -118,6 +124,15 @@ function createVersion(pipe, done) {
     pipe.version = res.toObject();
     return done(err, pipe);
   });
+}
+
+function findLastVersion(pipe, done) {
+  mongoose.model('DatasetVersions').findOne({})
+    .lean()
+    .exec((err, version) => {
+      pipe.version = version;
+      return done(err, pipe);
+    });
 }
 
 function createTransaction(pipe, done) {
@@ -261,6 +276,42 @@ function createConcepts(pipe, done) {
       return done(err, pipe);
     });
   }
+
+function createTranslations(pipe, done) {
+  logger.info('create translations');
+
+  var translations = []
+    .concat(map(pipe.ddfEnTranslations, 'en'))
+    .concat(map(pipe.ddfSeTranslations, 'se'));
+
+  return mongoose.model('Entities').create(translations, (err) => {
+    return done(err, pipe);
+  });
+
+  function map(json, lang) {
+    return _.reduce(json, function (res, value, key) {
+      let domain = _.find(pipe.concepts, concept => concept.gid === 'translations' && concept.type === 'entity_domain');
+      let group =  _.find(pipe.concepts, concept => concept.gid === lang && concept.type === 'entity_set');
+
+      res.push({
+        gid: key,
+        title: value,
+        sources: [`${lang}.json`],
+        domain: domain._id,
+        groups: [group._id],
+        properties: {
+          key: key,
+          value: value,
+          language: lang,
+          lng_key: key,
+          lng_value: value
+        },
+        version: pipe.version._id
+      });
+      return res;
+    }, []);
+  }
+}
 
 function createEntities(pipe, done) {
   logger.info('start process creating entities');
