@@ -36,7 +36,7 @@ module.exports = function (app, done) {
   pathToDdfFolder = config.PATH_TO_DDF_FOLDER;
   resolvePath = (filename) => path.resolve(pathToDdfFolder, filename);
   ddfConceptsFile = resolvePath('ddf--concepts.csv');
-  ddfEntitiesFileTemplate = _.template('ddf--entities--${ (domain && domain.gid + "--") || "" }${ gid }.csv');
+  ddfEntitiesFileTemplate = _.template('ddf--entities${ domainGid }--${ gid }.csv');
 
   let pipe = {
     ddfConceptsFile,
@@ -301,9 +301,12 @@ function createEntities(pipe, done) {
   }
 
     function __loadOriginalEntities(_pipe, cb) {
-      logger.info(`**** load original entities from file ${ddfEntitiesFileTemplate(_pipe.eg)}`);
+      let fileSource = {domainGid : _pipe.eg.domain ? '--' + _pipe.eg.domain.gid : '', gid: _pipe.eg.gid};
+      _pipe.filename = ddfEntitiesFileTemplate(fileSource);
 
-      readCsvFile(ddfEntitiesFileTemplate(_pipe.eg), {}, (err, res) => {
+      logger.info(`**** load original entities from file ${_pipe.filename}`);
+
+      readCsvFile(_pipe.filename, {}, (err, res) => {
         let originalEntities = _.map(res, mapDdfOriginalEntityToWsModel(_pipe));
         let uniqOriginalEntities = _.uniqBy(originalEntities, 'gid');
 
@@ -318,12 +321,12 @@ function createEntities(pipe, done) {
 
     function __createOriginalEntities(_pipe, cb) {
       if (_.isEmpty(_pipe.raw.originalEntities)) {
-        logger.warn(`file '${ddfEntitiesFileTemplate(_pipe.eg)}' is empty or doesn't exist.`);
+        logger.warn(`file '${_pipe.filename}' is empty or doesn't exist.`);
 
         return async.setImmediate(cb);
       }
 
-      logger.info(`**** create original entities from file ${ddfEntitiesFileTemplate(_pipe.eg)}`);
+      logger.info(`**** create original entities from file '${_pipe.filename}'`);
 
       mongoose.model('OriginalEntities').create(_pipe.raw.originalEntities, (err) => {
         return cb(err, _pipe);
@@ -458,7 +461,7 @@ function createDataPoints(pipe, done) {
 
   function _updateConceptsDimensions(pipe, cb) {
     if (_.isEmpty(pipe.dimensions)) {
-      logger.warn(`file '${ddfEntitiesFileTemplate(pipe.filename)}' doesn't have any dimensions.`);
+      logger.warn(`file '${pipe.filename}' doesn't have any dimensions.`);
 
       return async.setImmediate(cb);
     }
@@ -490,7 +493,7 @@ function createDataPoints(pipe, done) {
             gid: entry[entityGroupGid],
             source: pipe.filename,
             domain: domain,
-            groups: domain ? [] : [pipe.dimensions[entityGroupGid]._id],
+            groups: pipe.dimensions && pipe.dimensions[entityGroupGid] ? [pipe.dimensions[entityGroupGid]._id] : [],
             versions: [pipe.version._id]
           };
         })
@@ -534,7 +537,7 @@ function createDataPoints(pipe, done) {
     let dataPoints = _.flatMap(pipe.raw.dataPoints, mapDdfDataPointToWsModel(pipe));
 
     if (_.isEmpty(dataPoints)) {
-      logger.error(`file '${ddfEntitiesFileTemplate(pipe.filename)}' is empty or doesn't exist.`);
+      logger.error(`file '${pipe.filename}' is empty or doesn't exist.`);
 
       return async.setImmediate(() => cb(null, pipe));
     }
@@ -580,6 +583,8 @@ function mapDdfConceptsToWsModel(pipe) {
 
 function mapDdfOriginalEntityToWsModel(pipe) {
   return (entry) => {
+    let fileSource = {domainGid : pipe.eg.domain ? '--' + pipe.eg.domain.gid : '', gid: pipe.eg.gid};
+    pipe.filename = ddfEntitiesFileTemplate(fileSource);
     let gid = passGeoMapping(pipe, entry);
     let resolvedColumns = mapResolvedColumns(entry);
     let resolvedGroups = mapResolvedGroups(pipe, _.first(resolvedColumns));
@@ -587,7 +592,7 @@ function mapDdfOriginalEntityToWsModel(pipe) {
     return {
       gid: gid,
       title: entry.name,
-      sources: [ddfEntitiesFileTemplate(pipe.eg)],
+      sources: [pipe.filename],
       properties: entry,
 
       domain: pipe.eg.domain ? pipe.eg.domain._id : pipe.eg._id,
@@ -667,6 +672,8 @@ function mapDdfEntityToWsModel(pipe) {
         return dm._id.toString() === _entry.domain.toString();
       });
     pipe.eg = pipe.dimensions[egGid];
+    let fileSource = {domainGid : pipe.eg&& pipe.eg.domain ? '--' + pipe.eg.domain.gid : '', gid: pipe.eg.gid};
+    pipe.filename = ddfEntitiesFileTemplate(fileSource);
     let gid = process.env.USE_GEO_MAPPING === 'true' ? geoMapping[_entry.gid] || _entry.gid : _entry.gid;
     let resolvedColumns = mapResolvedColumns(_entry);
     let resolvedGroups = mapResolvedGroups(pipe, resolvedColumns);
@@ -674,7 +681,7 @@ function mapDdfEntityToWsModel(pipe) {
     return {
       gid: gid,
       title: _entry.name,
-      source: ddfEntitiesFileTemplate(pipe.eg),
+      source: pipe.filename,
       properties: _entry,
 
       domain: pipe.eg.domain ? pipe.eg.domain._id : pipe.eg._id,
@@ -790,7 +797,7 @@ function passGeoMapping(pipe, entry) {
   let _value = entry[pipe.eg.gid] || (pipe.eg.domain && entry[pipe.eg.domain.gid]);
 
   if (!_value) {
-    logger.warn(`Either '${pipe.eg.gid}' or '${pipe.eg.domain && pipe.eg.domain.gid}' columns weren't found in file '${ddfEntitiesFileTemplate(pipe.eg)}'`);
+    logger.warn(`Either '${pipe.eg.gid}' or '${pipe.eg.domain && pipe.eg.domain.gid}' columns weren't found in file '${pipe.filename}'`);
   }
 
   let gid = process.env.USE_GEO_MAPPING === 'true' ? geoMapping[_value] || _value : _value;
