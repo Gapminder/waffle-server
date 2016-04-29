@@ -293,7 +293,7 @@ function createEntities(pipe, done) {
 
     function _processEntities(pipe) {
       return (eg, cb) => async.waterfall([
-        async.constant({eg: eg, version: pipe.version}),
+        async.constant({eg: eg, concepts: pipe.concepts, version: pipe.version}),
         __loadOriginalEntities,
         __createOriginalEntities
       ], cb);
@@ -587,7 +587,7 @@ function mapDdfOriginalEntityToWsModel(pipe) {
     pipe.filename = ddfEntitiesFileTemplate(fileSource);
     let gid = passGeoMapping(pipe, entry);
     let resolvedColumns = mapResolvedColumns(entry);
-    let resolvedGroups = mapResolvedGroups(pipe, _.first(resolvedColumns));
+    let resolvedGroups = mapResolvedGroups(pipe, resolvedColumns);
 
     return {
       gid: gid,
@@ -695,10 +695,9 @@ function mapDdfEntityToWsModel(pipe) {
 
 function mapResolvedGroups(pipe, resolvedGids) {
   return _.chain(pipe.concepts)
-    .filter(concept => defaultEntityGroupTypes.indexOf(concept.type) > -1 && resolvedGids === `is--${concept.gid}`)
+    .filter(concept => defaultEntityGroupTypes.indexOf(concept.type) > -1 && resolvedGids.indexOf(`is--${concept.gid}`) > -1)
     .filter(concept => concept.type !== 'entity_domain')
     .map(concept => concept._id)
-    // .union([pipe.eg.domain ? pipe.eg.domain._id : pipe.eg._id])
     .uniq()
     .value();
 }

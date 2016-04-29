@@ -302,7 +302,7 @@ module.exports = (app, done) => {
           batchQuery.push({
             method: 'POST',
             to: '/node',
-            body: {gid: entity.gid, 'properties.name': 'hello', source: entity.source},
+            body: {gid: entity.gid, 'properties.name': entity.gid, source: entity.source},
             id: indexId
           });
 
