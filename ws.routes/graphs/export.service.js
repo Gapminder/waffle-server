@@ -13,10 +13,10 @@ module.exports = (app, done) => {
       return done(error);
     }
 
-    return async.parallelLimit([
+    return async.waterfall([
       cb => exportDdfMetaTree(app, cb),
       cb => exportDdfDataTree(app, cb)
-    ], 2, error => {
+    ], error => {
       if (error) {
         logger.error(error);
       }

@@ -1,6 +1,7 @@
 'use strict';
 
 var _ = require('lodash');
+var flat = require('flat');
 var async = require('async');
 var express = require('express');
 var mongoose = require('mongoose');
@@ -77,7 +78,14 @@ module.exports = (app, done) => {
           const batchQuery = [];
           const batchId = batchQuery.length;
           batchQuery.push({
-            body: {dsId: dataset.dsId},
+            body: {
+              dsId: dataset.dsId,
+              type: dataset.type,
+              url: dataset.url,
+              commit: dataset.commit,
+              defaultLanguage: dataset.defaultLanguage,
+              dataProvider: dataset.dataProvider
+            },
             to: '/node',
             id: batchId,
             method: 'POST'
@@ -139,13 +147,13 @@ module.exports = (app, done) => {
     var Concepts = mongoose.model('Concepts');
 
     async.waterfall([
-      cb => Concepts.find({type: 'measure'}, {gid: 1, name: 1}).lean().exec(cb),
+      cb => Concepts.find({type: 'measure'}, {gid: 1, name: 1, isNumeric: 1}).lean().exec(cb),
       (measures, cb) => {
         var batchQuery = _.map(measures, function (measure, index) {
           return {
             method: 'POST',
             to: '/node',
-            body: {gid: measure.gid, name: measure.name},
+            body: {gid: measure.gid, name: measure.name, isNumeric: measure.isNumeric},
             id: index
           };
         });
@@ -211,7 +219,11 @@ module.exports = (app, done) => {
 
           var entityGroupIndex = batchQuery.length;
 
-          var entityGroupNode = {name: entityGroup.name, gid: entityGroup.gid, type: entityGroup.type};
+          var entityGroupNode = {
+            gid: entityGroup.gid,
+            name: entityGroup.name,
+            type: entityGroup.type
+          };
 
           if (entityGroup.domain) {
             entityGroupNode.domain = pipe.entityGroups[entityGroup.domain.toString()].gid;
@@ -302,7 +314,7 @@ module.exports = (app, done) => {
           batchQuery.push({
             method: 'POST',
             to: '/node',
-            body: {gid: entity.gid, 'properties.name': entity.gid, source: entity.source},
+            body: _.extend({gid: entity.gid}, flattenProperties(entity)),
             id: indexId
           });
 
@@ -461,11 +473,13 @@ module.exports = (app, done) => {
 
           const batchId = batchQuery.length;
 
+          const conceptNode = _.extend({
+            gid: concept.gid
+          }, flattenProperties(concept));
+
           batchQuery.push({
             method: 'POST',
-            body: {
-              gid: concept.gid
-            },
+            body: conceptNode,
             id: batchId,
             to: '/node'
           });
@@ -523,5 +537,18 @@ module.exports = (app, done) => {
         return cb(err);
       });
     }, cb);
+  }
+
+  function flattenProperties(obj) {
+    if (!obj.properties) {
+      return {};
+    }
+
+    // _.mapKeys(flat(_.mapValues(_.omitBy(obj.properties, _.isNil), value => JSON.stringify(value)), {safe: true}), (value, key) => `properties.${key}`)
+    return _.chain(obj.properties)
+      .omitBy(_.isNil)
+      .mapValues(value => JSON.stringify(value))
+      .mapKeys((value, key) => `properties.${key}`)
+      .value(); 
   }
 };
