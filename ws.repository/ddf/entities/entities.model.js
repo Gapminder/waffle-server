@@ -22,7 +22,7 @@ let Schema = mongoose.Schema;
  * @property {Models.Entity} previous - of current entity (could be null)
  */
 let Entities = new Schema({
-  gid: {type: String, match: /^[a-zA-Z0-9_-]*$/, index: true, required: true},
+  gid: {type: String, match: /^[a-zA-Z0-9\/\._-]*$/, index: true, required: true},
   title: String,
   sources: [String],
   isOwnParent: Boolean,
