@@ -362,7 +362,7 @@ function createEntities(pipe, done) {
         let uniqOriginalEntities = _.uniqBy(originalEntities, 'gid');
 
         if (uniqOriginalEntities.length !== originalEntities.length) {
-          return done('All entity gid\'s should be unique within the Entity Set or Entity Domain!');
+          return cb('All entity gid\'s should be unique within the Entity Set or Entity Domain!');
         }
 
         _pipe.raw = {originalEntities};
@@ -446,6 +446,10 @@ function createEntities(pipe, done) {
     let relations = flatEntityRelations(pipe);
 
     async.forEachOfLimit(relations, LIMIT_NUMBER_PROCESS, (childOf, _id, escb) => {
+      if (!childOf.length) {
+        return escb();
+      }
+
       mongoose.model('Entities').update(
         {_id: _id},
         {$addToSet: {'childOf': {$each: childOf}}},
@@ -867,7 +871,7 @@ function flatEntityRelations(pipe) {
       result[entity._id] = _.map(resolvedEntitiesByConcepts, '_id');
 
       if (entity.isOwnParent) {
-        result[entity._id].push(entity._id);
+        result[entity._id] = entity._id;
       }
 
       return result;

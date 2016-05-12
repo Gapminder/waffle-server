@@ -19,7 +19,7 @@ let Schema = mongoose.Schema;
  * @property {Array<Models.DatasetVersions>} versions - all versions of data set in which the entity was added
  */
 let OriginalEntities = new Schema({
-  gid: {type: String, match: /^[a-zA-Z0-9_-]*$/, index: true, required: true},
+  gid: {type: String, match: /^[a-zA-Z0-9\/\._-]*$/, index: true, required: true},
   title: String,
   sources: [String],
 

@@ -124,7 +124,7 @@ var wConfig = {
       filename: config.index,
       template: path.join(config.src, config.template),
       chunks: ['angular', 'waffle-server'],
-      minify: true
+      minify: false
     })
   ],
   pushPlugins: function () {
