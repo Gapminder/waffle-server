@@ -9,7 +9,7 @@ const path = require('path');
 const async = require('async');
 const Converter = require('csvtojson').Converter;
 
-const metadata = require('./vizabi/metadata.json');
+const metadata = require('./vizabi/conceptprops.json');
 const mongoose = require('mongoose');
 
 // const geoMappingHash = require('./geo-mapping.json');
