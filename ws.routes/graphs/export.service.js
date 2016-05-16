@@ -4,7 +4,7 @@ const async = require('async');
 const exportDdfMetaTree = require('./export-ddf-meta-tree');
 const exportDdfDataTree = require('./export-ddf-data-tree');
 
-module.exports = (app, done) => {
+module.exports = (app, done, datasetName = process.env.DATASET_NAME) => {
   var logger = app.get('log');
   var neo4jdb = app.get('neo4jDb');
 
@@ -14,8 +14,8 @@ module.exports = (app, done) => {
     }
 
     return async.waterfall([
-      cb => exportDdfMetaTree(app, cb),
-      cb => exportDdfDataTree(app, cb)
+      cb => exportDdfMetaTree(app, cb, datasetName),
+      cb => exportDdfDataTree(app, cb, datasetName)
     ], error => {
       if (error) {
         logger.error(error);

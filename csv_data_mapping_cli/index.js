@@ -43,8 +43,9 @@ const mappingImporters = {
   'ddf-world2': 'import-ddf2',
   'ddf-open-numbers': 'import',
   'metadata': 'import-metadata',
+  'incremental-update': 'incremental-update-ddf2',
   'export-neo4j': '../ws.routes/graphs/export.service',
-  'incremental-update': 'incremental-update-ddf2'
+  'export-neo4j-inc': '../ws.routes/graphs/export-ddf-tree-updates'
 };
 const defaultImporter = 'ddf-world';
 let selectedImporter = mappingImporters[process.env.ACTION] || mappingImporters[defaultImporter];

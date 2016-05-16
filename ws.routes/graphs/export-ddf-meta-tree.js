@@ -1,398 +1,366 @@
 'use strict';
 
 var _ = require('lodash');
-var flat = require('flat');
 var async = require('async');
 var express = require('express');
 var mongoose = require('mongoose');
 
-module.exports = (app, done) => {
+const exportUtils = require('./export.utils');
+const makeBatchNode = exportUtils.makeBatchNode;
+const makeBatchRelation = exportUtils.makeBatchRelation;
+const flattenProperties = exportUtils.flattenProperties;
+
+module.exports = (app, done, datasetName) => {
   var neo4jdb = app.get('neo4jDb');
   var logger = app.get('log');
 
-  console.time('Ddf meta tree exporting is completed.');
+  console.time('Ddf meta tree is exported');
   async.waterfall([
     async.constant({}),
-    exportDatasetVersion,
     exportDataset,
-    exportTranslations,
-    exportConcepts,
+    // exportTranslations,
+    // exportConcepts,
     exportMeasures,
-    exportEntityGroups,
+    exportEntitySetsAndDomains,
     exportEntities
   ], function (err) {
     if (err) {
       return done(err);
     }
-    console.timeEnd('Ddf meta tree exporting is completed.');
+    console.timeEnd('Ddf meta tree is exported');
     done(null);
   });
 
-  function exportDatasetVersion(pipe, ecdvDone) {
-    const DatasetVersions = mongoose.model('DatasetVersions');
-
-    async.waterfall([
-        cb => DatasetVersions.findOne({/*isCurrent: true*/}).lean().exec(cb),
-        (version, cb) => {
-          pipe.version = version;
-
-          const batchQuery = [];
-          const batchId = batchQuery.length;
-
-          batchQuery.push({
-            body: {name: version.name},
-            to: '/node',
-            id: batchId,
-            method: 'POST'
-          });
-
-          batchQuery.push({
-            method: 'POST',
-            to: '{' + batchId + '}/labels',
-            id: batchQuery.length,
-            body: 'DatasetVersions'
-          });
-
-          return cb(null, batchQuery);
-        },
-        (batchQuery, cb) => {
-          return neo4jdb.batchQuery(batchQuery, function (err, versionNodes) {
-            const versionNode = _.find(versionNodes, node => node.body.data.name === pipe.version.name);
-            pipe.version.neoId = versionNode.body.metadata.id;
-
-            return cb(err, versionNodes);
-          });
-        }
-      ],
-      error => ecdvDone(error, pipe));
-  }
-
-  function exportDataset(pipe, edDone) {
+  function exportDataset(pipe, onDatasetExported) {
+    console.time('Dataset is exported');
+    console.log(`Dataset "${datasetName}" is going to be exported`);
     const Datasets = mongoose.model('Datasets');
-
     async.waterfall([
-        cb => Datasets.findOne({_id: pipe.version.dataset.toString()}).lean().exec(cb),
-        (dataset, cb) => {
+        done => Datasets.findOne({name: datasetName}).lean().exec(done),
+        (dataset, done) => {
           pipe.dataset = dataset;
+          pipe.currentVersion = Number(_.first(dataset.versions));
 
-          const batchQuery = [];
-          const batchId = batchQuery.length;
-          batchQuery.push({
+          console.log(`Dataset version to be exported: "${pipe.currentVersion}"`);
+
+          return done(null, makeBatchNode({
+            id: 0,
+            labelName: 'Dataset',
             body: {
-              dsId: dataset.dsId,
+              name: dataset.name,
+              versions: dataset.versions,
+              path: dataset.path,
               type: dataset.type,
-              url: dataset.url,
               commit: dataset.commit,
               defaultLanguage: dataset.defaultLanguage,
               dataProvider: dataset.dataProvider
-            },
-            to: '/node',
-            id: batchId,
-            method: 'POST'
-          });
-
-          batchQuery.push({
-            method: 'POST',
-            to: '{' + batchId + '}/labels',
-            id: batchQuery.length,
-            body: 'Datasets'
-          });
-
-          return cb(null, batchQuery);
-        },
-        (batchQuery, cb) => {
-          return neo4jdb.batchQuery(batchQuery, function (err, datasetNodes) {
-            const datasetNode = _.find(datasetNodes, node => node.body.data.dsId === pipe.dataset.dsId);
-            pipe.dataset.neoId = datasetNode.body.metadata.id;
-
-            return cb(err, datasetNodes);
-          });
-        },
-        (datasetNodes, cb) => {
-          const batchQuery = [];
-          batchQuery.push({
-            method: 'POST',
-            to: '/node/' + pipe.dataset.neoId + '/relationships',
-            id: 0,
-            body: {
-              to: '' + pipe.version.neoId + '',
-              type: 'WITH_VERSION'
             }
-          });
-
-          if (/*pipe.version.isCurrent*/ true) {
-            batchQuery.push({
-              method: 'POST',
-              to: '/node/' + pipe.dataset.neoId + '/relationships',
-              id: 0,
-              body: {
-                to: '' + pipe.version.neoId + '',
-                type: 'WITH_CURRENT_VERSION'
-              }
-            });
-          }
-
-          return cb(null, batchQuery);
+          }));
         },
-        (batchQuery, cb) => {
-          return neo4jdb.batchQuery(batchQuery, function (err) {
-            return cb(err);
+        (batchQuery, done) => {
+          return neo4jdb.batchQuery(batchQuery, function (err, datasetNodes) {
+            const dsIdToNeoId = datasetNodes.reduce((result, next) => {
+              if (!next.body) {
+                return result;
+              }
+
+              result[pipe.dataset._id.toString()] = next.body.metadata.id;
+              return result;
+            }, {});
+            pipe.dataset.neoId = dsIdToNeoId[pipe.dataset._id.toString()];
+            return done(err);
           });
         }
       ],
-      error => edDone(error, pipe));
+      error => {
+        console.timeEnd('Dataset is exported');
+        onDatasetExported(error, pipe)
+      });
   }
 
-  function exportMeasures(pipe, emCb) {
-    var Concepts = mongoose.model('Concepts');
+  function exportMeasures(pipe, onMeasuresExported) {
+    console.time('Measures are exported');
 
+    const Concepts = mongoose.model('Concepts');
     async.waterfall([
-      cb => Concepts.find({type: 'measure'}, {gid: 1, name: 1, isNumeric: 1}).lean().exec(cb),
-      (measures, cb) => {
-        var batchQuery = _.map(measures, function (measure, index) {
-          return {
-            method: 'POST',
-            to: '/node',
-            body: {gid: measure.gid, name: measure.name, isNumeric: measure.isNumeric},
-            id: index
-          };
-        });
+      done => Concepts.find({dataset: pipe.dataset._id, type: 'measure', from: {$lte: pipe.currentVersion}, to: {$gt: pipe.currentVersion}}, {gid: 1, originId: 1, properties: 1}).lean().exec(done),
+      (measures, done) => {
+        pipe.measures = measures;
 
-        _.each(measures, function (measure, index) {
-          batchQuery.push({
-            method: 'POST',
-            to: '{' + index + '}/labels',
-            id: batchQuery.length,
-            body: 'Measures'
-          });
-        });
-        return neo4jdb.batchQuery(batchQuery, (err, measureNodes) => {
-          return cb(err, {measureNodes, measures});
-        });
-      },
-      (measuresPipe, cb) => {
-        return async.reduce(measuresPipe.measures, {}, (memo, measure, cb)=> {
-          var index = _.findIndex(measuresPipe.measureNodes, node => measure.gid === node.body.data.gid);
-          measure.nodeId = measuresPipe.measureNodes[index].body.metadata.id;
-          memo[measure._id.toString()] = measure;
-          return Concepts.update({_id: measure._id}, {$set: {nodeId: measure.nodeId}}, err => cb(err, memo));
-        }, (err, res) => {
-          pipe.measures = res;
-          return cb(err);
-        });
-      },
-      (cb) => {
-        const batchQuery = [];
-        _.each(pipe.measures, measure => {
-          batchQuery.push({
-            method: 'POST',
-            to: '/node/' + pipe.version.neoId + '/relationships',
-            id: 0,
-            body: {
-              to: '' + measure.nodeId + '',
-              type: 'WITH_MEASURE'
-            }
-          });
-        });
-        return neo4jdb.batchQuery(batchQuery, function (err) {
-          return cb(err);
-        });
-      }
-    ], err => emCb(err, pipe));
-  }
+        let batchQueryId = 0;
+        const batchQuery = _.map(measures, measure => {
 
-  function exportEntityGroups(pipe, eidCb) {
-    var Concepts = mongoose.model('Concepts');
-
-    async.waterfall([
-      cb => Concepts.find({$or: [{type: 'entity_set'}, {type: 'entity_domain'}]}, {name: 1, gid: 1, type: 1, drilldowns: 1, drillups: 1, _id: 1, domain: 1}).lean().exec(cb),
-      (entityGroups, cb) => cb(null, _.keyBy(entityGroups, entityGroup => entityGroup._id.toString())),
-      (entityGroups, cb) => {
-        pipe.entityGroups = entityGroups;
-        return cb(null, pipe);
-      },
-      (pipe, cb) => {
-        var batchQuery = [];
-        var nodeMetas = {};
-        _.each(pipe.entityGroups, function (entityGroupId) {
-          var entityGroup = pipe.entityGroups[entityGroupId._id.toString()];
-
-          var entityGroupIndex = batchQuery.length;
-
-          var entityGroupNode = {
-            gid: entityGroup.gid,
-            name: entityGroup.name,
-            type: entityGroup.type
-          };
-
-          if (entityGroup.domain) {
-            entityGroupNode.domain = pipe.entityGroups[entityGroup.domain.toString()].gid;
-          }
-
-          batchQuery.push({
-            method: 'POST',
-            to: '/node',
-            body: entityGroupNode,
-            id: batchQuery.length
+          let batchNode = makeBatchNode({
+            id: batchQueryId,
+            labelName: 'Measure',
+            body: {originId: measure.originId.toString()}
           });
 
-          batchQuery.push({
-            method: 'POST',
-            to: '{' + entityGroupIndex + '}/labels',
-            id: batchQuery.length,
-            body: entityGroup.domain ? 'EntitySets' : 'EntityDomains'
-          });
+          batchNode.push(makeBatchRelation({
+            fromNodeId: pipe.dataset.neoId,
+            toNodeId: `{${batchQueryId}}`,
+            relationName: 'WITH_MEASURE',
+            from: pipe.currentVersion
+          }));
 
-          nodeMetas[entityGroupId._id.toString()] = {entityGroupIndex, gid: entityGroup.gid, batchQueryId: batchQuery.length};
+          batchQueryId += 2;
+          return batchNode;
         });
-        return cb(null, batchQuery, nodeMetas);
-      },
-      (batchQuery, nodeMetas, cb) => {
-        return neo4jdb.batchQuery(batchQuery, function (err, dimensionNodes) {
-          _.reduce(dimensionNodes, (prev, current) => {
-            const node = _.find(nodeMetas, node => {
-              return current.body && node.gid === current.body.data.gid
-            });
-            if (node) {
-              node.neoId = current.body.metadata.id;
-            }
+
+        return neo4jdb.batchQuery(batchQuery, (error, measureNodes) => {
+          const measureNodesByOriginId = _.chain(measureNodes)
+            .filter(node => node.body)
+            .keyBy(node => node.body.data.originId)
+            .mapValues(node => node.body.metadata.id)
+            .value();
+
+          pipe.measures = _.reduce(pipe.measures, (result, measure)=> {
+            measure.neoId = measureNodesByOriginId[measure.originId.toString()];
+            result[measure._id.toString()] = measure;
+            return result;
           }, {});
 
-          return cb(err, dimensionNodes, nodeMetas);
+          return done(error);
         });
       },
-      (dimensionNodes, nodeMetas, cb) => {
-        var batchQuery = [];
+      done => {
+        let batchQueryId = 0;
+        const batchQuery = _.map(pipe.measures, measure => {
+          let batchNode = makeBatchNode({
+            id: batchQueryId,
+            labelName: 'MeasureState',
+            body: _.extend({gid: measure.gid, originId: measure.originId}, flattenProperties(measure))
+          });
 
-        pipe.nodeMetas = nodeMetas;
-        _.each(pipe.entityGroups, entityGroup => {
-          if (!entityGroup.domain) {
-            batchQuery.push({
-              method: 'POST',
-              to: `/node/${pipe.version.neoId}/relationships`,
-              id: batchQuery.length,
-              body: {
-                to: `${nodeMetas[entityGroup._id.toString()].neoId}`,
-                type: 'WITH_ENTITY_DOMAIN'
-              }
-            });
-          }
+          batchNode.push(makeBatchRelation({
+            fromNodeId: measure.neoId,
+            toNodeId: `{${batchQueryId}}`,
+            relationName: 'WITH_MEASURE_STATE',
+            from: pipe.currentVersion
+          }));
 
-          if (entityGroup.domain) {
-            batchQuery.push({
-              method: 'POST',
-              to: `/node/${nodeMetas[entityGroup._id.toString()].neoId}/relationships`,
-              id: batchQuery.length,
-              body: {
-                to: `${nodeMetas[entityGroup.domain.toString()].neoId}`,
-                type: 'IS_SUBSET_OF_ENTITY_DOMAIN'
-              }
-            });
-          }
+          batchQueryId += 2;
+          return batchNode;
         });
 
-        return cb(null, batchQuery);
-      },
-      (batchQuery, cb) => {
-        return neo4jdb.batchQuery(batchQuery, function (err, dimensionNodes) {
-          return cb(err, dimensionNodes);
+        return neo4jdb.batchQuery(batchQuery, error => {
+          return done(error);
         });
       }
-    ], err => eidCb(err, pipe));
+    ], err => {
+      // we don't need measures at this point and further, hence there is no sense to keep them in pipe
+      delete pipe.measures;
+
+      console.timeEnd('Measures are exported');
+      onMeasuresExported(err, pipe)
+    });
   }
 
-  function exportEntities(pipe, done) {
+  function exportEntitySetsAndDomains(pipe, onEntitySetsAndDomainsExported) {
+    console.time('Entity sets and domains are exported');
+
+    const Concepts = mongoose.model('Concepts');
     async.waterfall([
-      eeDone => mongoose.model('Entities').find({}).lean().exec(eeDone),
-      (entities, eeDone) => {
-        pipe.entities = _.keyBy(entities, entity => entity._id.toString());
-        pipe.entitiesMeta = {};
-        let batchQuery = [];
+      done => {
+        const query = {$or: [{type: 'entity_set'}, {type: 'entity_domain'}], from: {$lte: pipe.currentVersion}, to: {$gt: pipe.currentVersion}, dataset: pipe.dataset._id};
+        const projection = {gid: 1, domain: 1, originId: 1, properties: 1};
 
-        _.each(pipe.entities, entity => {
-          const indexId = batchQuery.length;
-          batchQuery.push({
-            method: 'POST',
-            to: '/node',
-            body: _.extend({gid: entity.gid}, flattenProperties(entity)),
-            id: indexId
-          });
-
-          pipe.entitiesMeta[indexId] = {
-            objId: entity._id.toString()
-          };
-
-          batchQuery.push({
-            method: 'POST',
-            to: '{' + indexId  + '}/labels',
-            id: indexId ,
-            body: 'Entities'
-          });
-        });
-        return eeDone(null, batchQuery)
-      },
-      (batchQuery, cb) => {
-        return neo4jdb.batchQuery(batchQuery, function (err, entityNodes) {
-          return cb(err, entityNodes);
+        return Concepts.find(query, projection).lean().exec((error, setsAndDomains) => {
+          pipe.entitySetsAndDomains = _.keyBy(setsAndDomains, setOrDomain => setOrDomain.originId.toString());
+          return done(null);
         });
       },
-      (entityNodes, cb) => {
-        pipe.entitiesNeo = entityNodes.filter(node => node.body).reduce((result, node)=> {
-          const metaObj = pipe.entitiesMeta[node.id];
-          result[metaObj.objId] = {
-            neoId: node.body.metadata.id
-          };
-          return result;
-        }, {});
+      done => {
+        let batchQueryId = 0;
+        const batchQuery = _.map(pipe.entitySetsAndDomains, setOrDomain => {
 
-        var batchQuery = [];
-        _.each(pipe.entitiesNeo, (entity, key) => {
-          _.each(pipe.entities[key].childOf, parent => {
-            if (!parent) return;
+        let batchNode = makeBatchNode({
+          id: batchQueryId,
+          labelName: setOrDomain.domain ? 'EntitySet' : 'EntityDomain',
+          body: {originId: setOrDomain.originId.toString()}
+        });
 
-            batchQuery.push({
-              method: 'POST',
-              to: `/node/${entity.neoId}/relationships`,
-              body: {
-                to: `${pipe.entitiesNeo[parent.toString()].neoId}`,
-                type: 'WITH_DRILLUP'
-              }
+        if (!setOrDomain.domain) {
+          batchNode.push(makeBatchRelation({
+            fromNodeId: pipe.dataset.neoId,
+            toNodeId: `{${batchQueryId}}`,
+            relationName: 'WITH_ENTITY_DOMAIN',
+            from: pipe.currentVersion
+          }));
+        }
+
+          batchQueryId += 2;
+          return batchNode;
+        });
+
+        return neo4jdb.batchQuery(batchQuery, function (error, setsAndDomainsNodes) {
+          const setsAndDomainsNodesByOriginId = _.chain(setsAndDomainsNodes)
+            .filter(node => node.body)
+            .keyBy(node => node.body.data.originId)
+            .mapValues(node => node.body.metadata.id)
+            .value();
+
+          pipe.entitySetsAndDomains = _.reduce(pipe.entitySetsAndDomains, (result, setOrDomain)=> {
+            setOrDomain.neoId = setsAndDomainsNodesByOriginId[setOrDomain.originId.toString()];
+            result[setOrDomain._id.toString()] = setOrDomain;
+            return result;
+          }, {});
+
+          return done(error);
+        });
+      },
+      done => {
+        let batchQueryId = 0;
+        const batchQuery = _.chain(pipe.entitySetsAndDomains)
+          .filter(setOrDomain => setOrDomain.domain)
+          .map(entitySet => {
+
+            const batchNode = makeBatchRelation({
+              fromNodeId: entitySet.neoId,
+              toNodeId: pipe.entitySetsAndDomains[entitySet.domain.toString()].neoId,
+              relationName: 'IS_SUBSET_OF_ENTITY_DOMAIN',
+              from: pipe.currentVersion
             });
+
+            batchQueryId += 2;
+            return batchNode;
+          })
+          .value();
+
+        return neo4jdb.batchQuery(batchQuery, error => {
+          return done(error);
+        });
+      },
+      done => {
+        let batchQueryId = 0;
+        const batchQuery = _.map(pipe.entitySetsAndDomains, setOrDomain => {
+          let batchNode = makeBatchNode({
+            id: batchQueryId,
+            labelName: setOrDomain.domain ? 'EntitySetState' : 'EntityDomainState',
+            body: _.extend({gid: setOrDomain.gid, originId: setOrDomain.originId}, flattenProperties(setOrDomain))
           });
+
+          batchNode.push(makeBatchRelation({
+            fromNodeId: setOrDomain.neoId,
+            toNodeId: `{${batchQueryId}}`,
+            relationName: setOrDomain.domain ? 'WITH_ENTITY_SET_STATE' : 'WITH_ENTITY_DOMAIN_STATE',
+            from: pipe.currentVersion
+          }));
+
+          batchQueryId += 2;
+          return batchNode;
         });
 
-        _.each(pipe.entities, entity => {
-          _.each(pipe.entityGroups, group => {
-            const foundEntitySet = _.find(entity.groups, entitySet => entitySet.toString() === group._id.toString());
-            if (foundEntitySet) {
-              batchQuery.push({
-                method: 'POST',
-                to: `/node/${pipe.nodeMetas[foundEntitySet.toString()].neoId}/relationships`,
-                body: {
-                  to: `${pipe.entitiesNeo[entity._id.toString()].neoId}`,
-                  type: 'WITH_ENTITY'
-                }
-              });
-            } else if (group._id.toString() === entity.domain.toString()) {
-              batchQuery.push({
-                method: 'POST',
-                to: `/node/${pipe.nodeMetas[group._id.toString()].neoId}/relationships`,
-                body: {
-                  to: `${pipe.entitiesNeo[entity._id.toString()].neoId}`,
-                  type: 'WITH_ENTITY'
-                }
-              });
-            }
-          });
-        });
-        return cb(null, batchQuery);
-      },
-      (batchQuery, cb) => {
-        return neo4jdb.batchQuery(batchQuery, function (err, entityRelations) {
-          return cb(err, entityRelations);
+        return neo4jdb.batchQuery(batchQuery, error => {
+          return done(error);
         });
       }
-    ], error => done(error, pipe));
+    ], error => {
+
+      console.timeEnd('Entity sets and domains are exported');
+      onEntitySetsAndDomainsExported(error, pipe)
+    });
+  }
+
+  function exportEntities(pipe, onEntitiesExported) {
+    console.time('Entities are exported');
+
+    async.waterfall([
+      done => mongoose.model('Entities').find({from: {$lte: pipe.currentVersion}, to: {$gt: pipe.currentVersion}, dataset: pipe.dataset._id}).lean().exec(done),
+      (entities, done) => {
+        pipe.entities = _.keyBy(entities, entity => entity.originId.toString());
+
+        let batchQueryId = 0;
+        const batchQuery = _.map(pipe.entities, entity => {
+          entity.batchQueryId = batchQueryId;
+          let batchNode = makeBatchNode({
+            id: batchQueryId,
+            labelName: 'Entity',
+            body: {originId: entity.originId}
+          });
+
+          const setOrDomainObjectIdsAsStrings =
+            _.chain(entity.sets)
+            .union([entity.domain])
+            .keyBy(group => group.toString())
+            .value();
+
+          _.each(setOrDomainObjectIdsAsStrings, setOrDomainObjectIdAsString => {
+            const foundSetOrDomain = pipe.entitySetsAndDomains[setOrDomainObjectIdAsString];
+            if (foundSetOrDomain) {
+              batchNode.push(makeBatchRelation({
+                fromNodeId: foundSetOrDomain.neoId,
+                toNodeId: `{${batchQueryId}}`,
+                relationName: 'WITH_ENTITY',
+                from: pipe.currentVersion
+              }));
+            }
+          });
+
+          batchQueryId += 2;
+          return batchNode;
+        });
+
+        return neo4jdb.batchQuery(batchQuery, function (error, entityNodes) {
+          const entityNodesByGid =
+            _.chain(entityNodes)
+              .filter(node => node.body)
+              .keyBy(node => node.id)
+              .mapValues(node => node.body.metadata.id)
+              .value();
+
+          _.each(pipe.entities, entity => {
+            entity.neoId = entityNodesByGid[entity.batchQueryId];
+          });
+
+          return done(error);
+        });
+      },
+      done => {
+        let batchQueryId = 0;
+        const batchQuery = _.map(pipe.entities, entity => {
+          let batchNode = makeBatchNode({
+            id: batchQueryId,
+            labelName: 'EntityState',
+            body: _.extend({gid: entity.gid, originId: entity.originId}, flattenProperties(entity))
+          });
+
+          batchNode.push(makeBatchRelation({
+            fromNodeId: entity.neoId,
+            toNodeId: `{${batchQueryId}}`,
+            relationName: 'WITH_ENTITY_STATE',
+            from: pipe.currentVersion
+          }));
+
+          _.each(entity.drillups, parentEntityObjectId => {
+            if (!parentEntityObjectId) {
+              return;
+            }
+
+            batchNode.push(makeBatchRelation({
+              fromNodeId: entity.neoId,
+              toNodeId: pipe.entities[parentEntityObjectId.toString()].neoId,
+              relationName: 'WITH_DRILLUP',
+              from: pipe.currentVersion
+            }));
+          });
+
+          batchQueryId += 2;
+          return batchNode;
+        });
+
+        return neo4jdb.batchQuery(batchQuery, error => {
+          return done(error);
+        });
+      }
+    ], error => {
+      delete pipe.dataset;
+      delete pipe.entities;
+      delete pipe.entitySetsAndDomains;
+
+      console.timeEnd('Entities are exported');
+      onEntitiesExported(error, pipe)
+    });
   }
 
   function exportTranslations(pipe, etDone) {
@@ -460,6 +428,20 @@ module.exports = (app, done) => {
     ], error => etDone(error, pipe));
   }
 
+  function createIndexes(pipe, cb) {
+    async.eachSeries([
+      'create index on :Indicators(gid)',
+      'create index on :Dimensions(gid)',
+      'create index on :DimensionValues(value)'
+    ], (query, cb) => {
+      console.time(query);
+      return neo4jdb.cypherQuery(query, {}, function (err) {
+        console.timeEnd(query);
+        return cb(err);
+      });
+    }, cb);
+  }
+
   function exportConcepts(pipe, ecDone) {
     const Concepts = mongoose.model('Concepts');
 
@@ -523,32 +505,5 @@ module.exports = (app, done) => {
         });
       }
     ], error => ecDone(null, pipe));
-  }
-
-  function createIndexes(pipe, cb) {
-    async.eachSeries([
-      'create index on :Indicators(gid)',
-      'create index on :Dimensions(gid)',
-      'create index on :DimensionValues(value)'
-    ], (query, cb) => {
-      console.time(query);
-      return neo4jdb.cypherQuery(query, {}, function (err) {
-        console.timeEnd(query);
-        return cb(err);
-      });
-    }, cb);
-  }
-
-  function flattenProperties(obj) {
-    if (!obj.properties) {
-      return {};
-    }
-
-    // _.mapKeys(flat(_.mapValues(_.omitBy(obj.properties, _.isNil), value => JSON.stringify(value)), {safe: true}), (value, key) => `properties.${key}`)
-    return _.chain(obj.properties)
-      .omitBy(_.isNil)
-      .mapValues(value => JSON.stringify(value))
-      .mapKeys((value, key) => `properties.${key}`)
-      .value(); 
   }
 };
