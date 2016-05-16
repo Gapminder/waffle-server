@@ -53,15 +53,15 @@ module.exports = function (app, done) {
   async.waterfall([
     async.constant(pipe),
     clearAllDbs,
-    createUser,
-    createDataset,
-    createVersion,
-    createTransaction,
-    // findLastVersion,
-    createConcepts,
-    createTranslations,
-    createEntities,
-    createDataPoints
+    // createUser,
+    // createDataset,
+    // createVersion,
+    // createTransaction,
+    // // findLastVersion,
+    // createConcepts,
+    // createTranslations,
+    // createEntities,
+    // createDataPoints
   ], (err) => {
     console.timeEnd('done');
     return done(err);
@@ -69,18 +69,28 @@ module.exports = function (app, done) {
 };
 
 function clearAllDbs(pipe, cb) {
-  if (process.env.CLEAR_ALL_MONGO_DB_COLLECTIONS_BEFORE_IMPORT === 'true') {
-    logger.info('clear all collections');
+  // if (process.env.CLEAR_ALL_MONGO_DB_COLLECTIONS_BEFORE_IMPORT === 'true') {
+  //   logger.info('clear all collections');
+  //
+  //   let collectionsFn = _.map(ddfModels, model => {
+  //     let modelName = _.chain(model).camelCase().upperFirst();
+  //     return _cb => mongoose.model(modelName).remove({}, _cb);
+  //   });
+  //
+  //   return async.parallel(collectionsFn, (err) => cb(err, pipe));
+  // }
 
-    let collectionsFn = _.map(ddfModels, model => {
-      let modelName = _.chain(model).camelCase().upperFirst();
-      return _cb => mongoose.model(modelName).remove({}, _cb);
-    });
+  mongoose.model('DataPoints').find({measureGid: 'energy_use_total'})
+    .populate({path: 'measure', match: { gid: 'energy_use_total' } })
+    .populate({path: 'dimensions.entity', match: { gid: { $in: ['dza', '2000', '2001', 'alb']} } })
+    .populate({path: 'dimensions.concept', match: { gid: { $in: ['geo', 'time']} } })
+    .lean()
+    .exec(function (err, data) {
+      let _data = _.filter(data, item => item.measure && _.every(item.dimensions, dm => !_.isNull(dm.entity)) && _.every(item.dimensions, dm => !_.isNull(dm.concept)) );
 
-    return async.parallel(collectionsFn, (err) => cb(err, pipe));
-  }
+    return cb(null, _data);
+  });
 
-  return cb(null, pipe);
 }
 
 function createUser(pipe, done) {

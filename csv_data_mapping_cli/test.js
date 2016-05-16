@@ -1,23 +1,17 @@
 'use strict';
 
-let _ = require('lodash');
-let arr = [
-  {gid: 'test', title: 'dsfs', properties: {landlocked: 'coastline', region: 'asia'}},
-  {gid: 'test12', title: 'fszd', properties: {landlocked: 'landlocked', region: 'europe'}},
-];
+let mongoose = require('mongoose');
 
-let result = _.flatMap(arr, test);
+mongoose.connect('mongodb://@localhost:27017/ws_ddf', (err, db) => {
+  mongoose.model('DataPoints').findOne({})
+    .populate({path: 'measure', match: { gid: 'energy_use_total' } })
+    .populate({path: 'dimensions.entity', match: { gid: { $in: ['alb', '1997']} } })
+    .populate({path: 'dimensions.concept', match: { gid: { $in: ['geo', 'time']} } })
+    .lean()
+    .exec(function (err, data) {
+      console.log(data);
 
-console.log(result);
 
-function test(item) {
-  let groups = ['landlocked', 'region'];
-
-  return _.map(groups, (entityGroupGid) => {
-    return {
-      entityGroupGid: entityGroupGid,
-      childEntityGid: item.gid,
-      parentEntityGid: item.properties[entityGroupGid]
-    }
-  });
-}
+      return cb(null, data);
+    });
+});

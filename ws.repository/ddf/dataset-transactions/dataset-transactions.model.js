@@ -7,19 +7,28 @@ const Schema = mongoose.Schema;
  * @typedef {Object} DatasetTransactions
  * @memberof Models
  *
- * @property {Object} version - signifies version this session belongs to
- * @property {String} status - signifies state of the session - might be one of the following: 'CLOSED', 'CANCELLED', 'CORRUPTED', 'CREATED', 'PENDING'. By default 'CREATED' is used
- * @property {Models.User} createdBy - this session's owner
+ * @property {String} name - transaction's name (human readable)
+ * @property {Boolean} isClosed - the transaction is finished successfull
+ *
+ * @property {Models.Users} createdBy - this transaction's owner
  * @property {Date} createdAt - timestamp when this DatasetTransaction was created
+ *
+ * @property {Models.Datasets} dataset - of version, could be only one
  */
 const DatasetTransactions = new Schema({
-  version: {type: Schema.Types.ObjectId, ref: 'DatasetVersions'},
-  status: { type: String, enum: ['CLOSED', 'CANCELLED', 'CORRUPTED', 'CREATED', 'PENDING', 'IMPORTED'], 'default': 'CREATED'},
+  name: {type: String, required: true, unique: true, index: true},
+  isClosed: {type: Boolean, 'default': false},
+
   createdBy: {type: Schema.Types.ObjectId, ref: 'Users', required: true},
-  createdAt: {type: Date, 'default': new Date(), required: true}
+  createdAt: {type: Date, 'default': new Date(), required: true},
+
+  dataset: {type: Schema.Types.ObjectId, ref: 'Datasets'}
 });
 
-DatasetTransactions.index({status: 1});
+DatasetTransactions.index({name: 1});
 DatasetTransactions.index({createdBy: 1});
+DatasetTransactions.index({createdAt: 1});
+DatasetTransactions.index({isClosed: 1});
+DatasetTransactions.index({dataset: 1, createdBy: 1, isClosed: 1});
 
 module.exports = mongoose.model('DatasetTransactions', DatasetTransactions);
