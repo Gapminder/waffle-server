@@ -1,7 +1,4 @@
 var mongoose = require('mongoose');
-// mongoose.connect('mongodb://localhost/ws_ddf');
-// var _ = require('lodash');
-// var path = require('path');
 
 var Concepts = mongoose.model('Concepts');
 var DataPoints = mongoose.model('DataPoints');

@@ -1,6 +1,5 @@
 'use strict';
-var _ = require('lodash');
-var path = require('path');
+const _ = require('lodash');
 
 /**
  * @namespace Models
