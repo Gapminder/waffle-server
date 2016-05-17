@@ -1,4 +1,7 @@
 'use strict';
+var _ = require('lodash');
+var path = require('path');
+
 /**
  * @namespace Models
  */
@@ -25,4 +28,20 @@ module.exports = function (serviceLocator) {
   require('./translations.model');
   require('./indexTree.model');
   require('./indexDb.model');
+
+  const ddfModels = [
+    'concepts',
+    'data-points',
+    'dataset-versions',
+    'dataset-transactions',
+    'datasets',
+    'entities',
+    'original-entities',
+    'changelogs',
+    'eventlogs'
+  ];
+
+  _.forEach(ddfModels, model => {
+    require(`./ddf/${model}`)(serviceLocator.repositories);
+  });
 };
