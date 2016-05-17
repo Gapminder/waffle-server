@@ -12,7 +12,7 @@ let Schema = mongoose.Schema;
  * @property {String} salt - @private, users salt
  */
 let Users = new Schema({
-  name: String,
+  name: {type: String},
   email: {type: String, index: true, unique: true, required: true},
   username: {type: String, index: true, unique: true, required: true},
   password: {type: String, required: true, 'private': true},

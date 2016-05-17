@@ -21,13 +21,13 @@ let OriginalEntities = new Schema({
   gid: {type: String, match: /^[a-zA-Z0-9\/\._-]*$/, index: true, required: true},
 
   title: String,
-  sources: [String],
+  sources: [{type: String, required: true}],
   properties: {},
 
   // should be required
-  domain: {type: Schema.Types.ObjectId},
+  domain: {type: Schema.Types.ObjectId, required: true},
   sets: [{type: Schema.Types.ObjectId}]
-});
+}, { strict: false });
 
 OriginalEntities.index({gid: 1, domain: 1});
 OriginalEntities.index({gid: 1, sets: 1});

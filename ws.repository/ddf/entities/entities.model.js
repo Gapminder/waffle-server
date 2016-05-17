@@ -2,6 +2,7 @@
 
 let mongoose = require('mongoose');
 let Schema = mongoose.Schema;
+const originId = require('./origin-id.plugin');
 
 /**
  * @typedef {Object} Entities
@@ -26,22 +27,30 @@ let Schema = mongoose.Schema;
  */
 let Entities = new Schema({
   gid: {type: String, match: /^[a-zA-Z0-9\/\._-]*$/, index: true, required: true},
-  originId: Schema.Types.ObjectId,
+  originId: {type: Schema.Types.ObjectId},
 
   title: String,
-  sources: [String],
+  sources: [{type: String, required: true}],
   isOwnParent: Boolean,
   properties: {},
 
   // should be required
-  domain: {type: Schema.Types.ObjectId},
+  domain: {type: Schema.Types.ObjectId, required: true},
   sets: [{type: Schema.Types.ObjectId}],
   drillups: [{type: Schema.Types.ObjectId}],
 
   from: {type: Number, required: true},
   to: {type: Number, required: true, default: Number.MAX_VALUE},
-  dataset: {type: Schema.Types.ObjectId, ref: 'Datasets'},
-  transaction: {type: Schema.Types.ObjectId, ref: 'DatasetTransactions'}
+  dataset: {type: Schema.Types.ObjectId, ref: 'Datasets', required: true},
+  transaction: {type: Schema.Types.ObjectId, ref: 'DatasetTransactions', required: true}
+}, { strict: false });
+
+
+Entities.plugin(originId, {
+  modelName: 'Concepts',
+  domain: 'Concepts',
+  sets: 'Array:Concepts',
+  drillups: 'Array:Entities'
 });
 
 Entities.index({gid: 1, domain: 1});
@@ -49,5 +58,6 @@ Entities.index({gid: 1, sets: 1});
 Entities.index({gid: 1, versions: 1});
 Entities.index({gid: 1, drilldowns: 1});
 Entities.index({gid: 1, drillups: 1});
+Entities.index({dataset: 1, transaction: 1, gid: 1});
 
 module.exports = mongoose.model('Entities', Entities);

@@ -2,6 +2,7 @@
 
 let mongoose = require('mongoose');
 let Schema = mongoose.Schema;
+const originId = require('./origin-id.plugin');
 
 /**
  * @typedef DimensionSchema
@@ -37,20 +38,26 @@ let DimensionSchema = new Schema({
  * @property {Models.DatasetTransactions} transaction - reference
  */
 let DataPoints = new Schema({
-  value: String,
+  value: {type: String, required: true},
 
-  isNumeric: Boolean,
-  measure: {type: Schema.Types.ObjectId},
+  isNumeric: {type: Boolean, required: true},
+  measure: {type: Schema.Types.ObjectId, required: true},
   dimensions: [{type: Schema.Types.ObjectId}],
 
   from: {type: Number, required: true},
   to: {type: Number, required: true, default: Number.MAX_VALUE},
-  dataset: {type: Schema.Types.ObjectId, ref: 'Datasets'},
-  transaction: {type: Schema.Types.ObjectId, ref: 'DatasetTransactions'}
+  dataset: {type: Schema.Types.ObjectId, ref: 'Datasets', required: true},
+  transaction: {type: Schema.Types.ObjectId, ref: 'DatasetTransactions', required: true}
+}, { strict: false });
+
+DataPoints.plugin(originId, {
+  modelName: 'DataPoints',
+  measure: 'Concepts',
+  dimensions: 'Array:Entities',
 });
 
 DataPoints.index({measure: 1, dimensions: 1, value: 1, from: 1, to: 1});
 DataPoints.index({value: 1, from: 1, to: 1});
-DataPoints.index({value: 1, dataset: 1, transaction: 1});
+DataPoints.index({dataset: 1, transaction: 1, value: 1});
 
 module.exports = mongoose.model('DataPoints', DataPoints);

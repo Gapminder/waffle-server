@@ -2,6 +2,7 @@
 
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const originId = require('./origin-id.plugin');
 
 /**
  * @typedef CoordinateSchema
@@ -34,9 +35,9 @@ const Schema = mongoose.Schema;
  * @property {Models.DatasetTransactions} transaction - reference
  */
 
-const ConceptsSchema = new Schema({
+const Concepts = new Schema({
   gid: {type: String, match: /^[a-z0-9_]*$/, index: true, required: true},
-  originId: {type: Schema.Types.ObjectId, required: true},
+  originId: {type: Schema.Types.ObjectId},
 
   title: {type: String, required: true, index: true},
   type: {type: String, enum: ['entity_set', 'entity_domain', 'time', 'string', 'measure'], 'default': 'string', required: true},
@@ -57,12 +58,31 @@ const ConceptsSchema = new Schema({
 
   from: {type: Number, required: true},
   to: {type: Number, required: true, default: Number.MAX_VALUE},
-  dataset: {type: Schema.Types.ObjectId, ref: 'Datasets'},
-  transaction: {type: Schema.Types.ObjectId, ref: 'DatasetTransactions'}
+  dataset: {type: Schema.Types.ObjectId, ref: 'Datasets', required: true},
+  transaction: {type: Schema.Types.ObjectId, ref: 'DatasetTransactions', required: true}
+}, { strict: false });
+
+Concepts.post('save', function (doc, next) {
+  if (!doc.originId) {
+    doc.originId = doc._id;
+    mongoose.model('Concepts').update({ _id: doc._id }, { $set: { originId: doc._id } }, (error, result) => {
+      next(error, result);
+    });
+  } else {
+    next();
+  }
 });
 
-ConceptsSchema.index({type: 1});
-ConceptsSchema.index({domain: 1});
-ConceptsSchema.index({gid: 1, type: 1});
+Concepts.plugin(originId, {
+  modelName: 'Concepts',
+  domain: 'Concepts',
+  subsetOf: 'Array:Concepts',
+  dimensions: 'Array:Concepts'
+});
+Concepts.index({type: 1});
+Concepts.index({domain: 1});
+Concepts.index({gid: 1, type: 1});
+Concepts.index({dataset: 1, transaction: 1, gid: 1});
 
-module.exports = mongoose.model('Concepts', ConceptsSchema);
+
+module.exports = mongoose.model('Concepts', Concepts);

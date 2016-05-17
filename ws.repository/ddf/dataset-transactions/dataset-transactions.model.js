@@ -20,7 +20,7 @@ const DatasetTransactions = new Schema({
   isClosed: {type: Boolean, 'default': false},
 
   createdBy: {type: Schema.Types.ObjectId, ref: 'Users', required: true},
-  createdAt: {type: Date, 'default': new Date(), required: true},
+  createdAt: {type: Number, 'default': (new Date()).valueOf(), required: true},
 
   dataset: {type: Schema.Types.ObjectId, ref: 'Datasets'}
 });

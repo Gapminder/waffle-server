@@ -11,6 +11,7 @@ const Converter = require('csvtojson').Converter;
 
 const metadata = require('./vizabi/metadata.json');
 const mongoose = require('mongoose');
+// mongoose.set('debug', true);
 
 // geo mapping
 const geoMapping = require('./geo-mapping.json');
@@ -53,15 +54,15 @@ module.exports = function (app, done) {
   async.waterfall([
     async.constant(pipe),
     clearAllDbs,
-    // createUser,
-    // createDataset,
-    // createVersion,
-    // createTransaction,
-    // // findLastVersion,
-    // createConcepts,
-    // createTranslations,
-    // createEntities,
-    // createDataPoints
+    createUser,
+    createTransaction,
+    createDataset,
+    updateTransaction,
+    // findLastVersion,
+    createConcepts,
+    createTranslations,
+    createEntities,
+    createDataPoints
   ], (err) => {
     console.timeEnd('done');
     return done(err);
@@ -69,28 +70,18 @@ module.exports = function (app, done) {
 };
 
 function clearAllDbs(pipe, cb) {
-  // if (process.env.CLEAR_ALL_MONGO_DB_COLLECTIONS_BEFORE_IMPORT === 'true') {
-  //   logger.info('clear all collections');
-  //
-  //   let collectionsFn = _.map(ddfModels, model => {
-  //     let modelName = _.chain(model).camelCase().upperFirst();
-  //     return _cb => mongoose.model(modelName).remove({}, _cb);
-  //   });
-  //
-  //   return async.parallel(collectionsFn, (err) => cb(err, pipe));
-  // }
+  if (process.env.CLEAR_ALL_MONGO_DB_COLLECTIONS_BEFORE_IMPORT === 'true') {
+    logger.info('clear all collections');
 
-  mongoose.model('DataPoints').find({measureGid: 'energy_use_total'})
-    .populate({path: 'measure', match: { gid: 'energy_use_total' } })
-    .populate({path: 'dimensions.entity', match: { gid: { $in: ['dza', '2000', '2001', 'alb']} } })
-    .populate({path: 'dimensions.concept', match: { gid: { $in: ['geo', 'time']} } })
-    .lean()
-    .exec(function (err, data) {
-      let _data = _.filter(data, item => item.measure && _.every(item.dimensions, dm => !_.isNull(dm.entity)) && _.every(item.dimensions, dm => !_.isNull(dm.concept)) );
+    let collectionsFn = _.map(ddfModels, model => {
+      let modelName = _.chain(model).camelCase().upperFirst();
+      return _cb => mongoose.model(modelName).remove({}, _cb);
+    });
 
-    return cb(null, _data);
-  });
+    return async.parallel(collectionsFn, (err) => cb(err, pipe));
+  }
 
+  return cb(null, _data);
 }
 
 function createUser(pipe, done) {
@@ -107,15 +98,30 @@ function createUser(pipe, done) {
   });
 }
 
+function createTransaction(pipe, done) {
+  logger.info('create transaction');
+
+  mongoose.model('DatasetTransactions').create({
+    name: Math.random().toString(),
+    createdAt: (new Date()).valueOf(),
+    createdBy: pipe.user._id
+  }, (err, res) => {
+    pipe.transaction = res.toObject();
+    return done(err, pipe);
+  });
+}
+
 function createDataset(pipe, done) {
   logger.info('create data set');
 
   mongoose.model('Datasets').create({
-    dsId: 'ddf-gapminder-world-v2',
+    name: 'ddf-gapminder-world-v2',
     type: 'local',
-    url: pathToDdfFolder,
-    dataProvider: 'semio',
+    path: pathToDdfFolder,
     defaultLanguage: 'en',
+    versions: [pipe.transaction.createdAt],
+    dataProvider: 'semio',
+    createdAt: pipe.transaction.createdAt,
     createdBy: pipe.user._id
   }, (err, res) => {
     pipe.dataset = res.toObject();
@@ -123,36 +129,14 @@ function createDataset(pipe, done) {
   });
 }
 
-function createVersion(pipe, done) {
-  logger.info('create version');
+function updateTransaction(pipe, done) {
+  logger.info('update transaction');
 
-  mongoose.model('DatasetVersions').create({
-    name: Math.random().toString(),
-    createdBy: pipe.user._id,
-    dataset: pipe.dataset._id
-  }, (err, res) => {
-    pipe.version = res.toObject();
-    return done(err, pipe);
-  });
-}
-
-function findLastVersion(pipe, done) {
-  mongoose.model('DatasetVersions').findOne({})
-    .lean()
-    .exec((err, version) => {
-      pipe.version = version;
-      return done(err, pipe);
-    });
-}
-
-function createTransaction(pipe, done) {
-  logger.info('create session');
-
-  mongoose.model('DatasetTransactions').create({
-    version: pipe.version._id,
-    createdBy: pipe.user._id
-  }, (err, res) => {
-    pipe.session = res.toObject();
+  mongoose.model('DatasetTransactions').update({_id: pipe.transaction._id}, {
+    $set: {
+      dataset: pipe.dataset._id
+    }
+  }, (err) => {
     return done(err, pipe);
   });
 }
@@ -161,12 +145,11 @@ function createConcepts(pipe, done) {
   logger.info('start process creating concepts');
 
   async.waterfall([
-    async.constant({version: pipe.version}),
+    async.constant({transaction: pipe.transaction, dataset: pipe.dataset}),
     _loadConcepts,
     _createConcepts,
     _getAllConcepts,
-    _addConceptDrillups,
-    _addConceptDrilldowns,
+    _addConceptSubsetOf,
     _addConceptDomains,
     _getAllConcepts
   ], (err, res) => {
@@ -188,8 +171,7 @@ function createConcepts(pipe, done) {
 
       pipe.raw = {
         concepts: concepts,
-        drillups: reduceUniqueNestedValues(concepts, 'properties.drill_up'),
-        drilldowns: reduceUniqueNestedValues(concepts, 'properties.drill_down'),
+        subsetOf: reduceUniqueNestedValues(concepts, 'properties.drill_up'),
         domains: reduceUniqueNestedValues(concepts, 'properties.domain')
       };
 
@@ -200,9 +182,18 @@ function createConcepts(pipe, done) {
   function _createConcepts(pipe, done) {
     logger.info('** create concepts documents');
 
-    mongoose.model('Concepts').create(pipe.raw.concepts, (err) => {
-      return done(err, pipe);
-    });
+    async.eachLimit(
+      _.chunk(pipe.raw.concepts, 100),
+      LIMIT_NUMBER_PROCESS,
+      __createConcepts,
+      (err) => {
+        return done(err, pipe);
+      }
+    );
+
+    function __createConcepts(chunk, cb) {
+      return mongoose.model('Concepts').create(chunk, cb);
+    }
   }
 
   function _getAllConcepts(pipe, done) {
@@ -210,105 +201,102 @@ function createConcepts(pipe, done) {
 
     mongoose.model('Concepts').find({})
       .populate('domain')
-      .populate('drillups')
-      .populate('drilldowns')
-      .populate('versions')
-      .populate('previous')
+      .populate('subsetOf')
+      .populate('dimensions')
+      .populate('dataset')
+      .populate('transaction')
       .lean()
       .exec((err, res) => {
-        pipe.concepts = res;
+        pipe.concepts = _.keyBy(res, 'gid');
         return done(err, pipe);
       });
   }
 
-  function _addConceptDrillups(pipe, done) {
-    logger.info('** add concept drillups');
+  function _addConceptSubsetOf(pipe, done) {
+    logger.info('** add concept subsetOf');
 
-    async.eachLimit(pipe.raw.drillups, LIMIT_NUMBER_PROCESS, (drillup, escb) => {
-      let drillupConcept = _.find(pipe.concepts, {gid: drillup});
+    async.eachLimit(pipe.raw.subsetOf, LIMIT_NUMBER_PROCESS, __updateConceptSubsetOf, (err) => {
+      return done(err, pipe);
+    });
 
-      if (!drillupConcept) {
-        logger.warn(`Drill up concept gid '${drillup}' isn't exist!`);
+    function __updateConceptSubsetOf(gid, escb) {
+      let concept = pipe.concepts[gid];
+
+      if (!concept) {
+        logger.warn(`Drill up concept gid '${gid}' isn't exist!`);
         return async.setImmediate(escb);
       }
 
       mongoose.model('Concepts').update(
-        {'properties.drill_up': drillup},
-        {$addToSet: {'drillups': drillupConcept._id}},
+        {'properties.drill_up': gid},
+        {$addToSet: {'subsetOf': concept._id}},
         {multi: true},
         escb
       );
-    }, (err) => {
-      return done(err, pipe);
-    });
-  }
-
-  function _addConceptDrilldowns(pipe, done) {
-    logger.info('** add concept drilldowns');
-
-    async.eachLimit(pipe.raw.drilldowns, LIMIT_NUMBER_PROCESS, (drilldown, escb) => {
-      let drilldownConcept = _.find(pipe.concepts, {gid: drilldown});
-
-      if (!drilldownConcept) {
-        logger.warn(`Drill down concept gid '${drilldown}' isn't exist!`);
-        return async.setImmediate(escb);
-      }
-
-      mongoose.model('Concepts').update(
-        {'properties.drill_down': drilldown},
-        {$addToSet: {'drilldowns': drilldownConcept._id}},
-        {multi: true},
-        escb
-      );
-    }, (err) => {
-      return done(err, pipe);
-    });
+    }
   }
 
   function _addConceptDomains(pipe, done) {
     logger.info('** add entity domains to related concepts');
 
-    async.eachLimit(pipe.raw.domains, LIMIT_NUMBER_PROCESS, (domainName, escb) => {
-      let domain = _.find(pipe.concepts, {gid: domainName});
+    async.eachLimit(pipe.raw.domains, LIMIT_NUMBER_PROCESS, __updateConceptDomain, (err) => {
+      return done(err, pipe);
+    });
 
-      if (!domain) {
-        logger.warn(`Entity domain concept gid '${domainName}' isn't exist!`);
+    function __updateConceptDomain(gid, escb) {
+      let concept = pipe.concepts[gid];
+
+      if (!concept) {
+        logger.warn(`Entity domain concept gid '${gid}' isn't exist!`);
         return async.setImmediate(escb);
       }
 
       mongoose.model('Concepts').update(
-        {'properties.domain': domainName},
-        {$set: {'domain': domain._id}},
+        {'properties.domain': gid},
+        {$set: {'domain': concept._id}},
         {multi: true},
         escb
       );
-    }, (err) => {
-      return done(err, pipe);
-    });
+    }
   }
 
 function createTranslations(pipe, done) {
   logger.info('create translations');
 
+  let domain = pipe.concepts['translations'];
+  if (!domain || domain.type !== 'entity_domain') {
+    logger.warn('There is no translations domain! Go to next step.');
+    return done(null, pipe);
+  }
+
   var translations = []
     .concat(map(pipe.ddfEnTranslations, 'en'))
     .concat(map(pipe.ddfSeTranslations, 'se'));
 
-  return mongoose.model('Entities').create(translations, (err) => {
-    return done(err, pipe);
-  });
+  return async.eachLimit(
+    _.chunk(translations, 100),
+    LIMIT_NUMBER_PROCESS,
+    _createEntities,
+    (err) => {
+      return done(err, pipe);
+    }
+  );
+
+  function _createEntities(chunk, cb) {
+    return mongoose.model('Entities').create(chunk, cb);
+  }
 
   function map(json, lang) {
     return _.reduce(json, function (res, value, key) {
-      let domain = _.find(pipe.concepts, concept => concept.gid === 'translations' && concept.type === 'entity_domain');
-      let group =  _.find(pipe.concepts, concept => concept.gid === lang && concept.type === 'entity_set');
+      let concept =  pipe.concepts[lang];
+      if (!concept || concept.type !== 'entity_set' || concept.domain.gid !== 'translations') {
+        logger.warn(`There is no entity set with gid '${lang}'!`);
+      }
 
       res.push({
         gid: key,
         title: value,
         sources: [`${lang}.json`],
-        domain: domain._id,
-        groups: [group._id],
         properties: {
           key: key,
           value: value,
@@ -316,7 +304,11 @@ function createTranslations(pipe, done) {
           lng_key: key,
           lng_value: value
         },
-        version: pipe.version._id
+        domain: domain._id,
+        sets: concept ? [concept._id] : [],
+        from: pipe.transaction.createdAt,
+        dataset: pipe.dataset._id,
+        transaction: pipe.transaction._id
       });
       return res;
     }, []);
@@ -327,7 +319,7 @@ function createEntities(pipe, done) {
   logger.info('start process creating entities');
 
   async.waterfall([
-    async.constant({version: pipe.version, concepts: pipe.concepts}),
+    async.constant({transaction: pipe.transaction, concepts: pipe.concepts}),
     _processOriginalEntities,
     _findAllOriginalEntities,
     _createEntitiesBasedOnOriginalEntities,
@@ -354,7 +346,7 @@ function createEntities(pipe, done) {
 
     function _processEntities(pipe) {
       return (eg, cb) => async.waterfall([
-        async.constant({eg: eg, concepts: pipe.concepts, version: pipe.version}),
+        async.constant({eg: eg, concepts: pipe.concepts, transaction: pipe.transaction}),
         __loadOriginalEntities,
         __createOriginalEntities
       ], cb);
@@ -400,7 +392,7 @@ function createEntities(pipe, done) {
     mongoose.model('OriginalEntities').find({})
       .populate('domain')
       .populate('groups')
-      .populate('versions')
+      .populate('transaction')
       .lean()
       .exec((err, res) => {
         pipe.originalEntities = res;
@@ -442,7 +434,7 @@ function createEntities(pipe, done) {
       .populate('domain')
       .populate('groups')
       .populate('childOf')
-      .populate('versions')
+      .populate('transaction')
       .populate('previous')
       .lean()
       .exec((err, res) => {
@@ -486,7 +478,7 @@ function createDataPoints(pipe, done) {
 
   function _processDataPoints(pipe) {
     return (filename, key, cb) => async.waterfall([
-      async.constant({filename: filename, concepts: pipe.concepts, version: pipe.version}),
+      async.constant({filename: filename, concepts: pipe.concepts, transaction: pipe.transaction}),
       _parseFilename,
       _updateConceptsDimensions,
       _findAllEntities,
@@ -559,7 +551,7 @@ function createDataPoints(pipe, done) {
             source: pipe.filename,
             domain: domain,
             groups: pipe.dimensions && pipe.dimensions[entityGroupGid] ? [pipe.dimensions[entityGroupGid]._id] : [],
-            versions: [pipe.version._id]
+            transaction: pipe.transaction._id
           };
         })
         .value();
@@ -625,23 +617,25 @@ function mapDdfConceptsToWsModel(pipe) {
     return {
       gid: _entry.concept,
 
-      name: _entry.name,
+      title: _entry.name || _entry.title,
       type: _entry.concept_type,
 
-      tooltip: _entry.tooltip,
-      link: _entry.indicator_url,
-
       tags: _entry.tags,
+      tooltip: _entry.tooltip,
+      indicatorUrl: _entry.indicator_url,
       color: _entry.color,
-      domain: null,
       unit: _entry.unit,
       scales: _entry.scales,
-
-      drillups: [],
-      drilldowns: [],
-
       properties: _entry,
-      versions: [pipe.version._id]
+
+      domain: null,
+      subsetOf: [],
+      dimensions: [],
+
+      from: pipe.transaction.createdAt,
+      to: Number.MAX_VALUE,
+      dataset: pipe.dataset._id,
+      transaction: pipe.transaction._id
     };
   };
 }
@@ -663,7 +657,7 @@ function mapDdfOriginalEntityToWsModel(pipe) {
       domain: pipe.eg.domain ? pipe.eg.domain._id : pipe.eg._id,
       groups: resolvedGroups,
 
-      versions: [pipe.version._id]
+      transaction: pipe.transaction._id
     };
   };
 }
@@ -753,7 +747,7 @@ function mapDdfEntityToWsModel(pipe) {
       groups: resolvedGroups,
       childOf: [],
 
-      versions: [pipe.version._id]
+      transaction: pipe.transaction._id
     };
   };
 }
@@ -817,7 +811,7 @@ function mapDdfDataPointToWsModel(pipe) {
           measureGid: measureGid,
 
           dimensions: dimensions,
-          versions: [pipe.version._id],
+          transaction: pipe.transaction._id,
         }
       })
       .value();
@@ -826,7 +820,7 @@ function mapDdfDataPointToWsModel(pipe) {
 
 //*** Validators ***
 function validateConcept(entry, rowNumber) {
-  let resolvedJSONColumns = ['color', 'scales', 'drill_up', 'drill_down'];
+  let resolvedJSONColumns = ['color', 'scales', 'drill_up'];
   let _entry = _.mapValues(entry, (value, columnName) => {
     if (!value) {
       return null;

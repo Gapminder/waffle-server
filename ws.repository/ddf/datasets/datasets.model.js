@@ -34,14 +34,14 @@ let Datasets = new Schema({
   defaultLanguage: {type: String, required: true},
   metadata: {},
 
-  versions: [{type: Number, unique: true, default: new Date()}],
+  versions: [{type: Number, unique: true}],
   isLocked: {type: Boolean, default: false},
   lockedAt: {type: Date, default: new Date()},
   lockedBy: {type: Schema.Types.ObjectId, ref: 'Users'},
 
   dataProvider: {type: String, required: true, sparse: true},
   createdBy: {type: Schema.Types.ObjectId, ref: 'Users', required: true},
-  createdAt: {type: Date, default: new Date(), required: true}
+  createdAt: {type: Number, 'default': (new Date()).valueOf(), required: true}
 });
 
 Datasets.index({dsId: 1});
