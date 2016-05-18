@@ -1,4 +1,5 @@
 'use strict';
+
 const _ = require('lodash');
 
 /**
@@ -31,16 +32,13 @@ module.exports = function (serviceLocator) {
   const ddfModels = [
     'concepts',
     'data-points',
-    'dataset-versions',
     'dataset-transactions',
     'datasets',
     'entities',
-    'original-entities',
-    'changelogs',
-    'eventlogs'
+    'original-entities'
   ];
 
-  _.forEach(ddfModels, model => {
+  _.forEach(ddfModels, (model) => {
     require(`./ddf/${model}`)(serviceLocator.repositories);
   });
 };
