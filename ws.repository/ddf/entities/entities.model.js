@@ -2,7 +2,7 @@
 
 let mongoose = require('mongoose');
 let Schema = mongoose.Schema;
-const originId = require('./origin-id.plugin');
+const originId = require('../origin-id.plugin');
 
 /**
  * @typedef {Object} Entities
@@ -47,10 +47,11 @@ let Entities = new Schema({
 
 
 Entities.plugin(originId, {
-  modelName: 'Concepts',
+  modelName: 'Entities',
   domain: 'Concepts',
-  sets: 'Array:Concepts',
-  drillups: 'Array:Entities'
+  sets: 'Concepts',
+  drillups: 'Entities',
+  originId: 'Entities'
 });
 
 Entities.index({gid: 1, domain: 1});

@@ -27,7 +27,7 @@ let ddfModels;
 let pathToDdfFolder;
 let resolvePath;
 let ddfConceptsFile;
-let ddfEntitiesFileTemplate;
+let fileTemplates;
 
 module.exports = function (app, done) {
   logger = app.get('log');
@@ -36,10 +36,13 @@ module.exports = function (app, done) {
 
   pathToDdfFolder = config.PATH_TO_DDF_FOLDER;
   resolvePath = (filename) => path.resolve(pathToDdfFolder, filename);
-  ddfConceptsFile = resolvePath('ddf--concepts.csv');
   const ddfEnTranslations = require(resolvePath('../vizabi/en.json'));
   const ddfSeTranslations = require(resolvePath('../vizabi/se.json'));
-  ddfEntitiesFileTemplate = _.template('ddf--entities${ domainGid }--${ gid }.csv');
+  fileTemplates = {
+    getFilenameOfEntityDomainEntities: _.template('ddf--entities--${ gid }.csv'),
+    getFilenameOfEntitySetEntities: _.template('ddf--entities--${ domain.gid }--${ gid }.csv'),
+    getFilenameOfConcepts: _.template(resolvePath('ddf--concepts.csv'))
+  };
 
   let pipe = {
     ddfConceptsFile,
@@ -199,10 +202,25 @@ function createConcepts(pipe, done) {
   function _getAllConcepts(pipe, done) {
     logger.info('** get all concepts');
 
-    mongoose.model('Concepts').find({})
-      .populate('domain')
-      .populate('subsetOf')
-      .populate('dimensions')
+    mongoose.model('Concepts').find({
+        dataset: pipe.dataset._id,
+        transaction: pipe.transaction._id
+      }, null, {
+        join: {
+          domain: {
+            dataset: pipe.dataset._id,
+            transaction: pipe.transaction._id
+          },
+          subsetOf: {
+            dataset: pipe.dataset._id,
+            transaction: pipe.transaction._id
+          },
+          dimensions: {
+            dataset: pipe.dataset._id,
+            transaction: pipe.transaction._id
+          }
+        }
+      })
       .populate('dataset')
       .populate('transaction')
       .lean()
@@ -319,13 +337,13 @@ function createEntities(pipe, done) {
   logger.info('start process creating entities');
 
   async.waterfall([
-    async.constant({transaction: pipe.transaction, concepts: pipe.concepts}),
+    async.constant({transaction: pipe.transaction, concepts: pipe.concepts, dataset: pipe.dataset}),
     _processOriginalEntities,
     _findAllOriginalEntities,
     _createEntitiesBasedOnOriginalEntities,
     _clearOriginalEntities,
     _findAllEntities,
-    _addEntityChildOf,
+    _addEntityDrillups,
     _findAllEntities
   ], (err, res) => {
     pipe.entities = res.entities;
@@ -334,19 +352,24 @@ function createEntities(pipe, done) {
 }
 
   function _processOriginalEntities(pipe, done) {
-    logger.info('** process original entities')
-    let entityGroups = _.filter(pipe.concepts, concept => defaultEntityGroupTypes.indexOf(concept.type) > -1);
+    // Entities could be in many files with duplicates
+    // so for handling this case, we need to add all of them
+    // in temporaty collection OriginalEntities
+    // and then analyze and merge all duplicates
+    logger.info('** process original entities');
+
+    let entitySets = _.filter(pipe.concepts, concept => defaultEntityGroupTypes.indexOf(concept.type) > -1);
 
     async.eachLimit(
-      entityGroups,
+      entitySets,
       LIMIT_NUMBER_PROCESS,
       _processEntities(pipe),
       err => done(err, pipe)
     );
 
     function _processEntities(pipe) {
-      return (eg, cb) => async.waterfall([
-        async.constant({eg: eg, concepts: pipe.concepts, transaction: pipe.transaction}),
+      return (entitySet, cb) => async.waterfall([
+        async.constant({entitySet: entitySet, concepts: pipe.concepts, transaction: pipe.transaction, dataset: pipe.dataset}),
         __loadOriginalEntities,
         __createOriginalEntities
       ], cb);
@@ -354,8 +377,9 @@ function createEntities(pipe, done) {
   }
 
     function __loadOriginalEntities(_pipe, cb) {
-      let fileSource = {domainGid : _pipe.eg.domain ? '--' + _pipe.eg.domain.gid : '', gid: _pipe.eg.gid};
-      _pipe.filename = ddfEntitiesFileTemplate(fileSource);
+      _pipe.filename = _pipe.entitySet.domain
+        ? fileTemplates.getFilenameOfEntitySetEntities(_pipe.entitySet)
+        : fileTemplates.getFilenameOfEntityDomainEntities(_pipe.entitySet);
 
       logger.info(`**** load original entities from file ${_pipe.filename}`);
 
@@ -367,31 +391,43 @@ function createEntities(pipe, done) {
           return cb('All entity gid\'s should be unique within the Entity Set or Entity Domain!');
         }
 
-        _pipe.raw = {originalEntities};
+        _pipe.raw = {
+          originalEntities
+        };
         return cb(err, _pipe);
       });
     }
 
-    function __createOriginalEntities(_pipe, cb) {
+    function __createOriginalEntities(_pipe, done) {
       if (_.isEmpty(_pipe.raw.originalEntities)) {
         logger.warn(`file '${_pipe.filename}' is empty or doesn't exist.`);
 
-        return async.setImmediate(cb);
+        return async.setImmediate(done);
       }
 
       logger.info(`**** create original entities from file '${_pipe.filename}'`);
 
-      mongoose.model('OriginalEntities').create(_pipe.raw.originalEntities, (err) => {
-        return cb(err, _pipe);
-      });
+      return async.eachSeries(
+        _.chunk(_pipe.raw.originalEntities, 100),
+        ___createOriginalEntities,
+        done
+      );
+
+      function ___createOriginalEntities(chunk, cb) {
+        return mongoose.model('OriginalEntities').create(chunk, (err) => {
+          return cb(err, _pipe);
+        });
+      }
     }
 
   function _findAllOriginalEntities(pipe, done) {
     logger.info('** find all original entities');
 
-    mongoose.model('OriginalEntities').find({})
-      .populate('domain')
-      .populate('groups')
+    mongoose.model('OriginalEntities').find({
+        dataset: pipe.dataset._id,
+        transaction: pipe.transaction._id
+      })
+      .populate('dataset')
       .populate('transaction')
       .lean()
       .exec((err, res) => {
@@ -400,7 +436,7 @@ function createEntities(pipe, done) {
       });
   }
 
-  function _createEntitiesBasedOnOriginalEntities(pipe, cb) {
+  function _createEntitiesBasedOnOriginalEntities(pipe, done) {
     if (_.isEmpty(pipe.originalEntities)) {
       logger.warn(`There is no original entities.`);
 
@@ -411,18 +447,25 @@ function createEntities(pipe, done) {
 
     let entities = _.chain(pipe.originalEntities)
       .groupBy('gid')
-      .flatMap(mapDdfEntityBasedOnOriginalEntityToWsModel())
+      .flatMap(mapDdfEntityBasedOnOriginalEntityToWsModel(pipe.concepts))
       .value();
 
-    mongoose.model('Entities').create(entities, (err) => {
-      return cb(err, pipe);
+    return async.each(_.chunk(entities, 100), _createEntities, (err) => {
+      return done(err, pipe);
     });
+
+    function _createEntities(chunk, cb) {
+      return mongoose.model('Entities').create(chunk, cb);
+    }
   }
 
   function _clearOriginalEntities(pipe, cb) {
     logger.info('** clear original entities');
 
-    mongoose.model('OriginalEntities').remove({}, err => {
+    mongoose.model('OriginalEntities').remove({
+      dataset: pipe.dataset._id,
+      transaction: pipe.transaction._id
+    }, err => {
       return cb(err, pipe);
     });
   }
@@ -430,12 +473,27 @@ function createEntities(pipe, done) {
   function _findAllEntities(pipe, done) {
     logger.info('** find all entities');
 
-    mongoose.model('Entities').find({})
-      .populate('domain')
-      .populate('groups')
-      .populate('childOf')
+    mongoose.model('Entities').find({
+        dataset: pipe.dataset._id,
+        transaction: pipe.transaction._id
+      }, null, {
+        join: {
+          domain: {
+            dataset: pipe.dataset._id,
+            transaction: pipe.transaction._id
+          },
+          sets: {
+            dataset: pipe.dataset._id,
+            transaction: pipe.transaction._id
+          },
+          drillups: {
+            dataset: pipe.dataset._id,
+            transaction: pipe.transaction._id
+          }
+        }
+      })
+      .populate('dataset')
       .populate('transaction')
-      .populate('previous')
       .lean()
       .exec((err, res) => {
         pipe.entities = res;
@@ -443,18 +501,18 @@ function createEntities(pipe, done) {
       });
   }
 
-  function _addEntityChildOf(pipe, done) {
-    logger.info('** add entity childOf');
+  function _addEntityDrillups(pipe, done) {
+    logger.info('** add entity drillups');
     let relations = flatEntityRelations(pipe);
 
-    async.forEachOfLimit(relations, LIMIT_NUMBER_PROCESS, (childOf, _id, escb) => {
-      if (!childOf.length) {
+    async.forEachOfLimit(relations, LIMIT_NUMBER_PROCESS, (drillups, _id, escb) => {
+      if (!drillups.length) {
         return escb();
       }
 
       mongoose.model('Entities').update(
         {_id: _id},
-        {$addToSet: {'childOf': {$each: childOf}}},
+        {$addToSet: {'drillups': {$each: drillups}}},
         {multi: true},
         escb
       );
@@ -642,11 +700,9 @@ function mapDdfConceptsToWsModel(pipe) {
 
 function mapDdfOriginalEntityToWsModel(pipe) {
   return (entry) => {
-    let fileSource = {domainGid : pipe.eg.domain ? '--' + pipe.eg.domain.gid : '', gid: pipe.eg.gid};
-    pipe.filename = ddfEntitiesFileTemplate(fileSource);
     let gid = passGeoMapping(pipe, entry);
     let resolvedColumns = mapResolvedColumns(entry);
-    let resolvedGroups = mapResolvedGroups(pipe, resolvedColumns);
+    let resolvedSets = mapResolvedSets(pipe, resolvedColumns);
 
     return {
       gid: gid,
@@ -654,49 +710,23 @@ function mapDdfOriginalEntityToWsModel(pipe) {
       sources: [pipe.filename],
       properties: entry,
 
-      domain: pipe.eg.domain ? pipe.eg.domain._id : pipe.eg._id,
-      groups: resolvedGroups,
+      domain: pipe.entitySet.domain ? pipe.entitySet.domain._id : pipe.entitySet._id,
+      sets: resolvedSets,
 
+      from: pipe.transaction.createdAt,
+      dataset: pipe.dataset._id,
       transaction: pipe.transaction._id
     };
   };
 }
 
-function mapDdfEntityBasedOnOriginalEntityToWsModel() {
+function mapDdfEntityBasedOnOriginalEntityToWsModel(concepts) {
+  let conceptsById = _.mapKeys(concepts, '_id');
+
   return function mergeEntries(entries) {
 
     const leftovers = [];
-    const mergedEntry = _.chain(entries)
-      .reduce((result, entry) => {
-        let groups = _.map(entry.groups, 'gid');
-        let groupsResult = _.map(result.groups, 'gid');
-
-        let isEntryAllowedToMerge = _.chain(entry.properties)
-          .keys()
-          .intersection(groups)
-          .some(group => {
-            return result.properties[group] === entry.gid;
-          })
-          .value();
-
-        let isEntryAllowedToMergeResult = _.chain(result.properties)
-          .keys()
-          .intersection(groupsResult)
-          .some(group => {
-            return entry.properties[group] === result.gid;
-          })
-          .value();
-
-        if (isEntryAllowedToMerge || isEntryAllowedToMergeResult) {
-          result = _.mergeWith(result, entry, customizer);
-          result.isOwnParent = true;
-        } else {
-          leftovers.push(entry);
-        }
-
-        return result;
-      })
-      .value();
+    const mergedEntry = _mergeEntries(entries, leftovers, conceptsById);
 
     leftovers.push(mergedEntry);
 
@@ -705,8 +735,57 @@ function mapDdfEntityBasedOnOriginalEntityToWsModel() {
     } else {
       return mergeEntries(leftovers);
     }
+  };
+}
 
-    function customizer(objValue, srcValue) {
+  function _mergeEntries(entries, leftovers, conceptsById) {
+    return _.chain(entries)
+      .reduce((result, entry) => {
+        let isEntryAllowedToMerge = __checkEntryAllowedToMerge(result, entry, conceptsById);
+
+        let isEntryAllowedToMergeResult = __checkEntryAllowedToMergeResult(result, entry, conceptsById);
+
+        if (isEntryAllowedToMerge || isEntryAllowedToMergeResult) {
+          result = _.mergeWith(result, entry, __customizer);
+          result.isOwnParent = true;
+        } else {
+          leftovers.push(entry);
+        }
+
+        return result;
+      })
+      .value();
+  }
+
+    function __checkEntryAllowedToMerge(result, entry, conceptsById) {
+      let usedConcepts = _.chain(conceptsById)
+        .pick(conceptsById, entry.sets.map(_.toString))
+        .mapKeys('gid')
+        .keys()
+        .value();
+
+      return _.chain(entry.properties)
+        .keys()
+        .intersection(usedConcepts)
+        .some(group => result.properties[group] === entry.gid)
+        .value();
+    }
+
+    function __checkEntryAllowedToMergeResult (result, entry, conceptsById) {
+      let usedConcepts = _.chain(conceptsById)
+        .pick(conceptsById, result.sets.map(_.toString))
+        .mapKeys('gid')
+        .keys()
+        .value();
+
+      return _.chain(result.properties)
+        .keys()
+        .intersection(usedConcepts)
+        .some(group => entry.properties[group] === result.gid)
+        .value();
+    }
+
+    function __customizer(objValue, srcValue) {
       if (_.isArray(objValue)) {
         return _.chain(objValue)
           .concat(srcValue)
@@ -718,8 +797,6 @@ function mapDdfEntityBasedOnOriginalEntityToWsModel() {
       }
       return srcValue._id;
     }
-  };
-}
 
 function mapDdfEntityToWsModel(pipe) {
   return (entry) => {
@@ -752,7 +829,7 @@ function mapDdfEntityToWsModel(pipe) {
   };
 }
 
-function mapResolvedGroups(pipe, resolvedGids) {
+function mapResolvedSets(pipe, resolvedGids) {
   return _.chain(pipe.concepts)
     .filter(concept => defaultEntityGroupTypes.indexOf(concept.type) > -1 && resolvedGids.indexOf(`is--${concept.gid}`) > -1)
     .filter(concept => concept.type !== 'entity_domain')
@@ -852,10 +929,10 @@ function reduceUniqueNestedValues(data, propertyName) {
 }
 
 function passGeoMapping(pipe, entry) {
-  let _value = entry[pipe.eg.gid] || (pipe.eg.domain && entry[pipe.eg.domain.gid]);
+  let _value = entry[pipe.entitySet.gid] || (pipe.entitySet.domain && entry[pipe.entitySet.domain.gid]);
 
   if (!_value) {
-    logger.warn(`Either '${pipe.eg.gid}' or '${pipe.eg.domain && pipe.eg.domain.gid}' columns weren't found in file '${pipe.filename}'`);
+    logger.warn(`Either '${pipe.entitySet.gid}' or '${pipe.entitySet.domain && pipe.entitySet.domain.gid}' columns weren't found in file '${pipe.filename}'`);
   }
 
   let gid = process.env.USE_GEO_MAPPING === 'true' ? geoMapping[_value] || _value : _value;
@@ -868,8 +945,9 @@ function flatEntityRelations(pipe) {
     .reduce((result, entity) => {
       let conceptsGids = _.chain(entity.properties)
         .keys()
-        .filter(conceptGid => _.some(pipe.concepts, {'gid': conceptGid, 'type': 'entity_set'}) && entity.properties[conceptGid] !== entity.gid)
+        .filter(conceptGid => pipe.concepts[conceptGid] && pipe.concepts[conceptGid].type === 'entity_set' && entity.properties[conceptGid] !== entity.gid)
         .value();
+
       let resolvedEntitiesByConcepts = _getAllEntitiesByConcepts(pipe, conceptsGids, entity);
 
       result[entity._id] = _.map(resolvedEntitiesByConcepts, '_id');
@@ -888,7 +966,7 @@ function flatEntityRelations(pipe) {
 
   function _getEntityOfCertainConcept(pipe, conceptGid, entity) {
     return _.chain(pipe.entities)
-      .find(e => _.some(e.groups, group => group.gid === conceptGid && entity.properties[conceptGid] === e.gid))
+      .find(e => _.some(e.sets, set => set.gid === conceptGid && entity.properties[conceptGid] === e.gid))
       .value();
   }
 }

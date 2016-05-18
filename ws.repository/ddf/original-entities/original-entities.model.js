@@ -16,6 +16,10 @@ let Schema = mongoose.Schema;
  * @property {Models.Concepts} domain - of entity, reference to only one entity domain from Concepts collection
  * @property {Array<Models.Concepts>} sets - of entity, in which entity takes part of
  *
+ * @property {Number} from - entity start version
+ * @property {Number} to - entity end version (or Infinity)
+ * @property {Models.Datasets} dataset - reference
+ * @property {Models.DatasetTransactions} transaction - reference
  */
 let OriginalEntities = new Schema({
   gid: {type: String, match: /^[a-zA-Z0-9\/\._-]*$/, index: true, required: true},
@@ -26,7 +30,13 @@ let OriginalEntities = new Schema({
 
   // should be required
   domain: {type: Schema.Types.ObjectId, required: true},
-  sets: [{type: Schema.Types.ObjectId}]
+  sets: [{type: Schema.Types.ObjectId}],
+
+  from: {type: Number, required: true},
+  to: {type: Number, required: true, default: Number.MAX_VALUE},
+  dataset: {type: Schema.Types.ObjectId, ref: 'Datasets', required: true},
+  transaction: {type: Schema.Types.ObjectId, ref: 'DatasetTransactions', required: true}
+
 }, { strict: false });
 
 OriginalEntities.index({gid: 1, domain: 1});

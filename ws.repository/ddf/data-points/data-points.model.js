@@ -2,7 +2,7 @@
 
 let mongoose = require('mongoose');
 let Schema = mongoose.Schema;
-const originId = require('./origin-id.plugin');
+const originId = require('../origin-id.plugin');
 
 /**
  * @typedef DimensionSchema
@@ -53,7 +53,8 @@ let DataPoints = new Schema({
 DataPoints.plugin(originId, {
   modelName: 'DataPoints',
   measure: 'Concepts',
-  dimensions: 'Array:Entities',
+  dimensions: 'Entities',
+  originId: 'DataPoints'
 });
 
 DataPoints.index({measure: 1, dimensions: 1, value: 1, from: 1, to: 1});

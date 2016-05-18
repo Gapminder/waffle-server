@@ -2,7 +2,7 @@
 
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-const originId = require('./origin-id.plugin');
+const originId = require('../origin-id.plugin');
 
 /**
  * @typedef CoordinateSchema
@@ -76,8 +76,9 @@ Concepts.post('save', function (doc, next) {
 Concepts.plugin(originId, {
   modelName: 'Concepts',
   domain: 'Concepts',
-  subsetOf: 'Array:Concepts',
-  dimensions: 'Array:Concepts'
+  subsetOf: 'Concepts',
+  dimensions: 'Concepts',
+  originId: 'Concepts'
 });
 Concepts.index({type: 1});
 Concepts.index({domain: 1});
