@@ -80,10 +80,10 @@ Concepts.plugin(originId, {
   dimensions: 'Concepts',
   originId: 'Concepts'
 });
-Concepts.index({type: 1});
-Concepts.index({domain: 1});
-Concepts.index({gid: 1, type: 1});
-Concepts.index({dataset: 1, transaction: 1, gid: 1});
+// Concepts.index({type: 1});
+// Concepts.index({domain: 1});
+// Concepts.index({gid: 1, type: 1});
+Concepts.index({originId: 1, dataset: 1, transaction: 1});
 
 
 module.exports = mongoose.model('Concepts', Concepts);

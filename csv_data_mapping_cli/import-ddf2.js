@@ -61,12 +61,14 @@ module.exports = function (app, done) {
     createTransaction,
     createDataset,
     updateTransaction,
-    // findLastVersion,
     createConcepts,
-    createTranslations,
     createEntities,
-    createDataPoints
-  ], (err) => {
+    createDataPoints,
+    // findLastDataset,
+    // findLastVersion,
+    createTranslations,
+    // findDataPoints
+  ], (err, pipe) => {
     console.timeEnd('done');
     return done(err);
   });
@@ -208,16 +210,22 @@ function createConcepts(pipe, done) {
       }, null, {
         join: {
           domain: {
-            dataset: pipe.dataset._id,
-            transaction: pipe.transaction._id
+            $find: {
+              dataset: pipe.dataset._id,
+              transaction: pipe.transaction._id
+            }
           },
           subsetOf: {
-            dataset: pipe.dataset._id,
-            transaction: pipe.transaction._id
+            $find: {
+              dataset: pipe.dataset._id,
+              transaction: pipe.transaction._id
+            }
           },
           dimensions: {
-            dataset: pipe.dataset._id,
-            transaction: pipe.transaction._id
+            $find: {
+              dataset: pipe.dataset._id,
+              transaction: pipe.transaction._id
+            }
           }
         }
       })
@@ -479,16 +487,22 @@ function createEntities(pipe, done) {
       }, null, {
         join: {
           domain: {
-            dataset: pipe.dataset._id,
-            transaction: pipe.transaction._id
+            $find: {
+              dataset: pipe.dataset._id,
+              transaction: pipe.transaction._id
+            }
           },
           sets: {
-            dataset: pipe.dataset._id,
-            transaction: pipe.transaction._id
+            $find: {
+              dataset: pipe.dataset._id,
+              transaction: pipe.transaction._id
+            }
           },
           drillups: {
-            dataset: pipe.dataset._id,
-            transaction: pipe.transaction._id
+            $find: {
+              dataset: pipe.dataset._id,
+              transaction: pipe.transaction._id
+            }
           }
         }
       })
@@ -526,9 +540,8 @@ function createDataPoints(pipe, done) {
   fs.readdir(path.resolve(pathToDdfFolder), (err, _filenames) => {
     const filenames = _filenames.filter(filename => /^ddf--datapoints--/.test(filename));
     pipe.filenames = filenames;
-    async.forEachOfLimit(
+    async.forEachOfSeries(
       filenames,
-      1,
       _processDataPoints(pipe),
       err => done(err, pipe)
     );
@@ -536,7 +549,7 @@ function createDataPoints(pipe, done) {
 
   function _processDataPoints(pipe) {
     return (filename, key, cb) => async.waterfall([
-      async.constant({filename: filename, concepts: pipe.concepts, transaction: pipe.transaction}),
+      async.constant({filename: filename, concepts: pipe.concepts, transaction: pipe.transaction, dataset: pipe.dataset}),
       _parseFilename,
       _updateConceptsDimensions,
       _findAllEntities,
@@ -559,14 +572,8 @@ function createDataPoints(pipe, done) {
     let measureGids = _.first(parsedFileName).split('--');
     let dimensionGids = _.last(parsedFileName).split('--');
 
-    pipe.measures = _.chain(pipe.concepts)
-      .filter(concept => measureGids.indexOf(concept.gid) > -1)
-      .keyBy('gid')
-      .value();
-    pipe.dimensions = _.chain(pipe.concepts)
-      .filter(concept => dimensionGids.indexOf(concept.gid) > -1)
-      .keyBy('gid')
-      .value();
+    pipe.measures = _.pick(pipe.concepts, measureGids);
+    pipe.dimensions = _.pick(pipe.concepts, dimensionGids);
 
     logger.info(`** parsed measures: ${_.keys(pipe.measures)}`);
     logger.info(`** parsed dimensions: ${_.keys(pipe.dimensions)}`);
@@ -583,7 +590,7 @@ function createDataPoints(pipe, done) {
 
     logger.info(`** update property dimensions of concept`);
 
-    let dimensions = _.chain(pipe.dimensions).mapValues(dm => dm._id).values().value();
+    let dimensions = _.map(pipe.dimensions, 'originId');
 
     mongoose.model('Concepts').update(
       {gid: {$in: _.keys(pipe.measures)} },
@@ -597,27 +604,38 @@ function createDataPoints(pipe, done) {
     logger.info(`** load data points`);
 
     readCsvFile(pipe.filename, {}, (err, res) => {
-      let mapEntities = entry => _.chain(pipe.dimensions)
+      let mapEntities = (entry) => _.chain(pipe.dimensions)
         .keys()
-        .map(entityGroupGid => {
-          let domain = pipe.dimensions[entityGroupGid].domain
-            ? pipe.dimensions[entityGroupGid].domain._id
-            : pipe.dimensions[entityGroupGid]._id;
+        .map(entitySetGid => {
+          let domain = pipe.dimensions[entitySetGid].domain || pipe.dimensions[entitySetGid];
 
           return {
-            gid: entry[entityGroupGid],
+            gid: entry[entitySetGid],
             source: pipe.filename,
-            domain: domain,
-            groups: pipe.dimensions && pipe.dimensions[entityGroupGid] ? [pipe.dimensions[entityGroupGid]._id] : [],
+            domain: domain.originId,
+            sets: pipe.dimensions && pipe.dimensions[entitySetGid] ? [pipe.dimensions[entitySetGid].originId] : [],
+            dataset: pipe.dataset._id,
             transaction: pipe.transaction._id
           };
         })
         .value();
 
+      let dictionary = _.keyBy(pipe.entities, 'gid');
+      let gids = new Set();
       let entities = _.chain(res)
-        .flatMap(mapEntities)
-        .uniqWith(_.isEqual)
-        .filter(entity => !_.find(pipe.entities, {gid: entity.gid}))
+        .reduce((result, entity) => {
+          _.each(pipe.dimensions, (concept) => {
+            let domain = concept.domain || concept;
+
+            if (!dictionary[entity[concept.gid]] && !gids.has(entity[concept.gid])) {
+              let mappedEntity = mapDdfEntityToWsModel(entity, concept, domain, pipe);
+              result.push(mappedEntity);
+              gids.add(entity[concept.gid]);
+            }
+          });
+
+          return result;
+        }, [])
         .value();
 
       pipe.raw = {
@@ -637,12 +655,8 @@ function createDataPoints(pipe, done) {
     }
 
     logger.info(`** create entities based on data points`);
-    let entities = _.chain(pipe.raw.entities)
-      .groupBy('gid')
-      .map(mapDdfEntityToWsModel(pipe))
-      .value();
 
-    mongoose.model('Entities').create(entities, (err) => {
+    mongoose.model('Entities').create(pipe.raw.entities, (err) => {
       pipe.raw.entities = [];
       return cb(err, pipe);
     });
@@ -659,14 +673,63 @@ function createDataPoints(pipe, done) {
 
     logger.info(`** create data points`);
 
-    async.eachLimit(dataPoints, LIMIT_NUMBER_PROCESS, (dataPoint, plcb) => {
+    async.eachSeries(_.chunk(dataPoints, 100), (dataPoint, plcb) => {
       mongoose.model('DataPoints').create(dataPoint, err => plcb(err));
-    }, err => {
+    }, (err) => {
       pipe.raw = {};
       return cb(err, pipe);
     });
   }
 
+function findLastDataset(pipe, done) {
+  mongoose.model('Datasets').findOne({})
+    .lean()
+    .exec((err, res) => {
+      pipe.dataset = res;
+      return done(err, pipe);
+    });
+}
+
+function findLastVersion(pipe, done) {
+  mongoose.model('DatasetTransactions').findOne({})
+    .lean()
+    .exec((err, res) => {
+      pipe.transaction = res;
+      return done(err, pipe);
+    });
+}
+
+function findDataPoints(pipe, done) {
+  console.time('find all datapoints');
+  mongoose.model('DataPoints').find({
+      dataset: pipe.dataset._id,
+      transaction: pipe.transaction._id
+    }, null, {
+      join: {
+        dimensions: {
+          $find: {
+            dataset: pipe.dataset._id,
+            transaction: pipe.transaction._id
+          }
+        },
+        measure: {
+          $find: {
+            dataset: pipe.dataset._id,
+            transaction: pipe.transaction._id
+          }
+        }
+      }
+    })
+    .populate('dataset')
+    .populate('transaction')
+    // .limit(5)
+    .lean()
+    .exec((err, res) => {
+      console.timeEnd('find all datapoints');
+      pipe.datapoints = res;
+      return done(err, pipe);
+    });
+}
 //*** Mappers ***
 function mapDdfConceptsToWsModel(pipe) {
   return function (entry, rowNumber) {
@@ -798,34 +861,22 @@ function mapDdfEntityBasedOnOriginalEntityToWsModel(concepts) {
       return srcValue._id;
     }
 
-function mapDdfEntityToWsModel(pipe) {
-  return (entry) => {
-    let _entry = _.first(entry);
-    let egGid = _.findKey(pipe.dimensions, (dm) => {
-      let first = _.first(_entry.groups);
-      return (first && dm._id.toString() === first.toString());
-    }) || _.findKey(pipe.dimensions, (dm) => {
-        return dm._id.toString() === _entry.domain.toString();
-      });
-    pipe.eg = pipe.dimensions[egGid];
-    let fileSource = {domainGid : pipe.eg&& pipe.eg.domain ? '--' + pipe.eg.domain.gid : '', gid: pipe.eg.gid};
-    pipe.filename = ddfEntitiesFileTemplate(fileSource);
-    let gid = process.env.USE_GEO_MAPPING === 'true' ? geoMapping[_entry.gid] || _entry.gid : _entry.gid;
-    let resolvedColumns = mapResolvedColumns(_entry);
-    let resolvedGroups = mapResolvedGroups(pipe, resolvedColumns);
+function mapDdfEntityToWsModel(entity, concept, domain, pipe) {
+  let gid = process.env.USE_GEO_MAPPING === 'true' ? geoMapping[entity.gid] || entity.gid : entity.gid;
 
-    return {
-      gid: gid,
-      title: _entry.name,
-      source: pipe.filename,
-      properties: _entry,
+  return {
+    gid: entity[concept.gid],
+    title: gid,
+    source: [pipe.filename],
+    properties: entity,
 
-      domain: pipe.eg.domain ? pipe.eg.domain._id : pipe.eg._id,
-      groups: resolvedGroups,
-      childOf: [],
+    domain: domain.originId,
+    sets: concept.domain ? [] : [concept.originId],
+    drillups: [],
 
-      transaction: pipe.transaction._id
-    };
+    from: pipe.transaction.createdAt,
+    dataset: pipe.dataset._id,
+    transaction: pipe.transaction._id
   };
 }
 
@@ -833,7 +884,7 @@ function mapResolvedSets(pipe, resolvedGids) {
   return _.chain(pipe.concepts)
     .filter(concept => defaultEntityGroupTypes.indexOf(concept.type) > -1 && resolvedGids.indexOf(`is--${concept.gid}`) > -1)
     .filter(concept => concept.type !== 'entity_domain')
-    .map(concept => concept._id)
+    .map('originId')
     .uniq()
     .value();
 }
@@ -867,12 +918,7 @@ function mapDdfDataPointToWsModel(pipe) {
           return _entity.gid == entry[conceptGid];
         });
 
-        result.push({
-          gid: entry[conceptGid],
-          conceptGid: conceptGid,
-          concept: pipe.dimensions[conceptGid]._id,
-          entity: entity._id
-        });
+        result.push(entity.originId);
 
         return result;
       }, [])
@@ -884,11 +930,13 @@ function mapDdfDataPointToWsModel(pipe) {
       .map((measureGid) => {
         return {
           value: entry[measureGid],
-          measure: pipe.measures[measureGid]._id,
-          measureGid: measureGid,
-
+          measure: pipe.measures[measureGid].originId,
           dimensions: dimensions,
-          transaction: pipe.transaction._id,
+
+          isNumeric: _.isNumber(entry[measureGid]),
+          from: pipe.transaction.createdAt,
+          dataset: pipe.dataset._id,
+          transaction: pipe.transaction._id
         }
       })
       .value();

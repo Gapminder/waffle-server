@@ -27,7 +27,7 @@ module.exports = exports = function lastModifiedPlugin (schema, settings) {
     return next();
   });
 
-  function populateWithOrigin(item, query, settings, done) {
+  function populateWithOrigin(document, query, settings, done) {
 
     return async.forEachOfSeries(
       query,
@@ -36,13 +36,13 @@ module.exports = exports = function lastModifiedPlugin (schema, settings) {
           return cb(new Error(`There is no field with name '${fieldName}' in settings of origin-id plugin for model '${settings.modelName}'`));
         }
 
-        let _query = Object.assign({originId: {$in: wrapArray(item[fieldName])}}, match.$find);
+        let subquery = Object.assign({originId: {$in: wrapArray(document[fieldName])}}, match.$find);
 
         return mongoose.model(settings[fieldName])
-          .find(_query, null, match.$options)
+          .find(subquery, null, match.$options)
           .lean()
           .exec((error, result) => {
-            item[fieldName] = Array.isArray(item[fieldName]) ? result : result.shift();
+            document[fieldName] = Array.isArray(document[fieldName]) ? result : result.shift();
             return cb(error);
           });
       },
