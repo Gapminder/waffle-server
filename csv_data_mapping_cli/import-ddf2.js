@@ -649,7 +649,7 @@ function createDataPoints(pipe, done) {
 
   function _createEntitiesBasedOnDataPoints(pipe, cb) {
     if (_.isEmpty(pipe.raw.entities)) {
-      logger.warn(`There is no original entities.`);
+      logger.log(`** There is no new entities in data points file.`);
 
       return async.setImmediate(() => cb(null, pipe));
     }
