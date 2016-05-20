@@ -54,8 +54,8 @@ Entities.plugin(originId, {
   originId: 'Entities'
 });
 
-// Entities.index({gid: 1, domain: 1});
-// Entities.index({gid: 1, sets: 1});
+Entities.index({domain: 1});
+Entities.index({sets: 1});
 // Entities.index({gid: 1, versions: 1});
 // Entities.index({gid: 1, drilldowns: 1});
 // Entities.index({gid: 1, drillups: 1});
