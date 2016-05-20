@@ -37,7 +37,7 @@ module.exports = serviceLocator => {
    *        type: string
    */
 
-  router.get('/api/importer/concepts', sendDataResponse('Concepts'));
+  router.get('/api/importer/concepts', sendDataResponseConcepts());
 
   /**
    * @swagger
@@ -69,7 +69,7 @@ module.exports = serviceLocator => {
    *        type: string
    */
 
-  router.get('/api/importer/dataPoints', sendDataResponse('DataPoint'));
+  router.get('/api/importer/dataPoints', sendDataResponseDataPoints());
 
   /**
    * @swagger
@@ -101,7 +101,7 @@ module.exports = serviceLocator => {
    *        type: string
    */
 
-  router.get('/api/importer/dataSetTransactions', sendDataResponse('DatasetTransactions'));
+  router.get('/api/importer/dataSetTransactions', sendDataResponseDatasetTransactions());
 
   /**
    * @swagger
@@ -133,7 +133,7 @@ module.exports = serviceLocator => {
    *        type: string
    */
 
-  router.get('/api/importer/dataSets', sendDataResponse('Datasets'));
+  router.get('/api/importer/dataSets', sendDataResponseDatasets());
 
   /**
    * @swagger
@@ -165,7 +165,7 @@ module.exports = serviceLocator => {
    *        type: string
    */
 
-  router.get('/api/importer/entities', sendDataResponse('Entities'));
+  router.get('/api/importer/entities', sendDataResponseEntities());
 
   /**
    * @swagger
@@ -197,13 +197,73 @@ module.exports = serviceLocator => {
    *        type: string
    */
 
-  router.get('/api/importer/originalEntities', sendDataResponse('OriginalEntities'));
+  router.get('/api/importer/originalEntities', sendDataResponseOriginalEntities());
   return app.use(router);
 };
 
-function sendDataResponse(modelName) {
+function sendDataResponseConcepts() {
   return (req, res) => {
-    service['get' + modelName](req.query, function (err, result) {
+    service.getConcepts(req.query, function (err, result) {
+      if (err) {
+        return res.json({success: !err, error: err});
+      }
+
+      return res.json(result);
+    });
+  };
+}
+
+function sendDataResponseDataPoints() {
+  return (req, res) => {
+    service.getDataPoints(req.query, function (err, result) {
+      if (err) {
+        return res.json({success: !err, error: err});
+      }
+
+      return res.json(result);
+    });
+  };
+}
+
+function sendDataResponseDatasetTransactions() {
+  return (req, res) => {
+    service.getDatasetTransactions(req.query, function (err, result) {
+      if (err) {
+        return res.json({success: !err, error: err});
+      }
+
+      return res.json(result);
+    });
+  };
+}
+
+function sendDataResponseDatasets() {
+  return (req, res) => {
+    service.getDatasets(req.query, function (err, result) {
+      if (err) {
+        return res.json({success: !err, error: err});
+      }
+
+      return res.json(result);
+    });
+  };
+}
+
+function sendDataResponseEntities() {
+  return (req, res) => {
+    service.getEntities(req.query, function (err, result) {
+      if (err) {
+        return res.json({success: !err, error: err});
+      }
+
+      return res.json(result);
+    });
+  };
+}
+
+function sendDataResponseOriginalEntities() {
+  return (req, res) => {
+    service.getOriginalEntities(req.query, function (err, result) {
       if (err) {
         return res.json({success: !err, error: err});
       }
