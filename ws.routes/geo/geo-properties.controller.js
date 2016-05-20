@@ -55,7 +55,7 @@ module.exports = function (serviceLocator) {
    * @swagger
    * /api/geo:
    *   get:
-   *    description: Geo-poroperties
+   *    description: Geo-properties
    *    produces:
    *      - application/json
    *      - text/csv

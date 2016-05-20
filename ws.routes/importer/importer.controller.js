@@ -26,16 +26,12 @@ module.exports = serviceLocator => {
    *        type: string
    *   /api/importer/concepts:
    *  get:
-   *    description: Concepts-properties
+   *    description: Concepts
    *    produces:
    *      - application/json
    *      - text/csv
    *    parameters:
-   *      - name: select
-   *        in: query
-   *        description:
-   *        type: string
-   *      - name: where
+   *      - name: concepts
    *        in: query
    *        description:
    *        type: string
@@ -62,16 +58,12 @@ module.exports = serviceLocator => {
    *        type: string
    *   /api/importer/datapoint:
    *  get:
-   *    description: DataPoint-properties
+   *    description: DataPoint
    *    produces:
    *      - application/json
    *      - text/csv
    *    parameters:
-   *      - name: select
-   *        in: query
-   *        description:
-   *        type: string
-   *      - name: where
+   *      - name: dataPoints
    *        in: query
    *        description:
    *        type: string
@@ -98,16 +90,12 @@ module.exports = serviceLocator => {
    *        type: string
    *   /api/importer/dataSetTransactions:
    *  get:
-   *    description: DatasetTransactions-properties
+   *    description: DatasetTransactions
    *    produces:
    *      - application/json
    *      - text/csv
    *    parameters:
-   *      - name: select
-   *        in: query
-   *        description:
-   *        type: string
-   *      - name: where
+   *      - name: dataSetTransactions
    *        in: query
    *        description:
    *        type: string
@@ -134,16 +122,12 @@ module.exports = serviceLocator => {
    *        type: string
    *   /api/importer/dataSets:
    *  get:
-   *    description: Datasets-properties
+   *    description: Datasets
    *    produces:
    *      - application/json
    *      - text/csv
    *    parameters:
-   *      - name: select
-   *        in: query
-   *        description:
-   *        type: string
-   *      - name: where
+   *      - name: dataSets
    *        in: query
    *        description:
    *        type: string
@@ -170,16 +154,12 @@ module.exports = serviceLocator => {
    *        type: string
    *   /api/importer/entities:
    *  get:
-   *    description: Entities-properties
+   *    description: Entities
    *    produces:
    *      - application/json
    *      - text/csv
    *    parameters:
-   *      - name: select
-   *        in: query
-   *        description:
-   *        type: string
-   *      - name: where
+   *      - name: entities
    *        in: query
    *        description:
    *        type: string
@@ -206,16 +186,12 @@ module.exports = serviceLocator => {
    *        type: string
    *   /api/importer/originalEntities:
    *  get:
-   *    description: OriginalEntities-properties
+   *    description: OriginalEntities
    *    produces:
    *      - application/json
    *      - text/csv
    *    parameters:
-   *      - name: select
-   *        in: query
-   *        description:
-   *        type: string
-   *      - name: where
+   *      - name: originalEntities
    *        in: query
    *        description:
    *        type: string

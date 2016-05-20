@@ -2,7 +2,6 @@
 
 let mongoose = require('mongoose');
 let Schema = mongoose.Schema;
-mongoose.set('debug', true);
 
 /**
  * @typedef {Object} Datasets
