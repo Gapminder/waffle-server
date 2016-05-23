@@ -50,7 +50,7 @@ module.exports = serviceLocator => {
    *  DataPoints:
    *     type: object
    *     properties:
-   *       data-points:
+   *       _id:
    *         type: string
    *         description:
    *       value:
