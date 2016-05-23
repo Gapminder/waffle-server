@@ -44,12 +44,15 @@ module.exports = function (app) {
     createConcepts,
     createEntities,
     createDataPoints,
-    findLastDataset,
-    findLastVersion,
+    findDataset,
+    findVersion,
     getAllConcepts: _getAllConcepts,
+    findAllEntities: _findAllEntities,
     createTranslations,
     findDataPoints,
     processRawDataPoints: __processRawDataPoints,
+    parseFilename: _parseFilename,
+    createEntitiesBasedOnDataPoints: _createEntitiesBasedOnDataPoints,
     updateConceptsDimensions: _updateConceptsDimensions
   };
 };
@@ -88,7 +91,7 @@ function createDataset(pipe, done) {
 function updateTransaction(pipe, done) {
   logger.info('update transaction');
 
-  mongoose.model('DatasetTransactions').update({_id: pipe.transaction._id}, {
+  mongoose.model('DatasetTransactions').update({_id: pipe.transactionId || pipe.transaction._id}, {
     $set: {
       dataset: pipe.dataset._id
     }
@@ -156,26 +159,26 @@ function _getAllConcepts(pipe, done) {
   logger.info('** get all concepts');
 
   mongoose.model('Concepts').find({
-    dataset: pipe.dataset._id,
-    transaction: pipe.transaction._id
+    dataset: pipe.datasetId || pipe.dataset._id,
+    transaction: pipe.transactionId || pipe.transaction._id
   }, null, {
     join: {
       domain: {
         $find: {
           dataset: pipe.dataset._id,
-          transaction: pipe.transaction._id
+          transaction: pipe.transactionId || pipe.transaction._id
         }
       },
       subsetOf: {
         $find: {
           dataset: pipe.dataset._id,
-          transaction: pipe.transaction._id
+          transaction: pipe.transactionId || pipe.transaction._id
         }
       },
       dimensions: {
         $find: {
           dataset: pipe.dataset._id,
-          transaction: pipe.transaction._id
+          transaction: pipe.transactionId || pipe.transaction._id
         }
       }
     }
@@ -285,7 +288,7 @@ function createTranslations(pipe, done) {
         sets: concept ? [concept._id] : [],
         from: pipe.transaction.createdAt,
         dataset: pipe.dataset._id,
-        transaction: pipe.transaction._id
+        transaction: pipe.transactionId || pipe.transaction._id
       });
       return res;
     }, []);
@@ -389,7 +392,7 @@ function _findAllOriginalEntities(pipe, done) {
 
   mongoose.model('OriginalEntities').find({
     dataset: pipe.dataset._id,
-    transaction: pipe.transaction._id
+    transaction: pipe.transactionId || pipe.transaction._id
   })
     .populate('dataset')
     .populate('transaction')
@@ -428,7 +431,7 @@ function _clearOriginalEntities(pipe, cb) {
 
   mongoose.model('OriginalEntities').remove({
     dataset: pipe.dataset._id,
-    transaction: pipe.transaction._id
+    transaction: pipe.transactionId || pipe.transaction._id
   }, err => {
     return cb(err, pipe);
   });
@@ -439,25 +442,25 @@ function _findAllEntities(pipe, done) {
 
   mongoose.model('Entities').find({
     dataset: pipe.dataset._id,
-    transaction: pipe.transaction._id
+    transaction: pipe.transactionId || pipe.transaction._id
   }, null, {
     join: {
       domain: {
         $find: {
           dataset: pipe.dataset._id,
-          transaction: pipe.transaction._id
+          transaction: pipe.transactionId || pipe.transaction._id
         }
       },
       sets: {
         $find: {
           dataset: pipe.dataset._id,
-          transaction: pipe.transaction._id
+          transaction: pipe.transactionId || pipe.transaction._id
         }
       },
       drillups: {
         $find: {
           dataset: pipe.dataset._id,
-          transaction: pipe.transaction._id
+          transaction: pipe.transactionId || pipe.transaction._id
         }
       }
     }
@@ -516,8 +519,7 @@ function createDataPoints(pipe, done) {
       _loadDataPoints,
       _createEntitiesBasedOnDataPoints,
       _findAllEntities,
-      _createDataPoints,
-      _updateConceptsDimensions
+      _createDataPoints
     ], err => {
       logger.info(`** Processed ${key + 1} of ${pipe.filenames.length} files`);
 
@@ -553,10 +555,10 @@ function _parseFilename(pipe, cb) {
 function _loadDataPoints(pipe, cb) {
   logger.info(`** load data points`);
 
-  readCsvFile(pipe.filename, {}, __processRawDataPoints(cb));
+  readCsvFile(pipe.filename, {}, __processRawDataPoints(pipe, cb));
 }
 
-function __processRawDataPoints(cb) {
+function __processRawDataPoints(pipe, cb) {
   return (err, res) => {
     let dictionary = _.keyBy(pipe.entities, 'gid');
     let gids = new Set();
@@ -658,7 +660,7 @@ function ___getAllEntitiesByMeasure(pipe, cb) {
     {
       measure: pipe.measure.originId,
       dataset: pipe.dataset._id,
-      transaction: pipe.transaction._id,
+      transaction: pipe.transactionId || pipe.transaction._id,
     },
     (err, res) => {
       pipe.originIdsOfEntities = res;
@@ -673,7 +675,7 @@ function ___getAllSetsBySelectedEntities(pipe, cb) {
     {
       originId: {$in: pipe.originIdsOfEntities},
       dataset: pipe.dataset._id,
-      transaction: pipe.transaction._id,
+      transaction: pipe.transactionId || pipe.transaction._id,
     },
     (err, res) => {
       pipe.originIdsOfEntitySets = res;
@@ -688,7 +690,7 @@ function ___getAllDimensionsBySelectedEntities(pipe, cb) {
     {
       originId: {$in: pipe.originIdsOfEntities},
       dataset: pipe.dataset._id,
-      transaction: pipe.transaction._id,
+      transaction: pipe.transactionId || pipe.transaction._id,
     },
     (err, res) => {
       pipe.originIdsOfEntityDomains = res;
@@ -711,8 +713,9 @@ function ___updateDimensionByMeasure(pipe, cb) {
     });
 }
 
-function findLastDataset(pipe, done) {
-  mongoose.model('Datasets').findOne({})
+function findDataset(pipe, done) {
+  let query = pipe.datasetId ? {_id: pipe.datasetId} : {};
+  mongoose.model('Datasets').findOne(query)
     .lean()
     .exec((err, res) => {
       pipe.dataset = res;
@@ -720,7 +723,7 @@ function findLastDataset(pipe, done) {
     });
 }
 
-function findLastVersion(pipe, done) {
+function findVersion(pipe, done) {
   mongoose.model('DatasetTransactions').findOne({})
     .lean()
     .exec((err, res) => {
@@ -733,19 +736,19 @@ function findDataPoints(pipe, done) {
   console.time('find all datapoints');
   mongoose.model('DataPoints').find({
     dataset: pipe.dataset._id,
-    transaction: pipe.transaction._id
+    transaction: pipe.transactionId || pipe.transaction._id
   }, null, {
     join: {
       dimensions: {
         $find: {
           dataset: pipe.dataset._id,
-          transaction: pipe.transaction._id
+          transaction: pipe.transactionId || pipe.transaction._id
         }
       },
       measure: {
         $find: {
           dataset: pipe.dataset._id,
-          transaction: pipe.transaction._id
+          transaction: pipe.transactionId || pipe.transaction._id
         }
       }
     }
@@ -786,7 +789,7 @@ function mapDdfConceptsToWsModel(pipe) {
       from: pipe.transaction.createdAt,
       to: Number.MAX_VALUE,
       dataset: pipe.dataset._id,
-      transaction: pipe.transaction._id
+      transaction: pipe.transactionId || pipe.transaction._id
     };
   };
 }
@@ -808,7 +811,7 @@ function mapDdfOriginalEntityToWsModel(pipe) {
 
       from: pipe.transaction.createdAt,
       dataset: pipe.dataset._id,
-      transaction: pipe.transaction._id
+      transaction: pipe.transactionId || pipe.transaction._id
     };
   };
 }
@@ -906,7 +909,7 @@ function mapDdfEntityToWsModel(entity, concept, domain, pipe) {
 
     from: pipe.transaction.createdAt,
     dataset: pipe.dataset._id,
-    transaction: pipe.transaction._id
+    transaction: pipe.transactionId || pipe.transaction._id
   };
 }
 
@@ -965,7 +968,7 @@ function mapDdfDataPointToWsModel(pipe) {
           isNumeric: _.isNumber(entry[measureGid]),
           from: pipe.transaction.createdAt,
           dataset: pipe.dataset._id,
-          transaction: pipe.transaction._id
+          transaction: pipe.transactionId || pipe.transaction._id
         }
       })
       .value();

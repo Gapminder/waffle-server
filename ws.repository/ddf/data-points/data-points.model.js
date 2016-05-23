@@ -27,6 +27,7 @@ let DimensionSchema = new Schema({
  * @memberof Models
  *
  * @property {String} value - data this DataPoint contains at the given coordinates
+ * @property {Array<String>} sources - filenames of source item
  *
  * @property {Boolean} isNumeric - value of the measure?
  * @property {Models.Concepts.originId} measure - points to measure this DataPoint has value for
@@ -39,6 +40,7 @@ let DimensionSchema = new Schema({
  */
 let DataPoints = new Schema({
   value: {type: String, required: true},
+  sources: [{type: String, required: true}],
 
   isNumeric: {type: Boolean, required: true},
   measure: {type: Schema.Types.ObjectId, required: true},
@@ -60,6 +62,7 @@ DataPoints.plugin(originId, {
 // DataPoints.index({measure: 1, dimensions: 1, value: 1, from: 1, to: 1});
 // DataPoints.index({value: 1, from: 1, to: 1});
 // DataPoints.index({measure: 1, dimensions: 1});
+DataPoints.index({sources: 1});
 DataPoints.index({originId: 1, dataset: 1, transaction: 1});
 
 module.exports = mongoose.model('DataPoints', DataPoints);

@@ -57,6 +57,7 @@ module.exports = function (app, done) {
     common.createConcepts,
     common.createEntities,
     common.createDataPoints,
+    common.updateConceptsDimensions,
     // common.findLastDataset,
     // common.findLastVersion,
     // common.getAllConcepts,
