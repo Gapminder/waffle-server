@@ -53,13 +53,13 @@ module.exports = serviceLocator => {
    *       data-points:
    *         type: string
    *         description:
-   *       data-points.value:
+   *       value:
    *         type: string
    *         description: Result will consist only data this DataPoint contains at the given coordinates.
-   *       data-points.isNumeric:
+   *       isNumeric:
    *         type: Boolean
    *         description: May contain some value of the measure.
-   *       data-points.dimensions:
+   *       dimensions:
    *         type: Array
    *         description: May contain some objects that are define point for the data.
    *
@@ -84,16 +84,16 @@ module.exports = serviceLocator => {
    *       dataset-transactions:
    *         type: string
    *         description:
-   *       dataset-transactions.name:
+   *       name:
    *         type: string
    *         description: Result will consist only transaction's name (human readable).
-   *       dataset-transactions.isClosed:
+   *       isClosed:
    *         type: string
    *         description: Result will consist only the transaction is finished successfull.
-   *       dataset-transactions.createdBy:
+   *       createdBy:
    *         type: string
    *         description: Result will consist only this transaction's owner.
-   *       dataset-transactions.createdAt:
+   *       createdAt:
    *         type: Date
    *         description: Result will consist only timestamp when this DatasetTransaction was created.
    *
@@ -118,34 +118,34 @@ module.exports = serviceLocator => {
    *       datasets:
    *         type: string
    *         description:
-   *       datasets.name:
+   *       name:
    *         type: string
    *         description: Result will consist only unique data set `name` within Datasets space (human readable).
-   *       datasets.type:
+   *       type:
    *         type: string
    *         description: May contain github commit, local storage, etc.
-   *       datasets.path:
+   *       path:
    *         type: string
    *         description: Result will consist only path (url or local) to Data Set (if exists).
-   *       datasets.commit:
+   *       commit:
    *         type: string
    *         description: Result will consist only hash of commit on remote repo (if exists).
-   *       datasets.defaultLanguage:
+   *       defaultLanguage:
    *         type: Object
    *         description: Result will consist only language for Translation collection.
-   *       datasets.metadata:
+   *       metadata:
    *         type: Object
    *         description: Result will consist any metadata related to Data Set.
-   *       datasets.isLocked:
+   *       isLocked:
    *         type: Boolean
    *         description: Result will consist question - is this DataSet locked for adding new versions?
-   *       datasets.lockedBy:
+   *       lockedBy:
    *         type: string
    *         description: Result will consist only name of user who locked this Data Set.
-   *       datasets.lockedAt:
+   *       lockedAt:
    *         type: Date
    *         description: Result will consist only timestamp when this Dataset was locked.
-   *       datasets.createdAt:
+   *       createdAt:
    *         type: Date
    *         description: Result will consist only timestamp when this Dataset was created.
    *
@@ -170,31 +170,31 @@ module.exports = serviceLocator => {
    *       entities:
    *         type: string
    *         description:
-   *       entities.gid:
+   *       gid:
    *         type: string
    *         description: May contain some entity value.
-   *       entities.originId:
+   *       originId:
    *         type: string
    *         description: Result will consist only reference id to origin concept.
-   *       entities.title:
+   *       title:
    *         type: string
    *         description: Result will consist only nice name for entity.
-   *       entities.sources:
+   *       sources:
    *         type: Array
    *         description: Result will consist only filenames of source item.
-   *       entities.isOwnParent:
+   *       isOwnParent:
    *         type: Boolean
    *         description: Result will consist only indicator that this entity is its own parent.
-   *       entities.properties:
+   *       properties:
    *         type: Object
    *         description: Result will consist all properties from data set.
-   *       entities.domain:
+   *       domain:
    *         type: string
    *         description: Result will consist only one entity domain from Concepts collection.
-   *       entities.sets:
+   *       sets:
    *         type: Array
    *         description: Result will consist sets in which entity takes part of
-   *       entities.drillups:
+   *       drillups:
    *         type: Array
    *         description: Result will consist only drillups - to higher authorities (entity).
    *
