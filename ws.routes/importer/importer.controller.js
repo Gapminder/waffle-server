@@ -16,19 +16,19 @@ module.exports = serviceLocator => {
    *       concepts:
    *         type: string
    *         description:
-   *       concepts.title:
+   *       title:
    *         type: string
    *         description: Result will consist only human-readable name of the concept.
-   *       concepts.gid:
+   *       gid:
    *         type: string
    *         description: Concept identificator.
-   *       concepts.link:
+   *       link:
    *         type: string
    *         description: Result will consist only url that points to concept definition and explanation.
-   *       concepts.tooltip:
+   *       tooltip:
    *         type: string
    *         description: Result will consist only nice name for concept.
-   *       concepts.tags:
+   *       tags:
    *         type: string
    *         description: Result will consist only additional information regarding concept with type measure.
    *
