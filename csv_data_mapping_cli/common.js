@@ -538,6 +538,14 @@ function _parseFilename(pipe, cb) {
   pipe.measures = _.pick(pipe.concepts, measureGids);
   pipe.dimensions = _.pick(pipe.concepts, dimensionGids);
 
+  if (_.isEmpty(pipe.measures)) {
+    return async.setImmediate(() => cb(`file '${pipe.filename}' doesn't have any measure.`));
+  }
+
+  if (_.isEmpty(pipe.dimensions)) {
+    return async.setImmediate(() => cb(`file '${pipe.filename}' doesn't have any dimensions.`));
+  }
+
   logger.info(`** parsed measures: ${_.keys(pipe.measures)}`);
   logger.info(`** parsed dimensions: ${_.keys(pipe.dimensions)}`);
 
@@ -626,12 +634,6 @@ function _createDataPoints(pipe, cb) {
 }
 
 function _updateConceptsDimensions(pipe, cb) {
-  if (!_.isEmpty(pipe.dimensions)) {
-    logger.warn(`file '${pipe.filename}' doesn't have any dimensions.`);
-
-    return async.setImmediate(cb);
-  }
-
   logger.info(`** update property dimensions of concept`);
 
   // let dimensions = _.map(pipe.dimensions, 'originId');
@@ -1066,7 +1068,7 @@ function readCsvFile(file, options, cb) {
     flatKeys: true
   }, options));
 
-  converter.fromFile(resolvePath(file), (err, data) => {
+  converter.fromFile(resolvePath(file).trim(), (err, data) => {
     if (err && err.toString().indexOf("cannot be found.") > -1) {
       logger.warn(err);
     }
