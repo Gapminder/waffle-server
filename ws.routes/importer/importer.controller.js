@@ -42,7 +42,7 @@ module.exports = serviceLocator => {
    *        type: string
    */
 
-  router.get('/api/importer/concepts', sendDataResponseConcepts());
+  router.get('/api/importer/concepts', sendDataResponseConcepts);
 
   /**
    * @swagger
@@ -52,7 +52,7 @@ module.exports = serviceLocator => {
    *     properties:
    *       _id:
    *         type: string
-   *         description:
+   *         description: Result will consist only origin ID
    *       value:
    *         type: string
    *         description: Result will consist only data this DataPoint contains at the given coordinates.
@@ -73,7 +73,7 @@ module.exports = serviceLocator => {
    *        type: string
    */
 
-  router.get('/api/importer/data-points', sendDataResponseDataPoints());
+  router.get('/api/importer/data-points', sendDataResponseDataPoints);
 
   /**
    * @swagger
@@ -107,7 +107,7 @@ module.exports = serviceLocator => {
    *        type: string
    */
 
-  router.get('/api/importer/dataset-transactions', sendDataResponseDatasetTransactions());
+  router.get('/api/importer/dataset-transactions', sendDataResponseDatasetTransactions);
 
   /**
    * @swagger
@@ -159,7 +159,7 @@ module.exports = serviceLocator => {
    *        type: string
    */
 
-  router.get('/api/importer/datasets', sendDataResponseDatasets());
+  router.get('/api/importer/datasets', sendDataResponseDatasets);
 
   /**
    * @swagger
@@ -208,66 +208,51 @@ module.exports = serviceLocator => {
    *        type: string
    */
 
-  router.get('/api/importer/entities', sendDataResponseEntities());
+  router.get('/api/importer/entities', sendDataResponseEntities);
   return app.use(router);
 };
 
-function sendDataResponseConcepts() {
-  return (req, res) => {
-    service.getConcepts(req.query, function (err, result) {
-      if (err) {
-        return res.json({success: !err, error: err});
-      }
-
-      return res.json(result);
-    });
-  };
+function sendDataResponseConcepts(req, res) {
+  service.getConcepts(req.query, function (err, result) {
+    if (err) {
+      return res.json({success: !err, error: err});
+    }
+    res.json(result);
+  });
 }
 
-function sendDataResponseDataPoints() {
-  return (req, res) => {
-    service.getDataPoints(req.query, function (err, result) {
-      if (err) {
-        return res.json({success: !err, error: err});
-      }
-
-      return res.json(result);
-    });
-  };
+function sendDataResponseDataPoints(req, res) {
+  service.getDataPoints(req.query, function (err, result) {
+    if (err) {
+      return res.json({success: !err, error: err});
+    }
+    res.json(result);
+  });
 }
 
-function sendDataResponseDatasetTransactions() {
-  return (req, res) => {
-    service.getDatasetTransactions(req.query, function (err, result) {
-      if (err) {
-        return res.json({success: !err, error: err});
-      }
-
-      return res.json(result);
-    });
-  };
+function sendDataResponseDatasetTransactions(req, res) {
+  service.getDatasetTransactions(req.query, function (err, result) {
+    if (err) {
+      return res.json({success: !err, error: err});
+    }
+    res.json(result);
+  });
 }
 
-function sendDataResponseDatasets() {
-  return (req, res) => {
-    service.getDatasets(req.query, function (err, result) {
-      if (err) {
-        return res.json({success: !err, error: err});
-      }
-
-      return res.json(result);
-    });
-  };
+function sendDataResponseDatasets(req, res) {
+  service.getDatasets(req.query, function (err, result) {
+    if (err) {
+      return res.json({success: !err, error: err});
+    }
+    res.json(result);
+  });
 }
 
-function sendDataResponseEntities() {
-  return (req, res) => {
-    service.getEntities(req.query, function (err, result) {
-      if (err) {
-        return res.json({success: !err, error: err});
-      }
-
-      return res.json(result);
-    });
-  };
+function sendDataResponseEntities(req, res) {
+  service.getEntities(req.query, function (err, result) {
+    if (err) {
+      return res.json({success: !err, error: err});
+    }
+    res.json(result);
+  });
 }
