@@ -22,18 +22,15 @@ let config;
 let ddfModels;
 let pathToDdfFolder;
 let resolvePath;
-let ddfConceptsFile;
 let fileTemplates;
 
-module.exports = function (app, done) {
+module.exports = function (app) {
   logger = app.get('log');
   config = app.get('config');
   ddfModels = app.get('ddfModels');
 
   pathToDdfFolder = config.PATH_TO_DDF_FOLDER;
   resolvePath = (filename) => path.resolve(pathToDdfFolder, filename);
-  const ddfEnTranslations = require(resolvePath('../vizabi/en.json'));
-  const ddfSeTranslations = require(resolvePath('../vizabi/se.json'));
   fileTemplates = {
     getFilenameOfEntityDomainEntities: _.template('ddf--entities--${ gid }.csv'),
     getFilenameOfEntitySetEntities: _.template('ddf--entities--${ domain.gid }--${ gid }.csv'),
@@ -52,6 +49,7 @@ module.exports = function (app, done) {
     getAllConcepts: _getAllConcepts,
     createTranslations,
     findDataPoints,
+    processRawDataPoints: __processRawDataPoints,
     updateConceptsDimensions: _updateConceptsDimensions
   };
 };
@@ -555,23 +553,11 @@ function _parseFilename(pipe, cb) {
 function _loadDataPoints(pipe, cb) {
   logger.info(`** load data points`);
 
-  readCsvFile(pipe.filename, {}, (err, res) => {
-    let mapEntities = (entry) => _.chain(pipe.dimensions)
-      .keys()
-      .map(entitySetGid => {
-        let domain = pipe.dimensions[entitySetGid].domain || pipe.dimensions[entitySetGid];
+  readCsvFile(pipe.filename, {}, __processRawDataPoints(cb));
+}
 
-        return {
-          gid: entry[entitySetGid],
-          source: pipe.filename,
-          domain: domain.originId,
-          sets: pipe.dimensions && pipe.dimensions[entitySetGid] ? [pipe.dimensions[entitySetGid].originId] : [],
-          dataset: pipe.dataset._id,
-          transaction: pipe.transaction._id
-        };
-      })
-      .value();
-
+function __processRawDataPoints(cb) {
+  return (err, res) => {
     let dictionary = _.keyBy(pipe.entities, 'gid');
     let gids = new Set();
     let entities = _.chain(res)
@@ -596,7 +582,7 @@ function _loadDataPoints(pipe, cb) {
     };
 
     return cb(err, pipe);
-  });
+  }
 }
 
 function _createEntitiesBasedOnDataPoints(pipe, cb) {
