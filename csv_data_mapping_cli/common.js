@@ -44,6 +44,7 @@ module.exports = function (app) {
     createConcepts,
     createEntities,
     createDataPoints,
+    _createDataPoints,
     findDataset,
     findVersion,
     getAllConcepts: _getAllConcepts,
@@ -560,6 +561,7 @@ function _loadDataPoints(pipe, cb) {
 
 function __processRawDataPoints(pipe, cb) {
   return (err, res) => {
+    // TODO: account must be taken of entities that could have equal gids in different sets (groupBy)
     let dictionary = _.keyBy(pipe.entities, 'gid');
     let gids = new Set();
     let entities = _.chain(res)
@@ -583,7 +585,7 @@ function __processRawDataPoints(pipe, cb) {
       entities: entities
     };
 
-    return cb(err, pipe);
+    return async.setImmediate(() => cb(err, pipe));
   }
 }
 
@@ -900,7 +902,7 @@ function mapDdfEntityToWsModel(entity, concept, domain, pipe) {
   return {
     gid: entity[concept.gid],
     title: gid,
-    source: [pipe.filename],
+    sources: [pipe.filename],
     properties: entity,
 
     domain: domain.originId,
@@ -934,7 +936,7 @@ function mapDdfDataPointToWsModel(pipe) {
   return function (entry, key) {
     let isValidEntry = _.chain(entry)
       .values()
-      .every(value => !_.isNil(value))
+      .every((value, key) => !_.isNil(value) || key !== 'originId')
       .value();
 
     if (!isValidEntry) {
@@ -942,6 +944,7 @@ function mapDdfDataPointToWsModel(pipe) {
       return [];
     }
 
+    // TODO: rewrite with _.pick
     let dimensions = _.chain(entry)
       .keys()
       .filter(conceptGid => _.keys(pipe.dimensions).indexOf(conceptGid) > -1)
@@ -956,6 +959,7 @@ function mapDdfDataPointToWsModel(pipe) {
       }, [])
       .value();
 
+    // TODO: rewrite with _.pick
     return _.chain(entry)
       .keys()
       .filter(conceptGid => _.keys(pipe.measures).indexOf(conceptGid) > -1)
@@ -964,6 +968,7 @@ function mapDdfDataPointToWsModel(pipe) {
           value: entry[measureGid],
           measure: pipe.measures[measureGid].originId,
           dimensions: dimensions,
+          originId: entry.originId,
 
           isNumeric: _.isNumber(entry[measureGid]),
           from: pipe.transaction.createdAt,

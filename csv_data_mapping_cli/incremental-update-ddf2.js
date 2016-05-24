@@ -16,6 +16,7 @@ const ADD_MARK = 'A';
 const MODIFY_MARK = 'M';
 
 const LIMIT_NUMBER_PROCESS = 10;
+const MAX_VALUE = Number.MAX_VALUE;
 
 // take from args
 let logger;
@@ -48,7 +49,7 @@ module.exports = function (app, done) {
     getPreviousTransaction,
     // processConceptsChanges,
     // processEntitiesChanges,
-    common.getAllConcepts,
+    getAllConcepts,
     processDataPointsChanges
     // common.createConcepts,
     // common.createEntities,
@@ -88,6 +89,47 @@ function getPreviousTransaction(pipe, done) {
     });
 }
 
+function getAllConcepts(pipe, done) {
+  logger.info('** get all concepts');
+
+  mongoose.model('Concepts').find({
+    dataset: pipe.dataset._id,
+    from: { $lte: pipe.transaction.createdAt },
+    to: MAX_VALUE
+  }, null, {
+    join: {
+      domain: {
+        $find: {
+          dataset: pipe.dataset._id,
+          from: { $lte: pipe.transaction.createdAt },
+          to: MAX_VALUE
+        }
+      },
+      subsetOf: {
+        $find: {
+          dataset: pipe.dataset._id,
+          from: { $lte: pipe.transaction.createdAt },
+          to: MAX_VALUE
+        }
+      },
+      dimensions: {
+        $find: {
+          dataset: pipe.dataset._id,
+          from: { $lte: pipe.transaction.createdAt },
+          to: MAX_VALUE
+        }
+      }
+    }
+  })
+    .populate('dataset')
+    .populate('transaction')
+    .lean()
+    .exec((err, res) => {
+      pipe.concepts = _.keyBy(res, 'gid');
+      return done(err, pipe);
+    });
+}
+
 function processDataPointsChanges(pipe, done) {
   pipe.datapointsFiles = _.omitBy(pipe.allChanges, (ch, filename) => !filename.match(/ddf--datapoints--/g));
 
@@ -106,19 +148,18 @@ function processDataPointFile(pipe) {
       fileChanges: fileChanges.body,
       concepts: pipe.concepts,
       transaction: pipe.transaction,
-      transactionId: pipe.transactionId,
-      dataset: pipe.dataset
+      dataset: pipe.dataset,
+      common: pipe.common
     }),
     pipe.common.parseFilename,
-    pipe.common.findAllEntities,
-    closeRemovedAndUpdatedDataPoints, // передать все закрытые DP в pipe
-    fakeLoadRawDataPoints, // не забудь про originId
-    pipe.common.processRawDataPoints,
-    addRawEntitiesFromUpdatedDataPoints,
+    _getAllEntities,
+    _closeRemovedAndUpdatedDataPoints,
+    _fakeLoadRawDataPoints,
+    _wrapProcessRawDataPoints,
     pipe.common.createEntitiesBasedOnDataPoints,
-    pipe.common.findAllEntities,
-    pipe.common.createDataPoints, // обнови в common использование originID
-    pipe.common.updateConceptsDimensions
+    _getAllEntities,
+    pipe.common._createDataPoints, // обнови в common использование originID
+    // pipe.common.updateConceptsDimensions
   ], err => {
     logger.info(`** Processed ${key++} of ${_.keys(pipe.datapointsFiles).length} files`);
 
@@ -126,68 +167,169 @@ function processDataPointFile(pipe) {
   });
 }
 
-function closeRemovedAndUpdatedDataPoints(pipe, done) {
+function _getAllEntities(pipe, done) {
+  logger.info('** get all entities');
+
+  mongoose.model('Entities').find({
+    dataset: pipe.dataset._id,
+    from: { $lte: pipe.transaction.createdAt },
+    to: MAX_VALUE,
+    'properties.language': { $not: { $in: ['en', 'se'] } }
+  }, null, {
+    join: {
+      domain: {
+        $find: {
+          dataset: pipe.dataset._id,
+          from: { $lte: pipe.transaction.createdAt },
+          to: MAX_VALUE,
+        }
+      },
+      sets: {
+        $find: {
+          dataset: pipe.dataset._id,
+          from: { $lte: pipe.transaction.createdAt },
+          to: MAX_VALUE,
+        }
+      },
+      drillups: {
+        $find: {
+          dataset: pipe.dataset._id,
+          from: { $lte: pipe.transaction.createdAt },
+          to: MAX_VALUE,
+        }
+      }
+    }
+  })
+    .populate('dataset')
+    .populate('transaction')
+    .lean()
+    .exec((err, res) => {
+      pipe.entities = res;
+      return done(err, pipe);
+    });
+}
+
+function _closeRemovedAndUpdatedDataPoints(pipe, done) {
   logger.info(`** close data points`);
-  let entitiesGroupedByGid = _.groupBy(pipe.entities, 'gid');
+
+  pipe.closedDataPoints = {};
 
   return async.parallel([
-    updateRemovedDataPoints(pipe.fileChanges.remove, entitiesGroupedByGid, pipe.dimensions),
-    updateUpdatedDataPoints(pipe.fileChanges.update, entitiesGroupedByGid, pipe.dimensions),
-    updateChangedDataPoints(pipe.fileChanges.change, entitiesGroupedByGid, pipe.dimensions)
+    __updateRemovedDataPoints(pipe.fileChanges.remove, pipe),
+    __updateChangedDataPoints(pipe.fileChanges.update, pipe),
+    __updateChangedDataPoints(pipe.fileChanges.change, pipe)
   ], (err) => {
     return done(err, pipe);
   });
+}
 
-  function updateRemovedDataPoints(removedDataPoints, entities, dimensions) {
-    return (cb) => {
-      return async.each(removedDataPoints, (datapoint, ecb) => {
-        let dataPointEntities = _.chain(datapoint)
-          .pick(_.keys(dimensions))
-          .reduce((result, entityGid, conceptGid) => {
-            let matchedEntity = _.find(entities[entityGid], (entity) => {
-              return entity.domain.gid === conceptGid || _.some(entity.sets, ['gid', conceptGid]);
-            });
+function __updateRemovedDataPoints(removedDataPoints, pipe) {
+  return (cb) => {
+    return async.eachLimit(
+      removedDataPoints,
+      LIMIT_NUMBER_PROCESS,
+      ___closeDataPoint(pipe),
+      (err) => {
+        return cb(err);
+    });
+  };
+}
 
-            if (matchedEntity.originId) {
-              result.push(matchedEntity.originId);
-            }
+function ___closeDataPoint(pipe) {
+  let groupedEntities = _.groupBy(pipe.entities, 'gid');
 
-            return result;
-          }, [])
-          .value();
+  return (datapoint, ecb) => {
+    let entityGids = _.chain(datapoint)
+      .pick(_.keys(pipe.dimensions))
+      .values()
+      .compact()
+      .value();
+    // TODO: try to get not first element, but the element which belongs to related domain or sets
+    let entities = _.map(entityGids, (gid) => {
+      return _.first(groupedEntities[gid]).originId;
+    });
 
-        logger.info('get previous transaction');
+    return async.eachLimit(
+      pipe.measures,
+      LIMIT_NUMBER_PROCESS,
+      ____updateDataPoint(pipe, entities, datapoint),
+      (err) => {
+        return ecb(err);
+      }
+    );
+  };
+}
 
-        mongoose.model('DataPoints').update({
-          dataset: pipe.dataset._id,
-          from: {$lt: pipe.transaction.createdAt},
-          to: Number.MAX_VALUE,
-          dimensions: {
-            $size: dataPointEntities.length,
-            $all: dataPointEntities
-          }
-        }, {$set: {to: pipe.transaction.createdAt}})
-          .lean()
-          .exec((err, res) => {
-            return ecb();
-          });
-      }, cb);
-    };
-  }
+function ____updateDataPoint(pipe, entities, datapoint) {
+  return (measure, ecb) => {
+    return mongoose.model('DataPoints').findOneAndUpdate({
+      dataset: pipe.dataset._id,
+      from: {$lte: pipe.transaction.createdAt},
+      to: MAX_VALUE,
+      value: datapoint[measure.gid],
+      measure: measure.originId,
+      dimensions: {
+        $size: entities.length,
+        $all: entities
+      }
+    }, {$set: {to: pipe.transaction.createdAt}}, {new: true})
+      .lean()
+      .exec((err, doc) => {
+        if (doc) {
+          let complexKey = getComplexKey(datapoint);
 
-  function updateUpdatedDataPoints(updatedDataPoints, entities, dimensions) {
-    return (cb) => cb();
-  }
+          pipe.closedDataPoints[complexKey] = doc;
+        }
 
-  function updateChangedDataPoints(changedDataPoints, entities, dimensions) {
-    return (cb) => cb();
+        return ecb(err, pipe);
+      });
+  };
+}
+
+function __updateChangedDataPoints(changedDataPoints, pipe) {
+  return (cb) => {
+    return async.mapLimit(
+      _.map(changedDataPoints, 'data-origin'),
+      LIMIT_NUMBER_PROCESS,
+      ___closeDataPoint(pipe),
+      cb
+    );
+  };
+}
+
+function _fakeLoadRawDataPoints(pipe, done) {
+  let updatedDataPoints = _.map(pipe.fileChanges.update, __formRawDataPoint(pipe));
+  let changedDFataPoints = _.map(pipe.fileChanges.change, __formRawDataPoint(pipe));
+  let fakeLoadedDatapoints = _.concat(pipe.fileChanges.create, updatedDataPoints, changedDFataPoints);
+
+  pipe.fakeLoadedDatapoints = fakeLoadedDatapoints;
+
+  return async.setImmediate(() => done(null, pipe));
+}
+
+function __formRawDataPoint(pipe) {
+  return (datapoint) => {
+    let complexKey = getComplexKey(datapoint['data-origin']);
+    let closedOriginDatapoint = pipe.closedDataPoints[complexKey];
+    let originId = closedOriginDatapoint ? closedOriginDatapoint.originId : null;
+    return _.defaults({originId}, datapoint['data-update'], datapoint['data-origin'])
   }
 }
 
-function fakeLoadRawDataPoints() {
+function _wrapProcessRawDataPoints(pipe, done) {
+  return pipe.common.processRawDataPoints(pipe, done)(null, pipe.fakeLoadedDatapoints);
+}
+
+function _addRawEntitiesFromUpdatedDataPoints() {
 
 }
 
-function addRawEntitiesFromUpdatedDataPoints() {
-
+// UTILS FUNCTIONS
+function getComplexKey(obj) {
+  return _.chain(obj)
+    .keys()
+    .sort()
+    .map(key => `${key}:${obj[key]}`)
+    .join('--')
+    .value();
 }
