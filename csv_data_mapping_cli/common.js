@@ -54,7 +54,8 @@ module.exports = function (app) {
     processRawDataPoints: __processRawDataPoints,
     parseFilename: _parseFilename,
     createEntitiesBasedOnDataPoints: _createEntitiesBasedOnDataPoints,
-    updateConceptsDimensions: _updateConceptsDimensions
+    updateConceptsDimensions: _updateConceptsDimensions,
+    closeTransaction: closeTransaction
   };
 };
 
@@ -71,11 +72,21 @@ function createTransaction(pipe, done) {
   });
 }
 
+function closeTransaction(pipe, done) {
+  logger.info('close transaction');
+
+  mongoose.model('DatasetTransactions').update({
+    _id: pipe.transaction._id
+  }, {$set: {isClosed: true}}, (err) => {
+    return done(err, pipe);
+  });
+}
+
 function createDataset(pipe, done) {
   logger.info('create data set');
 
   mongoose.model('Datasets').create({
-    name: 'ddf-gapminder-world-v2',
+    name: pathToDdfFolder,
     type: 'local',
     path: pathToDdfFolder,
     defaultLanguage: 'en',
@@ -84,7 +95,7 @@ function createDataset(pipe, done) {
     createdAt: pipe.transaction.createdAt,
     createdBy: pipe.user._id
   }, (err, res) => {
-    pipe.dataset = res.toObject();
+    pipe.dataset = res;
     return done(err, pipe);
   });
 }
@@ -608,7 +619,7 @@ function _createDataPoints(pipe, cb) {
   let dataPoints = _.flatMap(pipe.raw.dataPoints, mapDdfDataPointToWsModel(pipe));
 
   if (_.isEmpty(dataPoints)) {
-    logger.error(`file '${pipe.filename}' is empty or doesn't exist.`);
+    logger.warn(`file '${pipe.filename}' is empty or doesn't exist.`);
 
     return async.setImmediate(() => cb(null, pipe));
   }
@@ -716,7 +727,7 @@ function ___updateDimensionByMeasure(pipe, cb) {
 }
 
 function findDataset(pipe, done) {
-  let query = pipe.datasetId ? {_id: pipe.datasetId} : {};
+  let query = pipe.datasetId ? {_id: pipe.datasetId} : {name: process.env.DATASET_NAME};
   mongoose.model('Datasets').findOne(query)
     .lean()
     .exec((err, res) => {

@@ -47,18 +47,16 @@ module.exports = function (app, done) {
     common.findDataset,
     common.updateTransaction,
     getPreviousTransaction,
+    // TODO: update dataset.versions for using successful transaction
+    addTransactionToDatasetVersions,
     // processConceptsChanges,
     // processEntitiesChanges,
     getAllConcepts,
-    processDataPointsChanges
-    // common.createConcepts,
-    // common.createEntities,
-    // common.createDataPoints,
-    // common.findLastVersion,
-    // common.getAllConcepts,
-    // common.createTranslations,
-    // common.findDataPoints,
-    // common.updateConceptsDimensions
+    // TODO: process removed and modified files (FIRST OF ALL - CHECK)
+    // TODO: close all unused entities which refer to removed DP
+    // TODO: fix sources for datapoints, concepts and entities
+    processDataPointsChanges,
+    common.closeTransaction
   ], (err, pipe) => {
     console.timeEnd('done');
     return done(err);
@@ -87,6 +85,18 @@ function getPreviousTransaction(pipe, done) {
       pipe.transactionId = res._id;
       return done(err, pipe);
     });
+}
+
+function addTransactionToDatasetVersions(pipe, done) {
+  logger.info('get previous transaction');
+
+  mongoose.model('Datasets').update({_id: pipe.dataset._id}, {
+    $addToSet: {
+      versions: pipe.transaction.createdAt
+    }
+  }, (err) => {
+    return done(err, pipe);
+  });
 }
 
 function getAllConcepts(pipe, done) {

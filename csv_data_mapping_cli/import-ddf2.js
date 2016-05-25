@@ -29,8 +29,8 @@ module.exports = function (app, done) {
 
   pathToDdfFolder = config.PATH_TO_DDF_FOLDER;
   resolvePath = (filename) => path.resolve(pathToDdfFolder, filename);
-  const ddfEnTranslations = require(resolvePath('../vizabi/en.json'));
-  const ddfSeTranslations = require(resolvePath('../vizabi/se.json'));
+  const ddfEnTranslations = require(resolvePath('./vizabi/en.json'));
+  const ddfSeTranslations = require(resolvePath('./vizabi/se.json'));
   fileTemplates = {
     getFilenameOfEntityDomainEntities: _.template('ddf--entities--${ gid }.csv'),
     getFilenameOfEntitySetEntities: _.template('ddf--entities--${ domain.gid }--${ gid }.csv'),
@@ -64,6 +64,7 @@ module.exports = function (app, done) {
     common.createTranslations,
     // common.findDataPoints,
     // common.updateConceptsDimensions
+    common.closeTransaction
   ], (err, pipe) => {
     console.timeEnd('done');
     return done(err);
@@ -82,19 +83,21 @@ function clearAllDbs(pipe, cb) {
     return async.parallel(collectionsFn, (err) => cb(err, pipe));
   }
 
-  return cb(null, _data);
+  return cb(null, pipe);
 }
 
 function createUser(pipe, done) {
   logger.info('create user');
 
-  mongoose.model('Users').create({
+  mongoose.model('Users').findOneAndUpdate({}, {
     name: 'Vasya Pupkin',
     email: 'email@email.com',
     username: 'VPup',
     password: 'VPup'
-  }, (err, res) => {
-    pipe.user = res.toObject();
+  }, {upsert: true, new: true})
+  .lean()
+  .exec((err, res) => {
+    pipe.user = res;
     return done(err, pipe);
   });
 }
