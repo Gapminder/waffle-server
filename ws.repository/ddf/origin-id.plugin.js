@@ -18,8 +18,9 @@ module.exports = exports = function lastModifiedPlugin (schema, settings) {
     const _result = wrapArray(result);
 
     if (this.options.join) {
-      return async.eachSeries(
+      return async.eachLimit(
         _result,
+        10,
         (item, cb) => populateWithOrigin(item, this.options.join, settings, cb),
         err => next(err));
     }
@@ -29,8 +30,9 @@ module.exports = exports = function lastModifiedPlugin (schema, settings) {
 
   function populateWithOrigin(document, query, settings, done) {
 
-    return async.forEachOfSeries(
+    return async.forEachOfLimit(
       query,
+      2,
       (match, fieldName, cb) => {
         if (!settings[fieldName]) {
           return cb(new Error(`There is no field with name '${fieldName}' in settings of origin-id plugin for model '${settings.modelName}'`));

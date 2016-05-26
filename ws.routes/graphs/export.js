@@ -43,6 +43,10 @@ module.exports = serviceLocator => {
     if (isExportInProgress) {
       return res.json({success: true, msg: 'Export is already in progress!'});
     }
+    
+    if (!req.params.datasetName) {
+      return res.json({success: false, msg: 'No datasetName for exporting was given!'});
+    }
 
     isExportInProgress = true;
     return exportDdf(app, error => {
@@ -51,6 +55,6 @@ module.exports = serviceLocator => {
       }
       isExportInProgress = false;
       return res.json({success: !error, msg, error});
-    });
+    }, req.params.datasetName);
   }
 };
