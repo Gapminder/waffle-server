@@ -10,9 +10,13 @@ const makeBatchNode = exportUtils.makeBatchNode;
 const makeBatchRelation = exportUtils.makeBatchRelation;
 const flattenProperties = exportUtils.flattenProperties;
 
-module.exports = (app, done, datasetName) => {
-  var neo4jdb = app.get('neo4jDb');
-  var logger = app.get('log');
+module.exports = (app, done, options = {}) => {
+  const neo4jdb = app.get('neo4jDb');
+  const logger = app.get('log');
+  const config = app.get('config');
+
+  const version = options.EXPORT_TO_VERSION || config.EXPORT_TO_VERSION;
+  const datasetName = options.DATASET_NAME || config.DATASET_NAME;
 
   console.time('Ddf meta tree is exported');
   async.waterfall([
@@ -39,7 +43,16 @@ module.exports = (app, done, datasetName) => {
         done => Datasets.findOne({name: datasetName}).lean().exec(done),
         (dataset, done) => {
           pipe.dataset = dataset;
-          pipe.currentVersion = Number(_.first(dataset.versions));
+
+          if (!dataset) {
+            return done(`There is no dataset with name "${datasetName}"`);
+          }
+
+          pipe.currentVersion = Number(version) || Number(_.first(dataset.versions));
+
+          if (!pipe.currentVersion) {
+            return done(`There is no version to import for dataset "${datasetName}"`);
+          }
 
           console.log(`Dataset version to be exported: "${pipe.currentVersion}"`);
 
@@ -48,7 +61,7 @@ module.exports = (app, done, datasetName) => {
             labelName: 'Dataset',
             body: {
               name: dataset.name,
-              versions: dataset.versions,
+              versions: [pipe.currentVersion],
               path: dataset.path,
               type: dataset.type,
               commit: dataset.commit,
@@ -162,7 +175,7 @@ module.exports = (app, done, datasetName) => {
     const Concepts = mongoose.model('Concepts');
     async.waterfall([
       done => {
-        const query = {$or: [{type: 'entity_set'}, {type: 'entity_domain'}], from: {$lte: pipe.currentVersion}, to: {$gt: pipe.currentVersion}, dataset: pipe.dataset._id};
+        const query = {dataset: pipe.dataset._id, $or: [{type: 'entity_set'}, {type: 'entity_domain'}], from: {$lte: pipe.currentVersion}, to: {$gt: pipe.currentVersion}, };
         const projection = {gid: 1, domain: 1, originId: 1, properties: 1};
 
         return Concepts.find(query, projection).lean().exec((error, setsAndDomains) => {
@@ -266,7 +279,7 @@ module.exports = (app, done, datasetName) => {
     console.time('Entities are exported');
 
     async.waterfall([
-      done => mongoose.model('Entities').find({from: {$lte: pipe.currentVersion}, to: {$gt: pipe.currentVersion}, dataset: pipe.dataset._id}).lean().exec(done),
+      done => mongoose.model('Entities').find({dataset: pipe.dataset._id, from: {$lte: pipe.currentVersion}, to: {$gt: pipe.currentVersion}}).lean().exec(done),
       (entities, done) => {
         pipe.entities = _.keyBy(entities, entity => entity.originId.toString());
 

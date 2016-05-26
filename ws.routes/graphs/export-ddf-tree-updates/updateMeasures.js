@@ -12,28 +12,41 @@ module.exports = neo4jdb => {
   return function updateMeasures(pipe, onMeasuresUpdated) {
     const Concepts = mongoose.model('Concepts');
 
+    let changed = {
+      updated: 0,
+      created: 0,
+      deleted: 0
+    };
     return async.waterfall([
-      done => Concepts.find({type: 'measure', $or: [{from: pipe.version}, {to: pipe.version}]}).lean().exec(done),
+      done => Concepts.find({dataset: pipe.dataset._id, type: 'measure', $or: [{from: pipe.version}, {to: pipe.version}]}).lean().exec(done),
       (measures, done) => {
         const measuresByOriginId = _.groupBy(measures, measure => measure.originId.toString());
 
         return async.eachLimit(measuresByOriginId, 10, (measuresForSameOriginId, onMeasureUpdated) => {
           if (exportUtils.isDeleted(measuresForSameOriginId, pipe.version)) {
+            changed.deleted++;
             return deleteMeasure(_.first(measuresForSameOriginId), pipe.version, onMeasureUpdated)
           }
 
           if (exportUtils.isNew(measuresForSameOriginId, pipe.version)) {
+            changed.created++;
             return createMeasure(_.first(measuresForSameOriginId), pipe.version, pipe.dataset, onMeasureUpdated)
           }
 
           if (exportUtils.isUpdated(measuresForSameOriginId, pipe.version)) {
+            changed.updated++;
             return updateMeasure(_.last(_.sortBy(measuresForSameOriginId, 'from')), pipe.version, onMeasureUpdated)
           }
 
           return onMeasureUpdated();
         }, done);
       }
-    ], error => onMeasuresUpdated(error, pipe));
+    ], error => {
+      console.log('Measures updated:', changed.updated);
+      console.log('Measures created:', changed.created);
+      console.log('Measures deleted:', changed.deleted);
+      onMeasuresUpdated(error, pipe)
+    });
   };
 
   function createMeasure(measure, version, dataset, onCreated) {
@@ -113,8 +126,10 @@ module.exports = neo4jdb => {
 
   function deleteMeasure(measure, version, onDeleted) {
     const cypher = `
-      MATCH ()-[r:WITH_MEASURE]->(n:Measure {originId: '${measure.originId}'}) 
-      SET r.to = ${version}`;
+      MATCH 
+        ()-[wm:WITH_MEASURE]->(n:Measure {originId: '${measure.originId}'}),
+        ()-[wi:WITH_INDICATOR]->(i:Indicators {originId: '${measure.originId}'})
+      SET wm.to = ${version}, wi.to = ${version}`;
 
     return neo4jdb.cypherQuery(cypher, onDeleted);
   }

@@ -10,30 +10,43 @@ const flattenProperties = exportUtils.flattenProperties;
 
 module.exports = neo4jdb => {
   return function updateDatapoints(pipe, onDatapointsUpdated) {
-    const Datapoints = mongoose.model('Datapoints');
+    const Datapoints = mongoose.model('DataPoints');
 
+    let changed = {
+      updated: 0,
+      created: 0,
+      deleted: 0
+    };
     return async.waterfall([
-      done => Datapoints.find({$or: [{from: pipe.version}, {to: pipe.version}]}, null, {join: {dimensions: ''}}).lean().exec(done),
+      done => Datapoints.find({dataset: pipe.dataset._id, $or: [{from: pipe.version}, {to: pipe.version}]}, null, {join: {dimensions: ''}}).lean().exec(done),
       (datapoints, done) => {
         const datapointsByOriginId = _.groupBy(datapoints, datapoint => datapoint.originId.toString());
 
         return async.eachLimit(datapointsByOriginId, 10, (datapointsForSameOriginId, onDatapointUpdated) => {
           if (exportUtils.isDeleted(datapointsForSameOriginId, pipe.version)) {
+            changed.deleted++;
             return deleteDatapoint(_.first(datapointsForSameOriginId), pipe.version, onDatapointUpdated)
           }
 
           if (exportUtils.isNew(datapointsForSameOriginId, pipe.version)) {
+            changed.created++;
             return createDatapoint(_.first(datapointsForSameOriginId), pipe.version, pipe.dataset, onDatapointUpdated)
           }
 
           if (exportUtils.isUpdated(datapointsForSameOriginId, pipe.version)) {
+            changed.updated++;
             return updateDatapoint(_.last(_.sortBy(datapointsForSameOriginId, 'from')), pipe.version, onDatapointUpdated)
           }
 
           return onDatapointUpdated();
         }, done);
       }
-    ], error => onDatapointsUpdated(error, pipe));
+    ], error => {
+      console.log('Datapoints updated:', changed.updated);
+      console.log('Datapoints created:', changed.created);
+      console.log('Datapoints deleted:', changed.deleted);
+      onDatapointsUpdated(error, pipe)
+    });
   };
 
   function createDatapoint(datapoint, version, dataset, onCreated) {
@@ -52,7 +65,7 @@ module.exports = neo4jdb => {
         batchNode.push(makeBatchNode({
           id: batchQueryId,
           labelName: 'IndicatorValueState',
-          body: _.extend({originId: datapoint.originId.toString()}, flattenProperties(datapoint))
+          body: {value: datapoint.value, isNumeric: datapoint.isNumeric, originId: datapoint.originId.toString()}
         }));
 
         batchNode.push(makeBatchIdBasedRelation({
@@ -62,10 +75,10 @@ module.exports = neo4jdb => {
           from: version
         }));
 
-        return neo4jdb.batchQuery(batchNode, done);
+        return neo4jdb.batchQuery(batchNode, error => done(error));
       },
       (done) => {
-        async.eachSeries(datapoint.dimensions, (entity, onEntityProcessed) => {
+        return async.eachSeries(datapoint.dimensions, (entity, onEntityProcessed) => {
           const conceptsAsOriginIds = _(entity.sets)
             .concat([entity.domain])
             .map(_.toString)
@@ -80,7 +93,7 @@ module.exports = neo4jdb => {
             MERGE (i:Indicators {originId: '${datapoint.measure.toString()}'}) 
             MERGE (iv:IndicatorValues {originId: '${datapoint.originId.toString()}'}) 
             MERGE (ds:Dataset {originId: '${dataset._id.toString()}'})-[wi:WITH_INDICATOR]->(i) 
-              ON CREATE wi.from = ${version} wi.to = ${Number.MAX_SAFE_INTEGER}`;
+              ON CREATE SET wi.from = ${version}, wi.to = ${Number.MAX_SAFE_INTEGER}`;
 
           createDatapointQuery = _.reduce(conceptsAsOriginIds, (result, originId) => {
             result += ` MERGE (i)-[wd${conceptCounter}:WITH_DIMENSION]->(d${conceptCounter}:Dimensions {originId: '${originId}'}) 
@@ -95,7 +108,6 @@ module.exports = neo4jdb => {
             return result;
           }, createDatapointQuery);
 
-
           neo4jdb.cypherQuery(createDatapointQuery, onEntityProcessed);
         }, done);
       }
@@ -103,31 +115,31 @@ module.exports = neo4jdb => {
   }
 
   function updateDatapoint(datapoint, version, onUpdated) {
-    const findIdsOfDomainAndRelationQuery = `
-      MATCH (n:EntityDomain {originId: '${datapoint.originId}'})-[r:WITH_ENTITY_DOMAIN_STATE]->()
-      WHERE 
-        ${version} > r.from 
-        AND ${version} < r.to 
-        AND r.to = ${Number.MAX_SAFE_INTEGER} 
+    const findIdsOfDatapointAndStateRelationQuery = `
+      MATCH (n:IndicatorValues {originId: '${datapoint.originId}'})-[r:WITH_INDICATOR_VALUE_STATE]->()
+      WHERE
+        ${version} > r.from
+        AND ${version} < r.to
+        AND r.to = ${Number.MAX_SAFE_INTEGER}
       RETURN DISTINCT id(n),id(r)`;
 
-    return neo4jdb.cypherQuery(findIdsOfDomainAndRelationQuery, (error, response) => {
+    return neo4jdb.cypherQuery(findIdsOfDatapointAndStateRelationQuery, (error, response) => {
       const ids = _.flatten(response.data);
-      const domainId = _.first(ids);
+      const datapointNeoId = _.first(ids);
       const previousRelationId = _.last(ids);
 
       let batchQueryId = 0;
 
       const batchNode = makeBatchNode({
         id: batchQueryId,
-        labelName: 'EntityDomainState',
-        body: _.extend({gid: datapoint.gid, originId: datapoint.originId}, flattenProperties(datapoint))
+        labelName: 'IndicatorValueState',
+        body: {value: datapoint.value, isNumeric: datapoint.isNumeric, originId: datapoint.originId.toString()}
       });
 
       batchNode.push(makeBatchRelation({
-        fromNodeId: domainId,
+        fromNodeId: datapointNeoId,
         toNodeId: `{${batchQueryId}}`,
-        relationName: 'WITH_ENTITY_DOMAIN_STATE',
+        relationName: 'WITH_INDICATOR_VALUE_STATE',
         from: version
       }));
 
@@ -136,9 +148,9 @@ module.exports = neo4jdb => {
           return onUpdated(error);
         }
 
-        neo4jdb.cypherQuery(`
-          MATCH ()-[r:WITH_ENTITY_DOMAIN_STATE]->() 
-          WHERE id(r) = ${previousRelationId} 
+        return neo4jdb.cypherQuery(`
+          MATCH ()-[r:WITH_INDICATOR_VALUE_STATE]->()
+          WHERE id(r) = ${previousRelationId}
           SET r.to = ${version}`, onUpdated);
       });
     });
@@ -146,7 +158,7 @@ module.exports = neo4jdb => {
 
   function deleteDatapoint(datapoint, version, onDeleted) {
     const cypher = `
-      MATCH ()-[r:WITH_INDICATOR_VALUE]->(n:IndicatorValues {originId: '${datapoint.originId}'}) 
+      MATCH (:IndicatorValueState)<-[r:WITH_INDICATOR_VALUE_STATE {to: ${Number.MAX_SAFE_INTEGER}}]-(n:IndicatorValues {originId: '${datapoint.originId}'}) 
       SET r.to = ${version}`;
 
     return neo4jdb.cypherQuery(cypher, onDeleted);

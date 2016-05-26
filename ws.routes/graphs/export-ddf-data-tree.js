@@ -10,9 +10,14 @@ const makeBatchNode = exportUtils.makeBatchNode;
 const makeBatchRelation = exportUtils.makeBatchRelation;
 const makeBatchIdBasedRelation = exportUtils.makeBatchIdBasedRelation;
 
-module.exports = (app, done, datasetName) => {
+module.exports = (app, done, options = {}) => {
   const neo4jdb = app.get('neo4jDb');
   const logger = app.get('log');
+
+  const config = app.get('config');
+
+  const version = options.EXPORT_TO_VERSION || config.EXPORT_TO_VERSION;
+  const datasetName = options.DATASET_NAME || config.DATASET_NAME;
 
   console.time('Ddf data tree exporting is completed.');
   async.waterfall([
@@ -39,8 +44,17 @@ module.exports = (app, done, datasetName) => {
         done => Datasets.findOne({name: datasetName}).lean().exec(done),
         (dataset, done) => {
           pipe.dataset = dataset;
-          pipe.currentVersion = Number(_.last(dataset.versions));
 
+          if (!dataset) {
+            return done(`There is no dataset with name "${datasetName}"`);
+          }
+
+          pipe.currentVersion = Number(version) || Number(_.first(dataset.versions));
+
+          if (!pipe.currentVersion) {
+            return done(`There is no version to import for dataset "${datasetName}"`);
+          }
+          
           let batchQueryId = 0;
           let batchNode = makeBatchNode({
             id: batchQueryId,
@@ -72,7 +86,7 @@ module.exports = (app, done, datasetName) => {
     console.time('Indicators exported');
     var Concepts = mongoose.model('Concepts');
     async.waterfall([
-      done => Concepts.find({type: 'measure'}, {gid: 1, originId: 1, dimensions: 1}).lean().exec(done),
+      done => Concepts.find({type: 'measure', dataset: pipe.dataset._id, from: {$lte: pipe.currentVersion}, to: {$gt: pipe.currentVersion}}, {gid: 1, originId: 1, dimensions: 1}).lean().exec(done),
       (indicators, done) => {
         console.log('Exporting %s indicators', indicators.length);
         pipe.indicators = indicators;
@@ -123,7 +137,7 @@ module.exports = (app, done, datasetName) => {
     async.waterfall([
       done => {
         const projection = {originId: 1};
-        const query = {$or: [{type: 'entity_set'}, {type: 'entity_domain'}]};
+        const query = {dataset: pipe.dataset._id, $or: [{type: 'entity_set'}, {type: 'entity_domain'}], from: {$lte: pipe.currentVersion}, to: {$gt: pipe.currentVersion}};
 
         return Concepts.find(query, projection).lean().exec((error, dimensions) => {
           if (error) {
@@ -181,32 +195,35 @@ module.exports = (app, done, datasetName) => {
           }, {});
           done(null, dimensionOriginIdToNeoId)
         }),
-        (dimensionOriginIdToNeoId, done) => IndicatorValues.distinct('dimensions', {measure: indicator.originId}).lean().exec((error, coordinates) => {
-          return Entities.find({originId: {$in: coordinates}}, {sets: 1, domain: 1, originId: 1}).lean().exec((error, entities) => {
+        (dimensionOriginIdToNeoId, done) => IndicatorValues.distinct('dimensions', {dataset: pipe.dataset._id, measure: indicator.originId, from: {$lte: pipe.currentVersion}, to: {$gt: pipe.currentVersion}}).lean().exec((error, coordinates) => {
+          return Entities.find({originId: {$in: coordinates}, dataset: pipe.dataset._id, from: {$lte: pipe.currentVersion}, to: {$gt: pipe.currentVersion}}, {sets: 1, domain: 1, originId: 1}).lean().exec((error, entities) => {
           if (!coordinates.length) {
             return onDimensionValuesForIndicatorExported();
           }
 
           let batchQueryId = 0;
           const batchQuery = _.map(entities, dimValue => {
-            let batchNode = makeBatchNode({
-              id: batchQueryId,
-              labelName: 'DimensionValues',
-              body: {originId: dimValue.originId.toString()}
-            });
 
-
+            let batchNode = [];
             _(dimValue.sets ? dimValue.sets : [])
               .concat([dimValue.domain])
-			  .map(coord => coord.toString())
-			  .uniq()
+              .map(coord => coord.toString())
+              .uniq()
               .forEach(coord => {
+                batchNode.push(makeBatchNode({
+                  id: batchQueryId,
+                  labelName: 'DimensionValues',
+                  body: {originId: dimValue.originId.toString()}
+                }));
+
                 batchNode.push(makeBatchRelation({
                   fromNodeId: dimensionOriginIdToNeoId[coord],
                   toNodeId: `{${batchQueryId}}`,
                   relationName: 'WITH_DIMENSION_VALUE',
                   from: pipe.currentVersion
                 }));
+
+                batchQueryId += 2;
               });
 
             batchQueryId += 2;
@@ -228,7 +245,7 @@ module.exports = (app, done, datasetName) => {
     const IndicatorValues = mongoose.model('DataPoints');
 
     return async.eachSeries(pipe.indicators, (indicator, escb) => {
-	
+
 	  console.log(`Exporting of '${indicator.gid}' measure values STARTED`);
       console.time(`Exporting of '${indicator.gid}' measure values DONE`);
 
@@ -274,7 +291,7 @@ module.exports = (app, done, datasetName) => {
 
           console.time(`${indicator.gid} values left to save: ${currentCounter}`);
 
-          IndicatorValues.find({measure: indicator.originId}, {
+          IndicatorValues.find({dataset: pipe.dataset._id, measure: indicator.originId, from: {$lte: pipe.currentVersion}, to: {$gt: pipe.currentVersion}}, {
             value: 1,
             dimensions: 1,
             measure: 1,
@@ -283,12 +300,16 @@ module.exports = (app, done, datasetName) => {
           }, {join: {
               measure: {
                 $find: {
-                  dataset: pipe.dataset._id
+                  dataset: pipe.dataset._id,
+                  from: {$lte: pipe.currentVersion},
+                  to: {$gt: pipe.currentVersion}
                 }
               },
               dimensions: {
                 $find: {
-                  dataset: pipe.dataset._id
+                  dataset: pipe.dataset._id,
+                  from: {$lte: pipe.currentVersion},
+                  to: {$gt: pipe.currentVersion}
                 }
               }
           }}).skip(task.skip).limit(task.limit).lean().exec((err, indicatorValues) => {
@@ -302,10 +323,15 @@ module.exports = (app, done, datasetName) => {
               });
 
               _.each(indicatorValue.dimensions, coordinate => {
-                _.each(_.uniq([coordinate.domain/*, ...coordinate.sets*/].map(concept => concept.toString())), concept => {
+                const concepts = _.chain([coordinate.domain, ...coordinate.sets])
+                  .map(_.toString)
+                  .uniq()
+                  .value();
+
+                _.each(concepts, concept => {
                   const nodeId =
-                    indicatorMetadata.dimensionsWithValuesPerIndicator[concept.toString()][coordinate.originId.toString()] ||
-                    indicatorMetadata.dimensionsWithValuesPerIndicator[concept.toString()][null];
+                    indicatorMetadata.dimensionsWithValuesPerIndicator[concept][coordinate.originId.toString()] ||
+                    indicatorMetadata.dimensionsWithValuesPerIndicator[concept][null];
 
                   batchNode.push(makeBatchRelation({
                     fromNodeId: nodeId,

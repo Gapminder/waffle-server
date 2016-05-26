@@ -55,6 +55,9 @@ module.exports = serviceLocator => {
       }
       isExportInProgress = false;
       return res.json({success: !error, msg, error});
-    }, req.params.datasetName);
+    }, {
+      datasetName: req.params.datasetName,
+      version: req.params.version
+    });
   }
 };

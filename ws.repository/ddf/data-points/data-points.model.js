@@ -64,5 +64,7 @@ DataPoints.plugin(originId, {
 // DataPoints.index({measure: 1, dimensions: 1});
 DataPoints.index({sources: 1});
 DataPoints.index({originId: 1, dataset: 1, transaction: 1});
+DataPoints.index({dataset: 1, measure: 1, from: 1});
+DataPoints.index({dataset: 1, from: 1});
 
 module.exports = mongoose.model('DataPoints', DataPoints);
