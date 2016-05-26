@@ -1,3 +1,5 @@
+'use strict';
+
 module.exports = function (serviceLocator) {
   require('./adapter')(serviceLocator);
   require('./geo')(serviceLocator);
@@ -9,6 +11,6 @@ module.exports = function (serviceLocator) {
   require('./file-management')(serviceLocator);
   require('./pipes')(serviceLocator);
   require('./graphs')(serviceLocator);
-  
+  require('./importer')(serviceLocator);
 };
 
