@@ -1,7 +1,7 @@
 'use strict';
 
 var express = require('express');
-var service = require('./importer.service');
+var service = require('./import.service');
 
 module.exports = serviceLocator => {
   let app = serviceLocator.getApplication();
