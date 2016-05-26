@@ -5,7 +5,7 @@ var compression = require('compression');
 var cors = require('cors');
 
 var u = require('../utils');
-var controller = require('./geo-properties.service');
+var service = require('./geo-properties.service');
 
 
 /**
@@ -49,13 +49,13 @@ module.exports = function (serviceLocator) {
   var router = express.Router();
 
   const cache = require('../../ws.utils/redis-cache')(app.get('config'));
-  
+
   // lists
   /**
    * @swagger
    * /api/geo:
    *   get:
-   *    description: Geo-poroperties
+   *    description: Geo-properties
    *    produces:
    *      - application/json
    *      - text/csv
@@ -109,7 +109,7 @@ module.exports = function (serviceLocator) {
 };
 
 function sendGeoResponse(req, res) {
-  controller.projectGeoProperties(req.decodedQuery.select, req.decodedQuery.where, function (err, result) {
+  service.projectGeoProperties(req.decodedQuery.select, req.decodedQuery.where, function (err, result) {
     if (err) {
       return res.json({success: !err, error: err});
     }
