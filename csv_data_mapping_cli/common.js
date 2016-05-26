@@ -22,18 +22,15 @@ let config;
 let ddfModels;
 let pathToDdfFolder;
 let resolvePath;
-let ddfConceptsFile;
 let fileTemplates;
 
-module.exports = function (app, done) {
+module.exports = function (app) {
   logger = app.get('log');
   config = app.get('config');
   ddfModels = app.get('ddfModels');
 
   pathToDdfFolder = config.PATH_TO_DDF_FOLDER;
   resolvePath = (filename) => path.resolve(pathToDdfFolder, filename);
-  const ddfEnTranslations = require(resolvePath('../vizabi/en.json'));
-  const ddfSeTranslations = require(resolvePath('../vizabi/se.json'));
   fileTemplates = {
     getFilenameOfEntityDomainEntities: _.template('ddf--entities--${ gid }.csv'),
     getFilenameOfEntitySetEntities: _.template('ddf--entities--${ domain.gid }--${ gid }.csv'),
@@ -47,12 +44,18 @@ module.exports = function (app, done) {
     createConcepts,
     createEntities,
     createDataPoints,
-    findLastDataset,
-    findLastVersion,
+    _createDataPoints,
+    findDataset,
+    findVersion,
     getAllConcepts: _getAllConcepts,
+    findAllEntities: _findAllEntities,
     createTranslations,
     findDataPoints,
-    updateConceptsDimensions: _updateConceptsDimensions
+    processRawDataPoints: __processRawDataPoints,
+    parseFilename: _parseFilename,
+    createEntitiesBasedOnDataPoints: _createEntitiesBasedOnDataPoints,
+    updateConceptsDimensions: _updateConceptsDimensions,
+    closeTransaction: closeTransaction
   };
 };
 
@@ -69,11 +72,21 @@ function createTransaction(pipe, done) {
   });
 }
 
+function closeTransaction(pipe, done) {
+  logger.info('close transaction');
+
+  mongoose.model('DatasetTransactions').update({
+    _id: pipe.transaction._id
+  }, {$set: {isClosed: true}}, (err) => {
+    return done(err, pipe);
+  });
+}
+
 function createDataset(pipe, done) {
   logger.info('create data set');
 
   mongoose.model('Datasets').create({
-    name: 'ddf-gapminder-world-v2',
+    name: pathToDdfFolder,
     type: 'local',
     path: pathToDdfFolder,
     defaultLanguage: 'en',
@@ -82,7 +95,7 @@ function createDataset(pipe, done) {
     createdAt: pipe.transaction.createdAt,
     createdBy: pipe.user._id
   }, (err, res) => {
-    pipe.dataset = res.toObject();
+    pipe.dataset = res;
     return done(err, pipe);
   });
 }
@@ -90,7 +103,7 @@ function createDataset(pipe, done) {
 function updateTransaction(pipe, done) {
   logger.info('update transaction');
 
-  mongoose.model('DatasetTransactions').update({_id: pipe.transaction._id}, {
+  mongoose.model('DatasetTransactions').update({_id: pipe.transactionId || pipe.transaction._id}, {
     $set: {
       dataset: pipe.dataset._id
     }
@@ -158,26 +171,26 @@ function _getAllConcepts(pipe, done) {
   logger.info('** get all concepts');
 
   mongoose.model('Concepts').find({
-    dataset: pipe.dataset._id,
-    transaction: pipe.transaction._id
+    dataset: pipe.datasetId || pipe.dataset._id,
+    transaction: pipe.transactionId || pipe.transaction._id
   }, null, {
     join: {
       domain: {
         $find: {
           dataset: pipe.dataset._id,
-          transaction: pipe.transaction._id
+          transaction: pipe.transactionId || pipe.transaction._id
         }
       },
       subsetOf: {
         $find: {
           dataset: pipe.dataset._id,
-          transaction: pipe.transaction._id
+          transaction: pipe.transactionId || pipe.transaction._id
         }
       },
       dimensions: {
         $find: {
           dataset: pipe.dataset._id,
-          transaction: pipe.transaction._id
+          transaction: pipe.transactionId || pipe.transaction._id
         }
       }
     }
@@ -287,7 +300,7 @@ function createTranslations(pipe, done) {
         sets: concept ? [concept._id] : [],
         from: pipe.transaction.createdAt,
         dataset: pipe.dataset._id,
-        transaction: pipe.transaction._id
+        transaction: pipe.transactionId || pipe.transaction._id
       });
       return res;
     }, []);
@@ -391,7 +404,7 @@ function _findAllOriginalEntities(pipe, done) {
 
   mongoose.model('OriginalEntities').find({
     dataset: pipe.dataset._id,
-    transaction: pipe.transaction._id
+    transaction: pipe.transactionId || pipe.transaction._id
   })
     .populate('dataset')
     .populate('transaction')
@@ -430,7 +443,7 @@ function _clearOriginalEntities(pipe, cb) {
 
   mongoose.model('OriginalEntities').remove({
     dataset: pipe.dataset._id,
-    transaction: pipe.transaction._id
+    transaction: pipe.transactionId || pipe.transaction._id
   }, err => {
     return cb(err, pipe);
   });
@@ -441,25 +454,25 @@ function _findAllEntities(pipe, done) {
 
   mongoose.model('Entities').find({
     dataset: pipe.dataset._id,
-    transaction: pipe.transaction._id
+    transaction: pipe.transactionId || pipe.transaction._id
   }, null, {
     join: {
       domain: {
         $find: {
           dataset: pipe.dataset._id,
-          transaction: pipe.transaction._id
+          transaction: pipe.transactionId || pipe.transaction._id
         }
       },
       sets: {
         $find: {
           dataset: pipe.dataset._id,
-          transaction: pipe.transaction._id
+          transaction: pipe.transactionId || pipe.transaction._id
         }
       },
       drillups: {
         $find: {
           dataset: pipe.dataset._id,
-          transaction: pipe.transaction._id
+          transaction: pipe.transactionId || pipe.transaction._id
         }
       }
     }
@@ -518,8 +531,7 @@ function createDataPoints(pipe, done) {
       _loadDataPoints,
       _createEntitiesBasedOnDataPoints,
       _findAllEntities,
-      _createDataPoints,
-      _updateConceptsDimensions
+      _createDataPoints
     ], err => {
       logger.info(`** Processed ${key + 1} of ${pipe.filenames.length} files`);
 
@@ -555,23 +567,12 @@ function _parseFilename(pipe, cb) {
 function _loadDataPoints(pipe, cb) {
   logger.info(`** load data points`);
 
-  readCsvFile(pipe.filename, {}, (err, res) => {
-    let mapEntities = (entry) => _.chain(pipe.dimensions)
-      .keys()
-      .map(entitySetGid => {
-        let domain = pipe.dimensions[entitySetGid].domain || pipe.dimensions[entitySetGid];
+  readCsvFile(pipe.filename, {}, __processRawDataPoints(pipe, cb));
+}
 
-        return {
-          gid: entry[entitySetGid],
-          source: pipe.filename,
-          domain: domain.originId,
-          sets: pipe.dimensions && pipe.dimensions[entitySetGid] ? [pipe.dimensions[entitySetGid].originId] : [],
-          dataset: pipe.dataset._id,
-          transaction: pipe.transaction._id
-        };
-      })
-      .value();
-
+function __processRawDataPoints(pipe, cb) {
+  return (err, res) => {
+    // TODO: account must be taken of entities that could have equal gids in different sets (groupBy)
     let dictionary = _.keyBy(pipe.entities, 'gid');
     let gids = new Set();
     let entities = _.chain(res)
@@ -595,8 +596,8 @@ function _loadDataPoints(pipe, cb) {
       entities: entities
     };
 
-    return cb(err, pipe);
-  });
+    return async.setImmediate(() => cb(err, pipe));
+  }
 }
 
 function _createEntitiesBasedOnDataPoints(pipe, cb) {
@@ -618,7 +619,7 @@ function _createDataPoints(pipe, cb) {
   let dataPoints = _.flatMap(pipe.raw.dataPoints, mapDdfDataPointToWsModel(pipe));
 
   if (_.isEmpty(dataPoints)) {
-    logger.error(`file '${pipe.filename}' is empty or doesn't exist.`);
+    logger.warn(`file '${pipe.filename}' is empty or doesn't exist.`);
 
     return async.setImmediate(() => cb(null, pipe));
   }
@@ -672,7 +673,7 @@ function ___getAllEntitiesByMeasure(pipe, cb) {
     {
       measure: pipe.measure.originId,
       dataset: pipe.dataset._id,
-      transaction: pipe.transaction._id,
+      transaction: pipe.transactionId || pipe.transaction._id,
     },
     (err, res) => {
       pipe.originIdsOfEntities = res;
@@ -687,7 +688,7 @@ function ___getAllSetsBySelectedEntities(pipe, cb) {
     {
       originId: {$in: pipe.originIdsOfEntities},
       dataset: pipe.dataset._id,
-      transaction: pipe.transaction._id,
+      transaction: pipe.transactionId || pipe.transaction._id,
     },
     (err, res) => {
       pipe.originIdsOfEntitySets = res;
@@ -702,7 +703,7 @@ function ___getAllDimensionsBySelectedEntities(pipe, cb) {
     {
       originId: {$in: pipe.originIdsOfEntities},
       dataset: pipe.dataset._id,
-      transaction: pipe.transaction._id,
+      transaction: pipe.transactionId || pipe.transaction._id,
     },
     (err, res) => {
       pipe.originIdsOfEntityDomains = res;
@@ -725,8 +726,9 @@ function ___updateDimensionByMeasure(pipe, cb) {
     });
 }
 
-function findLastDataset(pipe, done) {
-  mongoose.model('Datasets').findOne({})
+function findDataset(pipe, done) {
+  let query = pipe.datasetId ? {_id: pipe.datasetId} : {name: process.env.DATASET_NAME};
+  mongoose.model('Datasets').findOne(query)
     .lean()
     .exec((err, res) => {
       pipe.dataset = res;
@@ -734,7 +736,7 @@ function findLastDataset(pipe, done) {
     });
 }
 
-function findLastVersion(pipe, done) {
+function findVersion(pipe, done) {
   mongoose.model('DatasetTransactions').findOne({})
     .lean()
     .exec((err, res) => {
@@ -747,19 +749,19 @@ function findDataPoints(pipe, done) {
   console.time('find all datapoints');
   mongoose.model('DataPoints').find({
     dataset: pipe.dataset._id,
-    transaction: pipe.transaction._id
+    transaction: pipe.transactionId || pipe.transaction._id
   }, null, {
     join: {
       dimensions: {
         $find: {
           dataset: pipe.dataset._id,
-          transaction: pipe.transaction._id
+          transaction: pipe.transactionId || pipe.transaction._id
         }
       },
       measure: {
         $find: {
           dataset: pipe.dataset._id,
-          transaction: pipe.transaction._id
+          transaction: pipe.transactionId || pipe.transaction._id
         }
       }
     }
@@ -800,7 +802,7 @@ function mapDdfConceptsToWsModel(pipe) {
       from: pipe.transaction.createdAt,
       to: Number.MAX_VALUE,
       dataset: pipe.dataset._id,
-      transaction: pipe.transaction._id
+      transaction: pipe.transactionId || pipe.transaction._id
     };
   };
 }
@@ -822,7 +824,7 @@ function mapDdfOriginalEntityToWsModel(pipe) {
 
       from: pipe.transaction.createdAt,
       dataset: pipe.dataset._id,
-      transaction: pipe.transaction._id
+      transaction: pipe.transactionId || pipe.transaction._id
     };
   };
 }
@@ -911,7 +913,7 @@ function mapDdfEntityToWsModel(entity, concept, domain, pipe) {
   return {
     gid: entity[concept.gid],
     title: gid,
-    source: [pipe.filename],
+    sources: [pipe.filename],
     properties: entity,
 
     domain: domain.originId,
@@ -920,7 +922,7 @@ function mapDdfEntityToWsModel(entity, concept, domain, pipe) {
 
     from: pipe.transaction.createdAt,
     dataset: pipe.dataset._id,
-    transaction: pipe.transaction._id
+    transaction: pipe.transactionId || pipe.transaction._id
   };
 }
 
@@ -945,7 +947,7 @@ function mapDdfDataPointToWsModel(pipe) {
   return function (entry, key) {
     let isValidEntry = _.chain(entry)
       .values()
-      .every(value => !_.isNil(value))
+      .every((value, key) => !_.isNil(value) || key !== 'originId')
       .value();
 
     if (!isValidEntry) {
@@ -953,6 +955,7 @@ function mapDdfDataPointToWsModel(pipe) {
       return [];
     }
 
+    // TODO: rewrite with _.pick
     let dimensions = _.chain(entry)
       .keys()
       .filter(conceptGid => _.keys(pipe.dimensions).indexOf(conceptGid) > -1)
@@ -967,6 +970,7 @@ function mapDdfDataPointToWsModel(pipe) {
       }, [])
       .value();
 
+    // TODO: rewrite with _.pick
     return _.chain(entry)
       .keys()
       .filter(conceptGid => _.keys(pipe.measures).indexOf(conceptGid) > -1)
@@ -975,11 +979,12 @@ function mapDdfDataPointToWsModel(pipe) {
           value: entry[measureGid],
           measure: pipe.measures[measureGid].originId,
           dimensions: dimensions,
+          originId: entry.originId,
 
           isNumeric: _.isNumber(entry[measureGid]),
           from: pipe.transaction.createdAt,
           dataset: pipe.dataset._id,
-          transaction: pipe.transaction._id
+          transaction: pipe.transactionId || pipe.transaction._id
         }
       })
       .value();

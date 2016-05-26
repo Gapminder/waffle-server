@@ -14,6 +14,7 @@ const originId = require('../origin-id.plugin');
  *
  * @property {String} title - human-readable name of the concept
  * @property {String} type - can be on of the following: 'entity_set', 'entity_domain', 'string', 'measure'. By default 'string' will be used
+ * @property {Array<String>} sources - filenames of source item
  *
  * @property {Array<String>} tags - additional information regarding concept with type measure
  * @property {String} tooltip - nice name for concept
@@ -41,6 +42,7 @@ const Concepts = new Schema({
 
   title: {type: String, required: true, index: true},
   type: {type: String, enum: ['entity_set', 'entity_domain', 'time', 'string', 'measure'], 'default': 'string', required: true},
+  sources: [{type: String, required: true}],
 
   tags: [String],
   tooltip: String,
@@ -82,6 +84,7 @@ Concepts.plugin(originId, {
 });
 // Concepts.index({type: 1});
 Concepts.index({domain: 1});
+Concepts.index({sources: 1});
 // Concepts.index({gid: 1, type: 1});
 Concepts.index({originId: 1, dataset: 1, transaction: 1});
 
