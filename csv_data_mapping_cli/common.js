@@ -220,7 +220,11 @@ function _addConceptSubsetOf(pipe, done) {
     }
 
     mongoose.model('Concepts').update(
-      {'properties.drill_up': gid},
+      {
+        'properties.drill_up': gid,
+        dataset: pipe.datasetId || pipe.dataset._id,
+        transaction: pipe.transactionId || pipe.transaction._id
+      },
       {$addToSet: {'subsetOf': concept._id}},
       {multi: true},
       escb
@@ -244,7 +248,11 @@ function _addConceptDomains(pipe, done) {
     }
 
     mongoose.model('Concepts').update(
-      {'properties.domain': gid},
+      {
+        'properties.domain': gid,
+        dataset: pipe.datasetId || pipe.dataset._id,
+        transaction: pipe.transactionId || pipe.transaction._id
+      },
       {$set: {'domain': concept._id}},
       {multi: true},
       escb
@@ -719,7 +727,11 @@ function ___updateDimensionByMeasure(pipe, cb) {
   }
 
   return mongoose.model('Concepts').update(
-    {originId: pipe.measure.originId},
+    {
+      originId: pipe.measure.originId,
+      dataset: pipe.datasetId || pipe.dataset._id,
+      transaction: pipe.transactionId || pipe.transaction._id
+    },
     {$addToSet: {dimensions: {$each: dimensions}}},
     (err) => {
       return cb(err, pipe);
