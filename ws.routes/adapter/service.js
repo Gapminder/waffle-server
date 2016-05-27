@@ -127,7 +127,7 @@ module.exports = function (serviceLocator) {
    *
    *
    */
-  router.get('/api/vizabi/conceptprops.json', cors(), compression(), u.getCacheConfig('conceptprops'), cache.route(), getMetadata);
+  router.get('/api/vizabi/metadata.json', cors(), compression(), u.getCacheConfig('metadata'), cache.route(), getMetadata);
 
   /**
    * @swagger

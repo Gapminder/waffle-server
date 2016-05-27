@@ -7,7 +7,7 @@ const _ = require('lodash');
 const fs = require('fs');
 const async = require('async');
 
-const metadata = require('./vizabi/conceptprops.json');
+const metadata = require('./vizabi/metadata.json');
 const mongoose = require('mongoose');
 
 const Translations = mongoose.model('Translations');
