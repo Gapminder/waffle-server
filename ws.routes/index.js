@@ -12,5 +12,6 @@ module.exports = function (serviceLocator) {
   require('./pipes')(serviceLocator);
   require('./graphs')(serviceLocator);
   require('./ddf/import')(serviceLocator);
+  require('./ddf/stats')(serviceLocator);
 };
 

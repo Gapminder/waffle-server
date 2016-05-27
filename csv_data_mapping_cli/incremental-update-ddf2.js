@@ -16,7 +16,7 @@ const ADD_MARK = 'A';
 const MODIFY_MARK = 'M';
 
 const LIMIT_NUMBER_PROCESS = 10;
-const MAX_VALUE = Number.MAX_VALUE;
+const MAX_VALUE = Number.MAX_SAFE_INTEGER;
 
 // take from args
 let logger;
