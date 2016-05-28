@@ -77,17 +77,37 @@ module.exports = (serviceLocator) => {
   }
 
   function importDataset(req, res, next) {
-    let params = req.query || req.body;
+    let params = req.body;
+    async.waterfall([
+      async.constant({}),
+      (pipe, done) => Datasets.findOne({name: params.github}).lean().exec((error, dataset) => {
+        pipe.dataset = dataset;
+        done(error, pipe);
+      }),
+      (pipe, done) => Transactions.findOne({dataset: pipe.dataset ? pipe.dataset._id: null, commit: req.body.commit}).lean().exec((error, transaction) => {
+        if (error) {
+          logger.error(error);
+          return res.json({success: !error, error});
+        }
 
-    reposService.cloneRepo(params.github, (error, wasCloned) => {
-      if (error) {
-        return res.json({success: !error, error});
-      }
+        if (transaction) {
+          logger.error(`Version of dataset "${req.body.github}" with commit: "${transaction.commit}" was already applied`);
+          return res.json({success: false, error: `Version of dataset with commit: "${transaction.commit}" was already applied`});
+        }
 
-      require('../../../csv_data_mapping_cli/import-ddf2')(app, error => {
+        reposService.cloneRepo(params.github, error => {
+          if (error) {
+            return done(error);
+          }
+
+          require('../../../csv_data_mapping_cli/import-ddf2')(app, error => {
+            return done(error);
+          }, {datasetName: params.github, commit: params.commit, github: req.body.github});
+        }, config);
+      })
+    ], error => {
         return res.json({success: !error, error});
-      }, {datasetName: params.github, commit: params.commit, github: req.body.github});
-    }, config);
+    });
   }
 
   function updateIncrementally(req, res, next) {
