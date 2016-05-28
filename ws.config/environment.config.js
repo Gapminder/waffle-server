@@ -52,5 +52,7 @@ module.exports = Object.freeze({
   CLEAR_MONGO_DB_COLLECTIONS: false,
 
   PATH_TO_DDF_FOLDER: '../open-numbers/ddf--gapminder_world',
-  PATH_TO_DIFF_DDF_RESULT_FILE: '../waffle-server-import-cli/requests/operation-result.json'
+  PATH_TO_DIFF_DDF_RESULT_FILE: '../waffle-server-import-cli/requests/operation-result.json',
+
+  CLEAN_EXPORT: false
 });

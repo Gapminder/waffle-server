@@ -62,5 +62,7 @@ Entities.index({sources: 1});
 // Entities.index({gid: 1, drilldowns: 1});
 // Entities.index({gid: 1, drillups: 1});
 Entities.index({originId: 1, dataset: 1, transaction: 1});
+Entities.index({originId: 1, dataset: 1, from: 1});
+Entities.index({dataset: 1, from: 1});
 
 module.exports = mongoose.model('Entities', Entities);

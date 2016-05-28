@@ -12,28 +12,41 @@ module.exports = neo4jdb => {
   return function updateEntitySets(pipe, onEntitySetsUpdated) {
     const Concepts = mongoose.model('Concepts');
 
+    let changed = {
+      updated: 0,
+      created: 0,
+      deleted: 0
+    };
     return async.waterfall([
-      done => Concepts.find({type: 'entity_set', $or: [{from: pipe.version}, {to: pipe.version}]}).lean().exec(done),
+      done => Concepts.find({dataset: pipe.dataset._id, type: 'entity_set', $or: [{from: pipe.version}, {to: pipe.version}]}).lean().exec(done),
       (entitySets, done) => {
         const entitySetsByOriginId = _.groupBy(entitySets, entitySet => entitySet.originId.toString());
 
         return async.eachLimit(entitySetsByOriginId, 10, (entitySetsForSameOriginId, onEntitySetUpdated) => {
           if (exportUtils.isDeleted(entitySetsForSameOriginId, pipe.version)) {
+            changed.deleted++;
             return deleteEntitySet(_.first(entitySetsForSameOriginId), pipe.version, onEntitySetUpdated)
           }
 
           if (exportUtils.isNew(entitySetsForSameOriginId, pipe.version)) {
+            changed.created++;
             return createEntitySet(_.first(entitySetsForSameOriginId), pipe.version, onEntitySetUpdated)
           }
 
           if (exportUtils.isUpdated(entitySetsForSameOriginId, pipe.version)) {
+            changed.updated++;
             return updateEntitySet(_.last(_.sortBy(entitySetsForSameOriginId, 'from')), pipe.version, onEntitySetUpdated)
           }
 
           return onEntitySetUpdated();
         }, done);
       }
-    ], error => onEntitySetsUpdated(error, pipe));
+    ], error => {
+      console.log('EntitySets updated:', changed.updated);
+      console.log('EntitySets created:', changed.created);
+      console.log('EntitySets deleted:', changed.deleted);
+      onEntitySetsUpdated(error, pipe)
+    });
   };
 
   function createEntitySet(entitySet, version, onCreated) {
@@ -118,8 +131,9 @@ module.exports = neo4jdb => {
 
   function deleteEntitySet(entitySet, version, onDeleted) {
     const cypher = `
-      MATCH ()<-[r:IS_SUBSET_OF_ENTITY_DOMAIN]-(n:EntitySet {originId: '${entitySet.originId}'}) 
-      SET r.to = ${version}`;
+      MATCH ()<-[r:IS_SUBSET_OF_ENTITY_DOMAIN]-(n:EntitySet {originId: '${entitySet.originId}'}), 
+            ()<-[wiv:WITH_INDICATOR_VALUE]-(:DimensionValues)<-[:WITH_DIMENSION_VALUE]-(:Dimensions {originId: '${entitySet.originId}'})<-[wd:WITH_DIMENSION]-(:Indicators)
+      SET r.to = ${version}, wiv.to = ${version}, wd.to = ${version}`;
 
     return neo4jdb.cypherQuery(cypher, onDeleted);
   }

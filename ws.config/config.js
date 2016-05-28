@@ -38,6 +38,11 @@ module.exports = function (app) {
     PATH_TO_DDF_FOLDER: process.env.PATH_TO_DDF_FOLDER || DEFAULT_CONFIG.PATH_TO_DDF_FOLDER,
     PATH_TO_DIFF_DDF_RESULT_FILE: process.env.PATH_TO_DIFF_DDF_RESULT_FILE || DEFAULT_CONFIG.PATH_TO_DIFF_DDF_RESULT_FILE,
 
+    DATASET_NAME: process.env.DATASET_NAME,
+    CLEAN_EXPORT: process.env.CLEAN_EXPORT || DEFAULT_CONFIG.CLEAN_EXPORT,
+    EXPORT_TO_VERSION: process.env.EXPORT_TO_VERSION,
+    INCREMENTAL_EXPORT_TO_VERSION: process.env.INCREMENTAL_EXPORT_TO_VERSION, 
+
     // is used npm logging levels (prioritized from 0 to 5, from highest to lowest):
     // { error: 0, warn: 1, info: 2, verbose: 3, debug: 4, silly: 5 }
     LOG_LEVEL: process.env.LOG_LEVEL || DEFAULT_CONFIG.LOG_LEVEL,

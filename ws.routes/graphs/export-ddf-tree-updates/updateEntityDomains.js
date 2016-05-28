@@ -12,28 +12,41 @@ module.exports = neo4jdb => {
   return function updateEntityDomains(pipe, onDomainsUpdated) {
     const Concepts = mongoose.model('Concepts');
 
+    let changed = {
+      updated: 0,
+      created: 0,
+      deleted: 0
+    };
     return async.waterfall([
-      done => Concepts.find({type: 'entity_domain', $or: [{from: pipe.version}, {to: pipe.version}]}).lean().exec(done),
+      done => Concepts.find({dataset: pipe.dataset._id, type: 'entity_domain', $or: [{from: pipe.version}, {to: pipe.version}]}).lean().exec(done),
       (domains, done) => {
         const domainsByOriginId = _.groupBy(domains, domain => domain.originId.toString());
 
         return async.eachLimit(domainsByOriginId, 10, (domainsForSameOriginId, onDomainUpdated) => {
           if (exportUtils.isDeleted(domainsForSameOriginId, pipe.version)) {
+            changed.deleted++;
             return deleteDomain(_.first(domainsForSameOriginId), pipe.version, onDomainUpdated)
           }
 
           if (exportUtils.isNew(domainsForSameOriginId, pipe.version)) {
+            changed.created++;
             return createDomain(_.first(domainsForSameOriginId), pipe.version, pipe.dataset, onDomainUpdated)
           }
 
           if (exportUtils.isUpdated(domainsForSameOriginId, pipe.version)) {
+            changed.updated++;
             return updateDomain(_.last(_.sortBy(domainsForSameOriginId, 'from')), pipe.version, onDomainUpdated)
           }
 
           return onDomainUpdated();
         }, done);
       }
-    ], error => onDomainsUpdated(error, pipe));
+    ], error => {
+      console.log('Domains updated:', changed.updated);
+      console.log('Domains created:', changed.created);
+      console.log('Domains deleted:', changed.deleted);
+      onDomainsUpdated(error, pipe)
+    });
   };
 
   function createDomain(domain, version, dataset, onCreated) {
@@ -114,8 +127,9 @@ module.exports = neo4jdb => {
 
   function deleteDomain(domain, version, onDeleted) {
     const cypher = `
-      MATCH ()-[r:WITH_ENTITY_DOMAIN]->(n:EntityDomain {originId: '${domain.originId}'}) 
-      SET r.to = ${version}`;
+      MATCH ()-[r:WITH_ENTITY_DOMAIN]->(n:EntityDomain {originId: '${domain.originId}'}),
+            ()<-[wiv:WITH_INDICATOR_VALUE]-(:DimensionValues)<-[:WITH_DIMENSION_VALUE]-(:Dimensions {originId: '${entitySet.originId}'})<-[wd:WITH_DIMENSION]-(:Indicators)
+      SET r.to = ${version}, wiv.to = ${version}, wd.to = ${version}`;
 
     return neo4jdb.cypherQuery(cypher, onDeleted);
   }

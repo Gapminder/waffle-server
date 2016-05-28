@@ -4,25 +4,26 @@ const async = require('async');
 const exportDdfMetaTree = require('./export-ddf-meta-tree');
 const exportDdfDataTree = require('./export-ddf-data-tree');
 
-module.exports = (app, done, datasetName = process.env.DATASET_NAME) => {
-  var logger = app.get('log');
-  var neo4jdb = app.get('neo4jDb');
+module.exports = (app, done, options = {}) => {
+  const logger = app.get('log');
+  const neo4jdb = app.get('neo4jDb');
+  const config = app.get('config');
 
-  return cleanGraph(error => {
+  const exportTasks = [];
+
+  if (config.CLEAN_EXPORT) {
+    exportTasks.push(cb => cleanGraph(cb));
+  }
+
+  exportTasks.push(cb => exportDdfMetaTree(app, cb, options));
+  exportTasks.push(cb => exportDdfDataTree(app, cb, options));
+
+  return async.waterfall(exportTasks, error => {
     if (error) {
-      return done(error);
+      logger.error(error);
     }
 
-    return async.waterfall([
-      cb => exportDdfMetaTree(app, cb, datasetName),
-      cb => exportDdfDataTree(app, cb, datasetName)
-    ], error => {
-      if (error) {
-        logger.error(error);
-      }
-
-      return done(error);
-    });
+    return done(error);
   });
 
   function cleanGraph(cb) {

@@ -12,21 +12,29 @@ module.exports = neo4jdb => {
   return function updateEntities(pipe, onEntitiesUpdated) {
     const Entities = mongoose.model('Entities');
 
+    let changed = {
+      updated: 0,
+      created: 0,
+      deleted: 0
+    };
     return async.waterfall([
-      done => Entities.find({$or: [{from: pipe.version}, {to: pipe.version}]}).lean().exec(done),
+      done => Entities.find({dataset: pipe.dataset._id, $or: [{from: pipe.version}, {to: pipe.version}]}).lean().exec(done),
       (entities, done) => {
         const entitiesByOriginId = _.groupBy(entities, entity => entity.originId.toString());
 
         return async.eachLimit(entitiesByOriginId, 10, (entitiesForSameOriginId, onEntityUpdated) => {
           if (exportUtils.isDeleted(entitiesForSameOriginId, pipe.version)) {
+            changed.deleted++;
             return deleteEntity(_.first(entitiesForSameOriginId), pipe.version, onEntityUpdated);
           }
 
           if (exportUtils.isNew(entitiesForSameOriginId, pipe.version)) {
+            changed.created++;
             return createEntity(_.first(entitiesForSameOriginId), pipe.version, onEntityUpdated);
           }
 
           if (exportUtils.isUpdated(entitiesForSameOriginId, pipe.version)) {
+            changed.updated++;
             return updateEntity(
               _.last(_.sortBy(entitiesForSameOriginId, 'from')),
               getUpdatedSetsDomainRelations(entitiesForSameOriginId),
@@ -39,7 +47,12 @@ module.exports = neo4jdb => {
           return onEntityUpdated();
         }, done);
       }
-    ], error => onEntitiesUpdated(error, pipe));
+    ], error => {
+      console.log('Entities updated:', changed.updated);
+      console.log('Entities created:', changed.created);
+      console.log('Entities deleted:', changed.deleted);
+      onEntitiesUpdated(error, pipe)
+    });
   };
 
   function createEntity(entity, version, onCreated) {
@@ -184,8 +197,9 @@ module.exports = neo4jdb => {
 
   function deleteEntity(entity, version, onDeleted) {
     const cypher = `
-      MATCH ()-[r:WITH_ENTITY]->(n:Entity {originId: '${entity.originId}'})
-      SET r.to = ${version}`;
+      MATCH ()-[r:WITH_ENTITY]->(n:Entity {originId: '${entity.originId}'}),
+            (:DimensionValues {originId: '${entity.originId}'})-[wiv:WITH_INDICATOR_VALUE]->()
+      SET r.to = ${version}, wiv.to = ${version}`;
 
     return neo4jdb.cypherQuery(cypher, onDeleted);
   }

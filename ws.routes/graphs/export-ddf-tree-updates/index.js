@@ -5,7 +5,20 @@ const async = require('async');
 const express = require('express');
 const mongoose = require('mongoose');
 
-module.exports = (app, done) => {
+module.exports = (app, done, options = {}) => {
+  const config = app.get('config');
+
+  const datasetName = options.datasetName || config.DATASET_NAME;
+  const version = options.version || config.INCREMENTAL_EXPORT_TO_VERSION;
+
+  if (!datasetName) {
+    throw new Error('Dataset name was not given - cannot invoke incremental export without it');
+  }
+
+  if (!version) {
+    throw new Error('Version to which dataset should be updated was not given - cannot invoke incremental export without it');
+  }
+
   const neo4jdb = app.get('neo4jDb');
   const logger = app.get('log');
 
@@ -13,16 +26,23 @@ module.exports = (app, done) => {
   const updateEntitySets = require('./updateEntitySets')(neo4jdb);
   const updateEntities = require('./updateEntities')(neo4jdb);
   const updateMeasures = require('./updateMeasures')(neo4jdb);
+  const updateDatapoints = require('./updateDatapoints')(neo4jdb);
 
+  logger.info('Incremental export started');
+  console.time('Incremental export completed');
   async.waterfall([
-    async.constant({datasetName: 'ddf-gapminder-world-v2', version: 1464089942362}),
+    async.constant({datasetName, version: Number(version)}),
     findDataset,
     updateMeasures,
     updateEntityDomains,
     updateEntitySets,
     updateEntities,
+    updateDatapoints,
     updateDatasetVersion
-  ], done);
+  ], error => {
+    console.timeEnd('Incremental export completed');
+    done(error);
+  });
 
   function findDataset(pipe, onDatasetFound) {
     const Datasets = mongoose.model('Datasets');
@@ -36,7 +56,10 @@ module.exports = (app, done) => {
 
           pipe.dataset = dataset;
 
-          neo4jdb.cypherQuery(`MATCH (n:Dataset {name: '${dataset.name}'})-[:WITH_ENTITY_DOMAIN]->() RETURN id(n), n.versions LIMIT 1`, (error, response) => {
+          neo4jdb.cypherQuery(`
+            MATCH (n:Dataset {name: '${dataset.name}'})-[:WITH_ENTITY_DOMAIN]->() 
+            RETURN id(n), n.versions LIMIT 1`, (error, response) => {
+
             if (error) {
               return done(error);
             }
@@ -58,6 +81,9 @@ module.exports = (app, done) => {
   }
 
   function updateDatasetVersion(pipe, onDatasetVersionUpdated) {
-    return neo4jdb.cypherQuery(`MATCH (n:Dataset) WHERE id(n) = ${pipe.dataset.neoId} SET n.versions = n.versions + ${pipe.version}`, onDatasetVersionUpdated);
+    return neo4jdb.cypherQuery(`
+      MATCH (n:Dataset {name: '${datasetName}'})-[:WITH_ENTITY_DOMAIN]->()
+      WHERE id(n) = ${pipe.dataset.neoId} 
+      SET n.versions = n.versions + ${pipe.version}`, onDatasetVersionUpdated);
   }
 };
