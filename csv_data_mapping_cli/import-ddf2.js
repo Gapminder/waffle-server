@@ -44,7 +44,7 @@ module.exports = function (app, done, options) {
   async.waterfall([
     async.constant(pipe),
     common.resolvePathToDdfFolder,
-    resolvePathToTranslations,
+    // resolvePathToTranslations,
     clearAllDbs,
     createUser,
     common.createTransaction,
@@ -57,7 +57,7 @@ module.exports = function (app, done, options) {
     // common.findLastDataset,
     // common.findLastVersion,
     // common.getAllConcepts,
-    common.createTranslations,
+    // common.createTranslations,
     // common.findDataPoints,
     // common.updateConceptsDimensions
     common.closeTransaction

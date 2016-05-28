@@ -122,28 +122,28 @@ function getAllConcepts(pipe, done) {
   mongoose.model('Concepts').find({
     dataset: pipe.dataset._id,
     from: { $lte: pipe.transaction.createdAt },
-    to: MAX_VALUE
+    to: { $gt: pipe.transaction.createdAt }
   }, null, {
     join: {
       domain: {
         $find: {
           dataset: pipe.dataset._id,
           from: { $lte: pipe.transaction.createdAt },
-          to: MAX_VALUE
+          to: { $gt: pipe.transaction.createdAt }
         }
       },
       subsetOf: {
         $find: {
           dataset: pipe.dataset._id,
           from: { $lte: pipe.transaction.createdAt },
-          to: MAX_VALUE
+          to: { $gt: pipe.transaction.createdAt }
         }
       },
       dimensions: {
         $find: {
           dataset: pipe.dataset._id,
           from: { $lte: pipe.transaction.createdAt },
-          to: MAX_VALUE
+          to: { $gt: pipe.transaction.createdAt }
         }
       }
     }

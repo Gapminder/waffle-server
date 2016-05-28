@@ -35,7 +35,7 @@ module.exports = (serviceLocator) => {
     getPrestoredQueries
   );
 
-  router.all('/api/ddf/demo/update-incremental',
+  router.post('/api/ddf/demo/update-incremental',
     cors(),
     compression(),
     decodeQuery,
@@ -61,7 +61,7 @@ module.exports = (serviceLocator) => {
   function getGitCommitsList(req, res, next) {
     const github = req.body.github || req.params.github || req.query.github;
 
-    reposService.cloneRepo(github, (error, repoInfo) => {
+    reposService.cloneRepo(github, null, (error, repoInfo) => {
       if (error) {
         return res.json({success: !error, error});
       }
@@ -92,10 +92,17 @@ module.exports = (serviceLocator) => {
           return res.json({success: !error, error});
         }
 
+<<<<<<< Updated upstream
         if (transaction) {
           logger.error(`Version of dataset "${req.body.github}" with commit: "${transaction.commit}" was already applied`);
           return res.json({success: false, error: `Version of dataset with commit: "${transaction.commit}" was already applied`});
         }
+=======
+    reposService.cloneRepo(params.github, params.commit, (error, wasCloned) => {
+      if (error) {
+        return res.json({success: !error, error});
+      }
+>>>>>>> Stashed changes
 
         reposService.cloneRepo(params.github, (error, wasCloned) => {
           if (error) {
@@ -109,30 +116,32 @@ module.exports = (serviceLocator) => {
       })
     ], error => {
         return res.json({success: !error, error});
+<<<<<<< Updated upstream
     });
+=======
+      }, {datasetName: reposService.getRepoName(params.github), commit: params.commit, github: req.body.github});
+    }, config);
+>>>>>>> Stashed changes
   }
 
   function updateIncrementally(req, res, next) {
     Transactions.findOne({commit: req.body.commit}).lean().exec((error, transaction) => {
+      if (error) {
+        logger.error(error);
+        return res.json({success: !error, error});
+      }
+
+      if (transaction) {
+        logger.error(`Version of dataset "${req.body.github}" with commit: "${transaction.commit}" was already applied`);
+        return res.json({
+          success: false,
+          error: `Version of dataset with commit: "${transaction.commit}" was already applied`
+        });
+      }
 
       incrementalUpdateService(app, error => {
-        if (error) {
-          logger.error(error);
-          return res.json({success: !error, error});
-        }
-
-        if (transaction) {
-          logger.error(`Version of dataset "${req.body.github}" with commit: "${transaction.commit}" was already applied`);
-          return res.json({
-            success: false,
-            error: `Version of dataset with commit: "${transaction.commit}" was already applied`
-          });
-        }
-
-        return require('../../../csv_data_mapping_cli/incremental-update-ddf2')(app, error => {
-          res.json({success: !error, error});
-        }, {diff: req.body.diff, datasetName: req.body.github, commit: req.body.commit, github: req.body.github});
-      });
+        return res.json({success: !error, error});
+      }, {diff: JSON.parse(req.body.diff), datasetName: reposService.getRepoName(req.body.github), commit: req.body.commit, github: req.body.github});
     });
   }
 

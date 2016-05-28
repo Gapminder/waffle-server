@@ -6,13 +6,15 @@ const express = require('express');
 const shell = require('shelljs');
 const fs = require('fs');
 const path = require('path');
+const git = require('simple-git');
 
 module.exports = {
   cloneRepo,
+  getRepoName,
   getPathToRepo
 };
 
-function cloneRepo(githubUrl, onCloned, config) {
+function cloneRepo(githubUrl, commit, onCloned, config) {
   if (!githubUrl) {
     return onCloned('Github url was not given');
   }
@@ -23,6 +25,13 @@ function cloneRepo(githubUrl, onCloned, config) {
       shell.exec(`git clone ${githubUrl} ./${config.PATH_TO_DDF_REPOSITORIES}/${getRepoName(githubUrl)}`);
       return onCloned(null, {pathToRepo});
     }
+
+    return git(pathToRepo)
+      .pull('origin', 'master')
+      .checkout(commit || 'HEAD', function (err) {
+        return onCloned(err, {pathToRepo});
+      });
+
     return onCloned(null, {pathToRepo});
   });
 }

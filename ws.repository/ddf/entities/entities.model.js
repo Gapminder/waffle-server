@@ -40,7 +40,7 @@ let Entities = new Schema({
   drillups: [{type: Schema.Types.ObjectId}],
 
   from: {type: Number, required: true},
-  to: {type: Number, required: true, default: Number.MAX_VALUE},
+  to: {type: Number, required: true, default: Number.MAX_SAFE_INTEGER},
   dataset: {type: Schema.Types.ObjectId, ref: 'Datasets', required: true},
   transaction: {type: Schema.Types.ObjectId, ref: 'DatasetTransactions', required: true}
 }, { strict: false });

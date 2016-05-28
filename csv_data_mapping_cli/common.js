@@ -523,9 +523,10 @@ function _addEntityDrillups(pipe, done) {
 
 function createDataPoints(pipe, done) {
   logger.info('start process creating data points');
-  fs.readdir(path.resolve(pipe.pathToDdfFolder), (err, _filenames) => {
+  fs.readdir(pipe.pathToDdfFolder, (err, _filenames) => {
     const filenames = _filenames.filter(filename => /^ddf--datapoints--/.test(filename));
     pipe.filenames = filenames;
+
     async.forEachOfSeries(
       filenames,
       _processDataPoints(pipe),
