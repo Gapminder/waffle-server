@@ -25,7 +25,7 @@ const ddfModels = [
 let logger;
 let config;
 
-module.exports = function (app, done, options = {}) {
+module.exports = function (app, done, options) {
   logger = app.get('log');
   config = app.get('config');
 
