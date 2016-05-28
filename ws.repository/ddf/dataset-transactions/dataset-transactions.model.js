@@ -22,7 +22,9 @@ const DatasetTransactions = new Schema({
   createdBy: {type: Schema.Types.ObjectId, ref: 'Users', required: true},
   createdAt: {type: Number, 'default': (new Date()).valueOf(), required: true},
 
-  dataset: {type: Schema.Types.ObjectId, ref: 'Datasets'}
+  dataset: {type: Schema.Types.ObjectId, ref: 'Datasets'},
+
+  commit: {type: String}
 });
 
 DatasetTransactions.index({name: 1});

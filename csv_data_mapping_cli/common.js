@@ -8,7 +8,7 @@ const async = require('async');
 const Converter = require('csvtojson').Converter;
 
 const mongoose = require('mongoose');
-// mongoose.set('debug', true);
+const reposService = require('../ws.routes/ddf/import/repos.servise');
 
 // geo mapping
 const geoMapping = require('./geo-mapping.json');
@@ -20,24 +20,14 @@ const LIMIT_NUMBER_PROCESS = 10;
 let logger;
 let config;
 let ddfModels;
-let pathToDdfFolder;
-let resolvePath;
-let fileTemplates;
 
 module.exports = function (app) {
   logger = app.get('log');
   config = app.get('config');
   ddfModels = app.get('ddfModels');
 
-  pathToDdfFolder = config.PATH_TO_DDF_FOLDER;
-  resolvePath = (filename) => path.resolve(pathToDdfFolder, filename);
-  fileTemplates = {
-    getFilenameOfEntityDomainEntities: _.template('ddf--entities--${ gid }.csv'),
-    getFilenameOfEntitySetEntities: _.template('ddf--entities--${ domain.gid }--${ gid }.csv'),
-    getFilenameOfConcepts: _.template(resolvePath('ddf--concepts.csv'))
-  };
-
   return {
+    resolvePathToDdfFolder,
     createTransaction,
     createDataset,
     updateTransaction,
@@ -59,13 +49,28 @@ module.exports = function (app) {
   };
 };
 
+function resolvePathToDdfFolder(pipe, done) {
+  pipe.pathToDdfFolder = reposService.getPathToRepo(pipe.datasetName, pipe.config);
+  pipe.resolvePath = (filename) => path.resolve(pipe.pathToDdfFolder, filename);
+  pipe.fileTemplates = {
+    getFilenameOfEntityDomainEntities: _.template('ddf--entities--${ gid }.csv'),
+    getFilenameOfEntitySetEntities: _.template('ddf--entities--${ domain.gid }--${ gid }.csv'),
+    getFilenameOfConcepts: _.template(pipe.resolvePath('ddf--concepts.csv'))
+  };
+
+  return async.setImmediate(() => {
+    return done(null, pipe);
+  });
+}
+
 function createTransaction(pipe, done) {
   logger.info('create transaction');
 
   mongoose.model('DatasetTransactions').create({
     name: Math.random().toString(),
     createdAt: (new Date()).valueOf(),
-    createdBy: pipe.user._id
+    createdBy: pipe.user._id,
+    commit: pipe.commit,
   }, (err, res) => {
     pipe.transaction = res.toObject();
     return done(err, pipe);
@@ -86,9 +91,9 @@ function createDataset(pipe, done) {
   logger.info('create data set');
 
   mongoose.model('Datasets').create({
-    name: pathToDdfFolder,
+    name: pipe.datasetName,
     type: 'local',
-    path: pathToDdfFolder,
+    path: pipe.resolvePath(''),
     defaultLanguage: 'en',
     versions: [pipe.transaction.createdAt],
     dataProvider: 'semio',
@@ -116,7 +121,7 @@ function createConcepts(pipe, done) {
   logger.info('start process creating concepts');
 
   async.waterfall([
-    async.constant({transaction: pipe.transaction, dataset: pipe.dataset}),
+    async.constant({transaction: pipe.transaction, dataset: pipe.dataset, resolvePath: pipe.resolvePath}),
     _loadConcepts,
     _createConcepts,
     _getAllConcepts,
@@ -132,7 +137,7 @@ function createConcepts(pipe, done) {
 function _loadConcepts(pipe, done) {
   logger.info('** load concepts');
 
-  return readCsvFile('ddf--concepts.csv', {}, (err, res) => {
+  return readCsvFile(pipe.resolvePath('ddf--concepts.csv'), {}, (err, res) => {
     let concepts = _.map(res, mapDdfConceptsToWsModel(pipe));
     let uniqConcepts = _.uniqBy(concepts, 'gid');
 
@@ -319,7 +324,7 @@ function createEntities(pipe, done) {
   logger.info('start process creating entities');
 
   async.waterfall([
-    async.constant({transaction: pipe.transaction, concepts: pipe.concepts, dataset: pipe.dataset}),
+    async.constant({transaction: pipe.transaction, concepts: pipe.concepts, dataset: pipe.dataset, fileTemplates: pipe.fileTemplates, resolvePath: pipe.resolvePath}),
     _processOriginalEntities,
     _findAllOriginalEntities,
     _createEntitiesBasedOnOriginalEntities,
@@ -355,7 +360,9 @@ function _processOriginalEntities(pipe, done) {
         entitySet: entitySet,
         concepts: pipe.concepts,
         transaction: pipe.transaction,
-        dataset: pipe.dataset
+        dataset: pipe.dataset,
+        resolvePath: pipe.resolvePath,
+        fileTemplates: pipe.fileTemplates
       }),
       __loadOriginalEntities,
       __createOriginalEntities
@@ -365,12 +372,12 @@ function _processOriginalEntities(pipe, done) {
 
 function __loadOriginalEntities(_pipe, cb) {
   _pipe.filename = _pipe.entitySet.domain
-    ? fileTemplates.getFilenameOfEntitySetEntities(_pipe.entitySet)
-    : fileTemplates.getFilenameOfEntityDomainEntities(_pipe.entitySet);
+    ? _pipe.fileTemplates.getFilenameOfEntitySetEntities(_pipe.entitySet)
+    : _pipe.fileTemplates.getFilenameOfEntityDomainEntities(_pipe.entitySet);
 
   logger.info(`**** load original entities from file ${_pipe.filename}`);
 
-  readCsvFile(_pipe.filename, {}, (err, res) => {
+  readCsvFile(_pipe.resolvePath(_pipe.filename), {}, (err, res) => {
     let originalEntities = _.map(res, mapDdfOriginalEntityToWsModel(_pipe));
     let uniqOriginalEntities = _.uniqBy(originalEntities, 'gid');
 
@@ -427,7 +434,7 @@ function _createEntitiesBasedOnOriginalEntities(pipe, done) {
   if (_.isEmpty(pipe.originalEntities)) {
     logger.warn(`There is no original entities.`);
 
-    return async.setImmediate(() => cb(null, pipe));
+    return async.setImmediate(() => done(null, pipe));
   }
 
   logger.info(`** create entities based on original entities`);
@@ -516,7 +523,7 @@ function _addEntityDrillups(pipe, done) {
 
 function createDataPoints(pipe, done) {
   logger.info('start process creating data points');
-  fs.readdir(path.resolve(pathToDdfFolder), (err, _filenames) => {
+  fs.readdir(path.resolve(pipe.pathToDdfFolder), (err, _filenames) => {
     const filenames = _filenames.filter(filename => /^ddf--datapoints--/.test(filename));
     pipe.filenames = filenames;
     async.forEachOfSeries(
@@ -532,7 +539,8 @@ function createDataPoints(pipe, done) {
         filename: filename,
         concepts: pipe.concepts,
         transaction: pipe.transaction,
-        dataset: pipe.dataset
+        dataset: pipe.dataset,
+        resolvePath: pipe.resolvePath
       }),
       _parseFilename,
       _findAllEntities,
@@ -575,7 +583,7 @@ function _parseFilename(pipe, cb) {
 function _loadDataPoints(pipe, cb) {
   logger.info(`** load data points`);
 
-  readCsvFile(pipe.filename, {}, __processRawDataPoints(pipe, cb));
+  readCsvFile(pipe.resolvePath(pipe.filename), {}, __processRawDataPoints(pipe, cb));
 }
 
 function __processRawDataPoints(pipe, cb) {
@@ -739,7 +747,7 @@ function ___updateDimensionByMeasure(pipe, cb) {
 }
 
 function findDataset(pipe, done) {
-  let query = pipe.datasetId ? {_id: pipe.datasetId} : {name: process.env.DATASET_NAME};
+  let query = pipe.datasetId ? {_id: pipe.datasetId} : {name: options.datasetName || process.env.DATASET_NAME};
   mongoose.model('Datasets').findOne(query)
     .lean()
     .exec((err, res) => {
@@ -1085,7 +1093,7 @@ function readCsvFile(file, options, cb) {
     flatKeys: true
   }, options));
 
-  converter.fromFile(resolvePath(file).trim(), (err, data) => {
+  converter.fromFile(file, (err, data) => {
     if (err && err.toString().indexOf("cannot be found.") > -1) {
       logger.warn(err);
     }

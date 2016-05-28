@@ -17,17 +17,25 @@ const MODIFY_MARK = 'M';
 
 const LIMIT_NUMBER_PROCESS = 10;
 const MAX_VALUE = Number.MAX_SAFE_INTEGER;
+const ddfModels = [
+  'concepts',
+  'data-points',
+  'dataset-transactions',
+  'datasets',
+  'entities',
+  'original-entities',
+  'users'
+];
 
 // take from args
 let logger;
 let config;
-let ddfModels;
-let resolvePath;
 
-module.exports = function (app, done) {
+
+module.exports = function (app, done, options = {}) {
   logger = app.get('log');
   config = app.get('config');
-  ddfModels = app.get('ddfModels');
+
   const common = require('./common')(app, done);
 
   const mapFilenameToCollectionName = {
@@ -35,13 +43,22 @@ module.exports = function (app, done) {
     datapoints: 'DataPoints',
     entities: 'Entities'
   };
-  const pathToDiffDdfFile = config.PATH_TO_DIFF_DDF_RESULT_FILE;
-  let diffFile = require(path.resolve(pathToDiffDdfFile));
+  let diffFile = options.diff;//require(path.resolve(pathToDiffDdfFile));
   let changedFiles = diffFile.files;
   let allChanges = diffFile.changes;
+  let pipe = {
+    changedFiles,
+    allChanges,
+    mapFilenameToCollectionName,
+    common,
+    commit: options.commit,
+    datasetName: options.datasetName,
+    config
+  };
 
   async.waterfall([
-    async.constant({changedFiles, allChanges, mapFilenameToCollectionName, common}),
+    async.constant(pipe),
+    common.resolvePathToDdfFolder,
     findUser,
     common.createTransaction,
     common.findDataset,
@@ -59,7 +76,7 @@ module.exports = function (app, done) {
     common.closeTransaction
   ], (err, pipe) => {
     console.timeEnd('done');
-    return done(err);
+    return done(err, {datasetName: pipe.dataset.name, version: pipe.transaction.createdAt});
   });
 };
 

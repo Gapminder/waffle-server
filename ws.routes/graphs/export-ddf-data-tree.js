@@ -16,8 +16,8 @@ module.exports = (app, done, options = {}) => {
 
   const config = app.get('config');
 
-  const version = options.EXPORT_TO_VERSION || config.EXPORT_TO_VERSION;
-  const datasetName = options.DATASET_NAME || config.DATASET_NAME;
+  const version = options.version || config.EXPORT_TO_VERSION;
+  const datasetName = options.datasetName || config.DATASET_NAME;
 
   console.time('Ddf data tree exporting is completed.');
   async.waterfall([

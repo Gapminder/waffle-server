@@ -15,8 +15,8 @@ module.exports = (app, done, options = {}) => {
   const logger = app.get('log');
   const config = app.get('config');
 
-  const version = options.EXPORT_TO_VERSION || config.EXPORT_TO_VERSION;
-  const datasetName = options.DATASET_NAME || config.DATASET_NAME;
+  const version = options.version || config.EXPORT_TO_VERSION;
+  const datasetName = options.datasetName || config.DATASET_NAME;
 
   console.time('Ddf meta tree is exported');
   async.waterfall([

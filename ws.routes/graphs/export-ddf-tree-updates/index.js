@@ -8,8 +8,8 @@ const mongoose = require('mongoose');
 module.exports = (app, done, options = {}) => {
   const config = app.get('config');
 
-  const datasetName = options.datasetName || config.DATASET_NAME;
   const version = options.version || config.INCREMENTAL_EXPORT_TO_VERSION;
+  const datasetName = options.datasetName || config.DATASET_NAME;
 
   if (!datasetName) {
     throw new Error('Dataset name was not given - cannot invoke incremental export without it');
