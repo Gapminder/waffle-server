@@ -92,36 +92,24 @@ module.exports = (serviceLocator) => {
           return res.json({success: !error, error});
         }
 
-<<<<<<< Updated upstream
         if (transaction) {
           logger.error(`Version of dataset "${req.body.github}" with commit: "${transaction.commit}" was already applied`);
           return res.json({success: false, error: `Version of dataset with commit: "${transaction.commit}" was already applied`});
         }
-=======
-    reposService.cloneRepo(params.github, params.commit, (error, wasCloned) => {
-      if (error) {
-        return res.json({success: !error, error});
-      }
->>>>>>> Stashed changes
 
-        reposService.cloneRepo(params.github, (error, wasCloned) => {
+        reposService.cloneRepo(params.github, params.commit, (error, wasCloned) => {
           if (error) {
             return res.json({success: !error, error});
           }
 
           importDdfService(app, error => {
             return done(error);
-          }, {datasetName: params.github, commit: params.commit, github: req.body.github});
+          }, {datasetName: reposService.getRepoName(params.github), commit: params.commit, github: req.body.github});
         }, config);
       })
     ], error => {
         return res.json({success: !error, error});
-<<<<<<< Updated upstream
     });
-=======
-      }, {datasetName: reposService.getRepoName(params.github), commit: params.commit, github: req.body.github});
-    }, config);
->>>>>>> Stashed changes
   }
 
   function updateIncrementally(req, res, next) {
