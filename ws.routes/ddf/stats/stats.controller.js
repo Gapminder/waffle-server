@@ -107,10 +107,12 @@ module.exports = function (serviceLocator) {
   return app.use(router);
 
   function vizabiTools(req, res, next) {
+    console.time('finish DataPoint');
+
     var select = req.decodedQuery.select;
     var where = req.decodedQuery.where;
     var sort = req.decodedQuery.sort;
-    var dataset = _.first(req.decodedQuery.where.dataset);
+    var datasetName = _.first(req.decodedQuery.where.dataset);
     var version = _.first(req.decodedQuery.where.version);
     delete where.dataset;
     delete where.version;
@@ -118,9 +120,9 @@ module.exports = function (serviceLocator) {
     logger.debug('URL: \n%s%s', config.LOG_TABS, req.originalUrl);
 
     async.waterfall([
-      async.constant({select, where, sort, dataset, version}),
-      // statsService.checkDataset,
-      // statsService.checkVersion,
+      async.constant({select, where, sort, datasetName, version}),
+      statsService.getDataset,
+      statsService.getVersion,
       statsService.getConcepts,
       statsService.getEntities,
       statsService.getDataPoints,
@@ -131,6 +133,7 @@ module.exports = function (serviceLocator) {
         res.use_express_redis_cache = false;
         return res.json({success: false, error: err});
       }
+      console.timeEnd('finish DataPoint');
 
       req.wsJson = pipe.result;
       return next();
