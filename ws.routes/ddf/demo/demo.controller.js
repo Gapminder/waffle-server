@@ -6,17 +6,21 @@ const async = require('async');
 const express = require('express');
 const compression = require('compression');
 
+const git = require('simple-git');
+
 const decodeQuery = require('../../utils').decodeQuery;
 
 const reposService = require('../import/repos.servise');
 
 const mongoose = require('mongoose');
 const Datasets = mongoose.model('Datasets');
+const Transactions = mongoose.model('DatasetTransactions');
 const Concepts = mongoose.model('Concepts');
 
 module.exports = (serviceLocator) => {
   const app = serviceLocator.getApplication();
   const config = app.get('config');
+  const logger = app.get('log');
 
   const cache = require('../../../ws.utils/redis-cache')(config);
 
@@ -25,7 +29,6 @@ module.exports = (serviceLocator) => {
   router.all('/api/ddf/demo/prestored-queries',
     cors(),
     compression(),
-    // cache.route(),
     decodeQuery,
     getPrestoredQueries
   );
@@ -33,7 +36,6 @@ module.exports = (serviceLocator) => {
   router.all('/api/ddf/demo/update-incremental',
     cors(),
     compression(),
-    // cache.route(),
     decodeQuery,
     updateIncrementally
   );
@@ -55,27 +57,27 @@ module.exports = (serviceLocator) => {
   return app.use(router);
 
   function getGitCommitsList(req, res, next) {
-    console.log(req.body.github);
-    const repos = {
-      'git@github.com:valor-software/ddf--gapminder_world-stub-1.git': [
-        'aafed7d4dcda8d736f317e0cd3eaff009275cbb6',
-        '5f88ae30f095579b9bf1b6dc4a14c27a0617abc4',
-        '5412b8bd341ec69475ad3678ffd217aae7bb699e'
-      ],
-      'git@github.com:valor-software/ddf--gapminder_world-stub-2.git': [
-        'e4eaa8ef84c7f56325f86967351a7004cb175651',
-        'a7f2d9d9fa22ed21d2a0979a2f6106b2798c0e43',
-        '7d034e3f86f9b9878c0e36b26aad36e0e21c66e5'
-      ]
-    };
+    const github = req.body.github || req.params.github || req.query.github;
 
-    return res.json({commits: repos[req.body.github]});
+    reposService.cloneRepo(github, (error, repoInfo) => {
+      if (error) {
+        return res.json({success: !error, error});
+      }
+
+      git(repoInfo.pathToRepo)
+        .log(function(err, log) {
+          if (err) {
+            return res.json({success: !err, err});
+          }
+
+          return res.json({commits: _.map(log.all, 'hash')});
+        })
+
+    }, config);
   }
 
   function importDataset(req, res, next) {
     let params = req.query || req.body;
-    console.log(params.github);
-    console.log(params.commit);
 
     reposService.cloneRepo(params.github, (error, wasCloned) => {
       if (error) {
@@ -89,15 +91,21 @@ module.exports = (serviceLocator) => {
   }
 
   function updateIncrementally(req, res, next) {
-    console.log(req.body.diff);
-    console.log(req.body.github);
-
-    require('../../../csv_data_mapping_cli/incremental-update-ddf2')(app, error => {
+    Transactions.findOne({commit: req.body.commit}).lean().exec((error, transaction) => {
       if (error) {
+        logger.error(error);
         return res.json({success: !error, error});
       }
-      return next();
-    }, {diff: req.body.diff, datasetName: req.body.github, commit: req.body.commit, github: req.body.github});
+
+      if (transaction) {
+        logger.error(`Version of dataset "${req.body.github}" with commit: "${transaction.commit}" was already applied`);
+        return res.json({success: false, error: `Version of dataset with commit: "${transaction.commit}" was already applied`});
+      }
+
+      return require('../../../csv_data_mapping_cli/incremental-update-ddf2')(app, error => {
+        res.json({success: !error, error});
+      }, {diff: req.body.diff, datasetName: req.body.github, commit: req.body.commit, github: req.body.github});
+    });
   }
 
   function getPrestoredQueries(req, res, next) {
@@ -123,7 +131,7 @@ module.exports = (serviceLocator) => {
       }
     ], (error, queries) => {
       if (error) {
-        return next();
+        res.json({success: !error, error});
       }
       return res.json(queries)
     });

@@ -21,9 +21,9 @@ function cloneRepo(githubUrl, onCloned, config) {
   fs.exists(pathToRepo, exists => {
     if (!exists) {
       shell.exec(`git clone ${githubUrl} ./${config.PATH_TO_DDF_REPOSITORIES}/${getRepoName(githubUrl)}`);
-      return onCloned(null, true);
+      return onCloned(null, {pathToRepo});
     }
-    return onCloned(null, false);
+    return onCloned(null, {pathToRepo});
   });
 }
 

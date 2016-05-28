@@ -69,6 +69,7 @@
     "path": "0.11.14",
     "require-dir": "0.3.0",
     "shelljs": "0.6.0",
+    "simple-git": "1.35.0",
     "static-favicon": "1.0.2",
     "stream-transform": "0.1.1",
     "swagger-jsdoc": "1.1.2",

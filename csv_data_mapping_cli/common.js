@@ -747,7 +747,7 @@ function ___updateDimensionByMeasure(pipe, cb) {
 }
 
 function findDataset(pipe, done) {
-  let query = pipe.datasetId ? {_id: pipe.datasetId} : {name: options.datasetName || process.env.DATASET_NAME};
+  let query = pipe.datasetId ? {_id: pipe.datasetId} : {name: pipe.datasetName || process.env.DATASET_NAME};
   mongoose.model('Datasets').findOne(query)
     .lean()
     .exec((err, res) => {
