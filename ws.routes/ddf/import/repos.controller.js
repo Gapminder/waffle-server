@@ -15,7 +15,12 @@ module.exports = serviceLocator => {
 };
 
 function cloneRepositories() {
-  shell.exec(`cd csv_data_mapping_cli/repos`);
-  shell.exec(`git clone ${gitHubUrl}`);
+
+  shell.exec(` git clone ${gitHubUrl} ./csv_data_mapping_cli/repos`);
+
+  // - git checkout, должна выполняться в контекст (папке) с репозиторием.
+  // - есть путь к репозиторию, нужно получить имя папки ( split + split || regexp)
+  // - вторая команда с checkout сделать по аналогии с оператором &&
+
   shell.exec(`git checkout ${gitCommit}`);
 }
