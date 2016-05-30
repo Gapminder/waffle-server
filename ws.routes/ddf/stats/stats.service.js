@@ -210,7 +210,7 @@ function mapResult(pipe, cb) {
     })
     .value();
 
-  pipe.result = { headers: pipe.select, rows: _.sortBy(rows, '0') };
+  pipe.result = { headers: pipe.select, rows: _.sortBy(rows, ['0', '1']) };
   return async.setImmediate(() => {
     return cb(null, pipe);
   });
