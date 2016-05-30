@@ -146,7 +146,13 @@ module.exports = (serviceLocator) => {
           return async.each(dataset.versions, (version, cb) => {
             return Concepts.find({dataset: dataset._id, type: 'measure', from: {$lte: version}, to: {$gt: version}}).lean().exec((error, measures) => {
               urls.push(`dataset: ${dataset.name}, version: ${version}`);
-              urls.push(`http://localhost:3000/api/ddf/stats?dataset=${dataset.name}&version=${version}&time=1800:2015&select=geo,time,${_.map(measures, 'gid').join(',')}`);
+              const filteredMeasures = _.chain(measures)
+                .map('gid')
+                .filter((measure) => !_.includes(['age', 'longitude', 'latitude'], measure))
+                .take(3)
+                .join(',')
+                .value();
+              urls.push(`http://localhost:3000/api/ddf/stats?dataset=${dataset.name}&version=${version}&time=1800:2015&select=geo,time,${filteredMeasures}`);
               return cb();
             });
           },onUrlsCreated);

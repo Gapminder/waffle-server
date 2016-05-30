@@ -28,7 +28,9 @@ function getDataset(pipe, done) {
 }
 
 function getVersion(pipe, done) {
-  let query = {dataset: pipe.dataset._id};
+  let query = {
+    dataset: pipe.dataset._id
+  };
 
   if (pipe.version) {
     query.createdAt = pipe.version;
@@ -57,6 +59,7 @@ function getConcepts(pipe, cb) {
     .lean()
     .exec((err, res) => {
       pipe.concepts = _.keyBy(res, 'gid');
+      pipe.conceptsByOriginId = _.keyBy(res, 'originId');
 
       pipe.selectedConcepts = _.pick(pipe.concepts, pipe.select);
 
@@ -141,12 +144,14 @@ function getEntities(pipe, cb) {
         })
         .value();
 
-      pipe.entities = filteredEntitiesGroupedByDomain;
+      pipe.entitiesGroupedByDomain = filteredEntitiesGroupedByDomain;
+      pipe.entities = _.keyBy(res, 'originId');
       return cb(null, pipe);
     });
 }
 
 function getDataPoints(pipe, cb) {
+  console.time('get datapoints');
   if (_.isNil(pipe.measures)) {
     return cb(null, pipe);
   }
@@ -160,41 +165,14 @@ function getDataPoints(pipe, cb) {
       $size: _.size(dimensions),
       $all: _.map(dimensions, (entitySet) => {
         let domainOriginId = entitySet.domain ? entitySet.domain.originId : entitySet.originId
-        return {$elemMatch: { $in: pipe.entities[domainOriginId]}}
+        return {$elemMatch: { $in: pipe.entitiesGroupedByDomain[domainOriginId]}}
       })
     }
   };
-  return DataPoints.find(query, null, {
-    join: {
-      dimensions: {
-        $find: {
-          dataset: pipe.dataset._id,
-          from: {$lte: pipe.version},
-          to: {$gt: pipe.version}
-        },
-        $options: {
-          join: {
-            domain: {
-              $find: {
-                dataset: pipe.dataset._id,
-                from: {$lte: pipe.version},
-                to: {$gt: pipe.version}
-              }
-            }
-          }
-        }
-      },
-      measure: {
-        $find: {
-          dataset: pipe.dataset._id,
-          from: {$lte: pipe.version},
-          to: {$gt: pipe.version}
-        }
-      }
-    }
-  })
+  return DataPoints.find(query)
     .lean()
     .exec((err, res) => {
+      console.timeEnd('get datapoints');
       pipe.datapoints = res;
       return cb(null, pipe);
     });
@@ -205,7 +183,11 @@ function mapResult(pipe, cb) {
   let rows = _.chain(pipe.datapoints)
     .reduce((result, datapoint) => {
       let complexKey = _.chain(datapoint.dimensions)
-        .sortBy((dimension) => pipe.select.indexOf(dimension.domain.gid))
+        .map((dimension) => pipe.entities[dimension])
+        .sortBy((originEntity) => {
+          let domainGid = pipe.conceptsByOriginId[originEntity.domain].gid;
+          return pipe.select.indexOf(domainGid);
+        })
         .map('gid')
         .join(':')
         .value();
@@ -213,19 +195,22 @@ function mapResult(pipe, cb) {
       if (!result[complexKey]) {
         result[complexKey] = {};
         _.each(datapoint.dimensions, (dimension) => {
-          result[complexKey][dimension.domain.gid] = dimension.gid;
+          let originEntity = pipe.entities[dimension];
+          let domainGid = pipe.conceptsByOriginId[originEntity.domain].gid;
+
+          result[complexKey][domainGid] = originEntity.gid;
         });
       }
-
-      result[complexKey][datapoint.measure.gid] = datapoint.value;
+      let measureGid = pipe.conceptsByOriginId[datapoint.measure].gid;
+      result[complexKey][measureGid] = datapoint.value;
       return result;
     }, {})
     .map((row) => {
-      return _.map(pipe.select, column => row[column] || null);
+      return _.map(pipe.select, column => (_.isNaN(_.toNumber(row[column])) ? row[column] : +row[column]) || null);
     })
     .value();
 
-  pipe.result = { header: pipe.select, rows: rows };
+  pipe.result = { headers: pipe.select, rows: _.sortBy(rows, '0') };
   return async.setImmediate(() => {
     return cb(null, pipe);
   });
