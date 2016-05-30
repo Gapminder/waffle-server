@@ -72,7 +72,7 @@ module.exports = (serviceLocator) => {
             return res.json({success: !err, err});
           }
 
-          return res.json({commits: _.reverse(_.map(log.all, 'hash'))});
+          return res.json({commits: _.reverse(log.all)});
         })
 
     }, config);
