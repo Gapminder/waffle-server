@@ -101,19 +101,15 @@ function getEntities(pipe, cb) {
       return pipe.concepts[key].originId
     })
     .mapValues((dimension) => {
-      if (_.some(dimension, _.isArray)) {
-        return _.chain(dimension)
-          .flatMap((value) => {
-            if (!_.isArray(value)) {
-              return [value];
-            }
-            return _.range(_.first(value), _.last(value) + 1)
-          })
-          .map(_.toString)
-          .value();
-      }
-
-      return dimension;
+      return _.chain(dimension)
+        .flatMap((value) => {
+          if (!_.isArray(value)) {
+            return [value];
+          }
+          return _.range(_.first(value), _.last(value) + 1)
+        })
+        .map(_.toString)
+        .value();
     })
     .value();
 
