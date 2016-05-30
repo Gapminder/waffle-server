@@ -21,8 +21,12 @@ function getDataset(pipe, done) {
   let query = { name: pipe.datasetName };
   mongoose.model('Datasets').findOne(query)
     .lean()
-    .exec((err, res) => {
-      pipe.dataset = res;
+    .exec((err, dataset) => {
+      if (!dataset) {
+        return done(`Given dataset "${pipe.datasetName}" doesn't exist`);
+      }
+
+      pipe.dataset = dataset;
       return done(err, pipe);
     });
 }
@@ -40,8 +44,12 @@ function getVersion(pipe, done) {
     .sort({createdAt: -1})
     .limit(1)
     .lean()
-    .exec((err, res) => {
-      pipe.transaction = _.first(res);
+    .exec((err, transactions) => {
+      if (!transactions || _.isEmpty(transactions)) {
+        return done(`Given dataset version "${pipe.version}" doesn't exist`);
+      }
+
+      pipe.transaction = _.first(transactions);
       pipe.version = pipe.transaction.createdAt;
       return done(err, pipe);
     });
