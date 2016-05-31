@@ -80,6 +80,7 @@ module.exports = (serviceLocator) => {
 
   function importDataset(req, res, next) {
     let params = _.isEmpty(req.query) ? req.body : req.query;
+
     async.waterfall([
       async.constant({}),
       (pipe, done) => Datasets.findOne({name: params.github}).lean().exec((error, dataset) => {
@@ -188,25 +189,32 @@ module.exports = (serviceLocator) => {
   function getPrestoredQueries(req, res, next) {
     async.waterfall([
       async.constant({}),
-      (pipe, done) => Datasets.find({}).lean().exec((error, datasets) => {
-        pipe.datasets = datasets;
-        return done(error, pipe);
-      }),
+      (pipe, done) => Datasets.find({})
+          .sort({'name': 1})
+          .lean()
+          .exec((error, datasets) => {
+          pipe.datasets = datasets;
+          return done(error, pipe);
+        }),
       (pipe, done) => {
         const urls = [];
-        return async.each(pipe.datasets, (dataset, onUrlsCreated) => {
-          return async.each(dataset.versions, (version, cb) => {
-            return Concepts.find({dataset: dataset._id, type: 'measure', from: {$lte: version}, to: {$gt: version}}).lean().exec((error, measures) => {
-              urls.push(`dataset: ${dataset.name}, version: ${version}`);
-              const filteredMeasures = _.chain(measures)
-                .map('gid')
-                .filter((measure) => !_.includes(['age', 'longitude', 'latitude'], measure))
-                .take(3)
-                .join(',')
-                .value();
-              urls.push(`http://localhost:3000/api/ddf/stats?dataset=${dataset.name}&version=${version}&time=1800:2015&select=geo,time,${filteredMeasures}`);
-              return cb();
-            });
+        return async.eachSeries(pipe.datasets, (dataset, onUrlsCreated) => {
+          return async.eachSeries(dataset.versions, (version, cb) => {
+            let query = {dataset: dataset._id, type: 'measure', from: {$lte: version}, to: {$gt: version}};
+            return Concepts.find(query)
+              .lean()
+              .exec((error, measures) => {
+                let date = new Date(version);
+                urls.push(`dataset: ${dataset.name}, version: ${version} (${date.toLocaleString()})`);
+                const filteredMeasures = _.chain(measures)
+                  .map('gid')
+                  .filter((measure) => !_.includes(['age', 'longitude', 'latitude'], measure))
+                  .take(3)
+                  .join(',')
+                  .value();
+                urls.push(`http://localhost:3000/api/ddf/stats?dataset=${dataset.name}&version=${version}&time=1800:2015&select=geo,time,${filteredMeasures}`);
+                return cb();
+              });
           },onUrlsCreated);
         }, error => {
           done(error, urls);
