@@ -1,268 +1,344 @@
 'use strict';
 
-const _ = require('lodash');
 const cors = require('cors');
-const async = require('async');
 const express = require('express');
 const compression = require('compression');
+const _ = require('lodash');
 
-const git = require('simple-git');
-
+const reposService = require('../import/repos.service');
+const service = require('./demo.service');
 const decodeQuery = require('../../utils').decodeQuery;
 
-const reposService = require('../import/repos.servise');
-const importDdfService = require('../../../csv_data_mapping_cli/import-ddf2');
-const incrementalUpdateService = require('../../../csv_data_mapping_cli/incremental-update-ddf2');
+/**
+ * @swagger
+ * definition:
+ *  Update incremental:
+ *     type: object
+ *     properties:
+ *       success:
+ *         type: boolean
+ *         description:
+ *  Error:
+ *    type: object
+ *    properties:
+ *      code:
+ *        type: integer
+ *        format: int32
+ *      message:
+ *        type: string
+ */
 
-const mongoose = require('mongoose');
-const Datasets = mongoose.model('Datasets');
-const Transactions = mongoose.model('DatasetTransactions');
-const Concepts = mongoose.model('Concepts');
+/**
+ * @swagger
+ * definition:
+ *  Import dataset:
+ *     type: object
+ *     properties:
+ *       success:
+ *         type: boolean
+ *         description:
+ *  Error:
+ *    type: object
+ *    properties:
+ *      code:
+ *        type: integer
+ *        format: int32
+ *      message:
+ *        type: string
+ */
+
+/**
+ * @swagger
+ * definition:
+ *  Git commits list:
+ *     type: object
+ *     properties:
+ *       success:
+ *         type: boolean
+ *         description:
+ *       commits:
+ *         type: array
+ *         description: Consist all commits
+ *
+ *  Error:
+ *    type: object
+ *    properties:
+ *      code:
+ *        type: integer
+ *        format: int32
+ *      message:
+ *        type: string
+ */
 
 module.exports = (serviceLocator) => {
   const app = serviceLocator.getApplication();
+
   const config = app.get('config');
   const logger = app.get('log');
-
   const cache = require('../../../ws.utils/redis-cache')(config);
 
   const router = express.Router();
+
+  /**
+   * @swagger
+   * /api/ddf/demo/prestored-queries:
+   *   get:
+   *    description: Prestored queries
+   *    produces:
+   *      - application/json
+   *    responses:
+   *      200:
+   *        description: An array of products
+   *        schema:
+   *         type: array
+   *         items:
+   *           type: string
+   *      default:
+   *        description: Unexpected error
+   *        schema:
+   *        $ref: '#/definitions/Error'
+   *   post:
+   *    description: Prestored queries
+   *    produces:
+   *      - application/json
+   *    responses:
+   *      200:
+   *        description: An array of products
+   *        schema:
+   *         type: array
+   *         items:
+   *           type: string
+   *      default:
+   *        description: Unexpected error
+   *        schema:
+   *        $ref: '#/definitions/Error'
+   */
 
   router.all('/api/ddf/demo/prestored-queries',
     cors(),
     compression(),
     decodeQuery,
-    getPrestoredQueries
+    _getPrestoredQueries
   );
+
+  /**
+   * @swagger
+   * api/ddf/demo/update-incremental:
+   *   post:
+   *    description: Update incremental
+   *    produces:
+   *      - application/json
+   *    parameters:
+   *      - name: commit
+   *        in: body
+   *        description:
+   *        type: string
+   *      - name: github
+   *        in: body
+   *        description:
+   *        type: string
+   *      - name: diff
+   *        in: body
+   *        description:
+   *        type: string
+   *    responses:
+   *      200:
+   *        description: An array of products
+   *        schema:
+   *         type: array
+   *         items:
+   *            type: string
+   *      default:
+   *        description: Unexpected error
+   *        schema:
+   *          $ref: '#/definitions/Error'
+   */
 
   router.post('/api/ddf/demo/update-incremental',
     cors(),
     compression(),
     decodeQuery,
-    updateIncrementally
+    _updateIncrementally
   );
+
+  /**
+   * @swagger
+   * api/ddf/demo/import-dataset:
+   *   post:
+   *    description: Import dataset
+   *    produces:
+   *      - application/json
+   *    parameters:
+   *      - name: github
+   *        in: body
+   *        description: Reference to database which will be clone
+   *        type: string
+   *    responses:
+   *      200:
+   *        description: An array of products
+   *        schema:
+   *         type: array
+   *         items:
+   *            type: string
+   *      default:
+   *        description: Unexpected error
+   *        schema:
+   *          $ref: '#/definitions/Error'
+   *   get:
+   *    description: Import dataset
+   *    produces:
+   *      - application/json
+   *    parameters:
+   *      - name: github
+   *        in: query
+   *        description: Reference to database which will be clone
+   *        type: string
+   *    responses:
+   *      200:
+   *        description: An array of products
+   *        schema:
+   *         type: array
+   *         items:
+   *            type: string
+   *      default:
+   *        description: Unexpected error
+   *        schema:
+   *          $ref: '#/definitions/Error'
+   */
 
   router.all('/api/ddf/demo/import-dataset',
     cors(),
     compression(),
     decodeQuery,
-    importDataset
+    _importDataset
   );
+
+  /**
+   * @swagger
+   * api/ddf/demo/git-commits-list:
+   *   post:
+   *    description: Git commits list
+   *    produces:
+   *      - application/json
+   *    parameters:
+   *      - name: github
+   *        in: body
+   *        description: Reference to database which will be clone
+   *        type: string
+   *    responses:
+   *      200:
+   *        description: An array of products
+   *        schema:
+   *         type: array
+   *         items:
+   *            type: string
+   *      default:
+   *        description: Unexpected error
+   *        schema:
+   *          $ref: '#/definitions/Error'
+   *   get:
+   *    description: Git commits list
+   *    produces:
+   *      - application/json
+   *    parameters:
+   *      - name: github
+   *        in: query
+   *        description: Reference to database which will be clone
+   *        type: string
+   *    responses:
+   *      200:
+   *        description: An array of products
+   *        schema:
+   *         type: array
+   *         items:
+   *            type: string
+   *      default:
+   *        description: Unexpected error
+   *        schema:
+   *          $ref: '#/definitions/Error'
+   */
 
   router.all('/api/ddf/demo/git-commits-list',
     cors(),
     compression(),
     decodeQuery,
-    getGitCommitsList
+    _getGitCommitsList
   );
 
   router.get('/api/ddf/demo/commit-of-latest-dataset-version',
     cors(),
     compression(),
     decodeQuery,
-    getCommitOfLatestDatasetVersion
+    _getCommitOfLatestDatasetVersion
   );
 
   return app.use(router);
 
-  function getGitCommitsList(req, res, next) {
-    const github = req.body.github || req.params.github || req.query.github;
-
-    reposService.cloneRepo(github, null, (error, repoInfo) => {
-      if (error) {
-        return res.json({success: !error, error});
+  function _getPrestoredQueries(req, res) {
+    service.getPrestoredQueries ((err, result) => {
+      if (err) {
+        logger.error(err);
       }
-
-      git(repoInfo.pathToRepo)
-        .log(function(err, log) {
-          if (err) {
-            return res.json({success: !err, err});
-          }
-
-          return res.json({commits: _.reverse(log.all)});
-        })
-
-    }, config);
-  }
-
-  function getCommitOfLatestDatasetVersion(req, res, next) {
-    const github = req.query.github;
-
-    Datasets.findOne({path: github}).lean().exec((error, dataset) => {
-      if (error || !dataset) {
-        return res.json({success: !error, error: error || `Dataset with given github url: '${github}' was not found`});
-      }
-
-      Transactions
-        .findOne({dataset: dataset._id})
-        .sort({createdAt: -1})
-        .limit(1)
-        .lean()
-        .exec((error, transaction) => {
-          if (error) {
-            return res.json({success: !error, error: error});
-          }
-
-          return res.json({
-            github: dataset.path,
-            dataset: dataset.name,
-            commit: transaction.commit
-          });
-        });
+      return res.json({success: !err, result, err});
     });
   }
 
-  function importDataset(req, res, next) {
-    let params = _.isEmpty(req.query) ? req.body : req.query;
-
-    if (!params.github || !params.commit) {
-      return res.json({success: false, error: 'Github url to dataset and commit to be imported must be provided'});
-    }
-
-    async.waterfall([
-      async.constant({}),
-      (pipe, done) => Datasets.findOne({name: params.github}).lean().exec((error, dataset) => {
-        pipe.dataset = dataset;
-        done(error, pipe);
-      }),
-      (pipe, done) => Transactions.findOne({dataset: pipe.dataset ? pipe.dataset._id: null, commit: req.body.commit}).lean().exec((error, transaction) => {
-        if (error) {
-          logger.error(error);
-          return res.json({success: !error, error});
-        }
-
-        if (transaction) {
-          logger.error(`Version of dataset "${req.body.github}" with commit: "${transaction.commit}" was already applied`);
-          return res.json({success: false, error: `Version of dataset with commit: "${transaction.commit}" was already applied`});
-        }
-
-        reposService.cloneRepo(params.github, params.commit, (error, wasCloned) => {
-          if (error) {
-            return res.json({success: !error, error});
-          }
-
-          importDdfService(app, error => {
-            return done(error);
-          }, {datasetName: reposService.getRepoName(params.github), commit: params.commit, github: req.body.github});
-        }, config);
-      })
-    ], error => {
-      return res.json({success: !error, error});
-    });
-  }
-
-  function updateIncrementally(req, res) {
-    let pipe = {
+  function _updateIncrementally(req, res) {
+    let params = {
       commit: req.body.commit,
       github: req.body.github,
       datasetName: reposService.getRepoName(req.body.github),
       diff: JSON.parse(req.body.diff)
     };
 
-    return async.waterfall([
-      async.constant(pipe),
-      lockDataset,
-      checkTransaction,
-      runIncrementalUpdate,
-      unlockDataset
-    ], (err) => {
+    service.updateIncrementally(params, (err) => {
       if (err) {
         logger.error(err);
       }
 
       return res.json({success: !err, err});
     });
-
-    function lockDataset(pipe, done) {
-      return Datasets
-        .findOneAndUpdate({name: pipe.datasetName, isLocked: false}, {isLocked: true}, {new: 1})
-        .lean()
-        .exec((err, dataset) => {
-          if (!dataset) {
-            return done(`Version of dataset "${pipe.datasetName}" was already locked or dataset is absent`);
-          }
-
-          return done(err, pipe);
-        });
-    }
-
-    function checkTransaction(pipe, done) {
-      return Transactions
-        .findOne({commit: pipe.commit})
-        .lean()
-        .exec((err, transaction) => {
-          if (transaction) {
-            return done(`Version of dataset "${pipe.datasetName}" with commit: "${transaction.commit}" was already applied`);
-          }
-
-          return done(err, pipe);
-        });
-    }
-
-    function runIncrementalUpdate(pipe, done) {
-      let options = {
-        diff: pipe.diff,
-        datasetName: pipe.datasetName,
-        commit: pipe.commit,
-        github: pipe.github
-      };
-
-      return incrementalUpdateService(app, (err) => done(err, pipe), options);
-    }
-
-    function unlockDataset(pipe, done) {
-      return Datasets
-        .findOneAndUpdate({name: pipe.datasetName, isLocked: true}, {isLocked: false}, {new: 1})
-        .lean()
-        .exec((err, dataset) => {
-          if (!dataset) {
-            return done(`Version of dataset "${pipe.datasetName}" wasn't locked`);
-          }
-
-          return done(err, pipe);
-        });
-    }
   }
 
-  function getPrestoredQueries(req, res, next) {
-    async.waterfall([
-      async.constant({}),
-      (pipe, done) => Datasets.find({})
-          .sort({'name': 1})
-          .lean()
-          .exec((error, datasets) => {
-          pipe.datasets = datasets;
-          return done(error, pipe);
-        }),
-      (pipe, done) => {
-        const urls = [];
-        return async.eachSeries(pipe.datasets, (dataset, onUrlsCreated) => {
-          return async.eachSeries(dataset.versions, (version, cb) => {
-            let query = {dataset: dataset._id, type: 'measure', from: {$lte: version}, to: {$gt: version}};
-            return Concepts.find(query)
-              .lean()
-              .exec((error, measures) => {
-                let date = new Date(version);
-                urls.push(`dataset: ${dataset.name}, version: ${version} (${date.toLocaleString()})`);
-                const filteredMeasures = _.chain(measures)
-                  .map('gid')
-                  .filter((measure) => !_.includes(['age', 'longitude', 'latitude'], measure))
-                  .take(3)
-                  .join(',')
-                  .value();
-                urls.push(`http://localhost:3000/api/ddf/stats?dataset=${dataset.name}&version=${version}&time=1800:2015&select=geo,time,${filteredMeasures}`);
-                return cb();
-              });
-          },onUrlsCreated);
-        }, error => {
-          done(error, urls);
-        })
+  function _importDataset(req, res) {
+    let params = _.isEmpty(req.query) ? req.body : req.query;
+
+    service.importDataset(params, config, app, (err) => {
+      if (err) {
+        logger.error(err);
       }
-    ], (error, queries) => {
-      if (error) {
-        res.json({success: !error, error});
+
+      return res.json({success: !err, err});
+    });
+  }
+
+  function _getGitCommitsList(req, res) {
+    const github = req.body.github || req.params.github || req.query.github;
+
+    service.getGitCommitsList(github, config, (err, result) => {
+      if (err) {
+        logger.error(err);
       }
-      return res.json(queries)
+
+      return res.json({success: !err, err, commits: result.commits});
+    });
+  }
+
+  function _getCommitOfLatestDatasetVersion(req, res) {
+    const github = req.query.github;
+
+    service.getCommitOfLatestDatasetVersion(github, (err, result) => {
+      if (err) {
+        logger.error(err);
+      }
+
+      return res.json({
+        success: !err,
+        err,
+        github: result.dataset.path,
+        dataset: result.dataset.name,
+        commit: result.transaction.commit
+      });
     });
   }
 };

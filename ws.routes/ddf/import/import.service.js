@@ -1,21 +1,19 @@
 'use strict';
 
-let mongoose = require('mongoose');
+const mongoose = require('mongoose');
 
-let Concepts = mongoose.model('Concepts');
-let DataPoints = mongoose.model('DataPoints');
-let DatasetTransactions = mongoose.model('DatasetTransactions');
-let Datasets = mongoose.model('Datasets');
-let Entities = mongoose.model('Entities');
-let OriginalEntities = mongoose.model('OriginalEntities');
+const Concepts = mongoose.model('Concepts');
+const DataPoints = mongoose.model('DataPoints');
+const DatasetTransactions = mongoose.model('DatasetTransactions');
+const Datasets = mongoose.model('Datasets');
+const Entities = mongoose.model('Entities');
 
 module.exports = {
   getConcepts: getConcepts,
   getDataPoints: getDataPoints,
   getDatasetTransactions: getDatasetTransactions,
   getDatasets: getDatasets,
-  getEntities: getEntities,
-  getOriginalEntities: getOriginalEntities
+  getEntities: getEntities
 };
 
 function getConcepts(query, cb) {
@@ -36,8 +34,4 @@ function getDatasets(query, cb) {
 
 function getEntities(query, cb) {
   Entities.find(query, cb);
-}
-
-function getOriginalEntities(query, cb) {
-  OriginalEntities.find(query, cb);
 }
