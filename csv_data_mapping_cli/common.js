@@ -8,7 +8,7 @@ const async = require('async');
 const Converter = require('csvtojson').Converter;
 
 const mongoose = require('mongoose');
-const reposService = require('../ws.routes/ddf/import/repos.servise');
+const reposService = require('../ws.routes/ddf/import/repos.service.js');
 
 // geo mapping
 const geoMapping = require('./geo-mapping.json');
