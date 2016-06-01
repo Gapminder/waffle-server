@@ -60,6 +60,7 @@ module.exports = function (app, done, options) {
     async.constant(pipe),
     common.resolvePathToDdfFolder,
     findUser,
+    // TODO: check 
     common.createTransaction,
     common.findDataset,
     common.updateTransaction,
@@ -162,12 +163,12 @@ function processDataPointsChanges(pipe, done) {
 
   return async.forEachOfSeries(
     pipe.datapointsFiles,
-    processDataPointFile(pipe),
+    _processDataPointFile(pipe),
     err => done(err, pipe)
   );
 }
 
-function processDataPointFile(pipe) {
+function _processDataPointFile(pipe) {
   let key = 1;
   return (fileChanges, filename, cb) => async.waterfall([
     async.constant({
@@ -179,14 +180,13 @@ function processDataPointFile(pipe) {
       common: pipe.common
     }),
     pipe.common.parseFilename,
-    _getAllEntities,
-    _closeRemovedAndUpdatedDataPoints,
-    _fakeLoadRawDataPoints,
-    _wrapProcessRawDataPoints,
+    __getAllEntities,
+    __closeRemovedAndUpdatedDataPoints,
+    __fakeLoadRawDataPoints,
+    __wrapProcessRawDataPoints,
     pipe.common.createEntitiesBasedOnDataPoints,
-    _getAllEntities,
+    __getAllEntities,
     pipe.common._createDataPoints, // обнови в common использование originID
-    // pipe.common.updateConceptsDimensions
   ], err => {
     logger.info(`** Processed ${key++} of ${_.keys(pipe.datapointsFiles).length} files`);
 
@@ -194,7 +194,7 @@ function processDataPointFile(pipe) {
   });
 }
 
-function _getAllEntities(pipe, done) {
+function __getAllEntities(pipe, done) {
   logger.info('** get all entities');
 
   mongoose.model('Entities').find({
@@ -236,33 +236,33 @@ function _getAllEntities(pipe, done) {
     });
 }
 
-function _closeRemovedAndUpdatedDataPoints(pipe, done) {
+function __closeRemovedAndUpdatedDataPoints(pipe, done) {
   logger.info(`** close data points`);
 
   pipe.closedDataPoints = {};
 
   return async.parallel([
-    __updateRemovedDataPoints(pipe.fileChanges.remove, pipe),
-    __updateChangedDataPoints(pipe.fileChanges.update, pipe),
-    __updateChangedDataPoints(pipe.fileChanges.change, pipe)
+    ___updateRemovedDataPoints(pipe.fileChanges.remove, pipe),
+    ___updateChangedDataPoints(pipe.fileChanges.update, pipe),
+    ___updateChangedDataPoints(pipe.fileChanges.change, pipe)
   ], (err) => {
     return done(err, pipe);
   });
 }
 
-function __updateRemovedDataPoints(removedDataPoints, pipe) {
+function ___updateRemovedDataPoints(removedDataPoints, pipe) {
   return (cb) => {
     return async.eachLimit(
       removedDataPoints,
       LIMIT_NUMBER_PROCESS,
-      ___closeDataPoint(pipe),
+      ____closeDataPoint(pipe),
       (err) => {
         return cb(err);
     });
   };
 }
 
-function ___closeDataPoint(pipe) {
+function ____closeDataPoint(pipe) {
   let groupedEntities = _.groupBy(pipe.entities, 'gid');
 
   return (datapoint, ecb) => {
@@ -279,7 +279,7 @@ function ___closeDataPoint(pipe) {
     return async.eachLimit(
       pipe.measures,
       LIMIT_NUMBER_PROCESS,
-      ____updateDataPoint(pipe, entities, datapoint),
+      _____updateDataPoint(pipe, entities, datapoint),
       (err) => {
         return ecb(err);
       }
@@ -287,7 +287,7 @@ function ___closeDataPoint(pipe) {
   };
 }
 
-function ____updateDataPoint(pipe, entities, datapoint) {
+function _____updateDataPoint(pipe, entities, datapoint) {
   return (measure, ecb) => {
     return mongoose.model('DataPoints').findOneAndUpdate({
       dataset: pipe.dataset._id,
@@ -313,28 +313,28 @@ function ____updateDataPoint(pipe, entities, datapoint) {
   };
 }
 
-function __updateChangedDataPoints(changedDataPoints, pipe) {
+function ___updateChangedDataPoints(changedDataPoints, pipe) {
   return (cb) => {
     return async.mapLimit(
       _.map(changedDataPoints, 'data-origin'),
       LIMIT_NUMBER_PROCESS,
-      ___closeDataPoint(pipe),
+      ____closeDataPoint(pipe),
       cb
     );
   };
 }
 
-function _fakeLoadRawDataPoints(pipe, done) {
-  let updatedDataPoints = _.map(pipe.fileChanges.update, __formRawDataPoint(pipe));
-  let changedDFataPoints = _.map(pipe.fileChanges.change, __formRawDataPoint(pipe));
-  let fakeLoadedDatapoints = _.concat(pipe.fileChanges.create, updatedDataPoints, changedDFataPoints);
+function __fakeLoadRawDataPoints(pipe, done) {
+  let updatedDataPoints = _.map(pipe.fileChanges.update, ___formRawDataPoint(pipe));
+  let changedDataPoints = _.map(pipe.fileChanges.change, ___formRawDataPoint(pipe));
+  let fakeLoadedDatapoints = _.concat(pipe.fileChanges.create, updatedDataPoints, changedDataPoints);
 
   pipe.fakeLoadedDatapoints = fakeLoadedDatapoints;
 
   return async.setImmediate(() => done(null, pipe));
 }
 
-function __formRawDataPoint(pipe) {
+function ___formRawDataPoint(pipe) {
   return (datapoint) => {
     let complexKey = getComplexKey(datapoint['data-origin']);
     let closedOriginDatapoint = pipe.closedDataPoints[complexKey];
@@ -343,12 +343,8 @@ function __formRawDataPoint(pipe) {
   }
 }
 
-function _wrapProcessRawDataPoints(pipe, done) {
+function __wrapProcessRawDataPoints(pipe, done) {
   return pipe.common.processRawDataPoints(pipe, done)(null, pipe.fakeLoadedDatapoints);
-}
-
-function _addRawEntitiesFromUpdatedDataPoints() {
-
 }
 
 // UTILS FUNCTIONS
