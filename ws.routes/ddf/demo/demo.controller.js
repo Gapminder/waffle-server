@@ -109,7 +109,7 @@ module.exports = (serviceLocator) => {
         }, config);
       })
     ], error => {
-        return res.json({success: !error, error});
+      return res.json({success: !error, error});
     });
   }
 

@@ -67,7 +67,7 @@ module.exports = function (app, done, options) {
     getPreviousTransaction,
     // TODO: update dataset.versions for using successful transaction
     addTransactionToDatasetVersions,
-    // processConceptsChanges,
+    require('./ddf/import/incremental/import-concepts')(app),
     // processEntitiesChanges,
     getAllConcepts,
     // TODO: process removed and modified files (FIRST OF ALL - CHECK)
@@ -123,28 +123,28 @@ function getAllConcepts(pipe, done) {
   mongoose.model('Concepts').find({
     dataset: pipe.dataset._id,
     from: { $lte: pipe.transaction.createdAt },
-    to: { $gt: pipe.transaction.createdAt }
+    to: MAX_VALUE
   }, null, {
     join: {
       domain: {
         $find: {
           dataset: pipe.dataset._id,
           from: { $lte: pipe.transaction.createdAt },
-          to: { $gt: pipe.transaction.createdAt }
+          to: MAX_VALUE
         }
       },
       subsetOf: {
         $find: {
           dataset: pipe.dataset._id,
           from: { $lte: pipe.transaction.createdAt },
-          to: { $gt: pipe.transaction.createdAt }
+          to: MAX_VALUE
         }
       },
       dimensions: {
         $find: {
           dataset: pipe.dataset._id,
           from: { $lte: pipe.transaction.createdAt },
-          to: { $gt: pipe.transaction.createdAt }
+          to: MAX_VALUE
         }
       }
     }

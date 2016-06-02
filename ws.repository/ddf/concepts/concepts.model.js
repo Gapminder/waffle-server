@@ -28,7 +28,7 @@ const originId = require('../origin-id.plugin');
  * @property {Boolean} isNumeric - indicate whether concept with type measure has only numeric values
  * @property {Models.Concepts.originId} domain - of current entity set (could be null only for entity domain)
  * @property {Array<Models.Concepts.originId>} subsetOf - to lower-tier authorities, entity sets (could be null)
- * @property {Array<Models.Concepts.originId>} dimensions - list of all dimensions which were got in data-points files
+ * @property {Array<Models.Concepts.originId>} dimensions - list of all entity_sets, entity_domains that belong to particular measure. Only measure has this prop populated.
  *
  * @property {Number} from - concept start version
  * @property {Number} to - concept end version (or Infinity)

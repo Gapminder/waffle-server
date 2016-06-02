@@ -16,6 +16,7 @@ const defaultEntityGroupTypes = ['entity_domain', 'entity_set', 'time', 'age'];
 const defaultMeasureTypes = ['measure'];
 
 const LIMIT_NUMBER_PROCESS = 10;
+const MAX_VALUE = Number.MAX_SAFE_INTEGER;
 
 let logger;
 let config;
@@ -45,7 +46,8 @@ module.exports = function (app) {
     parseFilename: _parseFilename,
     createEntitiesBasedOnDataPoints: _createEntitiesBasedOnDataPoints,
     updateConceptsDimensions: _updateConceptsDimensions,
-    closeTransaction: closeTransaction
+    closeTransaction: closeTransaction,
+    addConceptSubsetOf: _addConceptSubsetOf
   };
 };
 
@@ -823,7 +825,7 @@ function mapDdfConceptsToWsModel(pipe) {
       dimensions: [],
 
       from: pipe.transaction.createdAt,
-      to: Number.MAX_SAFE_INTEGER,
+      to: MAX_VALUE,
       dataset: pipe.dataset._id,
       transaction: pipe.transactionId || pipe.transaction._id
     };
@@ -843,6 +845,7 @@ function mapDdfOriginalEntityToWsModel(pipe) {
       properties: entry,
 
       originId: entry.originId,
+      // FIXME: Take domain from ddf--entities--${ENTITY_DOMAIN}--${ENTITY_SET}.csv
       domain: pipe.entitySet.domain ? pipe.entitySet.domain._id : pipe.entitySet._id,
       sets: resolvedSets,
 
