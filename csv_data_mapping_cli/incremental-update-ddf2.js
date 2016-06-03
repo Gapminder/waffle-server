@@ -43,7 +43,8 @@ module.exports = function (app, done, options) {
     datapoints: 'DataPoints',
     entities: 'Entities'
   };
-  let diffFile = options.diff;//require(path.resolve(pathToDiffDdfFile));
+  const RESOLVED_PATH_TO_DIFF_DDF_RESULT_FILE = process.env.PATH_TO_DIFF_DDF_RESULT_FILE ? path.resolve(process.env.PATH_TO_DIFF_DDF_RESULT_FILE) : '';
+  let diffFile = options.diff || require(RESOLVED_PATH_TO_DIFF_DDF_RESULT_FILE);
   let changedFiles = diffFile.files;
   let allChanges = diffFile.changes;
   let pipe = {
@@ -51,8 +52,8 @@ module.exports = function (app, done, options) {
     allChanges,
     mapFilenameToCollectionName,
     common,
-    commit: options.commit,
-    datasetName: options.datasetName,
+    commit: options.commit || process.env.DDF_REPO_COMMIT,
+    datasetName: options.datasetName || process.env.DDF_DATASET_NAME,
     config
   };
 
@@ -60,7 +61,7 @@ module.exports = function (app, done, options) {
     async.constant(pipe),
     common.resolvePathToDdfFolder,
     findUser,
-    // TODO: check 
+    // TODO: check last Transaction was closed ({isClosed: true})
     common.createTransaction,
     common.findDataset,
     common.updateTransaction,
@@ -68,8 +69,8 @@ module.exports = function (app, done, options) {
     // TODO: update dataset.versions for using successful transaction
     addTransactionToDatasetVersions,
     require('./ddf/import/incremental/import-concepts')(app),
-    // processEntitiesChanges,
     getAllConcepts,
+    processEntitiesChanges,
     // TODO: process removed and modified files (FIRST OF ALL - CHECK)
     // TODO: close all unused entities which refer to removed DP
     // TODO: fix sources for datapoints, concepts and entities
@@ -158,7 +159,262 @@ function getAllConcepts(pipe, done) {
     });
 }
 
+function processEntitiesChanges(pipe, done) {
+  logger.info('process entities changes');
+
+  pipe.entitiesFiles = _.pickBy(pipe.allChanges, (ch, filename) => filename.match(/ddf--entities--/g));
+
+  return async.forEachOfSeries(
+    pipe.entitiesFiles,
+    _processEntititesFile(pipe),
+    err => {
+      return done(err, pipe);
+    }
+  );
+}
+
+function _processEntititesFile(pipe) {
+  let key = 1;
+
+  return (fileChanges, filename, cb) => {
+    let _pipe = {
+      filename: filename,
+      fileChanges: fileChanges.body,
+      removedColumns: fileChanges.header.remove,
+      createdColumns: fileChanges.header.create,
+      concepts: pipe.concepts,
+      transaction: pipe.transaction,
+      dataset: pipe.dataset,
+      common: pipe.common
+    };
+
+    return async.waterfall([
+      async.constant(_pipe),
+      __parseEntityFilename,
+      __closeRemovedAndUpdatedEntities,
+      __createAndUpdateEntities
+    ], err => {
+      logger.info(`** Processed ${key++} of ${_.keys(pipe.entitiesFiles).length} files`);
+
+      return cb(err);
+    });
+  }
+}
+
+function __parseEntityFilename(pipe, cb) {
+  logger.info(`**** load original entities from file ${pipe.filename}`);
+
+  let parsedFilename = pipe.filename
+    .replace('ddf--entities--', '')
+    .replace('.csv', '')
+    .split('--');
+
+  let entityDomainGid = _.first(parsedFilename);
+  let entitySetGid = _.last(parsedFilename);
+
+  pipe.entitySet = pipe.concepts[entitySetGid];
+  pipe.entityDomain = pipe.concepts[entityDomainGid];
+
+  return async.setImmediate(() => cb(null, pipe));
+}
+
+function __closeRemovedAndUpdatedEntities(pipe, cb) {
+  logger.info(`** close entities`);
+
+  if (pipe.removedColumns.length || pipe.createdColumns.length) {
+    // EXPLANATION: just because if column was removed it should affect ALL Entities in file
+    // so, we should close all of them before create their new version
+    return ___processChangedColumnsBySource(pipe, cb);
+  }
+
+  return async.parallel([
+    ___updateRemovedEntities(pipe.fileChanges.remove, pipe),
+    ___updateRemovedEntities(pipe.fileChanges.update, pipe),
+    ___updateRemovedEntities(pipe.fileChanges.change, pipe)
+  ], (err) => {
+    return cb(err, pipe);
+  });
+}
+
+function ___processChangedColumnsBySource(pipe, cb) {
+  let _pipe = {
+    source: pipe.filename,
+    entityDomain: pipe.entityDomain,
+    entitySet: pipe.entitySet,
+    transaction: pipe.transaction,
+    dataset: pipe.dataset
+  };
+
+  return async.waterfall([
+    async.constant(_pipe),
+    ___closeAllEntitiesBySource,
+    ___getAllEntitiesBySource
+  ], (err, res) => {
+    pipe.closedEntities = _.keyBy(res, 'gid');
+
+    return cb(err, pipe);
+  });
+}
+
+function ___closeAllEntitiesBySource(pipe, cb) {
+  let query = {
+    dataset: pipe.dataset._id,
+    from: {$lte: pipe.transaction.createdAt},
+    to: MAX_VALUE,
+    domain: pipe.entityDomain.originId,
+    sets : pipe.entitySet ? pipe.entitySet.originId : {$size: 0}
+  };
+
+  return mongoose.model('Entities').update(
+    query,
+    {$set: {to: pipe.transaction.createdAt}},
+    {multi: true},
+    (err) => {
+      return cb(err, pipe);
+    });
+}
+
+function ___getAllEntitiesBySource(pipe, cb) {
+  let query = {
+    dataset: pipe.dataset._id,
+    from: {$lte: pipe.transaction.createdAt},
+    to: pipe.transaction.createdAt,
+    domain: pipe.entityDomain.originId,
+    sets : pipe.entitySet ? pipe.entitySet.originId : {$size: 0}
+  };
+
+  return mongoose.model('Entities').find(query)
+    .lean()
+    .exec((err, docs) => {
+      return cb(err, docs);
+    });
+}
+
+function ___updateRemovedEntities(removedEntities, pipe) {
+  return (cb) => {
+    return async.eachLimit(
+      removedEntities,
+      LIMIT_NUMBER_PROCESS,
+      ____closeEntity(pipe),
+      (err) => {
+        return cb(err);
+      });
+  };
+}
+
+function ____closeEntity(pipe) {
+  return (entity, ecb) => {
+    let properties = {};
+    properties[`properties.${entity.gid}`] = entity[entity.gid];
+
+    let query = _.assign({
+      dataset: pipe.dataset._id,
+      from: {$lte: pipe.transaction.createdAt},
+      to: MAX_VALUE,
+      domain: pipe.entityDomain.originId,
+      sets : pipe.entitySet ? pipe.entitySet.originId : {$size: 0}
+    }, properties);
+
+    return mongoose.model('Entities').findOneAndUpdate(query, {$set: {to: pipe.transaction.createdAt}}, {new: true})
+      .lean()
+      .exec((err, doc) => {
+        if (doc) {
+          pipe.closedEntities[doc.gid] = doc.properties;
+        }
+
+        return ecb(err, pipe);
+      });
+  };
+}
+
+function __createAndUpdateEntities(pipe, cb) {
+  let _pipe = {
+    filename: pipe.filename,
+    entitySet: pipe.entitySet,
+    entityDomain: pipe.entityDomain,
+    fileChanges: pipe.fileChanges,
+    removedColumns: pipe.removedColumns,
+    createdColumns: pipe.createdColumns,
+    closedEntities: pipe.closedEntities,
+    concepts: pipe.concepts,
+    transaction: pipe.transaction,
+    dataset: pipe.dataset,
+    common: pipe.common
+  };
+
+  return async.waterfall([
+    async.constant(_pipe),
+    ___fakeLoadRawOriginalEntities,
+    pipe.common.createOriginalEntities,
+    pipe.common.findAllOriginalEntities,
+    pipe.common.createEntitiesBasedOnOriginalEntities,
+    pipe.common.clearOriginalEntities,
+    __getAllEntities,
+    pipe.common.addEntityDrillups,
+    __getAllEntities
+  ], cb);
+}
+
+function ___fakeLoadRawOriginalEntities(pipe, done) {
+  let removedEntitiesGids = _.chain(pipe.fileChanges.remove)
+    .keyBy(getGid)
+    .keys()
+    .value();
+  let closedEntities = _.mapValues(pipe.closedEntities, 'properties');
+  let _changedClosedEntities = _.omit(closedEntities, removedEntitiesGids);
+  let changedClosedEntities = _.mapValues(_changedClosedEntities, (entity) => {
+      return _.chain(pipe.createdColumns)
+        .reduce((result, key) =>{
+          result[key] = null;
+          return result;
+        }, entity)
+        .omit(pipe.removedColumns)
+        .value();
+    });
+
+  let _mergedChangedEntities = mergeUpdatedAndChangedEntities(pipe.fileChanges.update, pipe.fileChanges.change);
+  let mergedChangedEntities = _.merge(changedClosedEntities, _mergedChangedEntities);
+
+  let updatedEntities = _.map(mergedChangedEntities, ____formRawEntities(pipe));
+  let createdEntities = _.map(pipe.fileChanges.create, pipe.common.mapDdfOriginalEntityToWsModel(pipe));
+
+  let fakeLoadedEntities = _.concat([], createdEntities, updatedEntities);
+  let uniqEntities = _.uniqBy(fakeLoadedEntities, 'gid');
+
+  if (uniqEntities.length !== fakeLoadedEntities.length) {
+    return done('All entity gid\'s should be unique within the Entity Set or Entity Domain!');
+  }
+
+  pipe.raw ={
+    originalEntities: fakeLoadedEntities
+  };
+
+  return async.setImmediate(() => done(null, pipe));
+
+  function getGid(conceptChange) {
+    return conceptChange[conceptChange.gid];
+  }
+
+  function mergeUpdatedAndChangedEntities(updatedEntities, changedEntities) {
+    return _.mapValues(_.groupBy(_.concat(updatedEntities, changedEntities), getGid), values => {
+      return _.merge.apply(null, _.flatMap(values, value => value['data-update']));
+    });
+  }
+}
+
+function ____formRawEntities(pipe) {
+  let mapper = pipe.common.mapDdfOriginalEntityToWsModel(pipe);
+  return (entity, entityGid) => {
+    let closedEntity = pipe.closedEntities[entityGid];
+    let originId = closedEntity ? closedEntity.originId : null;
+    let result = _.assign(entity, {originId});
+
+    return mapper(result);
+  }
+}
+
 function processDataPointsChanges(pipe, done) {
+  logger.info('process data points changes');
   pipe.datapointsFiles = _.omitBy(pipe.allChanges, (ch, filename) => !filename.match(/ddf--datapoints--/g));
 
   return async.forEachOfSeries(
@@ -186,7 +442,7 @@ function _processDataPointFile(pipe) {
     __wrapProcessRawDataPoints,
     pipe.common.createEntitiesBasedOnDataPoints,
     __getAllEntities,
-    pipe.common._createDataPoints, // обнови в common использование originID
+    pipe.common._createDataPoints,
   ], err => {
     logger.info(`** Processed ${key++} of ${_.keys(pipe.datapointsFiles).length} files`);
 
@@ -208,21 +464,21 @@ function __getAllEntities(pipe, done) {
         $find: {
           dataset: pipe.dataset._id,
           from: { $lte: pipe.transaction.createdAt },
-          to: MAX_VALUE,
+          to: MAX_VALUE
         }
       },
       sets: {
         $find: {
           dataset: pipe.dataset._id,
           from: { $lte: pipe.transaction.createdAt },
-          to: MAX_VALUE,
+          to: MAX_VALUE
         }
       },
       drillups: {
         $find: {
           dataset: pipe.dataset._id,
           from: { $lte: pipe.transaction.createdAt },
-          to: MAX_VALUE,
+          to: MAX_VALUE
         }
       }
     }

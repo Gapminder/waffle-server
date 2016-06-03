@@ -60,4 +60,4 @@ require('./' + selectedImporter)(appStub, (err) => {
   mongoose.disconnect();
 
   process.exit(0);
-});
+}, {});

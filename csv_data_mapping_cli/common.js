@@ -40,6 +40,13 @@ module.exports = function (app) {
     findVersion,
     getAllConcepts: _getAllConcepts,
     findAllEntities: _findAllEntities,
+    processOriginalEntities: _processOriginalEntities,
+    mapDdfOriginalEntityToWsModel: mapDdfOriginalEntityToWsModel,
+    createOriginalEntities: __createOriginalEntities,
+    findAllOriginalEntities: _findAllOriginalEntities,
+    createEntitiesBasedOnOriginalEntities: _createEntitiesBasedOnOriginalEntities,
+    clearOriginalEntities: _clearOriginalEntities,
+    addEntityDrillups: _addEntityDrillups,
     createTranslations,
     findDataPoints,
     processRawDataPoints: __processRawDataPoints,
@@ -324,9 +331,16 @@ function createTranslations(pipe, done) {
 
 function createEntities(pipe, done) {
   logger.info('start process creating entities');
+  let _pipe = {
+    transaction: pipe.transaction,
+    concepts: pipe.concepts,
+    dataset: pipe.dataset,
+    fileTemplates: pipe.fileTemplates,
+    resolvePath: pipe.resolvePath
+  };
 
   async.waterfall([
-    async.constant({transaction: pipe.transaction, concepts: pipe.concepts, dataset: pipe.dataset, fileTemplates: pipe.fileTemplates, resolvePath: pipe.resolvePath}),
+    async.constant(_pipe),
     _processOriginalEntities,
     _findAllOriginalEntities,
     _createEntitiesBasedOnOriginalEntities,
@@ -394,20 +408,20 @@ function __loadOriginalEntities(_pipe, cb) {
   });
 }
 
-function __createOriginalEntities(_pipe, done) {
-  if (_.isEmpty(_pipe.raw.originalEntities)) {
-    logger.warn(`file '${_pipe.filename}' is empty or doesn't exist.`);
+function __createOriginalEntities(pipe, done) {
+  if (_.isEmpty(pipe.raw.originalEntities)) {
+    logger.warn(`file '${pipe.filename}' is empty or doesn't exist.`);
 
-    return async.setImmediate(() => done(null, _pipe));
+    return async.setImmediate(() => done(null, pipe));
   }
 
-  logger.info(`**** create original entities from file '${_pipe.filename}'`);
+  logger.info(`**** create original entities from file '${pipe.filename}'`);
 
   return async.eachSeries(
-    _.chunk(_pipe.raw.originalEntities, 100),
+    _.chunk(pipe.raw.originalEntities, 100),
     ___createOriginalEntities,
     (err) => {
-      return done(err, _pipe);
+      return done(err, pipe);
     }
   );
 
@@ -443,17 +457,20 @@ function _createEntitiesBasedOnOriginalEntities(pipe, done) {
 
   logger.info(`** create entities based on original entities`);
 
-  let entities = _.chain(pipe.originalEntities)
-    .groupBy('gid')
-    .flatMap(mapDdfEntityBasedOnOriginalEntityToWsModel(pipe.concepts))
-    .value();
+  // let entities = _.chain(pipe.originalEntities)
+  //   .groupBy('gid')
+  //   .flatMap(mapDdfEntityBasedOnOriginalEntityToWsModel(pipe.concepts))
+  //   .value();
 
-  return async.each(_.chunk(entities, 100), _createEntities, (err) => {
+  // FIXME: REMOVE ALL REFERENCE TO ORIGINAL ENTITIES FROM IMPORT AND INCREMENTAL UPDATE
+  return async.each(_.chunk(pipe.originalEntities, 100), _createEntities, (err) => {
     return done(err, pipe);
   });
 
   function _createEntities(chunk, cb) {
-    return mongoose.model('Entities').create(chunk, cb);
+    return mongoose.model('Entities').create(chunk, (err) => {
+      return cb(err);
+    });
   }
 }
 
@@ -509,6 +526,8 @@ function _addEntityDrillups(pipe, done) {
   logger.info('** add entity drillups');
   let relations = flatEntityRelations(pipe);
 
+  // TODO: fix drillup for merged entities
+  // (for hkg created only main_religion_2008 `eastern_religions`, but not country `hkg`)
   async.forEachOfLimit(relations, LIMIT_NUMBER_PROCESS, (drillups, _id, escb) => {
     if (!drillups.length) {
       return escb();
@@ -837,14 +856,30 @@ function mapDdfOriginalEntityToWsModel(pipe) {
     let gid = passGeoMapping(pipe, entry);
     let resolvedColumns = mapResolvedColumns(entry);
     let resolvedSets = mapResolvedSets(pipe, resolvedColumns);
+    let _entry = _.mapValues(entry, property => {
+      let numericValue = property && _.toNumber(property);
+      if (property === 'TRUE' || property === 'FALSE' || _.isBoolean(property)) {
+        if (property === 'FALSE') {
+          return false;
+        }
+        if (property === 'TRUE') {
+          return true;
+        }
+        return property;
+      }
+      if (!_.isNaN(numericValue) && _.isNumber(numericValue)) {
+        return numericValue;
+      }
+      return property;
+    });
 
     return {
       gid: gid,
-      title: entry.name,
+      title: _entry.name,
       sources: [pipe.filename],
-      properties: entry,
+      properties: _entry,
 
-      originId: entry.originId,
+      originId: _entry.originId,
       // FIXME: Take domain from ddf--entities--${ENTITY_DOMAIN}--${ENTITY_SET}.csv
       domain: pipe.entitySet.domain ? pipe.entitySet.domain._id : pipe.entitySet._id,
       sets: resolvedSets,
@@ -943,6 +978,7 @@ function mapDdfEntityToWsModel(entity, concept, domain, pipe) {
     sources: [pipe.filename],
     properties: entity,
 
+    // originId: entity.originId,
     domain: domain.originId,
     sets: concept.domain ? [] : [concept.originId],
     drillups: [],

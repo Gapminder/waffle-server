@@ -36,9 +36,9 @@ module.exports = function (app, done, options) {
     config,
     defaultEntityGroupTypes,
     defaultMeasureTypes,
-    github: options.github,
-    datasetName: options.datasetName,
-    commit: options.commit
+    github: options.github || process.env.GITHUB_DDF_REPO,
+    datasetName: options.datasetName || process.env.DDF_DATASET_NAME,
+    commit: options.commit || process.env.DDF_REPO_COMMIT
   };
 
   async.waterfall([
