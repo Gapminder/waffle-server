@@ -396,7 +396,7 @@ function __createOriginalEntities(_pipe, done) {
   if (_.isEmpty(_pipe.raw.originalEntities)) {
     logger.warn(`file '${_pipe.filename}' is empty or doesn't exist.`);
 
-    return async.setImmediate(done);
+    return async.setImmediate(() => done(null, _pipe));
   }
 
   logger.info(`**** create original entities from file '${_pipe.filename}'`);
@@ -404,12 +404,14 @@ function __createOriginalEntities(_pipe, done) {
   return async.eachSeries(
     _.chunk(_pipe.raw.originalEntities, 100),
     ___createOriginalEntities,
-    done
+    (err) => {
+      return done(err, _pipe);
+    }
   );
 
   function ___createOriginalEntities(chunk, cb) {
     return mongoose.model('OriginalEntities').create(chunk, (err) => {
-      return cb(err, _pipe);
+      return cb(err);
     });
   }
 }
@@ -821,7 +823,7 @@ function mapDdfConceptsToWsModel(pipe) {
       dimensions: [],
 
       from: pipe.transaction.createdAt,
-      to: Number.MAX_VALUE,
+      to: Number.MAX_SAFE_INTEGER,
       dataset: pipe.dataset._id,
       transaction: pipe.transactionId || pipe.transaction._id
     };
@@ -840,6 +842,7 @@ function mapDdfOriginalEntityToWsModel(pipe) {
       sources: [pipe.filename],
       properties: entry,
 
+      originId: entry.originId,
       domain: pipe.entitySet.domain ? pipe.entitySet.domain._id : pipe.entitySet._id,
       sets: resolvedSets,
 
