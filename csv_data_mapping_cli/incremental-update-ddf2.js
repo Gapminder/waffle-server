@@ -70,6 +70,7 @@ module.exports = function (app, done, options) {
     addTransactionToDatasetVersions,
     require('./ddf/import/incremental/import-concepts')(app),
     getAllConcepts,
+    getAllPreviousConcepts,
     processEntitiesChanges,
     // TODO: process removed and modified files (FIRST OF ALL - CHECK)
     // TODO: close all unused entities which refer to removed DP
@@ -159,6 +160,47 @@ function getAllConcepts(pipe, done) {
     });
 }
 
+function getAllPreviousConcepts(pipe, done) {
+  logger.info('** get all concepts');
+
+  mongoose.model('Concepts').find({
+    dataset: pipe.dataset._id,
+    from: { $lt: pipe.transaction.createdAt },
+    to: pipe.transaction.createdAt
+  }, null, {
+    join: {
+      domain: {
+        $find: {
+          dataset: pipe.dataset._id,
+          from: { $lt: pipe.transaction.createdAt },
+          to: pipe.transaction.createdAt
+        }
+      },
+      subsetOf: {
+        $find: {
+          dataset: pipe.dataset._id,
+          from: { $lt: pipe.transaction.createdAt },
+          to: pipe.transaction.createdAt
+        }
+      },
+      dimensions: {
+        $find: {
+          dataset: pipe.dataset._id,
+          from: { $lt: pipe.transaction.createdAt },
+          to: pipe.transaction.createdAt
+        }
+      }
+    }
+  })
+    .populate('dataset')
+    .populate('transaction')
+    .lean()
+    .exec((err, res) => {
+      pipe.previousConcepts = _.keyBy(res, 'gid');
+      return done(err, pipe);
+    });
+}
+
 function processEntitiesChanges(pipe, done) {
   logger.info('process entities changes');
 
@@ -181,7 +223,7 @@ function _processEntititesFile(pipe) {
       filename: filename,
       fileChanges: fileChanges.body,
       removedColumns: fileChanges.header.remove,
-      createdColumns: fileChanges.header.create,
+      previousConcepts: pipe.previousConcepts,
       concepts: pipe.concepts,
       transaction: pipe.transaction,
       dataset: pipe.dataset,
@@ -212,8 +254,8 @@ function __parseEntityFilename(pipe, cb) {
   let entityDomainGid = _.first(parsedFilename);
   let entitySetGid = _.last(parsedFilename);
 
-  pipe.entitySet = pipe.concepts[entitySetGid];
-  pipe.entityDomain = pipe.concepts[entityDomainGid];
+  pipe.entitySet = pipe.previousConcepts[entitySetGid] || pipe.concepts[entitySetGid];
+  pipe.entityDomain = pipe.previousConcepts[entityDomainGid] || pipe.concepts[entityDomainGid];
 
   return async.setImmediate(() => cb(null, pipe));
 }
@@ -221,7 +263,7 @@ function __parseEntityFilename(pipe, cb) {
 function __closeRemovedAndUpdatedEntities(pipe, cb) {
   logger.info(`** close entities`);
 
-  if (pipe.removedColumns.length || pipe.createdColumns.length) {
+  if (pipe.removedColumns.length) {
     // EXPLANATION: just because if column was removed it should affect ALL Entities in file
     // so, we should close all of them before create their new version
     return ___processChangedColumnsBySource(pipe, cb);
@@ -291,6 +333,7 @@ function ___getAllEntitiesBySource(pipe, cb) {
 }
 
 function ___updateRemovedEntities(removedEntities, pipe) {
+  pipe.closedEntities = {};
   return (cb) => {
     return async.eachLimit(
       removedEntities,
@@ -334,7 +377,6 @@ function __createAndUpdateEntities(pipe, cb) {
     entityDomain: pipe.entityDomain,
     fileChanges: pipe.fileChanges,
     removedColumns: pipe.removedColumns,
-    createdColumns: pipe.createdColumns,
     closedEntities: pipe.closedEntities,
     concepts: pipe.concepts,
     transaction: pipe.transaction,
@@ -362,15 +404,7 @@ function ___fakeLoadRawOriginalEntities(pipe, done) {
     .value();
   let closedEntities = _.mapValues(pipe.closedEntities, 'properties');
   let _changedClosedEntities = _.omit(closedEntities, removedEntitiesGids);
-  let changedClosedEntities = _.mapValues(_changedClosedEntities, (entity) => {
-      return _.chain(pipe.createdColumns)
-        .reduce((result, key) =>{
-          result[key] = null;
-          return result;
-        }, entity)
-        .omit(pipe.removedColumns)
-        .value();
-    });
+  let changedClosedEntities = _.mapValues(_changedClosedEntities, (entity) => _.omit(entity, pipe.removedColumns));
 
   let _mergedChangedEntities = mergeUpdatedAndChangedEntities(pipe.fileChanges.update, pipe.fileChanges.change);
   let mergedChangedEntities = _.merge(changedClosedEntities, _mergedChangedEntities);
@@ -437,6 +471,7 @@ function _processDataPointFile(pipe) {
     }),
     pipe.common.parseFilename,
     __getAllEntities,
+    __getAllPreviousEntities,
     __closeRemovedAndUpdatedDataPoints,
     __fakeLoadRawDataPoints,
     __wrapProcessRawDataPoints,
@@ -492,6 +527,48 @@ function __getAllEntities(pipe, done) {
     });
 }
 
+function __getAllPreviousEntities(pipe, done) {
+  logger.info('** get all entities');
+
+  mongoose.model('Entities').find({
+    dataset: pipe.dataset._id,
+    from: { $lt: pipe.transaction.createdAt },
+    to: pipe.transaction.createdAt,
+    'properties.language': { $not: { $in: ['en', 'se'] } }
+  }, null, {
+    join: {
+      domain: {
+        $find: {
+          dataset: pipe.dataset._id,
+          from: { $lt: pipe.transaction.createdAt },
+          to: pipe.transaction.createdAt
+        }
+      },
+      sets: {
+        $find: {
+          dataset: pipe.dataset._id,
+          from: { $lt: pipe.transaction.createdAt },
+          to: pipe.transaction.createdAt
+        }
+      },
+      drillups: {
+        $find: {
+          dataset: pipe.dataset._id,
+          from: { $lt: pipe.transaction.createdAt },
+          to: pipe.transaction.createdAt
+        }
+      }
+    }
+  })
+    .populate('dataset')
+    .populate('transaction')
+    .lean()
+    .exec((err, res) => {
+      pipe.previousEntities = res;
+      return done(err, pipe);
+    });
+}
+
 function __closeRemovedAndUpdatedDataPoints(pipe, done) {
   logger.info(`** close data points`);
 
@@ -519,6 +596,7 @@ function ___updateRemovedDataPoints(removedDataPoints, pipe) {
 }
 
 function ____closeDataPoint(pipe) {
+  let groupedPreviousEntities = _.groupBy(pipe.previousEntities, 'gid');
   let groupedEntities = _.groupBy(pipe.entities, 'gid');
 
   return (datapoint, ecb) => {
@@ -528,8 +606,8 @@ function ____closeDataPoint(pipe) {
       .compact()
       .value();
     // TODO: try to get not first element, but the element which belongs to related domain or sets
-    let entities = _.map(entityGids, (gid) => {
-      return _.first(groupedEntities[gid]).originId;
+    let entities = _.flatMap(entityGids, (gid) => {
+      return groupedEntities[gid] || groupedPreviousEntities[gid];
     });
 
     return async.eachLimit(
@@ -547,13 +625,14 @@ function _____updateDataPoint(pipe, entities, datapoint) {
   return (measure, ecb) => {
     return mongoose.model('DataPoints').findOneAndUpdate({
       dataset: pipe.dataset._id,
-      from: {$lte: pipe.transaction.createdAt},
+      from: {$lt: pipe.transaction.createdAt},
       to: MAX_VALUE,
       value: datapoint[measure.gid],
       measure: measure.originId,
       dimensions: {
-        $size: entities.length,
-        $all: entities
+        $size: _.size(pipe.dimensions),
+        // TODO: get the point to presentation
+        $not: {$elemMatch: {$nin : _.map(entities, 'originId') }}
       }
     }, {$set: {to: pipe.transaction.createdAt}}, {new: true})
       .lean()

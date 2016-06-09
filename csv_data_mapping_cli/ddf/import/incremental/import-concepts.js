@@ -9,6 +9,10 @@ const mappers = require('./mappers');
 
 module.exports = () => {
   return (pipe, done) => {
+    if (!pipe.allChanges['ddf--concepts.csv']) {
+      return done(null, pipe);
+    }
+
     const conceptChanges = pipe.allChanges['ddf--concepts.csv'];
     const remove = conceptChanges.body.remove;
     const create = conceptChanges.body.create;
