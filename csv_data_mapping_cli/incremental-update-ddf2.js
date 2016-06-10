@@ -66,15 +66,11 @@ module.exports = function (app, done, options) {
     common.findDataset,
     common.updateTransaction,
     getPreviousTransaction,
-    // TODO: update dataset.versions for using successful transaction
     addTransactionToDatasetVersions,
     require('./ddf/import/incremental/import-concepts')(app),
     getAllConcepts,
     getAllPreviousConcepts,
     processEntitiesChanges,
-    // TODO: process removed and modified files (FIRST OF ALL - CHECK)
-    // TODO: close all unused entities which refer to removed DP
-    // TODO: fix sources for datapoints, concepts and entities
     processDataPointsChanges,
     common.closeTransaction
   ], (err, pipe) => {
@@ -605,7 +601,7 @@ function ____closeDataPoint(pipe) {
       .values()
       .compact()
       .value();
-    // TODO: try to get not first element, but the element which belongs to related domain or sets
+
     let entities = _.flatMap(entityGids, (gid) => {
       return groupedEntities[gid] || groupedPreviousEntities[gid];
     });

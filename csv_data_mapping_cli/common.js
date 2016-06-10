@@ -612,7 +612,8 @@ function _loadDataPoints(pipe, cb) {
 
 function __processRawDataPoints(pipe, cb) {
   return (err, res) => {
-    // TODO: account must be taken of entities that could have equal gids in different sets (groupBy)
+    // TODO: account must be taken of entities that
+    // could have equal gids in different sets (groupBy)
     let dictionary = _.keyBy(pipe.entities, 'gid');
     let gids = new Set();
     let entities = _.chain(res)
@@ -880,7 +881,6 @@ function mapDdfOriginalEntityToWsModel(pipe) {
       properties: _entry,
 
       originId: _entry.originId,
-      // FIXME: Take domain from ddf--entities--${ENTITY_DOMAIN}--${ENTITY_SET}.csv
       domain: pipe.entitySet.domain ? pipe.entitySet.domain._id : pipe.entitySet._id,
       sets: resolvedSets,
 
