@@ -91,5 +91,5 @@ function gidToEntityDomainGid(entityDomainGid, object) {
 }
 
 function toPropertiesDotNotation(object) {
-  return _.mapKeys(object, (value, property) => `properties.${property}`);
+  return _.mapKeys(object, (value, property) => property === 'gid' ? property : `properties.${property}`);
 }
