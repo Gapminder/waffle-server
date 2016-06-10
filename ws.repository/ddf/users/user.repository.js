@@ -4,7 +4,7 @@ let mongoose = require('mongoose');
 
 let Users = mongoose.model('Users');
 
-let utils = require('../utils');
+let utils = require('../../utils');
 
 function UsersRepository() {
 }

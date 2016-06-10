@@ -9,4 +9,5 @@ let Repository = require('./entities.repository');
  * @param {ServiceLocator} serviceLocator - repository service locator
  * @returns {ServiceLocator} - instance of locator
  */
-module.exports = serviceLocator => serviceLocator.set(name, new Repository());
+//FIXME: Pull this ouf of service locator
+module.exports = serviceLocator => serviceLocator.set(name, new Repository({}));

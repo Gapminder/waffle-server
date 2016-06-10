@@ -8,4 +8,5 @@ const Repository = require('./concepts.repository');
  * @param {ServiceLocator} serviceLocator - repository service locator
  * @returns {ServiceLocator} - instance of locator
  */
-module.exports = serviceLocator => serviceLocator.set('Concepts', new Repository());
+//FIXME: Pull this ouf of service locator
+module.exports = serviceLocator => serviceLocator.set('Concepts', new Repository({}));

@@ -4,7 +4,7 @@ let mongoose = require('mongoose');
 
 let Datasets = mongoose.model('Datasets');
 
-let utils = require('../utils');
+let utils = require('../../utils');
 
 function DatasetsRepository() {
 }

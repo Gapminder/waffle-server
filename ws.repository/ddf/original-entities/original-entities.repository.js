@@ -4,7 +4,7 @@ let mongoose = require('mongoose');
 
 let OriginalEntities = mongoose.model('OriginalEntities');
 
-let utils = require('../utils');
+let utils = require('../../utils');
 
 function OriginalEntitiesRepository() {
 }

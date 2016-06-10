@@ -56,6 +56,13 @@ module.exports = (serviceLocator) => {
     getGitCommitsList
   );
 
+  router.get('/api/ddf/demo/commit-of-latest-dataset-version',
+    cors(),
+    compression(),
+    decodeQuery,
+    getCommitOfLatestDatasetVersion
+  );
+
   return app.use(router);
 
   function getGitCommitsList(req, res, next) {
@@ -78,8 +85,39 @@ module.exports = (serviceLocator) => {
     }, config);
   }
 
+  function getCommitOfLatestDatasetVersion(req, res, next) {
+    const github = req.query.github;
+
+    Datasets.findOne({path: github}).lean().exec((error, dataset) => {
+      if (error || !dataset) {
+        return res.json({success: !error, error: error || `Dataset with given github url: '${github}' was not found`});
+      }
+
+      Transactions
+        .findOne({dataset: dataset._id})
+        .sort({createdAt: -1})
+        .limit(1)
+        .lean()
+        .exec((error, transaction) => {
+          if (error) {
+            return res.json({success: !error, error: error});
+          }
+
+          return res.json({
+            github: dataset.path,
+            dataset: dataset.name,
+            commit: transaction.commit
+          });
+        });
+    });
+  }
+
   function importDataset(req, res, next) {
     let params = _.isEmpty(req.query) ? req.body : req.query;
+
+    if (!params.github || !params.commit) {
+      return res.json({success: false, error: 'Github url to dataset and commit to be imported must be provided'});
+    }
 
     async.waterfall([
       async.constant({}),

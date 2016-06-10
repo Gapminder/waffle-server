@@ -102,7 +102,7 @@ function createDataset(pipe, done) {
   mongoose.model('Datasets').create({
     name: pipe.datasetName,
     type: 'local',
-    path: pipe.resolvePath(''),
+    path: pipe.github,
     defaultLanguage: 'en',
     versions: [pipe.transaction.createdAt],
     dataProvider: 'semio',
