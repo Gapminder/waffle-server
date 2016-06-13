@@ -35,7 +35,7 @@ EntitiesRepository.prototype.findEntityProperties = function(entityDomainGid, se
       'properties.concept_type': 'entity_domain'
   });
 
-  Concepts.findOne(conceptQuery).lean().exec((error, concept) => {
+  return Concepts.findOne(conceptQuery).lean().exec((error, concept) => {
     if (error) {
       return onPropertiesFound(error);
     }
@@ -54,16 +54,7 @@ EntitiesRepository.prototype.findEntityProperties = function(entityDomainGid, se
 
     const entitiesQuery = _.merge({}, this.versionQueryFragment, {domain: concept.originId}, where);
 
-    Entities.find(entitiesQuery, projection).lean().exec((error, entities) => {
-      if (error) {
-        return onPropertiesFound(error);
-      }
-
-      return onPropertiesFound(null, {
-        headers: select,
-        rows: _.map(entities, entity => toWsJson(entityDomainGid, select, entity))
-      });
-    });
+    return Entities.find(entitiesQuery, projection).lean().exec(onPropertiesFound);
   });
 };
 
@@ -71,23 +62,10 @@ EntitiesRepository.prototype.findEntityProperties = function(entityDomainGid, se
   EntitiesRepository.prototype[actionName] = utils.actionFactory(actionName)(Entities, this);
 });
 
-function toWsJson(entityDomainGid, select, entity) {
-  const flattenedEntity = _.merge(gidToEntityDomainGid(entityDomainGid, _.omit(entity, 'properties')), entity.properties);
-  return _.map(select, property => flattenedEntity[property]);
-}
 
 function makePositiveProjectionFor(properties) {
   const positiveProjectionValues = _.fill(new Array(_.size(properties)), 1);
   return toPropertiesDotNotation(_.chain(properties).zipObject(positiveProjectionValues).value());
-}
-
-function gidToEntityDomainGid(entityDomainGid, object) {
-  return _.mapKeys(object, (value, property) => {
-    if (property === 'gid') {
-      return entityDomainGid;
-    }
-    return property;
-  })
 }
 
 function toPropertiesDotNotation(object) {

@@ -6,19 +6,11 @@ var express = require('express');
 var compression = require('compression');
 var md5 = require('md5');
 
-var statsService = require('./stats.service');
+var statsService = require('./entities.service');
 var decodeQuery = require('../../utils').decodeQuery;
 var getCacheConfig = require('../../utils').getCacheConfig;
 
-// var GeoPropService = require('./geo-props.service');
 const dataPostProcessors = require('../../data-post-processors');
-const postProcessorsMiddlewares = [
-  dataPostProcessors.gapfilling,
-  dataPostProcessors.toPrecision,
-  dataPostProcessors.format
-];
-
-const EntitiesRepositoryFactory = require('../../../ws.repository/ddf/entities/entities.repository');
 
 /**
  * @swagger
@@ -86,8 +78,6 @@ const EntitiesRepositoryFactory = require('../../../ws.repository/ddf/entities/e
 module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
 
-
-  // var neo4jdb = app.get('neo4jDb');
   var logger = app.get('log');
   var config = app.get('config');
   const cache = require('../../../ws.utils/redis-cache')(config);
@@ -95,60 +85,13 @@ module.exports = function (serviceLocator) {
   /*eslint new-cap:0*/
   var router = express.Router();
 
-  router.use([cors(), compression()/*, getCacheConfig('stats'), cache.route()*/, decodeQuery, logRequest]);
-
-  /**
-   * @swagger
-   * /api/ddf/stats/datapoints:
-   *   get:
-   *    description: For getting datapoints for choosen geo-time-measure(s). Take into account, if you choose Entity Domain, as a column, then WS calculates all datapoints for each matched Entity Set (geo -> region + country + city... )
-   *    produces:
-   *      - application/json
-   *      - text/csv
-   *    parameters:
-   *      - name: dataset
-   *        in: query
-   *        description: certain name of dataset (ddf--gapminder_world).
-   *        type: string
-   *      - name: version
-   *        in: query
-   *        description: certain version of dataset (timestamp, optional, if it is absent, it will be latest).
-   *        type: number
-   *      - name: gapfilling
-   *        in: query
-   *        description: list of methods for post processing of measures data (isn't supported yet)
-   *        type: string
-   *      - name: precisionLevel
-   *        in: query
-   *        description: Optional. Default value: 0.
-   *        type: number
-   *      - name: format
-   *        in: query
-   *        description: Optional. Default value: wsJson. Possible values: 'csv/json/wsJson'
-   *        type: string
-   *    tags:
-   *      - Datapoints Stats
-   *    responses:
-   *      200:
-   *        description: An array of datapoints in certain column order (pointed out in select)
-   *        schema:
-   *         type: object
-   *         items:
-   *            $ref: '#/definitions/Stats'
-   *      304:
-   *        description: cache
-   *        schema:
-   *          type: array
-   *          items:
-   *            $ref: '#/definitions/Stats'
-   *      default:
-   *        description: Unexpected error
-   *        schema:
-   *          $ref: '#/definitions/Error'
-   *
-   *
-   */
-  router.get('/api/ddf/stats/datapoints', ddfDatapointStats, postProcessorsMiddlewares);
+  router.use([
+    cors(),
+    compression(),
+    // getCacheConfig('stats'),
+    // cache.route(),
+    decodeQuery
+  ]);
 
   /**
    * @swagger
@@ -192,43 +135,17 @@ module.exports = function (serviceLocator) {
    *
    *
    */
-  router.get('/api/ddf/stats/entities', ddfEntitiesStats, postProcessorsMiddlewares);
+  router.get('/api/ddf/entities',
+    ddfEntitiesStats,
+    dataPostProcessors.gapfilling,
+    dataPostProcessors.toPrecision,
+    dataPostProcessors.format
+  );
 
   return app.use(router);
 
-  function ddfDatapointStats(req, res, next) {
-    console.time('finish DataPoint stats');
-
-    var select = req.decodedQuery.select;
-    var where = req.decodedQuery.where;
-    var sort = req.decodedQuery.sort;
-    var datasetName = _.first(req.decodedQuery.where.dataset);
-    var version = _.first(req.decodedQuery.where.version);
-    delete where.dataset;
-    delete where.version;
-
-    async.waterfall([
-      async.constant({select, where, sort, datasetName, version}),
-      statsService.getDataset,
-      statsService.getVersion,
-      statsService.getConcepts,
-      statsService.getEntities,
-      statsService.getDataPoints,
-      statsService.mapResult
-    ], (err, pipe) => {
-      if (err) {
-        console.error(err);
-        res.use_express_redis_cache = false;
-        return res.json({success: false, error: err});
-      }
-      console.timeEnd('finish DataPoint stats');
-
-      req.wsJson = pipe.result;
-      return next();
-    });
-  }
-
   function ddfEntitiesStats(req, res, next) {
+    logger.debug('URL: \n%s%s', config.LOG_TABS, req.originalUrl);
     console.time('finish Entities stats');
 
     var where = _.chain(req.decodedQuery.where).clone().mapValues(mapWhereClause).value();
@@ -245,19 +162,11 @@ module.exports = function (serviceLocator) {
     delete where['geo.cat'];
 
     async.waterfall([
-      async.constant({select, where, sort, datasetName, version}),
+      async.constant({select, where, sort, domainGid, datasetName, version}),
       statsService.getDataset,
       statsService.getVersion,
-      (pipe, cb) => {
-        const EntitiesRepository = new EntitiesRepositoryFactory({datasetId: pipe.dataset._id, version: pipe.version});
-        EntitiesRepository
-          .currentVersion()
-          .findEntityProperties(domainGid, select, where, (error, entities) => {
-            pipe.result = entities;
-            return cb(error, pipe);
-          });
-      }
-    ], (err, pipe) => {
+      statsService.getEntities
+    ], (err, result) => {
       if (err) {
         console.error(err);
         res.use_express_redis_cache = false;
@@ -265,14 +174,9 @@ module.exports = function (serviceLocator) {
       }
       console.timeEnd('finish Entities stats');
 
-      req.wsJson = pipe.result;
+      req.wsJson = result;
       return next();
     });
-  }
-
-  function logRequest(req, res, next) {
-    logger.debug('URL: \n%s%s', config.LOG_TABS, req.originalUrl);
-    return next();
   }
 
   function mapWhereClause(value, key) {

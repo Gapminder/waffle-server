@@ -55,7 +55,6 @@ function getVersion(pipe, done) {
     });
 }
 
-
 // pipe={select, where, sort, dataset, version}
 function getConcepts(pipe, cb) {
   return Concepts
@@ -214,8 +213,9 @@ function mapResult(pipe, cb) {
     })
     .value();
 
-  pipe.result = { headers: pipe.select, rows: _.sortBy(rows, ['0', '1']) };
   return async.setImmediate(() => {
-    return cb(null, pipe);
+    return cb(null, {
+      headers: pipe.select,
+      rows: _.sortBy(rows, ['0', '1']) });
   });
 }

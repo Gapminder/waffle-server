@@ -1,6 +1,6 @@
 'use strict';
 
 module.exports = function (serviceLocator) {
-  require('./stats.controller')(serviceLocator);
+  require('./entities.controller')(serviceLocator);
 };
 
