@@ -63,18 +63,9 @@ module.exports = function (app, done, options) {
     common.closeTransaction
   ], (err, pipe) => {
     console.timeEnd('done');
-    return done(err, {datasetName: pipe.dataset.name, version: pipe.transaction.createdAt});
+    return done(err, {datasetName: pipe.datasetName, version: pipe.transaction.createdAt});
   });
 };
-
-function resolvePathToTranslations(pipe, done) {
-  pipe.ddfEnTranslations = require(pipe.resolvePath('./vizabi/en.json'));
-  pipe.ddfSeTranslations = require(pipe.resolvePath('./vizabi/se.json'));
-
-  return async.setImmediate(() => {
-    return done(null, pipe);
-  });
-}
 
 function clearAllDbs(pipe, cb) {
   if (process.env.CLEAR_ALL_MONGO_DB_COLLECTIONS_BEFORE_IMPORT === 'true') {

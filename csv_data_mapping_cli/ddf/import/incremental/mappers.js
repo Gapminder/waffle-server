@@ -17,7 +17,7 @@ function mapDdfConceptsToWsModel(version, datasetId, transactionId) {
       gid: transformedEntry.concept,
 
       title: transformedEntry.name || transformedEntry.title,
-      type: transformedEntry.concept_type,
+      type: transformedEntry.concept_type === 'time' ? 'entity_domain' : transformedEntry.concept_type,
 
       tags: transformedEntry.tags,
       tooltip: transformedEntry.tooltip,

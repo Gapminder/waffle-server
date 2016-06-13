@@ -287,7 +287,7 @@ function mergeConcepts(originalConcept, changesToConcept, currentVersion) {
     }
 
     if (property === 'concept_type') {
-      originalConcept.type = changedValue;
+      originalConcept.type = changedValue === 'time' ? 'entity_domain' : changedValue;
     }
 
     if (utils.isJson(changedValue)) {

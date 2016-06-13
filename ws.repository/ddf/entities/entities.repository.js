@@ -32,7 +32,7 @@ function EntitiesRepository(versionQueryFragment) {
 EntitiesRepository.prototype.findEntityProperties = function(entityDomainGid, select, where, onPropertiesFound) {
   const conceptQuery = _.merge({}, this.versionQueryFragment, {
       gid: entityDomainGid,
-      'properties.concept_type': 'entity_domain'
+      'properties.concept_type': entityDomainGid === 'time' ? 'time' : 'entity_domain'
   });
 
   return Concepts.findOne(conceptQuery).lean().exec((error, concept) => {

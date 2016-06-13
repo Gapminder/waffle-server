@@ -4,10 +4,6 @@ var async = require('async');
 
 const mongoose = require('mongoose');
 
-const Concepts = mongoose.model('Concepts');
-const Entities = mongoose.model('Entities');
-const DataPoints = mongoose.model('DataPoints');
-
 const ConceptsRepositoryFactory = require('../../../ws.repository/ddf/concepts/concepts.repository');
 
 module.exports = {

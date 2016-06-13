@@ -830,7 +830,7 @@ function mapDdfConceptsToWsModel(pipe) {
       gid: _entry.concept,
 
       title: _entry.name || _entry.title,
-      type: _entry.concept_type,
+      type: (_entry.concept_type === 'time') ? 'entity_domain' : _entry.concept_type,
 
       tags: _entry.tags,
       tooltip: _entry.tooltip,
