@@ -14,6 +14,7 @@ module.exports = function (serviceLocator) {
   require('./ddf/import')(serviceLocator);
   require('./ddf/datapoints')(serviceLocator);
   require('./ddf/entities')(serviceLocator);
+  require('./ddf/concepts')(serviceLocator);
   require('./ddf/demo')(serviceLocator);
 };
 

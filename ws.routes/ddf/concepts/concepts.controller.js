@@ -6,7 +6,7 @@ var express = require('express');
 var compression = require('compression');
 var md5 = require('md5');
 
-var statsService = require('./entities.service');
+var statsService = require('./concepts.service');
 var commonService = require('../../../ws.utils/common.service');
 var decodeQuery = require('../../utils').decodeQuery;
 var getCacheConfig = require('../../utils').getCacheConfig;
@@ -136,8 +136,8 @@ module.exports = function (serviceLocator) {
    *
    *
    */
-  router.get('/api/ddf/entities',
-    ddfEntitiesStats,
+  router.get('/api/ddf/concepts',
+    ddfConceptsStats,
     dataPostProcessors.gapfilling,
     dataPostProcessors.toPrecision,
     dataPostProcessors.format
@@ -145,9 +145,9 @@ module.exports = function (serviceLocator) {
 
   return app.use(router);
 
-  function ddfEntitiesStats(req, res, next) {
+  function ddfConceptsStats(req, res, next) {
     logger.debug('URL: \n%s%s', config.LOG_TABS, req.originalUrl);
-    console.time('finish Entities stats');
+    console.time('finish Concepts stats');
 
     var where = _.chain(req.decodedQuery.where).clone().mapValues(mapWhereClause).value();
     var datasetName = _.first(req.decodedQuery.where.dataset);
@@ -166,14 +166,14 @@ module.exports = function (serviceLocator) {
       async.constant({select, where, sort, domainGid, datasetName, version}),
       commonService.getDataset,
       commonService.getVersion,
-      statsService.getEntities
+      statsService.getConcepts
     ], (err, result) => {
       if (err) {
         console.error(err);
         res.use_express_redis_cache = false;
         return res.json({success: false, error: err});
       }
-      console.timeEnd('finish Entities stats');
+      console.timeEnd('finish Concepts stats');
 
       req.wsJson = result;
       return next();

@@ -9,51 +9,11 @@ const Entities = mongoose.model('Entities');
 const DataPoints = mongoose.model('DataPoints');
 
 module.exports = {
-  getDataset,
-  getVersion,
   getConcepts,
   getEntities,
   getDataPoints,
   mapResult
 };
-
-function getDataset(pipe, done) {
-  let query = { name: pipe.datasetName };
-  mongoose.model('Datasets').findOne(query)
-    .lean()
-    .exec((err, dataset) => {
-      if (!dataset) {
-        return done(`Given dataset "${pipe.datasetName}" doesn't exist`);
-      }
-
-      pipe.dataset = dataset;
-      return done(err, pipe);
-    });
-}
-
-function getVersion(pipe, done) {
-  let query = {
-    dataset: pipe.dataset._id
-  };
-
-  if (pipe.version) {
-    query.createdAt = pipe.version;
-  }
-
-  mongoose.model('DatasetTransactions').find(query)
-    .sort({createdAt: -1})
-    .limit(1)
-    .lean()
-    .exec((err, transactions) => {
-      if (!transactions || _.isEmpty(transactions)) {
-        return done(`Given dataset version "${pipe.version}" doesn't exist`);
-      }
-
-      pipe.transaction = _.first(transactions);
-      pipe.version = pipe.transaction.createdAt;
-      return done(err, pipe);
-    });
-}
 
 // pipe={select, where, sort, dataset, version}
 function getConcepts(pipe, cb) {

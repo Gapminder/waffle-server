@@ -7,6 +7,7 @@ var compression = require('compression');
 var md5 = require('md5');
 
 var statsService = require('./datapoints.service');
+var commonService = require('../../../ws.utils/common.service');
 var decodeQuery = require('../../utils').decodeQuery;
 var getCacheConfig = require('../../utils').getCacheConfig;
 
@@ -168,8 +169,8 @@ module.exports = function (serviceLocator) {
 
     async.waterfall([
       async.constant({select, where, sort, datasetName, version}),
-      statsService.getDataset,
-      statsService.getVersion,
+      commonService.getDataset,
+      commonService.getVersion,
       statsService.getConcepts,
       statsService.getEntities,
       statsService.getDataPoints,
