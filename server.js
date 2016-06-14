@@ -3,6 +3,10 @@ var express = require('express');
 
 var app = express();
 
+var bodyParser = require('body-parser');
+// app.use(bodyParser.json({limit: '50mb'}));
+app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
+
 var serviceLocator = require('./ws.service-locator')(app);
 
 require('./ws.config')(app);

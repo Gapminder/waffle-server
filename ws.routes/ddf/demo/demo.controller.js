@@ -276,6 +276,8 @@ module.exports = (serviceLocator) => {
 
   function _getPrestoredQueries(req, res) {
     service.getPrestoredQueries ((err, result) => {
+      logger.info(`finished getting prestored queries`);
+
       if (err) {
         logger.error(err);
       }
@@ -292,6 +294,8 @@ module.exports = (serviceLocator) => {
     };
 
     service.updateIncrementally(params, app, (err) => {
+      logger.info(`finished incremental update for dataset '${params.github}' and commit '${params.commit}'`);
+
       if (err) {
         logger.error(err);
       }
@@ -304,6 +308,8 @@ module.exports = (serviceLocator) => {
     let params = _.isEmpty(req.query) ? req.body : req.query;
 
     service.importDataset(params, config, app, (err) => {
+      logger.info(`finished import for dataset '${params.github}' and commit '${params.commit}'`);
+
       if (err) {
         logger.error(err);
       }
@@ -316,6 +322,8 @@ module.exports = (serviceLocator) => {
     const github = req.body.github || req.params.github || req.query.github;
 
     service.getGitCommitsList(github, config, (err, result) => {
+      logger.info(`finished getting commits list for dataset '${github}'`);
+
       if (err) {
         logger.error(err);
       }
@@ -328,6 +336,8 @@ module.exports = (serviceLocator) => {
     const github = req.query.github;
 
     service.getCommitOfLatestDatasetVersion(github, (err, result) => {
+      logger.info(`finished getting latest commit '${result.transaction.commit}' for dataset '${github}'`);
+
       if (err) {
         logger.error(err);
       }
