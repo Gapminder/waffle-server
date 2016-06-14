@@ -100,8 +100,9 @@ function _importDdfService(pipe, done) {
   return importDdfService(pipe.app, error => done(error), options);
 }
 
-function updateIncrementally(params, cb) {
+function updateIncrementally(params, app, cb) {
   let pipe = params;
+  pipe.app = app;
 
   return async.waterfall([
     async.constant(pipe),
@@ -133,7 +134,7 @@ function _runIncrementalUpdate(pipe, done) {
     github: pipe.github
   };
 
-  return incrementalUpdateService(app, (err) => done(err, pipe), options);
+  return incrementalUpdateService(pipe.app, (err) => done(err, pipe), options);
 }
 
 function _unlockDataset(pipe, done) {

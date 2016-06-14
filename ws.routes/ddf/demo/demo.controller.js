@@ -291,7 +291,7 @@ module.exports = (serviceLocator) => {
       diff: JSON.parse(req.body.diff)
     };
 
-    service.updateIncrementally(params, (err) => {
+    service.updateIncrementally(params, app, (err) => {
       if (err) {
         logger.error(err);
       }
