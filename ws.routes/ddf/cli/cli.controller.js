@@ -6,7 +6,7 @@ const compression = require('compression');
 const _ = require('lodash');
 
 const reposService = require('../import/repos.service');
-const service = require('./demo.service');
+const cliService = require('./cli.service');
 const decodeQuery = require('../../utils').decodeQuery;
 
 /**
@@ -70,7 +70,7 @@ const decodeQuery = require('../../utils').decodeQuery;
  *        type: string
  */
 
-module.exports = (serviceLocator) => {
+module.exports = serviceLocator => {
   const app = serviceLocator.getApplication();
 
   const config = app.get('config');
@@ -81,7 +81,7 @@ module.exports = (serviceLocator) => {
 
   /**
    * @swagger
-   * /api/ddf/demo/prestored-queries:
+   * /api/ddf/cli/prestored-queries:
    *   get:
    *    description: Prestored queries
    *    produces:
@@ -114,7 +114,7 @@ module.exports = (serviceLocator) => {
    *        $ref: '#/definitions/Error'
    */
 
-  router.all('/api/ddf/demo/prestored-queries',
+  router.get('/api/ddf/cli/prestored-queries',
     cors(),
     compression(),
     decodeQuery,
@@ -123,7 +123,7 @@ module.exports = (serviceLocator) => {
 
   /**
    * @swagger
-   * api/ddf/demo/update-incremental:
+   * api/ddf/cli/update-incremental:
    *   post:
    *    description: Update incremental
    *    produces:
@@ -154,7 +154,7 @@ module.exports = (serviceLocator) => {
    *          $ref: '#/definitions/Error'
    */
 
-  router.post('/api/ddf/demo/update-incremental',
+  router.post('/api/ddf/cli/update-incremental',
     cors(),
     compression(),
     decodeQuery,
@@ -163,7 +163,7 @@ module.exports = (serviceLocator) => {
 
   /**
    * @swagger
-   * api/ddf/demo/import-dataset:
+   * api/ddf/cli/import-dataset:
    *   post:
    *    description: Import dataset
    *    produces:
@@ -206,7 +206,7 @@ module.exports = (serviceLocator) => {
    *          $ref: '#/definitions/Error'
    */
 
-  router.all('/api/ddf/demo/import-dataset',
+  router.post('/api/ddf/cli/import-dataset',
     cors(),
     compression(),
     decodeQuery,
@@ -215,8 +215,8 @@ module.exports = (serviceLocator) => {
 
   /**
    * @swagger
-   * api/ddf/demo/git-commits-list:
-   *   post:
+   * api/ddf/cli/git-commits-list:
+   *   get:
    *    description: Git commits list
    *    produces:
    *      - application/json
@@ -258,14 +258,14 @@ module.exports = (serviceLocator) => {
    *          $ref: '#/definitions/Error'
    */
 
-  router.all('/api/ddf/demo/git-commits-list',
+  router.get('/api/ddf/cli/git-commits-list',
     cors(),
     compression(),
     decodeQuery,
     _getGitCommitsList
   );
 
-  router.get('/api/ddf/demo/commit-of-latest-dataset-version',
+  router.get('/api/ddf/cli/commit-of-latest-dataset-version',
     cors(),
     compression(),
     decodeQuery,
@@ -275,7 +275,7 @@ module.exports = (serviceLocator) => {
   return app.use(router);
 
   function _getPrestoredQueries(req, res) {
-    service.getPrestoredQueries ((err, result) => {
+    cliService.getPrestoredQueries ((err, result) => {
       if (err) {
         logger.error(err);
       }
@@ -291,7 +291,7 @@ module.exports = (serviceLocator) => {
       diff: JSON.parse(req.body.diff)
     };
 
-    service.updateIncrementally(params, app, (err) => {
+    cliService.updateIncrementally(params, app, (err) => {
       if (err) {
         logger.error(err);
       }
@@ -301,9 +301,9 @@ module.exports = (serviceLocator) => {
   }
 
   function _importDataset(req, res) {
-    let params = _.isEmpty(req.query) ? req.body : req.query;
+    let params = req.body;
 
-    service.importDataset(params, config, app, (err) => {
+    cliService.importDataset(params, config, app, (err) => {
       if (err) {
         logger.error(err);
       }
@@ -313,9 +313,9 @@ module.exports = (serviceLocator) => {
   }
 
   function _getGitCommitsList(req, res) {
-    const github = req.body.github || req.params.github || req.query.github;
+    const github = req.query.github;
 
-    service.getGitCommitsList(github, config, (err, result) => {
+    cliService.getGitCommitsList(github, config, (err, result) => {
       if (err) {
         logger.error(err);
       }
@@ -327,7 +327,7 @@ module.exports = (serviceLocator) => {
   function _getCommitOfLatestDatasetVersion(req, res) {
     const github = req.query.github;
 
-    service.getCommitOfLatestDatasetVersion(github, (err, result) => {
+    cliService.getCommitOfLatestDatasetVersion(github, (err, result) => {
       if (err) {
         logger.error(err);
       }
