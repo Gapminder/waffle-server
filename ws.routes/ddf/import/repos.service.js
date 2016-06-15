@@ -22,7 +22,11 @@ function cloneRepo(githubUrl, commit, onCloned, config) {
   const pathToRepo = getPathToRepo(githubUrl, config);
   fs.exists(pathToRepo, exists => {
     if (!exists) {
-      shell.exec(`git clone ${githubUrl} ./${config.PATH_TO_DDF_REPOSITORIES}/${getRepoName(githubUrl)}`);
+      const repoName = getRepoName(githubUrl);
+      if (!repoName) {
+        return onCloned(`Incorrect github url was given: ${githubUrl}`);
+      }
+      shell.exec(`git clone ${githubUrl} ./${config.PATH_TO_DDF_REPOSITORIES}/${repoName}`);
     }
 
     return git(pathToRepo)
@@ -34,9 +38,9 @@ function cloneRepo(githubUrl, commit, onCloned, config) {
 }
 
 function getRepoName(githubUrl) {
-  const partsOfGitHubUrl = githubUrl.split('/');
+  const partsOfGitHubUrl = _.split(githubUrl, '/');
   const lastPart = _.last(partsOfGitHubUrl);
-  return _.first(lastPart.split('.'));
+  return _.first(_.split(lastPart, '.'));
 }
 
 function getPathToRepo(githubUrl, config) {
