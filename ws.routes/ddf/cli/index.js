@@ -1,5 +1,5 @@
 'use strict';
 
 module.exports = serviceLocator => {
-  require('./demo.controller')(serviceLocator);
+  require('./cli.controller')(serviceLocator);
 };

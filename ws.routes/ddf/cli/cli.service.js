@@ -22,6 +22,10 @@ module.exports = {
 };
 
 function getGitCommitsList(github, config, cb) {
+  if (!github) {
+    return cb('Url to dataset\'s github repository was not provided');
+  }
+
   let pipe = {
     github,
     config

@@ -166,6 +166,7 @@ module.exports = function (serviceLocator) {
     var version = _.first(req.decodedQuery.where.version);
     delete where.dataset;
     delete where.version;
+    delete where.v;
 
     async.waterfall([
       async.constant({select, where, sort, datasetName, version}),

@@ -36,8 +36,8 @@ EntitiesRepository.prototype.findEntityProperties = function(entityDomainGid, se
   });
 
   return Concepts.findOne(conceptQuery).lean().exec((error, concept) => {
-    if (error) {
-      return onPropertiesFound(error);
+    if (error || !concept) {
+      return onPropertiesFound(error || `There is no entity domain '${entityDomainGid}'`);
     }
 
     const projection = makePositiveProjectionFor(_.without(select, entityDomainGid));

@@ -161,6 +161,7 @@ module.exports = function (serviceLocator) {
     delete where.version;
     delete where.key;
     delete where['geo.cat'];
+    delete where.v;
 
     async.waterfall([
       async.constant({select, where, sort, domainGid, datasetName, version}),
