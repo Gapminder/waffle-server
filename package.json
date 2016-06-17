@@ -18,6 +18,7 @@
     "postversion": "git push origin master && git push --tags && npm run github-release"
   },
   "dependencies": {
+    "JSONStream": "1.1.2",
     "adm-zip": "0.4.7",
     "angular": "1.5.0",
     "angular-animate": "1.5.0",

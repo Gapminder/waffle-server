@@ -1,9 +1,10 @@
 'use strict';
 
+const _ = require('lodash');
 const cors = require('cors');
 const express = require('express');
 const compression = require('compression');
-const _ = require('lodash');
+const JSONStream = require('JSONStream');
 
 const reposService = require('../import/repos.service');
 const cliService = require('./cli.service');
@@ -287,22 +288,45 @@ module.exports = serviceLocator => {
   }
 
   function _updateIncrementally(req, res) {
-    let params = {
-      commit: req.body.commit,
-      github: req.body.github,
-      datasetName: reposService.getRepoName(req.body.github),
-      diff: JSON.parse(req.body.diff)
-    };
-
-    cliService.updateIncrementally(params, app, (err) => {
-      logger.info(`finished incremental update for dataset '${params.github}' and commit '${params.commit}'`);
-
-      if (err) {
-        logger.error(err);
+    bodyFromStream(req, (error, body) => {
+      if (error) {
+        return res.json({success: !error, error});
       }
 
-      return res.json({success: !err, err});
+      cliService.updateIncrementally(body, app, err => {
+        if (err) {
+          logger.error(err);
+        }
+
+        return res.json({success: !err, err});
+      });
     });
+
+    function bodyFromStream(req, onBodyTransformed) {
+      let result = {};
+      req.pipe(JSONStream.parse('$*'))
+        .on('data', entry => {
+          const data = entry.value;
+          
+          const repoName = reposService.getRepoName(data.github);
+          if (data.github && !repoName) {
+            req.destroy();
+            return onBodyTransformed(`Incorrect github url was given: ${data.github}`)
+          }
+
+          result.datasetName = repoName;
+          result = _.merge(result, data);
+        })
+        .on('end', () => {
+          if (_.isEmpty(result)) {
+            return onBodyTransformed('No data (github, commit, etc.) was given for performing incremental update');
+          }
+          return onBodyTransformed(null, result);
+        })
+        .on('error', error => {
+          return onBodyTransformed(error);
+        });
+    }
   }
 
   function _importDataset(req, res) {
