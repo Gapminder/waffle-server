@@ -7,7 +7,7 @@ var compression = require('compression');
 var md5 = require('md5');
 
 var statsService = require('./datapoints.service');
-var commonService = require('../../../ws.utils/common.service');
+var commonService = require('../../../ws.services/common.service');
 var decodeQuery = require('../../utils').decodeQuery;
 var getCacheConfig = require('../../utils').getCacheConfig;
 
