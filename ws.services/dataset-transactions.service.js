@@ -12,6 +12,9 @@ const DataPoints = mongoose.model('DataPoints');
 const Datasets = mongoose.model('Datasets');
 const DatasetTransactions = mongoose.model('DatasetTransactions');
 
+const DatasetsRepository = require('../ws.repository/ddf/datasets/datasets.repository')();
+const TransactionsRepository = require('../ws.repository/ddf/dataset-transactions/dataset-transactions.repository')();
+
 module.exports = {
   rollback
 };
@@ -25,7 +28,7 @@ function rollback(datasetName, onRollbackCompleted) {
       return onRollbackCompleted();
     }
 
-    const tasks =
+    const rollbackTasks =
       _.chain([DataPoints, Entities, Concepts])
         .map(model => [rollbackRemovedTask(model, failedTransaction.createdAt), rollbackNewTask(model, failedTransaction.createdAt)])
         .flatten()
@@ -33,9 +36,9 @@ function rollback(datasetName, onRollbackCompleted) {
         .value();
 
     async.waterfall([
-      done => async.parallelLimit(tasks, numOfTasksExecutedInParallel, done),
-      done => DatasetTransactions.remove({_id: failedTransaction._id}, done),
-      done => Datasets.update({_id: failedTransaction.dataset}, {$pull: {versions: failedTransaction.createdAt}}).lean().exec(done)
+      done => async.parallelLimit(rollbackTasks, numOfTasksExecutedInParallel, done),
+      done => TransactionsRepository.deleteRecord(failedTransaction._id, done),
+      done => DatasetsRepository.removeVersion(failedTransaction.dataset, failedTransaction.createdAt, done)
     ], onRollbackCompleted);
   });
 
@@ -48,32 +51,12 @@ function rollback(datasetName, onRollbackCompleted) {
   }
 }
 
-function findLatestTransactionByQuery(query, done) {
-  return DatasetTransactions
-    .find(query)
-    .sort({createdAt: -1})
-    .limit(1)
-    .lean()
-    .exec((error, transaction) => {
-      return done(error, transaction);
-    });
-}
-
-function findDatasetByName(datasetName, done) {
-  return Datasets
-    .findOne({name: datasetName})
-    .lean()
-    .exec((error, dataset) => {
-      return done(error, dataset);
-    });
-}
-
 function findLatestFailedTransactionByDatasetName(datasetName, done) {
-  return findDatasetByName(datasetName, (error, dataset) => {
+  return DatasetsRepository.findByName(datasetName, (error, dataset) => {
     if (error || !dataset) {
       return done(error || `Dataset was not found for the given name: ${datasetName}`);
     }
 
-    return findLatestTransactionByQuery({dataset: dataset._id, isClosed: false}, done);
+    return TransactionsRepository.findLatestByQuery({dataset: dataset._id, isClosed: false}, done);
   })
 }

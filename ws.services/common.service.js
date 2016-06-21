@@ -28,7 +28,8 @@ function getDataset(pipe, done) {
 
 function getVersion(pipe, done) {
   let query = {
-    dataset: pipe.dataset._id
+    dataset: pipe.dataset._id,
+    isClosed: true
   };
 
   if (pipe.version) {
