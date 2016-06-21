@@ -1,15 +1,15 @@
 'use strict';
-var _ = require('lodash');
-var cors = require('cors');
-var async = require('async');
-var express = require('express');
-var compression = require('compression');
-var md5 = require('md5');
+const _ = require('lodash');
+const cors = require('cors');
+const async = require('async');
+const express = require('express');
+const compression = require('compression');
+const md5 = require('md5');
 
-var statsService = require('./concepts.service');
-var commonService = require('../../../ws.utils/common.service');
-var decodeQuery = require('../../utils').decodeQuery;
-var getCacheConfig = require('../../utils').getCacheConfig;
+const statsService = require('./concepts.service');
+const commonService = require('../../../ws.services/common.service');
+const decodeQuery = require('../../utils').decodeQuery;
+const getCacheConfig = require('../../utils').getCacheConfig;
 
 const dataPostProcessors = require('../../data-post-processors');
 
@@ -149,13 +149,13 @@ module.exports = function (serviceLocator) {
     logger.debug('URL: \n%s%s', config.LOG_TABS, req.originalUrl);
     console.time('finish Concepts stats');
 
-    var where = _.chain(req.decodedQuery.where).clone().mapValues(mapWhereClause).value();
-    var datasetName = _.first(req.decodedQuery.where.dataset);
-    var version = _.first(req.decodedQuery.where.version);
-    let domainGid = _.first(req.decodedQuery.where.key);
+    const where = _.chain(req.decodedQuery.where).clone().mapValues(mapWhereClause).value();
+    const datasetName = _.first(req.decodedQuery.where.dataset);
+    const version = _.first(req.decodedQuery.where.version);
+    const domainGid = _.first(req.decodedQuery.where.key);
 
-    var select = req.decodedQuery.select;
-    var sort = req.decodedQuery.sort;
+    const select = req.decodedQuery.select;
+    const sort = req.decodedQuery.sort;
 
     delete where.dataset;
     delete where.version;
