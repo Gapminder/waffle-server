@@ -35,7 +35,7 @@ let Datasets = new Schema({
   metadata: {},
 
   versions: [{type: Number, unique: true}],
-  isLocked: {type: Boolean, default: false},
+  isLocked: {type: Boolean, default: true},
   lockedAt: {type: Date, default: new Date()},
   lockedBy: {type: Schema.Types.ObjectId, ref: 'Users'},
 
