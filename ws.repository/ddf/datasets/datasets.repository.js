@@ -22,8 +22,16 @@ DatasetsRepository.prototype.findByName = (datasetName, done) => {
     });
 };
 
-DatasetsRepository.prototype.removeVersion = (datasetId, version, done) => {
-  return Datasets.update({_id: datasetId}, {$pull: {versions: version}}).lean().exec(done)
+DatasetsRepository.prototype.removeVersion = (datasetName, version, done) => {
+  return Datasets.findOneAndUpdate({name: datasetName}, {$pull: {versions: version}}, {new: 1}).lean().exec(done)
+};
+
+DatasetsRepository.prototype.lock = (datasetName, done) => {
+  return Datasets.findOneAndUpdate({name: datasetName}, {isLocked: true}, {new: 1}).lean().exec(done);
+};
+
+DatasetsRepository.prototype.unlock = (datasetName, done) => {
+  return Datasets.findOneAndUpdate({name: datasetName}, {isLocked: false}, {new: 1}).lean().exec(done);
 };
 
 module.exports = DatasetsRepository;

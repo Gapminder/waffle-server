@@ -8,6 +8,7 @@ const JSONStream = require('JSONStream');
 
 const reposService = require('../import/repos.service');
 const cliService = require('./cli.service');
+const transactionsService = require('../../../ws.services/dataset-transactions.service');
 const decodeQuery = require('../../utils').decodeQuery;
 
 /**
@@ -273,7 +274,51 @@ module.exports = serviceLocator => {
     _getCommitOfLatestDatasetVersion
   );
 
+  router.get('/api/ddf/cli/transactions/latest/status',
+    cors(),
+    compression(),
+    decodeQuery,
+    _getStateOfLatestTransaction
+  );
+
+  router.post('/api/ddf/cli/transactions/latest/rollback',
+    cors(),
+    compression(),
+    decodeQuery,
+    _activateRollback
+  );
+
   return app.use(router);
+
+  function _getStateOfLatestTransaction(req, res) {
+    const datasetName = req.query.datasetName;
+    if (!datasetName) {
+      return res.json({success: false, error: 'No dataset name was given'})
+    }
+
+    return transactionsService.getStatusOfLatestTransactionByDatasetName(datasetName, (statusError, status) => {
+      if (statusError) {
+        return res.json({success: !statusError, error: statusError});
+      }
+
+      return res.json({success: !statusError, data: status});
+    });
+  }
+
+  function _activateRollback(req, res) {
+    const datasetName = req.body.datasetName;
+    if (!datasetName) {
+      return res.json({success: false, error: 'No dataset name was given'})
+    }
+
+    return transactionsService.rollbackFailedTransactionFor(datasetName, rollbackError => {
+      if (rollbackError) {
+        return res.json({success: !rollbackError, error: rollbackError});
+      }
+
+      return res.json({success: !rollbackError, message: 'Rollback completed successfully'});
+    });
+  }
 
   function _getPrestoredQueries(req, res) {
     cliService.getPrestoredQueries ((err, result) => {
@@ -282,7 +327,7 @@ module.exports = serviceLocator => {
       if (err) {
         logger.error(err);
       }
-      
+
       return res.json({success: !err, result, err});
     });
   }
@@ -307,7 +352,7 @@ module.exports = serviceLocator => {
       req.pipe(JSONStream.parse('$*'))
         .on('data', entry => {
           const data = entry.value;
-          
+
           const repoName = reposService.getRepoName(data.github);
           if (data.github && !repoName) {
             req.destroy();

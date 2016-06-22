@@ -25,9 +25,25 @@ EntitiesRepositoryWrapper.prototype.currentVersion = function () {
   return new EntitiesRepository(versionQueryFragment)
 };
 
+EntitiesRepositoryWrapper.prototype.closedOrOpenedByVersion = function (datasetId) {
+  const versionQueryFragment = {
+    $or: [
+      {from: this.version},
+      {to: this.version}
+    ],
+    dataset: datasetId
+  };
+  return new EntitiesRepository(versionQueryFragment);
+};
+
 function EntitiesRepository(versionQueryFragment) {
   this.versionQueryFragment = versionQueryFragment;
 }
+
+EntitiesRepository.prototype.countBy = function (where, onCounted) {
+  const countQuery = _.merge({}, this.versionQueryFragment, where);
+  return Entities.count(countQuery, onCounted);
+};
 
 EntitiesRepository.prototype.findEntityProperties = function(entityDomainGid, select, where, onPropertiesFound) {
   const conceptQuery = _.merge({}, this.versionQueryFragment, {
