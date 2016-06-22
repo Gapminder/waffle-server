@@ -318,8 +318,8 @@ function createTranslations(pipe, done) {
           lng_key: key,
           lng_value: value
         },
-        domain: domain._id,
-        sets: concept ? [concept._id] : [],
+        domain: domain.originId,
+        sets: concept ? [concept.originId] : [],
         from: pipe.transaction.createdAt,
         dataset: pipe.dataset._id,
         transaction: pipe.transactionId || pipe.transaction._id
@@ -881,7 +881,7 @@ function mapDdfOriginalEntityToWsModel(pipe) {
       properties: _entry,
 
       originId: _entry.originId,
-      domain: pipe.entitySet.domain ? pipe.entitySet.domain._id : pipe.entitySet._id,
+      domain: pipe.entitySet.domain ? pipe.entitySet.domain.originId : pipe.entitySet.originId,
       sets: resolvedSets,
 
       from: pipe.transaction.createdAt,
