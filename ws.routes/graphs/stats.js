@@ -35,7 +35,7 @@ module.exports = function (serviceLocator) {
     vizabiTools,
     dataPostProcessors.gapfilling,
     dataPostProcessors.toPrecision,
-    dataPostProcessors.format
+    dataPostProcessors.pack
   );
 
   return app.use(router);

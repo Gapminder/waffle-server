@@ -4,8 +4,8 @@ var json2csv = require('json2csv');
 var cors = require('cors');
 var async = require('async');
 
-var geoController = require('../geo/geo-properties.service');
 var mongoose = require('mongoose');
+var geoController = require('../geo/geo-properties.service');
 
 var Geo = mongoose.model('Geo');
 var Translations = mongoose.model('Translations');

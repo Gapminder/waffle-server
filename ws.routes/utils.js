@@ -15,7 +15,7 @@ module.exports = {
 function getCacheConfig(prefix) {
   return function (req, res, next) {
     /*eslint camelcase:0*/
-    if (req.query.force === true) {
+    if (req.query.force === 'true') {
       res.use_express_redis_cache = false;
       return next();
     }

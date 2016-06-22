@@ -265,7 +265,7 @@ function getPrestoredQueries(cb) {
 
 function _makePrestoredQuery(query) {
   const filteredMeasures = _.chain(query.measures)
-    .map('gid')
+    .map(constants.GID)
     .filter((measure) => !_.includes(['age', 'longitude', 'latitude'], measure))
     .take(3)
     .join(',')

@@ -977,7 +977,7 @@ function mapDdfEntityToWsModel(entity, concept, domain, pipe) {
 
     // originId: entity.originId,
     domain: domain.originId,
-    sets: concept.domain ? [] : [concept.originId],
+    sets: concept.type === 'entity_set' ? [concept.originId] : [],
     drillups: [],
 
     from: pipe.transaction.createdAt,
