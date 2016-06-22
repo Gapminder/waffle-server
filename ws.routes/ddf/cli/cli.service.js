@@ -60,40 +60,30 @@ function importDataset(params, config, app, cb) {
 
   return async.waterfall([
     async.constant(pipe),
-    _findDataset((dataset) => {
-      if (dataset) {
-        return {valid: false, message: 'Dataset exitst, cannot import same dataset twice'};
-      }
-      return {valid: true}
-    }),
-    _checkTransaction,
+    _findDataset,
+    _validateDatasetBeforeImport,
     _cloneSourceRepo,
-    _importDdfService
+    _importDdfService,
+    _unlockDataset
   ], cb);
 }
 
-function _findDataset(validateDataset) {
-  return (pipe, done) => Datasets.findOne({path: pipe.github}).lean().exec((error, dataset) => {
-    const validationResult = validateDataset(dataset);
-    if (!validationResult.valid) {
-      return done(validationResult.message);
-    }
-
+function _findDataset(pipe, done) {
+  return Datasets.findOne({path: pipe.github}).lean().exec((error, dataset) => {
     pipe.dataset = dataset;
 
     return done(error, pipe);
   });
 }
 
-function _checkTransaction(pipe, done) {
-  return Transactions.findOne({
-    dataset: pipe.dataset ? pipe.dataset._id : null,
-    commit: pipe.commit
-  }).lean().exec((error, transaction) => {
-    if (transaction) {
-      return done(`Version of dataset "${pipe.github}" with commit: "${transaction.commit}" was already applied`);
-    }
+function _validateDatasetBeforeImport(pipe, done) {
+  let error;
 
+  if (pipe.dataset) {
+    error = 'Dataset exitst, cannot import same dataset twice';
+  }
+
+  return async.setImmediate(() => {
     return done(error, pipe);
   });
 }
@@ -101,7 +91,22 @@ function _checkTransaction(pipe, done) {
 function _importDdfService(pipe, done) {
   let options = {datasetName: reposService.getRepoName(pipe.github), commit: pipe.commit, github: pipe.github};
 
-  return importDdfService(pipe.app, error => done(error), options);
+  return importDdfService(pipe.app, (error, pipe) => {
+    return done(error, pipe);
+  }, options);
+}
+
+function _unlockDataset(pipe, done) {
+  return Datasets
+    .findOneAndUpdate({name: pipe.datasetName, isLocked: true}, {isLocked: false}, {new: 1})
+    .lean()
+    .exec((err, dataset) => {
+      if (!dataset) {
+        return done(`Version of dataset "${pipe.datasetName}" wasn't locked`);
+      }
+
+      return done(err, pipe);
+    });
 }
 
 function updateIncrementally(params, app, cb) {
@@ -126,8 +131,23 @@ function _lockDataset(pipe, done) {
         return done(`Version of dataset "${pipe.datasetName}" was already locked or dataset is absent`);
       }
 
+      pipe.dataset = dataset;
+
       return done(err, pipe);
     });
+}
+
+function _checkTransaction(pipe, done) {
+  return Transactions.findOne({
+    dataset: pipe.dataset._id,
+    commit: pipe.commit
+  }).lean().exec((error, transaction) => {
+    if (transaction) {
+      return done(`Version of dataset "${pipe.github}" with commit: "${transaction.commit}" was already applied`);
+    }
+
+    return done(error, pipe);
+  });
 }
 
 function _runIncrementalUpdate(pipe, done) {
@@ -139,19 +159,6 @@ function _runIncrementalUpdate(pipe, done) {
   };
 
   return incrementalUpdateService(pipe.app, (err) => done(err, pipe), options);
-}
-
-function _unlockDataset(pipe, done) {
-  return Datasets
-    .findOneAndUpdate({name: pipe.datasetName, isLocked: true}, {isLocked: false}, {new: 1})
-    .lean()
-    .exec((err, dataset) => {
-      if (!dataset) {
-        return done(`Version of dataset "${pipe.datasetName}" wasn't locked`);
-      }
-
-      return done(err, pipe);
-    });
 }
 
 function getPrestoredQueries(cb) {
@@ -262,21 +269,32 @@ function getCommitOfLatestDatasetVersion(github, cb) {
 
   return async.waterfall([
     async.constant(pipe),
-    _findDataset(dataset => {
-      if (!dataset) {
-        return {valid: false, message: 'Dataset was not found, hence hash commit of it\'s latest version cannot be acquired'};
-      }
-      return {valid: true}
-    }),
+    _findDataset,
+    _validateDatasetBeforeIncrementalUpdate,
     _findTransaction
   ], cb);
+}
+
+function _validateDatasetBeforeIncrementalUpdate(pipe, done) {
+  let error;
+
+  if (!pipe.dataset) {
+    error = 'Dataset was not found, hence hash commit of it\'s latest version cannot be acquired';
+  }
+
+  if (pipe.dataset.isLocked) {
+    error = 'Dataset was locked. Please, start rollback process.';
+  }
+
+  return async.setImmediate(() => {
+    return done(error, pipe);
+  });
 }
 
 function _findTransaction(pipe, done) {
   return Transactions
     .findOne({dataset: pipe.dataset._id})
     .sort({createdAt: -1})
-    .limit(1)
     .lean()
     .exec((error, transaction) => {
       pipe.transaction = transaction;

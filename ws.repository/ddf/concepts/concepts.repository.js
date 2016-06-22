@@ -22,6 +22,17 @@ ConceptsRepositoryWrapper.prototype.currentVersion = function () {
   return new ConceptsRepository(versionQueryFragment)
 };
 
+ConceptsRepositoryWrapper.prototype.closedOrOpenedByVersion = function (datasetId) {
+  const versionQueryFragment = {
+    $or: [
+      {from: this.version},
+      {to: this.version}
+    ],
+    dataset: datasetId
+  };
+  return new ConceptsRepository(versionQueryFragment)
+};
+
 function ConceptsRepository(versionQueryFragment) {
   this.versionQueryFragment = versionQueryFragment;
 }
@@ -31,6 +42,11 @@ ConceptsRepository.prototype.findConceptProperties = function (select, where, on
   const conceptQuery = _.merge({}, this.versionQueryFragment, prefixWithProperties(where));
 
   return Concepts.find(conceptQuery, projection).lean().exec(onPropertiesFound);
+};
+
+ConceptsRepository.prototype.countBy = function (where, onCounted) {
+  const countQuery = _.merge({}, this.versionQueryFragment, where);
+  return Concepts.count(countQuery, onCounted);
 };
 
 ['pagedList', 'update', 'findById', 'deleteRecord'].forEach(actionName => {
