@@ -11,10 +11,7 @@ const Entities = mongoose.model('Entities');
 const DataPoints = mongoose.model('DataPoints');
 
 const DatasetsRepository = require('../ws.repository/ddf/datasets/datasets.repository');
-const datasetsRepository = new DatasetsRepository();
-
 const TransactionsRepository = require('../ws.repository/ddf/dataset-transactions/dataset-transactions.repository');
-const transactionsRepository = new TransactionsRepository();
 
 module.exports = {
   rollbackFailedTransactionFor,
@@ -44,11 +41,11 @@ function rollbackFailedTransactionFor(datasetName, onRollbackCompleted) {
         .value();
 
     async.series([
-      done => datasetsRepository.lock(datasetName, done),
+      done => DatasetsRepository.forceLock(datasetName, done),
       done => async.parallelLimit(rollbackTasks, asyncOperationsAmount, done),
-      done => transactionsRepository.deleteRecord(failedTransaction._id, done),
-      done => datasetsRepository.removeVersion(datasetName, failedVersion, done),
-      done => datasetsRepository.unlock(datasetName, done)
+      done => TransactionsRepository.deleteRecord(failedTransaction._id, done),
+      done => DatasetsRepository.removeVersion(datasetName, failedVersion, done),
+      done => DatasetsRepository.forceUnlock(datasetName, done)
     ],
     onRollbackCompleted);
   });
@@ -63,22 +60,22 @@ function rollbackFailedTransactionFor(datasetName, onRollbackCompleted) {
 }
 
 function findLatestFailedTransactionByDatasetName(datasetName, done) {
-  return datasetsRepository.findByName(datasetName, (error, dataset) => {
+  return DatasetsRepository.findByName(datasetName, (error, dataset) => {
     if (error || !dataset) {
       return done(error || `Dataset was not found for the given name: ${datasetName}`);
     }
 
-    return transactionsRepository.findLatestByQuery({dataset: dataset._id, isClosed: false}, done);
+    return TransactionsRepository.findLatestByQuery({dataset: dataset._id, isClosed: false}, done);
   });
 }
 
 function getStatusOfLatestTransactionByDatasetName(datasetName, done) {
-  return datasetsRepository.findByName(datasetName, (error, dataset) => {
+  return DatasetsRepository.findByName(datasetName, (error, dataset) => {
     if (error || !dataset) {
       return done(error || `Dataset was not found for the given name: ${datasetName}`);
     }
 
-    return transactionsRepository.findLatestByQuery({dataset: dataset._id}, (error, latestTransaction) => {
+    return TransactionsRepository.findLatestByQuery({dataset: dataset._id}, (error, latestTransaction) => {
       if (error || !latestTransaction) {
         return done(error || `Transaction is absent for dataset: ${datasetName}`);
       }

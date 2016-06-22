@@ -19,8 +19,11 @@ let Users = new Schema({
   image: String,
   social: {
     googleId: String
-  }
+  },
 
+  uniqueToken: {type: String},
+  expireToken: {type: Number}
+  
   /*,
   salt: {type: String, required: true, 'private': true}*/
 });
