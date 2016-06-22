@@ -221,28 +221,39 @@ function _getPrestoredQueries(pipe, done) {
   let calculation = {
     datasetName: null,
     version: null,
-    gid: []
+    gids: []
   };
 
-  let urls = pipe.measures.reduce(function (result, measure, index) {
+  let queries = pipe.measures.reduce(function (result, measure, index) {
     if (index === 0 || (calculation.datasetName === measure.dataset.name && calculation.version === measure.transaction.createdAt )) {
       __updateCalculation(calculation, measure);
 
       if (index === pipe.measures.length - 1) {
-        __pushResult(result, calculation);
+        result.push(__makePrestoredQuery(calculation));
       }
 
       return result;
     }
 
-    __pushResult(result, calculation);
-    calculation.gid = [];
+    result.push(__makePrestoredQuery(calculation));
+    calculation.gids = [];
     __updateCalculation(calculation, measure);
 
     return result;
   }, []);
 
-  return async.setImmediate(() => done(null, urls));
+  return async.setImmediate(() => done(null, queries));
+}
+
+function __makePrestoredQuery(calculation) {
+  const filteredGids = __filterGids(calculation.gids);
+
+  return {
+    url: `http://localhost:3000/api/ddf/stats?dataset=${calculation.datasetName}&version=${calculation.version}time=1800:2015&select==geo,time,${filteredGids}`,
+    datasetName: calculation.datasetName,
+    version: calculation.version,
+    createdAt: new Date(calculation.version)
+  };
 }
 
 function __filterGids(gids) {
@@ -252,16 +263,10 @@ function __filterGids(gids) {
     .value();
 }
 
-function __pushResult(result, calculation) {
-  const filteredGids = __filterGids(calculation.gid);
-  result.push(`dataset: ${calculation.datasetName}, version: ${calculation.version} ${new Date(calculation.version)}`);
-  result.push(`http://localhost:3000/api/ddf/stats?dataset=${calculation.datasetName}&version=${calculation.version}time=1800:2015&select==geo,time,${filteredGids}`);
-}
-
 function __updateCalculation(calculation, measure) {
   calculation.datasetName = measure.dataset.name;
   calculation.version = measure.transaction.createdAt;
-  calculation.gid.push(measure.gid);
+  calculation.gids.push(measure.gid);
 }
 
 function getCommitOfLatestDatasetVersion(github, cb) {

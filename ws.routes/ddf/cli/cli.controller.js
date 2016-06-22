@@ -321,14 +321,14 @@ module.exports = serviceLocator => {
   }
 
   function _getPrestoredQueries(req, res) {
-    cliService.getPrestoredQueries ((err, result) => {
+    cliService.getPrestoredQueries ((error, queries) => {
       logger.info(`finished getting prestored queries`);
 
-      if (err) {
-        logger.error(err);
+      if (error) {
+        return res.json({success: !error, error});
       }
 
-      return res.json({success: !err, result, err});
+      return res.json({success: !error, data: queries});
     });
   }
 
@@ -338,12 +338,12 @@ module.exports = serviceLocator => {
         return res.json({success: !error, error});
       }
 
-      cliService.updateIncrementally(body, app, err => {
-        if (err) {
-          logger.error(err);
+      cliService.updateIncrementally(body, app, updateError => {
+        if (updateError) {
+          return res.json({success: !updateError, error: updateError});
         }
 
-        return res.json({success: !err, err});
+        return res.json({success: !updateError});
       });
     });
 
@@ -377,47 +377,53 @@ module.exports = serviceLocator => {
   function _importDataset(req, res) {
     let params = req.body;
 
-    cliService.importDataset(params, config, app, (err) => {
+    cliService.importDataset(params, config, app, error => {
       logger.info(`finished import for dataset '${params.github}' and commit '${params.commit}'`);
 
-      if (err) {
-        logger.error(err);
+      if (error) {
+        return res.json({success: !error, error});
       }
 
-      return res.json({success: !err, err});
+      return res.json({success: !error});
     });
   }
 
   function _getGitCommitsList(req, res) {
     const github = req.query.github;
 
-    cliService.getGitCommitsList(github, config, (err, result) => {
+    cliService.getGitCommitsList(github, config, (error, result) => {
       logger.info(`finished getting commits list for dataset '${github}'`);
 
-      if (err) {
-        logger.error(err);
+      if (error) {
+        return res.json({success: !error, error});
       }
 
-      return res.json({success: !err, err, commits: result.commits});
+      return res.json({
+        success: !error, 
+        data: {
+          commits: result.commits
+        }
+      });
     });
   }
 
   function _getCommitOfLatestDatasetVersion(req, res) {
     const github = req.query.github;
 
-    cliService.getCommitOfLatestDatasetVersion(github, (err, result) => {
+    cliService.getCommitOfLatestDatasetVersion(github, (error, result) => {
       logger.info(`finished getting latest commit '${result.transaction.commit}' for dataset '${github}'`);
 
-      if (err) {
-        logger.error(err);
+      if (error) {
+        return res.json({success: !error, error});
       }
 
       return res.json({
-        success: !err,
-        err,
-        github: result.dataset.path,
-        dataset: result.dataset.name,
-        commit: result.transaction.commit
+        success: !error,
+        data: {
+          github: result.dataset.path,
+          dataset: result.dataset.name,
+          commit: result.transaction.commit
+        }
       });
     });
   }
