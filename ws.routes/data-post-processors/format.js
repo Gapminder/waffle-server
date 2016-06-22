@@ -10,6 +10,7 @@ const MIME_TYPE_MAPPINGS = {
 
 module.exports = (req, res) => {
   let formatType = req.query.format;
+
   format(req.wsJson, formatType, (err, formattedData) => {
     if (err) {
       console.error(err);

@@ -132,11 +132,13 @@ function getDataPoints(pipe, cb) {
       })
     }
   };
+
   return DataPoints.find(query)
     .lean()
     .exec((err, res) => {
       console.timeEnd('get datapoints');
       pipe.datapoints = res;
+
       return cb(null, pipe);
     });
 }
@@ -176,6 +178,10 @@ function mapResult(pipe, cb) {
   return async.setImmediate(() => {
     return cb(null, {
       headers: pipe.select,
-      rows: _.sortBy(rows, ['0', '1']) });
+      rows: _.sortBy(rows, ['0', '1']),
+      datapoints: pipe.datapoints,
+      entities: pipe.entities,
+      concepts: pipe.concepts
+    });
   });
 }
