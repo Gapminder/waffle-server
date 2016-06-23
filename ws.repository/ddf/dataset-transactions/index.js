@@ -8,4 +8,4 @@ const Repository = require('./dataset-transactions.repository');
  * @param {ServiceLocator} serviceLocator - repository service locator
  * @returns {ServiceLocator} - instance of locator
  */
-module.exports = serviceLocator => serviceLocator.set('DatasetTransaction', new Repository());
+module.exports = serviceLocator => serviceLocator.set('DatasetTransaction', Repository);

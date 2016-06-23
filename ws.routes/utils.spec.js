@@ -110,6 +110,5 @@ describe('decodeQuery-middleware', () => {
     assert.ok(next.calledOnce);
     assert.ok(req.decodedQuery);
     assert.deepEqual(req.decodedQuery.select, []);
-    assert.deepEqual(req.decodedQuery.where['geo.cat'], []);
   });
 });

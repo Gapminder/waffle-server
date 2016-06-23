@@ -24,4 +24,4 @@ DatasetTransactionsRepository.prototype.findLatestByQuery = (query, done) => {
     });
 };
 
-module.exports = DatasetTransactionsRepository;
+module.exports = new DatasetTransactionsRepository();

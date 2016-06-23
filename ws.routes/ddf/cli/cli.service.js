@@ -13,12 +13,15 @@ const Datasets = mongoose.model('Datasets');
 const Transactions = mongoose.model('DatasetTransactions');
 const Concepts = mongoose.model('Concepts');
 
+const authService = require('../../../ws.services/auth.service');
+
 module.exports = {
-  getGitCommitsList: getGitCommitsList,
-  importDataset: importDataset,
-  updateIncrementally: updateIncrementally,
-  getPrestoredQueries: getPrestoredQueries,
-  getCommitOfLatestDatasetVersion: getCommitOfLatestDatasetVersion
+  getGitCommitsList,
+  importDataset,
+  updateIncrementally,
+  getPrestoredQueries,
+  getCommitOfLatestDatasetVersion,
+  authenticate
 };
 
 function getGitCommitsList(github, config, cb) {
@@ -298,12 +301,17 @@ function _validateDatasetBeforeIncrementalUpdate(pipe, done) {
 
 function _findTransaction(pipe, done) {
   return Transactions
-    .findOne({dataset: pipe.dataset._id})
+    .find({dataset: pipe.dataset._id})
     .sort({createdAt: -1})
+    .limit(1)
     .lean()
     .exec((error, transaction) => {
-      pipe.transaction = transaction;
+      pipe.transaction = _.first(transaction);
 
       return done(error, pipe);
     });
+}
+
+function authenticate(credentials, onAuthenticated) {
+  return authService.authenticate(credentials, onAuthenticated);
 }

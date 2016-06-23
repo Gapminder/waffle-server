@@ -1,44 +1,65 @@
-var mongoose = require('mongoose');
-var passport = require('passport');
-var LocalStrategy = require('passport-local').Strategy;
-var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
+'use strict';
 
-module.exports = function (app) {
-  var config = app.get('config');
+const mongoose = require('mongoose');
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+const GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
+const UniqueTokenStrategy = require('passport-unique-token').Strategy;
 
-  function findUserById(id, cb) {
-    var Users = mongoose.model('Users');
-    Users.findOne({_id: id}).exec(function (err, user) {
-      cb(err, user);
-    });
-  }
+const UsersRepository = require('../ws.repository/ddf/users/users.repository');
 
-  passport.serializeUser(function (user, done) {
-    done(null, user._id);
+module.exports = app => {
+  const config = app.get('config');
+
+  passport.serializeUser((user, done) => {
+    return done(null, user._id);
   });
 
-  passport.deserializeUser(function (id, done) {
-    findUserById(id, function (err, user) {
-      done(err, user);
+  passport.deserializeUser((id, done) => {
+    return UsersRepository.findById(id, (error, user) => {
+      done(error, user);
     });
   });
 
   enableLocalStrategy();
   enableGoogleStrategy();
+  enableUniqueTokenStrategy();
 
-  // local strategy
+  function enableUniqueTokenStrategy() {
+    const tokenName = 'waffle-server-token';
+    const strategyOptions = {
+      tokenQuery: tokenName,
+      tokenParams: tokenName,
+      tokenField: tokenName,
+      tokenHeader: tokenName
+    };
+
+    passport.use(new UniqueTokenStrategy(strategyOptions, (token, done) => {
+      UsersRepository.findUserByUniqueToken(token, (error, user) => {
+        if (error) {
+          return done(error);
+        }
+
+        if (!user) {
+          return done(null, false);
+        }
+
+        return done(null, user);
+      });
+    }));
+  }
+
   function enableLocalStrategy() {
-    passport.use(new LocalStrategy(
-      function (username, password, done) {
-        var Users = mongoose.model('Users');
-        Users.findOne({
+    passport.use(new LocalStrategy((username, password, done) => {
+        const Users = mongoose.model('Users');
+        return Users.findOne({
           $or: [
             {username: new RegExp('^' + username + '$', 'i')},
             {email: username}
           ]
-        }, function (err, user) {
-          if (err) {
-            return done(err);
+        }, (error, user) => {
+          if (error) {
+            return done(error);
           }
 
           if (!user) {
@@ -55,24 +76,25 @@ module.exports = function (app) {
     ));
   }
 
-  // google strategy
   function enableGoogleStrategy() {
-    /* jshint -W106 */
-    passport.use(new GoogleStrategy({
+    const googleConfig = {
       clientID: config.social.GOOGLE_CLIENT_ID,
       clientSecret: config.social.GOOGLE_CLIENT_SECRET,
       callbackURL: config.social.GOOGLE_CALLBACK_URL
-    }, function (accessToken, refreshToken, profile, done) {
-      var Users = mongoose.model('Users');
+    };
+    /* jshint -W106 */
+    passport.use(new GoogleStrategy(googleConfig, (accessToken, refreshToken, profile, done) => {
+      const Users = mongoose.model('Users');
+
       Users.findOne({
         $or: [
           {'social.googleId': profile._json.id},
           {email: profile._json.email}
         ]
-      }, function (err, user) {
+      }, (error, user) => {
         // user not found -> create new
-        if (user || err) {
-          return done(err, user);
+        if (user || error) {
+          return done(error, user);
         }
 
         Users.create({
@@ -85,8 +107,8 @@ module.exports = function (app) {
           },
           password: accessToken,
           username: profile.displayName
-        }, function (err2) {
-          return done(err2, user, {isNewUser: true});
+        }, userCreationError => {
+          return done(userCreationError, user, {isNewUser: true});
         });
       });
     }));

@@ -14,7 +14,6 @@ const _ = require('lodash');
 module.exports = function (serviceLocator) {
   // system
   require('./files.model');
-  require('./users')(serviceLocator.repositories);
 
   require('./dimension-values')(serviceLocator.repositories);
   require('./dimensions')(serviceLocator.repositories);
@@ -30,6 +29,7 @@ module.exports = function (serviceLocator) {
   require('./indexDb.model');
 
   const ddfModels = [
+    'users',
     'concepts',
     'data-points',
     'dataset-transactions',

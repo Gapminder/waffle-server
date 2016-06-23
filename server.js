@@ -9,8 +9,8 @@ app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
 
 var serviceLocator = require('./ws.service-locator')(app);
 
-require('./ws.config')(app);
 require('./ws.repository')(serviceLocator);
+require('./ws.config')(app);
 
 // routes ==================================================
 // configure our routes
