@@ -9,9 +9,8 @@ const DEFAULT_CONFIG = require('./environment.config');
 module.exports = function (app) {
   const REQUIRED_ENVIRONMENT_VARIABLES = Object.freeze([
     'SESSION_SECRET',
-    'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET',
-    // 'AWS_SECRET_ACCESS_KEY', 'AWS_ACCESS_KEY_ID', 'S3_BUCKET',
-    'MONGODB_URL', 'NEO4J_URL'
+    'MONGODB_URL', 
+    'NEO4J_URL'
   ]);
 
   // Check that all the REQUIRED VARIABLES was setup.
@@ -44,13 +43,11 @@ module.exports = function (app) {
     EXPORT_TO_VERSION: process.env.EXPORT_TO_VERSION,
     INCREMENTAL_EXPORT_TO_VERSION: process.env.INCREMENTAL_EXPORT_TO_VERSION,
 
-    // is used npm logging levels (prioritized from 0 to 5, from highest to lowest):
     // { error: 0, warn: 1, info: 2, verbose: 3, debug: 4, silly: 5 }
     LOG_LEVEL: process.env.LOG_LEVEL || DEFAULT_CONFIG.LOG_LEVEL,
-    LOG_TRANSPORTS: process.env.LOG_TRANSPORTS
-      ? process.env.LOG_TRANSPORTS.split(',')
-      : DEFAULT_CONFIG.LOG_TRANSPORTS,
+
     LOG_TABS: process.env.LOG_TABS || DEFAULT_CONFIG.LOG_TABS,
+    LOG_TRANSPORTS: process.env.LOG_TRANSPORTS ? process.env.LOG_TRANSPORTS.split(',') : DEFAULT_CONFIG.LOG_TRANSPORTS, 
 
     DEFAULT_OPTIONS_CONVERTING_JSON_TO_CSV: {
       DELIMITER: {
@@ -60,20 +57,7 @@ module.exports = function (app) {
       },
       EOL: '\n',
       PARSE_CSV_NUMBERS: false
-    },
-
-    AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY || DEFAULT_CONFIG.AWS_SECRET_ACCESS_KEY,
-    AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID || DEFAULT_CONFIG.AWS_ACCESS_KEY_ID,
-    S3_BUCKET: process.env.S3_BUCKET || DEFAULT_CONFIG.S3_BUCKET
-  };
-
-  config.social = {
-    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || DEFAULT_CONFIG.GOOGLE_CLIENT_ID,
-    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || DEFAULT_CONFIG.GOOGLE_CLIENT_SECRET,
-    GOOGLE_CALLBACK_URL: `${config.HOST_URL}:${config.PORT}/api/auth/google/callback`,
-    GOOGLE_SCOPE: [
-      'https://www.googleapis.com/auth/userinfo.profile',
-      'https://www.googleapis.com/auth/userinfo.email']
+    }
   };
 
   app.set('config', config);

@@ -10,13 +10,6 @@ module.exports = function (serviceLocator) {
   var config = app.get('config');
   var Users = mongoose.model('Users');
 
-  // google stategy
-  app.get('/api/auth/google', passport.authenticate('google', {scope: config.social.GOOGLE_SCOPE}));
-  app.get('/api/auth/google/callback', passport.authenticate('google', {
-    failureRedirect: loginPage,
-    successRedirect: '/'
-  }));
-
   // local strategy
   app.post('/api/auth/register', function (req, res, next) {
     Users.findOne({
