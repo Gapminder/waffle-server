@@ -17,9 +17,6 @@ let Users = new Schema({
   username: {type: String, index: true, unique: true, required: true},
   password: {type: String, required: true, 'private': true},
   image: String,
-  social: {
-    googleId: String
-  },
 
   uniqueToken: {type: String},
   expireToken: {type: Number}

@@ -291,7 +291,7 @@ module.exports = serviceLocator => {
   function _getStateOfLatestTransaction(req, res) {
     const datasetName = req.query.datasetName;
     if (!datasetName) {
-      return res.json({success: false, error: 'No dataset name was given'})
+      return res.json({success: false, error: 'No dataset name was given'});
     }
 
     return TransactionsService.getStatusOfLatestTransactionByDatasetName(datasetName, (statusError, status) => {
@@ -306,7 +306,7 @@ module.exports = serviceLocator => {
   function _activateRollback(req, res) {
     const datasetName = req.body.datasetName;
     if (!datasetName) {
-      return res.json({success: false, error: 'No dataset name was given'})
+      return res.json({success: false, error: 'No dataset name was given'});
     }
 
     return TransactionsService.rollbackFailedTransactionFor(datasetName, rollbackError => {

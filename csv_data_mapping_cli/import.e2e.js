@@ -5,7 +5,6 @@ const async = require('async');
 const fs = require('fs');
 const path = require('path');
 const parse = require('csv-parse');
-const transform = require('stream-transform');
 const expect = require('chai').expect;
 
 const appStub = {
