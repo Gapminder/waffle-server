@@ -26,7 +26,7 @@ module.exports = function (serviceLocator) {
 
   router.use([
     cors(),
-    compression(),
+    compression({filter: shouldCompress}),
     // getCacheConfig('stats'),
     // cache.route(),
     decodeQuery
@@ -40,6 +40,16 @@ module.exports = function (serviceLocator) {
   );
 
   return app.use(router);
+
+  function shouldCompress(req, res) {
+    if (req.query['no-compression']) {
+      // don't compress responses with this request header
+      return false;
+    }
+
+    // fallback to standard filter function
+    return compression.filter(req, res)
+  }
 
   function ddfDatapointStats(req, res, next) {
     logger.debug('URL: \n%s%s', config.LOG_TABS, req.originalUrl);
