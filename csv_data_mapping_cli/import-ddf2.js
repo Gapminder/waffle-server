@@ -46,7 +46,7 @@ module.exports = function (app, done, options) {
     common.resolvePathToDdfFolder,
     // resolvePathToTranslations,
     clearAllDbs,
-    createUser,
+    findCurrentUser,
     common.createTransaction,
     common.createDataset,
     common.updateTransaction,
@@ -82,18 +82,13 @@ function clearAllDbs(pipe, cb) {
   return cb(null, pipe);
 }
 
-function createUser(pipe, done) {
-  logger.info('create user');
+function findCurrentUser(pipe, done) {
+  logger.info('find current user');
 
-  mongoose.model('Users').findOneAndUpdate({}, {
-    name: 'Vasya Pupkin',
-    email: 'email@email.com',
-    username: 'VPup',
-    password: 'VPup'
-  }, {upsert: true, new: true})
+  mongoose.model('Users').findOne({email: 'dev@gapminder.org'})
   .lean()
-  .exec((err, res) => {
+  .exec((error, res) => {
     pipe.user = res;
-    return done(err, pipe);
+    return done(error, pipe);
   });
 }

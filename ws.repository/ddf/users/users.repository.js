@@ -30,4 +30,9 @@ UsersRepository.prototype.setUpToken = (email, uniqueToken, expireToken, onFound
   return Users.findOneAndUpdate({email}, {uniqueToken, expireToken}, {new: 1}).lean().exec(onFound);
 };
 
+UsersRepository.prototype.createUser = (user, done) => {
+  return Users.findOneAndUpdate({email: user.email}, user, {upsert: true, new: true}).lean().exec(done);
+};
+
+
 module.exports = new UsersRepository();

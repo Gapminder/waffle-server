@@ -72,6 +72,9 @@ function decodeQuery(req, res, next) {
   // for supporting previous and new api for geo: select && default response header
   req.decodedQuery.select = req.decodedQuery.select || [];
 
+  // FIXME: We should set up default dataset and dataset version via WS CLI
+  req.decodedQuery.where.dataset = req.decodedQuery.dataset || 'ddf--gapminder--gapminder_world';
+
   return next();
 }
 
