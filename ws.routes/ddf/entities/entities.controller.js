@@ -13,69 +13,6 @@ var getCacheConfig = require('../../utils').getCacheConfig;
 
 const dataPostProcessors = require('../../data-post-processors');
 
-/**
- * @swagger
- * definition:
- *  Stats:
- *     type: object
- *     properties:
- *       header:
- *         type: array
- *         description:  Result will consist array of strings. Example: `["geo", "time", "population"]`
- *       rows:
- *         type: array
- *         description:  Result will consist array of arrays.
- *  Datapoints:
- *     type: object
- *     properties:
- *       geo:
- *         type: string
- *         description:  Example query `?select=geo.latitude,geo.name,geo&geo.cat=country,region`
- *       time:
- *         type: string
- *         description:  Result will consist only from unique geo-time, filtered by time values. Example query `?select=geo,time`
- *       measure:
- *         type: string
- *         description:  Example query `?select=geo,time,population,gini`
- *  Entities:
- *     type: object
- *     properties:
- *       geo-props:
- *         type: string
- *         description: Result will consist only from unique geo-props, filtered by geo values. Example query `?select=geo.latitude,geo.name,geo&geo.cat=country,region`
- *       geo-time:
- *         type: string
- *         description:  Result will consist only from unique geo-time, filtered by time values. Example query `?select=geo,time`
- *       geo-time-measure:
- *         type: string
- *         description:  Example query `?select=geo,time,population,gini`
- *       geo-time-measure (filter by geo):
- *         type: string
- *         description: Example query `?select=geo,time,population,gini&geo=chn`
- *       geo-time-measure (filter time):
- *         type: string
- *         description: Example query `?select=geo,time,population,gini&time=1800`, `?select=geo,time,population,gini&time=2000:2010`
- *  Concepts:
- *     type: object
- *     properties:
- *       geo-props:
- *         type: string
- *         description: Result will consist only from unique geo-props, filtered by geo values. Example query `?select=geo.latitude,geo.name,geo&geo.cat=country,region`
- *       geo-time:
- *         type: string
- *         description:  Result will consist only from unique geo-time, filtered by time values. Example query `?select=geo,time`
- *       geo-time-measure:
- *         type: string
- *         description:  Example query `?select=geo,time,population,gini`
- *       geo-time-measure (filter by geo):
- *         type: string
- *         description: Example query `?select=geo,time,population,gini&geo=chn`
- *       geo-time-measure (filter time):
- *         type: string
- *         description: Example query `?select=geo,time,population,gini&time=1800`, `?select=geo,time,population,gini&time=2000:2010`
- *
- */
-
 module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
 
@@ -94,48 +31,6 @@ module.exports = function (serviceLocator) {
     decodeQuery
   ]);
 
-  /**
-   * @swagger
-   * /api/ddf/stats/entities:
-   *   get:
-   *    description: For getting entities-props list
-   *    produces:
-   *      - application/json
-   *      - text/csv
-   *    parameters:
-   *      - name: select
-   *        in: query
-   *        description: array of columns.
-   *        type: string
-   *      - name: where
-   *        description: list of filters (optional, shouldn't present in query, it's a virtual parameter, works like union). Example: `{"is--country":[1],"landlocked": ["coastline"]}`
-   *        type: object
-   *      - name: gapfilling
-   *        in: query
-   *        description: list of methods for post processing of measures data (isn't supported yet)
-   *        type: string
-   *    tags:
-   *      - Graph
-   *    responses:
-   *      200:
-   *        description: An array of products
-   *        schema:
-   *         type: array
-   *         items:
-   *            $ref: '#/definitions/Graph'
-   *      304:
-   *        description: cache
-   *        schema:
-   *          type: array
-   *          items:
-   *            $ref: '#/definitions/Graph'
-   *      default:
-   *        description: Unexpected error
-   *        schema:
-   *          $ref: '#/definitions/Error'
-   *
-   *
-   */
   router.get('/api/ddf/entities',
     ddfEntitiesStats,
     dataPostProcessors.gapfilling,
