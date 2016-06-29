@@ -16,6 +16,9 @@ require('./ws.config')(app);
 // configure our routes
 require('./ws.routes/index')(serviceLocator);
 
+// FIXME: make-default-user is the temporary solution and should be deleted as soon as WS will have a registration functionality
+require('./make-default-user')(app);
+
 // start app ===============================================
 // startup our app at http://localhost:3000
 var config = app.get('config');

@@ -45,7 +45,8 @@ function rollbackFailedTransactionFor(datasetName, onRollbackCompleted) {
       done => async.parallelLimit(rollbackTasks, asyncOperationsAmount, done),
       done => TransactionsRepository.deleteRecord(failedTransaction._id, done),
       done => DatasetsRepository.removeVersion(datasetName, failedVersion, done),
-      done => DatasetsRepository.forceUnlock(datasetName, done)
+      done => DatasetsRepository.forceUnlock(datasetName, done),
+      done => DatasetsRepository.removeDatasetWithoutVersionsByName(datasetName, done)
     ],
     onRollbackCompleted);
   });

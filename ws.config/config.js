@@ -57,7 +57,9 @@ module.exports = function (app) {
       },
       EOL: '\n',
       PARSE_CSV_NUMBERS: false
-    }
+    },
+    
+    DEFAULT_USER_PASSWORD: process.env.DEFAULT_USER_PASSWORD
   };
 
   app.set('config', config);
