@@ -16,25 +16,6 @@ module.exports = serviceLocator => {
   /*eslint new-cap:0*/
   const router = express.Router();
 
-  /** Outdated
-   * //@swagger
-   * /api/graphs/export:
-   *   get:
-   *    description: Export data in neo4j
-   *    produces:
-   *      - application/json
-   *      - text/csv
-   *    tags:
-   *      - GraphExport
-   *    responses:
-   *      200:
-   *        description: Export in neo4j
-   *      default:
-   *        description: Unexpected error
-   *        schema:
-   *          $ref: '#/definitions/Error'
-   *
-   */
   router.get('/api/graphs/export', ensureAuthenticated, runExportDdf);
 
   return app.use(router);
