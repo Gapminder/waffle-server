@@ -30,7 +30,8 @@ function cloneRepo(githubUrl, commit, onCloned, config) {
     }
 
     return git(pathToRepo)
-      .pull('origin', 'master')
+      .fetch('origin', 'master')
+      .reset(['--hard', 'origin/master'])
       .checkout(commit || 'HEAD', function (err) {
         return onCloned(err, {pathToRepo});
       });

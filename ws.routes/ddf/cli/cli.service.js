@@ -80,15 +80,11 @@ function _findDataset(pipe, done) {
 }
 
 function _validateDatasetBeforeImport(pipe, done) {
-  let error;
-
   if (pipe.dataset) {
-    error = 'Dataset exitst, cannot import same dataset twice';
+    return _handleAsynchronously('Dataset exists, cannot import same dataset twice', pipe, done);
   }
 
-  return async.setImmediate(() => {
-    return done(error, pipe);
-  });
+  return _handleAsynchronously(null, pipe, done);
 }
 
 function _importDdfService(pipe, done) {
@@ -231,18 +227,20 @@ function getCommitOfLatestDatasetVersion(github, cb) {
 }
 
 function _validateDatasetBeforeIncrementalUpdate(pipe, done) {
-  let error;
-
   if (!pipe.dataset) {
-    error = 'Dataset was not found, hence hash commit of it\'s latest version cannot be acquired';
+    return _handleAsynchronously('Dataset was not found, hence hash commit of it\'s latest version cannot be acquired', pipe, done);
   }
 
   if (pipe.dataset.isLocked) {
-    error = 'Dataset was locked. Please, start rollback process.';
+    return _handleAsynchronously('Dataset was locked. Please, start rollback process.', pipe, done);
   }
 
+  return _handleAsynchronously(null, pipe, done);
+}
+
+function _handleAsynchronously(error, result, done) {
   return async.setImmediate(() => {
-    return done(error, pipe);
+    return done(error, result);
   });
 }
 
