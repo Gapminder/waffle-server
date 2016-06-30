@@ -9,9 +9,9 @@ const compression = require('compression');
 
 const routeUtils = require('../../utils');
 
-const CliService = require('./cli.service');
-const ReposService = require('../import/repos.service');
-const TransactionsService = require('../../../ws.services/dataset-transactions.service');
+const cliService = require('./cli.service');
+const reposService = require('../import/repos.service');
+const transactionsService = require('../../../ws.services/dataset-transactions.service');
 
 module.exports = serviceLocator => {
   const app = serviceLocator.getApplication();
@@ -60,7 +60,7 @@ module.exports = serviceLocator => {
       return res.json({success: false, error: 'Password was not provided'});
     }
 
-    return CliService.authenticate({email, password}, (error, token) => {
+    return cliService.authenticate({email, password}, (error, token) => {
       if (error) {
         return res.json({success: !error, error});
       }
@@ -75,7 +75,7 @@ module.exports = serviceLocator => {
       return res.json({success: false, error: 'No dataset name was given'});
     }
 
-    return TransactionsService.getStatusOfLatestTransactionByDatasetName(datasetName, (statusError, status) => {
+    return transactionsService.getStatusOfLatestTransactionByDatasetName(datasetName, (statusError, status) => {
       if (statusError) {
         return res.json({success: !statusError, error: statusError});
       }
@@ -90,7 +90,7 @@ module.exports = serviceLocator => {
       return res.json({success: false, error: 'No dataset name was given'});
     }
 
-    return TransactionsService.rollbackFailedTransactionFor(datasetName, rollbackError => {
+    return transactionsService.rollbackFailedTransactionFor(datasetName, rollbackError => {
       if (rollbackError) {
         return res.json({success: !rollbackError, error: rollbackError});
       }
@@ -100,7 +100,7 @@ module.exports = serviceLocator => {
   }
 
   function _getPrestoredQueries(req, res) {
-    CliService.getPrestoredQueries ((error, queries) => {
+    cliService.getPrestoredQueries ((error, queries) => {
       logger.info(`finished getting prestored queries`);
 
       if (error) {
@@ -117,7 +117,7 @@ module.exports = serviceLocator => {
         return res.json({success: !error, error});
       }
 
-      CliService.updateIncrementally(body, app, updateError => {
+      cliService.updateIncrementally(body, app, updateError => {
         if (updateError) {
           return res.json({success: !updateError, error: updateError});
         }
@@ -132,7 +132,7 @@ module.exports = serviceLocator => {
         .on('data', entry => {
           const data = entry.value;
 
-          const repoName = ReposService.getRepoName(data.github);
+          const repoName = reposService.getRepoName(data.github);
           if (data.github && !repoName) {
             req.destroy();
             return onBodyTransformed(`Incorrect github url was given: ${data.github}`);
@@ -156,21 +156,21 @@ module.exports = serviceLocator => {
   function _importDataset(req, res) {
     let params = req.body;
 
-    CliService.importDataset(params, config, app, error => {
+    cliService.importDataset(params, config, app, error => {
       logger.info(`finished import for dataset '${params.github}' and commit '${params.commit}'`);
 
       if (error) {
         return res.json({success: !error, error});
       }
 
-      return res.json({success: !error});
+      return res.json({success: !error, message: 'Dataset was imported successfully'});
     });
   }
 
   function _getGitCommitsList(req, res) {
     const github = req.query.github;
 
-    CliService.getGitCommitsList(github, config, (error, result) => {
+    cliService.getGitCommitsList(github, config, (error, result) => {
       logger.info(`finished getting commits list for dataset '${github}'`);
 
       if (error) {
@@ -189,7 +189,7 @@ module.exports = serviceLocator => {
   function _getCommitOfLatestDatasetVersion(req, res) {
     const github = req.query.github;
 
-    CliService.getCommitOfLatestDatasetVersion(github, (error, result) => {
+    cliService.getCommitOfLatestDatasetVersion(github, (error, result) => {
       logger.info(`finished getting latest commit '${result.transaction.commit}' for dataset '${github}'`);
 
       if (error) {

@@ -224,6 +224,7 @@ function _getPrestoredQueries(pipe, done) {
   let calculation = {
     datasetName: null,
     version: null,
+    commit: null,
     gids: []
   };
 
@@ -252,9 +253,10 @@ function __makePrestoredQuery(calculation) {
   const filteredGids = __filterGids(calculation.gids);
 
   return {
-    url: `http://localhost:3000/api/ddf/stats?dataset=${calculation.datasetName}&version=${calculation.version}time=1800:2015&select==geo,time,${filteredGids}`,
+    url: `http://localhost:3000/api/ddf/datapoints?dataset=${calculation.datasetName}&version=${calculation.version}&year=1800:2015&select=geo,year,${filteredGids}`,
     datasetName: calculation.datasetName,
     version: calculation.version,
+    commit: calculation.commit,
     createdAt: new Date(calculation.version)
   };
 }
@@ -269,6 +271,7 @@ function __filterGids(gids) {
 function __updateCalculation(calculation, measure) {
   calculation.datasetName = measure.dataset.name;
   calculation.version = measure.transaction.createdAt;
+  calculation.commit = measure.transaction.commit;
   calculation.gids.push(measure.gid);
 }
 

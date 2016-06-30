@@ -73,7 +73,7 @@ function decodeQuery(req, res, next) {
   req.decodedQuery.select = req.decodedQuery.select || [];
 
   // FIXME: We should set up default dataset and dataset version via WS CLI
-  req.decodedQuery.where.dataset = req.decodedQuery.dataset || 'ddf--gapminder--gapminder_world';
+  req.decodedQuery.where.dataset = req.decodedQuery.where.dataset || ['ddf--gapminder--gapminder_world'];
 
   return next();
 }
@@ -84,7 +84,7 @@ function normalizeParam(param) {
 
 function sanitizeSortValues(sortParam) {
   function isSortValueValid(value) {
-    return value === 'asc' || value === 'desc' || value === true
+    return value === 'asc' || value === 'desc' || value === true;
   }
 
   return Object.keys(sortParam).reduce((result, key) => {
