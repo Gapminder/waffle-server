@@ -358,7 +358,7 @@ function ____closeEntity(pipe) {
       .lean()
       .exec((err, doc) => {
         if (doc) {
-          pipe.closedEntities[doc.gid] = doc.properties;
+          pipe.closedEntities[doc.gid] = doc;
         }
 
         return ecb(err, pipe);
@@ -412,7 +412,7 @@ function ___fakeLoadRawOriginalEntities(pipe, done) {
   let uniqEntities = _.uniqBy(fakeLoadedEntities, 'gid');
 
   if (uniqEntities.length !== fakeLoadedEntities.length) {
-    return done('All entity gid\'s should be unique within the Entity Set or Entity Domain!');
+    return async.setImmediate(() => done('All entity gid\'s should be unique within the Entity Set or Entity Domain!'));
   }
 
   pipe.raw ={

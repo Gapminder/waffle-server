@@ -117,7 +117,7 @@ module.exports = serviceLocator => {
         return res.json({success: !error, error});
       }
 
-      cliService.updateIncrementally(body, app, updateError => {
+      cliService.updateIncrementally(body, config, app, updateError => {
         if (updateError) {
           return res.json({success: !updateError, error: updateError});
         }

@@ -112,13 +112,15 @@ function _unlockDataset(pipe, done) {
     });
 }
 
-function updateIncrementally(params, app, cb) {
+function updateIncrementally(params, config, app, cb) {
   let pipe = params;
   pipe.app = app;
+  pipe.config = config;
 
   return async.waterfall([
     async.constant(pipe),
     _lockDataset,
+    _cloneSourceRepo,
     _checkTransaction,
     _runIncrementalUpdate,
     _unlockDataset
@@ -165,114 +167,56 @@ function _runIncrementalUpdate(pipe, done) {
 }
 
 function getPrestoredQueries(cb) {
-  async.waterfall([
+  return async.waterfall([
     async.constant({}),
-    _findDatasets,
-    _computeConceptQueries,
-    _getMeasures,
-    _getPrestoredQueries
+    (pipe, done) => Datasets.find({})
+      .sort({'name': 1})
+      .lean()
+      .exec((error, datasets) => {
+        pipe.datasets = datasets;
+        return done(error, pipe);
+      }),
+    (pipe, done) => {
+      const urls = [];
+
+      return async.eachSeries(pipe.datasets, (dataset, onUrlsCreated) => {
+        return async.eachSeries(dataset.versions, (version, cb) => {
+          let query = {dataset: dataset._id, type: 'measure', from: {$lte: version}, to: {$gt: version}};
+
+          return Concepts.find(query)
+            .lean()
+            .exec((error, measures) => {
+              urls.push(_makePrestoredQuery({
+                datasetName: dataset.name,
+                version,
+                measures
+              }));
+
+              return cb();
+            });
+        }, onUrlsCreated);
+      }, error => {
+        return done(error, urls);
+      });
+    }
   ], cb);
 }
 
-function _findDatasets(pipe, done) {
-  Datasets.find({})
-    .sort({'name': 1})
-    .lean()
-    .exec((error, datasets) => {
-      pipe.datasets = datasets;
 
-      return done(error, pipe);
-    });
-}
-
-function _computeConceptQueries(pipe, done) {
-  let queries = [];
-
-  pipe.datasets.forEach(function (dataset) {
-    dataset.versions.forEach(function (version) {
-      let query = {
-        dataset: dataset._id,
-        type: 'measure',
-        from: {$lte: version},
-        to: {$gt: version}
-      };
-      queries.push(query);
-
-      return queries;
-    });
-
-    pipe.queries = queries;
-  });
-
-  return async.setImmediate(() => done(null, pipe));
-}
-
-function _getMeasures(pipe, done) {
-  return Concepts.find({$or: pipe.queries})
-    .populate('dataset')
-    .populate('transaction')
-    .sort({'dataset.name': 1, 'transaction.createdAt': 1})
-    .lean()
-    .exec((error, measures) => {
-      pipe.measures = measures;
-
-      return done(error, pipe);
-    });
-}
-
-function _getPrestoredQueries(pipe, done) {
-  let calculation = {
-    datasetName: null,
-    version: null,
-    commit: null,
-    gids: []
-  };
-
-  let queries = pipe.measures.reduce(function (result, measure, index) {
-    if (index === 0 || (calculation.datasetName === measure.dataset.name && calculation.version === measure.transaction.createdAt )) {
-      __updateCalculation(calculation, measure);
-
-      if (index === pipe.measures.length - 1) {
-        result.push(__makePrestoredQuery(calculation));
-      }
-
-      return result;
-    }
-
-    result.push(__makePrestoredQuery(calculation));
-    calculation.gids = [];
-    __updateCalculation(calculation, measure);
-
-    return result;
-  }, []);
-
-  return async.setImmediate(() => done(null, queries));
-}
-
-function __makePrestoredQuery(calculation) {
-  const filteredGids = __filterGids(calculation.gids);
+function _makePrestoredQuery(query) {
+  const filteredMeasures = _.chain(query.measures)
+    .map('gid')
+    .filter((measure) => !_.includes(['age', 'longitude', 'latitude'], measure))
+    .take(3)
+    .join(',')
+    .value();
 
   return {
-    url: `http://localhost:3000/api/ddf/datapoints?dataset=${calculation.datasetName}&version=${calculation.version}&year=1800:2015&select=geo,year,${filteredGids}`,
-    datasetName: calculation.datasetName,
-    version: calculation.version,
-    commit: calculation.commit,
-    createdAt: new Date(calculation.version)
+    url: `http://localhost:3000/api/ddf/datapoints?dataset=${query.datasetName}&version=${query.version}&year=1800:2015&select=geo,year,${filteredMeasures}`,
+    datasetName: query.datasetName,
+    version: query.version,
+    createdAt: new Date(query.version)
   };
-}
-
-function __filterGids(gids) {
-  return _.chain(gids)
-    .difference(['age', 'longitude', 'latitude'])
-    .take(3)
-    .value();
-}
-
-function __updateCalculation(calculation, measure) {
-  calculation.datasetName = measure.dataset.name;
-  calculation.version = measure.transaction.createdAt;
-  calculation.commit = measure.transaction.commit;
-  calculation.gids.push(measure.gid);
 }
 
 function getCommitOfLatestDatasetVersion(github, cb) {
