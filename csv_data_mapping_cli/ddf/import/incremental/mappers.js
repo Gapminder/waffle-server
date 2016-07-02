@@ -1,7 +1,8 @@
 'use strict';
 
 const _ = require('lodash');
-const utils = require('./utils');
+const ddfImportProcess = require('../../../../ws.utils/ddf-import-process');
+const constants = require('../../../../ws.utils/constants');
 
 const JSON_COLUMNS = ['color', 'scales', 'drill_up'];
 
@@ -32,7 +33,7 @@ function mapDdfConceptsToWsModel(version, datasetId, transactionId) {
       dimensions: [],
 
       from: version,
-      to: utils.MAX_VALUE,
+      to: constants.MAX_VERSION,
       dataset: datasetId,
       transaction: transactionId
     };
@@ -46,7 +47,7 @@ function isJsonColumn(column) {
 function transformPropsToJsonWherePossible(object) {
   return _.transform(object, (result, value, key) => {
     if (isJsonColumn(key)) {
-      result[key] = utils.isJson(value) ? JSON.parse(value) : null;
+      result[key] = ddfImportProcess.isJson(value) ? JSON.parse(value) : null;
     } else {
       result[key] = value;
     }
