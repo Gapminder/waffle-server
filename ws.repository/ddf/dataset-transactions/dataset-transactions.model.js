@@ -18,6 +18,7 @@ const Schema = mongoose.Schema;
 const DatasetTransactions = new Schema({
   name: {type: String, required: true, unique: true, index: true},
   isClosed: {type: Boolean, 'default': false},
+  lastError: {type: String},
 
   createdBy: {type: Schema.Types.ObjectId, ref: 'Users', required: true},
   createdAt: {type: Number, 'default': (new Date()).valueOf(), required: true},

@@ -156,15 +156,20 @@ module.exports = serviceLocator => {
   function _importDataset(req, res) {
     let params = req.body;
 
-    cliService.importDataset(params, config, app, error => {
-      logger.info(`finished import for dataset '${params.github}' and commit '${params.commit}'`);
-
+    cliService.prepareDatasetForImporting(params, config, app, (error, pipe) => {
       if (error) {
         return res.json({success: !error, error});
       }
 
-      return res.json({success: !error, message: 'Dataset was imported successfully'});
+      return cliService.importDataset(pipe, error => {
+        logger.info(`finished import for dataset '${params.github}' and commit '${params.commit}'`);
+        if (error) {
+          logger.error(error);
+        }
+      });
     });
+
+    return res.json({success: true, message: 'Dataset importing is in progress ...'});
   }
 
   function _getGitCommitsList(req, res) {
