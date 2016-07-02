@@ -24,4 +24,8 @@ DatasetTransactionsRepository.prototype.findLatestByQuery = (query, done) => {
     });
 };
 
+DatasetTransactionsRepository.prototype.setLastError = (transactionId, lastErrorMessage, done) => {
+  return DatasetTransactions.findOneAndUpdate({_id: transactionId}, {$set: {lastError: lastErrorMessage}}, {new: 1}, done);
+};
+
 module.exports = new DatasetTransactionsRepository();

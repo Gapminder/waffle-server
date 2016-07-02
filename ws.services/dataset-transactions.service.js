@@ -15,7 +15,8 @@ const TransactionsRepository = require('../ws.repository/ddf/dataset-transaction
 
 module.exports = {
   rollbackFailedTransactionFor,
-  getStatusOfLatestTransactionByDatasetName
+  getStatusOfLatestTransactionByDatasetName,
+  setLastError
 };
 
 function rollbackFailedTransactionFor(datasetName, onRollbackCompleted) {
@@ -99,6 +100,7 @@ function getStatusOfLatestTransactionByDatasetName(datasetName, done) {
         const result = {
           datasetName: datasetName,
           transaction: {
+            lastError: latestTransaction.lastError,
             commit: latestTransaction.commit,
             status: latestTransaction.isClosed ? 'Completed' : 'In progress',
             createdAt: new Date(latestTransaction.createdAt)
@@ -110,4 +112,8 @@ function getStatusOfLatestTransactionByDatasetName(datasetName, done) {
       });
     });
   });
+}
+
+function setLastError(transactionId, lastErrorMessage, onErrorSet) {
+  return TransactionsRepository.setLastError(transactionId, lastErrorMessage, onErrorSet);
 }

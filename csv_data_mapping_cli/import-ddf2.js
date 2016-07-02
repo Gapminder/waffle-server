@@ -3,7 +3,6 @@
 console.time('done');
 const _ = require('lodash');
 const fs = require('fs');
-const path = require('path');
 const async = require('async');
 
 const mongoose = require('mongoose');
@@ -63,7 +62,7 @@ module.exports = function (app, done, options) {
     common.closeTransaction
   ], (err, pipe) => {
     console.timeEnd('done');
-    return done(err, {datasetName: pipe.datasetName, version: pipe.transaction.createdAt});
+    return done(err, {datasetName: pipe.datasetName, version: pipe.transaction.createdAt, transactionId: pipe.transaction._id});
   });
 };
 

@@ -14,6 +14,7 @@ const Transactions = mongoose.model('DatasetTransactions');
 const Concepts = mongoose.model('Concepts');
 
 const authService = require('../../../ws.services/auth.service');
+const transactionsService = require('../../../ws.services/dataset-transactions.service');
 
 module.exports = {
   getGitCommitsList,
@@ -21,7 +22,8 @@ module.exports = {
   updateIncrementally,
   getPrestoredQueries,
   getCommitOfLatestDatasetVersion,
-  authenticate
+  authenticate,
+  prepareDatasetForImporting
 };
 
 function getGitCommitsList(github, config, cb) {
@@ -56,7 +58,7 @@ function _getPathToRepo(pipe, done) {
     });
 }
 
-function importDataset(params, config, app, cb) {
+function prepareDatasetForImporting(params, config, app, cb) {
   let pipe = params;
   pipe.config = config;
   pipe.app = app;
@@ -65,10 +67,23 @@ function importDataset(params, config, app, cb) {
     async.constant(pipe),
     _findDataset,
     _validateDatasetBeforeImport,
-    _cloneSourceRepo,
+    _cloneSourceRepo
+  ], cb);
+}
+
+function importDataset(pipe, cb) {
+  return async.waterfall([
+    async.constant(pipe),
     _importDdfService,
     _unlockDataset
-  ], cb);
+  ], (importError, pipe) => {
+    if (importError) {
+      return transactionsService.setLastError(pipe.transactionId, _.toString(importError), () => {
+        cb(importError);
+      });
+    }
+    return cb(null, pipe);
+  });
 }
 
 function _findDataset(pipe, done) {
