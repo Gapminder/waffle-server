@@ -4,7 +4,8 @@ const _ = require('lodash');
 const async = require('async');
 const mongoose = require('mongoose');
 
-const utils = require('./utils');
+const ddfImportProcess = require('../../../../ws.utils/ddf-import-process');
+const constants = require('../../../../ws.utils/constants');
 const mappers = require('./mappers');
 
 module.exports = () => {
@@ -33,11 +34,11 @@ module.exports = () => {
 
 function processRemovedConcepts(removedConcepts) {
   return (pipe, done) => {
-    return async.eachLimit(removedConcepts, utils.LIMIT_NUMBER_PROCESS, (removedConcept, onConceptClosed) => {
+    return async.eachLimit(removedConcepts, constants.LIMIT_NUMBER_PROCESS, (removedConcept, onConceptClosed) => {
       const originalConceptQuery = {
         dataset: pipe.external.dataset._id,
         from: {$lt: pipe.external.transaction.createdAt},
-        to: utils.MAX_VALUE,
+        to: constants.MAX_VERSION,
         gid: getGid(removedConcept)
       };
 
@@ -64,7 +65,7 @@ function processCreatedConcepts(createdConcepts) {
       error => {
         return done(error, pipe);
       });
-  }
+  };
 }
 
 function processUpdatedConcepts(updatedConcepts, removedProperties) {
@@ -90,7 +91,7 @@ function processUpdatedConcepts(updatedConcepts, removedProperties) {
       error => {
         return done(error, pipe);
       });
-  }
+  };
 }
 
 function createConcepts(conceptChanges) {
@@ -108,18 +109,21 @@ function createConcepts(conceptChanges) {
     }
 
     const chunkSize = 100;
-    return async.eachLimit(_.chunk(concepts, chunkSize), utils.LIMIT_NUMBER_PROCESS, (chunk, onConceptsChunkCreated) => {
-      return mongoose.model('Concepts').create(chunk, onConceptsChunkCreated);
-    },
-    error => {
-      return done(error, pipe);
-    });
-  }
+    return async.eachLimit(_.chunk(concepts, chunkSize), constants.LIMIT_NUMBER_PROCESS, (chunk, onConceptsChunkCreated) => {
+        return mongoose.model('Concepts').create(chunk, onConceptsChunkCreated);
+      },
+      error => {
+        return done(error, pipe);
+      });
+  };
 }
 
 function getDrillupsOfChangedConcepts() {
   return (pipe, done) => {
-    const dillupsOfChangedConceptsQuery = {dataset: pipe.external.dataset._id, from: pipe.external.transaction.createdAt};
+    const dillupsOfChangedConceptsQuery = {
+      dataset: pipe.external.dataset._id,
+      from: pipe.external.transaction.createdAt
+    };
     return mongoose.model('Concepts').distinct('properties.drill_up', dillupsOfChangedConceptsQuery).lean().exec((error, drillUps) => {
       if (error) {
         return done(error);
@@ -127,13 +131,16 @@ function getDrillupsOfChangedConcepts() {
 
       pipe.internal.drillUps = _.compact(drillUps);
       return done(error, pipe);
-    })
-  }
+    });
+  };
 }
 
 function getDomainsOfChangedConcepts() {
   return (pipe, done) => {
-    const dillupsOfChangedConceptsQuery = {dataset: pipe.external.dataset._id, from: pipe.external.transaction.createdAt};
+    const dillupsOfChangedConceptsQuery = {
+      dataset: pipe.external.dataset._id,
+      from: pipe.external.transaction.createdAt
+    };
     return mongoose.model('Concepts').distinct('properties.domain', dillupsOfChangedConceptsQuery).lean().exec((error, domains) => {
       if (error) {
         return done(error);
@@ -141,17 +148,17 @@ function getDomainsOfChangedConcepts() {
 
       pipe.internal.domains = _.compact(domains);
       return done(error, pipe);
-    })
-  }
+    });
+  };
 }
 
 function applyChangesToConcepts(changedConcepts) {
   return (pipe, done) => {
-    return async.forEachOfLimit(changedConcepts, utils.LIMIT_NUMBER_PROCESS, (changesToConcept, gid, onChangesApplied) => {
+    return async.forEachOfLimit(changedConcepts, constants.LIMIT_NUMBER_PROCESS, (changesToConcept, gid, onChangesApplied) => {
       const originalConceptQuery = {
         dataset: pipe.external.dataset._id,
         from: {$lt: pipe.external.transaction.createdAt},
-        to: utils.MAX_VALUE,
+        to: constants.MAX_VERSION,
         gid: gid
       };
 
@@ -168,7 +175,7 @@ function applyChangesToConcepts(changedConcepts) {
     }, error => {
       return done(error, pipe);
     });
-  }
+  };
 }
 
 function applyUpdatesToConcepts(changedConcepts, removedProperties) {
@@ -176,7 +183,7 @@ function applyUpdatesToConcepts(changedConcepts, removedProperties) {
     const originalConceptQuery = {
       dataset: pipe.external.dataset._id,
       from: {$lt: pipe.external.transaction.createdAt},
-      to: utils.MAX_VALUE
+      to: constants.MAX_VERSION
     };
 
     const conceptsClosingQuery = {$set: {to: pipe.external.transaction.createdAt}};
@@ -185,7 +192,7 @@ function applyUpdatesToConcepts(changedConcepts, removedProperties) {
         return done(error);
       }
 
-      return async.eachLimit(originalConcepts, utils.LIMIT_NUMBER_PROCESS, (originalConcept, onUpdateApplied) => {
+      return async.eachLimit(originalConcepts, constants.LIMIT_NUMBER_PROCESS, (originalConcept, onUpdateApplied) => {
         mongoose.model('Concepts').findOneAndUpdate({_id: originalConcept._id}, conceptsClosingQuery, {new: false}).lean().exec((error, closedOriginalConcept) => {
           if (error) {
             return onUpdateApplied(error);
@@ -203,7 +210,7 @@ function applyUpdatesToConcepts(changedConcepts, removedProperties) {
         return done(error, pipe);
       });
     });
-  }
+  };
 }
 
 function  getAllConcepts() {
@@ -211,7 +218,7 @@ function  getAllConcepts() {
     return mongoose.model('Concepts').find({
       dataset: pipe.external.dataset._id,
       from: {$lte: pipe.external.transaction.createdAt},
-      to: utils.MAX_VALUE
+      to: constants.MAX_VERSION
     })
       .populate('dataset')
       .populate('transaction')
@@ -220,12 +227,12 @@ function  getAllConcepts() {
         pipe.internal.concepts = _.keyBy(res, 'gid');
         return done(error, pipe);
       });
-  }
+  };
 }
 
 function populateConceptsDrillups() {
   return (pipe, done) => {
-    return async.eachLimit(pipe.internal.drillUps, utils.LIMIT_NUMBER_PROCESS, (gid, onDrillupsPopulated) => {
+    return async.eachLimit(pipe.internal.drillUps, constants.LIMIT_NUMBER_PROCESS, (gid, onDrillupsPopulated) => {
       let concept = pipe.internal.concepts[gid];
 
       if (!concept) {
@@ -253,7 +260,7 @@ function populateConceptsDrillups() {
 
 function populateConceptsDomains() {
   return (pipe, done) => {
-    return async.eachLimit(pipe.internal.domains, utils.LIMIT_NUMBER_PROCESS, (gid, onDomainPopulated) => {
+    return async.eachLimit(pipe.internal.domains, constants.LIMIT_NUMBER_PROCESS, (gid, onDomainPopulated) => {
       let concept = pipe.internal.concepts[gid];
 
       if (!concept) {
@@ -271,7 +278,7 @@ function populateConceptsDomains() {
     }, error => {
       return done(error, pipe);
     });
-  }
+  };
 }
 
 // HELPERS -------------------------------------------------------------------------------------------------------------
@@ -290,24 +297,24 @@ function mergeConcepts(originalConcept, changesToConcept, currentVersion) {
       originalConcept.type = changedValue === 'time' ? 'entity_domain' : changedValue;
     }
 
-    if (utils.isJson(changedValue)) {
+    if (ddfImportProcess.isJson(changedValue)) {
       return JSON.parse(changedValue);
     }
 
-    if (utils.isPropertyReserved(property)) {
+    if (ddfImportProcess.isPropertyReserved(property)) {
       return originalValue;
     }
   });
 
   _.mergeWith(updatedConcept.properties, changesToConcept, (originalValue, changedValue) => {
-    if (utils.isJson(changedValue)) {
+    if (ddfImportProcess.isJson(changedValue)) {
       return JSON.parse(changedValue);
     }
   });
 
   updatedConcept = _.omit(updatedConcept, ['concept', 'drill_up', '_id', 'subsetOf', 'domain']);
   updatedConcept.from = currentVersion;
-  updatedConcept.to = utils.MAX_VALUE;
+  updatedConcept.to = constants.MAX_VERSION;
   return updatedConcept;
 }
 
@@ -325,6 +332,6 @@ function mergeConceptModifications(conceptChanges, conceptUpdates) {
 
 function omitRemovedProperties(concept, removedProperties) {
   return _.omitBy(concept, (value, property) => {
-    return _.includes(removedProperties, property) && !utils.isPropertyReserved(property);
+    return _.includes(removedProperties, property) && !ddfImportProcess.isPropertyReserved(property);
   });
 }
