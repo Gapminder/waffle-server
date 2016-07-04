@@ -22,8 +22,7 @@ module.exports = {
   updateIncrementally,
   getPrestoredQueries,
   getCommitOfLatestDatasetVersion,
-  authenticate,
-  prepareDatasetForImporting
+  authenticate
 };
 
 function getGitCommitsList(github, config, cb) {
@@ -58,31 +57,38 @@ function _getPathToRepo(pipe, done) {
     });
 }
 
-function prepareDatasetForImporting(params, config, app, cb) {
+function _findCurrentUser(pipe, done) {
+  mongoose.model('Users').findOne({email: 'dev@gapminder.org'})
+    .lean()
+    .exec((error, user) => {
+      if (error || !user) {
+        return done(error || 'User that tries to initiate import was not found');
+      }
+      pipe.user = user;
+      return done(error, pipe);
+    });
+}
+
+function importDataset(params, config, app, cb) {
   let pipe = params;
   pipe.config = config;
   pipe.app = app;
 
   return async.waterfall([
     async.constant(pipe),
+    _findCurrentUser,
     _findDataset,
     _validateDatasetBeforeImport,
-    _cloneSourceRepo
-  ], cb);
-}
-
-function importDataset(pipe, cb) {
-  return async.waterfall([
-    async.constant(pipe),
+    _cloneSourceRepo,
     _importDdfService,
     _unlockDataset
   ], (importError, pipe) => {
-    if (importError) {
+    if (importError && pipe.transactionId) {
       return transactionsService.setLastError(pipe.transactionId, _.toString(importError), () => {
         cb(importError);
       });
     }
-    return cb(null, pipe);
+    return cb(importError, pipe);
   });
 }
 
@@ -103,7 +109,13 @@ function _validateDatasetBeforeImport(pipe, done) {
 }
 
 function _importDdfService(pipe, done) {
-  let options = {datasetName: reposService.getRepoName(pipe.github), commit: pipe.commit, github: pipe.github};
+  let options = {
+    datasetName: reposService.getRepoName(pipe.github),
+    commit: pipe.commit,
+    github: pipe.github,
+    user: pipe.user,
+    lifecycleHooks: pipe.lifecycleHooks
+  };
 
   return importDdfService(pipe.app, (error, pipe) => {
     return done(error, pipe);
@@ -130,12 +142,20 @@ function updateIncrementally(params, config, app, cb) {
 
   return async.waterfall([
     async.constant(pipe),
+    _findCurrentUser,
     _lockDataset,
     _cloneSourceRepo,
     _checkTransaction,
     _runIncrementalUpdate,
     _unlockDataset
-  ], cb);
+  ], (importError, pipe) => {
+    if (importError && pipe.transactionId) {
+      return transactionsService.setLastError(pipe.transactionId, _.toString(importError), () => {
+        cb(importError);
+      });
+    }
+    return cb(importError, pipe);
+  });
 }
 
 function _lockDataset(pipe, done) {
@@ -171,7 +191,9 @@ function _runIncrementalUpdate(pipe, done) {
     diff: pipe.diff,
     datasetName: pipe.datasetName,
     commit: pipe.commit,
-    github: pipe.github
+    github: pipe.github,
+    lifecycleHooks: pipe.lifecycleHooks,
+    user: pipe.user
   };
 
   return incrementalUpdateService(pipe.app, (err) => done(err, pipe), options);

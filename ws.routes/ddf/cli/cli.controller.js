@@ -117,12 +117,24 @@ module.exports = serviceLocator => {
         return res.json({success: !error, error});
       }
 
+      body.lifecycleHooks = {
+        onTransactionCreated: () => {
+          if (!res.headersSent) {
+            return res.json({success: true, message: 'Dataset updating is in progress ...'});
+          }
+        }
+      };
+
       cliService.updateIncrementally(body, config, app, updateError => {
-        if (updateError) {
+        if (updateError && !res.headersSent) {
           return res.json({success: !updateError, error: updateError});
         }
 
-        return res.json({success: !updateError, message: 'Dataset was updated successfully'});
+        if (updateError) {
+          return logger.error(updateError);
+        }
+
+        logger.info(`finished import for dataset '${body.github}' and commit '${body.commit}'`);
       });
     });
 
@@ -156,20 +168,25 @@ module.exports = serviceLocator => {
   function _importDataset(req, res) {
     let params = req.body;
 
-    cliService.prepareDatasetForImporting(params, config, app, (error, pipe) => {
-      if (error) {
-        return res.json({success: !error, error});
+    params.lifecycleHooks = {
+      onTransactionCreated: () => {
+        if (!res.headersSent) {
+          res.json({success: true, message: 'Dataset importing is in progress ...'});
+        }
+      }
+    };
+
+    return cliService.importDataset(params, config, app, importError => {
+      if (importError && !res.headersSent) {
+        return res.json({success: !importError, error: importError});
       }
 
-      return cliService.importDataset(pipe, error => {
-        logger.info(`finished import for dataset '${params.github}' and commit '${params.commit}'`);
-        if (error) {
-          logger.error(error);
-        }
-      });
-    });
+      if (importError) {
+        logger.error(importError);
+      }
 
-    return res.json({success: true, message: 'Dataset importing is in progress ...'});
+      logger.info(`finished import for dataset '${params.github}' and commit '${params.commit}'`);
+    });
   }
 
   function _getGitCommitsList(req, res) {

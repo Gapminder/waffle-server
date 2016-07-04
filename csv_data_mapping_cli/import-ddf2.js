@@ -1,33 +1,14 @@
 'use strict';
 
-console.time('done');
-const _ = require('lodash');
-const fs = require('fs');
 const async = require('async');
 
-const mongoose = require('mongoose');
+const ddfImportProcess = require('../ws.utils/ddf-import-process');
 
-// geo mapping
 const defaultEntityGroupTypes = ['entity_domain', 'entity_set', 'time', 'age'];
 const defaultMeasureTypes = ['measure'];
-const ddfModels = [
-  'concepts',
-  'data-points',
-  'dataset-transactions',
-  'datasets',
-  'entities',
-  'original-entities',
-  'users'
-];
-
-// take from args
-let logger;
-let config;
 
 module.exports = function (app, done, options) {
-  logger = app.get('log');
-  config = app.get('config');
-
+  const config = app.get('config');
   const common = require('./common')(app, done);
 
   let pipe = {
@@ -37,16 +18,18 @@ module.exports = function (app, done, options) {
     defaultMeasureTypes,
     github: options.github || process.env.GITHUB_DDF_REPO,
     datasetName: options.datasetName || process.env.DDF_DATASET_NAME,
-    commit: options.commit || process.env.DDF_REPO_COMMIT
+    commit: options.commit || process.env.DDF_REPO_COMMIT,
+    user: options.user,
+    lifecycleHooks: options.lifecycleHooks
   };
 
+  console.time('done');
   async.waterfall([
     async.constant(pipe),
     common.resolvePathToDdfFolder,
     // resolvePathToTranslations,
-    clearAllDbs,
-    findCurrentUser,
     common.createTransaction,
+    ddfImportProcess.activateLifecycleHook('onTransactionCreated'),
     common.createDataset,
     common.updateTransaction,
     common.createConcepts,
@@ -60,34 +43,13 @@ module.exports = function (app, done, options) {
     // common.findDataPoints,
     // common.updateConceptsDimensions
     common.closeTransaction
-  ], (err, pipe) => {
+  ], (importError, pipe) => {
     console.timeEnd('done');
-    return done(err, {datasetName: pipe.datasetName, version: pipe.transaction.createdAt, transactionId: pipe.transaction._id});
+
+    if (importError && pipe.transaction) {
+      return done(importError, {transactionId: pipe.transaction._id});
+    }
+    
+    return done(importError, {datasetName: pipe.datasetName, version: pipe.transaction.createdAt, transactionId: pipe.transaction._id});
   });
 };
-
-function clearAllDbs(pipe, cb) {
-  if (process.env.CLEAR_ALL_MONGO_DB_COLLECTIONS_BEFORE_IMPORT === 'true') {
-    logger.info('clear all collections');
-
-    let collectionsFn = _.map(ddfModels, model => {
-      let modelName = _.chain(model).camelCase().upperFirst();
-      return _cb => mongoose.model(modelName).remove({}, _cb);
-    });
-
-    return async.parallel(collectionsFn, (err) => cb(err, pipe));
-  }
-
-  return cb(null, pipe);
-}
-
-function findCurrentUser(pipe, done) {
-  logger.info('find current user');
-
-  mongoose.model('Users').findOne({email: 'dev@gapminder.org'})
-  .lean()
-  .exec((error, res) => {
-    pipe.user = res;
-    return done(error, pipe);
-  });
-}
