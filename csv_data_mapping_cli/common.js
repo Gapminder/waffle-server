@@ -8,15 +8,12 @@ const async = require('async');
 const Converter = require('csvtojson').Converter;
 
 const mongoose = require('mongoose');
+const constants = require('../ws.utils/constants');
 const reposService = require('../ws.routes/ddf/import/repos.service.js');
 
 // geo mapping
 const geoMapping = require('./geo-mapping.json');
 const defaultEntityGroupTypes = ['entity_domain', 'entity_set', 'time', 'age'];
-const defaultMeasureTypes = ['measure'];
-
-const LIMIT_NUMBER_PROCESS = 10;
-const MAX_VALUE = Number.MAX_SAFE_INTEGER;
 
 let logger;
 let config;
@@ -169,7 +166,7 @@ function _createConcepts(pipe, done) {
 
   async.eachLimit(
     _.chunk(pipe.raw.concepts, 100),
-    LIMIT_NUMBER_PROCESS,
+    constants.LIMIT_NUMBER_PROCESS,
     __createConcepts,
     (err) => {
       return done(err, pipe);
@@ -221,7 +218,7 @@ function _getAllConcepts(pipe, done) {
 function _addConceptSubsetOf(pipe, done) {
   logger.info('** add concept subsetOf');
 
-  async.eachLimit(pipe.raw.subsetOf, LIMIT_NUMBER_PROCESS, __updateConceptSubsetOf, (err) => {
+  async.eachLimit(pipe.raw.subsetOf, constants.LIMIT_NUMBER_PROCESS, __updateConceptSubsetOf, (err) => {
     return done(err, pipe);
   });
 
@@ -249,7 +246,7 @@ function _addConceptSubsetOf(pipe, done) {
 function _addConceptDomains(pipe, done) {
   logger.info('** add entity domains to related concepts');
 
-  async.eachLimit(pipe.raw.domains, LIMIT_NUMBER_PROCESS, __updateConceptDomain, (err) => {
+  async.eachLimit(pipe.raw.domains, constants.LIMIT_NUMBER_PROCESS, __updateConceptDomain, (err) => {
     return done(err, pipe);
   });
 
@@ -289,7 +286,7 @@ function createTranslations(pipe, done) {
 
   return async.eachLimit(
     _.chunk(translations, 100),
-    LIMIT_NUMBER_PROCESS,
+    constants.LIMIT_NUMBER_PROCESS,
     _createEntities,
     (err) => {
       return done(err, pipe);
@@ -365,7 +362,7 @@ function _processOriginalEntities(pipe, done) {
 
   async.eachLimit(
     entitySets,
-    LIMIT_NUMBER_PROCESS,
+    constants.LIMIT_NUMBER_PROCESS,
     _processEntities(pipe),
     err => done(err, pipe)
   );
@@ -528,7 +525,7 @@ function _addEntityDrillups(pipe, done) {
 
   // TODO: fix drillup for merged entities
   // (for hkg created only main_religion_2008 `eastern_religions`, but not country `hkg`)
-  async.forEachOfLimit(relations, LIMIT_NUMBER_PROCESS, (drillups, _id, escb) => {
+  async.forEachOfLimit(relations, constants.LIMIT_NUMBER_PROCESS, (drillups, _id, escb) => {
     if (!drillups.length) {
       return escb();
     }
@@ -685,7 +682,7 @@ function _updateConceptsDimensions(pipe, cb) {
 
   return async.eachLimit(
     measures,
-    LIMIT_NUMBER_PROCESS,
+    constants.LIMIT_NUMBER_PROCESS,
     __updateConceptDimension(pipe),
     (err) => {
       return cb(err, pipe);
@@ -845,7 +842,7 @@ function mapDdfConceptsToWsModel(pipe) {
       dimensions: [],
 
       from: pipe.transaction.createdAt,
-      to: MAX_VALUE,
+      to: constants.MAX_VERSION,
       dataset: pipe.dataset._id,
       transaction: pipe.transactionId || pipe.transaction._id
     };

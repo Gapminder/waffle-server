@@ -101,11 +101,11 @@ module.exports = serviceLocator => {
 
   function _getPrestoredQueries(req, res) {
     cliService.getPrestoredQueries ((error, queries) => {
-      logger.info(`finished getting prestored queries`);
-
       if (error) {
         return res.json({success: !error, error});
       }
+
+      logger.info(`finished getting prestored queries`);
 
       return res.json({success: !error, data: queries});
     });
@@ -117,12 +117,24 @@ module.exports = serviceLocator => {
         return res.json({success: !error, error});
       }
 
+      body.lifecycleHooks = {
+        onTransactionCreated: () => {
+          if (!res.headersSent) {
+            return res.json({success: true, message: 'Dataset updating is in progress ...'});
+          }
+        }
+      };
+
       cliService.updateIncrementally(body, config, app, updateError => {
-        if (updateError) {
+        if (updateError && !res.headersSent) {
           return res.json({success: !updateError, error: updateError});
         }
 
-        return res.json({success: !updateError, message: 'Dataset was updated successfully'});
+        if (updateError) {
+          return logger.error(updateError);
+        }
+
+        logger.info(`finished import for dataset '${body.github}' and commit '${body.commit}'`);
       });
     });
 
@@ -154,33 +166,38 @@ module.exports = serviceLocator => {
   }
 
   function _importDataset(req, res) {
-    let params = req.body;
+    const params = req.body;
 
-    cliService.prepareDatasetForImporting(params, config, app, (error, pipe) => {
-      if (error) {
-        return res.json({success: !error, error});
+    params.lifecycleHooks = {
+      onTransactionCreated: () => {
+        if (!res.headersSent) {
+          res.json({success: true, message: 'Dataset importing is in progress ...'});
+        }
+      }
+    };
+
+    return cliService.importDataset(params, config, app, importError => {
+      if (importError && !res.headersSent) {
+        return res.json({success: !importError, error: importError});
       }
 
-      return cliService.importDataset(pipe, error => {
-        logger.info(`finished import for dataset '${params.github}' and commit '${params.commit}'`);
-        if (error) {
-          logger.error(error);
-        }
-      });
-    });
+      if (importError) {
+        return logger.error(importError);
+      }
 
-    return res.json({success: true, message: 'Dataset importing is in progress ...'});
+      logger.info(`finished import for dataset '${params.github}' and commit '${params.commit}'`);
+    });
   }
 
   function _getGitCommitsList(req, res) {
     const github = req.query.github;
 
     cliService.getGitCommitsList(github, config, (error, result) => {
-      logger.info(`finished getting commits list for dataset '${github}'`);
-
       if (error) {
         return res.json({success: !error, error});
       }
+
+      logger.info(`finished getting commits list for dataset '${github}'`);
 
       return res.json({
         success: !error,
@@ -195,11 +212,11 @@ module.exports = serviceLocator => {
     const github = req.query.github;
 
     cliService.getCommitOfLatestDatasetVersion(github, (error, result) => {
-      logger.info(`finished getting latest commit '${result.transaction.commit}' for dataset '${github}'`);
-
       if (error) {
         return res.json({success: !error, error});
       }
+
+      logger.info(`finished getting latest commit '${result.transaction.commit}' for dataset '${github}'`);
 
       return res.json({
         success: !error,

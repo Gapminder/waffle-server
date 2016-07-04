@@ -1,16 +1,28 @@
+'use strict';
+
 const _ = require('lodash');
+const async = require('async');
 const validator = require('validator');
 
-const LIMIT_NUMBER_PROCESS = 10;
-const MAX_VALUE = Number.MAX_SAFE_INTEGER;
 const RESERVED_PROPERTIES = ['properties', 'dimensions', 'subsetOf', 'from', 'to', 'originId', 'gid', 'domain', 'type'];
 
 module.exports = {
-  MAX_VALUE,
-  LIMIT_NUMBER_PROCESS,
+  activateLifecycleHook,
   isJson,
   isPropertyReserved
 };
+
+function activateLifecycleHook(hookName) {
+  const actualParameters = [].slice.call(arguments, 1);
+  return (pipe, done) => {
+    if (pipe.lifecycleHooks && pipe.lifecycleHooks[hookName]) {
+      pipe.lifecycleHooks[hookName](actualParameters);
+    }
+    return async.setImmediate(() => {
+      return done(null, pipe);
+    });
+  };
+}
 
 function isPropertyReserved(property) {
   return _.includes(RESERVED_PROPERTIES, property);
@@ -23,3 +35,4 @@ function isJson(value) {
 function isJsonLike(value) {
   return /^\[.*\]$|^{.*}$/g.test(value);
 }
+

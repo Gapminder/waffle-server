@@ -1,6 +1,5 @@
 'use strict';
 
-console.time('done');
 const _ = require('lodash');
 const fs = require('fs');
 const path = require('path');
@@ -8,29 +7,14 @@ const async = require('async');
 
 const mongoose = require('mongoose');
 
-// geo mapping
-const defaultEntityGroupTypes = ['entity_domain', 'entity_set', 'time', 'age'];
-const defaultMeasureTypes = ['measure'];
-const DELETE_MARK = 'D';
-const ADD_MARK = 'A';
-const MODIFY_MARK = 'M';
+const constants = require('../ws.utils/constants');
+const ddfImportProcess = require('../ws.utils/ddf-import-process');
+const processConceptChanges = require('./ddf/import/incremental/import-concepts')();
 
 const LIMIT_NUMBER_PROCESS = 10;
-const MAX_VALUE = Number.MAX_SAFE_INTEGER;
-const ddfModels = [
-  'concepts',
-  'data-points',
-  'dataset-transactions',
-  'datasets',
-  'entities',
-  'original-entities',
-  'users'
-];
 
-// take from args
 let logger;
 let config;
-
 
 module.exports = function (app, done, options) {
   logger = app.get('log');
@@ -54,28 +38,37 @@ module.exports = function (app, done, options) {
     common,
     commit: options.commit || process.env.DDF_REPO_COMMIT,
     datasetName: options.datasetName || process.env.DDF_DATASET_NAME,
-    config
+    config,
+    lifecycleHooks: options.lifecycleHooks,
+    user: options.user
   };
 
+  console.time('done');
   async.waterfall([
     async.constant(pipe),
     common.resolvePathToDdfFolder,
-    findUser,
     // TODO: check last Transaction was closed ({isClosed: true})
     common.createTransaction,
+    ddfImportProcess.activateLifecycleHook('onTransactionCreated'),
     common.findDataset,
     common.updateTransaction,
     getPreviousTransaction,
     addTransactionToDatasetVersions,
-    require('./ddf/import/incremental/import-concepts')(app),
+    processConceptChanges,
     getAllConcepts,
     getAllPreviousConcepts,
     processEntitiesChanges,
     processDataPointsChanges,
     common.closeTransaction
-  ], (err, pipe) => {
+  ], (updateError, pipe) => {
     console.timeEnd('done');
-    return done(err, {datasetName: pipe.dataset.name, version: pipe.transaction.createdAt});
+
+    if (updateError && pipe.transaction) {
+      return done(updateError, {transactionId: pipe.transaction._id});
+    }
+
+
+    return done(updateError, {datasetName: pipe.dataset.name, version: pipe.transaction.createdAt, transactionId: pipe.transaction._id});
   });
 };
 
@@ -121,28 +114,28 @@ function getAllConcepts(pipe, done) {
   mongoose.model('Concepts').find({
     dataset: pipe.dataset._id,
     from: { $lte: pipe.transaction.createdAt },
-    to: MAX_VALUE
+    to: constants.MAX_VERSION
   }, null, {
     join: {
       domain: {
         $find: {
           dataset: pipe.dataset._id,
           from: { $lte: pipe.transaction.createdAt },
-          to: MAX_VALUE
+          to: constants.MAX_VERSION
         }
       },
       subsetOf: {
         $find: {
           dataset: pipe.dataset._id,
           from: { $lte: pipe.transaction.createdAt },
-          to: MAX_VALUE
+          to: constants.MAX_VERSION
         }
       },
       dimensions: {
         $find: {
           dataset: pipe.dataset._id,
           from: { $lte: pipe.transaction.createdAt },
-          to: MAX_VALUE
+          to: constants.MAX_VERSION
         }
       }
     }
@@ -298,7 +291,7 @@ function ___closeAllEntitiesBySource(pipe, cb) {
   let query = {
     dataset: pipe.dataset._id,
     from: {$lte: pipe.transaction.createdAt},
-    to: MAX_VALUE,
+    to: constants.MAX_VERSION,
     domain: pipe.entityDomain.originId,
     sets : pipe.entitySet ? pipe.entitySet.originId : {$size: 0}
   };
@@ -349,7 +342,7 @@ function ____closeEntity(pipe) {
     let query = _.assign({
       dataset: pipe.dataset._id,
       from: {$lte: pipe.transaction.createdAt},
-      to: MAX_VALUE,
+      to: constants.MAX_VERSION,
       domain: pipe.entityDomain.originId,
       sets : pipe.entitySet ? pipe.entitySet.originId : {$size: 0}
     }, properties);
@@ -487,7 +480,7 @@ function __getAllEntities(pipe, done) {
   mongoose.model('Entities').find({
     dataset: pipe.dataset._id,
     from: { $lte: pipe.transaction.createdAt },
-    to: MAX_VALUE,
+    to: constants.MAX_VERSION,
     'properties.language': { $not: { $in: ['en', 'se'] } }
   }, null, {
     join: {
@@ -495,21 +488,21 @@ function __getAllEntities(pipe, done) {
         $find: {
           dataset: pipe.dataset._id,
           from: { $lte: pipe.transaction.createdAt },
-          to: MAX_VALUE
+          to: constants.MAX_VERSION
         }
       },
       sets: {
         $find: {
           dataset: pipe.dataset._id,
           from: { $lte: pipe.transaction.createdAt },
-          to: MAX_VALUE
+          to: constants.MAX_VERSION
         }
       },
       drillups: {
         $find: {
           dataset: pipe.dataset._id,
           from: { $lte: pipe.transaction.createdAt },
-          to: MAX_VALUE
+          to: constants.MAX_VERSION
         }
       }
     }
@@ -622,7 +615,7 @@ function _____updateDataPoint(pipe, entities, datapoint) {
     return mongoose.model('DataPoints').findOneAndUpdate({
       dataset: pipe.dataset._id,
       from: {$lt: pipe.transaction.createdAt},
-      to: MAX_VALUE,
+      to: constants.MAX_VERSION,
       value: datapoint[measure.gid],
       measure: measure.originId,
       dimensions: {

@@ -3,7 +3,6 @@
 const _ = require('lodash');
 
 const express = require('express');
-const shell = require('shelljs');
 const fs = require('fs');
 const path = require('path');
 const git = require('simple-git');
@@ -26,16 +25,26 @@ function cloneRepo(githubUrl, commit, onCloned, config) {
       if (!repoName) {
         return onCloned(`Incorrect github url was given: ${githubUrl}`);
       }
-      shell.exec(`git clone ${githubUrl} ./${config.PATH_TO_DDF_REPOSITORIES}/${repoName}`);
+      return git(config.PATH_TO_DDF_REPOSITORIES).clone(githubUrl, repoName, cloneError => {
+        if (cloneError) {
+          return onCloned(`Cannot clone repo from ${githubUrl}`);
+        }
+
+        return checkoutRepo(pathToRepo, commit, onCloned);
+      });
     }
 
-    return git(pathToRepo)
-      .fetch('origin', 'master')
-      .reset(['--hard', 'origin/master'])
-      .checkout(commit || 'HEAD', function (err) {
-        return onCloned(err, {pathToRepo});
-      });
+    return checkoutRepo(pathToRepo, commit, onCloned);
   });
+}
+
+function checkoutRepo(pathToRepo, commit, onCheckedOut) {
+  git(pathToRepo)
+    .fetch('origin', 'master')
+    .reset(['--hard', 'origin/master'])
+    .checkout(commit || 'HEAD', function (err) {
+      return onCheckedOut(err, {pathToRepo});
+    });
 }
 
 function getRepoName(githubUrl) {
