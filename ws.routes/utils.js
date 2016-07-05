@@ -20,7 +20,7 @@ function getCacheConfig(prefix) {
       return next();
     }
 
-    var hash = md5(prefix + '-' + req.method + req.url);
+    var hash = prefix + '-' + req.method + req.url;
     res.express_redis_cache_name = hash;
     next();
   };
@@ -71,9 +71,6 @@ function decodeQuery(req, res, next) {
 
   // for supporting previous and new api for geo: select && default response header
   req.decodedQuery.select = req.decodedQuery.select || [];
-
-  // FIXME: We should set up default dataset and dataset version via WS CLI
-  req.decodedQuery.where.dataset = req.decodedQuery.where.dataset || ['ddf--gapminder--gapminder_world'];
 
   return next();
 }

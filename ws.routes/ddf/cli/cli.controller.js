@@ -10,7 +10,7 @@ const compression = require('compression');
 const routeUtils = require('../../utils');
 
 const cliService = require('./cli.service');
-const reposService = require('../import/repos.service');
+const reposService = require('../../../ws.services/repos.service');
 const transactionsService = require('../../../ws.services/dataset-transactions.service');
 
 module.exports = serviceLocator => {
@@ -46,6 +46,10 @@ module.exports = serviceLocator => {
 
   router.post('/api/ddf/cli/transactions/latest/rollback', _activateRollback);
 
+  router.get('/api/ddf/cli/datasets', _getDatasets);
+
+  router.post('/api/ddf/cli/datasets/default', _setDefaultDataset);
+
   return app.use(router);
 
   function _getToken(req, res) {
@@ -66,6 +70,51 @@ module.exports = serviceLocator => {
       }
 
       return res.json({success: !error, data: {token}});
+    });
+  }
+
+  function _setDefaultDataset(req, res) {
+    const datasetName = req.body.datasetName;
+    const transactionCommit = req.body.commit;
+
+    if (!req.user) {
+      return res.json({success: false, message: 'There is no user authenticated user to get its datasets'});
+    }
+
+    if (!datasetName) {
+      return res.json({success: false, error: 'Dataset name was not provided'});
+    }
+
+    if (!transactionCommit) {
+      return res.json({success: false, error: 'Transaction commit was not provided'});
+    }
+
+    cliService.setTransactionAsDefault(req.user._id, datasetName, transactionCommit, (error, defaultDatasetAndCommit) => {
+      if (error) {
+        return res.json({success: !error, error});
+      }
+
+      return cliService.cleanDdfRedisCache(config, cacheCleanError => {
+        if (cacheCleanError) {
+          return res.json({success: !cacheCleanError, error: cacheCleanError});
+        }
+
+        return res.json({success: !error, data: defaultDatasetAndCommit});
+      });
+    });
+  }
+
+  function _getDatasets(req, res) {
+    if (!req.user) {
+      return res.json({success: false, message: 'There is no user authenticated user to get its datasets'});
+    }
+
+    return cliService.findDatasetsWithVersions(req.user._id, (error, datasetsWithVersions) => {
+      if (error) {
+        return res.json({success: !error, error});
+      }
+
+      return res.json({success: !error, data: datasetsWithVersions});
     });
   }
 

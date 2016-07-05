@@ -1,53 +1,20 @@
 'use strict';
-var _ = require('lodash');
 
-const mongoose = require('mongoose');
-
-const Datasets = mongoose.model('Datasets');
-const Transactions = mongoose.model('DatasetTransactions');
+const transactionsService = require('./dataset-transactions.service');
 
 module.exports = {
-  getDataset,
-  getVersion
+  findDefaultDatasetAndTransaction
 };
 
-function getDataset(pipe, done) {
-  let query = { name: pipe.datasetName || process.env.DEFAULT_DATASET_NAME || 'ddf--gapminder_world-stub-4' };
-  Datasets.findOne(query)
-    .lean()
-    .exec((err, dataset) => {
-      if (!dataset) {
-        return done(`Given dataset "${pipe.datasetName}" doesn't exist`);
-      }
+function findDefaultDatasetAndTransaction(pipe, done) {
+  return transactionsService.findDefaultDatasetAndTransaction(pipe.datasetName, pipe.version, (error, datasetAndTransaction) => {
+    if (error) {
+      return done(error);
+    }
 
-      pipe.dataset = dataset;
-
-      return done(err, pipe);
-    });
-}
-
-function getVersion(pipe, done) {
-  let query = {
-    dataset: pipe.dataset._id,
-    isClosed: true
-  };
-
-  if (pipe.version) {
-    query.createdAt = pipe.version;
-  }
-
-  Transactions.find(query)
-    .sort({createdAt: -1})
-    .limit(1)
-    .lean()
-    .exec((err, transactions) => {
-      if (!transactions || _.isEmpty(transactions)) {
-        return done(`Given dataset version "${pipe.version}" doesn't exist`);
-      }
-
-      pipe.transaction = _.first(transactions);
-      pipe.version = pipe.transaction.createdAt;
-
-      return done(err, pipe);
-    });
+    pipe.dataset = datasetAndTransaction.dataset;
+    pipe.transaction = datasetAndTransaction.transaction;
+    pipe.version = datasetAndTransaction.transaction.createdAt;
+    return done(null, pipe);
+  });
 }

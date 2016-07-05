@@ -25,8 +25,7 @@ describe('decodeQuery-middleware', () => {
         geo:['ind','chn'],
         'geo.region':['afr', 'europe'],
         'geo.cat':['region', 'country'],
-        time:[1800,[2000, 2010],2015],
-        dataset: ['ddf--gapminder--gapminder_world']
+        time:[1800,[2000, 2010],2015]
       },
       sort: {geo: 'asc',time: 'desc'},
       gapfilling: {interpolation: 'log',extrapolation: 3}

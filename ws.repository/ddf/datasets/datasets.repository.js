@@ -22,6 +22,19 @@ DatasetsRepository.prototype.findByName = (datasetName, done) => {
     });
 };
 
+DatasetsRepository.prototype.findByUser = (userId, done) => {
+  return Datasets.find({createdBy: userId}).lean().exec(done);
+};
+
+DatasetsRepository.prototype.findByNameAndUser = (datasetName, userId, done) => {
+  return Datasets
+    .findOne({name: datasetName, createdBy: userId})
+    .lean()
+    .exec((error, dataset) => {
+      return done(error, dataset);
+    });
+};
+
 DatasetsRepository.prototype.removeVersion = (datasetName, version, done) => {
   return Datasets.findOneAndUpdate({name: datasetName}, {$pull: {versions: version}}, {new: 1}).lean().exec(done);
 };

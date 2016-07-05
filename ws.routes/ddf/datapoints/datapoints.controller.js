@@ -1,38 +1,33 @@
 'use strict';
-var _ = require('lodash');
-var cors = require('cors');
-var async = require('async');
-var express = require('express');
-var compression = require('compression');
-var md5 = require('md5');
 
-var statsService = require('./datapoints.service');
-var commonService = require('../../../ws.services/common.service');
-var decodeQuery = require('../../utils').decodeQuery;
-var getCacheConfig = require('../../utils').getCacheConfig;
+const _ = require('lodash');
+const cors = require('cors');
+const async = require('async');
+const express = require('express');
+const compression = require('compression');
 
+const constants = require('../../../ws.utils/constants');
+const decodeQuery = require('../../utils').decodeQuery;
+const statsService = require('./datapoints.service');
+const commonService = require('../../../ws.services/common.service');
+const getCacheConfig = require('../../utils').getCacheConfig;
 const dataPostProcessors = require('../../data-post-processors');
 
-module.exports = function (serviceLocator) {
-  var app = serviceLocator.getApplication();
+module.exports = serviceLocator => {
+  const app = serviceLocator.getApplication();
 
-  // var neo4jdb = app.get('neo4jDb');
-  var logger = app.get('log');
-  var config = app.get('config');
+  const logger = app.get('log');
+  const config = app.get('config');
   const cache = require('../../../ws.utils/redis-cache')(config);
 
-  /*eslint new-cap:0*/
-  var router = express.Router();
-
-  router.use([
-    cors(),
-    compression(),
-    // getCacheConfig('stats'),
-    // cache.route(),
-    decodeQuery
-  ]);
+  const router = express.Router();
 
   router.get('/api/ddf/datapoints',
+    cors(),
+    compression(),
+    getCacheConfig(constants.DDF_REDIS_CACHE_NAME_DATAPOINTS),
+    cache.route({expire: constants.DDF_REDIS_CACHE_LIFETIME}),
+    decodeQuery,
     ddfDatapointStats,
     dataPostProcessors.gapfilling,
     dataPostProcessors.toPrecision,
@@ -43,30 +38,29 @@ module.exports = function (serviceLocator) {
 
   function ddfDatapointStats(req, res, next) {
     logger.debug('URL: \n%s%s', config.LOG_TABS, req.originalUrl);
-    console.time('finish DataPoint stats');
 
-    var select = req.decodedQuery.select;
-    var where = req.decodedQuery.where;
-    var sort = req.decodedQuery.sort;
-    var datasetName = _.first(req.decodedQuery.where.dataset);
-    var version = _.first(req.decodedQuery.where.version);
+    const select = req.decodedQuery.select;
+    const where = req.decodedQuery.where;
+    const sort = req.decodedQuery.sort;
+    const datasetName = _.first(req.decodedQuery.where.dataset);
+    const version = _.first(req.decodedQuery.where.version);
     delete where.dataset;
     delete where.version;
     delete where.v;
 
+    console.time('finish DataPoint stats');
     async.waterfall([
       async.constant({select, where, sort, datasetName, version}),
-      commonService.getDataset,
-      commonService.getVersion,
+      commonService.findDefaultDatasetAndTransaction,
       statsService.getConcepts,
       statsService.getEntities,
       statsService.getDataPoints,
       statsService.mapResult
-    ], (err, result) => {
-      if (err) {
-        console.error(err);
+    ], (error, result) => {
+      if (error) {
+        console.error(error);
         res.use_express_redis_cache = false;
-        return res.json({success: false, error: err});
+        return res.json({success: false, error: error});
       }
       console.timeEnd('finish DataPoint stats');
 
