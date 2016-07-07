@@ -4,10 +4,11 @@ const _ = require('lodash');
 const async = require('async');
 const git = require('simple-git');
 
-const reposService = require('../import/repos.service');
+const reposService = require('../../../ws.services/repos.service');
 const importDdfService = require('../../../csv_data_mapping_cli/import-ddf2');
 const incrementalUpdateService = require('../../../csv_data_mapping_cli/incremental-update-ddf2');
 
+const constants = require('../../../ws.utils/constants');
 const mongoose = require('mongoose');
 const Datasets = mongoose.model('Datasets');
 const Transactions = mongoose.model('DatasetTransactions');
@@ -15,6 +16,7 @@ const Concepts = mongoose.model('Concepts');
 
 const authService = require('../../../ws.services/auth.service');
 const transactionsService = require('../../../ws.services/dataset-transactions.service');
+const datasetsService = require('../../../ws.services/datasets.service');
 
 module.exports = {
   getGitCommitsList,
@@ -22,7 +24,10 @@ module.exports = {
   updateIncrementally,
   getPrestoredQueries,
   getCommitOfLatestDatasetVersion,
-  authenticate
+  authenticate,
+  findDatasetsWithVersions,
+  setTransactionAsDefault,
+  cleanDdfRedisCache
 };
 
 function getGitCommitsList(github, config, cb) {
@@ -234,7 +239,6 @@ function getPrestoredQueries(cb) {
   ], cb);
 }
 
-
 function _makePrestoredQuery(query) {
   const filteredMeasures = _.chain(query.measures)
     .map('gid')
@@ -295,4 +299,24 @@ function _findTransaction(pipe, done) {
 
 function authenticate(credentials, onAuthenticated) {
   return authService.authenticate(credentials, onAuthenticated);
+}
+
+function findDatasetsWithVersions(userId, onFound) {
+  return datasetsService.findDatasetsWithVersions(userId, onFound);
+}
+
+function setTransactionAsDefault(userId, datasetName, transactionCommit, onSetAsDefault) {
+  return transactionsService.setTransactionAsDefault(userId, datasetName, transactionCommit, onSetAsDefault);
+}
+
+function cleanDdfRedisCache(config, onCacheCleaned) {
+  const cache = require('../../../ws.utils/redis-cache')(config);
+
+  const cacheCleaningTasks = [
+    done => cache.del(`${constants.DDF_REDIS_CACHE_NAME_CONCEPTS}*`, done),
+    done => cache.del(`${constants.DDF_REDIS_CACHE_NAME_ENTITIES}*`, done),
+    done => cache.del(`${constants.DDF_REDIS_CACHE_NAME_DATAPOINTS}*`, done)
+  ];
+
+  return async.parallelLimit(cacheCleaningTasks, constants.LIMIT_NUMBER_PROCESS, onCacheCleaned);
 }

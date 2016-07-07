@@ -9,7 +9,7 @@ const Converter = require('csvtojson').Converter;
 
 const mongoose = require('mongoose');
 const constants = require('../ws.utils/constants');
-const reposService = require('../ws.routes/ddf/import/repos.service.js');
+const reposService = require('../ws.services/repos.service');
 
 // geo mapping
 const geoMapping = require('./geo-mapping.json');
@@ -50,7 +50,7 @@ module.exports = function (app) {
     parseFilename: _parseFilename,
     createEntitiesBasedOnDataPoints: _createEntitiesBasedOnDataPoints,
     updateConceptsDimensions: _updateConceptsDimensions,
-    closeTransaction: closeTransaction,
+    closeTransaction,
     addConceptSubsetOf: _addConceptSubsetOf
   };
 };
@@ -76,7 +76,7 @@ function createTransaction(pipe, done) {
     name: Math.random().toString(),
     createdAt: (new Date()).valueOf(),
     createdBy: pipe.user._id,
-    commit: pipe.commit,
+    commit: pipe.commit
   }, (err, res) => {
     pipe.transaction = res.toObject();
     return done(err, pipe);
@@ -86,7 +86,7 @@ function createTransaction(pipe, done) {
 function closeTransaction(pipe, done) {
   logger.info('close transaction');
 
-  mongoose.model('DatasetTransactions').update({
+  mongoose.model('DatasetTransactions').findOneAndUpdate({
     _id: pipe.transaction._id
   }, {$set: {isClosed: true}}, (err) => {
     return done(err, pipe);

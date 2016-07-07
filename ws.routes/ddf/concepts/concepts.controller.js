@@ -4,34 +4,30 @@ const cors = require('cors');
 const async = require('async');
 const express = require('express');
 const compression = require('compression');
-const md5 = require('md5');
 
+const constants = require('../../../ws.utils/constants');
+const decodeQuery = require('../../utils').decodeQuery;
 const statsService = require('./concepts.service');
 const commonService = require('../../../ws.services/common.service');
-const decodeQuery = require('../../utils').decodeQuery;
 const getCacheConfig = require('../../utils').getCacheConfig;
 
 const dataPostProcessors = require('../../data-post-processors');
 
-module.exports = function (serviceLocator) {
-  var app = serviceLocator.getApplication();
+module.exports = serviceLocator => {
+  const app = serviceLocator.getApplication();
 
-  var logger = app.get('log');
-  var config = app.get('config');
+  const logger = app.get('log');
+  const config = app.get('config');
   const cache = require('../../../ws.utils/redis-cache')(config);
 
-  /*eslint new-cap:0*/
-  var router = express.Router();
-
-  router.use([
-    cors(),
-    compression(),
-    // getCacheConfig('stats'),
-    // cache.route(),
-    decodeQuery
-  ]);
+  const router = express.Router();
 
   router.get('/api/ddf/concepts',
+    cors(),
+    compression(),
+    getCacheConfig(constants.DDF_REDIS_CACHE_NAME_CONCEPTS),
+    cache.route({expire: constants.DDF_REDIS_CACHE_LIFETIME}),
+    decodeQuery,
     ddfConceptsStats,
     dataPostProcessors.gapfilling,
     dataPostProcessors.toPrecision,
@@ -42,7 +38,6 @@ module.exports = function (serviceLocator) {
 
   function ddfConceptsStats(req, res, next) {
     logger.debug('URL: \n%s%s', config.LOG_TABS, req.originalUrl);
-    console.time('finish Concepts stats');
 
     const where = _.chain(req.decodedQuery.where).clone().mapValues(mapWhereClause).value();
     const datasetName = _.first(req.decodedQuery.where.dataset);
@@ -58,10 +53,10 @@ module.exports = function (serviceLocator) {
     delete where['geo.cat'];
     delete where.v;
 
+    console.time('finish Concepts stats');
     async.waterfall([
       async.constant({select, where, sort, domainGid, datasetName, version}),
-      commonService.getDataset,
-      commonService.getVersion,
+      commonService.findDefaultDatasetAndTransaction,
       statsService.getConcepts
     ], (err, result) => {
       if (err) {
