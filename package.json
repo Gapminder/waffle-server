@@ -26,6 +26,7 @@
     "connect-redis": "2.5.1",
     "cookie-parser": "1.4.1",
     "cors": "2.7.1",
+    "ddf-validation": "^0.12.6",
     "express": "4.13.4",
     "express-redis-cache": "0.1.9",
     "express-session": "1.13.0",

@@ -1,22 +1,28 @@
 'use strict';
 
 const _ = require('lodash');
-const async = require('async');
 const git = require('simple-git');
+const async = require('async');
+const ddfValidation = require('ddf-validation');
+const SimpleDdfValidator = ddfValidation.SimpleValidator;
 
-const reposService = require('../../../ws.services/repos.service');
-const importDdfService = require('../../../csv_data_mapping_cli/import-ddf2');
-const incrementalUpdateService = require('../../../csv_data_mapping_cli/incremental-update-ddf2');
-
-const constants = require('../../../ws.utils/constants');
 const mongoose = require('mongoose');
 const Datasets = mongoose.model('Datasets');
-const Transactions = mongoose.model('DatasetTransactions');
 const Concepts = mongoose.model('Concepts');
+const Transactions = mongoose.model('DatasetTransactions');
 
+const constants = require('../../../ws.utils/constants');
 const authService = require('../../../ws.services/auth.service');
-const transactionsService = require('../../../ws.services/dataset-transactions.service');
+const reposService = require('../../../ws.services/repos.service');
 const datasetsService = require('../../../ws.services/datasets.service');
+const importDdfService = require('../../../csv_data_mapping_cli/import-ddf2');
+const transactionsService = require('../../../ws.services/dataset-transactions.service');
+const incrementalUpdateService = require('../../../csv_data_mapping_cli/incremental-update-ddf2');
+
+const ddfValidationConfig = {
+  includeTags: 'WAFFLE_SERVER',
+  excludeRules: 'FILENAME_DOES_NOT_MATCH_HEADER'
+};
 
 module.exports = {
   getGitCommitsList,
@@ -42,12 +48,12 @@ function getGitCommitsList(github, config, cb) {
 
   return async.waterfall([
     async.constant(pipe),
-    _cloneSourceRepo,
+    _cloneDdfRepo,
     _getPathToRepo
   ], cb);
 }
 
-function _cloneSourceRepo(pipe, done) {
+function _cloneDdfRepo(pipe, done) {
   return reposService.cloneRepo(pipe.github, pipe.commit || null, (error, repoInfo) => {
     pipe.repoInfo = repoInfo;
 
@@ -84,7 +90,8 @@ function importDataset(params, config, app, onDatasetImported) {
     _findCurrentUser,
     _findDataset,
     _validateDatasetBeforeImport,
-    _cloneSourceRepo,
+    _cloneDdfRepo,
+    _validateDdfRepo,
     _importDdfService,
     _unlockDataset
   ], (importError, pipe) => {
@@ -93,6 +100,22 @@ function importDataset(params, config, app, onDatasetImported) {
     }
     return onDatasetImported(importError, pipe);
   });
+}
+
+function _validateDdfRepo(pipe, onDdfRepoValidated) {
+  const simpleDdfValidator = new SimpleDdfValidator(pipe.repoInfo.pathToRepo, ddfValidationConfig);
+  simpleDdfValidator.on('finish', (error, isDatasetCorrect) => {
+    if (error) {
+      return onDdfRepoValidated(error);
+    }
+
+    if (!isDatasetCorrect) {
+      return onDdfRepoValidated(`Ddf validation failed for dataset "${pipe.github}" and version "${pipe.commit}"`);
+    }
+
+    return onDdfRepoValidated(null, pipe);
+  });
+  return ddfValidation.validate(simpleDdfValidator);
 }
 
 function _findDataset(pipe, done) {
@@ -145,8 +168,9 @@ function updateIncrementally(params, config, app, onDatasetUpdated) {
     async.constant(pipe),
     _findCurrentUser,
     _lockDataset,
-    _cloneSourceRepo,
     _checkTransaction,
+    _cloneDdfRepo,
+    _validateDdfRepo,
     _runIncrementalUpdate,
     _unlockDataset
   ], (importError, pipe) => {
