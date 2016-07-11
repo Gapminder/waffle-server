@@ -13,26 +13,32 @@ function authenticate(credentials, onAuthenticated) {
   const email = credentials.email;
   const password = credentials.password;
 
-  UsersRepository.findUserByEmail(email, (error, user) => {
+  return UsersRepository.findUserByEmail(email, (error, user) => {
     if (error) {
-      return onAuthenticated(error);
+      return onAuthenticated('Error was happened during credentials verification');
     }
 
     if (!user) {
       return onAuthenticated(`User with an email: '${email}' was not found`);
     }
 
-    if (user.password !== password) {
-      return onAuthenticated('Provided password didn\'t match');
-    }
-
-    const tokenDescriptor = generateTokenDescriptor();
-    UsersRepository.setUpToken(email, tokenDescriptor.uniqueToken, tokenDescriptor.expireToken, (error, user) => {
-      if (error) {
-        return onAuthenticated(error);
+    return user.comparePassword(password, (comparisonError, isMatch) => {
+      if (comparisonError) {
+        return onAuthenticated('Error was happened during credentials verification');
       }
 
-      return onAuthenticated(null, user.uniqueToken);
+      if (!isMatch) {
+        return onAuthenticated('Provided password didn\'t match');
+      }
+
+      const tokenDescriptor = generateTokenDescriptor();
+      return UsersRepository.setUpToken(email, tokenDescriptor.uniqueToken, tokenDescriptor.expireToken, (error, user) => {
+        if (error) {
+          return onAuthenticated(`Couldn't set up Waffle Server token`);
+        }
+
+        return onAuthenticated(null, user.uniqueToken);
+      });
     });
   });
 }
