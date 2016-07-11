@@ -29,8 +29,8 @@ module.exports = function (app, done, options) {
     common.resolvePathToDdfFolder,
     // resolvePathToTranslations,
     common.createTransaction,
-    ddfImportProcess.activateLifecycleHook('onTransactionCreated'),
     common.createDataset,
+    ddfImportProcess.activateLifecycleHook('onDatasetCreated'),
     common.updateTransaction,
     common.createConcepts,
     common.createEntities,
@@ -49,7 +49,7 @@ module.exports = function (app, done, options) {
     if (importError && pipe.transaction) {
       return done(importError, {transactionId: pipe.transaction._id});
     }
-    
+
     return done(importError, {datasetName: pipe.datasetName, version: pipe.transaction.createdAt, transactionId: pipe.transaction._id});
   });
 };
