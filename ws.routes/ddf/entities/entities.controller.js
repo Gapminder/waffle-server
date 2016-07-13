@@ -1,4 +1,5 @@
 'use strict';
+
 const _ = require('lodash');
 const cors = require('cors');
 const async = require('async');
@@ -10,6 +11,7 @@ const decodeQuery = require('../../utils').decodeQuery;
 const statsService = require('./entities.service');
 const commonService = require('../../../ws.services/common.service');
 const getCacheConfig = require('../../utils').getCacheConfig;
+const conceptsService = require('../concepts/concepts.service');
 const dataPostProcessors = require('../../data-post-processors');
 
 module.exports = serviceLocator => {
@@ -23,14 +25,14 @@ module.exports = serviceLocator => {
 
   router.get('/api/ddf/entities',
     cors(),
-    compression(),
+    compression({filter: commonService.shouldCompress}),
     getCacheConfig(constants.DDF_REDIS_CACHE_NAME_ENTITIES),
     cache.route({expire: constants.DDF_REDIS_CACHE_LIFETIME}),
     decodeQuery,
     ddfEntitiesStats,
     dataPostProcessors.gapfilling,
     dataPostProcessors.toPrecision,
-    dataPostProcessors.format
+    dataPostProcessors.pack
   );
 
   return app.use(router);
@@ -38,24 +40,30 @@ module.exports = serviceLocator => {
   function ddfEntitiesStats(req, res, next) {
     logger.debug('URL: \n%s%s', config.LOG_TABS, req.originalUrl);
 
-    const where = _.chain(req.decodedQuery.where).clone().mapValues(mapWhereClause).value();
+    let where = _.chain(req.decodedQuery.where).clone().mapValues(mapWhereClause).value();
     const datasetName = _.first(req.decodedQuery.where.dataset);
     const version = _.first(req.decodedQuery.where.version);
     const domainGid = _.first(req.decodedQuery.where.key);
 
-    const select = req.decodedQuery.select;
+    const headers = req.decodedQuery.select;
     const sort = req.decodedQuery.sort;
 
-    delete where.dataset;
-    delete where.version;
-    delete where.key;
-    delete where['geo.cat'];
-    delete where.v;
+    where = _.omit(where, constants.EXCLUDED_QUERY_PARAMS);
+
+    const pipe = {
+      headers,
+      where,
+      sort,
+      domainGid,
+      datasetName,
+      version
+    };
 
     console.time('finish Entities stats');
     async.waterfall([
-      async.constant({select, where, sort, domainGid, datasetName, version}),
+      async.constant(pipe),
       commonService.findDefaultDatasetAndTransaction,
+      conceptsService.getConcepts,
       statsService.getEntities
     ], (error, result) => {
       if (error) {

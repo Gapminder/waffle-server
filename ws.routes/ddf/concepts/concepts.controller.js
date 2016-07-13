@@ -24,14 +24,14 @@ module.exports = serviceLocator => {
 
   router.get('/api/ddf/concepts',
     cors(),
-    compression(),
+    compression({filter: commonService.shouldCompress}),
     getCacheConfig(constants.DDF_REDIS_CACHE_NAME_CONCEPTS),
     cache.route({expire: constants.DDF_REDIS_CACHE_LIFETIME}),
     decodeQuery,
     ddfConceptsStats,
     dataPostProcessors.gapfilling,
     dataPostProcessors.toPrecision,
-    dataPostProcessors.format
+    dataPostProcessors.pack
   );
 
   return app.use(router);
@@ -39,23 +39,27 @@ module.exports = serviceLocator => {
   function ddfConceptsStats(req, res, next) {
     logger.debug('URL: \n%s%s', config.LOG_TABS, req.originalUrl);
 
-    const where = _.chain(req.decodedQuery.where).clone().mapValues(mapWhereClause).value();
+    let where = _.chain(req.decodedQuery.where).clone().mapValues(mapWhereClause).value();
     const datasetName = _.first(req.decodedQuery.where.dataset);
     const version = _.first(req.decodedQuery.where.version);
     const domainGid = _.first(req.decodedQuery.where.key);
-
-    const select = req.decodedQuery.select;
+    const headers = req.decodedQuery.select;
     const sort = req.decodedQuery.sort;
 
-    delete where.dataset;
-    delete where.version;
-    delete where.key;
-    delete where['geo.cat'];
-    delete where.v;
+    where = _.omit(where, constants.EXCLUDED_QUERY_PARAMS);
+
+    let pipe = {
+      headers,
+      where,
+      sort,
+      domainGid,
+      datasetName,
+      version
+    };
 
     console.time('finish Concepts stats');
-    async.waterfall([
-      async.constant({select, where, sort, domainGid, datasetName, version}),
+    return async.waterfall([
+      async.constant(pipe),
       commonService.findDefaultDatasetAndTransaction,
       statsService.getConcepts
     ], (err, result) => {
@@ -67,6 +71,7 @@ module.exports = serviceLocator => {
       console.timeEnd('finish Concepts stats');
 
       req.wsJson = result;
+
       return next();
     });
   }

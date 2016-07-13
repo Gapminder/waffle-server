@@ -1,6 +1,7 @@
 'use strict';
-var _ = require('lodash');
-var async = require('async');
+const _ = require('lodash');
+const async = require('async');
+const constants = require('../../../ws.utils/constants');
 
 const mongoose = require('mongoose');
 
@@ -11,11 +12,10 @@ const DataPoints = mongoose.model('DataPoints');
 module.exports = {
   getConcepts,
   getEntities,
-  getDataPoints,
-  mapResult
+  getDataPoints
 };
 
-// pipe={select, where, sort, dataset, version}
+// pipe={headers, where, sort, dataset, version}
 function getConcepts(pipe, cb) {
   return Concepts
     .find({
@@ -25,10 +25,10 @@ function getConcepts(pipe, cb) {
     })
     .lean()
     .exec((err, res) => {
-      pipe.concepts = _.keyBy(res, 'gid');
+      pipe.concepts = _.keyBy(res, constants.GID);
       pipe.conceptsByOriginId = _.keyBy(res, 'originId');
 
-      pipe.selectedConcepts = _.pick(pipe.concepts, pipe.select);
+      pipe.selectedConcepts = _.pick(pipe.concepts, pipe.headers);
 
       if (_.isEmpty(pipe.selectedConcepts)) {
         return cb(`You didn't select any column`);
@@ -38,6 +38,7 @@ function getConcepts(pipe, cb) {
       pipe.domains = _.pickBy(pipe.selectedConcepts, ['type', 'entity_domain']);
       pipe.sets = _.pickBy(pipe.selectedConcepts, ['type', 'entity_set']);
       pipe.dimensions = _.pick(pipe.concepts, _.keys(pipe.where));
+
       let wrongConcepts = _.chain(pipe.selectedConcepts)
         .pickBy(_.isNil)
         .keys()
@@ -96,7 +97,7 @@ function getEntities(pipe, cb) {
           if (!_.isEmpty(resolvedFilters[domainOriginId])) {
             return _.chain(entities)
               .filter((entity) => {
-                return resolvedFilters[domainOriginId].indexOf(entity.gid) > -1;
+                return _.includes(resolvedFilters[domainOriginId], entity[constants.GID]);
               })
               .map('originId')
               .value()
@@ -127,55 +128,19 @@ function getDataPoints(pipe, cb) {
     dimensions: {
       $size: _.size(dimensions),
       $all: _.map(dimensions, (entitySet) => {
-        let domainOriginId = entitySet.domain ? entitySet.domain.originId : entitySet.originId
-        return {$elemMatch: { $in: pipe.entitiesGroupedByDomain[domainOriginId]}}
+        const domainOriginId = _.isEmpty(entitySet.domain) ? entitySet.originId : entitySet.domain;
+        return {$elemMatch: { $in: pipe.entitiesGroupedByDomain[_.toString(domainOriginId)]}}
       })
     }
   };
+
   return DataPoints.find(query)
     .lean()
     .exec((err, res) => {
       console.timeEnd('get datapoints');
+
       pipe.datapoints = res;
+
       return cb(null, pipe);
     });
-}
-
-function mapResult(pipe, cb) {
-  // let measuresByOriginId = _.keyBy(pipe.measures, 'originId');
-  let rows = _.chain(pipe.datapoints)
-    .reduce((result, datapoint) => {
-      let complexKey = _.chain(datapoint.dimensions)
-        .map((dimension) => pipe.entities[dimension])
-        .sortBy((originEntity) => {
-          let domainGid = pipe.conceptsByOriginId[originEntity.domain].gid;
-          return pipe.select.indexOf(domainGid);
-        })
-        .map('gid')
-        .join(':')
-        .value();
-
-      if (!result[complexKey]) {
-        result[complexKey] = {};
-        _.each(datapoint.dimensions, (dimension) => {
-          let originEntity = pipe.entities[dimension];
-          let domainGid = pipe.conceptsByOriginId[originEntity.domain].gid;
-
-          result[complexKey][domainGid] = originEntity.gid;
-        });
-      }
-      let measureGid = pipe.conceptsByOriginId[datapoint.measure].gid;
-      result[complexKey][measureGid] = datapoint.value;
-      return result;
-    }, {})
-    .map((row) => {
-      return _.map(pipe.select, column => (_.isNaN(_.toNumber(row[column])) ? row[column] : +row[column]) || null);
-    })
-    .value();
-
-  return async.setImmediate(() => {
-    return cb(null, {
-      headers: pipe.select,
-      rows: _.sortBy(rows, ['0', '1']) });
-  });
 }

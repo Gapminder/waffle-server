@@ -1,8 +1,4 @@
 'use strict';
-var _ = require('lodash');
-var async = require('async');
-
-const mongoose = require('mongoose');
 
 const ConceptsRepositoryFactory = require('../../../ws.repository/ddf/concepts/concepts.repository');
 
@@ -18,24 +14,13 @@ function getConcepts(pipe, cb) {
 
   ConceptsRepository
     .currentVersion()
-    .findConceptProperties(pipe.select, pipe.where, (error, concepts) => {
+    .findConceptProperties({}, pipe.where, (error, concepts) => {
       if (error) {
         return cb(error);
       }
 
       pipe.concepts = concepts;
 
-      return mapResult(pipe, cb);
+      return cb(null, pipe);
     });
-}
-
-function mapResult(pipe, cb) {
-  return cb(null, {
-    headers: pipe.select,
-    rows: _.map(pipe.concepts, concept => toWsJson(pipe.select, concept))
-  });
-}
-
-function toWsJson(select, concept) {
-  return _.map(select, property => concept.properties[property]);
 }

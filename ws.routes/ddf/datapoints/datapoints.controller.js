@@ -24,14 +24,14 @@ module.exports = serviceLocator => {
 
   router.get('/api/ddf/datapoints',
     cors(),
-    compression(),
+    compression({filter: commonService.shouldCompress}),
     getCacheConfig(constants.DDF_REDIS_CACHE_NAME_DATAPOINTS),
     cache.route({expire: constants.DDF_REDIS_CACHE_LIFETIME}),
     decodeQuery,
     ddfDatapointStats,
     dataPostProcessors.gapfilling,
     dataPostProcessors.toPrecision,
-    dataPostProcessors.format
+    dataPostProcessors.pack
   );
 
   return app.use(router);
@@ -39,23 +39,27 @@ module.exports = serviceLocator => {
   function ddfDatapointStats(req, res, next) {
     logger.debug('URL: \n%s%s', config.LOG_TABS, req.originalUrl);
 
-    const select = req.decodedQuery.select;
-    const where = req.decodedQuery.where;
+    const where = _.omit(req.decodedQuery.where, constants.EXCLUDED_QUERY_PARAMS);
+    const headers = req.decodedQuery.select;
     const sort = req.decodedQuery.sort;
     const datasetName = _.first(req.decodedQuery.where.dataset);
     const version = _.first(req.decodedQuery.where.version);
-    delete where.dataset;
-    delete where.version;
-    delete where.v;
+
+    const pipe = {
+      headers,
+      where,
+      sort,
+      datasetName,
+      version
+    };
 
     console.time('finish DataPoint stats');
     async.waterfall([
-      async.constant({select, where, sort, datasetName, version}),
+      async.constant(pipe),
       commonService.findDefaultDatasetAndTransaction,
       statsService.getConcepts,
       statsService.getEntities,
-      statsService.getDataPoints,
-      statsService.mapResult
+      statsService.getDataPoints
     ], (error, result) => {
       if (error) {
         console.error(error);
@@ -65,6 +69,7 @@ module.exports = serviceLocator => {
       console.timeEnd('finish DataPoint stats');
 
       req.wsJson = result;
+
       return next();
     });
   }

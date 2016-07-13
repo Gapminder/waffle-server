@@ -1,12 +1,13 @@
 'use strict';
-let _ = require('lodash');
-let async = require('async');
-let mongoose = require('mongoose');
+const _ = require('lodash');
+const async = require('async');
+const mongoose = require('mongoose');
+const constants = require('../../ws.utils/constants');
 
-let Geo = mongoose.model('Geo');
+const Geo = mongoose.model('Geo');
 
 // TODO: fix mapping categories hardcode
-let mappingCategories = {
+const mappingCategories = {
   isRegion4: 'world_4region',
   isGlobal: 'global',
   isCountry: 'country',
@@ -14,8 +15,8 @@ let mappingCategories = {
 };
 
 // TODO: hardcode mapping geo for ddf (fix it when we will have more formats)
-let geoMapping = require('./geo-mapping').ddf;
-let defaultSelect = ['geo','geo.name','geo.cat','geo.region'];
+const geoMapping = require('./geo-mapping').ddf;
+const defaultSelect = ['geo','geo.name','geo.cat','geo.region'];
 
 module.exports = {
   listGeoProperties: listGeoProperties,
