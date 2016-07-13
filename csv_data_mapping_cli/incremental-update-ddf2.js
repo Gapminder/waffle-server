@@ -7,20 +7,16 @@ const async = require('async');
 
 const mongoose = require('mongoose');
 
+const common = require('./common');
+const logger = require('../ws.config/log');
+const config = require('../ws.config/config');
 const constants = require('../ws.utils/constants');
 const ddfImportProcess = require('../ws.utils/ddf-import-process');
 const processConceptChanges = require('./ddf/import/incremental/import-concepts')();
 
 const LIMIT_NUMBER_PROCESS = 10;
 
-let logger;
-let config;
-
-module.exports = function (app, done, options) {
-  logger = app.get('log');
-  config = app.get('config');
-
-  const common = require('./common')(app, done);
+module.exports = function (options, done) {
 
   const mapFilenameToCollectionName = {
     concepts: 'Concepts',

@@ -13,13 +13,10 @@ const cliService = require('./cli.service');
 const reposService = require('../../../ws.services/repos.service');
 const transactionsService = require('../../../ws.services/dataset-transactions.service');
 
+const cache = require('../../../ws.utils/redis-cache');
+const logger = require('../../../ws.config/log');
+
 module.exports = serviceLocator => {
-  const app = serviceLocator.getApplication();
-
-  const config = app.get('config');
-  const logger = app.get('log');
-  const cache = require('../../../ws.utils/redis-cache')(config);
-
   const router = express.Router();
 
   router.use(cors());
@@ -30,7 +27,7 @@ module.exports = serviceLocator => {
   // cause it is entry point for acquiring token and requesting other resources
   router.post('/api/ddf/cli/authenticate', _getToken);
 
-  router.use(routeUtils.ensureAuthenticatedViaToken(config.NODE_ENV));
+  router.use(routeUtils.ensureAuthenticatedViaToken);
 
   router.get('/api/ddf/cli/prestored-queries', _getPrestoredQueries);
 
@@ -50,6 +47,7 @@ module.exports = serviceLocator => {
 
   router.post('/api/ddf/cli/datasets/default', _setDefaultDataset);
 
+  const app = serviceLocator.getApplication();
   return app.use(router);
 
   function _getToken(req, res) {
@@ -94,7 +92,7 @@ module.exports = serviceLocator => {
         return res.json({success: !error, error});
       }
 
-      return cliService.cleanDdfRedisCache(config, cacheCleanError => {
+      return cliService.cleanDdfRedisCache(cacheCleanError => {
         if (cacheCleanError) {
           return res.json({success: !cacheCleanError, error: cacheCleanError});
         }
@@ -174,7 +172,7 @@ module.exports = serviceLocator => {
         }
       };
 
-      cliService.updateIncrementally(body, config, app, updateError => {
+      cliService.updateIncrementally(body, updateError => {
         if (updateError && !res.headersSent) {
           return res.json({success: !updateError, error: updateError});
         }
@@ -225,7 +223,7 @@ module.exports = serviceLocator => {
       }
     };
 
-    return cliService.importDataset(params, config, app, importError => {
+    return cliService.importDataset(params, importError => {
       if (importError && !res.headersSent) {
         return res.json({success: !importError, error: importError});
       }
@@ -241,7 +239,7 @@ module.exports = serviceLocator => {
   function _getGitCommitsList(req, res) {
     const github = req.query.github;
 
-    cliService.getGitCommitsList(github, config, (error, result) => {
+    cliService.getGitCommitsList(github, (error, result) => {
       if (error) {
         return res.json({success: !error, error});
       }

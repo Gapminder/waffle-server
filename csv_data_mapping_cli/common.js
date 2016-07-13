@@ -15,48 +15,41 @@ const reposService = require('../ws.services/repos.service');
 const geoMapping = require('./geo-mapping.json');
 const defaultEntityGroupTypes = ['entity_domain', 'entity_set', 'time', 'age'];
 
-let logger;
-let config;
-let ddfModels;
+const logger = require('../ws.config/log');
+const config = require('../ws.config/config');
 
-module.exports = function (app) {
-  logger = app.get('log');
-  config = app.get('config');
-  ddfModels = app.get('ddfModels');
-
-  return {
-    resolvePathToDdfFolder,
-    createTransaction,
-    createDataset,
-    updateTransaction,
-    createConcepts,
-    createEntities,
-    createDataPoints,
-    _createDataPoints,
-    findDataset,
-    findVersion,
-    getAllConcepts: _getAllConcepts,
-    findAllEntities: _findAllEntities,
-    processOriginalEntities: _processOriginalEntities,
-    mapDdfOriginalEntityToWsModel: mapDdfOriginalEntityToWsModel,
-    createOriginalEntities: __createOriginalEntities,
-    findAllOriginalEntities: _findAllOriginalEntities,
-    createEntitiesBasedOnOriginalEntities: _createEntitiesBasedOnOriginalEntities,
-    clearOriginalEntities: _clearOriginalEntities,
-    addEntityDrillups: _addEntityDrillups,
-    createTranslations,
-    findDataPoints,
-    processRawDataPoints: __processRawDataPoints,
-    parseFilename: _parseFilename,
-    createEntitiesBasedOnDataPoints: _createEntitiesBasedOnDataPoints,
-    updateConceptsDimensions: _updateConceptsDimensions,
-    closeTransaction,
-    addConceptSubsetOf: _addConceptSubsetOf
-  };
+module.exports = {
+  resolvePathToDdfFolder,
+  createTransaction,
+  createDataset,
+  updateTransaction,
+  createConcepts,
+  createEntities,
+  createDataPoints,
+  _createDataPoints,
+  findDataset,
+  findVersion,
+  getAllConcepts: _getAllConcepts,
+  findAllEntities: _findAllEntities,
+  processOriginalEntities: _processOriginalEntities,
+  mapDdfOriginalEntityToWsModel: mapDdfOriginalEntityToWsModel,
+  createOriginalEntities: __createOriginalEntities,
+  findAllOriginalEntities: _findAllOriginalEntities,
+  createEntitiesBasedOnOriginalEntities: _createEntitiesBasedOnOriginalEntities,
+  clearOriginalEntities: _clearOriginalEntities,
+  addEntityDrillups: _addEntityDrillups,
+  createTranslations,
+  findDataPoints,
+  processRawDataPoints: __processRawDataPoints,
+  parseFilename: _parseFilename,
+  createEntitiesBasedOnDataPoints: _createEntitiesBasedOnDataPoints,
+  updateConceptsDimensions: _updateConceptsDimensions,
+  closeTransaction,
+  addConceptSubsetOf: _addConceptSubsetOf
 };
 
 function resolvePathToDdfFolder(pipe, done) {
-  pipe.pathToDdfFolder = reposService.getPathToRepo(pipe.datasetName, pipe.config);
+  pipe.pathToDdfFolder = reposService.getPathToRepo(pipe.datasetName);
   pipe.resolvePath = (filename) => path.resolve(pipe.pathToDdfFolder, filename);
   pipe.fileTemplates = {
     getFilenameOfEntityDomainEntities: _.template('ddf--entities--${ gid }.csv'),

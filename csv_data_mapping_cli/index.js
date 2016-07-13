@@ -1,16 +1,13 @@
 'use strict';
 
-const appStub = {
-  get: function (moduleName) {
-    return this[moduleName];
-  },
-  set: function (moduleName, module) {
-    return this[moduleName] = module;
-  }
-};
-const config = require('../ws.config/config')(appStub);
-const logger = require('../ws.config/log')(appStub);
 const _ = require('lodash');
+
+const config = require('../ws.config/config');
+const logger = require('../ws.config/log');
+
+require('../ws.config/db.config');
+const mongoose = require('mongoose');
+
 const ddfModels = [
   'concepts',
   'data-points',
@@ -20,13 +17,7 @@ const ddfModels = [
   'original-entities',
   'users'
 ];
-appStub.set('ddfModels', ddfModels);
 
-require('../ws.config/db.config')(appStub);
-
-var mongoose = require('mongoose');
-
-// import models
 require('../ws.repository/geo.model');
 require('../ws.repository/dimensions/dimensions.model');
 require('../ws.repository/dimension-values/dimension-values.model');
@@ -39,20 +30,15 @@ require('../ws.repository/indexDb.model');
 _.forEach(ddfModels, model => require(`../ws.repository/ddf/${model}/${model}.model`));
 
 const mappingImporters = {
-  'ddf-world': 'import-ddf1',
   'ddf-world2': 'import-ddf2',
-  'ddf-open-numbers': 'import',
   'metadata': 'import-metadata',
-  'incremental-update': 'incremental-update-ddf2',
-  'export-neo4j': '../ws.routes/graphs/export.service',
-  'export-neo4j-inc': '../ws.routes/graphs/export-ddf-tree-updates',
-  'import-export-ddf': 'import-export-ddf',
-  'import-export-ddf-incremental': 'import-export-ddf-incremental'
+  'incremental-update': 'incremental-update-ddf2'
 };
-const defaultImporter = 'ddf-world';
-let selectedImporter = mappingImporters[process.env.ACTION] || mappingImporters[defaultImporter];
 
-require('./' + selectedImporter)(appStub, (err) => {
+const selectedImporter = mappingImporters[process.env.ACTION] || mappingImporters['ddf-world2'];
+
+// FIXME: {} is not valid argument, cause not all importers have defaults for absent options
+require('./' + selectedImporter)({}, err => {
   if (err) {
     logger.error(err);
   }

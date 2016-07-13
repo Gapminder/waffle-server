@@ -10,7 +10,6 @@ const NODE_ENV = process.env.NODE_ENV ? `NODE_ENV=${process.env.NODE_ENV}`: '';
 const LOG_LEVEL = process.env.LOG_LEVEL ? `LOG_LEVEL=${process.env.LOG_LEVEL}` : '';
 const LOG_TRANSPORTS = process.env.LOG_TRANSPORTS ? `LOG_TRANSPORTS=${process.env.LOG_TRANSPORTS}` : '';
 
-const SESSION_SECRET = process.env.SESSION_SECRET ? `SESSION_SECRET=${process.env.SESSION_SECRET}`: '';
 const MONGODB_URL = `MONGODB_URL=${process.env.MONGODB_URL || 'mongodb://@localhost:27017/ws_test'}`;
 const NEO4J_URL = `NEO4J_URL=${process.env.NEO4J_URL || 'http://neo4j:neo4j@localhost:7474'}`;
 
@@ -25,7 +24,7 @@ module.exports = {
   assertCommandExists: assertCommandExists,
   assertCommandCode: assertCommandCode,
   config: {
-    NODE_ENV, LOG_LEVEL, LOG_TRANSPORTS, SESSION_SECRET, MONGODB_URL, NEO4J_URL,
+    NODE_ENV, LOG_LEVEL, LOG_TRANSPORTS, MONGODB_URL, NEO4J_URL,
 
     SWAGGER_UI_TAG, WS_HOST, SWAGGER_UI_LINK_DEFAULT, SWAGGER_UI_INDEX_PATH,
     DEFAULT_COMMAND_FOR_OPEN_BROWSER,

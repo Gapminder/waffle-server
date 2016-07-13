@@ -7,8 +7,7 @@ const UniqueTokenStrategy = require('passport-unique-token').Strategy;
 
 const UsersRepository = require('../ws.repository/ddf/users/users.repository');
 
-module.exports = app => {
-  const config = app.get('config');
+module.exports = (function () {
 
   passport.serializeUser((user, done) => {
     return done(null, user._id);
@@ -73,4 +72,4 @@ module.exports = app => {
       }
     ));
   }
-};
+}());

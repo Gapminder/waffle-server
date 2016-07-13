@@ -7,18 +7,20 @@ const fs = require('fs');
 const path = require('path');
 const git = require('simple-git');
 
+const config = require('../ws.config/config');
+
 module.exports = {
   cloneRepo,
   getRepoName,
   getPathToRepo
 };
 
-function cloneRepo(githubUrl, commit, onCloned, config) {
+function cloneRepo(githubUrl, commit, onCloned) {
   if (!githubUrl) {
     return onCloned('Github url was not given');
   }
 
-  const pathToRepo = getPathToRepo(githubUrl, config);
+  const pathToRepo = getPathToRepo(githubUrl);
   fs.exists(pathToRepo, exists => {
     if (!exists) {
       const repoName = getRepoName(githubUrl);
@@ -53,7 +55,7 @@ function getRepoName(githubUrl) {
   return _.first(_.split(lastPart, '.'));
 }
 
-function getPathToRepo(githubUrl, config) {
+function getPathToRepo(githubUrl) {
   if (!githubUrl) {
     return githubUrl;
   }

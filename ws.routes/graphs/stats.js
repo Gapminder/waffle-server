@@ -16,12 +16,13 @@ var DimensionValues = mongoose.model('DimensionValues');
 
 var dataPostProcessors = require('../data-post-processors');
 
+const cache = require('../../ws.utils/redis-cache');
+const logger = require('../../ws.config/log');
+const config = require('../../ws.config/config');
+const neo4jdb = require('../../ws.config/db.config').neo4jDb;
+
 module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
-  var neo4jdb = app.get('neo4jDb');
-  var logger = app.get('log');
-  var config = app.get('config');
-  const cache = require('../../ws.utils/redis-cache')(config);
 
   /*eslint new-cap:0*/
   var router = express.Router();

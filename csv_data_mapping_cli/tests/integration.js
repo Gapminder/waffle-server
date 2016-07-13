@@ -22,7 +22,6 @@ commandBase += 'LOG_LEVEL=debug ';
 commandBase += 'LOG_TRANSPORTS=console,file ';
 commandBase += 'GOOGLE_CLIENT_ID=t ';
 commandBase += 'GOOGLE_CLIENT_SECRET=t ';
-commandBase += 'SESSION_SECRET=t ';
 commandBase += 'CLEAR_ALL_MONGO_DB_COLLECTIONS_BEFORE_IMPORT=true ';
 commandBase += 'ACTION=ddf-world2 ';
 commandBase += 'USE_GEO_MAPPING=true ';

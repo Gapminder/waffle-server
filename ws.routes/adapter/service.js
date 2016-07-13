@@ -15,13 +15,13 @@ var IndexDb = mongoose.model('IndexDb');
 var compression = require('compression');
 
 var u = require('../utils');
+const config = require('../../ws.config/config');
+const cache = require('../../ws.utils/redis-cache');
 
 module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
   /*eslint new-cap:0*/
   var router = express.Router();
-  var config = app.get('config');
-  const cache = require('../../ws.utils/redis-cache')(config);
 
   var mcPrecomputedShapes = require('../../csv_data_mapping_cli/fixtures/mc_precomputed_shapes.json');
   var world50m = require('../../csv_data_mapping_cli/fixtures/world-50m.json');
