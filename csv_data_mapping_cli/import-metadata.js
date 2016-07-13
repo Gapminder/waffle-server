@@ -1,7 +1,6 @@
 /*eslint camelcase: 0*/
 'use strict';
 
-console.time('done');
 // Converter Class
 const _ = require('lodash');
 const fs = require('fs');
@@ -14,14 +13,12 @@ const Translations = mongoose.model('Translations');
 const IndexTree = mongoose.model('IndexTree');
 const IndexDb = mongoose.model('IndexDb');
 
-// take from args
-let logger;
-let config;
+const logger = require('../ws.config/log');
+const config = require('../ws.config/config');
 
-module.exports = function (app, done) {
-  logger = app.get('log');
-  config = app.get('config');
+module.exports = function (options, done) {
 
+  console.time('done');
   async.waterfall([
     clearAllDbs,
     (pipe, cb) => cb(),

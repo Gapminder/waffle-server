@@ -3,26 +3,14 @@
 const _ = require('lodash');
 
 /**
- * @namespace Models
- */
-
-/**
  * Models and repository bootstrap
- * @param {ServiceLocatorContainer} serviceLocator - express serviceLocator2 instance
- * @returns {void} - nothing
  */
-module.exports = function (serviceLocator) {
-  // system
+module.exports = function () {
   require('./files.model');
-
-  require('./dimension-values')(serviceLocator.repositories);
-  require('./dimensions')(serviceLocator.repositories);
-
-  // indicators
-  require('./indicator-values')(serviceLocator.repositories);
-  require('./indicators')(serviceLocator.repositories);
-
-  // geo
+  require('./dimension-values/dimension-values.model');
+  require('./dimensions/dimensions.model');
+  require('./indicator-values/indicator-values.model');
+  require('./indicators/indicators.model');
   require('./geo.model');
   require('./translations.model');
   require('./indexTree.model');
@@ -39,6 +27,6 @@ module.exports = function (serviceLocator) {
   ];
 
   _.forEach(ddfModels, (model) => {
-    require(`./ddf/${model}`)(serviceLocator.repositories);
+    require(`./ddf/${model}/${model}.model`);
   });
 };

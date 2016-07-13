@@ -11,6 +11,7 @@ const Datasets = mongoose.model('Datasets');
 const Concepts = mongoose.model('Concepts');
 const Transactions = mongoose.model('DatasetTransactions');
 
+const cache = require('../../../ws.utils/redis-cache');
 const constants = require('../../../ws.utils/constants');
 const authService = require('../../../ws.services/auth.service');
 const reposService = require('../../../ws.services/repos.service');
@@ -36,18 +37,13 @@ module.exports = {
   cleanDdfRedisCache
 };
 
-function getGitCommitsList(github, config, cb) {
+function getGitCommitsList(github, cb) {
   if (!github) {
     return cb('Url to dataset\'s github repository was not provided');
   }
 
-  let pipe = {
-    github,
-    config
-  };
-
   return async.waterfall([
-    async.constant(pipe),
+    async.constant({github}),
     _cloneDdfRepo,
     _getPathToRepo
   ], cb);
@@ -58,7 +54,7 @@ function _cloneDdfRepo(pipe, done) {
     pipe.repoInfo = repoInfo;
 
     return done(error, pipe);
-  }, pipe.config);
+  });
 }
 
 function _getPathToRepo(pipe, done) {
@@ -80,13 +76,9 @@ function _findCurrentUser(pipe, done) {
     });
 }
 
-function importDataset(params, config, app, onDatasetImported) {
-  let pipe = params;
-  pipe.config = config;
-  pipe.app = app;
-
+function importDataset(params, onDatasetImported) {
   return async.waterfall([
-    async.constant(pipe),
+    async.constant(params),
     _findCurrentUser,
     _findDataset,
     _validateDatasetBeforeImport,
@@ -143,7 +135,7 @@ function _importDdfService(pipe, onDatasetImported) {
     lifecycleHooks: pipe.lifecycleHooks
   };
 
-  return importDdfService(pipe.app, onDatasetImported, options);
+  return importDdfService(options, onDatasetImported);
 }
 
 function _unlockDataset(pipe, done) {
@@ -159,13 +151,9 @@ function _unlockDataset(pipe, done) {
     });
 }
 
-function updateIncrementally(params, config, app, onDatasetUpdated) {
-  let pipe = params;
-  pipe.app = app;
-  pipe.config = config;
-
+function updateIncrementally(params, onDatasetUpdated) {
   return async.waterfall([
-    async.constant(pipe),
+    async.constant(params),
     _findCurrentUser,
     _lockDataset,
     _checkTransaction,
@@ -224,7 +212,7 @@ function _runIncrementalUpdate(pipe, onDatasetUpdated) {
     user: pipe.user
   };
 
-  return incrementalUpdateService(pipe.app, onDatasetUpdated, options);
+  return incrementalUpdateService(options, onDatasetUpdated);
 }
 
 function getPrestoredQueries(cb) {
@@ -333,9 +321,7 @@ function setTransactionAsDefault(userId, datasetName, transactionCommit, onSetAs
   return transactionsService.setTransactionAsDefault(userId, datasetName, transactionCommit, onSetAsDefault);
 }
 
-function cleanDdfRedisCache(config, onCacheCleaned) {
-  const cache = require('../../../ws.utils/redis-cache')(config);
-
+function cleanDdfRedisCache(onCacheCleaned) {
   const cacheCleaningTasks = [
     done => cache.del(`${constants.DDF_REDIS_CACHE_NAME_CONCEPTS}*`, done),
     done => cache.del(`${constants.DDF_REDIS_CACHE_NAME_ENTITIES}*`, done),

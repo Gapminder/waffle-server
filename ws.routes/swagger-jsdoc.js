@@ -1,8 +1,9 @@
+const config = require('../ws.config/config');
+
 module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
   var swaggerJson = require('../swagger.json');
   var swagger2 = require('swagger2-utils');
-  var config = app.get('config');
 
   var cors = require('cors');
 

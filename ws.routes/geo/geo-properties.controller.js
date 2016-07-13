@@ -7,12 +7,12 @@ var cors = require('cors');
 var u = require('../utils');
 var service = require('./geo-properties.service');
 
+const cache = require('../../ws.utils/redis-cache');
+
 module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
   /*eslint new-cap:0*/
   var router = express.Router();
-
-  const cache = require('../../ws.utils/redis-cache')(app.get('config'));
 
   router.get('/api/geo',
     compression(), u.getCacheConfig('geo'), cors(), cache.route(),

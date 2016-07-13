@@ -6,10 +6,10 @@ const ddfImportProcess = require('../ws.utils/ddf-import-process');
 
 const defaultEntityGroupTypes = ['entity_domain', 'entity_set', 'time', 'age'];
 const defaultMeasureTypes = ['measure'];
+const common = require('./common');
+const config = require('../ws.config/config');
 
-module.exports = function (app, done, options) {
-  const config = app.get('config');
-  const common = require('./common')(app, done);
+module.exports = function (options, done) {
 
   let pipe = {
     raw: {},

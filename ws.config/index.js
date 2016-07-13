@@ -1,8 +1,7 @@
-module.exports = function (app) {
-  // should be the first
-  require('./config')(app);
-  require('./log')(app);
-  require('./passport')(app);
+module.exports = function (serviceLocator) {
+  const app = serviceLocator.getApplication();
+
+  require('./passport');
   require('./express.config')(app);
-  require('./db.config')(app);
+  require('./db.config');
 };

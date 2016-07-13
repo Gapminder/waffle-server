@@ -6,20 +6,7 @@ const _ = require('lodash');
 const fs = require('fs');
 const DEFAULT_CONFIG = require('./environment.config');
 
-module.exports = function (app) {
-  const REQUIRED_ENVIRONMENT_VARIABLES = Object.freeze([
-    'SESSION_SECRET',
-    'MONGODB_URL', 
-    'NEO4J_URL'
-  ]);
-
-  // Check that all the REQUIRED VARIABLES was setup.
-  _.each(REQUIRED_ENVIRONMENT_VARIABLES, function (CURRENT_VARIABLE) {
-    if (!process.env[CURRENT_VARIABLE] && !DEFAULT_CONFIG[CURRENT_VARIABLE]) {
-      throw new Error(`You need to set up ${CURRENT_VARIABLE}`);
-    }
-  });
-
+module.exports = (function () {
   const config = {
     NODE_ENV: process.env.NODE_ENV || DEFAULT_CONFIG.NODE_ENV,
     PORT: process.env.PORT || DEFAULT_CONFIG.PORT,
@@ -47,7 +34,7 @@ module.exports = function (app) {
     LOG_LEVEL: process.env.LOG_LEVEL || DEFAULT_CONFIG.LOG_LEVEL,
 
     LOG_TABS: process.env.LOG_TABS || DEFAULT_CONFIG.LOG_TABS,
-    LOG_TRANSPORTS: process.env.LOG_TRANSPORTS ? process.env.LOG_TRANSPORTS.split(',') : DEFAULT_CONFIG.LOG_TRANSPORTS, 
+    LOG_TRANSPORTS: process.env.LOG_TRANSPORTS ? process.env.LOG_TRANSPORTS.split(',') : DEFAULT_CONFIG.LOG_TRANSPORTS,
 
     DEFAULT_OPTIONS_CONVERTING_JSON_TO_CSV: {
       DELIMITER: {
@@ -58,11 +45,22 @@ module.exports = function (app) {
       EOL: '\n',
       PARSE_CSV_NUMBERS: false
     },
-    
+
     DEFAULT_USER_PASSWORD: process.env.DEFAULT_USER_PASSWORD
   };
 
-  app.set('config', config);
+  const REQUIRED_ENVIRONMENT_VARIABLES = Object.freeze([
+    'MONGODB_URL',
+    'NEO4J_URL'
+  ]);
+
+  // Check that all the REQUIRED VARIABLES was setup.
+  if (['production', 'stage'].some(env => config.NODE_ENV === env))
+    _.each(REQUIRED_ENVIRONMENT_VARIABLES, function (CURRENT_VARIABLE) {
+      if (!process.env[CURRENT_VARIABLE] && !DEFAULT_CONFIG[CURRENT_VARIABLE]) {
+        throw new Error(`You need to set up ${CURRENT_VARIABLE}`);
+      }
+    });
 
   return config;
-};
+}());

@@ -4,6 +4,7 @@ const md5 = require('md5');
 const passport = require('passport');
 const queryCoder = require('../ws.utils/query-coder');
 const loginPage = '/login';
+const config = require('../ws.config/config');
 
 module.exports = {
   getCacheConfig,
@@ -37,16 +38,14 @@ function ensureAuthenticated(req, res, next) {
   return res.redirect(loginPage);
 }
 
-function ensureAuthenticatedViaToken(env) {
-  return (res, req, next) => {
-    // FIXME: This solution with disabling auth for local env is a workaround in order to be able to test routes,
-    // this will be fixed as soon as user registration is implemented
-    if (env === 'local') {
-      return next();
-    }
+function ensureAuthenticatedViaToken(res, req, next) {
+  // FIXME: This solution with disabling auth for local env is a workaround in order to be able to test routes,
+  // this will be fixed as soon as user registration is implemented
+  if (config.NODE_ENV === 'local') {
+    return next();
+  }
 
-    return passport.authenticate('token')(res, req, next);
-  };
+  return passport.authenticate('token')(res, req, next);
 }
 
 function decodeQuery(req, res, next) {

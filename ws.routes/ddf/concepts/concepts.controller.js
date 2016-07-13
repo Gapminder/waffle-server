@@ -13,12 +13,12 @@ const getCacheConfig = require('../../utils').getCacheConfig;
 
 const dataPostProcessors = require('../../data-post-processors');
 
+const cache = require('../../../ws.utils/redis-cache');
+const logger = require('../../../ws.config/log');
+const config = require('../../../ws.config/config');
+
 module.exports = serviceLocator => {
   const app = serviceLocator.getApplication();
-
-  const logger = app.get('log');
-  const config = app.get('config');
-  const cache = require('../../../ws.utils/redis-cache')(config);
 
   const router = express.Router();
 
