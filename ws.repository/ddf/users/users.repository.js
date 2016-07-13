@@ -14,7 +14,7 @@ function UsersRepository() {
 });
 
 UsersRepository.prototype.findUserByEmail = (email, onFound) => {
-  return Users.findOne({email}).lean().exec(onFound);
+  return Users.findOne({email}).exec(onFound);
 };
 
 UsersRepository.prototype.findUserByUniqueToken = (uniqueToken, onFound) => {
@@ -31,7 +31,21 @@ UsersRepository.prototype.setUpToken = (email, uniqueToken, expireToken, onFound
 };
 
 UsersRepository.prototype.createUser = (user, done) => {
-  return Users.findOneAndUpdate({email: user.email}, user, {upsert: true, new: true}).lean().exec(done);
+  Users.findOne({email: user.email}).lean().exec((error, existingUser) => {
+    if (error) {
+      return done(`Error occurred during user creation`);
+    }
+
+    if (existingUser) {
+      return done(`User with an email: "${user.email}" already exists`);
+    }
+
+    return Users.create(user, done);
+  });
+};
+
+UsersRepository.prototype.removeUserByEmail = function (email, onRemoved) {
+  return Users.findOneAndRemove({email}, onRemoved);
 };
 
 
