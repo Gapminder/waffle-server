@@ -1,57 +1,37 @@
 'use strict';
 
 const _ = require('lodash');
-
+const util = require('util');
 const mongoose = require('mongoose');
 const Concepts = mongoose.model('Concepts');
 
 const utils = require('../../utils');
 const constants = require('../../../ws.utils/constants');
 
-function ConceptsRepositoryWrapper(options) {
-  this.version = options.version;
-  this.datasetId = options.datasetId;
+util.inherits(ConceptsRepository, utils.VersionedModelRepository);
+
+function ConceptsRepository() {
+  utils.VersionedModelRepository.apply(this, arguments);
 }
 
-ConceptsRepositoryWrapper.prototype.currentVersion = function () {
-  const versionQueryFragment = {
-    from: {$lte: this.version},
-    to: {$gt: this.version},
-    dataset: this.datasetId
-  };
-  return new ConceptsRepository(versionQueryFragment)
-};
-
-ConceptsRepositoryWrapper.prototype.closedOrOpenedByVersion = function (datasetId) {
-  const versionQueryFragment = {
-    $or: [
-      {from: this.version},
-      {to: this.version}
-    ],
-    dataset: datasetId
-  };
-  return new ConceptsRepository(versionQueryFragment)
-};
-
-function ConceptsRepository(versionQueryFragment) {
-  this.versionQueryFragment = versionQueryFragment;
-}
+module.exports = new utils.VersionedModelRepositoryFactory(ConceptsRepository);
 
 ConceptsRepository.prototype.findConceptProperties = function (select, where, onPropertiesFound) {
   const projection = makePositiveProjectionFor(select);
-  const conceptQuery = _.merge({}, this.versionQueryFragment, prefixWithProperties(where));
+  const conceptQuery = this._composeQuery(prefixWithProperties(where));
 
   return Concepts.find(conceptQuery, projection).lean().exec(onPropertiesFound);
 };
 
 ConceptsRepository.prototype.countBy = function (where, onCounted) {
-  const countQuery = _.merge({}, this.versionQueryFragment, where);
+  const countQuery = this._composeQuery(where);
   return Concepts.count(countQuery, onCounted);
 };
 
-['pagedList', 'update', 'findById', 'deleteRecord'].forEach(actionName => {
-  ConceptsRepository.prototype[actionName] = utils.actionFactory(actionName)(Concepts, this);
-});
+ConceptsRepository.prototype.findAll = function (onFound) {
+  const countQuery = this._composeQuery();
+  return Concepts.find(countQuery).lean().exec(onFound);
+};
 
 //TODO: Move this in utils that should be common across all repositories
 function makePositiveProjectionFor(properties) {
@@ -62,5 +42,3 @@ function makePositiveProjectionFor(properties) {
 function prefixWithProperties(object) {
   return _.mapKeys(object, (value, property) => `properties.${property}`);
 }
-
-module.exports = ConceptsRepositoryWrapper;

@@ -1,13 +1,10 @@
 'use strict';
 const _ = require('lodash');
-const async = require('async');
 const constants = require('../../../ws.utils/constants');
 
-const mongoose = require('mongoose');
-
-const Concepts = mongoose.model('Concepts');
-const Entities = mongoose.model('Entities');
-const DataPoints = mongoose.model('DataPoints');
+const conceptsRepositoryFactory = require('../../../ws.repository/ddf/concepts/concepts.repository');
+const entitiesRepositoryFactory = require('../../../ws.repository/ddf/entities/entities.repository');
+const datapointsRepositoryFactory = require('../../../ws.repository/ddf/data-points/data-points.repository');
 
 module.exports = {
   getConcepts,
@@ -15,16 +12,10 @@ module.exports = {
   getDataPoints
 };
 
-// pipe={headers, where, sort, dataset, version}
 function getConcepts(pipe, cb) {
-  return Concepts
-    .find({
-      dataset: pipe.dataset._id,
-      from: {$lte: pipe.version},
-      to: {$gt: pipe.version}
-    })
-    .lean()
-    .exec((err, res) => {
+  return conceptsRepositoryFactory
+    .currentVersion(pipe.dataset._id, pipe.version)
+    .findAll((err, res) => {
       pipe.concepts = _.keyBy(res, constants.GID);
       pipe.conceptsByOriginId = _.keyBy(res, 'originId');
 
@@ -54,51 +45,33 @@ function getConcepts(pipe, cb) {
 }
 
 function getEntities(pipe, cb) {
-  let resolvedDimensionsGid = _.keys(_.assign({}, pipe.domains, pipe.sets));
-  let resolvedFilters = _.chain(pipe.where)
+  const resolvedDimensionsGid = _.keys(_.assign({}, pipe.domains, pipe.sets));
+  const resolvedFilters = _.chain(pipe.where)
     .pick(pipe.where, resolvedDimensionsGid)
     .mapKeys((value, key) => {
-      return pipe.concepts[key].originId
+      return pipe.concepts[key].originId;
     })
     .mapValues((dimension) => {
       return _.chain(dimension)
-        .flatMap((value) => {
-          if (!_.isArray(value)) {
-            return [value];
-          }
-          return _.range(_.first(value), _.last(value) + 1)
-        })
+        .flatMap(value => !_.isArray(value) ? [value] : _.range(_.first(value), _.last(value) + 1))
         .map(_.toString)
         .value();
     })
     .value();
 
-  let query = {
-    dataset: pipe.dataset._id,
-    from: {$lte: pipe.version},
-    to: {$gt: pipe.version},
-    $or: [
-      {
-        domain: {$in: _.map(pipe.domains, 'originId')}
-      },
-      {
-        sets: {$in: _.map(pipe.sets, 'originId')}
+  entitiesRepositoryFactory
+    .currentVersion(pipe.dataset._id, pipe.version)
+    .findAllHavingGivenDomainsOrSets(_.map(pipe.domains, 'originId'), _.map(pipe.sets, 'originId'), (error, foundEntities) => {
+      if (error) {
+        return cb(error);
       }
-    ]
-  };
 
-  return Entities
-    .find(query)
-    .lean()
-    .exec((err, res) => {
-      let filteredEntitiesGroupedByDomain = _.chain(res)
+      const filteredEntitiesGroupedByDomain = _.chain(foundEntities)
         .groupBy('domain')
         .mapValues((entities, domainOriginId) => {
           if (!_.isEmpty(resolvedFilters[domainOriginId])) {
             return _.chain(entities)
-              .filter((entity) => {
-                return _.includes(resolvedFilters[domainOriginId], entity[constants.GID]);
-              })
+              .filter(entity => _.includes(resolvedFilters[domainOriginId], entity[constants.GID]))
               .map('originId')
               .value()
               .sort();
@@ -109,7 +82,7 @@ function getEntities(pipe, cb) {
         .value();
 
       pipe.entitiesGroupedByDomain = filteredEntitiesGroupedByDomain;
-      pipe.entities = _.keyBy(res, 'originId');
+      pipe.entities = _.keyBy(foundEntities, 'originId');
       return cb(null, pipe);
     });
 }
@@ -119,28 +92,23 @@ function getDataPoints(pipe, cb) {
   if (_.isNil(pipe.measures)) {
     return cb(null, pipe);
   }
-  let dimensions = _.defaults({}, pipe.domains, pipe.sets);
-  let query = {
-    dataset: pipe.dataset._id,
-    from: {$lte: pipe.version},
-    to: {$gt: pipe.version},
-    measure: {$in: _.map(pipe.measures, 'originId')},
-    dimensions: {
-      $size: _.size(dimensions),
-      $all: _.map(dimensions, (entitySet) => {
-        const domainOriginId = _.isEmpty(entitySet.domain) ? entitySet.originId : entitySet.domain;
-        return {$elemMatch: { $in: pipe.entitiesGroupedByDomain[_.toString(domainOriginId)]}}
-      })
-    }
-  };
 
-  return DataPoints.find(query)
-    .lean()
-    .exec((err, res) => {
+  const dimensions = _.defaults({}, pipe.domains, pipe.sets);
+
+  const measureIds = _.map(pipe.measures, 'originId');
+  const dimensionIds = _.map(dimensions, entitySet => {
+    const domainOriginId = _.isEmpty(entitySet.domain) ? entitySet.originId : entitySet.domain;
+    return pipe.entitiesGroupedByDomain[_.toString(domainOriginId)];
+  });
+
+  return datapointsRepositoryFactory
+    .currentVersion(pipe.dataset._id, pipe.version)
+    .findForGivenMeasuresAndDimensions(measureIds, dimensionIds, (error, datapoints) => {
       console.timeEnd('get datapoints');
-
-      pipe.datapoints = res;
-
+      if (error) {
+        return cb(error);
+      }
+      pipe.datapoints = datapoints;
       return cb(null, pipe);
     });
 }

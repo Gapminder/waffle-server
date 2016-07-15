@@ -4,14 +4,8 @@ let mongoose = require('mongoose');
 
 let Users = mongoose.model('Users');
 
-let utils = require('../../utils');
-
 function UsersRepository() {
 }
-
-['pagedList', 'update', 'findById', 'deleteRecord'].forEach(actionName => {
-  UsersRepository.prototype[actionName] = utils.actionFactory(actionName)(Users, this);
-});
 
 UsersRepository.prototype.findUserByEmail = (email, onFound) => {
   return Users.findOne({email}).exec(onFound);

@@ -1,16 +1,36 @@
 'use strict';
 
-let mongoose = require('mongoose');
+const _ = require('lodash');
+const util = require('util');
+const mongoose = require('mongoose');
+const DataPoints = mongoose.model('DataPoints');
 
-let DataPoints = mongoose.model('DataPoints');
+const utils = require('../../utils');
 
-let utils = require('../../utils');
+util.inherits(DataPointsRepository, utils.VersionedModelRepository);
 
 function DataPointsRepository() {
+  utils.VersionedModelRepository.apply(this, arguments);
 }
 
-['pagedList', 'update', 'findById', 'deleteRecord'].forEach(actionName => {
-  DataPointsRepository.prototype[actionName] = utils.actionFactory(actionName)(DataPoints, this);
-});
+module.exports = new utils.VersionedModelRepositoryFactory(DataPointsRepository);
 
-module.exports = DataPointsRepository;
+/**
+ *
+ * @param measureIds
+ * @param dimensionIds array of arrays, where each subarray is a collection of entities that relate to the same concept
+ * @param onDatapointsFound
+ */
+DataPointsRepository.prototype.findForGivenMeasuresAndDimensions = function(measureIds, dimensionIds, onDatapointsFound) {
+  const query = this._composeQuery({
+    measure: {$in: measureIds},
+    dimensions: {
+      $size: _.size(dimensionIds),
+      $all: _.map(dimensionIds, dimensionIdsPerConcept => {
+        return {$elemMatch: {$in: dimensionIdsPerConcept}};
+      })
+    }
+  });
+
+  return DataPoints.find(query).lean().exec(onDatapointsFound);
+};

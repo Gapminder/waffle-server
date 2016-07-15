@@ -1,19 +1,15 @@
 'use strict';
 
-const EntitiesRepositoryFactory = require('../../../ws.repository/ddf/entities/entities.repository');
+const entitiesRepositoryFactory = require('../../../ws.repository/ddf/entities/entities.repository');
 
 module.exports = {
   getEntities
 };
 
 function getEntities(pipe, cb) {
-  const EntitiesRepository = new EntitiesRepositoryFactory({
-    datasetId: pipe.dataset._id,
-    version: pipe.version
-  });
+  const entitiesRepository = entitiesRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version);
 
-  EntitiesRepository
-    .currentVersion()
+  entitiesRepository
     .findEntityProperties(pipe.domainGid, {}, pipe.where, (error, entities) => {
       if (error) {
         return cb(error);

@@ -4,14 +4,9 @@ const _ = require('lodash');
 
 const mongoose = require('mongoose');
 const DatasetTransactions = mongoose.model('DatasetTransactions');
-const utils = require('../../utils');
 
 function DatasetTransactionsRepository() {
 }
-
-['pagedList', 'update', 'findById', 'deleteRecord'].forEach(actionName => {
-  DatasetTransactionsRepository.prototype[actionName] = utils.actionFactory(actionName)(DatasetTransactions, this);
-});
 
 DatasetTransactionsRepository.prototype._findLatestByQuery = function (query, done) {
   return DatasetTransactions
@@ -43,6 +38,10 @@ DatasetTransactionsRepository.prototype.findByDatasetAndCommit = function (datas
     .exec((error, transaction) => {
       return done(error, transaction);
     });
+};
+
+DatasetTransactionsRepository.prototype.removeById = function (transactionId, done) {
+  return DatasetTransactions.findOneAndRemove({_id: transactionId}, done);
 };
 
 DatasetTransactionsRepository.prototype.findAllCompletedByDataset = function (datasetId, done) {

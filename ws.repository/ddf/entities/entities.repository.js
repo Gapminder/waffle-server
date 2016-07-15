@@ -1,7 +1,7 @@
 'use strict';
 
 const _ = require('lodash');
-
+const util = require('util');
 const mongoose = require('mongoose');
 const Entities = mongoose.model('Entities');
 const Concepts = mongoose.model('Concepts');
@@ -9,46 +9,38 @@ const Concepts = mongoose.model('Concepts');
 const utils = require('../../utils');
 const constants = require('../../../ws.utils/constants');
 
-module.exports = EntitiesRepositoryWrapper;
+util.inherits(EntitiesRepository, utils.VersionedModelRepository);
 
-function EntitiesRepositoryWrapper(options) {
-  this.version = options.version;
-  this.datasetId = options.datasetId;
+function EntitiesRepository() {
+  utils.VersionedModelRepository.apply(this, arguments);
 }
 
-EntitiesRepositoryWrapper.prototype.currentVersion = function () {
-  const versionQueryFragment = {
-    from: {$lte: this.version},
-    to: {$gt: this.version},
-    dataset: this.datasetId
-  };
-  return new EntitiesRepository(versionQueryFragment)
-};
-
-EntitiesRepositoryWrapper.prototype.closedOrOpenedByVersion = function (datasetId) {
-  const versionQueryFragment = {
-    $or: [
-      {from: this.version},
-      {to: this.version}
-    ],
-    dataset: datasetId
-  };
-  return new EntitiesRepository(versionQueryFragment);
-};
-
-function EntitiesRepository(versionQueryFragment) {
-  this.versionQueryFragment = versionQueryFragment;
-}
+module.exports = new utils.VersionedModelRepositoryFactory(EntitiesRepository);
 
 EntitiesRepository.prototype.countBy = function (where, onCounted) {
-  const countQuery = _.merge({}, this.versionQueryFragment, where);
+  const countQuery = this._composeQuery(where);
   return Entities.count(countQuery, onCounted);
 };
 
+EntitiesRepository.prototype.findAllHavingGivenDomainsOrSets = function (domainsIds, setsIds, onFound) {
+  const query = this._composeQuery({
+    $or: [
+      {
+        domain: {$in: domainsIds}
+      },
+      {
+        sets: {$in: setsIds}
+      }
+    ]
+  });
+
+  return Entities.find(query).lean().exec(onFound);
+};
+
 EntitiesRepository.prototype.findEntityProperties = function(entityDomainGid, select, where, onPropertiesFound) {
-  const conceptQuery = _.merge({}, this.versionQueryFragment, {
-      gid: entityDomainGid,
-      'properties.concept_type': entityDomainGid === 'time' ? 'time' : 'entity_domain'
+  const conceptQuery = this._composeQuery({
+    gid: entityDomainGid,
+    'properties.concept_type': entityDomainGid === 'time' ? 'time' : 'entity_domain'
   });
 
   return Concepts.findOne(conceptQuery).lean().exec((error, concept) => {
@@ -68,16 +60,11 @@ EntitiesRepository.prototype.findEntityProperties = function(entityDomainGid, se
       return key;
     }));
 
-    const entitiesQuery = _.merge({}, this.versionQueryFragment, {domain: concept.originId}, where);
+    const entitiesQuery = this._composeQuery({domain: concept.originId}, where);
 
     return Entities.find(entitiesQuery, projection).lean().exec(onPropertiesFound);
   });
 };
-
-['pagedList', 'update', 'findById', 'deleteRecord'].forEach(actionName => {
-  EntitiesRepository.prototype[actionName] = utils.actionFactory(actionName)(Entities, this);
-});
-
 
 function makePositiveProjectionFor(properties) {
   const positiveProjectionValues = _.fill(new Array(_.size(properties)), 1);
