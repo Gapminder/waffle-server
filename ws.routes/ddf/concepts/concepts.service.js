@@ -1,19 +1,15 @@
 'use strict';
 
-const ConceptsRepositoryFactory = require('../../../ws.repository/ddf/concepts/concepts.repository');
+const conceptsRepositoryFactory = require('../../../ws.repository/ddf/concepts/concepts.repository');
 
 module.exports = {
   getConcepts
 };
 
 function getConcepts(pipe, cb) {
-  const ConceptsRepository = new ConceptsRepositoryFactory({
-    datasetId: pipe.dataset._id,
-    version: pipe.version
-  });
+  const conceptsRepository = conceptsRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version);
 
-  ConceptsRepository
-    .currentVersion()
+  conceptsRepository
     .findConceptProperties({}, pipe.where, (error, concepts) => {
       if (error) {
         return cb(error);

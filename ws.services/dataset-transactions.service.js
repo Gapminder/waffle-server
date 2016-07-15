@@ -98,7 +98,7 @@ function rollbackFailedTransactionFor(datasetName, onRollbackCompleted) {
     async.series([
       done => datasetsRepository.forceLock(datasetName, done),
       done => async.parallelLimit(rollbackTasks, constants.LIMIT_NUMBER_PROCESS, done),
-      done => transactionsRepository.deleteRecord(failedTransaction._id, done),
+      done => transactionsRepository.removeById(failedTransaction._id, done),
       done => datasetsRepository.removeVersion(datasetName, failedVersion, done),
       done => datasetsRepository.forceUnlock(datasetName, done),
       done => datasetsRepository.removeDatasetWithoutVersionsByName(datasetName, done)
@@ -168,7 +168,7 @@ function getStatusOfLatestTransactionByDatasetName(datasetName, done) {
 }
 
 function findDefaultDatasetAndTransaction(datasetName, commit, onFound) {
-  const croppedCommit = commit ? commit.slice(0, 7) : commit;
+  const croppedCommit = commit ? String(commit).slice(0, 7) : commit;
 
   if (datasetName && croppedCommit) {
     return _findDefaultDatasetAndTransactionByDatasetNameAndCommit(datasetName, croppedCommit, onFound);
