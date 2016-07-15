@@ -12,6 +12,7 @@ const Concepts = mongoose.model('Concepts');
 const Transactions = mongoose.model('DatasetTransactions');
 
 const cache = require('../../../ws.utils/redis-cache');
+const config = require('../../../ws.config/config');
 const constants = require('../../../ws.utils/constants');
 const authService = require('../../../ws.services/auth.service');
 const reposService = require('../../../ws.services/repos.service');
@@ -215,40 +216,33 @@ function _runIncrementalUpdate(pipe, onDatasetUpdated) {
   return incrementalUpdateService(options, onDatasetUpdated);
 }
 
-function getPrestoredQueries(cb) {
-  return async.waterfall([
-    async.constant({}),
-    (pipe, done) => Datasets.find({})
-      .sort({'name': 1})
-      .lean()
-      .exec((error, datasets) => {
-        pipe.datasets = datasets;
-        return done(error, pipe);
-      }),
-    (pipe, done) => {
-      const urls = [];
+function getPrestoredQueries(userId, onQueriesGot) {
+  return datasetsService.findDatasetsWithVersions(userId, (error, datasetsWithVersions) => {
+    return async.mapLimit(datasetsWithVersions, 3, (dataset, onUrlsCreated) => {
+      return async.mapLimit(dataset.versions, 3, (version, cb) => {
+        const query = {
+          dataset: dataset.id,
+          type: 'measure',
+          from: {$lte: version.createdAt.getTime()},
+          to: {$gt: version.createdAt.getTime()}
+        };
 
-      return async.eachSeries(pipe.datasets, (dataset, onUrlsCreated) => {
-        return async.eachSeries(dataset.versions, (version, cb) => {
-          let query = {dataset: dataset._id, type: 'measure', from: {$lte: version}, to: {$gt: version}};
-
-          return Concepts.find(query)
-            .lean()
-            .exec((error, measures) => {
-              urls.push(_makePrestoredQuery({
-                datasetName: dataset.name,
-                version,
-                measures
-              }));
-
-              return cb();
-            });
-        }, onUrlsCreated);
-      }, error => {
-        return done(error, urls);
-      });
-    }
-  ], cb);
+        return Concepts.find(query).lean().exec((error, measures) => {
+          return cb(null, _makePrestoredQuery({
+            createdAt: version.createdAt,
+            datasetName: dataset.name,
+            version: version.commit,
+            measures
+          }));
+        });
+      }, onUrlsCreated);
+    }, (error, result) => {
+      if (error) {
+        return onQueriesGot(error);
+      }
+      return onQueriesGot(null, _.flattenDeep(result));
+    });
+  });
 }
 
 function _makePrestoredQuery(query) {
@@ -260,10 +254,10 @@ function _makePrestoredQuery(query) {
     .value();
 
   return {
-    url: `http://localhost:3000/api/ddf/datapoints?dataset=${query.datasetName}&version=${query.version}&year=1800:2015&select=geo,year,${filteredMeasures}`,
+    url: `${config.HOST_URL}:${config.PORT}/api/ddf/datapoints?dataset=${query.datasetName}&version=${query.version}&select=geo,year,${filteredMeasures}`,
     datasetName: query.datasetName,
     version: query.version,
-    createdAt: new Date(query.version)
+    createdAt: query.createdAt
   };
 }
 

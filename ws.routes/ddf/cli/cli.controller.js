@@ -76,7 +76,7 @@ module.exports = serviceLocator => {
     const transactionCommit = req.body.commit;
 
     if (!req.user) {
-      return res.json({success: false, message: 'There is no user authenticated user to get its datasets'});
+      return res.json({success: false, error: 'There is no authenticated user to get its datasets'});
     }
 
     if (!datasetName) {
@@ -104,7 +104,7 @@ module.exports = serviceLocator => {
 
   function _getDatasets(req, res) {
     if (!req.user) {
-      return res.json({success: false, message: 'There is no user authenticated user to get its datasets'});
+      return res.json({success: false, error: 'There is no authenticated user to get its datasets'});
     }
 
     return cliService.findDatasetsWithVersions(req.user._id, (error, datasetsWithVersions) => {
@@ -147,7 +147,11 @@ module.exports = serviceLocator => {
   }
 
   function _getPrestoredQueries(req, res) {
-    cliService.getPrestoredQueries ((error, queries) => {
+    if (!req.user) {
+      return res.json({success: false, error: 'There is no authenticated user to get its datasets'});
+    }
+
+    cliService.getPrestoredQueries (req.user._id, (error, queries) => {
       if (error) {
         return res.json({success: !error, error});
       }

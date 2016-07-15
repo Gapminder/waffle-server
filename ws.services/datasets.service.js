@@ -47,6 +47,7 @@ function findDatasetsWithVersions(userId, onFound) {
         });
 
         const datasetWithVersions = {
+          id: dataset._id,
           name: dataset.name,
           isDefault: _.some(versions, version => version.isDefault),
           versions
