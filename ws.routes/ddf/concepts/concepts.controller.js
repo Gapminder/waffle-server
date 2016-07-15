@@ -39,14 +39,12 @@ module.exports = serviceLocator => {
   function ddfConceptsStats(req, res, next) {
     logger.debug('URL: \n%s%s', config.LOG_TABS, req.originalUrl);
 
-    let where = _.chain(req.decodedQuery.where).clone().mapValues(mapWhereClause).value();
+    const where = _.omit(req.decodedQuery.where, constants.EXCLUDED_QUERY_PARAMS);
     const datasetName = _.first(req.decodedQuery.where.dataset);
     const version = _.first(req.decodedQuery.where.version);
     const domainGid = _.first(req.decodedQuery.where.key);
     const headers = req.decodedQuery.select;
     const sort = req.decodedQuery.sort;
-
-    where = _.omit(where, constants.EXCLUDED_QUERY_PARAMS);
 
     let pipe = {
       headers,
@@ -70,21 +68,9 @@ module.exports = serviceLocator => {
       }
       console.timeEnd('finish Concepts stats');
 
-      req.wsJson = result;
+      req.rawDdf = result;
 
       return next();
     });
-  }
-
-  function mapWhereClause(value, key) {
-    if ( key.indexOf('is--') === 0 ) {
-      return !!_.first(value);
-    }
-
-    if ( _.isArray(value) ) {
-      return {$in: value};
-    }
-
-    return value;
   }
 };

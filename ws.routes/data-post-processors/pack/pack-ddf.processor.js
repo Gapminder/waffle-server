@@ -9,19 +9,21 @@ module.exports = {
   packDatapoints: _packDatapoints
 };
 
-function _packConcepts(wsJson) {
-  const concepts = wsJson.concepts;
-  const conceptGids = _.keys(concepts);
+function _packConcepts(rawDdf) {
+  const concepts = _.mapKeys(rawDdf.concepts, constants.GID);
+  const conceptGids = _.keys(concepts).sort();
 
   const properties = _.chain(concepts)
     .flatMap(concept => _.keys(concept.properties))
     .uniq()
+    .sort()
     .value();
 
   const propertyValues = _.chain(concepts)
     .flatMap(concept => _.values(concept.properties))
-    .map(_mapArrayAndObjectToJson)
+    .map(__mapArrayAndObjectToJson)
     .uniq()
+    .sort()
     .value();
 
   const invertedPropertyValues = _.invert(propertyValues);
@@ -29,7 +31,7 @@ function _packConcepts(wsJson) {
   const rows = _.map(conceptGids, (gid) => {
     const row = _.map(properties, (property) => {
       const value = concepts[gid].properties[property];
-      const propertyValue = _mapArrayAndObjectToJson(value);
+      const propertyValue = __mapArrayAndObjectToJson(value);
 
       return Number(_.get(invertedPropertyValues, propertyValue, -1));
     });
@@ -49,12 +51,15 @@ function _packConcepts(wsJson) {
   return result;
 }
 
-function _packEntities(wsJson) {
-  const entities = wsJson.entities;
-  const concepts = wsJson.concepts;
+function _packEntities(rawDdf) {
+  const entities = _.mapKeys(rawDdf.entities, constants.ORIGIN_ID);
+  _.forEach(entities, (entity) => {
+    entity.properties[rawDdf.domainGid] = entity[constants.GID];
+  });
+  const concepts = _.mapKeys(rawDdf.concepts, constants.GID);
 
   const isDomainOrSetOrTime = (value, key) => _.includes(['entity_domain', 'entity_set', 'time'], concepts[key].properties.concept_type);
-  const invertedConceptGids = _.chain(concepts).keys().invert().value();
+  const invertedConceptGids = _.chain(concepts).keys().sort().invert().value();
 
   const invertedConceptValues = _.chain(invertedConceptGids)
     .pickBy(isDomainOrSetOrTime)
@@ -65,13 +70,10 @@ function _packEntities(wsJson) {
 
   const values = _.chain(entities).map(constants.GID).uniq().value();
   const invertedValues = _.invert(values);
-  const properties = _.chain(entities)
-    .flatMap(entity => _.keys(entity.properties))
-    .uniq()
-    .value();
+  const properties = rawDdf.headers;
   const propertyValues = _.chain(entities)
     .flatMap(entity => _.values(entity.properties))
-    .map(_mapArrayAndObjectToJson)
+    .map(__mapArrayAndObjectToJson)
     .uniq()
     .value();
   const _propertyValues = _.invert(propertyValues);
@@ -81,7 +83,7 @@ function _packEntities(wsJson) {
   const rows = _.map(entities, (entity, key) => {
     const row = _.map(properties, (property) => {
       const value = entity.properties[property];
-      const propertyValue = _mapArrayAndObjectToJson(value);
+      const propertyValue = __mapArrayAndObjectToJson(value);
 
       return Number(_.get(_propertyValues, propertyValue, -1));
     });
@@ -129,17 +131,17 @@ function _packEntities(wsJson) {
   return result;
 }
 
-function _packDatapoints(wsJson, entityByOriginId) {
-  const headers = wsJson.headers;
-  const concepts = wsJson.concepts;
-  const datapoints = wsJson.datapoints;
+function _packDatapoints(rawDdf, entityByOriginId) {
+  const headers = rawDdf.headers;
+  const concepts = _.mapKeys(rawDdf.concepts, constants.GID);
+  const datapoints = rawDdf.datapoints;
 
   const isMeasure = (value, key) => {
     return _.includes(['measure'], concepts[key].properties.concept_type)
       && _.includes(headers, concepts[key].properties.concept);
   };
 
-  const invertedConceptGids = _.chain(concepts).keys().invert().value();
+  const invertedConceptGids = _.chain(concepts).keys().sort().invert().value();
   const invertedIndicatorValues = _.chain(invertedConceptGids)
     .pickBy(isMeasure)
     .invert()
@@ -181,6 +183,6 @@ function _packDatapoints(wsJson, entityByOriginId) {
   return result;
 }
 
-function _mapArrayAndObjectToJson(property) {
+function __mapArrayAndObjectToJson(property) {
   return _.isArray(property) || _.isObject(property) ? JSON.stringify(property) : property;
 }

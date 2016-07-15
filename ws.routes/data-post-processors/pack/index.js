@@ -1,5 +1,5 @@
 'use strict';
-
+const _ = require('lodash');
 let pack = require('./pack.processor.js');
 
 const DEFAULT_MIME_TYPE = 'application/json';
@@ -12,8 +12,17 @@ const MIME_TYPE_MAPPINGS = {
 
 module.exports = (req, res) => {
   let formatType = req.query.format;
+  const data = {};
+  if (!_.isEmpty(req.wsJson)) {
+    data.wsJson = req.wsJson;
+    formatType = MIME_TYPE_MAPPINGS[formatType] ? formatType : 'wsJson';
+  }
+  if (!_.isEmpty(req.rawDdf)) {
+    data.rawDdf = req.rawDdf;
+    formatType = 'ddfJson';
+  }
 
-  return pack(req.wsJson, formatType, (err, packedData) => {
+  return pack(data, formatType, (err, packedData) => {
     if (err) {
       console.error(err);
       res.use_express_redis_cache = false;

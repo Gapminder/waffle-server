@@ -3,6 +3,7 @@
 const _ = require('lodash');
 const constants = require('../../../ws.utils/constants');
 
+// FIXME: wsJson, csv, json pack processors
 module.exports = {
   mapConcepts: mapConceptToWsJson,
   mapEntities: mapEntitiesToWsJson,
@@ -14,7 +15,7 @@ function mapConceptToWsJson(data, cb) {
     return _mapConceptPropertiesToWsJson(data.headers, concept);
   });
 
-  return cb(null, rows);
+  return cb(null, {wsJson: {headers: data.headers, rows}});
 }
 
 function _mapConceptPropertiesToWsJson(select, concept) {
@@ -26,7 +27,7 @@ function mapEntitiesToWsJson(data, cb) {
     return _mapEntitiesPropertiesToWsJson(data.domainGid, data.headers, entity);
   });
 
-  return cb(null, rows);
+  return cb(null, {wsJson: {headers: data.headers, rows}});
 }
 
 function _mapEntitiesPropertiesToWsJson(entityDomainGid, select, entity) {
@@ -73,7 +74,10 @@ function mapDatapointsToWsJson(data, cb) {
     })
     .value();
 
-  return cb(null, _.sortBy(rows, ['0', '1']));
+  return cb(null, {wsJson: {
+    headers: data.headers,
+    rows: _.sortBy(rows, ['0', '1'])
+  }});
 }
 
 function _getComplexKey(entities, selectedConceptsByOriginId, headers, datapoint) {

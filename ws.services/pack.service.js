@@ -1,11 +1,13 @@
 'use strict';
 
 const _ = require('lodash');
+const async = require('async');
 const json2csv = require('json2csv');
 
 const wsJsonPack = require('./../ws.routes/data-post-processors/pack/pack-ws.processor.js');
 const ddfJsonPack = require('./../ws.routes/data-post-processors/pack/pack-ddf.processor.js');
 
+// FIXME: packToWsJson, packToCsv, packToJson
 module.exports = {
   csv: packToCsv,
   json: packToJson,
@@ -14,30 +16,35 @@ module.exports = {
   ddfJson: packToDdfJson
 };
 
-
 function packToCsv(data, cb) {
-  return _toWsJson(data, (error, rows) => _toCsv(data.headers, rows, cb));
+  const pipe = {
+    headers: data.headers,
+    rows: data.rows,
+    fields: data.headers,
+    quotes: '"'
+  };
+
+  return async.waterfall([
+    async.constant(data),
+    _toWsJson,
+    (data, cb) => _toJson(data, (err, json) => cb(null, {headers: data.headers, })),
+    _toCsv
+  ], cb);
 }
 
-function _toCsv(headers, rows, cb) {
-  _toJson(headers, rows, (err, json) => {
-    return json2csv({data: json, fields: headers, quotes: '"'}, (err, csv) => {
-      if (err) {
-        return cb(err);
-      }
-
-      return cb(null, csv);
-    });
-  });
+function _toCsv(data, _cb) {
+  return json2csv({data: data.rows, fields: data.headers, quotes: '"'}, _cb);
 }
 
-function packToJson(data, cb) {
-  return _toWsJson(data, (error, rows) => _toJson(data.headers, rows, cb));
+function packToJson(data, _cb) {
+  const cb = (error, rows) => _toJson(data.headers, rows, _cb);
+
+  return _toWsJson(data, cb);
 }
 
-function _toJson(headers, rows, cb) {
-  const json = _.map(rows, row => {
-    return _.zipObject(headers, row);
+function _toJson(data, cb) {
+  const json = _.map(data.rows, row => {
+    return _.zipObject(data.headers, row);
   });
 
   return cb(null, json);
@@ -53,21 +60,24 @@ function packToWsJson(data, cb) {
 }
 
 function _toWsJson(data, cb) {
-  const entities = data.entities;
-  const datapoints = data.datapoints;
-  const rows = data.rows;
+  const rawDdf = _.get(data, 'rawDdf', {});
+  const rows = _.get(data, 'wsJson.rows', null);
 
   if (!_.isEmpty(rows)) {
-    return cb(null, rows);
+    return cb(null, {wsJson: {headers: data.headers, rows}});
+  }
+
+  if (_.isEmpty(rawDdf)) {
+    return cb(null, {wsJson: {}});
   }
 
   // TODO: should be covered by unittest
-  if (!_.isEmpty(datapoints)) {
+  if (!_.isEmpty(rawDdf.datapoints)) {
     return wsJsonPack.mapDatapoints(data, cb);
   }
 
   // TODO: should be covered by unittest
-  if (!_.isEmpty(entities)) {
+  if (!_.isEmpty(rawDdf.entities)) {
     return wsJsonPack.mapEntities(data, cb);
   }
 
@@ -80,23 +90,28 @@ function packToDdfJson(data, cb) {
 }
 
 function _toDdfJson(data, cb) {
+  const rawDdf = _.get(data, 'rawDdf', data);
   const json = {};
 
-  const concepts = ddfJsonPack.packConcepts(data);
+  if (_.isEmpty(rawDdf)) {
+    return cb(null, json);
+  }
+
+  const concepts = ddfJsonPack.packConcepts(rawDdf);
   json.concepts = concepts.packed;
 
-  if (_.isEmpty(data.entities)) {
+  if (_.isEmpty(rawDdf.entities)) {
     return cb(null, json);
   }
 
-  const entities = ddfJsonPack.packEntities(data);
+  const entities = ddfJsonPack.packEntities(rawDdf);
   json.entities = entities.packed;
 
-  if (_.isEmpty(data.datapoints)) {
+  if (_.isEmpty(rawDdf.datapoints)) {
     return cb(null, json);
   }
 
-  const datapoints = ddfJsonPack.packDatapoints(data, entities.meta.entityByOriginId);
+  const datapoints = ddfJsonPack.packDatapoints(rawDdf, entities.meta.entityByOriginId);
   json.datapoints = datapoints.packed;
 
   return cb(null, json);

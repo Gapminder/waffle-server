@@ -319,11 +319,11 @@ describe('unpack data post processor for ddfJson', () => {
     const expectedHeaders = ["energy_use_total","geo","sg_population","time"];
     const expectedRows = [
       {geo: 'usa', time: "2000", sg_population: "282895741", energy_use_total: "2273000000"},
-      {geo: 'usa', time: "1800", sg_population: "6801854", energy_use_total: ""},
-      {geo: 'usa', time: "1900", sg_population: "77415610", energy_use_total: ""},
+      {geo: 'usa', time: "1800", sg_population: "6801854", energy_use_total: null},
+      {geo: 'usa', time: "1900", sg_population: "77415610", energy_use_total: null},
       {geo: 'ukraine', time: "2000", sg_population: "48746269", energy_use_total: "133800000"},
-      {geo: 'ukraine', time: "1800", sg_population: "11215490", energy_use_total: ""},
-      {geo: 'ukraine', time: "1900", sg_population: "23471939", energy_use_total: ""}
+      {geo: 'ukraine', time: "1800", sg_population: "11215490", energy_use_total: null},
+      {geo: 'ukraine', time: "1900", sg_population: "23471939", energy_use_total: null}
     ];
 
     unpack(packedJson, (err, unpackedJson) => {
