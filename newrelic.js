@@ -11,10 +11,6 @@ exports.config = {
    * Array of application names.
    */
   app_name: ['Waffle Server'],
-  /**
-   * Your New Relic license key.
-   */
-  license_key: 'c81343d5465b4d6bbc063dfe9d5fc75d3c4f329e',
   logging: {
     /**
      * Level at which to log. 'trace' is most useful to New Relic when diagnosing
