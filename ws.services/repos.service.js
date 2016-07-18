@@ -8,6 +8,7 @@ const path = require('path');
 const git = require('simple-git');
 
 const config = require('../ws.config/config');
+const logger = require('../ws.config/log');
 
 module.exports = {
   cloneRepo,
@@ -29,6 +30,7 @@ function cloneRepo(githubUrl, commit, onCloned) {
       }
       return git(config.PATH_TO_DDF_REPOSITORIES).clone(githubUrl, repoName, cloneError => {
         if (cloneError) {
+          logger.error(cloneError);
           return onCloned(`Cannot clone repo from ${githubUrl}`);
         }
 
