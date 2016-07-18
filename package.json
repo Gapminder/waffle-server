@@ -38,6 +38,7 @@
     "method-override": "2.3.5",
     "mongoose": "4.3.7",
     "morgan": "1.6.1",
+    "newrelic": "1.28.3",
     "node-neo4j": "2.0.3",
     "node-uuid": "1.4.7",
     "passport": "0.2.2",
