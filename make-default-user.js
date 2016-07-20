@@ -15,12 +15,12 @@ module.exports = () => {
     password: config.DEFAULT_USER_PASSWORD
   };
 
-  usersRepository.updateUserByEmail(user, (error, updatedUser) => {
+  usersRepository.findUserByEmail(user.email, (error, existingUser) => {
     if (error) {
-      throw new Error('Default user was not vanished');
+      throw new Error('Error occurred fetching existing user');
     }
 
-    if (!updatedUser) {
+    if (!existingUser) {
       return usersRepository.createUser(user, error => {
         if (error) {
           return logger.error('Default user was not created');

@@ -38,9 +38,4 @@ UsersRepository.prototype.createUser = (user, done) => {
   });
 };
 
-UsersRepository.prototype.updateUserByEmail = function (user, onUpdated) {
-  return Users.findOneAndUpdate({email: user.email}, {$set: user}, {new: true}, onUpdated);
-};
-
-
 module.exports = new UsersRepository();

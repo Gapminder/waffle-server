@@ -4,17 +4,24 @@
   "description": "Waffle server",
   "main": "app.js",
   "scripts": {
-    "test": "./node_modules/.bin/gulp test",
+    "test": "./node_modules/.bin/nyc --all --include='**/*.js' ./node_modules/.bin/ava",
+    "test:coverage-report": "npm run test && ./node_modules/.bin/nyc report --reporter=html",
     "swagger": "./node_modules/.bin/gulp swagger",
-    "doc": "./node_modules/.bin/gulp swagger",
     "dev": "NODE_ENV=development npm run start",
-    "prestart": "./node_modules/.bin/gulp swagger",
+    "prestart": "npm run swagger",
     "start": "forever stopall && forever start --logFile forever.log --outFile logs/out.log --errFile logs/err.log -a -p logs --minUptime 1000 --spinSleepTime 1000000 server.js",
     "changelog": "./node_modules/.bin/conventional-changelog -i CHANGELOG.md -s -p angular",
     "github-release": "./node_modules/.bin/conventional-github-releaser -p angular",
     "preversion": "npm test",
     "version": "npm run changelog && git add CHANGELOG.md",
     "postversion": "git push origin master && git push --tags && npm run github-release"
+  },
+  "ava": {
+    "files": [
+      "**/*.test.js"
+    ],
+    "failFast": true,
+    "verbose": true
   },
   "dependencies": {
     "JSONStream": "1.1.2",
@@ -54,6 +61,7 @@
     "winston-daily-rotate-file": "1.0.1"
   },
   "devDependencies": {
+    "ava": "valorkin/ava",
     "chai": "3.4.1",
     "conventional-changelog": "1.1.0",
     "conventional-changelog-cli": "1.1.1",
@@ -63,7 +71,9 @@
     "gulp-eslint": "1.1.1",
     "gulp-mocha": "2.2.0",
     "mocha": "2.3.4",
+    "nyc": "7.0.0",
     "pre-commit": "1.1.2",
+    "proxyquire": "1.7.10",
     "rewire": "2.5.1",
     "sinon": "1.17.2",
     "supertest": "1.1.0",
@@ -76,12 +86,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/valor-software/waffle-server.git"
+    "url": "https://github.com/Gapminder/waffle-server.git"
   },
-  "author": "Dmitriy Shekhovtsov <valorkin@gmail.com>",
-  "license": "ISC",
+  "author": "Valor Software",
+  "private": true,
   "bugs": {
-    "url": "https://github.com/valor-software/waffle-server/issues"
+    "url": "https://github.com/Gapminder/waffle-server/issues"
   },
-  "homepage": "https://github.com/valor-software/waffle-server"
+  "homepage": "https://github.com/Gapminder/waffle-server"
 }
