@@ -38,8 +38,8 @@ UsersRepository.prototype.createUser = (user, done) => {
   });
 };
 
-UsersRepository.prototype.removeUserByEmail = function (email, onRemoved) {
-  return Users.findOneAndRemove({email}, onRemoved);
+UsersRepository.prototype.updateUserByEmail = function (user, onUpdated) {
+  return Users.findOneAndUpdate({email: user.email}, {$set: user}, {new: true}, onUpdated);
 };
 
 

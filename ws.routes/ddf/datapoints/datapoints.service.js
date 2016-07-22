@@ -113,6 +113,7 @@ function getDataPoints(pipe, cb) {
       if (error) {
         return cb(error);
       }
+      //pipe.datapoints = datapoints.slice(0, 10);
       pipe.datapoints = datapoints;
       return cb(null, pipe);
     });
