@@ -10,7 +10,7 @@ function getConcepts(pipe, cb) {
   const conceptsRepository = conceptsRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version);
 
   conceptsRepository
-    .findConceptProperties({}, pipe.where, (error, concepts) => {
+    .findConceptProperties(pipe.headers, pipe.where, (error, concepts) => {
       if (error) {
         return cb(error);
       }

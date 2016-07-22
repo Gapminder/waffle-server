@@ -18,7 +18,14 @@ module.exports = new utils.VersionedModelRepositoryFactory(ConceptsRepository);
 
 ConceptsRepository.prototype.findConceptProperties = function (select, where, onPropertiesFound) {
   const projection = makePositiveProjectionFor(select);
-  const conceptQuery = this._composeQuery(prefixWithProperties(where));
+  if (!_.isEmpty(projection)) {
+    projection.gid = 1;
+    projection.originId = 1;
+    projection['properties.concept_type'] = 1;
+  }
+
+  const normalizedWhereClause = this._normalizeWhereClause(where);
+  const conceptQuery = this._composeQuery(prefixWithProperties(normalizedWhereClause));
 
   return Concepts.find(conceptQuery, projection).lean().exec(onPropertiesFound);
 };
@@ -36,7 +43,7 @@ ConceptsRepository.prototype.findAll = function (onFound) {
 //TODO: Move this in utils that should be common across all repositories
 function makePositiveProjectionFor(properties) {
   const positiveProjectionValues = _.fill(new Array(_.size(properties)), 1);
-  return prefixWithProperties(_.chain(properties).zipObject(positiveProjectionValues).value());
+  return prefixWithProperties(_.zipObject(properties, positiveProjectionValues));
 }
 
 function prefixWithProperties(object) {

@@ -15,6 +15,11 @@ module.exports = {
 
   GID: 'gid',
   ORIGIN_ID: 'originId',
+  IS_OPERATOR: '.is--',
+  CONCEPT_TYPE: 'type',
+  CONCEPT_TYPE_MEASURE: 'measure',
+  CONCEPT_TYPE_ENTITY_DOMAIN: 'entity_domain',
+  CONCEPT_TYPE_ENTITY_SET: 'entity_set',
 
   EXCLUDED_QUERY_PARAMS: ['dataset', 'version', 'v', 'format', 'no-compression', 'key', 'geo.cat', 'force']
 };

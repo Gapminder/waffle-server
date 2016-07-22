@@ -3,7 +3,7 @@
 const mongoose = require('mongoose');
 require('../../ws.repository/geo.model');
 
-const geoController = require('./geo-properties.service');
+const geoService = require('./geo-properties.service');
 
 const sinon = require('sinon');
 const assert = require('assert');
@@ -612,13 +612,13 @@ describe('Geo properties controller', () => {
     let where = _where || defaultWhere;
     let rows = _rows || defaultRows;
 
-    let listGeoPropertiesStub = sinon.stub(geoController, 'listGeoProperties', (query, projection, cb) => {
+    let listGeoPropertiesStub = sinon.stub(geoService, 'listGeoProperties', (query, projection, cb) => {
       assert.deepEqual(query, expectedQuery);
       assert.deepEqual(projection, expectedProjection);
       cb(null, rows);
     });
 
-    geoController.projectGeoProperties(select, where, (err, wsJson) => {
+    geoService.projectGeoProperties(select, where, (err, wsJson) => {
       assert.deepEqual(wsJson, expectedWsJson);
       listGeoPropertiesStub.restore();
     });

@@ -2,16 +2,14 @@
 
 const _ = require('lodash');
 const cors = require('cors');
-const async = require('async');
 const express = require('express');
 const compression = require('compression');
 
 const constants = require('../../../ws.utils/constants');
 const decodeQuery = require('../../utils').decodeQuery;
-const statsService = require('./entities.service');
+const entitiesService = require('./entities.service');
 const commonService = require('../../../ws.services/common.service');
 const getCacheConfig = require('../../utils').getCacheConfig;
-const conceptsService = require('../concepts/concepts.service');
 const dataPostProcessors = require('../../data-post-processors');
 
 const cache = require('../../../ws.utils/redis-cache');
@@ -40,7 +38,7 @@ module.exports = serviceLocator => {
   function ddfEntitiesStats(req, res, next) {
     logger.debug('URL: \n%s%s', config.LOG_TABS, req.originalUrl);
 
-    let where = _.chain(req.decodedQuery.where).clone().mapValues(mapWhereClause).value();
+    const where = _.omit(req.decodedQuery.where, constants.EXCLUDED_QUERY_PARAMS);
     const datasetName = _.first(req.decodedQuery.where.dataset);
     const version = _.first(req.decodedQuery.where.version);
     const domainGid = _.first(req.decodedQuery.where.key);
@@ -48,9 +46,7 @@ module.exports = serviceLocator => {
     const headers = req.decodedQuery.select;
     const sort = req.decodedQuery.sort;
 
-    where = _.omit(where, constants.EXCLUDED_QUERY_PARAMS);
-
-    const pipe = {
+    const options = {
       headers,
       where,
       sort,
@@ -59,34 +55,18 @@ module.exports = serviceLocator => {
       version
     };
 
-    console.time('finish Entities stats');
-    async.waterfall([
-      async.constant(pipe),
-      commonService.findDefaultDatasetAndTransaction,
-      conceptsService.getConcepts,
-      statsService.getEntities
-    ], (error, result) => {
+    entitiesService.collectEntities(options, (error, result) => {
       if (error) {
         console.error(error);
         res.use_express_redis_cache = false;
         return res.json({success: false, error: error});
       }
-      console.timeEnd('finish Entities stats');
 
-      req.wsJson = result;
+
+      req.rawDdf = result;
+      req.rawDdf.domainGid = domainGid;
+
       return next();
     });
-  }
-
-  function mapWhereClause(value, key) {
-    if ( key.indexOf('is--') === 0 ) {
-      return !!_.first(value);
-    }
-
-    if ( _.isArray(value) ) {
-      return {$in: value};
-    }
-
-    return value;
   }
 };

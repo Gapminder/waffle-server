@@ -2,6 +2,6 @@
 
 module.exports = {
   pack: require('./pack'),
-  toPrecision: require('./toPrecision'),
+  toPrecision: require('./precision'),
   gapfilling: require('./gapfilling')
 };

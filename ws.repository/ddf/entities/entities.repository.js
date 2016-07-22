@@ -52,15 +52,19 @@ EntitiesRepository.prototype.findEntityProperties = function(entityDomainGid, se
     if (_.includes(select, entityDomainGid)) {
       projection.gid = 1;
     }
+    if (!_.isEmpty(projection)) {
+      projection.gid = 1;
+      projection.originId = 1;
+      projection.domain = 1;
+    }
 
-    where = toPropertiesDotNotation(_.mapKeys(where, (value, key) => {
-      if (key === entityDomainGid) {
-        return 'gid';
-      }
-      return key;
-    }));
+    const normalizedWhereClause = this._normalizeWhereClause(where);
+    const whereClauseWithSubstitutedGid = _.mapKeys(normalizedWhereClause, (value, key) => {
+      return key.slice(key.indexOf('.') + 1)
+    });
+    const whereWithPrefixedProperties = toPropertiesDotNotation(whereClauseWithSubstitutedGid);
 
-    const entitiesQuery = this._composeQuery({domain: concept.originId}, where);
+    const entitiesQuery = this._composeQuery({domain: concept.originId}, whereWithPrefixedProperties);
 
     return Entities.find(entitiesQuery, projection).lean().exec(onPropertiesFound);
   });

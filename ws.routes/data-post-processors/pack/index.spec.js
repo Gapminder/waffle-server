@@ -1,5 +1,6 @@
 'use strict';
 
+const _ = require('lodash');
 const sinon = require('sinon');
 const assert = require('assert');
 const packMiddleware = require('rewire')('./index');
@@ -36,13 +37,16 @@ describe('pack-middleware', () => {
       "gini": 42
     }];
 
+    req.query.format ='json';
+
     let resMock = sinon.mock(res);
     resMock.expects('set').once().withArgs('Content-Type', 'application/json');
     resMock.expects('send').once().withArgs(packedData);
 
     packMiddleware.__set__('pack', (wsJson, formatType, cb) => {
       //assert
-      assert.deepEqual(wsJson, req.wsJson);
+      assert.deepEqual(wsJson.wsJson, req.wsJson);
+      assert.ok(_.isEmpty(wsJson.rawDdf));
 
       cb(null, packedData);
 
@@ -54,22 +58,50 @@ describe('pack-middleware', () => {
     packMiddleware(req, res);
   });
 
-  it('should respond with application/json content type when unknown format parameter was given', (done) => {
+  it('should respond with application/x-ws+json content type when wsJson format parameter was given', (done) => {
     //arrange
-    let packedData = [{
-      "geo": "usa",
-      "year": 2004,
-      "gini": 42
-    }];
+    let packedData = {
+      "headers": ["geo", "year", "gini"],
+      "rows": [["usa", 2004, 42]]
+    };
+
+    req.query.format ='wsJson';
+
+    let resMock = sinon.mock(res);
+    resMock.expects('set').once().withArgs('Content-Type', 'application/x-ws+json');
+    resMock.expects('send').once().withArgs(packedData);
+
+    packMiddleware.__set__('pack', (wsJson, formatType, cb) => {
+      //assert
+      assert.deepEqual(wsJson.wsJson, req.wsJson);
+      assert.ok(_.isEmpty(wsJson.rawDdf));
+
+      cb(null, packedData);
+
+      resMock.verify();
+      done();
+    });
+
+    //act
+    packMiddleware(req, res);
+  });
+
+  it('should respond with application/x-ws+json content type when unknown format parameter was given', (done) => {
+    //arrange
+    let packedData = {
+      "headers": ["geo", "year", "gini"],
+      "rows": [["usa", 2004, 42]]
+    };
 
     req.query.format ='bla-unknown';
 
     let resMock = sinon.mock(res);
-    resMock.expects('set').once().withArgs('Content-Type', 'application/json');
+    resMock.expects('set').once().withArgs('Content-Type', 'application/x-ws+json');
     resMock.expects('send').once().withArgs(packedData);
 
     packMiddleware.__set__('pack', (wsJson, formatType, cb) => {
-      assert.deepEqual(wsJson, req.wsJson);
+      assert.deepEqual(wsJson.wsJson, req.wsJson);
+      assert.ok(_.isEmpty(wsJson.rawDdf));
 
       cb(null, packedData);
 
@@ -97,7 +129,8 @@ describe('pack-middleware', () => {
 
     packMiddleware.__set__('pack', (wsJson, formatType, cb) => {
       //assert
-      assert.deepEqual(wsJson, req.wsJson);
+      assert.deepEqual(wsJson.wsJson, req.wsJson);
+      assert.ok(_.isEmpty(wsJson.rawDdf));
 
       cb(null, packedData);
 

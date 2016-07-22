@@ -2,7 +2,7 @@
 
 const sinon = require('sinon');
 const assert = require('assert');
-const toPrecisionMiddleware = require('rewire')('./toPrecision');
+const toPrecisionMiddleware = require('rewire')('./index');
 
 describe('toPrecision-middleware', () => {
   it('should process data with a given precision level and call next middleware', () => {

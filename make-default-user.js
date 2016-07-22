@@ -15,17 +15,21 @@ module.exports = () => {
     password: config.DEFAULT_USER_PASSWORD
   };
 
-  usersRepository.removeUserByEmail(user.email, error => {
+  usersRepository.updateUserByEmail(user, (error, updatedUser) => {
     if (error) {
       throw new Error('Default user was not vanished');
     }
 
-    return usersRepository.createUser(user, error => {
-      if (error) {
-        return logger.error('Default user was not created');
-      }
+    if (!updatedUser) {
+      return usersRepository.createUser(user, error => {
+        if (error) {
+          return logger.error('Default user was not created');
+        }
 
-      return logger.info('Default user was created');
-    });
+        return logger.info('Default user was created');
+      });
+    }
+
+    return logger.info('Default user was updated');
   });
 };
