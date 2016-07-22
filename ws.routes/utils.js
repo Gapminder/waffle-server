@@ -39,12 +39,6 @@ function ensureAuthenticated(req, res, next) {
 }
 
 function ensureAuthenticatedViaToken(res, req, next) {
-  // FIXME: This solution with disabling auth for local env is a workaround in order to be able to test routes,
-  // this will be fixed as soon as user registration is implemented
-  if (config.NODE_ENV === 'local') {
-    return next();
-  }
-
   return passport.authenticate('token')(res, req, next);
 }
 

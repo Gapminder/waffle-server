@@ -52,10 +52,6 @@ function checkoutRepo(pathToRepo, commit, onCheckedOut) {
 }
 
 function getRepoName(githubUrl) {
-  if (!_.includes(githubUrl, '/')) {
-    return '';
-  }
-
   const partsOfGitHubUrl = _.split(githubUrl, '/');
   const lastPart = _.last(partsOfGitHubUrl);
   return _.first(_.split(lastPart, '.'));

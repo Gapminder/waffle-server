@@ -55,7 +55,7 @@ test.cb('should respond with an error if cannot detect repo name for cloning', a
   });
 
   stubbedReposService.cloneRepo('fake repo', 'any commit', error => {
-    assert.is(error, 'Incorrect github url was given: fake repo');
+    assert.is(error, 'Cannot clone repo from fake repo');
     assert.end();
   });
 });
@@ -148,14 +148,6 @@ test('should properly extract repo name from github url', assert => {
   const actualRepoName = reposService.getRepoName(`git@github.com:open-numbers/${expectedDdfRepoName}.git`);
 
   assert.is(actualRepoName, expectedDdfRepoName);
-});
-
-test('should respond with empty string when it is impossible to split given url by slashes', assert => {
-  const expectedDdfRepoName = 'ddf--gapminder--systema_globalis';
-
-  const actualRepoName = reposService.getRepoName(expectedDdfRepoName);
-
-  assert.is(actualRepoName, '');
 });
 
 test('should treat last chunk in a string separated by slashes as a repo name', assert => {
