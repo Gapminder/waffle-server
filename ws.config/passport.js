@@ -5,7 +5,7 @@ const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const UniqueTokenStrategy = require('passport-unique-token').Strategy;
 
-const UsersRepository = require('../ws.repository/ddf/users/users.repository');
+const usersRepository = require('../ws.repository/ddf/users/users.repository');
 
 module.exports = (function () {
 
@@ -14,7 +14,7 @@ module.exports = (function () {
   });
 
   passport.deserializeUser((id, done) => {
-    return UsersRepository.findById(id, (error, user) => {
+    return usersRepository.findById(id, (error, user) => {
       done(error, user);
     });
   });
@@ -32,7 +32,7 @@ module.exports = (function () {
     };
 
     passport.use(new UniqueTokenStrategy(strategyOptions, (token, done) => {
-      UsersRepository.findUserByUniqueToken(token, (error, user) => {
+      usersRepository.findUserByUniqueTokenAndProlongSession(token, (error, user) => {
         if (error) {
           return done(error);
         }

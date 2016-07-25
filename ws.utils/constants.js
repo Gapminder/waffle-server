@@ -21,5 +21,8 @@ module.exports = {
   CONCEPT_TYPE_ENTITY_DOMAIN: 'entity_domain',
   CONCEPT_TYPE_ENTITY_SET: 'entity_set',
 
-  EXCLUDED_QUERY_PARAMS: ['dataset', 'version', 'v', 'format', 'no-compression', 'key', 'geo.cat', 'force']
+  EXCLUDED_QUERY_PARAMS: ['dataset', 'version', 'v', 'format', 'no-compression', 'key', 'geo.cat', 'force'],
+
+  ONE_HOUR: 60 * 60 * 1000,
+  VALID_TOKEN_PERIOD_IN_MILLIS: this.ONE_HOUR
 };
