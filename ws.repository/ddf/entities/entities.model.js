@@ -54,15 +54,9 @@ Entities.plugin(originId, {
   originId: 'Entities'
 });
 
-Entities.index({domain: 1});
-Entities.index({sets: 1});
-Entities.index({sources: 1});
-
-// Entities.index({gid: 1, versions: 1});
-// Entities.index({gid: 1, drilldowns: 1});
-// Entities.index({gid: 1, drillups: 1});
+Entities.index({dataset: 1, from: 1, to: 1, domain: 1});
+Entities.index({dataset: 1, transaction: 1, originId: 1});
 Entities.index({originId: 1, dataset: 1, transaction: 1});
-Entities.index({originId: 1, dataset: 1, from: 1});
-Entities.index({dataset: 1, from: 1, to: 1});
+Entities.index({originId: 1, dataset: 1, from: 1, to: 1});
 
 module.exports = mongoose.model('Entities', Entities);

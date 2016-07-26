@@ -39,7 +39,6 @@ let OriginalEntities = new Schema({
 
 }, { strict: false });
 
-OriginalEntities.index({gid: 1, domain: 1});
-OriginalEntities.index({gid: 1, sets: 1});
+OriginalEntities.index({dataset: 1, transaction: 1});
 
 module.exports = mongoose.model('OriginalEntities', OriginalEntities);

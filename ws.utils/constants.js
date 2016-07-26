@@ -23,6 +23,5 @@ module.exports = {
 
   EXCLUDED_QUERY_PARAMS: ['dataset', 'version', 'v', 'format', 'no-compression', 'key', 'geo.cat', 'force'],
 
-  ONE_HOUR: 60 * 60 * 1000,
-  VALID_TOKEN_PERIOD_IN_MILLIS: this.ONE_HOUR
+  VALID_TOKEN_PERIOD_IN_MILLIS: 60 * 60 * 1000 // one hour
 };

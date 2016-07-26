@@ -17,16 +17,16 @@ UsersRepository.prototype.findUserByEmail = (email, onFound) => {
 };
 
 UsersRepository.prototype.findUserByUniqueTokenAndProlongSession = function (uniqueToken, onFound) {
+  const now = Date.now();
+
   const notExpiredUserQuery = {
     uniqueToken,
-    expireToken: {$gt: Date.now()}
+    expireToken: {$gt: now}
   };
 
   const updateExpireTokenQuery = {
     $set: {
-      inc: {
-        expireToken: constants.VALID_TOKEN_PERIOD_IN_MILLIS
-      }
+      expireToken: now + constants.VALID_TOKEN_PERIOD_IN_MILLIS
     }
   };
 

@@ -28,7 +28,6 @@ module.exports = {
   createDataPoints,
   _createDataPoints,
   findDataset,
-  findVersion,
   getAllConcepts: _getAllConcepts,
   findAllEntities: _findAllEntities,
   processOriginalEntities: _processOriginalEntities,
@@ -225,9 +224,9 @@ function _addConceptSubsetOf(pipe, done) {
 
     mongoose.model('Concepts').update(
       {
-        'properties.drill_up': gid,
         dataset: pipe.datasetId || pipe.dataset._id,
-        transaction: pipe.transactionId || pipe.transaction._id
+        transaction: pipe.transactionId || pipe.transaction._id,
+        'properties.drill_up': gid
       },
       {$addToSet: {'subsetOf': concept._id}},
       {multi: true},
@@ -253,9 +252,9 @@ function _addConceptDomains(pipe, done) {
 
     mongoose.model('Concepts').update(
       {
-        'properties.domain': gid,
         dataset: pipe.datasetId || pipe.dataset._id,
-        transaction: pipe.transactionId || pipe.transaction._id
+        transaction: pipe.transactionId || pipe.transaction._id,
+        'properties.domain': gid
       },
       {$set: {'domain': concept._id}},
       {multi: true},
@@ -447,11 +446,6 @@ function _createEntitiesBasedOnOriginalEntities(pipe, done) {
 
   logger.info(`** create entities based on original entities`);
 
-  // let entities = _.chain(pipe.originalEntities)
-  //   .groupBy('gid')
-  //   .flatMap(mapDdfEntityBasedOnOriginalEntityToWsModel(pipe.concepts))
-  //   .value();
-
   // FIXME: REMOVE ALL REFERENCE TO ORIGINAL ENTITIES FROM IMPORT AND INCREMENTAL UPDATE
   return async.each(_.chunk(pipe.originalEntities, 100), _createEntities, (err) => {
     return done(err, pipe);
@@ -628,7 +622,7 @@ function __processRawDataPoints(pipe, cb) {
     };
 
     return async.setImmediate(() => cb(err, pipe));
-  }
+  };
 }
 
 function _createEntitiesBasedOnDataPoints(pipe, cb) {
@@ -702,9 +696,9 @@ function ___getAllEntitiesByMeasure(pipe, cb) {
   return mongoose.model('DataPoints').distinct(
     'dimensions',
     {
-      measure: pipe.measure.originId,
       dataset: pipe.dataset._id,
       transaction: pipe.transactionId || pipe.transaction._id,
+      measure: pipe.measure.originId,
     },
     (err, res) => {
       pipe.originIdsOfEntities = res;
@@ -717,9 +711,9 @@ function ___getAllSetsBySelectedEntities(pipe, cb) {
   return mongoose.model('Entities').distinct(
     'sets',
     {
-      originId: {$in: pipe.originIdsOfEntities},
       dataset: pipe.dataset._id,
       transaction: pipe.transactionId || pipe.transaction._id,
+      originId: {$in: pipe.originIdsOfEntities},
     },
     (err, res) => {
       pipe.originIdsOfEntitySets = res;
@@ -732,9 +726,9 @@ function ___getAllDimensionsBySelectedEntities(pipe, cb) {
   return mongoose.model('Entities').distinct(
     'domain',
     {
-      originId: {$in: pipe.originIdsOfEntities},
       dataset: pipe.dataset._id,
       transaction: pipe.transactionId || pipe.transaction._id,
+      originId: {$in: pipe.originIdsOfEntities},
     },
     (err, res) => {
       pipe.originIdsOfEntityDomains = res;
@@ -751,9 +745,9 @@ function ___updateDimensionByMeasure(pipe, cb) {
 
   return mongoose.model('Concepts').update(
     {
-      originId: pipe.measure.originId,
       dataset: pipe.datasetId || pipe.dataset._id,
-      transaction: pipe.transactionId || pipe.transaction._id
+      transaction: pipe.transactionId || pipe.transaction._id,
+      originId: pipe.measure.originId,
     },
     {$addToSet: {dimensions: {$each: dimensions}}},
     (err) => {
@@ -767,15 +761,6 @@ function findDataset(pipe, done) {
     .lean()
     .exec((err, res) => {
       pipe.dataset = res;
-      return done(err, pipe);
-    });
-}
-
-function findVersion(pipe, done) {
-  mongoose.model('DatasetTransactions').findOne({})
-    .lean()
-    .exec((err, res) => {
-      pipe.transaction = res;
       return done(err, pipe);
     });
 }
@@ -881,84 +866,6 @@ function mapDdfOriginalEntityToWsModel(pipe) {
   };
 }
 
-function mapDdfEntityBasedOnOriginalEntityToWsModel(concepts) {
-  let conceptsById = _.mapKeys(concepts, '_id');
-
-  return function mergeEntries(entries) {
-
-    const leftovers = [];
-    const mergedEntry = _mergeEntries(entries, leftovers, conceptsById);
-
-    leftovers.push(mergedEntry);
-
-    if (leftovers.length === entries.length) {
-      return _.map(leftovers, item => _.omit(item, ['_id', '__v']));
-    } else {
-      return mergeEntries(leftovers);
-    }
-  };
-}
-
-function _mergeEntries(entries, leftovers, conceptsById) {
-  return _.chain(entries)
-    .reduce((result, entry) => {
-      let isEntryAllowedToMerge = __checkEntryAllowedToMerge(result, entry, conceptsById);
-
-      let isEntryAllowedToMergeResult = __checkEntryAllowedToMergeResult(result, entry, conceptsById);
-
-      if (isEntryAllowedToMerge || isEntryAllowedToMergeResult) {
-        result = _.mergeWith(result, entry, __customizer);
-        result.isOwnParent = true;
-      } else {
-        leftovers.push(entry);
-      }
-
-      return result;
-    })
-    .value();
-}
-
-function __checkEntryAllowedToMerge(result, entry, conceptsById) {
-  let usedConcepts = _.chain(conceptsById)
-    .pick(conceptsById, entry.sets.map(_.toString))
-    .mapKeys('gid')
-    .keys()
-    .value();
-
-  return _.chain(entry.properties)
-    .keys()
-    .intersection(usedConcepts)
-    .some(group => result.properties[group] === entry.gid)
-    .value();
-}
-
-function __checkEntryAllowedToMergeResult(result, entry, conceptsById) {
-  let usedConcepts = _.chain(conceptsById)
-    .pick(conceptsById, result.sets.map(_.toString))
-    .mapKeys('gid')
-    .keys()
-    .value();
-
-  return _.chain(result.properties)
-    .keys()
-    .intersection(usedConcepts)
-    .some(group => entry.properties[group] === result.gid)
-    .value();
-}
-
-function __customizer(objValue, srcValue) {
-  if (_.isArray(objValue)) {
-    return _.chain(objValue)
-      .concat(srcValue)
-      .uniqWith(_.isEqual)
-      .map(item => {
-        return item._id || item;
-      })
-      .value();
-  }
-  return srcValue._id;
-}
-
 function mapDdfEntityToWsModel(entity, concept, domain, pipe) {
   let gid = process.env.USE_GEO_MAPPING === 'true' ? geoMapping[entity.gid] || entity.gid : entity.gid;
 
@@ -1038,7 +945,7 @@ function mapDdfDataPointToWsModel(pipe) {
           from: pipe.transaction.createdAt,
           dataset: pipe.dataset._id,
           transaction: pipe.transactionId || pipe.transaction._id
-        }
+        };
       })
       .value();
   };
