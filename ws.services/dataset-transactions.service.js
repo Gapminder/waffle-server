@@ -137,7 +137,7 @@ function getStatusOfLatestTransactionByDatasetName(datasetName, done) {
       }
 
       const version = latestTransaction.createdAt;
-      const closedOrOpenedByVersionQuery = {dataset: dataset._id, $or: [{from: version}, {to: version}]};
+      const closedOrOpenedByVersionQuery = {$or: [{from: version}, {to: version}], dataset: dataset._id};
 
       const modifiedObjectsTasks = {
         concepts: done => Concepts.count(closedOrOpenedByVersionQuery, done),
