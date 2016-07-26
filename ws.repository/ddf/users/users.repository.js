@@ -1,30 +1,43 @@
 'use strict';
 
 let mongoose = require('mongoose');
-
 let Users = mongoose.model('Users');
+
+const constants = require('../../../ws.utils/constants');
 
 function UsersRepository() {
 }
+
+UsersRepository.prototype.findById = function (id, onFound) {
+  return Users.findOne({_id: id}).lean().exec(onFound);
+};
 
 UsersRepository.prototype.findUserByEmail = (email, onFound) => {
   return Users.findOne({email}).exec(onFound);
 };
 
-UsersRepository.prototype.findUserByUniqueToken = (uniqueToken, onFound) => {
-  const query = {
+UsersRepository.prototype.findUserByUniqueTokenAndProlongSession = function (uniqueToken, onFound) {
+  const now = Date.now();
+
+  const notExpiredUserQuery = {
     uniqueToken,
-    expireToken: {$gt: Date.now()}
+    expireToken: {$gt: now}
   };
 
-  return Users.findOne(query).lean().exec(onFound);
+  const updateExpireTokenQuery = {
+    $set: {
+      expireToken: now + constants.VALID_TOKEN_PERIOD_IN_MILLIS
+    }
+  };
+
+  return Users.findOneAndUpdate(notExpiredUserQuery, updateExpireTokenQuery, {new: true}).lean().exec(onFound);
 };
 
-UsersRepository.prototype.setUpToken = (email, uniqueToken, expireToken, onFound) => {
-  return Users.findOneAndUpdate({email}, {uniqueToken, expireToken}, {new: 1}).lean().exec(onFound);
+UsersRepository.prototype.setUpToken = function (email, uniqueToken, expireToken, onFound) {
+  return Users.findOneAndUpdate({email}, {uniqueToken, expireToken}, {new: true}).lean().exec(onFound);
 };
 
-UsersRepository.prototype.createUser = (user, done) => {
+UsersRepository.prototype.createUser = function (user, done) {
   Users.findOne({email: user.email}).lean().exec((error, existingUser) => {
     if (error) {
       return done(`Error occurred during user creation`);

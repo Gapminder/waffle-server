@@ -29,10 +29,8 @@ const DatasetTransactions = new Schema({
   commit: {type: String}
 });
 
-DatasetTransactions.index({name: 1});
-DatasetTransactions.index({createdBy: 1});
-DatasetTransactions.index({createdAt: 1});
-DatasetTransactions.index({isClosed: 1});
-DatasetTransactions.index({dataset: 1, createdBy: 1, isClosed: 1});
+DatasetTransactions.index({dataset: 1, commit: 1});
+DatasetTransactions.index({dataset: 1, isClosed: 1});
+DatasetTransactions.index({createdBy: 1, isDefault: 1});
 
 module.exports = mongoose.model('DatasetTransactions', DatasetTransactions);

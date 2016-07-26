@@ -612,13 +612,13 @@ function _____updateDataPoint(pipe, entities, datapoint) {
       dataset: pipe.dataset._id,
       from: {$lt: pipe.transaction.createdAt},
       to: constants.MAX_VERSION,
-      value: datapoint[measure.gid],
       measure: measure.originId,
       dimensions: {
         $size: _.size(pipe.dimensions),
         // TODO: get the point to presentation
         $not: {$elemMatch: {$nin : _.map(entities, 'originId') }}
-      }
+      },
+      value: datapoint[measure.gid]
     }, {$set: {to: pipe.transaction.createdAt}}, {new: true})
       .lean()
       .exec((err, doc) => {
@@ -660,7 +660,7 @@ function ___formRawDataPoint(pipe) {
     let closedOriginDatapoint = pipe.closedDataPoints[complexKey];
     let originId = closedOriginDatapoint ? closedOriginDatapoint.originId : null;
     return _.defaults({originId}, datapoint['data-update'], datapoint['data-origin'])
-  }
+  };
 }
 
 function __wrapProcessRawDataPoints(pipe, done) {

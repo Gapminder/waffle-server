@@ -59,4 +59,6 @@ Users.methods.comparePassword = function(candidatePassword, onCompared) {
   });
 };
 
+Users.index({uniqueToken: 1, expireToken: 1});
+
 module.exports = mongoose.model('Users', Users);

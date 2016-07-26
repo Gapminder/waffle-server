@@ -22,6 +22,7 @@ const transactionsService = require('../../../ws.services/dataset-transactions.s
 const incrementalUpdateService = require('../../../csv_data_mapping_cli/incremental-update-ddf2');
 
 const ddfValidationConfig = {
+  datapointlessMode: true,
   includeTags: 'WAFFLE_SERVER',
   excludeRules: 'FILENAME_DOES_NOT_MATCH_HEADER'
 };
@@ -53,7 +54,6 @@ function getGitCommitsList(github, cb) {
 function _cloneDdfRepo(pipe, done) {
   return reposService.cloneRepo(pipe.github, pipe.commit || null, (error, repoInfo) => {
     pipe.repoInfo = repoInfo;
-
     return done(error, pipe);
   });
 }
@@ -88,7 +88,7 @@ function importDataset(params, onDatasetImported) {
     _importDdfService,
     _unlockDataset
   ], (importError, pipe) => {
-    if (importError && pipe.transactionId) {
+    if (importError && pipe && pipe.transactionId) {
       return transactionsService.setLastError(pipe.transactionId, _.toString(importError), () => onDatasetImported(importError));
     }
     return onDatasetImported(importError, pipe);
@@ -164,7 +164,7 @@ function updateIncrementally(params, onDatasetUpdated) {
     _unlockDataset
   ], (importError, pipe) => {
     if (importError) {
-      if (pipe.transactionId) {
+      if (pipe && pipe.transactionId) {
         return transactionsService.setLastError(pipe.transactionId, _.toString(importError), () => onDatasetUpdated(importError));
       }
 

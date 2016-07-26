@@ -21,9 +21,9 @@ VersionedModelRepositoryFactory.prototype.currentVersion = function (datasetId, 
   }
 
   const versionQueryFragment = {
+    dataset: datasetId,
     from: {$lte: version},
-    to: {$gt: version},
-    dataset: datasetId
+    to: {$gt: version}
   };
 
   return new this.Repository(versionQueryFragment);

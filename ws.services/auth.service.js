@@ -1,9 +1,7 @@
 const crypto = require('crypto');
 
-const UsersRepository = require('../ws.repository/ddf/users/users.repository.js');
-
-const ONE_HOUR = 60 * 60 * 1000;
-const VALID_TOKEN_PERIOD_IN_MILLIS = ONE_HOUR;
+const constants = require('../ws.utils/constants');
+const usersRepository = require('../ws.repository/ddf/users/users.repository.js');
 
 module.exports = {
   authenticate
@@ -13,7 +11,7 @@ function authenticate(credentials, onAuthenticated) {
   const email = credentials.email;
   const password = credentials.password;
 
-  return UsersRepository.findUserByEmail(email, (error, user) => {
+  return usersRepository.findUserByEmail(email, (error, user) => {
     if (error) {
       return onAuthenticated('Error was happened during credentials verification');
     }
@@ -32,7 +30,7 @@ function authenticate(credentials, onAuthenticated) {
       }
 
       const tokenDescriptor = generateTokenDescriptor();
-      return UsersRepository.setUpToken(email, tokenDescriptor.uniqueToken, tokenDescriptor.expireToken, (error, user) => {
+      return usersRepository.setUpToken(email, tokenDescriptor.uniqueToken, tokenDescriptor.expireToken, (error, user) => {
         if (error) {
           return onAuthenticated(`Couldn't set up Waffle Server token`);
         }
@@ -46,6 +44,6 @@ function authenticate(credentials, onAuthenticated) {
 function generateTokenDescriptor() {
   return {
     uniqueToken: crypto.randomBytes(32).toString('base64'),
-    expireToken: Date.now() + VALID_TOKEN_PERIOD_IN_MILLIS
+    expireToken: Date.now() + constants.VALID_TOKEN_PERIOD_IN_MILLIS
   };
 }
