@@ -64,6 +64,7 @@ module.exports = serviceLocator => {
 
     return cliService.authenticate({email, password}, (error, token) => {
       if (error) {
+        logger.error(error);
         return res.json({success: !error, error});
       }
 
@@ -89,11 +90,13 @@ module.exports = serviceLocator => {
 
     cliService.setTransactionAsDefault(req.user._id, datasetName, transactionCommit, (error, defaultDatasetAndCommit) => {
       if (error) {
+        logger.error(error);
         return res.json({success: !error, error});
       }
 
       return cliService.cleanDdfRedisCache(cacheCleanError => {
         if (cacheCleanError) {
+          logger.error(cacheCleanError);
           return res.json({success: !cacheCleanError, error: cacheCleanError});
         }
 
@@ -109,6 +112,7 @@ module.exports = serviceLocator => {
 
     return cliService.findDatasetsWithVersions(req.user._id, (error, datasetsWithVersions) => {
       if (error) {
+        logger.error(error);
         return res.json({success: !error, error});
       }
 
@@ -124,6 +128,7 @@ module.exports = serviceLocator => {
 
     return transactionsService.getStatusOfLatestTransactionByDatasetName(datasetName, (statusError, status) => {
       if (statusError) {
+        logger.error(statusError);
         return res.json({success: !statusError, error: statusError});
       }
 
@@ -139,6 +144,7 @@ module.exports = serviceLocator => {
 
     return transactionsService.rollbackFailedTransactionFor(datasetName, rollbackError => {
       if (rollbackError) {
+        logger.error(rollbackError);
         return res.json({success: !rollbackError, error: rollbackError});
       }
 
@@ -153,6 +159,7 @@ module.exports = serviceLocator => {
 
     cliService.getPrestoredQueries (req.user._id, (error, queries) => {
       if (error) {
+        logger.error(error);
         return res.json({success: !error, error});
       }
 
@@ -165,6 +172,7 @@ module.exports = serviceLocator => {
   function _updateIncrementally(req, res) {
     bodyFromStream(req, (error, body) => {
       if (error) {
+        logger.error(error);
         return res.json({success: !error, error});
       }
 
@@ -178,6 +186,7 @@ module.exports = serviceLocator => {
 
       cliService.updateIncrementally(body, updateError => {
         if (updateError && !res.headersSent) {
+          logger.error(updateError);
           return res.json({success: !updateError, error: updateError});
         }
 
@@ -229,6 +238,7 @@ module.exports = serviceLocator => {
 
     return cliService.importDataset(params, importError => {
       if (importError && !res.headersSent) {
+        logger.error(importError);
         return res.json({success: !importError, error: importError});
       }
 
@@ -245,6 +255,7 @@ module.exports = serviceLocator => {
 
     cliService.getGitCommitsList(github, (error, result) => {
       if (error) {
+        logger.error(error);
         return res.json({success: !error, error});
       }
 
@@ -264,6 +275,7 @@ module.exports = serviceLocator => {
 
     cliService.getCommitOfLatestDatasetVersion(github, (error, result) => {
       if (error) {
+        logger.error(error);
         return res.json({success: !error, error});
       }
 
