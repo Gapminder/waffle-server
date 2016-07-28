@@ -63,8 +63,9 @@ module.exports = serviceLocator => {
       }
 
 
-      req.rawDdf = result;
-      req.rawDdf.domainGid = domainGid;
+      req.rawData = {
+        rawDdf: Object.assign({domainGid}, result)
+      };
 
       return next();
     });

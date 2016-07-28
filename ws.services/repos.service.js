@@ -22,20 +22,40 @@ function cloneRepo(githubUrl, commit, onCloned) {
   }
 
   const pathToRepo = getPathToRepo(githubUrl);
-  fs.exists(pathToRepo, exists => {
+
+  return fs.exists(pathToRepo, exists => {
     if (!exists) {
-      const repoName = getRepoName(githubUrl);
-      if (!repoName) {
-        return onCloned(`Incorrect github url was given: ${githubUrl}`);
-      }
-      return git(config.PATH_TO_DDF_REPOSITORIES).clone(githubUrl, repoName, cloneError => {
-        if (cloneError) {
-          logger.error(cloneError);
-          return onCloned(`Cannot clone repo from ${githubUrl}`);
+      return fs.exists(config.PATH_TO_DDF_REPOSITORIES, existsPathToRepos => {
+        if (!existsPathToRepos) {
+          return fs.mkdir(config.PATH_TO_DDF_REPOSITORIES, (createReposDirError) => {
+            if (createReposDirError) {
+              logger.error(createReposDirError);
+              return onCloned(`Cannot clone repo from ${githubUrl}`);
+            }
+
+            return _cloneRepo(githubUrl, commit, pathToRepo, onCloned);
+          });
         }
 
-        return checkoutRepo(pathToRepo, commit, onCloned);
+        return _cloneRepo(githubUrl, commit, pathToRepo, onCloned);
       });
+    }
+
+    return checkoutRepo(pathToRepo, commit, onCloned);
+  });
+}
+
+function _cloneRepo(githubUrl, commit, pathToRepo, onCloned) {
+  const repoName = getRepoName(githubUrl);
+
+  if (!repoName) {
+    return onCloned(`Incorrect github url was given: ${githubUrl}`);
+  }
+
+  return git(config.PATH_TO_DDF_REPOSITORIES).clone(githubUrl, repoName, cloneError => {
+    if (cloneError) {
+      logger.error(cloneError);
+      return onCloned(`Cannot clone repo from ${githubUrl}`);
     }
 
     return checkoutRepo(pathToRepo, commit, onCloned);

@@ -48,7 +48,8 @@ function _mapRange(v) {
 }
 
 function _isNumber(value) {
-  return parseInt(value, 10) == value;
+  const numValue = Number(value);
+  return !isNaN(numValue) && (String(value) === String(numValue));
 }
 
 function _toArray(object) {
@@ -69,7 +70,7 @@ function decodeParam(v, toObject) {
     .split(',')
     .map(function (sv) {
       var r = sv.split(':').map(function(value) {
-        return _isNumber(value) ? parseInt(value, 10) : value;
+        return _isNumber(value) ? Number(value) : value;
       });
       return r.length === 1 ? r[0] : r;
     });

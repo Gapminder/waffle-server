@@ -6,6 +6,7 @@ const json2csv = require('json2csv');
 
 const wsJsonPack = require('./../ws.routes/data-post-processors/pack/pack-ws.processor.js');
 const ddfJsonPack = require('./../ws.routes/data-post-processors/pack/pack-ddf.processor.js');
+const ddfJsonUnpack = require('./../ws.routes/data-post-processors/pack/unpack-ddf.processor.js');
 
 // FIXME: packToWsJson, packToCsv, packToJson
 module.exports = {
@@ -15,6 +16,23 @@ module.exports = {
   default: packToWsJson,
   ddfJson: packToDdfJson
 };
+
+function composePackingFunction(data, formatType) {
+  switch(true) {
+    // case (formatType === 'ddfJson' && _.get(data, 'wsJson', false)):
+    //   return async.compose();
+    case (formatType === 'ddfJson' && !!_.get(data, 'rawDdf', false)):
+      return async.seq(_toDdfJson, _pickDdfJsonProperties);
+    case (formatType === 'json' && !!_.get(data, 'rawDdf', false)):
+      return async.seq(_toDdfJson, _fromDdfJsonToJson);
+    case (formatType === 'wsJson' && !!_.get(data, 'rawDdf', false)):
+      return async.compose(_fromRawDdfToWsJson);
+    // case (formatType === 'csv' && data):
+    //   return async.compose();
+    default:
+      return async.seq(_toDdfJson);
+  }
+}
 
 function packToCsv(data, cb) {
   const pipe = {
@@ -36,10 +54,10 @@ function _toCsv(data, _cb) {
   return json2csv({data: data.rows, fields: data.headers, quotes: '"'}, _cb);
 }
 
-function packToJson(data, _cb) {
-  const cb = (error, rows) => _toJson(data.headers, rows, _cb);
+function packToJson(data, format, cb) {
+  const _packFn = composePackingFunction(data, format);
 
-  return _toWsJson(data, cb);
+  return _packFn(data, cb);
 }
 
 function _toJson(data, cb) {
@@ -50,43 +68,39 @@ function _toJson(data, cb) {
   return cb(null, json);
 }
 
-function packToWsJson(data, cb) {
-  return _toWsJson(data, (error, rows) => {
-    return cb(error, {
-      headers: data.headers,
-      rows
-    });
-  });
+function packToWsJson(data, format, cb) {
+  const _packFn = composePackingFunction(data, format);
+
+  return _packFn(data, cb);
 }
 
-function _toWsJson(data, cb) {
+function _fromRawDdfToWsJson(data, cb) {
   const rawDdf = _.get(data, 'rawDdf', {});
-  const rows = _.get(data, 'wsJson.rows', null);
-
-  if (!_.isEmpty(rows)) {
-    return cb(null, {wsJson: {headers: data.headers, rows}});
-  }
-
-  if (_.isEmpty(rawDdf)) {
-    return cb(null, {wsJson: {}});
-  }
+  let json;
 
   // TODO: should be covered by unittest
-  if (!_.isEmpty(rawDdf.datapoints)) {
-    return wsJsonPack.mapDatapoints(data, cb);
+  switch (true) {
+    case (!_.isEmpty(rawDdf.datapoints)):
+      json = wsJsonPack.mapDatapoints(rawDdf);
+      break;
+    case (!_.isEmpty(rawDdf.entities)):
+      json = wsJsonPack.mapEntities(rawDdf);
+      break;
+    case (!_.isEmpty(rawDdf.concepts)):
+      json = wsJsonPack.mapConcepts(rawDdf);
+      break;
+    default:
+      json = {};
+      break;
   }
 
-  // TODO: should be covered by unittest
-  if (!_.isEmpty(rawDdf.entities)) {
-    return wsJsonPack.mapEntities(data, cb);
-  }
-
-  // TODO: should be covered by unittest
-  return wsJsonPack.mapConcepts(data, cb);
+  return async.setImmediate(() => cb(null, json));
 }
 
-function packToDdfJson(data, cb) {
-  return _toDdfJson(data, cb);
+function packToDdfJson(data, format, cb) {
+  const _packFn = composePackingFunction(data, format);
+
+  return _packFn(data, cb);
 }
 
 function _toDdfJson(data, cb) {
@@ -94,25 +108,57 @@ function _toDdfJson(data, cb) {
   const json = {};
 
   if (_.isEmpty(rawDdf)) {
-    return cb(null, json);
+    return async.setImmediate(() => cb(null, json));
   }
 
   const concepts = ddfJsonPack.packConcepts(rawDdf);
   json.concepts = concepts.packed;
 
   if (_.isEmpty(rawDdf.entities)) {
-    return cb(null, json);
+    return async.setImmediate(() => cb(null, json));
   }
 
   const entities = ddfJsonPack.packEntities(rawDdf);
   json.entities = entities.packed;
 
   if (_.isEmpty(rawDdf.datapoints)) {
-    return cb(null, json);
+    return async.setImmediate(() => cb(null, json));
   }
 
   const datapoints = ddfJsonPack.packDatapoints(rawDdf, entities.meta.entityByOriginId);
   json.datapoints = datapoints.packed;
 
-  return cb(null, json);
+  return async.setImmediate(() => cb(null, json));
+}
+
+// FIXME: to remove when vizabi could read all geo props from ddfJson
+function _pickDdfJsonProperties(data, cb) {
+  const json = {
+    concepts: _.pick(data.concepts, ['values']),
+    entities: _.pick(data.entities, ['values', 'rows']),
+    datapoints: data.datapoints
+  };
+
+  return async.setImmediate(() => cb(null, json));
+}
+
+function _fromDdfJsonToJson(data, cb) {
+  let json;
+
+  switch (true) {
+    case (!!_.get(data, 'datapoints.values.0', false)):
+      json = ddfJsonUnpack.unpackDdfDatapoints(data);
+      break;
+    case (!!_.get(data, 'entities.values.0', false)):
+      json = ddfJsonUnpack.unpackDdfEntities(data);
+      break;
+    case (!!_.get(data, 'concepts.values.0', false)):
+      json = ddfJsonUnpack.unpackDdfConcepts(data);
+      break;
+    default:
+      json = {};
+      break;
+  }
+
+  return async.setImmediate(() => cb(null, json))
 }

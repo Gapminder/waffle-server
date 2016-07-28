@@ -68,7 +68,7 @@ module.exports = serviceLocator => {
       }
       console.timeEnd('finish Concepts stats');
 
-      req.rawDdf = result;
+      req.rawData = {rawDdf: result};
 
       return next();
     });

@@ -254,7 +254,7 @@ function _makePrestoredQuery(query) {
     .value();
 
   return {
-    url: `${config.HOST_URL}:${config.PORT}/api/ddf/datapoints?dataset=${query.datasetName}&version=${query.version}&select=geo,time,${filteredMeasures}`,
+    url: `${config.HOST_URL}:${config.PORT}/api/ddf/datapoints?dataset=${query.datasetName}&version=${query.version}&select=geo,time,${filteredMeasures}&key=geo,time`,
     datasetName: query.datasetName,
     version: query.version,
     createdAt: query.createdAt

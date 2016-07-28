@@ -583,7 +583,7 @@ test.skip.cb('should pack input entities data with domain time to ddfJson', asse
   });
 });
 
-test.cb('should pack input datapoints data to ddfJson', assert => {
+test.skip.cb('should pack input datapoints data to ddfJson', assert => {
   const headers = ['sg_population', 'energy_use_total'];
   const concepts = require('./../fixtures/concepts.json');
   const expectedConceptGids = ['energy_use_total', 'geo', 'sg_population', 'time'];

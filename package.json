@@ -6,6 +6,7 @@
   "scripts": {
     "test": "./node_modules/.bin/nyc --all --include='**/*.js' ./node_modules/.bin/ava",
     "test:coverage-report": "npm run test && ./node_modules/.bin/nyc report --reporter=html",
+    "test:ava": "./node_modules/.bin/ava",
     "swagger": "./node_modules/.bin/gulp swagger",
     "dev": "NODE_ENV=development npm run start",
     "prestart": "npm run swagger",
@@ -61,7 +62,7 @@
     "winston-daily-rotate-file": "1.0.1"
   },
   "devDependencies": {
-    "ava": "valorkin/ava",
+    "ava": "github:valorkin/ava",
     "chai": "3.4.1",
     "conventional-changelog": "1.1.0",
     "conventional-changelog-cli": "1.1.1",

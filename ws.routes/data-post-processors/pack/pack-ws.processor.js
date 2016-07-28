@@ -10,24 +10,28 @@ module.exports = {
   mapDatapoints: mapDatapointsToWsJson
 };
 
-function mapConceptToWsJson(data, cb) {
-  let rows = _.map(data.concepts, concept => {
+function mapConceptToWsJson(data) {
+  const rows = _.map(data.concepts, concept => {
     return _mapConceptPropertiesToWsJson(data.headers, concept);
   });
 
-  return cb(null, {wsJson: {headers: data.headers, rows}});
+  const result = { headers: data.headers, rows };
+
+  return result;
 }
 
 function _mapConceptPropertiesToWsJson(select, concept) {
   return _.map(select, property => concept.properties[property]);
 }
 
-function mapEntitiesToWsJson(data, cb) {
-  let rows = _.map(data.entities, (entity) => {
+function mapEntitiesToWsJson(data) {
+  const rows = _.map(data.entities, (entity) => {
     return _mapEntitiesPropertiesToWsJson(data.domainGid, data.headers, entity);
   });
 
-  return cb(null, {wsJson: {headers: data.headers, rows}});
+  const result = { headers: data.headers, rows };
+
+  return result;
 }
 
 function _mapEntitiesPropertiesToWsJson(entityDomainGid, select, entity) {
@@ -46,43 +50,53 @@ function __mapGidToEntityDomainGid(entityDomainGid, object) {
   })
 }
 
-function mapDatapointsToWsJson(data, cb) {
-  const selectedConceptsByOriginId = _.chain(data.concepts).pick(data.headers).mapKeys('originId').value();
+function mapDatapointsToWsJson(data) {
+  const selectedConceptsByOriginId = _.chain(data.concepts)
+    .keyBy(constants.GID)
+    .pick(data.headers)
+    .mapKeys(constants.ORIGIN_ID)
+    .value();
+  const conceptsByOriginId = _.keyBy(data.concepts, constants.ORIGIN_ID);
+  const entitiesByOriginId = _.keyBy(data.entities, constants.ORIGIN_ID);
 
-  let rows = _.chain(data.datapoints)
+  const rows = _.chain(data.datapoints)
     .reduce((result, datapoint) => {
-      const complexKey = _getComplexKey(data.entities, selectedConceptsByOriginId, data.headers, datapoint);
+      const complexKey = _getComplexKey(entitiesByOriginId, selectedConceptsByOriginId, data.headers, datapoint);
 
       if (!result[complexKey]) {
         result[complexKey] = {};
 
         _.each(datapoint.dimensions, (dimension) => {
-          const originEntity = data.entities[dimension];
+          const originEntity = entitiesByOriginId[dimension];
           const domainGid = _getGidOfSelectedConceptByEntity(selectedConceptsByOriginId, originEntity);
 
           result[complexKey][domainGid] = originEntity[constants.GID];
         });
       }
 
-      const measureGid = data.conceptsByOriginId[datapoint.measure][constants.GID];
+      const measureGid = conceptsByOriginId[datapoint.measure][constants.GID];
       result[complexKey][measureGid] = datapoint.value;
 
       return result;
     }, {})
     .map((row) => {
-      return _.map(data.headers, column => (_.isNaN(_.toNumber(row[column])) ? row[column] : +row[column]) || null);
+      return _.map(data.headers, column => (_.isNaN(_.toNumber(row[column])) ? row[column] : +row[column]) || undefined);
     })
     .value();
 
-  return cb(null, {wsJson: {
+  const result = {
     headers: data.headers,
     rows: _.sortBy(rows, ['0', '1'])
-  }});
+  };
+
+  return result;
 }
 
 function _getComplexKey(entities, selectedConceptsByOriginId, headers, datapoint) {
   return _.chain(datapoint.dimensions)
-    .map((dimension) => entities[dimension])
+    .map((dimension) => {
+      return entities[dimension];
+    })
     .sortBy((originEntity) => {
       const domainGid = _getGidOfSelectedConceptByEntity(selectedConceptsByOriginId, originEntity);
 
