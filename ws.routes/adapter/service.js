@@ -3,6 +3,7 @@ var _ = require('lodash');
 var json2csv = require('json2csv');
 var cors = require('cors');
 var async = require('async');
+const path = require('path');
 
 var mongoose = require('mongoose');
 var geoController = require('../geo/geo-properties.service');
@@ -155,16 +156,18 @@ module.exports = function (serviceLocator) {
   return app.use(router);
 
   function getTranslations(req, res) {
-    var lang = (req.params && req.params.lang) || 'en';
+    const lang = (req.params && req.params.lang) || 'en';
+    const translations = require(path.resolve('csv_data_mapping_cli/vizabi/', lang + '.json'));
 
-    Translations.find({language: lang}, function (err, items) {
-      var result = _.reduce(items, function (result, item) {
-        result[item.key] = item.value;
-        return result;
-      }, {});
-
-      return res.json(result);
-    });
+    return res.json(translations);
+    // Translations.find({language: lang}, function (err, items) {
+    //   var result = _.reduce(items, function (result, item) {
+    //     result[item.key] = item.value;
+    //     return result;
+    //   }, {});
+    //
+    //   return res.json(result);
+    // });
   }
 
   function adoptGeoProperties(req, res) {
@@ -191,18 +194,21 @@ module.exports = function (serviceLocator) {
   }
 
   function getMetadata(req, res) {
-    async.parallel({
-      indicatorsDB: getIndicatorsDB,
-      indicatorsTree: function getIndicatorsTree(cb) {
-        IndexTree.findOne({}, {_id: 0, __v: 0}).lean().exec(cb);
-      }
-    }, function (err, metadata) {
-      if (err) {
-        console.error(err);
-      }
+    const metadata = require('../../csv_data_mapping_cli/vizabi/metadata.json');
 
-      return res.json(metadata);
-    });
+    return res.json(metadata);
+    // async.parallel({
+    //   indicatorsDB: getIndicatorsDB,
+    //   indicatorsTree: function getIndicatorsTree(cb) {
+    //     IndexTree.findOne({}, {_id: 0, __v: 0}).lean().exec(cb);
+    //   }
+    // }, function (err, metadata) {
+    //   if (err) {
+    //     console.error(err);
+    //   }
+    //
+    //   return res.json(metadata);
+    // });
   }
 
   function getIndicatorsDB(done) {
