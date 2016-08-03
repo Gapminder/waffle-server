@@ -571,8 +571,8 @@ function _parseFilename(pipe, cb) {
   let measureGids = _.first(parsedFileName).split('--');
   let dimensionGids = _.last(parsedFileName).split('--');
 
-  pipe.measures = _.pick(pipe.concepts, measureGids);
-  pipe.dimensions = _.pick(pipe.concepts, dimensionGids);
+  pipe.measures = _.merge(_.pick(pipe.previousConcepts, measureGids), _.pick(pipe.concepts, measureGids));
+  pipe.dimensions = _.merge(_.pick(pipe.previousConcepts, dimensionGids), _.pick(pipe.concepts, dimensionGids));
 
   if (_.isEmpty(pipe.measures)) {
     return async.setImmediate(() => cb(`file '${pipe.filename}' doesn't have any measure.`));

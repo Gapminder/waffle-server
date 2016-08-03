@@ -450,6 +450,7 @@ function _processDataPointFile(pipe) {
       filename: filename,
       fileChanges: fileChanges.body,
       concepts: pipe.concepts,
+      previousConcepts: pipe.previousConcepts,
       transaction: pipe.transaction,
       dataset: pipe.dataset,
       common: pipe.common
