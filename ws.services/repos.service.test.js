@@ -44,7 +44,7 @@ test.cb('should hard checkout repo if it was cloned before', assert => {
   });
 });
 
-//FIXME: spawn
+//FIXME: Error: spawn git ENOENT
 test.skip.cb('should respond with an error if cannot detect repo name for cloning', assert => {
   const stubbedReposService = proxyquire('../ws.services/repos.service', {
     'fs': {
@@ -65,7 +65,7 @@ test.skip.cb('should respond with an error if cannot detect repo name for clonin
   });
 });
 
-//FIXME: some error
+//FIXME: error: some error
 test.skip.cb('should respond with an error if something wrong occurred during "git clone" invocation', assert => {
   const ddfRepoName = 'ddf--gapminder--systema_globalis';
   const expectedGithubUrl = `git@github.com:open-numbers/${ddfRepoName}.git`;

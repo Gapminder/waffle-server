@@ -160,14 +160,6 @@ module.exports = function (serviceLocator) {
     const translations = require(path.resolve('csv_data_mapping_cli/vizabi/', lang + '.json'));
 
     return res.json(translations);
-    // Translations.find({language: lang}, function (err, items) {
-    //   var result = _.reduce(items, function (result, item) {
-    //     result[item.key] = item.value;
-    //     return result;
-    //   }, {});
-    //
-    //   return res.json(result);
-    // });
   }
 
   function adoptGeoProperties(req, res) {
@@ -197,18 +189,6 @@ module.exports = function (serviceLocator) {
     const metadata = require('../../csv_data_mapping_cli/vizabi/metadata.json');
 
     return res.json(metadata);
-    // async.parallel({
-    //   indicatorsDB: getIndicatorsDB,
-    //   indicatorsTree: function getIndicatorsTree(cb) {
-    //     IndexTree.findOne({}, {_id: 0, __v: 0}).lean().exec(cb);
-    //   }
-    // }, function (err, metadata) {
-    //   if (err) {
-    //     console.error(err);
-    //   }
-    //
-    //   return res.json(metadata);
-    // });
   }
 
   function getIndicatorsDB(done) {

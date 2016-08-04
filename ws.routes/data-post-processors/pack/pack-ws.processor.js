@@ -56,6 +56,7 @@ function mapDatapointsToWsJson(data) {
     .pick(data.headers)
     .mapKeys(constants.ORIGIN_ID)
     .value();
+
   const conceptsByOriginId = _.keyBy(data.concepts, constants.ORIGIN_ID);
   const entitiesByOriginId = _.keyBy(data.entities, constants.ORIGIN_ID);
 
