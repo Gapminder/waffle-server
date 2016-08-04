@@ -5,16 +5,17 @@ const util = require('util');
 const mongoose = require('mongoose');
 const Concepts = mongoose.model('Concepts');
 
-const utils = require('../../utils');
+const RepositoryFactory = require('../../repository.factory');
+const repositoryModel = require('../../repository.model');
 const constants = require('../../../ws.utils/constants');
 
-util.inherits(ConceptsRepository, utils.VersionedModelRepository);
+util.inherits(ConceptsRepository, repositoryModel);
 
 function ConceptsRepository() {
-  utils.VersionedModelRepository.apply(this, arguments);
+  repositoryModel.apply(this, arguments);
 }
 
-module.exports = new utils.VersionedModelRepositoryFactory(ConceptsRepository);
+module.exports = new RepositoryFactory(ConceptsRepository);
 
 ConceptsRepository.prototype.findConceptProperties = function (select, where, onPropertiesFound) {
   const projection = makePositiveProjectionFor(select);

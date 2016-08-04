@@ -5,15 +5,16 @@ const util = require('util');
 const mongoose = require('mongoose');
 const DataPoints = mongoose.model('DataPoints');
 
-const utils = require('../../utils');
+const RepositoryFactory = require('../../repository.factory');
+const repositoryModel = require('../../repository.model');
 
-util.inherits(DataPointsRepository, utils.VersionedModelRepository);
+util.inherits(DataPointsRepository, repositoryModel);
 
 function DataPointsRepository() {
-  utils.VersionedModelRepository.apply(this, arguments);
+  repositoryModel.apply(this, arguments);
 }
 
-module.exports = new utils.VersionedModelRepositoryFactory(DataPointsRepository);
+module.exports = new RepositoryFactory(DataPointsRepository);
 
 /**
  *

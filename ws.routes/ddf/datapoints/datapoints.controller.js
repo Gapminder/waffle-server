@@ -63,8 +63,8 @@ module.exports = serviceLocator => {
         res.use_express_redis_cache = false;
         return res.json({success: false, error: error});
       }
-      
-      req.rawDdf = result;
+
+      req.rawData = {rawDdf: result};
 
       return next();
     });

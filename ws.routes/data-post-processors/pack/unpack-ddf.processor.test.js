@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import test from 'ava';
-import unpack from './unpack-ddf.processor.js';
+import unpackProcessor from './unpack-ddf.processor';
 
-test.cb('should ddfJson concept data into json format',assert => {
+test('should ddfJson concept data into json format', assert => {
   const packedJson = require('./../fixtures/ddf-json-concepts.json');
   const expectedHeaders = ["description_long","concept","name","concept_type","domain","indicator_url","scales","drill_up","unit","interpolation","description"];
   const expectedRows = [
@@ -68,18 +68,16 @@ test.cb('should ddfJson concept data into json format',assert => {
       "description": null
     }];
 
-  return unpack(packedJson, (err, unpackedJson) => {
+  return unpackProcessor.unpackDdfConcepts(packedJson, (err, unpackedJson) => {
     const actualHeaders = _.chain(unpackedJson).flatMap((concept) => _.keys(concept)).uniq().value();
 
     assert.true(_.isArray(unpackedJson));
     assert.deepEqual(actualHeaders.sort(), expectedHeaders.sort());
     assert.deepEqual(_.sortBy(unpackedJson, 'concept'), expectedRows);
-
-    assert.end();
   });
 });
 
-test.cb('should unpack ddfJson entities data into json format', assert => {
+test('should unpack ddfJson entities data into json format', assert => {
   const packedJson = require('./../fixtures/ddf-json-entities.json');
   const expectedHeaders = [
     "country", "gwid", "name", "geographic_regions", "income_groups", "landlocked", "geographic_regions_in_4_colors",
@@ -300,18 +298,16 @@ test.cb('should unpack ddfJson entities data into json format', assert => {
       geo: 'alb',
       energy_use_total: 1780000 } ];
 
-  unpack(packedJson, (err, unpackedJson) => {
+  unpackProcessor.unpackDdfEntities(packedJson, (err, unpackedJson) => {
     const actualHeaders = _.chain(unpackedJson).flatMap((entity) => _.keys(entity)).uniq().value();
 
     assert.true(_.isArray(unpackedJson));
     assert.deepEqual(actualHeaders.sort(), expectedHeaders.sort());
     assert.deepEqual(_.sortBy(unpackedJson, ['name', 'year']), expectedRows);
-
-    assert.end();
   });
 });
 
-test.cb('should unpack ddfJson datapoints data into json format',assert => {
+test('should unpack ddfJson datapoints data into json format', assert => {
   const packedJson = require('./../fixtures/ddf-json-datapoints.json');
   const expectedHeaders = ["energy_use_total","geo","sg_population","time"];
   const expectedRows = [
@@ -323,14 +319,12 @@ test.cb('should unpack ddfJson datapoints data into json format',assert => {
     {geo: 'ukraine', time: "1900", sg_population: "23471939", energy_use_total: null}
   ];
 
-  unpack(packedJson, (err, unpackedJson) => {
+  unpackProcessor.unpackDdfDatapoints(packedJson, (err, unpackedJson) => {
     const actualHeaders = _.chain(unpackedJson).flatMap((entity) => _.keys(entity)).uniq().value();
 
     assert.true(_.isArray(unpackedJson));
     assert.deepEqual(actualHeaders.sort(), expectedHeaders.sort());
     assert.deepEqual(unpackedJson, expectedRows);
-
-    assert.end();
   });
 });
 

@@ -6,16 +6,17 @@ const mongoose = require('mongoose');
 const Entities = mongoose.model('Entities');
 const Concepts = mongoose.model('Concepts');
 
-const utils = require('../../utils');
+const RepositoryFactory = require('../../repository.factory');
+const repositoryModel = require('../../repository.model');
 const constants = require('../../../ws.utils/constants');
 
-util.inherits(EntitiesRepository, utils.VersionedModelRepository);
+util.inherits(EntitiesRepository, repositoryModel);
 
 function EntitiesRepository() {
-  utils.VersionedModelRepository.apply(this, arguments);
+  repositoryModel.apply(this, arguments);
 }
 
-module.exports = new utils.VersionedModelRepositoryFactory(EntitiesRepository);
+module.exports = new RepositoryFactory(EntitiesRepository);
 
 EntitiesRepository.prototype.countBy = function (where, onCounted) {
   const countQuery = this._composeQuery(where);
@@ -60,6 +61,10 @@ EntitiesRepository.prototype.findEntityProperties = function(entityDomainGid, se
 
     const normalizedWhereClause = this._normalizeWhereClause(where);
     const whereClauseWithSubstitutedGid = _.mapKeys(normalizedWhereClause, (value, key) => {
+      if (entityDomainGid === key) {
+        return 'gid';
+      }
+
       return key.slice(key.indexOf('.') + 1)
     });
     const whereWithPrefixedProperties = toPropertiesDotNotation(whereClauseWithSubstitutedGid);

@@ -2,23 +2,16 @@
 
 const _ = require('lodash');
 
-module.exports = (data, cb) => {
-
-  if (_.get(data, 'datapoints.values.0', false)) {
-    return cb(null, __packDdfDatapoints(data));
-  }
-
-  if (_.get(data, 'entities.values.0', false)) {
-    return cb(null, __packDdfEntities(data))
-  }
-
-  return cb(null, __packDdfConcepts(data));
+module.exports = {
+  unpackDdfConcepts,
+  unpackDdfEntities,
+  unpackDdfDatapoints
 };
 
-function __packDdfConcepts(data) {
-  const rows = data.concepts.rows;
-  const properties = data.concepts.properties;
-  const propertyValues = data.concepts.propertyValues;
+function unpackDdfConcepts(data) {
+  const rows = _.get(data, 'concepts.rows', []);
+  const properties = _.get(data, 'concepts.properties', []);
+  const propertyValues = _.get(data, 'concepts.propertyValues', []);
 
   return _.map(rows, (row) => {
     return _.reduce(properties, (result, property, index) => {
@@ -28,14 +21,13 @@ function __packDdfConcepts(data) {
   });
 }
 
-function __packDdfEntities(data) {
-  const rows = data.entities.rows;
-  const properties = data.entities.properties;
-  const propertyValues = data.entities.propertyValues;
+function unpackDdfEntities(data) {
+  const rows = _.get(data, 'entities.rows', []);
+  const properties = _.get(data, 'entities.properties', []);
+  const propertyValues = _.get(data, 'entities.propertyValues', []);
   const offsetKey = 2;
 
   return _.map(rows, (row) => {
-
     return _.reduce(properties, (result, property, index) => {
       result[property] = _.get(propertyValues, row[index + offsetKey], null);
       return result;
@@ -43,18 +35,24 @@ function __packDdfEntities(data) {
   });
 }
 
-function __packDdfDatapoints(data) {
-  const entitiesNGram = _.size(data.entities.rows).toString(2).length;
-  const dimensions = _.map(data.datapoints.dimensions, (conceptIndex => data.concepts.values[conceptIndex]));
-  const indicators = _.map(data.datapoints.indicators, (conceptIndex => data.concepts.values[conceptIndex]));
-  const entityValues = _.map(data.entities.rows, (row) => data.entities.values[_.first(row)]);
-  const rows = data.datapoints.rows;
+function unpackDdfDatapoints(data) {
+  const entitiesRows = _.get(data, 'entities.rows', []);
+  const entitiesValues = _.get(data, 'entities.values', []);
+  const entitiesNGram = _.size(entitiesRows).toString().length;
+  const datapointsDimensions = _.get(data, 'datapoints.dimensions', []);
+  const conceptsValues = _.get(data, 'concepts.values', []);
+  const dimensions = _.map(datapointsDimensions, (conceptIndex => conceptsValues[conceptIndex]));
+  const datapointsIndicators = _.get(data, 'datapoints.indicators', []);
+  const indicators = _.map(datapointsIndicators, (conceptIndex => conceptsValues[conceptIndex]));
+  const entityValues = _.map(entitiesRows, (row) => entitiesValues[_.first(row)]);
+  const rows = _.get(data, 'datapoints.rows', []);
+  const datapointsValues = _.get(data, 'datapoints.values', []);
   const offsetKey = 1;
 
   return _.map(rows, (row) => {
     const entitiesIndexes = _.chain(_.first(row))
       .chunk(entitiesNGram)
-      .mapValues((entityBitMask) => parseInt(_.join(entityBitMask, ''), 2))
+      .mapValues((entityDecimalMask) => parseInt(_.join(entityDecimalMask, ''), 10))
       .value();
 
     let datapoint = _.reduce(entitiesIndexes, (result, entityIndex, key) => {
@@ -63,7 +61,7 @@ function __packDdfDatapoints(data) {
     }, {});
 
     return _.chain(row).drop(offsetKey).reduce((result, value, index) => {
-      result[indicators[index]] = _.isNil(data.datapoints.values[value]) ? null : '' + data.datapoints.values[value];
+      result[indicators[index]] = _.isNil(datapointsValues[value]) ? null : '' + datapointsValues[value];
       return result;
     }, datapoint).value();
   });

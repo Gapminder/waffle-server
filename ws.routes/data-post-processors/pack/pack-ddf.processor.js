@@ -79,7 +79,7 @@ function _packEntities(rawDdf) {
   const _propertyValues = _.invert(propertyValues);
   const entityByOriginId = {};
   let rowIndex = 0;
-  const entitiesNGram = _.size(entities).toString(2).length;
+  const entitiesNGram = _.size(entities).toString().length;
   const rows = _.map(entities, (entity, key) => {
     const row = _.map(properties, (property) => {
       const value = entity.properties[property];
@@ -102,14 +102,14 @@ function _packEntities(rawDdf) {
       return result;
     }, '');
 
-    const toBitMask = (index) => {
-      const indexBits = Number(index).toString(2);
+    const toDecimalMask = (index) => {
+      const indexBits = Number(index).toString();
       const indexNGram = indexBits.length;
 
       return _.repeat('0', entitiesNGram - indexNGram) + indexBits;
     };
 
-    entityByOriginId[entity.originId] = toBitMask(rowIndex++);
+    entityByOriginId[entity.originId] = toDecimalMask(rowIndex++);
     row.unshift(Number(invertedValues[entity[constants.GID]]), conceptMask);
 
     return row;

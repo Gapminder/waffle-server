@@ -55,6 +55,10 @@ function decodeQuery(req, res, next) {
     } else if (key === 'sort') {
       let decodedAsObjectParam = queryCoder.decodeParam(normalizedParam, queryCoder.toObject);
       result[key] = sanitizeSortValues(decodedAsObjectParam);
+    } else if (key === 'version') {
+      // FIXME: version should not be treated as a Number
+      // FIXME: should be covered by test
+      result.where[key] = [normalizedParam];
     } else {
       result.where[key] = decodedParam;
     }
