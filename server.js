@@ -8,6 +8,7 @@ const config = require('./ws.config/config');
 
 var bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
+app.use(bodyParser.json({limit: '10mb'}));
 
 var serviceLocator = require('./ws.service-locator')(app);
 

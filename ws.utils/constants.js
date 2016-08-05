@@ -9,6 +9,8 @@ module.exports = {
 
   //cache
   DDF_REDIS_CACHE_LIFETIME: -1,
+  DDF_REDIS_CACHE_NAME_META: 'metadata',
+  DDF_REDIS_CACHE_NAME_TRANSLATIONS: 'translations',
   DDF_REDIS_CACHE_NAME_ENTITIES: 'entities',
   DDF_REDIS_CACHE_NAME_CONCEPTS: 'concepts',
   DDF_REDIS_CACHE_NAME_DATAPOINTS: 'datapoints',

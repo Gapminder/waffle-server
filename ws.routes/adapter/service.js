@@ -1,23 +1,25 @@
-var express = require('express');
-var _ = require('lodash');
-var json2csv = require('json2csv');
-var cors = require('cors');
-var async = require('async');
+const express = require('express');
+const _ = require('lodash');
+const json2csv = require('json2csv');
+const cors = require('cors');
+const async = require('async');
 const path = require('path');
+const fs = require('fs');
 
-var mongoose = require('mongoose');
-var geoController = require('../geo/geo-properties.service');
+const mongoose = require('mongoose');
+const geoController = require('../geo/geo-properties.service');
 
-var Geo = mongoose.model('Geo');
-var Translations = mongoose.model('Translations');
-var IndexTree = mongoose.model('IndexTree');
-var IndexDb = mongoose.model('IndexDb');
+const Geo = mongoose.model('Geo');
+const Translations = mongoose.model('Translations');
+const IndexTree = mongoose.model('IndexTree');
+const IndexDb = mongoose.model('IndexDb');
 
-var compression = require('compression');
+const compression = require('compression');
 
-var u = require('../utils');
+const u = require('../utils');
 const config = require('../../ws.config/config');
 const cache = require('../../ws.utils/redis-cache');
+const constants = require('../../ws.utils/constants');
 
 module.exports = function (serviceLocator) {
   var app = serviceLocator.getApplication();
@@ -27,139 +29,54 @@ module.exports = function (serviceLocator) {
   var mcPrecomputedShapes = require('../../csv_data_mapping_cli/fixtures/mc_precomputed_shapes.json');
   var world50m = require('../../csv_data_mapping_cli/fixtures/world-50m.json');
 
-  /**
-   * @swagger
-   * /api/vizabi/translation/{lang}.json:
-   *   get:
-   *    description: Translation file
-   *    produces:
-   *      - application/json
-   *    parameters:
-   *      - name: "lang"
-   *        in: "path"
-   *        required: true
-   *        description: specify the language
-   *        type: string
-   *    tags:
-   *      - Translation
-   *    responses:
-   *      200:
-   *        description: Translation file
-   *      304:
-   *        description: cache
-   *      default:
-   *        description: Unexpected error
-   *        schema:
-   *          $ref: '#/definitions/Error'
-   *
-   *
-   */
-  router.get('/api/vizabi/translation/:lang.json', cors(), compression(), u.getCacheConfig('translations'), cache.route(), getTranslations);
+  router.get('/api/vizabi/translation/:lang.json', cors(), compression(), u.getCacheConfig(constants.DDF_REDIS_CACHE_NAME_TRANSLATIONS), cache.route(), getTranslations);
+  router.post('/api/vizabi/hack/translation/:lang.json', cors(), updateTranslations);
 
-
-  /**
-   * @swagger
-   * /api/vizabi/mc_precomputed_shapes.json:
-   *   get:
-   *    description: mc_precomputed_shapes for mountain chart
-   *    produces:
-   *      - application/json
-   *    tags:
-   *      - McPecomputedShapes
-   *    responses:
-   *      200:
-   *        description: McPecomputedShapes
-   *      304:
-   *        description: cache
-   *      default:
-   *        description: Unexpected error
-   *        schema:
-   *          $ref: '#/definitions/Error'
-   *
-   *
-   */
   router.get('/api/vizabi/mc_precomputed_shapes.json', cors(), compression(), u.getCacheConfig('mc-precomputed-shapes'), cache.route(), function (req, res) {
     return res.json(mcPrecomputedShapes);
   });
 
-  /**
-   * @swagger
-   * /api/vizabi/world-50m.json:
-   *   get:
-   *    description: world-50m.json for bubbleMap chart
-   *    produces:
-   *      - application/json
-   *    tags:
-   *      - World-50m
-   *    responses:
-   *      200:
-   *        description: world-50m.json
-   *      304:
-   *        description: cache
-   *      default:
-   *        description: Unexpected error
-   *        schema:
-   *          $ref: '#/definitions/Error'
-   *
-   *
-   */
   router.get('/api/vizabi/world-50m.json', cors(), compression(), u.getCacheConfig('world-50m'), cache.route(), function (req, res) {
     return res.json(world50m);
   });
 
-  /**
-   * @swagger
-   * /api/vizabi/metadata.json:
-   *   get:
-   *    description: metadata.json for all charts
-   *    produces:
-   *      - application/json
-   *    tags:
-   *      - Metadata
-   *    responses:
-   *      200:
-   *        description: metadata.json
-   *      304:
-   *        description: cache
-   *      default:
-   *        description: Unexpected error
-   *        schema:
-   *          $ref: '#/definitions/Error'
-   *
-   *
-   */
-  router.get('/api/vizabi/metadata.json', cors(), compression(), u.getCacheConfig('metadata'), cache.route(), getMetadata);
+  router.get('/api/vizabi/metadata.json', cors(), compression(), u.getCacheConfig(constants.DDF_REDIS_CACHE_NAME_META), cache.route(), getMetadata);
+  router.post('/api/vizabi/hack/metadata.json', cors(), updateMetadata);
 
-  /**
-   * @swagger
-   * /api/vizabi/geo_properties.csv:
-   *   get:
-   *    description: geo_properties.csv
-   *    produces:
-   *      - text/csv
-   *    tags:
-   *      - geo_properties
-   *    responses:
-   *      200:
-   *        description: geo_properties.csv
-   *      304:
-   *        description: cache
-   *      default:
-   *        description: Unexpected error
-   *        schema:
-   *          $ref: '#/definitions/Error'
-   *
-   *
-   */
   router.get('/api/vizabi/geo_properties.csv', cors(), compression(), u.getCacheConfig('geo-properties'), cache.route(), adoptGeoProperties);
 
   return app.use(router);
 
   function getTranslations(req, res) {
     const lang = (req.params && req.params.lang) || 'en';
-    const translations = require(path.resolve('csv_data_mapping_cli/vizabi/', lang + '.json'));
+    const translationsPath = path.resolve(__dirname, '../../csv_data_mapping_cli/vizabi/', lang + '.json');
 
-    return res.json(translations);
+    return fs.readFile(translationsPath, 'utf8', (error, translations) => {
+      if (error) {
+        return res.json({success: !error, error});
+      }
+
+      return res.json(JSON.parse(translations));
+    });
+  }
+
+  function updateTranslations(req, res) {
+    const lang = (req.params && req.params.lang) || 'en';
+    const translationsPath = path.resolve(__dirname, '../../csv_data_mapping_cli/vizabi/', lang + '.json');
+
+    return fs.writeFile(translationsPath, JSON.stringify(req.body), error => {
+      if (error) {
+        return res.json({success: !error, error});
+      }
+
+      return cache.del(`${constants.DDF_REDIS_CACHE_NAME_TRANSLATIONS}*`, (cacheError, numEntriesDeleted) => {
+        if (cacheError) {
+          return res.json({success: !cacheError, error: cacheError});
+        }
+
+        return res.json(`Translations were updated and ${numEntriesDeleted} cache entries were deleted`);
+      });
+    });
   }
 
   function adoptGeoProperties(req, res) {
@@ -186,26 +103,28 @@ module.exports = function (serviceLocator) {
   }
 
   function getMetadata(req, res) {
-    const metadata = require('../../csv_data_mapping_cli/vizabi/metadata.json');
+    return fs.readFile(path.resolve(__dirname, '../../csv_data_mapping_cli/vizabi/metadata.json'), 'utf8', (error, metadata) => {
+      if (error) {
+        return res.json({success: !error, error});
+      }
 
-    return res.json(metadata);
+      return res.json(JSON.parse(metadata));
+    });
   }
 
-  function getIndicatorsDB(done) {
-    async.waterfall([
-      function getIndexDb(cb) {
-        IndexDb.find({}, {_id: 0}).lean().exec(function (err, indexDb) {
-          var result = _.reduce(indexDb, function (result, item) {
-            result[item.name] = item;
-            delete item.name;
-            return result;
-          }, {});
-
-          return cb(err, result);
-        });
+  function updateMetadata(req, res) {
+    return fs.writeFile(path.resolve(__dirname, '../../csv_data_mapping_cli/vizabi/metadata.json'), JSON.stringify(req.body), error => {
+      if (error) {
+        return res.json({success: !error, error});
       }
-    ], function (err, indexDb) {
-      return done(err, indexDb);
+
+      return cache.del(`${constants.DDF_REDIS_CACHE_NAME_META}*`, (cacheError, numEntriesDeleted) => {
+        if (cacheError) {
+          return res.json({success: !cacheError, error: cacheError});
+        }
+
+        return res.json(`Meta was updated and ${numEntriesDeleted} cache entries were deleted`);
+      });
     });
   }
 };
