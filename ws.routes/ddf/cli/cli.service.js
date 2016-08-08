@@ -129,7 +129,7 @@ function _validateDatasetBeforeImport(pipe, done) {
 
 function _importDdfService(pipe, onDatasetImported) {
   let options = {
-    datasetName: reposService.getRepoName(pipe.github),
+    datasetName: reposService.getRepoNameForDataset(pipe.github),
     commit: pipe.commit,
     github: pipe.github,
     user: pipe.user,

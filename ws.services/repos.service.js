@@ -12,7 +12,7 @@ const logger = require('../ws.config/log');
 
 module.exports = {
   cloneRepo,
-  getRepoName,
+  getRepoNameForDataset,
   getPathToRepo
 };
 
@@ -27,7 +27,7 @@ function cloneRepo(githubUrl, commit, onCloned) {
     if (!exists) {
       return fs.exists(config.PATH_TO_DDF_REPOSITORIES, existsPathToRepos => {
         if (!existsPathToRepos) {
-          return fs.mkdir(config.PATH_TO_DDF_REPOSITORIES, (createReposDirError) => {
+          return fs.mkdir(config.PATH_TO_DDF_REPOSITORIES, createReposDirError => {
             if (createReposDirError) {
               logger.error(createReposDirError);
               return onCloned(`Cannot clone repo from ${githubUrl}`);
@@ -46,13 +46,14 @@ function cloneRepo(githubUrl, commit, onCloned) {
 }
 
 function _cloneRepo(githubUrl, commit, pathToRepo, onCloned) {
-  const repoName = getRepoName(githubUrl);
+  const githubUrlDescriptor = getGithubUrlDescriptor(githubUrl);
 
-  if (!repoName) {
+  if (!githubUrlDescriptor.repo) {
     return onCloned(`Incorrect github url was given: ${githubUrl}`);
   }
 
-  return git(config.PATH_TO_DDF_REPOSITORIES).clone(githubUrl, repoName, cloneError => {
+  return git(path.resolve(config.PATH_TO_DDF_REPOSITORIES))
+    .clone(githubUrl, pathToRepo, cloneError => {
     if (cloneError) {
       logger.error(cloneError);
       return onCloned(`Cannot clone repo from ${githubUrl}`);
@@ -71,15 +72,37 @@ function checkoutRepo(pathToRepo, commit, onCheckedOut) {
     });
 }
 
-function getRepoName(githubUrl) {
-  const partsOfGitHubUrl = _.split(githubUrl, '/');
-  const lastPart = _.last(partsOfGitHubUrl);
-  return _.first(_.split(lastPart, '.'));
+function getRepoNameForDataset(githubUrl) {
+  const githubUrlDescriptor = getGithubUrlDescriptor(githubUrl);
+  if (!githubUrlDescriptor.account || !githubUrlDescriptor.repo) {
+    return null;
+  }
+
+  return `${githubUrlDescriptor.account}/${githubUrlDescriptor.repo}`;
+}
+
+function getGithubUrlDescriptor(githubUrl) {
+  const accountAndRepoNames = _.chain(githubUrl)
+    .split(':')
+    .last()
+    .split('/')
+    .map(name => {
+      if (_.endsWith(name, '.git')) {
+        return name.slice(0, name.indexOf('.git'));
+      }
+      return name;
+    }).value();
+
+  return {
+    account: _.first(accountAndRepoNames),
+    repo: _.last(accountAndRepoNames)
+  };
 }
 
 function getPathToRepo(githubUrl) {
   if (!githubUrl) {
     return githubUrl;
   }
-  return path.resolve(process.cwd(), config.PATH_TO_DDF_REPOSITORIES, getRepoName(githubUrl));
+  const githubUrlDescriptor = getGithubUrlDescriptor(githubUrl);
+  return path.resolve(process.cwd(), config.PATH_TO_DDF_REPOSITORIES, githubUrlDescriptor.account, githubUrlDescriptor.repo);
 }
