@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import test from 'ava';
 import path from 'path';
 import proxyquire from 'proxyquire';
@@ -35,8 +36,9 @@ test.cb('should hard checkout repo if it was cloned before', assert => {
     }
   });
 
-  const githubUrl = `git@github.com:open-numbers/${ddfRepoName}.git`;
-  const expectedPathToRepo = path.resolve(process.cwd(), config.PATH_TO_DDF_REPOSITORIES, ddfRepoName);
+  const accountName = 'open-numbers';
+  const githubUrl = `git@github.com:${accountName}/${ddfRepoName}.git`;
+  const expectedPathToRepo = path.resolve(process.cwd(), config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName);
 
   stubbedReposService.cloneRepo(githubUrl, ddfRepoCommitHash, (error, cloneResult) => {
     assert.is(cloneResult.pathToRepo, expectedPathToRepo);
@@ -100,15 +102,17 @@ test.skip.cb('should respond with an error if something wrong occurred during "g
 });
 
 test.cb('should clone repo successfully (when no commit given to checkout - HEAD is used instead)', assert => {
+  const accountName = 'open-numbers';
   const expectedDdfRepoName = 'ddf--gapminder--systema_globalis';
-  const expectedGithubUrl = `git@github.com:open-numbers/${expectedDdfRepoName}.git`;
+  const expectedGithubUrl = `git@github.com:${accountName}/${expectedDdfRepoName}.git`;
+  const expectedPathToRepo = path.resolve(process.cwd(), config.PATH_TO_DDF_REPOSITORIES, accountName, expectedDdfRepoName);
 
   const stubbedReposService = proxyquire('../ws.services/repos.service', {
     'simple-git': function () {
       return {
-        clone: function(actualGithubUrl, actualDdfRepoName, done) {
+        clone: function(actualGithubUrl, pathToRepo, done) {
           assert.is(actualGithubUrl, expectedGithubUrl);
-          assert.is(actualDdfRepoName, expectedDdfRepoName);
+          assert.is(pathToRepo, expectedPathToRepo);
           done(null);
           return this;
         },
@@ -139,8 +143,6 @@ test.cb('should clone repo successfully (when no commit given to checkout - HEAD
     }
   });
 
-  const expectedPathToRepo = path.resolve(process.cwd(), config.PATH_TO_DDF_REPOSITORIES, expectedDdfRepoName);
-
   stubbedReposService.cloneRepo(expectedGithubUrl, null, (error, cloneResult) => {
     assert.is(cloneResult.pathToRepo, expectedPathToRepo);
     assert.end();
@@ -159,34 +161,27 @@ test.cb('should fail cloning if github url to ddf repo was not given', assert =>
 test.todo('should check repos dir if exists or not');
 
 test('should properly extract repo name from github url', assert => {
-  const expectedDdfRepoName = 'ddf--gapminder--systema_globalis';
+  const expectedDdfRepoName = 'open-numbers/ddf--gapminder--systema_globalis';
 
-  const actualRepoName = reposService.getRepoName(`git@github.com:open-numbers/${expectedDdfRepoName}.git`);
+  const actualRepoName = reposService.getRepoNameForDataset(`git@github.com:open-numbers/ddf--gapminder--systema_globalis.git`);
 
   assert.is(actualRepoName, expectedDdfRepoName);
 });
 
-test('should treat last chunk in a string separated by slashes as a repo name', assert => {
-  const expectedDdfRepoName = '/hello/ddf';
+test('should throw away part .git from repo name', assert => {
+  const expectedDdfRepoName = 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git';
 
-  const actualRepoName = reposService.getRepoName(expectedDdfRepoName);
+  const actualRepoName = reposService.getRepoNameForDataset(expectedDdfRepoName);
 
-  assert.is(actualRepoName, 'ddf');
-});
-
-test('should throw away part of the repo name that starts with dot', assert => {
-  const expectedDdfRepoName = '/hello/ddf.bla.bla.git';
-
-  const actualRepoName = reposService.getRepoName(expectedDdfRepoName);
-
-  assert.is(actualRepoName, 'ddf');
+  assert.false(_.endsWith(actualRepoName, '.git'));
 });
 
 test('should properly extract path to repo stored locally', assert => {
   const ddfRepoName = 'ddf--gapminder--systema_globalis';
+  const accountName = 'open-numbers';
 
-  const expectedPathToRepo = path.resolve(process.cwd(), config.PATH_TO_DDF_REPOSITORIES, ddfRepoName);
-  const actualPathToRepo = reposService.getPathToRepo(`git@github.com:open-numbers/${ddfRepoName}`);
+  const expectedPathToRepo = path.resolve(process.cwd(), config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName);
+  const actualPathToRepo = reposService.getPathToRepo(`git@github.com:${accountName}/${ddfRepoName}`);
 
   assert.is(actualPathToRepo, expectedPathToRepo);
 });

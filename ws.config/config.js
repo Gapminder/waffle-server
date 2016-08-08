@@ -14,7 +14,6 @@ module.exports = (function () {
     HOST_URL: process.env.HOST_URL || DEFAULT_CONFIG.HOST_URL,
 
     MONGODB_URL: process.env.MONGODB_URL || DEFAULT_CONFIG.MONGODB_URL,
-    NEO4J_URL: process.env.NEO4J_URL || DEFAULT_CONFIG.NEO4J_URL,
 
     REDIS_HOST: process.env.REDIS_HOST || DEFAULT_CONFIG.REDIS_HOST,
     REDIS_PORT: process.env.REDIS_PORT || DEFAULT_CONFIG.REDIS_PORT,
@@ -51,7 +50,6 @@ module.exports = (function () {
 
   const REQUIRED_ENVIRONMENT_VARIABLES = Object.freeze([
     'MONGODB_URL',
-    'NEO4J_URL'
   ]);
 
   // Check that all the REQUIRED VARIABLES was setup.

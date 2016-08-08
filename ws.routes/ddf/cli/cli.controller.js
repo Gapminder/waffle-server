@@ -204,7 +204,7 @@ module.exports = serviceLocator => {
         .on('data', entry => {
           const data = entry.value;
 
-          const repoName = reposService.getRepoName(data.github);
+          const repoName = reposService.getRepoNameForDataset(data.github);
           if (data.github && !repoName) {
             req.destroy();
             return onBodyTransformed(`Incorrect github url was given: ${data.github}`);

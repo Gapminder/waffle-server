@@ -1,7 +1,6 @@
 //eslint-disable
 const mongoose = require('mongoose');
 const config = require('./config');
-const Neo4j = require('node-neo4j');
 
 const db = mongoose.connection;
 mongoose.set('debug', config.MONGOOSE_DEBUG);
@@ -18,7 +17,3 @@ db.once('open', function () {
 db.once('close', function () {
   console.log('db connect close');
 });
-
-module.exports = {
-  neo4jDb: new Neo4j(config.NEO4J_URL)
-};
