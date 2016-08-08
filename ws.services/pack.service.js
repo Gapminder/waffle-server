@@ -136,8 +136,8 @@ function _toDdfJson(data, next) {
 // FIXME: to remove when vizabi could read all geo props from ddfJson
 function _pickDdfJsonProperties(data, next) {
   const json = {
-    concepts: _.pick(data.concepts, ['values']),
-    entities: _.pick(data.entities, ['values', 'rows']),
+    concepts: data.concepts,
+    entities: data.entities,
     datapoints: data.datapoints
   };
 
