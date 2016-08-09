@@ -26,7 +26,7 @@ UsersRepository.prototype.findUserByUniqueTokenAndProlongSession = function (uni
 
   const updateExpireTokenQuery = {
     $set: {
-      expireToken: now + constants.VALID_TOKEN_PERIOD_IN_MILLIS
+      expireToken: calculateNewTokenExpirationDate(now)
     }
   };
 
@@ -34,7 +34,26 @@ UsersRepository.prototype.findUserByUniqueTokenAndProlongSession = function (uni
 };
 
 UsersRepository.prototype.setUpToken = function (email, uniqueToken, expireToken, onFound) {
-  return Users.findOneAndUpdate({email}, {uniqueToken, expireToken}, {new: true}).lean().exec(onFound);
+  return Users.findOne({email}).exec((error, user) => {
+    if (error) {
+      return onFound(error);
+    }
+
+    const now = Date.now();
+    if (user.expireToken > now) {
+      user.expireToken = calculateNewTokenExpirationDate(now);
+    } else {
+      user.expireToken = expireToken;
+      user.uniqueToken = uniqueToken;
+    }
+
+    return user.save(error => {
+      if (error) {
+        return onFound(error);
+      }
+      return onFound(null, user);
+    });
+  });
 };
 
 UsersRepository.prototype.createUser = function (user, done) {
@@ -50,5 +69,9 @@ UsersRepository.prototype.createUser = function (user, done) {
     return Users.create(user, done);
   });
 };
+
+function calculateNewTokenExpirationDate(now) {
+  return now + constants.VALID_TOKEN_PERIOD_IN_MILLIS;
+}
 
 module.exports = new UsersRepository();
