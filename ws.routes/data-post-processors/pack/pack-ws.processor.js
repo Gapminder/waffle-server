@@ -11,25 +11,41 @@ module.exports = {
 };
 
 function mapConceptToWsJson(data) {
+  const uniqConceptProperties = _.chain(data.concepts)
+    .flatMap(concept => _.keys(concept.properties))
+    .uniq()
+    .value();
+
+  const select = _.isEmpty(data.headers) ? uniqConceptProperties : data.headers;
+
   const rows = _.map(data.concepts, concept => {
-    return _mapConceptPropertiesToWsJson(data.headers, concept);
+    return _mapConceptPropertiesToWsJson(select, concept);
   });
 
-  const result = { headers: data.headers, rows };
+  const result = { headers: select, rows };
 
   return result;
 }
 
 function _mapConceptPropertiesToWsJson(select, concept) {
-  return _.map(select, property => concept.properties[property]);
+  return _.map(select, property => {
+    return concept.properties[property];
+  });
 }
 
 function mapEntitiesToWsJson(data) {
+  const uniqEntityProperties = _.chain(data.entities)
+    .flatMap(entity => _.keys(entity.properties))
+    .uniq()
+    .value();
+
+  const select = _.isEmpty(data.headers) ? uniqEntityProperties : data.headers;
+
   const rows = _.map(data.entities, (entity) => {
-    return _mapEntitiesPropertiesToWsJson(data.domainGid, data.headers, entity);
+    return _mapEntitiesPropertiesToWsJson(data.domainGid, select, entity);
   });
 
-  const result = { headers: data.headers, rows };
+  const result = { headers: select, rows };
 
   return result;
 }
@@ -37,7 +53,9 @@ function mapEntitiesToWsJson(data) {
 function _mapEntitiesPropertiesToWsJson(entityDomainGid, select, entity) {
   const flattenedEntity = _.merge(__mapGidToEntityDomainGid(entityDomainGid, _.omit(entity, 'properties')), entity.properties);
 
-  return _.map(select, property => flattenedEntity[property]);
+  return _.map(select, property => {
+    return flattenedEntity[property];
+  });
 }
 
 function __mapGidToEntityDomainGid(entityDomainGid, object) {
