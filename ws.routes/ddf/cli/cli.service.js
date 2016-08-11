@@ -24,7 +24,8 @@ const incrementalUpdateService = require('../../../csv_data_mapping_cli/incremen
 const ddfValidationConfig = {
   datapointlessMode: true,
   includeTags: 'WAFFLE_SERVER',
-  excludeRules: 'FILENAME_DOES_NOT_MATCH_HEADER'
+  excludeRules: 'FILENAME_DOES_NOT_MATCH_HEADER',
+  indexlessMode: true
 };
 
 module.exports = {
