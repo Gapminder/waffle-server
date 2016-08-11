@@ -22,7 +22,7 @@ const DatasetTransactions = new Schema({
   lastError: {type: String},
 
   createdBy: {type: Schema.Types.ObjectId, ref: 'Users', required: true},
-  createdAt: {type: Number, 'default': (new Date()).valueOf(), required: true},
+  createdAt: {type: Number, 'default': Date.now(), required: true},
 
   dataset: {type: Schema.Types.ObjectId, ref: 'Datasets'},
 
