@@ -42,8 +42,8 @@ module.exports = serviceLocator => {
     const datasetName = _.first(req.decodedQuery.where.dataset);
     const version = _.first(req.decodedQuery.where.version);
     const domainGid = _.first(req.decodedQuery.where.key);
-
-    const headers = req.decodedQuery.select;
+    const select = req.decodedQuery.select;
+    const headers = _.union(domainGid, select);
     const sort = req.decodedQuery.sort;
 
     const options = {
