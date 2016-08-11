@@ -55,9 +55,9 @@ function mapConcepts(pipe, cb) {
   if (_.isEmpty(pipe.headers)) {
     return cb(`You didn't select any column`);
   }
-
-  const missingHeaders = _.difference(pipe.headers, _.map(pipe.concepts, constants.GID));
-  const missingKeys = _.difference(pipe.domainGids, _.map(pipe.concepts, constants.GID));
+  const resolvedConceptGids = _.map(pipe.concepts, constants.GID);
+  const missingHeaders = _.difference(pipe.select, resolvedConceptGids);
+  const missingKeys = _.difference(pipe.domainGids, resolvedConceptGids);
 
   if (!_.isEmpty(missingHeaders)) {
     return cb(`You choose select column(s) '${_.join(missingHeaders, ', ')}' which aren't present in choosen dataset`);
