@@ -41,9 +41,9 @@ module.exports = serviceLocator => {
 
     const where = _.omit(req.decodedQuery.where, constants.EXCLUDED_QUERY_PARAMS);
     const select = req.decodedQuery.select;
-    const headers = req.decodedQuery.select;
-    const sort = req.decodedQuery.sort;
     const domainGids = req.decodedQuery.where.key;
+    const headers = _.union(domainGids, select);
+    const sort = req.decodedQuery.sort;
     const datasetName = _.first(req.decodedQuery.where.dataset);
     const version = _.first(req.decodedQuery.where.version);
 

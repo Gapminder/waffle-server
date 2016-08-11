@@ -70,7 +70,11 @@ function _packEntities(rawDdf) {
 
   const values = _.chain(entities).map(constants.GID).uniq().value();
   const invertedValues = _.invert(values);
-  const properties = rawDdf.headers;
+  const properties = _.chain(entities)
+    .flatMap(entity => _.keys(entity.properties))
+    .uniq()
+    .sort()
+    .value();
   const propertyValues = _.chain(entities)
     .flatMap(entity => _.values(entity.properties))
     .map(__mapArrayAndObjectToJson)
