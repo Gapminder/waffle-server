@@ -22,7 +22,7 @@ module.exports = new RepositoryFactory(DataPointsRepository);
  * @param dimensionIds array of arrays, where each subarray is a collection of entities that relate to the same concept
  * @param onDatapointsFound
  */
-DataPointsRepository.prototype.findForGivenMeasuresAndDimensions = function(measureIds, dimensionIds, onDatapointsFound) {
+DataPointsRepository.prototype.findForGivenMeasuresAndDimensions = function(measureIds, dimensionIds) {
   const query = this._composeQuery({
     measure: {$in: measureIds},
     dimensions: {
@@ -33,5 +33,5 @@ DataPointsRepository.prototype.findForGivenMeasuresAndDimensions = function(meas
     }
   });
 
-  return DataPoints.find(query).lean().exec(onDatapointsFound);
+  return DataPoints.find(query).lean().stream();
 };

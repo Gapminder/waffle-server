@@ -7,19 +7,13 @@ const originId = require('../origin-id.plugin');
 /**
  * @typedef DimensionSchema
  * @memberof Models
- * @class
  *
- * @param {String} entityName - established entity name
- * @param {String} value - of entity
-
- * @param {String} entityGroup - of entity which was specified in ddf's file name
+ * @param {Models.Concepts.originId} domain - established entity name
+ * @param {Models.Entities.originId} entity - established entity name
  */
 let DimensionSchema = new Schema({
-  gid: String,
-  conceptGid: String,
-
-  concept: {type: Schema.Types.ObjectId, ref: 'Concepts'},
-  entity: {type: Schema.Types.ObjectId, ref: 'Entities'}
+  domain: {type: Schema.Types.ObjectId},
+  entity: {type: Schema.Types.ObjectId}
 }, {_id: false});
 
 /**
@@ -32,6 +26,7 @@ let DimensionSchema = new Schema({
  * @property {Boolean} isNumeric - value of the measure?
  * @property {Models.Concepts.originId} measure - points to measure this DataPoint has value for
  * @property {Array<Models.Entities.originId>} dimensions - contains objects that are define point for the data
+ * @property {Array<Models.DimensionSchema>} dimensionValues - contains objects that are define point for the data
  *
  * @property {Number} from - entity start version
  * @property {Number} to - entity end version (or Infinity)
@@ -45,6 +40,7 @@ let DataPoints = new Schema({
   isNumeric: {type: Boolean, required: true},
   measure: {type: Schema.Types.ObjectId, required: true},
   dimensions: [{type: Schema.Types.ObjectId}],
+  dimensionValues: [DimensionSchema],
 
   from: {type: Number, required: true},
   to: {type: Number, required: true, default: Number.MAX_SAFE_INTEGER},

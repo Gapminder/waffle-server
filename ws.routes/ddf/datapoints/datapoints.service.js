@@ -1,6 +1,8 @@
 'use strict';
 const _ = require('lodash');
 const async = require('async');
+const through2 = require('through2');
+
 const constants = require('../../../ws.utils/constants');
 const commonService = require('../../../ws.services/common.service');
 const conceptsService = require('../concepts/concepts.service');
@@ -13,10 +15,140 @@ module.exports = {
   getEntities,
   mapConcepts,
   getDataPoints,
-  collectDatapoints
+  collectDatapoints,
+  matchDdfqlToDatapoints
 };
 
-function collectDatapoints(options, cb) {
+function matchDdfqlToDatapoints(options, onMatchedDatapoints) {
+  console.time('finish matching DataPoints');
+  const pipe = options;
+
+  return async.waterfall([
+    async.constant(pipe),
+    commonService.findDefaultDatasetAndTransaction,
+    getConcepts,
+    mapConcepts,
+    getEntities,
+    getDdfqlDataPoints
+  ], (error, result) => {
+    console.timeEnd('finish matching DataPoints');
+
+    return onMatchedDatapoints(error, result);
+  });
+}
+
+function getDdfqlDataPoints(pipe, cb) {
+  console.time('get datapoints');
+
+  if (_.isEmpty(pipe.measures)) {
+    console.error('Measure should present in select property');
+    return cb(null, pipe);
+  }
+
+  const measureIds = _.map(pipe.measures, 'originId');
+  const dimensionIds = pipe.entityOriginIdsGroupedByDomain;
+
+  const stream =  datapointsRepositoryFactory
+    .currentVersion(pipe.dataset._id, pipe.version)
+    .findForGivenMeasuresAndDimensions(measureIds, dimensionIds);
+
+  const entitiesByOriginId = _.keyBy(pipe.entities, 'originId');
+  const conceptsByOriginId = _.keyBy(pipe.concepts, 'originId');
+
+  const transformer = through2.obj(function (data, enc, callback) {
+    console.timeEnd('get datapoints');
+
+    data.dimensions = _.chain(entitiesByOriginId)
+      .pick(data.dimensions)
+      .mapValues((entity) => {
+        entity.domain = conceptsByOriginId[entity.domain];
+        entity.sets = _.map(entity.sets, set => conceptsByOriginId[set]);
+
+        return entity;
+      })
+      .values()
+      .value();
+    data.measure = conceptsByOriginId[data.measure];
+
+    this.push(data);
+
+    callback();
+  });
+
+  const Mingo = require('mingo');
+  const query = new Mingo.Query({
+    "$and": [
+      {
+        dimensions: {
+          "$and":[
+            {
+              "$elemMatch": {
+                "domain.gid": "geo",
+                "properties.is--country": true,
+                "properties.latitude": {
+                  "$gte": 0
+                }
+              }
+            },
+            // {
+            //   "$elemMatch": {
+            //     "domain.gid": "year",
+            //     "gid": {
+            //       "$gt": "2015"
+            //     }
+            //   }
+            // }
+          ]
+        }
+      },
+      // {
+      //   "$or":[
+      //     {
+      //       "measure.gid": "population_total",
+      //       "value": {
+      //         "$gt": 179942846
+      //       }
+      //     },
+      //     {
+      //       "measure.gid": "life_expectancy_years",
+      //       "$or": [
+      //         {
+      //           "value": {
+      //             "$lt": 50
+      //           }
+      //         },
+      //         {
+      //           "value": {
+      //             "$gt": 40
+      //           }
+      //         }
+      //       ]
+      //     }
+      //   ]
+      // }
+    ]
+  });
+  const qs = query.stream();
+  let datapoints = [];
+
+  console.time('filter datapoints');
+
+  qs.on('data', (data) => {
+    datapoints.push(data);
+  });
+
+  qs.on('finish', () => {
+    console.timeEnd('filter datapoints');
+    pipe.datapoints = datapoints;
+    return cb(null, pipe);
+  });
+
+  qs.on('error', cb);
+
+  stream.pipe(transformer).pipe(qs);
+}
+
+function collectDatapoints(options, onCollectDatapoints) {
   console.time('finish DataPoint stats');
   const pipe = options;
 
@@ -30,7 +162,7 @@ function collectDatapoints(options, cb) {
   ], (error, result) => {
     console.timeEnd('finish DataPoint stats');
 
-    return cb(error, result);
+    return onCollectDatapoints(error, result);
   });
 }
 
@@ -39,9 +171,7 @@ function getConcepts(pipe, cb) {
     dataset: pipe.dataset,
     version: pipe.version,
     header: [],
-    where: {
-      concept: pipe.headers
-    }
+    where: {}
   };
 
   return conceptsService.getConcepts(_pipe, (err, result) => {
