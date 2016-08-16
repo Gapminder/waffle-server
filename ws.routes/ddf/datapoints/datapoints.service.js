@@ -57,18 +57,16 @@ function getDdfqlDataPoints(pipe, cb) {
   const originalSubDatapointQuery = pipe.where.$or;
   const dimensionIds = pipe.entityOriginIdsGroupedByDomain;
   const conceptsByGids = _.keyBy(pipe.concepts, 'gid');
-  const subDatapointQuery = {
-    $or: _.map(originalSubDatapointQuery, (subquery) => {
-      const wrappedSubquery = _.reduce(subquery, (result, q, k) => {
-        result['value'] = q;
-        result['measure'] = conceptsByGids[k].originId;
+  const subDatapointQuery = _.map(originalSubDatapointQuery, (subquery) => {
+    const wrappedSubquery = _.reduce(subquery, (result, q, k) => {
+      result['value'] = q;
+      result['measure'] = conceptsByGids[k].originId;
 
-        return result;
-      }, {});
+      return result;
+    }, {});
 
-      return wrappedSubquery;
-    })
-  };
+    return wrappedSubquery;
+  });
 
   return datapointsRepositoryFactory
     .currentVersion(pipe.dataset._id, pipe.version)

@@ -32,6 +32,6 @@ DataPointsRepository.prototype.findForGivenMeasuresAndDimensions = function(subD
       })
     }
   });
-
+  console.log(JSON.stringify(query));
   return DataPoints.find(query).lean().exec(onDatapointsFound);
 };

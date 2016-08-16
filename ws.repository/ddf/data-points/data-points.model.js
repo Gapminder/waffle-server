@@ -20,7 +20,7 @@ let DimensionSchema = new Schema({
  * @typedef {Object} DataPoints
  * @memberof Models
  *
- * @property {String} value - data this DataPoint contains at the given coordinates
+ * @property {Mixed} value - data this DataPoint contains at the given coordinates
  * @property {Array<String>} sources - filenames of source item
  *
  * @property {Boolean} isNumeric - value of the measure?
@@ -34,7 +34,7 @@ let DimensionSchema = new Schema({
  * @property {Models.DatasetTransactions} transaction - reference
  */
 let DataPoints = new Schema({
-  value: {type: String, required: true},
+  value: {type: Schema.Types.Mixed, required: true},
   sources: [{type: String, required: true}],
 
   isNumeric: {type: Boolean, required: true},
