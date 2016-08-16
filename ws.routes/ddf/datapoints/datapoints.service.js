@@ -21,7 +21,16 @@ module.exports = {
 
 function matchDdfqlToDatapoints(options, onMatchedDatapoints) {
   console.time('finish matching DataPoints');
-  const pipe = options;
+  const pipe = {
+    select: options.select,
+    headers: options.headers,
+    domainGids: options.domainGids,
+    where: options.where,
+    sort: options.sort,
+    groupBy: options.groupBy,
+    datasetName: options.datasetName,
+    version: options.version
+  };
 
   return async.waterfall([
     async.constant(pipe),
@@ -45,107 +54,32 @@ function getDdfqlDataPoints(pipe, cb) {
     return cb(null, pipe);
   }
 
-  const measureIds = _.map(pipe.measures, 'originId');
+  const originalSubDatapointQuery = pipe.where.$or;
   const dimensionIds = pipe.entityOriginIdsGroupedByDomain;
+  const conceptsByGids = _.keyBy(pipe.concepts, 'gid');
+  const subDatapointQuery = {
+    $or: _.map(originalSubDatapointQuery, (subquery) => {
+      const wrappedSubquery = _.reduce(subquery, (result, q, k) => {
+        result['value'] = q;
+        result['measure'] = conceptsByGids[k].originId;
 
-  const stream =  datapointsRepositoryFactory
+        return result;
+      }, {});
+
+      return wrappedSubquery;
+    })
+  };
+
+  return datapointsRepositoryFactory
     .currentVersion(pipe.dataset._id, pipe.version)
-    .findForGivenMeasuresAndDimensions(measureIds, dimensionIds);
-
-  const entitiesByOriginId = _.keyBy(pipe.entities, 'originId');
-  const conceptsByOriginId = _.keyBy(pipe.concepts, 'originId');
-
-  const transformer = through2.obj(function (data, enc, callback) {
-    console.timeEnd('get datapoints');
-
-    data.dimensions = _.chain(entitiesByOriginId)
-      .pick(data.dimensions)
-      .mapValues((entity) => {
-        entity.domain = conceptsByOriginId[entity.domain];
-        entity.sets = _.map(entity.sets, set => conceptsByOriginId[set]);
-
-        return entity;
-      })
-      .values()
-      .value();
-    data.measure = conceptsByOriginId[data.measure];
-
-    this.push(data);
-
-    callback();
-  });
-
-  const Mingo = require('mingo');
-  const query = new Mingo.Query({
-    "$and": [
-      {
-        dimensions: {
-          "$and":[
-            {
-              "$elemMatch": {
-                "domain.gid": "geo",
-                "properties.is--country": true,
-                "properties.latitude": {
-                  "$gte": 0
-                }
-              }
-            },
-            // {
-            //   "$elemMatch": {
-            //     "domain.gid": "year",
-            //     "gid": {
-            //       "$gt": "2015"
-            //     }
-            //   }
-            // }
-          ]
-        }
-      },
-      // {
-      //   "$or":[
-      //     {
-      //       "measure.gid": "population_total",
-      //       "value": {
-      //         "$gt": 179942846
-      //       }
-      //     },
-      //     {
-      //       "measure.gid": "life_expectancy_years",
-      //       "$or": [
-      //         {
-      //           "value": {
-      //             "$lt": 50
-      //           }
-      //         },
-      //         {
-      //           "value": {
-      //             "$gt": 40
-      //           }
-      //         }
-      //       ]
-      //     }
-      //   ]
-      // }
-    ]
-  });
-  const qs = query.stream();
-  let datapoints = [];
-
-  console.time('filter datapoints');
-
-  qs.on('data', (data) => {
-    datapoints.push(data);
-  });
-
-  qs.on('finish', () => {
-    console.timeEnd('filter datapoints');
-    pipe.datapoints = datapoints;
-    return cb(null, pipe);
-  });
-
-  qs.on('error', cb);
-
-  stream.pipe(transformer).pipe(qs);
+    .findForGivenMeasuresAndDimensions(subDatapointQuery, dimensionIds, (error, datapoints) => {
+      console.timeEnd('get datapoints');
+      if (error) {
+        return cb(error);
+      }
+      pipe.datapoints = datapoints;
+      return cb(null, pipe);
+    });
 }
 
 function collectDatapoints(options, onCollectDatapoints) {
@@ -235,10 +169,11 @@ function getDataPoints(pipe, cb) {
 
   const measureIds = _.map(pipe.measures, 'originId');
   const dimensionIds = pipe.entityOriginIdsGroupedByDomain;
+  const subDatapointQuery = {measure: {$in: measureIds}};
 
   return datapointsRepositoryFactory
     .currentVersion(pipe.dataset._id, pipe.version)
-    .findForGivenMeasuresAndDimensions(measureIds, dimensionIds, (error, datapoints) => {
+    .findForGivenMeasuresAndDimensions(subDatapointQuery, dimensionIds, (error, datapoints) => {
       console.timeEnd('get datapoints');
       if (error) {
         return cb(error);

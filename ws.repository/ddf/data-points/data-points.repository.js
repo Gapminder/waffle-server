@@ -22,9 +22,9 @@ module.exports = new RepositoryFactory(DataPointsRepository);
  * @param dimensionIds array of arrays, where each subarray is a collection of entities that relate to the same concept
  * @param onDatapointsFound
  */
-DataPointsRepository.prototype.findForGivenMeasuresAndDimensions = function(measureIds, dimensionIds) {
+DataPointsRepository.prototype.findForGivenMeasuresAndDimensions = function(subDatapointQuery, dimensionIds, onDatapointsFound) {
   const query = this._composeQuery({
-    measure: {$in: measureIds},
+    $or: subDatapointQuery,
     dimensions: {
       $size: _.size(dimensionIds),
       $all: _.map(dimensionIds, dimensionIdsPerConcept => {
@@ -33,5 +33,5 @@ DataPointsRepository.prototype.findForGivenMeasuresAndDimensions = function(meas
     }
   });
 
-  return DataPoints.find(query).lean().stream();
+  return DataPoints.find(query).lean().exec(onDatapointsFound);
 };

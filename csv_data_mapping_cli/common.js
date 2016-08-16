@@ -954,7 +954,7 @@ function mapDdfDataPointToWsModel(pipe) {
       .filter(conceptGid => _.keys(pipe.measures).indexOf(conceptGid) > -1)
       .map((measureGid) => {
         return {
-          value: entry[measureGid],
+          value: _.isNumber(entry[measureGid]) ? _.toNumber(entry[measureGid]) : entry[measureGid],
           measure: pipe.measures[measureGid].originId,
           dimensions: dimensions,
           dimensionValues: dimensionValues,

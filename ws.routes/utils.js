@@ -1,6 +1,5 @@
 'use strict';
 
-const _ = require('lodash');
 const md5 = require('md5');
 const passport = require('passport');
 const queryCoder = require('../ws.utils/query-coder');
@@ -16,9 +15,8 @@ module.exports = {
 
 function getCacheConfig(prefix) {
   return function (req, res, next) {
-    const query = getOriginalQuery(req);
     /*eslint camelcase:0*/
-    if (query.force === 'true') {
+    if (req.query.force === 'true') {
       res.use_express_redis_cache = false;
       return next();
     }
@@ -45,10 +43,9 @@ function ensureAuthenticatedViaToken(res, req, next) {
 }
 
 function decodeQuery(req, res, next) {
-  const query = getOriginalQuery(req);
-  req.decodedQuery = Object.keys(query).reduce((result, key) => {
+  req.decodedQuery = Object.keys(req.query).reduce((result, key) => {
 
-    var normalizedParam = normalizeParam(query[key]);
+    var normalizedParam = normalizeParam(req.query[key]);
     var decodedParam = queryCoder.decodeParam(normalizedParam);
 
     if (key === 'gapfilling') {
@@ -92,10 +89,6 @@ function sanitizeSortValues(sortParam) {
     }
     return result;
   }, {});
-}
-
-function getOriginalQuery(req) {
-  return _.isEmpty(req.body) ? req.query : req.body;
 }
 
 
