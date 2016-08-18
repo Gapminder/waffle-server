@@ -619,7 +619,8 @@ function _____updateDataPoint(pipe, entities, datapoint) {
         // TODO: get the point to presentation
         $not: {$elemMatch: {$nin : _.map(entities, 'originId') }}
       },
-      value: datapoint[measure.gid]
+      // FIXME: this type casting is a workaround to the issue thar WS sores measure as strings in mongodb
+      value: String(Number(datapoint[measure.gid]))
     }, {$set: {to: pipe.transaction.createdAt}}, {new: true})
       .lean()
       .exec((err, doc) => {

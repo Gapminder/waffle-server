@@ -24,11 +24,11 @@ DatasetTransactionsRepository.prototype.findLatestByDataset = function (datasetI
 };
 
 DatasetTransactionsRepository.prototype.findLatestCompletedByDataset = function (datasetId, done) {
-  return this._findLatestByQuery({dataset: datasetId, isClosed: true}, done);
+  return this._findLatestByQuery({dataset: datasetId, isClosed: true, lastError: {$exists: false}}, done);
 };
 
 DatasetTransactionsRepository.prototype.findLatestFailedByDataset = function (datasetId, done) {
-  return this._findLatestByQuery({dataset: datasetId, isClosed: false}, done);
+  return this._findLatestByQuery({dataset: datasetId, lastError: {$exists: true}}, done);
 };
 
 DatasetTransactionsRepository.prototype.findByDatasetAndCommit = function (datasetId, commit, done) {

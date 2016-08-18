@@ -43,7 +43,7 @@
     "lodash": "4.3.0",
     "md5": "2.0.0",
     "method-override": "2.3.5",
-    "mongoose": "4.5.7",
+    "mongoose": "4.5.9",
     "morgan": "1.6.1",
     "newrelic": "1.28.3",
     "passport": "0.2.2",
