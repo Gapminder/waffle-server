@@ -28,8 +28,8 @@ test('should normalize where and join clauses', assert => {
     },
     "join": {
       "$geo": {
-        key: "geo",
-        where: {
+        "key": "geo",
+        "where": {
           "$and": [
             {"is--country": true},
             {"latitude": {"$lte": 0}}
@@ -37,14 +37,14 @@ test('should normalize where and join clauses', assert => {
         }
       },
       "$time": {
-        key: "time",
-        where: {
+        "key": "time",
+        "where": {
           "time": {"$lt": 2015}
         }
       },
       "$time2": {
-        key: "time",
-        where: {
+        "key": "time",
+        "where": {
           "time": {"$eq": 1918}
         }
       }

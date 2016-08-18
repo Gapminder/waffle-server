@@ -23,15 +23,7 @@ module.exports = new RepositoryFactory(DataPointsRepository);
  * @param onDatapointsFound
  */
 DataPointsRepository.prototype.findForGivenMeasuresAndDimensions = function(subDatapointQuery, dimensionIds, onDatapointsFound) {
-  const query = this._composeQuery({
-    $or: subDatapointQuery,
-    dimensions: {
-      $size: _.size(dimensionIds),
-      $all: _.map(dimensionIds, dimensionIdsPerConcept => {
-        return {$elemMatch: {$in: dimensionIdsPerConcept}};
-      })
-    }
-  });
-  console.log(JSON.stringify(query));
+  const query = this._composeQuery(subDatapointQuery);
+
   return DataPoints.find(query).lean().exec(onDatapointsFound);
 };

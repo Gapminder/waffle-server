@@ -75,6 +75,7 @@ module.exports = serviceLocator => {
   function getMatchedDdfqlDatapoints(req, res, next) {
     logger.debug('URL: \n%s%s', config.LOG_TABS, req.originalUrl);
 
+    const query = req.body;
     const where = req.body.where;
     const select = req.body.select.value;
     const domainGids = req.body.select.key;
@@ -92,7 +93,8 @@ module.exports = serviceLocator => {
       sort,
       groupBy,
       datasetName,
-      version
+      version,
+      query
     };
 
     const onMatchedDatapoints = doDataTransfer(req, res, next);

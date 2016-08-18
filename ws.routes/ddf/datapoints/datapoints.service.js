@@ -7,7 +7,9 @@ const constants = require('../../../ws.utils/constants');
 const commonService = require('../../../ws.services/common.service');
 const conceptsService = require('../concepts/concepts.service');
 const entitiesService = require('../entities/entities.service');
+const ddfql = require('../../../ws.ddfql/ddf-query-normalizer');
 
+const entitiesRepositoryFactory = require('../../../ws.repository/ddf/entities/entities.repository');
 const datapointsRepositoryFactory = require('../../../ws.repository/ddf/data-points/data-points.repository');
 
 module.exports = {
@@ -26,6 +28,7 @@ function matchDdfqlToDatapoints(options, onMatchedDatapoints) {
     headers: options.headers,
     domainGids: options.domainGids,
     where: options.where,
+    query: options.query,
     sort: options.sort,
     groupBy: options.groupBy,
     datasetName: options.datasetName,
@@ -54,30 +57,31 @@ function getDdfqlDataPoints(pipe, cb) {
     return cb(null, pipe);
   }
 
-  const originalSubDatapointQuery = pipe.where.$or;
-  const dimensionIds = pipe.entityOriginIdsGroupedByDomain;
-  const conceptsByGids = _.keyBy(pipe.concepts, 'gid');
-  const subDatapointQuery = _.map(originalSubDatapointQuery, (subquery) => {
-    const wrappedSubquery = _.reduce(subquery, (result, q, k) => {
-      result['value'] = q;
-      result['measure'] = conceptsByGids[k].originId;
+  const entitiesRepository = entitiesRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version);
+  const conceptsByGids = _.chain(pipe.concepts)
+    .keyBy('gid')
+    .mapValues('originId')
+    .value();
+  const normlizedQuery = ddfql.normalize(pipe.query, conceptsByGids);
 
-      return result;
-    }, {});
+  return async.mapLimit(normlizedQuery.join, 10, (item, mcb) => {
+    return entitiesRepository.findEntityPropertiesByQuery(item, (error, entities) => mcb(error, _.map(entities, 'originId')));
+  }, (err, substituteJoinLinks) => {
+    const promotedQuery = ddfql.substituteJoinLinks(normlizedQuery, substituteJoinLinks);
+    const subDatapointQuery = promotedQuery.where;
+    const dimensionIds = pipe.entityOriginIdsGroupedByDomain;
 
-    return wrappedSubquery;
+    return datapointsRepositoryFactory
+      .currentVersion(pipe.dataset._id, pipe.version)
+      .findForGivenMeasuresAndDimensions(subDatapointQuery, dimensionIds, (error, datapoints) => {
+        console.timeEnd('get datapoints');
+        if (error) {
+          return cb(error);
+        }
+        pipe.datapoints = datapoints;
+        return cb(null, pipe);
+      });
   });
-
-  return datapointsRepositoryFactory
-    .currentVersion(pipe.dataset._id, pipe.version)
-    .findForGivenMeasuresAndDimensions(subDatapointQuery, dimensionIds, (error, datapoints) => {
-      console.timeEnd('get datapoints');
-      if (error) {
-        return cb(error);
-      }
-      pipe.datapoints = datapoints;
-      return cb(null, pipe);
-    });
 }
 
 function collectDatapoints(options, onCollectDatapoints) {
@@ -167,7 +171,15 @@ function getDataPoints(pipe, cb) {
 
   const measureIds = _.map(pipe.measures, 'originId');
   const dimensionIds = pipe.entityOriginIdsGroupedByDomain;
-  const subDatapointQuery = {measure: {$in: measureIds}};
+  const subDatapointQuery = {
+    $or: {measure: {$in: measureIds}},
+    dimensions: {
+      $size: _.size(dimensionIds),
+      $all: _.map(dimensionIds, dimensionIdsPerConcept => {
+        return {$elemMatch: {$in: dimensionIdsPerConcept}};
+      })
+    }
+  };
 
   return datapointsRepositoryFactory
     .currentVersion(pipe.dataset._id, pipe.version)
