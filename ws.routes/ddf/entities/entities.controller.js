@@ -33,6 +33,18 @@ module.exports = serviceLocator => {
     dataPostProcessors.pack
   );
 
+  router.get('/api/ddf/entities',
+    cors(),
+    compression({filter: commonService.shouldCompress}),
+    getCacheConfig(constants.DDF_REDIS_CACHE_NAME_ENTITIES),
+    cache.route({expire: constants.DDF_REDIS_CACHE_LIFETIME}),
+    decodeQuery,
+    getMatchedDdfqlEntities,
+    dataPostProcessors.gapfilling,
+    dataPostProcessors.toPrecision,
+    dataPostProcessors.pack
+  );
+
   return app.use(router);
 
   function ddfEntitiesStats(req, res, next) {
@@ -56,19 +68,27 @@ module.exports = serviceLocator => {
       version
     };
 
-    entitiesService.collectEntities(options, (error, result) => {
+    const onCollectEntities = doDataTransfer(req, res, next);
+    entitiesService.collectEntities(options, onCollectEntities);
+  }
+
+  function getMatchedDdfqlEntities() {
+    const onMatchedEntities = doDataTransfer(req, res, next);
+
+    entitiesService.matchDdfqlToEntities(options, onMatchedEntities);
+  }
+
+  function doDataTransfer(req, res, next) {
+    return (error, result) => {
       if (error) {
-        console.error(error);
+        logger.error(error);
         res.use_express_redis_cache = false;
         return res.json({success: false, error: error});
       }
 
-
-      req.rawData = {
-        rawDdf: Object.assign({domainGid}, result)
-      };
+      req.rawData = {rawDdf: result};
 
       return next();
-    });
+    }
   }
 };

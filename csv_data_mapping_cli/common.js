@@ -930,24 +930,6 @@ function mapDdfDataPointToWsModel(pipe) {
       }, [])
       .value();
 
-   const dimensionValues = _.chain(entry)
-      .keys()
-      .filter(conceptGid => _.keys(pipe.dimensions).indexOf(conceptGid) > -1)
-      .reduce((result, conceptGid) => {
-        const entity = _.find(pipe.entities, (_entity) => {
-          return _entity.gid == entry[conceptGid];
-        });
-
-        const dimensionValue = {
-          domain: pipe.dimensions[conceptGid].originId,
-          entity: entity.originId
-        };
-        result.push(dimensionValue);
-
-        return result;
-      }, [])
-      .value();
-
     // TODO: rewrite with _.pick
     return _.chain(entry)
       .keys()
@@ -957,7 +939,6 @@ function mapDdfDataPointToWsModel(pipe) {
           value: _.isNumber(entry[measureGid]) ? _.toNumber(entry[measureGid]) : entry[measureGid],
           measure: pipe.measures[measureGid].originId,
           dimensions: dimensions,
-          dimensionValues: dimensionValues,
           originId: entry.originId,
 
           isNumeric: _.isNumber(entry[measureGid]),
