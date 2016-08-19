@@ -39,10 +39,10 @@ module.exports = serviceLocator => {
     compression({filter: commonService.shouldCompress}),
     getCacheConfig(constants.DDF_REDIS_CACHE_NAME_DATAPOINTS),
     cache.route({expire: constants.DDF_REDIS_CACHE_LIFETIME}),
-    getMatchedDdfqlDatapoints
-    // dataPostProcessors.gapfilling,
-    // dataPostProcessors.toPrecision,
-    // dataPostProcessors.pack
+    getMatchedDdfqlDatapoints,
+    dataPostProcessors.gapfilling,
+    dataPostProcessors.toPrecision,
+    dataPostProcessors.pack
   );
 
   return app.use(router);

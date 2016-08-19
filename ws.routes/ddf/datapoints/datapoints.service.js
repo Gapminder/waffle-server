@@ -1,13 +1,13 @@
 'use strict';
 const _ = require('lodash');
 const async = require('async');
-const through2 = require('through2');
 
+const ddfql = require('../../../ws.ddfql/ddf-query-normalizer');
+const logger = require('../../../ws.config/log');
 const constants = require('../../../ws.utils/constants');
 const commonService = require('../../../ws.services/common.service');
 const conceptsService = require('../concepts/concepts.service');
 const entitiesService = require('../entities/entities.service');
-const ddfql = require('../../../ws.ddfql/ddf-query-normalizer');
 
 const entitiesRepositoryFactory = require('../../../ws.repository/ddf/entities/entities.repository');
 const datapointsRepositoryFactory = require('../../../ws.repository/ddf/data-points/data-points.repository');
@@ -18,7 +18,9 @@ module.exports = {
   mapConcepts,
   getDataPoints,
   collectDatapoints,
-  matchDdfqlToDatapoints
+  matchDdfqlToDatapoints,
+  getDdfqlDataPoints: _getDdfqlDataPoints,
+  queryDatapoints: _queryDatapoints
 };
 
 function matchDdfqlToDatapoints(options, onMatchedDatapoints) {
@@ -41,7 +43,7 @@ function matchDdfqlToDatapoints(options, onMatchedDatapoints) {
     getConcepts,
     mapConcepts,
     getEntities,
-    getDdfqlDataPoints
+    _getDdfqlDataPoints
   ], (error, result) => {
     console.timeEnd('finish matching DataPoints');
 
@@ -49,11 +51,11 @@ function matchDdfqlToDatapoints(options, onMatchedDatapoints) {
   });
 }
 
-function getDdfqlDataPoints(pipe, cb) {
+function _getDdfqlDataPoints(pipe, cb) {
   console.time('get datapoints');
 
   if (_.isEmpty(pipe.measures)) {
-    console.error('Measure should present in select property');
+    logger.error('Measure should present in select property');
     return cb(null, pipe);
   }
 
@@ -69,19 +71,26 @@ function getDdfqlDataPoints(pipe, cb) {
   }, (err, substituteJoinLinks) => {
     const promotedQuery = ddfql.substituteJoinLinks(normlizedQuery, substituteJoinLinks);
     const subDatapointQuery = promotedQuery.where;
-    const dimensionIds = pipe.entityOriginIdsGroupedByDomain;
 
-    return datapointsRepositoryFactory
-      .currentVersion(pipe.dataset._id, pipe.version)
-      .findForGivenMeasuresAndDimensions(subDatapointQuery, dimensionIds, (error, datapoints) => {
-        console.timeEnd('get datapoints');
-        if (error) {
-          return cb(error);
-        }
-        pipe.datapoints = datapoints;
-        return cb(null, pipe);
-      });
+    return _queryDatapoints(pipe, subDatapointQuery, (err, pipe) => {
+      console.timeEnd('get datapoints');
+      return cb(err, pipe);
+    });
   });
+}
+
+function _queryDatapoints(pipe, subDatapointQuery, cb) {
+  return datapointsRepositoryFactory
+    .currentVersion(pipe.dataset._id, pipe.version)
+    .findForGivenMeasuresAndDimensions(subDatapointQuery, (error, datapoints) => {
+      if (error) {
+        return cb(error);
+      }
+
+      pipe.datapoints = datapoints;
+
+      return cb(null, pipe);
+    });
 }
 
 function collectDatapoints(options, onCollectDatapoints) {
@@ -165,14 +174,14 @@ function getDataPoints(pipe, cb) {
   console.time('get datapoints');
 
   if (_.isEmpty(pipe.measures)) {
-    console.error('Measure should present in select property');
+    logger.error('Measure should present in select property');
     return cb(null, pipe);
   }
 
   const measureIds = _.map(pipe.measures, 'originId');
   const dimensionIds = pipe.entityOriginIdsGroupedByDomain;
   const subDatapointQuery = {
-    $or: {measure: {$in: measureIds}},
+    measure: {$in: measureIds},
     dimensions: {
       $size: _.size(dimensionIds),
       $all: _.map(dimensionIds, dimensionIdsPerConcept => {
@@ -183,13 +192,14 @@ function getDataPoints(pipe, cb) {
 
   return datapointsRepositoryFactory
     .currentVersion(pipe.dataset._id, pipe.version)
-    .findForGivenMeasuresAndDimensions(subDatapointQuery, dimensionIds, (error, datapoints) => {
+    .findForGivenMeasuresAndDimensions(subDatapointQuery, (error, datapoints) => {
       console.timeEnd('get datapoints');
       if (error) {
         return cb(error);
       }
-      //pipe.datapoints = datapoints.slice(0, 10);
+
       pipe.datapoints = datapoints;
+
       return cb(null, pipe);
     });
 }
