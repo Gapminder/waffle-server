@@ -136,6 +136,7 @@ function _packEntities(rawDdf) {
 }
 
 function _packDatapoints(rawDdf, entityByOriginId) {
+  const domainGids = rawDdf.domainGids;
   const headers = rawDdf.headers;
   const concepts = _.mapKeys(rawDdf.concepts, constants.GID);
   const datapoints = rawDdf.datapoints;
@@ -179,7 +180,7 @@ function _packDatapoints(rawDdf, entityByOriginId) {
     packed: {
       values: values,
       indicators: indicatorIndexes,
-      dimensions: _.chain(invertedConceptGids).omit(_.values(invertedIndicatorValues)).values().value(),
+      dimensions: _.chain(invertedConceptGids).pick(domainGids).values().value(),
       rows: rows
     }
   };

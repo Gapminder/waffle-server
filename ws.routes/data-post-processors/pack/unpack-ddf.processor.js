@@ -56,7 +56,7 @@ function unpackDdfDatapoints(data) {
       .value();
 
     let datapoint = _.reduce(entitiesIndexes, (result, entityIndex, key) => {
-      result[dimensions[key]] = entityValues[entityIndex];
+      result[conceptsValues[datapointsDimensions[key]]] = entityValues[entityIndex];
       return result;
     }, {});
 

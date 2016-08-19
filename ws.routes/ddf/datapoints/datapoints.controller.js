@@ -34,6 +34,17 @@ module.exports = serviceLocator => {
     dataPostProcessors.pack
   );
 
+  router.post('/api/ddf/datapoints',
+    cors(),
+    compression({filter: commonService.shouldCompress}),
+    getCacheConfig(constants.DDF_REDIS_CACHE_NAME_DATAPOINTS),
+    cache.route({expire: constants.DDF_REDIS_CACHE_LIFETIME}),
+    getMatchedDdfqlDatapoints,
+    dataPostProcessors.gapfilling,
+    dataPostProcessors.toPrecision,
+    dataPostProcessors.pack
+  );
+
   return app.use(router);
 
   function ddfDatapointStats(req, res, next) {
@@ -57,9 +68,44 @@ module.exports = serviceLocator => {
       version
     };
 
-    datapointService.collectDatapoints(options, (error, result) => {
+    const onCollectDatapoints = doDataTransfer(req, res, next);
+    datapointService.collectDatapoints(options, onCollectDatapoints);
+  }
+
+  function getMatchedDdfqlDatapoints(req, res, next) {
+    logger.debug('URL: \n%s%s', config.LOG_TABS, req.originalUrl);
+
+    const query = req.body;
+    const where = req.body.where;
+    const select = req.body.select.value;
+    const domainGids = req.body.select.key;
+    const headers = _.union(domainGids, select);
+    const sort = req.body.order_by;
+    const groupBy = req.body.group_by;
+    const datasetName = _.first(req.body.dataset);
+    const version = _.first(req.body.version);
+
+    const options = {
+      select,
+      headers,
+      domainGids,
+      where,
+      sort,
+      groupBy,
+      datasetName,
+      version,
+      query
+    };
+
+    const onMatchedDatapoints = doDataTransfer(req, res, next);
+
+    datapointService.matchDdfqlToDatapoints(options, onMatchedDatapoints);
+  }
+
+  function doDataTransfer(req, res, next) {
+    return (error, result) => {
       if (error) {
-        console.error(error);
+        logger.error(error);
         res.use_express_redis_cache = false;
         return res.json({success: false, error: error});
       }
@@ -67,6 +113,6 @@ module.exports = serviceLocator => {
       req.rawData = {rawDdf: result};
 
       return next();
-    });
+    }
   }
 };

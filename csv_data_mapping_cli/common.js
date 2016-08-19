@@ -916,15 +916,33 @@ function mapDdfDataPointToWsModel(pipe) {
     }
 
     // TODO: rewrite with _.pick
-    let dimensions = _.chain(entry)
+    const dimensions = _.chain(entry)
       .keys()
       .filter(conceptGid => _.keys(pipe.dimensions).indexOf(conceptGid) > -1)
       .reduce((result, conceptGid) => {
-        let entity = _.find(pipe.entities, (_entity) => {
+        const entity = _.find(pipe.entities, (_entity) => {
           return _entity.gid == entry[conceptGid];
         });
 
         result.push(entity.originId);
+
+        return result;
+      }, [])
+      .value();
+
+   const dimensionValues = _.chain(entry)
+      .keys()
+      .filter(conceptGid => _.keys(pipe.dimensions).indexOf(conceptGid) > -1)
+      .reduce((result, conceptGid) => {
+        const entity = _.find(pipe.entities, (_entity) => {
+          return _entity.gid == entry[conceptGid];
+        });
+
+        const dimensionValue = {
+          domain: pipe.dimensions[conceptGid].originId,
+          entity: entity.originId
+        };
+        result.push(dimensionValue);
 
         return result;
       }, [])
@@ -936,9 +954,10 @@ function mapDdfDataPointToWsModel(pipe) {
       .filter(conceptGid => _.keys(pipe.measures).indexOf(conceptGid) > -1)
       .map((measureGid) => {
         return {
-          value: entry[measureGid],
+          value: _.isNumber(entry[measureGid]) ? _.toNumber(entry[measureGid]) : entry[measureGid],
           measure: pipe.measures[measureGid].originId,
           dimensions: dimensions,
+          dimensionValues: dimensionValues,
           originId: entry.originId,
 
           isNumeric: _.isNumber(entry[measureGid]),

@@ -18,20 +18,11 @@ module.exports = new RepositoryFactory(DataPointsRepository);
 
 /**
  *
- * @param measureIds
- * @param dimensionIds array of arrays, where each subarray is a collection of entities that relate to the same concept
+ * @param subDatapointQuery
  * @param onDatapointsFound
  */
-DataPointsRepository.prototype.findForGivenMeasuresAndDimensions = function(measureIds, dimensionIds, onDatapointsFound) {
-  const query = this._composeQuery({
-    measure: {$in: measureIds},
-    dimensions: {
-      $size: _.size(dimensionIds),
-      $all: _.map(dimensionIds, dimensionIdsPerConcept => {
-        return {$elemMatch: {$in: dimensionIdsPerConcept}};
-      })
-    }
-  });
+DataPointsRepository.prototype.findForGivenMeasuresAndDimensions = function(subDatapointQuery, onDatapointsFound) {
+  const query = this._composeQuery(subDatapointQuery);
 
   return DataPoints.find(query).lean().exec(onDatapointsFound);
 };

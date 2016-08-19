@@ -1,11 +1,15 @@
 'use strict';
 const _ = require('lodash');
 const async = require('async');
+
+const ddfql = require('../../../ws.ddfql/ddf-query-normalizer');
+const logger = require('../../../ws.config/log');
 const constants = require('../../../ws.utils/constants');
 const commonService = require('../../../ws.services/common.service');
 const conceptsService = require('../concepts/concepts.service');
 const entitiesService = require('../entities/entities.service');
 
+const entitiesRepositoryFactory = require('../../../ws.repository/ddf/entities/entities.repository');
 const datapointsRepositoryFactory = require('../../../ws.repository/ddf/data-points/data-points.repository');
 
 module.exports = {
@@ -13,10 +17,83 @@ module.exports = {
   getEntities,
   mapConcepts,
   getDataPoints,
-  collectDatapoints
+  collectDatapoints,
+  matchDdfqlToDatapoints,
+  getDdfqlDataPoints: _getDdfqlDataPoints,
+  queryDatapoints: _queryDatapoints
 };
 
-function collectDatapoints(options, cb) {
+function matchDdfqlToDatapoints(options, onMatchedDatapoints) {
+  console.time('finish matching DataPoints');
+  const pipe = {
+    select: options.select,
+    headers: options.headers,
+    domainGids: options.domainGids,
+    where: options.where,
+    query: options.query,
+    sort: options.sort,
+    groupBy: options.groupBy,
+    datasetName: options.datasetName,
+    version: options.version
+  };
+
+  return async.waterfall([
+    async.constant(pipe),
+    commonService.findDefaultDatasetAndTransaction,
+    getConcepts,
+    mapConcepts,
+    getEntities,
+    _getDdfqlDataPoints
+  ], (error, result) => {
+    console.timeEnd('finish matching DataPoints');
+
+    return onMatchedDatapoints(error, result);
+  });
+}
+
+function _getDdfqlDataPoints(pipe, cb) {
+  console.time('get datapoints');
+
+  if (_.isEmpty(pipe.measures)) {
+    logger.error('Measure should present in select property');
+    return cb(null, pipe);
+  }
+
+  const entitiesRepository = entitiesRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version);
+  const conceptsByGids = _.chain(pipe.concepts)
+    .keyBy('gid')
+    .mapValues('originId')
+    .value();
+  const normlizedQuery = ddfql.normalize(pipe.query, conceptsByGids);
+
+  return async.mapLimit(normlizedQuery.join, 10, (item, mcb) => {
+    return entitiesRepository.findEntityPropertiesByQuery(item, (error, entities) => mcb(error, _.map(entities, 'originId')));
+  }, (err, substituteJoinLinks) => {
+    const promotedQuery = ddfql.substituteJoinLinks(normlizedQuery, substituteJoinLinks);
+    const subDatapointQuery = promotedQuery.where;
+
+    return _queryDatapoints(pipe, subDatapointQuery, (err, pipe) => {
+      console.timeEnd('get datapoints');
+      return cb(err, pipe);
+    });
+  });
+}
+
+function _queryDatapoints(pipe, subDatapointQuery, cb) {
+  return datapointsRepositoryFactory
+    .currentVersion(pipe.dataset._id, pipe.version)
+    .findForGivenMeasuresAndDimensions(subDatapointQuery, (error, datapoints) => {
+      if (error) {
+        return cb(error);
+      }
+
+      pipe.datapoints = datapoints;
+
+      return cb(null, pipe);
+    });
+}
+
+function collectDatapoints(options, onCollectDatapoints) {
   console.time('finish DataPoint stats');
   const pipe = options;
 
@@ -30,7 +107,7 @@ function collectDatapoints(options, cb) {
   ], (error, result) => {
     console.timeEnd('finish DataPoint stats');
 
-    return cb(error, result);
+    return onCollectDatapoints(error, result);
   });
 }
 
@@ -39,9 +116,7 @@ function getConcepts(pipe, cb) {
     dataset: pipe.dataset,
     version: pipe.version,
     header: [],
-    where: {
-      concept: pipe.headers
-    }
+    where: {}
   };
 
   return conceptsService.getConcepts(_pipe, (err, result) => {
@@ -99,22 +174,32 @@ function getDataPoints(pipe, cb) {
   console.time('get datapoints');
 
   if (_.isEmpty(pipe.measures)) {
-    console.error('Measure should present in select property');
+    logger.error('Measure should present in select property');
     return cb(null, pipe);
   }
 
   const measureIds = _.map(pipe.measures, 'originId');
   const dimensionIds = pipe.entityOriginIdsGroupedByDomain;
+  const subDatapointQuery = {
+    measure: {$in: measureIds},
+    dimensions: {
+      $size: _.size(dimensionIds),
+      $all: _.map(dimensionIds, dimensionIdsPerConcept => {
+        return {$elemMatch: {$in: dimensionIdsPerConcept}};
+      })
+    }
+  };
 
   return datapointsRepositoryFactory
     .currentVersion(pipe.dataset._id, pipe.version)
-    .findForGivenMeasuresAndDimensions(measureIds, dimensionIds, (error, datapoints) => {
+    .findForGivenMeasuresAndDimensions(subDatapointQuery, (error, datapoints) => {
       console.timeEnd('get datapoints');
       if (error) {
         return cb(error);
       }
-      //pipe.datapoints = datapoints.slice(0, 10);
+
       pipe.datapoints = datapoints;
+
       return cb(null, pipe);
     });
 }

@@ -7,31 +7,26 @@ const originId = require('../origin-id.plugin');
 /**
  * @typedef DimensionSchema
  * @memberof Models
- * @class
  *
- * @param {String} entityName - established entity name
- * @param {String} value - of entity
-
- * @param {String} entityGroup - of entity which was specified in ddf's file name
+ * @param {Models.Concepts.originId} domain - established entity name
+ * @param {Models.Entities.originId} entity - established entity name
  */
 let DimensionSchema = new Schema({
-  gid: String,
-  conceptGid: String,
-
-  concept: {type: Schema.Types.ObjectId, ref: 'Concepts'},
-  entity: {type: Schema.Types.ObjectId, ref: 'Entities'}
+  domain: {type: Schema.Types.ObjectId},
+  entity: {type: Schema.Types.ObjectId}
 }, {_id: false});
 
 /**
  * @typedef {Object} DataPoints
  * @memberof Models
  *
- * @property {String} value - data this DataPoint contains at the given coordinates
+ * @property {Mixed} value - data this DataPoint contains at the given coordinates
  * @property {Array<String>} sources - filenames of source item
  *
  * @property {Boolean} isNumeric - value of the measure?
  * @property {Models.Concepts.originId} measure - points to measure this DataPoint has value for
  * @property {Array<Models.Entities.originId>} dimensions - contains objects that are define point for the data
+ * @property {Array<Models.DimensionSchema>} dimensionValues - contains objects that are define point for the data
  *
  * @property {Number} from - entity start version
  * @property {Number} to - entity end version (or Infinity)
@@ -39,7 +34,7 @@ let DimensionSchema = new Schema({
  * @property {Models.DatasetTransactions} transaction - reference
  */
 let DataPoints = new Schema({
-  value: {type: String, required: true},
+  value: {type: Schema.Types.Mixed, required: true},
   sources: [{type: String, required: true}],
 
   isNumeric: {type: Boolean, required: true},
