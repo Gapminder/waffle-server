@@ -23,6 +23,7 @@ module.exports = {
   createTransaction,
   createDataset,
   updateTransaction,
+  createDatasetIndex,
   createConcepts,
   createEntities,
   createDataPoints,
@@ -113,6 +114,47 @@ function updateTransaction(pipe, done) {
   }, (err) => {
     return done(err, pipe);
   });
+}
+
+function createDatasetIndex(pipe, done) {
+
+  logger.info('start process Dataset Index');
+
+  async.waterfall([
+    async.constant({transaction: pipe.transaction, dataset: pipe.dataset, resolvePath: pipe.resolvePath}),
+    _loadDatasetIndex,
+    _createDatasetIndex
+  ], (err, res) => {
+    return done(err, pipe);
+  });
+}
+
+function _loadDatasetIndex(pipe, done) {
+
+  logger.info('** load file Dataset Index');
+
+  return readCsvFile(pipe.resolvePath('ddf--index.csv'), {}, (err, res) => {
+    pipe.datasetIndexes = _.map(res, mapDdfIndexToWsModel(pipe));
+    return done(err, pipe);
+  });
+}
+
+function _createDatasetIndex(pipe, done) {
+
+  logger.info('** create Dataset Index documents');
+
+  async.eachLimit(
+    _.chunk(pipe.datasetIndexes, 100),
+    constants.LIMIT_NUMBER_PROCESS,
+    __createDatasetIndex,
+    (err) => {
+      return done(err, pipe);
+    }
+  );
+
+  function __createDatasetIndex(chunk, cb) {
+    return mongoose.model('DatasetIndex').create(chunk, cb);
+  }
 }
 
 function createConcepts(pipe, done) {
@@ -825,6 +867,21 @@ function mapDdfConceptsToWsModel(pipe) {
       transaction: pipe.transactionId || pipe.transaction._id
     };
   };
+}
+function mapDdfIndexToWsModel(pipe) {
+  return function (item) {
+    return {
+      key: item.key.split(','),
+      value: item.value || '',
+      source: item.file || '',
+
+      from: pipe.transaction.createdAt,
+      to: constants.MAX_VERSION,
+      dataset: pipe.dataset._id,
+      transaction: pipe.transactionId || pipe.transaction._id
+    };
+
+  }
 }
 
 function mapDdfOriginalEntityToWsModel(pipe) {
