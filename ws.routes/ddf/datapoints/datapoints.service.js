@@ -178,10 +178,14 @@ function getDataPoints(pipe, cb) {
     return cb(null, pipe);
   }
 
-  const measureIds = _.map(pipe.measures, 'originId');
+  const resolvedMeasureIds = _.chain(pipe.measures)
+    .keyBy('gid')
+    .pick(pipe.select)
+    .map('originId')
+    .value();
   const dimensionIds = pipe.entityOriginIdsGroupedByDomain;
   const subDatapointQuery = {
-    measure: {$in: measureIds},
+    measure: {$in: resolvedMeasureIds},
     dimensions: {
       $size: _.size(dimensionIds),
       $all: _.map(dimensionIds, dimensionIdsPerConcept => {

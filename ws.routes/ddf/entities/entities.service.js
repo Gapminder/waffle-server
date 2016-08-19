@@ -9,8 +9,43 @@ const entitiesRepositoryFactory = require('../../../ws.repository/ddf/entities/e
 module.exports = {
   getEntities,
   getConcepts,
-  collectEntities
+  collectEntities,
+  matchDdfqlToEntities,
+  getDdfqlEntities: _getDdfqlEntities
 };
+
+function matchDdfqlToEntities(options, cb) {
+  console.time('finish Entities stats');
+  const pipe = options;
+
+  async.waterfall([
+    async.constant(pipe),
+    commonService.findDefaultDatasetAndTransaction,
+    getConcepts,
+    _getDdfqlEntities
+  ],  (error, result) => {
+    console.timeEnd('finish Entities stats');
+
+    result.domainGid = pipe.domainGid;
+
+    return cb(error, result);
+  });
+}
+
+function _getDdfqlEntities(pipe, cb) {
+  const entitiesRepository = entitiesRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version);
+
+  entitiesRepository
+    .findEntityProperties(pipe.domainGid, pipe.headers, pipe.where, (error, entities) => {
+      if (error) {
+        return cb(error);
+      }
+
+      pipe.entities = entities;
+
+      return cb(null, pipe);
+    });
+}
 
 function getEntities(pipe, cb) {
   const entitiesRepository = entitiesRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version);
@@ -55,6 +90,8 @@ function collectEntities(options, cb) {
     getEntities
   ],  (error, result) => {
     console.timeEnd('finish Entities stats');
+
+    result.domainGid = pipe.domainGid;
 
     return cb(error, result);
   });
