@@ -2,6 +2,7 @@
 const _ = require('lodash');
 const async = require('async');
 
+const ddfql = require('../../../ws.ddfql/ddf-entities-query-normalizer');
 const commonService = require('../../../ws.services/common.service');
 const conceptsService = require('../concepts/concepts.service');
 const entitiesRepositoryFactory = require('../../../ws.repository/ddf/entities/entities.repository');

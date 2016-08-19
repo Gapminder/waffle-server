@@ -2,7 +2,7 @@
 const _ = require('lodash');
 const async = require('async');
 
-const ddfql = require('../../../ws.ddfql/ddf-query-normalizer');
+const ddfql = require('../../../ws.ddfql/ddf-datapoints-query-normalizer');
 const logger = require('../../../ws.config/log');
 const constants = require('../../../ws.utils/constants');
 const commonService = require('../../../ws.services/common.service');
@@ -64,12 +64,12 @@ function _getDdfqlDataPoints(pipe, cb) {
     .keyBy('gid')
     .mapValues('originId')
     .value();
-  const normlizedQuery = ddfql.normalize(pipe.query, conceptsByGids);
+  const normlizedQuery = ddfql.normalizeDatapoints(pipe.query, conceptsByGids);
 
   return async.mapLimit(normlizedQuery.join, 10, (item, mcb) => {
     return entitiesRepository.findEntityPropertiesByQuery(item, (error, entities) => mcb(error, _.map(entities, 'originId')));
   }, (err, substituteJoinLinks) => {
-    const promotedQuery = ddfql.substituteJoinLinks(normlizedQuery, substituteJoinLinks);
+    const promotedQuery = ddfql.substituteDatapointJoinLinks(normlizedQuery, substituteJoinLinks);
     const subDatapointQuery = promotedQuery.where;
 
     return _queryDatapoints(pipe, subDatapointQuery, (err, pipe) => {
