@@ -26,7 +26,6 @@ let DimensionSchema = new Schema({
  * @property {Boolean} isNumeric - value of the measure?
  * @property {Models.Concepts.originId} measure - points to measure this DataPoint has value for
  * @property {Array<Models.Entities.originId>} dimensions - contains objects that are define point for the data
- * @property {Array<Models.DimensionSchema>} dimensionValues - contains objects that are define point for the data
  *
  * @property {Number} from - entity start version
  * @property {Number} to - entity end version (or Infinity)
