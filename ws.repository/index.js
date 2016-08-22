@@ -6,16 +6,6 @@ const _ = require('lodash');
  * Models and repository bootstrap
  */
 module.exports = function () {
-  require('./files.model');
-  require('./dimension-values/dimension-values.model');
-  require('./dimensions/dimensions.model');
-  require('./indicator-values/indicator-values.model');
-  require('./indicators/indicators.model');
-  require('./geo.model');
-  require('./translations.model');
-  require('./indexTree.model');
-  require('./indexDb.model');
-
   const ddfModels = [
     'users',
     'concepts',

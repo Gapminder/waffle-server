@@ -13,7 +13,7 @@ module.exports = {
   getConcepts,
   collectEntities,
   collectEntitiesByDdfql,
-  normalizeQueriesToEntitiesByDdfql
+  normalizeQueriesToEntitiesByDdfql,
 };
 
 function collectEntitiesByDdfql(options, cb) {

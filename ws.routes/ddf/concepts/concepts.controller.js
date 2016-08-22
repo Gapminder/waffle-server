@@ -4,17 +4,14 @@ const cors = require('cors');
 const express = require('express');
 const compression = require('compression');
 
-const constants = require('../../../ws.utils/constants');
-const decodeQuery = require('../../utils').decodeQuery;
-const conceptsService = require('./concepts.service');
-const commonService = require('../../../ws.services/common.service');
-const getCacheConfig = require('../../utils').getCacheConfig;
-
-const dataPostProcessors = require('../../data-post-processors');
-
 const cache = require('../../../ws.utils/redis-cache');
 const logger = require('../../../ws.config/log');
 const config = require('../../../ws.config/config');
+const constants = require('../../../ws.utils/constants');
+const routeUtils = require('../../utils');
+const commonService = require('../../../ws.services/common.service');
+const conceptsService = require('./concepts.service');
+const dataPostProcessors = require('../../data-post-processors');
 
 module.exports = serviceLocator => {
   const app = serviceLocator.getApplication();
@@ -24,9 +21,9 @@ module.exports = serviceLocator => {
   router.get('/api/ddf/concepts',
     cors(),
     compression({filter: commonService.shouldCompress}),
-    getCacheConfig(constants.DDF_REDIS_CACHE_NAME_CONCEPTS),
+    routeUtils.getCacheConfig(constants.DDF_REDIS_CACHE_NAME_CONCEPTS),
     cache.route({expire: constants.DDF_REDIS_CACHE_LIFETIME}),
-    decodeQuery,
+    routeUtils.decodeQuery,
     ddfConceptsStats,
     dataPostProcessors.gapfilling,
     dataPostProcessors.toPrecision,
@@ -58,21 +55,7 @@ module.exports = serviceLocator => {
       version
     };
 
-    const onConceptsCollected = doDataTransfer(req, res, next);
+    const onConceptsCollected = routeUtils.respondWithRawDdf(req, res, next);
     conceptsService.collectConcepts(options, onConceptsCollected);
-  }
-
-  function doDataTransfer(req, res, next) {
-    return (error, result) => {
-      if (error) {
-        logger.error(error);
-        res.use_express_redis_cache = false;
-        return res.json({success: false, error: error});
-      }
-
-      req.rawData = {rawDdf: result};
-
-      return next();
-    }
   }
 };

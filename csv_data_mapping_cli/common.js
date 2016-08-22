@@ -23,7 +23,6 @@ module.exports = {
   createTransaction,
   createDataset,
   updateTransaction,
-  createDatasetIndex,
   createConcepts,
   createEntities,
   createDataPoints,
@@ -38,14 +37,15 @@ module.exports = {
   createEntitiesBasedOnOriginalEntities: _createEntitiesBasedOnOriginalEntities,
   clearOriginalEntities: _clearOriginalEntities,
   addEntityDrillups: _addEntityDrillups,
-  createTranslations,
   findDataPoints,
   processRawDataPoints: __processRawDataPoints,
   parseFilename: _parseFilename,
   createEntitiesBasedOnDataPoints: _createEntitiesBasedOnDataPoints,
   updateConceptsDimensions: _updateConceptsDimensions,
   closeTransaction,
-  addConceptSubsetOf: _addConceptSubsetOf
+  addConceptSubsetOf: _addConceptSubsetOf,
+  getMeasureDimensionFromFilename,
+  readCsvFile
 };
 
 function resolvePathToDdfFolder(pipe, done) {
@@ -114,224 +114,6 @@ function updateTransaction(pipe, done) {
   }, (err) => {
     return done(err, pipe);
   });
-}
-
-function createDatasetIndex(pipe, done) {
-
-  logger.info('start process Dataset Index');
-
-  return async.waterfall([
-    async.constant(pipe),
-    _loadDatasetFiles,
-    _generateDatasetIndex,
-    _convertDatasetIndexToModel,
-    _populateDatasetIndexWithOriginIds,
-    _createDatasetIndex
-  ], (err) => done(err, pipe));
-}
-
-function _loadDatasetFiles(pipe, done) {
-
-  logger.info('** load Dataset files');
-
-  fs.readdir(pipe.pathToDdfFolder, (err, _filenames) => {
-
-    if(err) {
-      return done(err);
-    }
-
-    pipe.datasetFilesByType = _.reduce(_filenames, (result, _filename) => {
-      if(/^ddf--datapoints--/.test(_filename)) {
-        result.datapoints.push(_filename);
-      }
-      if(/^ddf--entities--/.test(_filename)) {
-        result.entities.push(_filename);
-      }
-      if(/^ddf--concepts/.test(_filename)) {
-        result.concepts.push(_filename);
-      }
-      return result;
-    }, {
-      entities: [],
-      concepts: [],
-      datapoints: []
-    });
-
-    return done(null, pipe);
-  });
-}
-
-function _generateDatasetIndex(pipe, done) {
-
-  logger.info('** generate Dataset Index');
-  pipe.datasetIndex = [];
-
-  return async.waterfall([
-    async.constant(pipe),
-    _generateDatasetIndexFromConcepts,
-    _generateDatasetIndexFromEntities,
-    _generateDatasetIndexFromDatapoints
-  ], err => done(err, pipe));
-}
-
-function _generateDatasetIndexFromConcepts(pipe, done) {
-
-  return async.mapLimit(
-    pipe.datasetFilesByType.concepts,
-    constants.LIMIT_NUMBER_PROCESS,
-    (item, completeSearchForConcepts) => {
-      readCsvFile(pipe.resolvePath(item), {}, (err, res) => {
-
-        if(err) {
-          return completeSearchForConcepts(err);
-        }
-
-        const conceptKey = 'concept';
-        const datasetConceptsIndexes = _.reduce(res, (result, row) => {
-              result.push({
-                key: conceptKey,
-                value: row[conceptKey],
-                file: [item],
-                type: 'concepts'
-              });
-              return result;
-            }, []);
-
-        pipe.datasetIndex = _.concat(pipe.datasetIndex, datasetConceptsIndexes);
-        return completeSearchForConcepts(null, _.size(datasetConceptsIndexes));
-      });
-    },
-    (err, conceptsIndexAmounts) => {
-      logger.info('** load Dataset files Concepts: ' + _.sum(conceptsIndexAmounts));
-      return done(err, pipe);
-    }
-  );
-}
-function _generateDatasetIndexFromEntities(pipe, done) {
-
-  return async.mapLimit(
-    pipe.datasetFilesByType.entities,
-    constants.LIMIT_NUMBER_PROCESS,
-    (item, completeSearchForEntities) => {
-      readCsvFile(pipe.resolvePath(item), {}, (err, rows) => {
-
-        if(err) {
-          return completeSearchForEntities(err);
-        }
-
-        const entityFileHeader = _.first(rows);
-        const entityName = getEntityName(item);
-
-        const datasetEntitiesIndexes = _.chain(entityFileHeader)
-          .keys()
-          .reduce((result, column) => {
-            if (column !== entityName) {
-              result.push({
-                key: entityName,
-                value: column,
-                file: [item],
-                type: 'entities'
-              });
-            }
-            return result;
-          }, []).value();
-
-        pipe.datasetIndex = _.concat(pipe.datasetIndex, datasetEntitiesIndexes);
-        return completeSearchForEntities(null, _.size(datasetEntitiesIndexes));
-      });
-    },
-    (err, entityIndexAmounts) => {
-      logger.info('** load Dataset files Entities: ' + _.sum(entityIndexAmounts));
-      return done(err, pipe);
-    }
-  );
-
-  function getEntityName (item) {
-    const entityNameRegExp = /--.*--(.*).csv$/;
-    const entityNameMatch = entityNameRegExp.exec(item);
-    return _.get(entityNameMatch, '1');
-  }
-}
-function _generateDatasetIndexFromDatapoints(pipe, done) {
-
-  return async.forEachOfLimit(
-    pipe.datasetFilesByType.datapoints,
-    constants.LIMIT_NUMBER_PROCESS,
-    function (item, key, completeSearchForDatapoints) {
-
-      const keyValuePair = getKeyValuePair(item);
-      const itemExists = pipe.datasetIndex.find(arrayItem => arrayItem.key == keyValuePair.key && arrayItem.value == keyValuePair.value);
-
-      // check that item not exists
-      if(itemExists) {
-        pipe.datasetIndex[itemExists].file.push(item);
-      } else {
-        pipe.datasetIndex.push({
-          key: keyValuePair.key,
-          value: keyValuePair.value,
-          file: [item],
-          type: 'datapoints'
-        });
-      }
-      return completeSearchForDatapoints();
-    },
-    err => {
-      logger.info('** load Dataset files Datapoints: ' + pipe.datasetFilesByType.datapoints.length);
-      return done(err, pipe);
-    }
-  );
-
-  function getKeyValuePair(item) {
-    const parseFilename = getMesureDimensionFromFilename(item);
-    return {
-      key: parseFilename.dimension.join(','),
-      value: _.first(parseFilename.mesure)
-    };
-  }
-}
-
-function _convertDatasetIndexToModel(pipe, done) {
-  return async.setImmediate(() => {
-    pipe.datasetIndexes = _.map(pipe.datasetIndex, mapDdfIndexToWsModel(pipe));
-    return done(null, pipe);
-  });
-}
-
-function _populateDatasetIndexWithOriginIds(pipe, done) {
-
-  return async.mapLimit(pipe.datasetIndexes, constants.LIMIT_NUMBER_PROCESS, (index, onIndexPopulated) => {
-    index.keyOriginIds = _.chain(index.key).map(getOriginId).compact().value();
-    index.valueOriginId = getOriginId(index.value);
-    return onIndexPopulated(null, index);
-  }, (error, populatedDatasetIndexes) => {
-    if (error) {
-      return done(error);
-    }
-
-    pipe.datasetIndexes = populatedDatasetIndexes;
-    return done(null, pipe);
-  });
-
-  function getOriginId(key) {
-    const concept = pipe.concepts[key];
-    return concept ? concept.originId : null;
-  }
-}
-
-
-function _createDatasetIndex(pipe, done) {
-
-  logger.info('** create Dataset Index documents');
-
-  return async.eachLimit(
-    _.chunk(pipe.datasetIndexes, 100),
-    constants.LIMIT_NUMBER_PROCESS,
-    __createDatasetIndex,
-    (err) => done(err, pipe));
-
-  function __createDatasetIndex(chunk, cb) {
-    return mongoose.model('DatasetIndex').create(chunk, cb);
-  }
 }
 
 function createConcepts(pipe, done) {
@@ -480,61 +262,6 @@ function _addConceptDomains(pipe, done) {
       {multi: true},
       escb
     );
-  }
-}
-
-function createTranslations(pipe, done) {
-  logger.info('create translations');
-
-  let domain = pipe.concepts['translations'];
-  if (!domain || domain.type !== 'entity_domain') {
-    logger.warn('There is no translations domain! Go to next step.');
-    return done(null, pipe);
-  }
-
-  var translations = []
-    .concat(map(pipe.ddfEnTranslations, 'en'))
-    .concat(map(pipe.ddfSeTranslations, 'se'));
-
-  return async.eachLimit(
-    _.chunk(translations, 100),
-    constants.LIMIT_NUMBER_PROCESS,
-    _createEntities,
-    (err) => {
-      return done(err, pipe);
-    }
-  );
-
-  function _createEntities(chunk, cb) {
-    return mongoose.model('Entities').create(chunk, cb);
-  }
-
-  function map(json, lang) {
-    return _.reduce(json, function (res, value, key) {
-      let concept = pipe.concepts[lang];
-      if (!concept || concept.type !== 'entity_set' || concept.domain.gid !== 'translations') {
-        logger.warn(`There is no entity set with gid '${lang}'!`);
-      }
-
-      res.push({
-        gid: key,
-        title: value,
-        sources: [`${lang}.json`],
-        properties: {
-          key: key,
-          value: value,
-          language: lang,
-          lng_key: key,
-          lng_value: value
-        },
-        domain: domain.originId,
-        sets: concept ? [concept.originId] : [],
-        from: pipe.transaction.createdAt,
-        dataset: pipe.dataset._id,
-        transaction: pipe.transactionId || pipe.transaction._id
-      });
-      return res;
-    }, []);
   }
 }
 
@@ -784,10 +511,10 @@ function createDataPoints(pipe, done) {
   }
 }
 
-function getMesureDimensionFromFilename (filename) {
+function getMeasureDimensionFromFilename (filename) {
   let parsedFileName = filename.replace(/^ddf--datapoints--|\.csv$/g, '').split('--by--');
   return {
-    mesure: _.first(parsedFileName).split('--'),
+    measure: _.first(parsedFileName).split('--'),
     dimension: _.last(parsedFileName).split('--')
   };
 }
@@ -795,8 +522,8 @@ function getMesureDimensionFromFilename (filename) {
 function _parseFilename(pipe, cb) {
   logger.info(`** parse filename '${pipe.filename}'`);
 
-  const parseFilename = getMesureDimensionFromFilename(pipe.filename);
-  const measureGids = parseFilename.mesure;
+  const parseFilename = getMeasureDimensionFromFilename(pipe.filename);
+  const measureGids = parseFilename.measure;
   const dimensionGids = parseFilename.dimension;
 
   pipe.measures = _.merge(_.pick(pipe.previousConcepts, measureGids), _.pick(pipe.concepts, measureGids));
@@ -917,7 +644,7 @@ function __updateConceptDimension(pipe) {
 
       return cb(err);
     });
-  }
+  };
 }
 
 function ___getAllEntitiesByMeasure(pipe, cb) {
@@ -1054,20 +781,6 @@ function mapDdfConceptsToWsModel(pipe) {
     };
   };
 }
-function mapDdfIndexToWsModel(pipe) {
-  return function (item) {
-    return {
-      key: item.key.split(','),
-      value: item.value || '',
-      source: item.file || [],
-      type: item.type,
-
-      dataset: pipe.dataset._id,
-      transaction: pipe.transaction._id
-    };
-
-  }
-}
 
 function mapDdfOriginalEntityToWsModel(pipe) {
   return (entry) => {
@@ -1177,8 +890,10 @@ function mapDdfDataPointToWsModel(pipe) {
       .keys()
       .filter(conceptGid => _.keys(pipe.measures).indexOf(conceptGid) > -1)
       .map((measureGid) => {
+        const datapointValue = entry[measureGid];
+        const datapointValueAsNumber = _.toNumber(datapointValue);
         return {
-          value: _.isNumber(entry[measureGid]) ? _.toNumber(entry[measureGid]) : entry[measureGid],
+          value: _.isNaN(datapointValueAsNumber) ? datapointValue : datapointValueAsNumber,
           measure: pipe.measures[measureGid].originId,
           dimensions: dimensions,
           originId: entry.originId,

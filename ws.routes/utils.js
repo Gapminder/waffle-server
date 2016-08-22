@@ -5,12 +5,14 @@ const passport = require('passport');
 const queryCoder = require('../ws.utils/query-coder');
 const loginPage = '/login';
 const config = require('../ws.config/config');
+const logger = require('../ws.config/log');
 
 module.exports = {
   getCacheConfig,
   ensureAuthenticated,
   ensureAuthenticatedViaToken,
-  decodeQuery
+  decodeQuery,
+  respondWithRawDdf
 };
 
 function getCacheConfig(prefix) {
@@ -97,6 +99,20 @@ function sanitizeSortValues(sortParam) {
     }
     return result;
   }, {});
+}
+
+function respondWithRawDdf(req, res, next) {
+  return (error, result) => {
+    if (error) {
+      logger.error(error);
+      res.use_express_redis_cache = false;
+      return res.json({success: false, error: error});
+    }
+
+    req.rawData = {rawDdf: result};
+
+    return next();
+  };
 }
 
 

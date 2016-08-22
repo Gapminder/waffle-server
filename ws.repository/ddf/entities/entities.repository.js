@@ -69,7 +69,7 @@ EntitiesRepository.prototype.findEntityProperties = function(entityDomainGid, se
         return 'gid';
       }
 
-      return key.slice(key.indexOf('.') + 1)
+      return key.slice(key.indexOf('.') + 1);
     });
     const whereWithPrefixedProperties = toPropertiesDotNotation(whereClauseWithSubstitutedGid);
 

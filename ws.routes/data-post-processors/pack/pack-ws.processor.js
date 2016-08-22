@@ -7,8 +7,19 @@ const constants = require('../../../ws.utils/constants');
 module.exports = {
   mapConcepts: mapConceptToWsJson,
   mapEntities: mapEntitiesToWsJson,
-  mapDatapoints: mapDatapointsToWsJson
+  mapDatapoints: mapDatapointsToWsJson,
+  mapSchema: mapSchemaToWsJson
 };
+
+function mapSchemaToWsJson(data) {
+  const rows = _.map(data.schema, schemaDoc => _.reduce(data.headers, (schemaRow, header) => {
+    schemaRow.push(schemaDoc[header]);
+    return schemaRow;
+  }, []));
+
+  const headers = _.map(data.headers, header => data.aliases[header] ? data.aliases[header] : header);
+  return {headers, rows};
+}
 
 function mapConceptToWsJson(data) {
   const uniqConceptProperties = _.chain(data.concepts)
@@ -22,9 +33,7 @@ function mapConceptToWsJson(data) {
     return _mapConceptPropertiesToWsJson(select, concept);
   });
 
-  const result = { headers: select, rows };
-
-  return result;
+  return { headers: select, rows };
 }
 
 function _mapConceptPropertiesToWsJson(select, concept) {
@@ -45,9 +54,7 @@ function mapEntitiesToWsJson(data) {
     return _mapEntitiesPropertiesToWsJson(data.domainGid, select, entity);
   });
 
-  const result = { headers: select, rows };
-
-  return result;
+  return { headers: select, rows };
 }
 
 function _mapEntitiesPropertiesToWsJson(entityDomainGid, select, entity) {
@@ -65,7 +72,7 @@ function __mapGidToEntityDomainGid(entityDomainGid, object) {
     }
 
     return property;
-  })
+  });
 }
 
 function mapDatapointsToWsJson(data) {
@@ -103,12 +110,10 @@ function mapDatapointsToWsJson(data) {
     })
     .value();
 
-  const result = {
+  return {
     headers: data.headers,
     rows: _.sortBy(rows, ['0', '1'])
   };
-
-  return result;
 }
 
 function _getComplexKey(entities, selectedConceptsByOriginId, headers, datapoint) {
