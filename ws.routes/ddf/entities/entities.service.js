@@ -36,8 +36,25 @@ function matchDdfqlToEntities(options, cb) {
 function _getDdfqlEntities(pipe, cb) {
   const entitiesRepository = entitiesRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version);
 
-  entitiesRepository
-    .findEntityProperties(pipe.domainGid, pipe.headers, pipe.where, (error, entities) => {
+  const conceptsByGids = _.chain(pipe.concepts)
+    .keyBy('gid')
+    .mapValues('originId')
+    .value();
+  const normlizedQuery = ddfql.normalizeEntities(pipe.query, pipe.concepts);
+
+  return async.mapLimit(normlizedQuery.join, 10, (item, mcb) => {
+    return entitiesRepository.findEntityPropertiesByQuery(item, (error, entities) => mcb(error, _.map(entities, 'originId')));
+  }, (err, substituteJoinLinks) => {
+    const promotedQuery = ddfql.substituteEntityJoinLinks(normlizedQuery, substituteJoinLinks);
+    const subEntityQuery = promotedQuery.where;
+
+    return _queryEntities(pipe, subEntityQuery, cb);
+  });
+}
+
+function _queryEntities(pipe, subEntityQuery, cb) {
+  return entitiesRepository
+    .findEntityPropertiesByQuery(subEntityQuery, (error, entities) => {
       if (error) {
         return cb(error);
       }
@@ -68,9 +85,7 @@ function getConcepts(pipe, cb) {
     dataset: pipe.dataset,
     version: pipe.version,
     headers: [],
-    where: {
-      concept: pipe.domainGid
-    }
+    where: {}
   };
 
   return conceptsService.getConcepts(_pipe, (err, result) => {
