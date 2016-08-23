@@ -43,27 +43,27 @@ function _getDdfqlEntities(pipe, cb) {
   const normlizedQuery = ddfql.normalizeEntities(pipe.query, pipe.concepts);
 
   return async.mapLimit(normlizedQuery.join, 10, (item, mcb) => {
-    return entitiesRepository.findEntityPropertiesByQuery(item, (error, entities) => mcb(error, _.map(entities, 'originId')));
+    return entitiesRepository
+      .findEntityPropertiesByQuery(item, (error, entities) => {
+        return mcb(error, _.map(entities, 'gid'));
+      });
   }, (err, substituteJoinLinks) => {
     const promotedQuery = ddfql.substituteEntityJoinLinks(normlizedQuery, substituteJoinLinks);
     const subEntityQuery = promotedQuery.where;
 
-    return _queryEntities(pipe, subEntityQuery, cb);
+    return entitiesRepository
+      .findEntityPropertiesByQuery(subEntityQuery, (error, entities) => {
+        if (error) {
+          return cb(error);
+        }
+
+        pipe.entities = entities;
+
+        return cb(null, pipe);
+      });
   });
 }
 
-function _queryEntities(pipe, subEntityQuery, cb) {
-  return entitiesRepository
-    .findEntityPropertiesByQuery(subEntityQuery, (error, entities) => {
-      if (error) {
-        return cb(error);
-      }
-
-      pipe.entities = entities;
-
-      return cb(null, pipe);
-    });
-}
 
 function getEntities(pipe, cb) {
   const entitiesRepository = entitiesRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version);

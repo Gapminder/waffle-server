@@ -13,7 +13,6 @@ module.exports = {
 function normalizeEntities(query, concepts) {
   normalizeEntityDdfQuery(query, concepts);
   substituteEntityConceptsWithIds(query, concepts);
-  console.log(JSON.stringify(query, null, '\t'));
   return query;
 }
 
@@ -27,16 +26,21 @@ function substituteEntityJoinLinks(query, linksInJoinToValues) {
   return query;
 }
 
-function substituteEntityConceptsWithIds(query, conceptsToIds) {
+function substituteEntityConceptsWithIds(query, concepts) {
+  const conceptsToIds = _.chain(concepts)
+    .keyBy('gid')
+    .mapValues('originId')
+    .value();
+
   traverse(query.where).forEach(function (concept) {
-    if (shouldSubstituteValueWithId(concept, query)) {
+    if (shouldSubstituteValueWithId(this.key)) {
       const id = conceptsToIds[concept];
       this.update(id ? id : concept);
     }
   });
 
   traverse(query.join).forEach(function (concept) {
-    if (shouldSubstituteValueWithId(concept, query)) {
+    if (shouldSubstituteValueWithId(this.key)) {
       const id = conceptsToIds[concept];
       this.update(id ? id : concept);
     }
@@ -147,22 +151,18 @@ function replaceValueOnPath(options) {
   }
 }
 
-function isMeasureFilter(key, query) {
-  return _.includes(query.select.value, key);
+function isDomainFilter(key) {
+  return key === 'domain';
 }
 
-function isEntityFilter(key, query) {
-  return _.includes(query.select.key, key);
+function isSetFilter(key) {
+  return key === 'sets';
 }
 
 function isEntityPropertyFilter(key, resolvedProperties) {
-  return _.includes(resolvedProperties, key);
+  return _.includes(resolvedProperties, _.replace(key, /^is--/, ''));
 }
 
-function isOperator(key) {
-  return _.startsWith(key, '$') || _.includes(['key', 'where'], key);
-}
-
-function shouldSubstituteValueWithId(value, query) {
-  return isEntityFilter(value, query) || isMeasureFilter(value, query);
+function shouldSubstituteValueWithId(key) {
+  return isSetFilter(key) || isDomainFilter(key);
 }
