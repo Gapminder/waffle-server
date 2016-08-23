@@ -16,8 +16,6 @@ const originId = require('../origin-id.plugin');
  * @property {String} type - element type ['concepts','entities','datapoints']
  *
  *
- * @property {Number} from - entity start version
- * @property {Number} to - entity end version (or Infinity)
  * @property {Models.Datasets} dataset - reference
  * @property {Models.DatasetIndex} transaction - reference
  */
@@ -29,20 +27,14 @@ let DatasetIndex = new Schema({
   valueOriginId: {type: String},
   type: {type: String, enum: ['concepts','entities','datapoints']},
 
-  from: {type: Number, required: true},
-  to: {type: Number, required: true, default: Number.MAX_SAFE_INTEGER},
   dataset: {type: Schema.Types.ObjectId, ref: 'Datasets', required: true},
   transaction: {type: Schema.Types.ObjectId, ref: 'DatasetIndex', required: true}
 }, { strict: false });
 
-DatasetIndex.plugin(originId, {
-  modelName: 'DatasetIndex',
-  originId: 'DatasetIndex'
-});
-
-DatasetIndex.index({dataset: 1, from: 1, to: 1, measure: 1, dimensions: 1});
-DatasetIndex.index({dataset: 1, transaction: 1, measure: 1});
-DatasetIndex.index({dataset: 1, transaction: 1, originId: 1});
-DatasetIndex.index({originId: 1, dataset: 1, transaction: 1});
+DatasetIndex.index({transaction: 1});
+DatasetIndex.index({key: 1});
+DatasetIndex.index({value: 1});
+DatasetIndex.index({type: 1});
 
 module.exports = mongoose.model('DatasetIndex', DatasetIndex);
+

@@ -120,16 +120,14 @@ function createDatasetIndex(pipe, done) {
 
   logger.info('start process Dataset Index');
 
-  async.waterfall([
+  return async.waterfall([
     async.constant(pipe),
     _loadDatasetFiles,
     _generateDatasetIndex,
     _convertDatasetIndexToModel,
     _populateDatasetIndexWithOriginIds,
     _createDatasetIndex
-  ], (err, res) => {
-    return done(err, pipe);
-  });
+  ], (err) => done(err, pipe));
 }
 
 function _loadDatasetFiles(pipe, done) {
@@ -142,22 +140,21 @@ function _loadDatasetFiles(pipe, done) {
       return done(err);
     }
 
-    pipe.datasetFilesByType = {
-      'datapoints': [],
-      'entities': [],
-      'concepts': []
-    };
-
-    _filenames.forEach(function(_filename){
+    pipe.datasetFilesByType = _.reduce(_filenames, (result, _filename) => {
       if(/^ddf--datapoints--/.test(_filename)) {
-        return pipe.datasetFilesByType.datapoints.push(_filename);
+        result.datapoints.push(_filename);
       }
       if(/^ddf--entities--/.test(_filename)) {
-        return pipe.datasetFilesByType.entities.push(_filename);
+        result.entities.push(_filename);
       }
       if(/^ddf--concepts/.test(_filename)) {
-        return pipe.datasetFilesByType.concepts.push(_filename);
+        result.concepts.push(_filename);
       }
+      return result;
+    }, {
+      entities: [],
+      concepts: [],
+      datapoints: []
     });
 
     return done(null, pipe);
@@ -169,106 +166,128 @@ function _generateDatasetIndex(pipe, done) {
   logger.info('** generate Dataset Index');
   pipe.datasetIndex = [];
 
-  async.waterfall([
+  return async.waterfall([
     async.constant(pipe),
     _generateDatasetIndexFromConcepts,
     _generateDatasetIndexFromEntities,
     _generateDatasetIndexFromDatapoints
-  ], (err, res) => {
-    return done(err, pipe);
-  });
+  ], err => done(err, pipe));
 }
 
 function _generateDatasetIndexFromConcepts(pipe, done) {
-  let counter = 0;
-  async.forEachOfSeries(
+
+  return async.mapLimit(
     pipe.datasetFilesByType.concepts,
-    function (item, key, callback) {
+    constants.LIMIT_NUMBER_PROCESS,
+    (item, completeSearchForConcepts) => {
       readCsvFile(pipe.resolvePath(item), {}, (err, res) => {
+
+        if(err) {
+          return completeSearchForConcepts(err);
+        }
+
         const conceptKey = 'concept';
-        res.forEach(function(row, index){
-          pipe.datasetIndex.push({
-            key: conceptKey,
-            value: row[conceptKey],
-            file: [item],
-            type: 'concepts'
-          });
-          counter++;
-        });
-        return callback();
+        const datasetConceptsIndexes = _.reduce(res, (result, row) => {
+              result.push({
+                key: conceptKey,
+                value: row[conceptKey],
+                file: [item],
+                type: 'concepts'
+              });
+              return result;
+            }, []);
+
+        pipe.datasetIndex = _.concat(pipe.datasetIndex, datasetConceptsIndexes);
+        return completeSearchForConcepts(null, _.size(datasetConceptsIndexes));
       });
     },
-    function(err) {
-      logger.info('** load Dataset files Concepts: ' + counter);
+    (err, conceptsIndexAmounts) => {
+      logger.info('** load Dataset files Concepts: ' + _.sum(conceptsIndexAmounts));
       return done(err, pipe);
     }
   );
 }
 function _generateDatasetIndexFromEntities(pipe, done) {
-  let counter = 0;
-  async.forEachOfSeries(
-    pipe.datasetFilesByType.entities,
-    function (item, key, callback) {
-      readCsvFile(pipe.resolvePath(item), {}, (err, res) => {
-        const entityFileHeader = res[0];
-        const entityNameRegExp = /--.*--(.*).csv$/;
-        const entityNameMatch = entityNameRegExp.exec(item);
-        const entityNameReady = entityNameMatch[1];
 
-        for(let column in entityFileHeader) {
-          if(column !== entityNameReady) {
-            pipe.datasetIndex.push({
-              key: entityNameReady,
-              value: column,
-              file: [item],
-              type: 'entities'
-            });
-            counter++;
-          }
+  return async.mapLimit(
+    pipe.datasetFilesByType.entities,
+    constants.LIMIT_NUMBER_PROCESS,
+    (item, completeSearchForEntities) => {
+      readCsvFile(pipe.resolvePath(item), {}, (err, rows) => {
+
+        if(err) {
+          return completeSearchForEntities(err);
         }
-        return callback();
+
+        const entityFileHeader = _.first(rows);
+        const entityName = getEntityName(item);
+
+        const datasetEntitiesIndexes = _.chain(entityFileHeader)
+          .keys()
+          .reduce((result, column) => {
+            if (column !== entityName) {
+              result.push({
+                key: entityName,
+                value: column,
+                file: [item],
+                type: 'entities'
+              });
+            }
+            return result;
+          }, []).value();
+
+        pipe.datasetIndex = _.concat(pipe.datasetIndex, datasetEntitiesIndexes);
+        return completeSearchForEntities(null, _.size(datasetEntitiesIndexes));
       });
     },
-    function(err) {
-      logger.info('** load Dataset files Entities: ' + counter);
+    (err, entityIndexAmounts) => {
+      logger.info('** load Dataset files Entities: ' + _.sum(entityIndexAmounts));
       return done(err, pipe);
     }
   );
+
+  function getEntityName (item) {
+    const entityNameRegExp = /--.*--(.*).csv$/;
+    const entityNameMatch = entityNameRegExp.exec(item);
+    return _.get(entityNameMatch, '1');
+  }
 }
 function _generateDatasetIndexFromDatapoints(pipe, done) {
-  let counter = 0;
-  async.forEachOfSeries(
+
+  return async.forEachOfLimit(
     pipe.datasetFilesByType.datapoints,
-    function (item, key, callback) {
-      const datapointNameRegExp = /^ddf--datapoints--(.*)--by--(.*)--(.*).csv$/;
-      const datapointNameMatch = datapointNameRegExp.exec(item);
+    constants.LIMIT_NUMBER_PROCESS,
+    function (item, key, completeSearchForDatapoints) {
 
-      const readyKey = [datapointNameMatch[2],datapointNameMatch[3]].join(',');
-      const readyValue = datapointNameMatch[1];
-
-      const itemExists = pipe.datasetIndex.find(function(arrayItem){
-        return arrayItem.key == readyKey && arrayItem.value == readyValue ? true : false;
-      });
+      const keyValuePair = getKeyValuePair(item);
+      const itemExists = pipe.datasetIndex.find(arrayItem => arrayItem.key == keyValuePair.key && arrayItem.value == keyValuePair.value);
 
       // check that item not exists
-      if(typeof itemExists != 'undefined') {
+      if(itemExists) {
         pipe.datasetIndex[itemExists].file.push(item);
       } else {
         pipe.datasetIndex.push({
-          key: readyKey,
-          value: readyValue,
+          key: keyValuePair.key,
+          value: keyValuePair.value,
           file: [item],
           type: 'datapoints'
         });
       }
-      counter++;
-      return callback();
+      return completeSearchForDatapoints();
     },
-    function(err) {
-      logger.info('** load Dataset files Datapoints: ' + counter);
+    err => {
+      logger.info('** load Dataset files Datapoints: ' + pipe.datasetFilesByType.datapoints.length);
       return done(err, pipe);
     }
   );
+
+  function getKeyValuePair(item) {
+    const parseFilename = getMesureDimensionFromFilename(item);
+    return {
+      key: parseFilename.dimension.join(','),
+      value: _.first(parseFilename.mesure)
+    };
+  }
 }
 
 function _convertDatasetIndexToModel(pipe, done) {
@@ -279,6 +298,7 @@ function _convertDatasetIndexToModel(pipe, done) {
 }
 
 function _populateDatasetIndexWithOriginIds(pipe, done) {
+
   return async.mapLimit(pipe.datasetIndexes, constants.LIMIT_NUMBER_PROCESS, (index, onIndexPopulated) => {
     index.keyOriginIds = _.chain(index.key).map(getOriginId).compact().value();
     index.valueOriginId = getOriginId(index.value);
@@ -303,14 +323,11 @@ function _createDatasetIndex(pipe, done) {
 
   logger.info('** create Dataset Index documents');
 
-  async.eachLimit(
+  return async.eachLimit(
     _.chunk(pipe.datasetIndexes, 100),
     constants.LIMIT_NUMBER_PROCESS,
     __createDatasetIndex,
-    (err) => {
-      return done(err, pipe);
-    }
-  );
+    (err) => done(err, pipe));
 
   function __createDatasetIndex(chunk, cb) {
     return mongoose.model('DatasetIndex').create(chunk, cb);
@@ -318,9 +335,10 @@ function _createDatasetIndex(pipe, done) {
 }
 
 function createConcepts(pipe, done) {
+
   logger.info('start process creating concepts');
 
-  async.waterfall([
+  return async.waterfall([
     async.constant({transaction: pipe.transaction, dataset: pipe.dataset, resolvePath: pipe.resolvePath}),
     _loadConcepts,
     _createConcepts,
@@ -766,12 +784,20 @@ function createDataPoints(pipe, done) {
   }
 }
 
+function getMesureDimensionFromFilename (filename) {
+  let parsedFileName = filename.replace(/^ddf--datapoints--|\.csv$/g, '').split('--by--');
+  return {
+    mesure: _.first(parsedFileName).split('--'),
+    dimension: _.last(parsedFileName).split('--')
+  };
+}
+
 function _parseFilename(pipe, cb) {
   logger.info(`** parse filename '${pipe.filename}'`);
 
-  let parsedFileName = pipe.filename.replace(/^ddf--datapoints--|\.csv$/g, '').split('--by--');
-  let measureGids = _.first(parsedFileName).split('--');
-  let dimensionGids = _.last(parsedFileName).split('--');
+  const parseFilename = getMesureDimensionFromFilename(pipe.filename);
+  const measureGids = parseFilename.mesure;
+  const dimensionGids = parseFilename.dimension;
 
   pipe.measures = _.merge(_.pick(pipe.previousConcepts, measureGids), _.pick(pipe.concepts, measureGids));
   pipe.dimensions = _.merge(_.pick(pipe.previousConcepts, dimensionGids), _.pick(pipe.concepts, dimensionGids));
