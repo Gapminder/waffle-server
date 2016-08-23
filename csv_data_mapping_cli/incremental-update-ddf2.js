@@ -55,6 +55,7 @@ module.exports = function (options, done) {
     getAllPreviousConcepts,
     processEntitiesChanges,
     processDataPointsChanges,
+    common.createDatasetIndex,
     common.closeTransaction
   ], (updateError, pipe) => {
     console.timeEnd('done');

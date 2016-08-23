@@ -1062,10 +1062,8 @@ function mapDdfIndexToWsModel(pipe) {
       source: item.file || [],
       type: item.type,
 
-      from: pipe.transaction.createdAt,
-      to: constants.MAX_VERSION,
       dataset: pipe.dataset._id,
-      transaction: pipe.transactionId || pipe.transaction._id
+      transaction: pipe.transaction._id
     };
 
   }

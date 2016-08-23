@@ -1,13 +1,6 @@
 'use strict';
 
-const _ = require('lodash');
-const util = require('util');
+function DatasetIndexRepository() {}
 
-const RepositoryFactory = require('../../repository.factory');
-const repositoryModel = require('../../repository.model');
-
-function DatasetIndex() {
-  repositoryModel.apply(this, arguments);
-}
-
-module.exports = new RepositoryFactory(DatasetIndex);
+module.exports = new DatasetIndexRepository();
+ObjectId("57bc4f07aca1b6bd1287dc11")
