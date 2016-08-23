@@ -11,19 +11,19 @@ module.exports = {
   getEntities,
   getConcepts,
   collectEntities,
-  matchDdfqlToEntities,
-  getDdfqlEntities: _getDdfqlEntities
+  collectEntitiesByDdfql,
+  normalizeQueriesToEntitiesByDdfql
 };
 
-function matchDdfqlToEntities(options, cb) {
+function collectEntitiesByDdfql(options, cb) {
   console.time('finish Entities stats');
-  const pipe = options;
+  const pipe = _.extend(options, {domainGid: _.first(options.domainGids)});
 
   async.waterfall([
     async.constant(pipe),
     commonService.findDefaultDatasetAndTransaction,
     getConcepts,
-    _getDdfqlEntities
+    normalizeQueriesToEntitiesByDdfql
   ],  (error, result) => {
     console.timeEnd('finish Entities stats');
 
@@ -33,13 +33,9 @@ function matchDdfqlToEntities(options, cb) {
   });
 }
 
-function _getDdfqlEntities(pipe, cb) {
+function normalizeQueriesToEntitiesByDdfql(pipe, cb) {
   const entitiesRepository = entitiesRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version);
 
-  const conceptsByGids = _.chain(pipe.concepts)
-    .keyBy('gid')
-    .mapValues('originId')
-    .value();
   const normlizedQuery = ddfql.normalizeEntities(pipe.query, pipe.concepts);
 
   return async.mapLimit(normlizedQuery.join, 10, (item, mcb) => {
