@@ -121,23 +121,183 @@ function createDatasetIndex(pipe, done) {
   logger.info('start process Dataset Index');
 
   async.waterfall([
-    async.constant({transaction: pipe.transaction, dataset: pipe.dataset, resolvePath: pipe.resolvePath}),
-    _loadDatasetIndex,
+    async.constant(pipe),
+    _loadDatasetFiles,
+    _generateDatasetIndex,
+    _convertDatasetIndexToModel,
+    _populateDatasetIndexWithOriginIds,
     _createDatasetIndex
   ], (err, res) => {
     return done(err, pipe);
   });
 }
 
-function _loadDatasetIndex(pipe, done) {
+function _loadDatasetFiles(pipe, done) {
 
-  logger.info('** load file Dataset Index');
+  logger.info('** load Dataset files');
 
-  return readCsvFile(pipe.resolvePath('ddf--index.csv'), {}, (err, res) => {
-    pipe.datasetIndexes = _.map(res, mapDdfIndexToWsModel(pipe));
+  fs.readdir(pipe.pathToDdfFolder, (err, _filenames) => {
+
+    if(err) {
+      return done(err);
+    }
+
+    pipe.datasetFilesByType = {
+      'datapoints': [],
+      'entities': [],
+      'concepts': []
+    };
+
+    _filenames.forEach(function(_filename){
+      if(/^ddf--datapoints--/.test(_filename)) {
+        return pipe.datasetFilesByType.datapoints.push(_filename);
+      }
+      if(/^ddf--entities--/.test(_filename)) {
+        return pipe.datasetFilesByType.entities.push(_filename);
+      }
+      if(/^ddf--concepts/.test(_filename)) {
+        return pipe.datasetFilesByType.concepts.push(_filename);
+      }
+    });
+
+    return done(null, pipe);
+  });
+}
+
+function _generateDatasetIndex(pipe, done) {
+
+  logger.info('** generate Dataset Index');
+  pipe.datasetIndex = [];
+
+  async.waterfall([
+    async.constant(pipe),
+    _generateDatasetIndexFromConcepts,
+    _generateDatasetIndexFromEntities,
+    _generateDatasetIndexFromDatapoints
+  ], (err, res) => {
     return done(err, pipe);
   });
 }
+
+function _generateDatasetIndexFromConcepts(pipe, done) {
+  let counter = 0;
+  async.forEachOfSeries(
+    pipe.datasetFilesByType.concepts,
+    function (item, key, callback) {
+      readCsvFile(pipe.resolvePath(item), {}, (err, res) => {
+        const conceptKey = 'concept';
+        res.forEach(function(row, index){
+          pipe.datasetIndex.push({
+            key: conceptKey,
+            value: row[conceptKey],
+            file: [item],
+            type: 'concepts'
+          });
+          counter++;
+        });
+        return callback();
+      });
+    },
+    function(err) {
+      logger.info('** load Dataset files Concepts: ' + counter);
+      return done(err, pipe);
+    }
+  );
+}
+function _generateDatasetIndexFromEntities(pipe, done) {
+  let counter = 0;
+  async.forEachOfSeries(
+    pipe.datasetFilesByType.entities,
+    function (item, key, callback) {
+      readCsvFile(pipe.resolvePath(item), {}, (err, res) => {
+        const entityFileHeader = res[0];
+        const entityNameRegExp = /--.*--(.*).csv$/;
+        const entityNameMatch = entityNameRegExp.exec(item);
+        const entityNameReady = entityNameMatch[1];
+
+        for(let column in entityFileHeader) {
+          if(column !== entityNameReady) {
+            pipe.datasetIndex.push({
+              key: entityNameReady,
+              value: column,
+              file: [item],
+              type: 'entities'
+            });
+            counter++;
+          }
+        }
+        return callback();
+      });
+    },
+    function(err) {
+      logger.info('** load Dataset files Entities: ' + counter);
+      return done(err, pipe);
+    }
+  );
+}
+function _generateDatasetIndexFromDatapoints(pipe, done) {
+  let counter = 0;
+  async.forEachOfSeries(
+    pipe.datasetFilesByType.datapoints,
+    function (item, key, callback) {
+      const datapointNameRegExp = /^ddf--datapoints--(.*)--by--(.*)--(.*).csv$/;
+      const datapointNameMatch = datapointNameRegExp.exec(item);
+
+      const readyKey = [datapointNameMatch[2],datapointNameMatch[3]].join(',');
+      const readyValue = datapointNameMatch[1];
+
+      const itemExists = pipe.datasetIndex.find(function(arrayItem){
+        return arrayItem.key == readyKey && arrayItem.value == readyValue ? true : false;
+      });
+
+      // check that item not exists
+      if(typeof itemExists != 'undefined') {
+        pipe.datasetIndex[itemExists].file.push(item);
+      } else {
+        pipe.datasetIndex.push({
+          key: readyKey,
+          value: readyValue,
+          file: [item],
+          type: 'datapoints'
+        });
+      }
+      counter++;
+      return callback();
+    },
+    function(err) {
+      logger.info('** load Dataset files Datapoints: ' + counter);
+      return done(err, pipe);
+    }
+  );
+}
+
+function _convertDatasetIndexToModel(pipe, done) {
+  return async.setImmediate(() => {
+    pipe.datasetIndexes = _.map(pipe.datasetIndex, mapDdfIndexToWsModel(pipe));
+    return done(null, pipe);
+  });
+}
+
+function _populateDatasetIndexWithOriginIds(pipe, done) {
+  return async.mapLimit(pipe.datasetIndexes, constants.LIMIT_NUMBER_PROCESS, (index, onIndexPopulated) => {
+    index.keyOriginIds = _.chain(index.key).map(getOriginId).compact().value();
+    index.valueOriginId = getOriginId(index.value);
+    return onIndexPopulated(null, index);
+  }, (error, populatedDatasetIndexes) => {
+    if (error) {
+      return done(error);
+    }
+
+    pipe.datasetIndexes = populatedDatasetIndexes;
+    return done(null, pipe);
+  });
+
+  function getOriginId(key) {
+    const concept = pipe.concepts[key];
+    return concept ? concept.originId : null;
+  }
+}
+
 
 function _createDatasetIndex(pipe, done) {
 
@@ -873,7 +1033,8 @@ function mapDdfIndexToWsModel(pipe) {
     return {
       key: item.key.split(','),
       value: item.value || '',
-      source: item.file || '',
+      source: item.file || [],
+      type: item.type,
 
       from: pipe.transaction.createdAt,
       to: constants.MAX_VERSION,

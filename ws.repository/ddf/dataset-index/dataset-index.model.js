@@ -10,7 +10,11 @@ const originId = require('../origin-id.plugin');
  *
  * @property {Array<String>} key - type
  * @property {String} value - type value
- * @property {String} source - filename
+ * @property {Array<String>} source - filename
+ * @property {Array<String>} keyOriginIds - type
+ * @property {String} valueOriginId - type value
+ * @property {String} type - element type ['concepts','entities','datapoints']
+ *
  *
  * @property {Number} from - entity start version
  * @property {Number} to - entity end version (or Infinity)
@@ -20,7 +24,10 @@ const originId = require('../origin-id.plugin');
 let DatasetIndex = new Schema({
   key: [{type: String, required: true}],
   value: {type: String, required: true},
-  source: {type: String, required: true},
+  source: [{type: String, required: true}],
+  keyOriginIds: [{type: String}],
+  valueOriginId: {type: String},
+  type: {type: String, enum: ['concepts','entities','datapoints']},
 
   from: {type: Number, required: true},
   to: {type: Number, required: true, default: Number.MAX_SAFE_INTEGER},

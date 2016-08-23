@@ -32,7 +32,6 @@ module.exports = function (options, done) {
     common.createDataset,
     ddfImportProcess.activateLifecycleHook('onDatasetCreated'),
     common.updateTransaction,
-    common.createDatasetIndex,
     common.createConcepts,
     common.createEntities,
     common.createDataPoints,
@@ -43,6 +42,7 @@ module.exports = function (options, done) {
     // common.createTranslations,
     // common.findDataPoints,
     // common.updateConceptsDimensions
+    common.createDatasetIndex,
     common.closeTransaction
   ], (importError, pipe) => {
     console.timeEnd('done');
