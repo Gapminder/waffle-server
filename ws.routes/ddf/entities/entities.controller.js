@@ -56,7 +56,7 @@ module.exports = serviceLocator => {
     const domainGids = req.decodedQuery.where.key;
     const domainGid = _.first(domainGids);
     const select = req.decodedQuery.select;
-    const headers = _.union([domainGid], select);
+    const headers = _.isEmpty(select) ? [] : _.union([domainGid], select);
     const sort = req.decodedQuery.sort;
 
     const options = {

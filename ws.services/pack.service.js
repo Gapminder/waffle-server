@@ -148,13 +148,13 @@ function _fromDdfJsonToJson(data, next) {
   let json;
 
   switch (true) {
-    case (!!_.get(data, 'datapoints.values.0', false)):
+    case (!!_.get(data, 'datapoints.values.length', false)):
       json = ddfJsonUnpack.unpackDdfDatapoints(data);
       break;
-    case (!!_.get(data, 'entities.values.0', false)):
+    case (!!_.get(data, 'entities.values.length', false)):
       json = ddfJsonUnpack.unpackDdfEntities(data);
       break;
-    case (!!_.get(data, 'concepts.values.0', false)):
+    case (!!_.get(data, 'concepts.values.length', false)):
       json = ddfJsonUnpack.unpackDdfConcepts(data);
       break;
     default:
