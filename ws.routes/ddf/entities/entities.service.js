@@ -2,6 +2,7 @@
 const _ = require('lodash');
 const async = require('async');
 
+const ddfql = require('../../../ws.ddfql/ddf-entities-query-normalizer');
 const commonService = require('../../../ws.services/common.service');
 const conceptsService = require('../concepts/concepts.service');
 const entitiesRepositoryFactory = require('../../../ws.repository/ddf/entities/entities.repository');
@@ -10,19 +11,19 @@ module.exports = {
   getEntities,
   getConcepts,
   collectEntities,
-  matchDdfqlToEntities,
-  getDdfqlEntities: _getDdfqlEntities
+  collectEntitiesByDdfql,
+  normalizeQueriesToEntitiesByDdfql
 };
 
-function matchDdfqlToEntities(options, cb) {
+function collectEntitiesByDdfql(options, cb) {
   console.time('finish Entities stats');
-  const pipe = options;
+  const pipe = _.extend(options, {domainGid: _.first(options.domainGids)});
 
   async.waterfall([
     async.constant(pipe),
     commonService.findDefaultDatasetAndTransaction,
     getConcepts,
-    _getDdfqlEntities
+    normalizeQueriesToEntitiesByDdfql
   ],  (error, result) => {
     console.timeEnd('finish Entities stats');
 
@@ -32,20 +33,33 @@ function matchDdfqlToEntities(options, cb) {
   });
 }
 
-function _getDdfqlEntities(pipe, cb) {
+function normalizeQueriesToEntitiesByDdfql(pipe, cb) {
   const entitiesRepository = entitiesRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version);
 
-  entitiesRepository
-    .findEntityProperties(pipe.domainGid, pipe.headers, pipe.where, (error, entities) => {
-      if (error) {
-        return cb(error);
-      }
+  const normlizedQuery = ddfql.normalizeEntities(pipe.query, pipe.concepts);
 
-      pipe.entities = entities;
+  return async.mapLimit(normlizedQuery.join, 10, (item, mcb) => {
+    return entitiesRepository
+      .findEntityPropertiesByQuery(item, (error, entities) => {
+        return mcb(error, _.map(entities, 'gid'));
+      });
+  }, (err, substituteJoinLinks) => {
+    const promotedQuery = ddfql.substituteEntityJoinLinks(normlizedQuery, substituteJoinLinks);
+    const subEntityQuery = promotedQuery.where;
 
-      return cb(null, pipe);
-    });
+    return entitiesRepository
+      .findEntityPropertiesByQuery(subEntityQuery, (error, entities) => {
+        if (error) {
+          return cb(error);
+        }
+
+        pipe.entities = entities;
+
+        return cb(null, pipe);
+      });
+  });
 }
+
 
 function getEntities(pipe, cb) {
   const entitiesRepository = entitiesRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version);
@@ -67,9 +81,7 @@ function getConcepts(pipe, cb) {
     dataset: pipe.dataset,
     version: pipe.version,
     headers: [],
-    where: {
-      concept: pipe.domainGid
-    }
+    where: {}
   };
 
   return conceptsService.getConcepts(_pipe, (err, result) => {

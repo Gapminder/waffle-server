@@ -7,8 +7,8 @@ const express = require('express');
 const compression = require('compression');
 
 const constants = require('../../../ws.utils/constants');
-const decodeQuery = require('../../utils').decodeQuery;
-const datapointService = require('./datapoints.service');
+const entitiesService = require('../entities/entities.service');
+const datapointService = require('../datapoints/datapoints.service');
 const commonService = require('../../../ws.services/common.service');
 const getCacheConfig = require('../../utils').getCacheConfig;
 const dataPostProcessors = require('../../data-post-processors');
@@ -22,24 +22,12 @@ module.exports = serviceLocator => {
 
   const router = express.Router();
 
-  router.get('/api/ddf/datapoints',
+  router.post('/api/ddf/ql',
     cors(),
     compression({filter: commonService.shouldCompress}),
     getCacheConfig(constants.DDF_REDIS_CACHE_NAME_DATAPOINTS),
     cache.route({expire: constants.DDF_REDIS_CACHE_LIFETIME}),
-    decodeQuery,
-    ddfDatapointStats,
-    dataPostProcessors.gapfilling,
-    dataPostProcessors.toPrecision,
-    dataPostProcessors.pack
-  );
-
-  router.post('/api/ddf/datapoints',
-    cors(),
-    compression({filter: commonService.shouldCompress}),
-    getCacheConfig(constants.DDF_REDIS_CACHE_NAME_DATAPOINTS),
-    cache.route({expire: constants.DDF_REDIS_CACHE_LIFETIME}),
-    getMatchedDdfqlDatapoints,
+    getDdfStats,
     dataPostProcessors.gapfilling,
     dataPostProcessors.toPrecision,
     dataPostProcessors.pack
@@ -47,34 +35,10 @@ module.exports = serviceLocator => {
 
   return app.use(router);
 
-  function ddfDatapointStats(req, res, next) {
+  function getDdfStats(req, res, next) {
     logger.debug('URL: \n%s%s', config.LOG_TABS, req.originalUrl);
 
-    const where = _.omit(req.decodedQuery.where, constants.EXCLUDED_QUERY_PARAMS);
-    const select = req.decodedQuery.select;
-    const domainGids = req.decodedQuery.where.key;
-    const headers = _.union(domainGids, select);
-    const sort = req.decodedQuery.sort;
-    const datasetName = _.first(req.decodedQuery.where.dataset);
-    const version = _.first(req.decodedQuery.where.version);
-
-    const options = {
-      select,
-      headers,
-      domainGids,
-      where,
-      sort,
-      datasetName,
-      version
-    };
-
-    const onCollectDatapoints = doDataTransfer(req, res, next);
-    datapointService.collectDatapoints(options, onCollectDatapoints);
-  }
-
-  function getMatchedDdfqlDatapoints(req, res, next) {
-    logger.debug('URL: \n%s%s', config.LOG_TABS, req.originalUrl);
-
+    const from = req.body.from;
     const query = req.body;
     const where = req.body.where;
     const select = req.body.select.value;
@@ -86,6 +50,7 @@ module.exports = serviceLocator => {
     const version = _.first(req.body.version);
 
     const options = {
+      from,
       select,
       headers,
       domainGids,
@@ -97,9 +62,17 @@ module.exports = serviceLocator => {
       query
     };
 
-    const onMatchedDatapoints = doDataTransfer(req, res, next);
+    const onMatchedEntries = doDataTransfer(req, res, next);
 
-    datapointService.collectDatapointsByDdfql(options, onMatchedDatapoints);
+    switch (from) {
+      case 'datapoints':
+        return datapointService.collectDatapointsByDdfql(options, onMatchedEntries);
+      case 'entities':
+        return entitiesService.collectEntitiesByDdfql(options, onMatchedEntries);
+      default:
+        return onMatchedEntries(`Value '${from}' in the 'from' field isn't supported yet.`);
+        break;
+    }
   }
 
   function doDataTransfer(req, res, next) {

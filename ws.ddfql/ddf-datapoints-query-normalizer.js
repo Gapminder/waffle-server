@@ -4,19 +4,19 @@ const _ = require('lodash');
 const traverse = require('traverse');
 
 module.exports = {
-  normalize,
-  normalizeDdfQuery,
-  substituteConceptsWithIds,
-  substituteJoinLinks
+  normalizeDatapoints: normalizeDatapoints,
+  normalizeDatapointDdfQuery: normalizeDatapointDdfQuery,
+  substituteDatapointConceptsWithIds: substituteDatapointConceptsWithIds,
+  substituteDatapointJoinLinks: substituteDatapointJoinLinks
 };
 
-function normalize(query, conceptsToIds) {
-  normalizeDdfQuery(query);
-  substituteConceptsWithIds(query, conceptsToIds);
+function normalizeDatapoints(query, conceptsToIds) {
+  normalizeDatapointDdfQuery(query);
+  substituteDatapointConceptsWithIds(query, conceptsToIds);
   return query;
 }
 
-function substituteJoinLinks(query, linksInJoinToValues) {
+function substituteDatapointJoinLinks(query, linksInJoinToValues) {
   traverse(query.where).forEach(function (link) {
     if (query.join.hasOwnProperty(link)) {
       const id = linksInJoinToValues[link];
@@ -26,7 +26,7 @@ function substituteJoinLinks(query, linksInJoinToValues) {
   return query;
 }
 
-function substituteConceptsWithIds(query, conceptsToIds) {
+function substituteDatapointConceptsWithIds(query, conceptsToIds) {
   traverse(query.where).forEach(function (concept) {
     if (shouldSubstituteValueWithId(concept, query)) {
       const id = conceptsToIds[concept];
@@ -44,7 +44,7 @@ function substituteConceptsWithIds(query, conceptsToIds) {
   return query;
 }
 
-function normalizeDdfQuery(query) {
+function normalizeDatapointDdfQuery(query) {
   normalizeWhere(query);
   normalizeJoin(query);
   return query;
@@ -55,7 +55,7 @@ function normalizeWhere(query) {
     let normalizedFilter = null;
 
     if (isMeasureFilter(this.key, query)) {
-       normalizedFilter = {
+      normalizedFilter = {
         measure: this.key,
         value: filterValue
       };

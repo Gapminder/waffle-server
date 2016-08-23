@@ -1,7 +1,7 @@
 'use strict';
 
 import test from 'ava';
-import ddfQueryNormalizer from './ddf-query-normalizer';
+import ddfQueryNormalizer from './ddf-datapoints-query-normalizer';
 
 test('should normalize where and join clauses', assert => {
   const ddfql = {
@@ -110,7 +110,7 @@ test('should normalize where and join clauses', assert => {
     }
   };
 
-  assert.deepEqual(ddfQueryNormalizer.normalizeDdfQuery(ddfql), normalizedDdfql);
+  assert.deepEqual(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql), normalizedDdfql);
 });
 
 test('should substitute concept placeholders with ids', assert => {
@@ -241,7 +241,7 @@ test('should substitute concept placeholders with ids', assert => {
     }
   };
 
-  assert.deepEqual(ddfQueryNormalizer.substituteConceptsWithIds(normalizedDdfql, conceptsToIds), normalizedDdfqlWithSubstitutedConcepts);
+  assert.deepEqual(ddfQueryNormalizer.substituteDatapointConceptsWithIds(normalizedDdfql, conceptsToIds), normalizedDdfqlWithSubstitutedConcepts);
 });
 
 
@@ -408,5 +408,5 @@ test('should substitute join link in where clause', assert => {
     }
   };
 
-  assert.deepEqual(ddfQueryNormalizer.substituteJoinLinks(normalizedDdfql, linksInJoinToValues), normalizedDdfqlWithSubstitutedJoinLinks);
+  assert.deepEqual(ddfQueryNormalizer.substituteDatapointJoinLinks(normalizedDdfql, linksInJoinToValues), normalizedDdfqlWithSubstitutedJoinLinks);
 });

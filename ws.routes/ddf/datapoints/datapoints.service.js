@@ -2,7 +2,7 @@
 const _ = require('lodash');
 const async = require('async');
 
-const ddfql = require('../../../ws.ddfql/ddf-query-normalizer');
+const ddfql = require('../../../ws.ddfql/ddf-datapoints-query-normalizer');
 const logger = require('../../../ws.config/log');
 const constants = require('../../../ws.utils/constants');
 const commonService = require('../../../ws.services/common.service');
@@ -18,12 +18,12 @@ module.exports = {
   mapConcepts,
   getDataPoints,
   collectDatapoints,
-  matchDdfqlToDatapoints,
-  getDdfqlDataPoints: _getDdfqlDataPoints,
-  queryDatapoints: _queryDatapoints
+  queryDatapointsByDdfql,
+  collectDatapointsByDdfql,
+  normalizeQueriesToDatapointsByDdfql
 };
 
-function matchDdfqlToDatapoints(options, onMatchedDatapoints) {
+function collectDatapointsByDdfql(options, onMatchedDatapoints) {
   console.time('finish matching DataPoints');
   const pipe = {
     select: options.select,
@@ -43,7 +43,7 @@ function matchDdfqlToDatapoints(options, onMatchedDatapoints) {
     getConcepts,
     mapConcepts,
     getEntities,
-    _getDdfqlDataPoints
+    normalizeQueriesToDatapointsByDdfql
   ], (error, result) => {
     console.timeEnd('finish matching DataPoints');
 
@@ -51,7 +51,7 @@ function matchDdfqlToDatapoints(options, onMatchedDatapoints) {
   });
 }
 
-function _getDdfqlDataPoints(pipe, cb) {
+function normalizeQueriesToDatapointsByDdfql(pipe, cb) {
   console.time('get datapoints');
 
   if (_.isEmpty(pipe.measures)) {
@@ -64,22 +64,22 @@ function _getDdfqlDataPoints(pipe, cb) {
     .keyBy('gid')
     .mapValues('originId')
     .value();
-  const normlizedQuery = ddfql.normalize(pipe.query, conceptsByGids);
+  const normlizedQuery = ddfql.normalizeDatapoints(pipe.query, conceptsByGids);
 
   return async.mapLimit(normlizedQuery.join, 10, (item, mcb) => {
     return entitiesRepository.findEntityPropertiesByQuery(item, (error, entities) => mcb(error, _.map(entities, 'originId')));
   }, (err, substituteJoinLinks) => {
-    const promotedQuery = ddfql.substituteJoinLinks(normlizedQuery, substituteJoinLinks);
+    const promotedQuery = ddfql.substituteDatapointJoinLinks(normlizedQuery, substituteJoinLinks);
     const subDatapointQuery = promotedQuery.where;
 
-    return _queryDatapoints(pipe, subDatapointQuery, (err, pipe) => {
+    return queryDatapointsByDdfql(pipe, subDatapointQuery, (err, pipe) => {
       console.timeEnd('get datapoints');
       return cb(err, pipe);
     });
   });
 }
 
-function _queryDatapoints(pipe, subDatapointQuery, cb) {
+function queryDatapointsByDdfql(pipe, subDatapointQuery, cb) {
   return datapointsRepositoryFactory
     .currentVersion(pipe.dataset._id, pipe.version)
     .findForGivenMeasuresAndDimensions(subDatapointQuery, (error, datapoints) => {
