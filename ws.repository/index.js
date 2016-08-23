@@ -22,6 +22,7 @@ module.exports = function () {
     'data-points',
     'dataset-transactions',
     'datasets',
+    'dataset-index',
     'entities',
     'original-entities'
   ];

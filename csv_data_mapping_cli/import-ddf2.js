@@ -42,6 +42,7 @@ module.exports = function (options, done) {
     // common.createTranslations,
     // common.findDataPoints,
     // common.updateConceptsDimensions
+    common.createDatasetIndex,
     common.closeTransaction
   ], (importError, pipe) => {
     console.timeEnd('done');

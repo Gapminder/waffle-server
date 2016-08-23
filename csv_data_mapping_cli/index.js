@@ -9,6 +9,7 @@ require('../ws.config/db.config');
 const mongoose = require('mongoose');
 
 const ddfModels = [
+  'dataset-index',
   'concepts',
   'data-points',
   'dataset-transactions',
