@@ -16,12 +16,20 @@ module.exports = {
 function getCacheConfig(prefix) {
   return function (req, res, next) {
     /*eslint camelcase:0*/
-    if (req.query.force === 'true') {
+    if (req.query.force === 'true' || req.body.force === true) {
       res.use_express_redis_cache = false;
       return next();
     }
 
-    var hash = prefix + '-' + req.method + req.url;
+    let reqBody;
+
+    try {
+      reqBody = JSON.stringify(req.body);
+    } catch (error) {
+      return res.json({success: false, error: error});
+    }
+
+    var hash = prefix + '-' + req.method + '-' + req.url + '-' + reqBody;
     res.express_redis_cache_name = hash;
     next();
   };

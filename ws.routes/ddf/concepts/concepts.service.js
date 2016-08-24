@@ -1,10 +1,82 @@
 'use strict';
 
+const _ = require('lodash');
+const async = require('async');
+
+const ddfql = require('../../../ws.ddfql/ddf-concepts-query-normalizer');
+const commonService = require('../../../ws.services/common.service');
 const conceptsRepositoryFactory = require('../../../ws.repository/ddf/concepts/concepts.repository');
 
 module.exports = {
-  getConcepts
+  getConcepts,
+  collectConcepts,
+  collectConceptsByDdfql,
+  getConceptsByDdfql
 };
+
+function collectConceptsByDdfql(options, cb) {
+  console.time('finish Concepts stats');
+  const pipe = _.extend(options, {domainGid: _.first(options.domainGids)});
+
+  return async.waterfall([
+    async.constant(pipe),
+    commonService.findDefaultDatasetAndTransaction,
+    getAllConcepts,
+    getConceptsByDdfql
+  ], (error, result) => {
+    console.timeEnd('finish Concepts stats');
+
+    return cb(error, result);
+  });
+}
+
+function getAllConcepts(pipe, cb) {
+  const conceptsRepository = conceptsRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version);
+
+  conceptsRepository
+    .findConceptsByQuery({}, (error, concepts) => {
+      if (error) {
+        return cb(error);
+      }
+
+      pipe.allConcepts = concepts;
+
+      return cb(null, pipe);
+    });
+}
+
+function getConceptsByDdfql(pipe, cb) {
+  const conceptsRepository = conceptsRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version);
+  const normalizedQuery = ddfql.normalizeConcepts(pipe.query, pipe.allConcepts);
+
+  conceptsRepository
+    .findConceptsByQuery(normalizedQuery.where, (error, concepts) => {
+      if (error) {
+        return cb(error);
+      }
+
+      pipe.concepts = concepts;
+
+      return cb(null, pipe);
+    });
+}
+
+function collectConcepts(options, cb) {
+  console.time('finish Concepts stats');
+  const pipe = _.extend(options, {domainGid: _.first(options.domainGids)});
+
+  return async.waterfall([
+    async.constant(pipe),
+    commonService.findDefaultDatasetAndTransaction,
+    getConcepts
+  ], (error, result) => {
+    console.timeEnd('finish Concepts stats');
+
+    result.domainGid = pipe.domainGid;
+
+    return cb(error, result);
+  });
+}
 
 function getConcepts(pipe, cb) {
   const conceptsRepository = conceptsRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version);

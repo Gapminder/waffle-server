@@ -1,4 +1,5 @@
 'use strict';
+
 const _ = require('lodash');
 const async = require('async');
 
@@ -26,8 +27,6 @@ function collectEntitiesByDdfql(options, cb) {
     normalizeQueriesToEntitiesByDdfql
   ],  (error, result) => {
     console.timeEnd('finish Entities stats');
-
-    result.domainGid = pipe.domainGid;
 
     return cb(error, result);
   });
@@ -59,7 +58,6 @@ function normalizeQueriesToEntitiesByDdfql(pipe, cb) {
       });
   });
 }
-
 
 function getEntities(pipe, cb) {
   const entitiesRepository = entitiesRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version);
