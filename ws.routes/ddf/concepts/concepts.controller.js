@@ -1,13 +1,12 @@
 'use strict';
 const _ = require('lodash');
 const cors = require('cors');
-const async = require('async');
 const express = require('express');
 const compression = require('compression');
 
 const constants = require('../../../ws.utils/constants');
 const decodeQuery = require('../../utils').decodeQuery;
-const statsService = require('./concepts.service');
+const conceptsService = require('./concepts.service');
 const commonService = require('../../../ws.services/common.service');
 const getCacheConfig = require('../../utils').getCacheConfig;
 
@@ -42,12 +41,16 @@ module.exports = serviceLocator => {
     const where = _.omit(req.decodedQuery.where, constants.EXCLUDED_QUERY_PARAMS);
     const datasetName = _.first(req.decodedQuery.where.dataset);
     const version = _.first(req.decodedQuery.where.version);
-    const domainGid = _.first(req.decodedQuery.where.key);
-    const headers = req.decodedQuery.select;
+    const domainGids = _.first(req.decodedQuery.where.key);
+    const domainGid = _.first(domainGids);
+    const select = req.decodedQuery.select;
+    const headers = _.isEmpty(select) ? [] : _.union([domainGid], select);
+
     const sort = req.decodedQuery.sort;
 
-    let pipe = {
+    let options = {
       headers,
+      select,
       where,
       sort,
       domainGid,
@@ -55,22 +58,21 @@ module.exports = serviceLocator => {
       version
     };
 
-    console.time('finish Concepts stats');
-    return async.waterfall([
-      async.constant(pipe),
-      commonService.findDefaultDatasetAndTransaction,
-      statsService.getConcepts
-    ], (err, result) => {
-      if (err) {
-        console.error(err);
+    const onConceptsCollected = doDataTransfer(req, res, next);
+    conceptsService.collectConcepts(options, onConceptsCollected);
+  }
+
+  function doDataTransfer(req, res, next) {
+    return (error, result) => {
+      if (error) {
+        logger.error(error);
         res.use_express_redis_cache = false;
-        return res.json({success: false, error: err});
+        return res.json({success: false, error: error});
       }
-      console.timeEnd('finish Concepts stats');
 
       req.rawData = {rawDdf: result};
 
       return next();
-    });
+    }
   }
 };

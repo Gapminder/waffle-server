@@ -8,6 +8,7 @@ const compression = require('compression');
 
 const constants = require('../../../ws.utils/constants');
 const entitiesService = require('../entities/entities.service');
+const conceptsService = require('../concepts/concepts.service');
 const datapointService = require('../datapoints/datapoints.service');
 const commonService = require('../../../ws.services/common.service');
 const getCacheConfig = require('../../utils').getCacheConfig;
@@ -25,7 +26,7 @@ module.exports = serviceLocator => {
   router.post('/api/ddf/ql',
     cors(),
     compression({filter: commonService.shouldCompress}),
-    getCacheConfig(constants.DDF_REDIS_CACHE_NAME_DATAPOINTS),
+    getCacheConfig(constants.DDF_REDIS_CACHE_NAME_DDFQL),
     cache.route({expire: constants.DDF_REDIS_CACHE_LIFETIME}),
     getDdfStats,
     dataPostProcessors.gapfilling,
@@ -36,18 +37,24 @@ module.exports = serviceLocator => {
   return app.use(router);
 
   function getDdfStats(req, res, next) {
-    logger.debug('URL: \n%s%s', config.LOG_TABS, req.originalUrl);
+    logger.debug('\nURL: %s\nPOST: %s', req.originalUrl, JSON.stringify(req.body, null, '\t'));
 
     const from = req.body.from;
-    const query = req.body;
-    const where = req.body.where;
-    const select = req.body.select.value;
-    const domainGids = req.body.select.key;
+    const onEntriesCollected = doDataTransfer(req, res, next);
+
+    if (!from) {
+      return onEntriesCollected(`The filed 'from' must present in query.`);
+    }
+
+    const query = _.get(req, 'body', {});
+    const where = _.get(req, 'body.where', {});
+    const select = _.get(req, 'body.select.value', []);
+    const domainGids = _.get(req, 'body.select.key', []);
     const headers = _.union(domainGids, select);
-    const sort = req.body.order_by;
-    const groupBy = req.body.group_by;
-    const datasetName = _.first(req.body.dataset);
-    const version = _.first(req.body.version);
+    const sort = _.get(req, 'body.order_by', {});
+    const groupBy = _.get(req, 'body.group_by', {});
+    const datasetName = _.chain(req).get('body.dataset', []).first().value();
+    const version = _.chain(req).get('body.version', []).first().value();
 
     const options = {
       from,
@@ -62,15 +69,15 @@ module.exports = serviceLocator => {
       query
     };
 
-    const onMatchedEntries = doDataTransfer(req, res, next);
-
     switch (from) {
       case 'datapoints':
-        return datapointService.collectDatapointsByDdfql(options, onMatchedEntries);
+        return datapointService.collectDatapointsByDdfql(options, onEntriesCollected);
       case 'entities':
-        return entitiesService.collectEntitiesByDdfql(options, onMatchedEntries);
+        return entitiesService.collectEntitiesByDdfql(options, onEntriesCollected);
+      case 'concepts':
+        return conceptsService.collectConceptsByDdfql(options, onEntriesCollected);
       default:
-        return onMatchedEntries(`Value '${from}' in the 'from' field isn't supported yet.`);
+        return onEntriesCollected(`Value '${from}' in the 'from' field isn't supported yet.`);
         break;
     }
   }

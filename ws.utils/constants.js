@@ -14,6 +14,7 @@ module.exports = {
   DDF_REDIS_CACHE_NAME_ENTITIES: 'entities',
   DDF_REDIS_CACHE_NAME_CONCEPTS: 'concepts',
   DDF_REDIS_CACHE_NAME_DATAPOINTS: 'datapoints',
+  DDF_REDIS_CACHE_NAME_DDFQL: 'ddfql',
 
   GID: 'gid',
   ORIGIN_ID: 'originId',

@@ -2,7 +2,6 @@
 
 const _ = require('lodash');
 const cors = require('cors');
-const async = require('async');
 const express = require('express');
 const compression = require('compression');
 
@@ -34,17 +33,6 @@ module.exports = serviceLocator => {
     dataPostProcessors.pack
   );
 
-  router.post('/api/ddf/datapoints',
-    cors(),
-    compression({filter: commonService.shouldCompress}),
-    getCacheConfig(constants.DDF_REDIS_CACHE_NAME_DATAPOINTS),
-    cache.route({expire: constants.DDF_REDIS_CACHE_LIFETIME}),
-    getMatchedDdfqlDatapoints,
-    dataPostProcessors.gapfilling,
-    dataPostProcessors.toPrecision,
-    dataPostProcessors.pack
-  );
-
   return app.use(router);
 
   function ddfDatapointStats(req, res, next) {
@@ -68,38 +56,8 @@ module.exports = serviceLocator => {
       version
     };
 
-    const onCollectDatapoints = doDataTransfer(req, res, next);
-    datapointService.collectDatapoints(options, onCollectDatapoints);
-  }
-
-  function getMatchedDdfqlDatapoints(req, res, next) {
-    logger.debug('URL: \n%s%s', config.LOG_TABS, req.originalUrl);
-
-    const query = req.body;
-    const where = req.body.where;
-    const select = req.body.select.value;
-    const domainGids = req.body.select.key;
-    const headers = _.union(domainGids, select);
-    const sort = req.body.order_by;
-    const groupBy = req.body.group_by;
-    const datasetName = _.first(req.body.dataset);
-    const version = _.first(req.body.version);
-
-    const options = {
-      select,
-      headers,
-      domainGids,
-      where,
-      sort,
-      groupBy,
-      datasetName,
-      version,
-      query
-    };
-
-    const onMatchedDatapoints = doDataTransfer(req, res, next);
-
-    datapointService.collectDatapointsByDdfql(options, onMatchedDatapoints);
+    const onDatapointsCollected = doDataTransfer(req, res, next);
+    datapointService.collectDatapoints(options, onDatapointsCollected);
   }
 
   function doDataTransfer(req, res, next) {

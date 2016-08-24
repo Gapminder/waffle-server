@@ -49,6 +49,7 @@ module.exports = serviceLocator => {
 
     const options = {
       headers,
+      select,
       where,
       sort,
       domainGid,
@@ -56,8 +57,8 @@ module.exports = serviceLocator => {
       version
     };
 
-    const onCollectEntities = doDataTransfer(req, res, next);
-    entitiesService.collectEntities(options, onCollectEntities);
+    const onEntitiesCollected = doDataTransfer(req, res, next);
+    entitiesService.collectEntities(options, onEntitiesCollected);
   }
 
   function doDataTransfer(req, res, next) {

@@ -160,7 +160,8 @@ function isSetFilter(key) {
 }
 
 function isEntityPropertyFilter(key, resolvedProperties) {
-  return _.includes(resolvedProperties, _.replace(key, /^is--/, ''));
+  const normalizedKey = _.chain(key).split('.').first().replace(/^is--/, '').value();
+  return _.includes(resolvedProperties, normalizedKey);
 }
 
 function shouldSubstituteValueWithId(key) {
