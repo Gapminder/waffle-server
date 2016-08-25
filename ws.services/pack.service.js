@@ -91,6 +91,9 @@ function _fromRawDdfToWsJson(data, next) {
     case (!_.isEmpty(rawDdf.concepts)):
       json = wsJsonPack.mapConcepts(rawDdf);
       break;
+    case (!_.isEmpty(rawDdf.schema)):
+      json = wsJsonPack.mapSchema(rawDdf);
+      break;
     default:
       json = {};
       break;

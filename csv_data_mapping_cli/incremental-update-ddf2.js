@@ -12,6 +12,8 @@ const logger = require('../ws.config/log');
 const config = require('../ws.config/config');
 const constants = require('../ws.utils/constants');
 const ddfImportProcess = require('../ws.utils/ddf-import-process');
+
+const createDatasetIndex = require('./create-dataset-index');
 const processConceptChanges = require('./ddf/import/incremental/import-concepts')();
 
 const LIMIT_NUMBER_PROCESS = 10;
@@ -55,7 +57,7 @@ module.exports = function (options, done) {
     getAllPreviousConcepts,
     processEntitiesChanges,
     processDataPointsChanges,
-    common.createDatasetIndex,
+    createDatasetIndex,
     common.closeTransaction
   ], (updateError, pipe) => {
     console.timeEnd('done');
@@ -68,17 +70,6 @@ module.exports = function (options, done) {
     return done(updateError, {datasetName: pipe.dataset.name, version: pipe.transaction.createdAt, transactionId: pipe.transaction._id});
   });
 };
-
-function findUser(pipe, done) {
-  logger.info('find user');
-
-  mongoose.model('Users').findOne({})
-    .lean()
-    .exec((err, res) => {
-      pipe.user = res;
-      return done(err, pipe);
-    });
-}
 
 function getPreviousTransaction(pipe, done) {
   logger.info('get previous transaction');
@@ -226,7 +217,7 @@ function _processEntititesFile(pipe) {
 
       return cb(err);
     });
-  }
+  };
 }
 
 function __parseEntityFilename(pipe, cb) {
@@ -430,7 +421,7 @@ function ____formRawEntities(pipe) {
     let result = _.assign(entity, {originId});
 
     return mapper(result);
-  }
+  };
 }
 
 function processDataPointsChanges(pipe, done) {

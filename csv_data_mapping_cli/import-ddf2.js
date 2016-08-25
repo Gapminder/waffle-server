@@ -3,6 +3,7 @@
 const async = require('async');
 
 const ddfImportProcess = require('../ws.utils/ddf-import-process');
+const createDatasetIndex = require('./create-dataset-index');
 
 const defaultEntityGroupTypes = ['entity_domain', 'entity_set', 'time', 'age'];
 const defaultMeasureTypes = ['measure'];
@@ -39,10 +40,9 @@ module.exports = function (options, done) {
     // common.findLastDataset,
     // common.findLastVersion,
     // common.getAllConcepts,
-    // common.createTranslations,
     // common.findDataPoints,
     // common.updateConceptsDimensions
-    common.createDatasetIndex,
+    createDatasetIndex,
     common.closeTransaction
   ], (importError, pipe) => {
     console.timeEnd('done');
@@ -54,3 +54,4 @@ module.exports = function (options, done) {
     return done(importError, {datasetName: pipe.datasetName, version: pipe.transaction.createdAt, transactionId: pipe.transaction._id});
   });
 };
+

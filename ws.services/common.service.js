@@ -16,7 +16,7 @@ function shouldCompress(req, res) {
   }
 
   // fallback to standard filter function
-  return compression.filter(req, res)
+  return compression.filter(req, res);
 }
 
 function findDefaultDatasetAndTransaction(pipe, done) {

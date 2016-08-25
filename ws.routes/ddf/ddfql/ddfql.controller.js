@@ -7,16 +7,18 @@ const express = require('express');
 const compression = require('compression');
 
 const constants = require('../../../ws.utils/constants');
+const schemaService = require('../../../ws.services/schema.service');
+const commonService = require('../../../ws.services/common.service');
 const entitiesService = require('../entities/entities.service');
 const conceptsService = require('../concepts/concepts.service');
-const datapointService = require('../datapoints/datapoints.service');
-const commonService = require('../../../ws.services/common.service');
-const getCacheConfig = require('../../utils').getCacheConfig;
+const datapointsService = require('../datapoints/datapoints.service');
 const dataPostProcessors = require('../../data-post-processors');
 
 const cache = require('../../../ws.utils/redis-cache');
 const logger = require('../../../ws.config/log');
 const config = require('../../../ws.config/config');
+
+const routeUtils = require('../../utils');
 
 module.exports = serviceLocator => {
   const app = serviceLocator.getApplication();
@@ -26,7 +28,7 @@ module.exports = serviceLocator => {
   router.post('/api/ddf/ql',
     cors(),
     compression({filter: commonService.shouldCompress}),
-    getCacheConfig(constants.DDF_REDIS_CACHE_NAME_DDFQL),
+    routeUtils.getCacheConfig(constants.DDF_REDIS_CACHE_NAME_DDFQL),
     cache.route({expire: constants.DDF_REDIS_CACHE_LIFETIME}),
     getDdfStats,
     dataPostProcessors.gapfilling,
@@ -40,7 +42,7 @@ module.exports = serviceLocator => {
     logger.debug('\nURL: %s\nPOST: %s', req.originalUrl, JSON.stringify(req.body, null, '\t'));
 
     const from = req.body.from;
-    const onEntriesCollected = doDataTransfer(req, res, next);
+    const onEntriesCollected = routeUtils.respondWithRawDdf(req, res, next);
 
     if (!from) {
       return onEntriesCollected(`The filed 'from' must present in query.`);
@@ -69,30 +71,22 @@ module.exports = serviceLocator => {
       query
     };
 
-    switch (from) {
-      case 'datapoints':
-        return datapointService.collectDatapointsByDdfql(options, onEntriesCollected);
-      case 'entities':
-        return entitiesService.collectEntitiesByDdfql(options, onEntriesCollected);
-      case 'concepts':
-        return conceptsService.collectConceptsByDdfql(options, onEntriesCollected);
-      default:
-        return onEntriesCollected(`Value '${from}' in the 'from' field isn't supported yet.`);
-        break;
-    }
-  }
-
-  function doDataTransfer(req, res, next) {
-    return (error, result) => {
-      if (error) {
-        logger.error(error);
-        res.use_express_redis_cache = false;
-        return res.json({success: false, error: error});
-      }
-
-      req.rawData = {rawDdf: result};
-
-      return next();
+    if (from === 'datapoints') {
+      return datapointsService.collectDatapointsByDdfql(options, onEntriesCollected);
+    } else if (from === 'entities') {
+      return entitiesService.collectEntitiesByDdfql(options, onEntriesCollected);
+    } else if (from === 'concepts') {
+      return conceptsService.collectConceptsByDdfql(options, onEntriesCollected);
+    } else if (queryToSchema(from)) {
+      req.query.format = 'wsJson';
+      const onSchemaEntriesFound = routeUtils.respondWithRawDdf(req, res, next);
+      return schemaService.findSchemaByDdfql(options.query, onSchemaEntriesFound);
+    } else {
+      return onEntriesCollected(`Value '${from}' in the 'from' field isn't supported yet.`);
     }
   }
 };
+
+function queryToSchema(from) {
+  return _.endsWith(from, '.schema');
+}
