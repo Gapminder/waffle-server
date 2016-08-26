@@ -25,8 +25,9 @@ module.exports = serviceLocator => {
 
   const router = express.Router();
 
+  router.use(cors());
+
   router.post('/api/ddf/ql',
-    cors(),
     compression({filter: commonService.shouldCompress}),
     routeUtils.getCacheConfig(constants.DDF_REDIS_CACHE_NAME_DDFQL),
     cache.route({expire: constants.DDF_REDIS_CACHE_LIFETIME}),
