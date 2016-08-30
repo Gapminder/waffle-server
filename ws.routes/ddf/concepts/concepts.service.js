@@ -72,8 +72,6 @@ function collectConcepts(options, cb) {
   ], (error, result) => {
     console.timeEnd('finish Concepts stats');
 
-    result.domainGid = pipe.domainGid;
-
     return cb(error, result);
   });
 }
