@@ -110,8 +110,8 @@ test.cb('check GET requests: concepts, entities, datapoints with parameter `form
   const routes = ['concepts', 'datapoints', 'entities'];
   t.plan(routes.length);
 
-  async.forEach(routes, (route, fecb) => {
-    api.get(`/api/ddf/${route}?format=json`)
+  return async.forEach(routes, (route, fecb) => {
+    return api.get(`/api/ddf/${route}?format=json`)
       .set('Accept', 'application/json')
       .expect(200)
       .end((err, res) => {
@@ -120,7 +120,7 @@ test.cb('check GET requests: concepts, entities, datapoints with parameter `form
         return fecb();
       })
   }, (error) => {
-    t.end(error);
+    return t.end(error);
   });
 });
 
@@ -128,8 +128,8 @@ test.cb('check GET requests: concepts, entities, datapoints with parameter `form
   const routes = ['concepts', 'datapoints', 'entities'];
   t.plan(routes.length);
 
-  async.forEach(routes, (route, fecb) => {
-    api.get(`/api/ddf/${route}?format=wsJson`)
+  return async.forEach(routes, (route, fecb) => {
+    return api.get(`/api/ddf/${route}?format=wsJson`)
       .set('Accept', 'application/json')
       .expect(200)
       .end((err, res) => {
@@ -138,16 +138,16 @@ test.cb('check GET requests: concepts, entities, datapoints with parameter `form
         return fecb();
       });
   }, (error) => {
-    t.end(error);
-  })
+    return t.end(error);
+  });
 });
 
 test.cb('check GET requests: concepts, entities, datapoints with parameter `format=ddfJson`, when default dataset wasn\'t set', t => {
   const routes = ['concepts', 'datapoints', 'entities'];
   t.plan(routes.length);
 
-  async.forEach(routes, (route, fecb) => {
-    api.get(`/api/ddf/${route}?format=ddfJson`)
+  return async.forEach(routes, (route, fecb) => {
+    return api.get(`/api/ddf/${route}?format=ddfJson`)
       .set('Accept', 'application/json')
       .expect(200)
       .end((err, res) => {
@@ -156,25 +156,29 @@ test.cb('check GET requests: concepts, entities, datapoints with parameter `form
         return fecb();
       })
   }, (error) => {
-    t.end(error);
+    return t.end(error);
   });
 });
 
-//test.cb('Select concepts on WS endpoint without using query params and having only one version of dataset (right after importing)', t => {
-// api.post(`/api/ddf/ql`)
-//    .send({})
-//    .set('Accept', 'application/json')
-//    .expect(200)
-//   .expect('Content-Type', /application\/json/)
-//    .end((error, res) => {
-//      //t.ifError(error);
-//      if (error) return t.end(error);
-//      t.deepEqual(res.body, 'Default dataset was not set');
-//
-//      t.end();
-//
-//    })
-//});
+test.cb('check POST requests: concepts, entities, datapoints, schemas, when default dataset wasn\'t set', t => {
+  const routes = ['concepts', 'datapoints', 'entities', 'concepts.schema', 'entities.schema', 'datapoints.schema'];
+  t.plan(routes.length);
+
+  return async.forEach(routes, (route, fecb) => {
+    return api.post(`/api/ddf/ql`)
+      .send({from: route})
+      .set('Accept', 'application/json')
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+      .end((error, res) => {
+        t.deepEqual(res.body.error, 'Default dataset was not set');
+
+        return fecb();
+      });
+  }, (error) => {
+    return t.end(error);
+  });
+});
 
 //test.cb('Select concepts on WS endpoint without using query params and having only one version of dataset (right after importing)', t => {
 //  api.get('/api/ddf/concepts?format=wsJson')
