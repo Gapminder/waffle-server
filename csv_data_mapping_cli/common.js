@@ -99,7 +99,7 @@ function createDataset(pipe, done) {
     createdAt: pipe.transaction.createdAt,
     createdBy: pipe.user._id
   }, (err, res) => {
-    pipe.dataset = res;
+    pipe.dataset = res.toObject();
     return done(err, pipe);
   });
 }
@@ -176,26 +176,26 @@ function _getAllConcepts(pipe, done) {
   logger.info('** get all concepts');
 
   mongoose.model('Concepts').find({
-    dataset: pipe.datasetId || pipe.dataset._id,
-    transaction: pipe.transactionId || pipe.transaction._id
+    dataset: pipe.dataset._id,
+    transaction: pipe.transaction._id
   }, null, {
     join: {
       domain: {
         $find: {
           dataset: pipe.dataset._id,
-          transaction: pipe.transactionId || pipe.transaction._id
+          transaction: pipe.transaction._id
         }
       },
       subsetOf: {
         $find: {
           dataset: pipe.dataset._id,
-          transaction: pipe.transactionId || pipe.transaction._id
+          transaction: pipe.transaction._id
         }
       },
       dimensions: {
         $find: {
           dataset: pipe.dataset._id,
-          transaction: pipe.transactionId || pipe.transaction._id
+          transaction: pipe.transaction._id
         }
       }
     }
