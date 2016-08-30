@@ -18,7 +18,7 @@ function normalizeEntities(query, concepts) {
 
 function substituteEntityJoinLinks(query, linksInJoinToValues) {
   traverse(query.where).forEach(function (link) {
-    if (query.join.hasOwnProperty(link)) {
+    if (query.join && query.join.hasOwnProperty(link)) {
       const id = linksInJoinToValues[link];
       this.update(id ? {$in: id} : link);
     }

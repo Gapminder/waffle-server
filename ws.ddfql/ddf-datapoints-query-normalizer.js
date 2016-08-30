@@ -18,7 +18,7 @@ function normalizeDatapoints(query, conceptsToIds) {
 
 function substituteDatapointJoinLinks(query, linksInJoinToValues) {
   traverse(query.where).forEach(function (link) {
-    if (query.join.hasOwnProperty(link)) {
+    if (query.join && query.join.hasOwnProperty(link)) {
       const id = linksInJoinToValues[link];
       this.update(id ? {$in: id} : link);
     }
