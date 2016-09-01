@@ -2,8 +2,9 @@
 
 import test from 'ava';
 import ddfConceptsJsonFormat from './ws.ddf.test.json/concepts.test.json';
-import ddfConceptsWsJsonFormat from './ws.ddf.test.json/concepts.wsjson.format.test.json'
-import ddfConceptsDdfJsonFormat from './ws.ddf.test.json/concepts.ddfjson.format.test.json'
+import ddfConceptsWsJsonFormat from './ws.ddf.test.json/concepts.wsjson.format.test.json';
+import ddfConceptsDdfJsonFormat from './ws.ddf.test.json/concepts.ddfjson.format.test.json';
+import ddfConceptsForPostRequest from './ws.ddf.test.json/ddf--concepts-for-post-request.json';
 
 
 const _ = require('lodash');
@@ -109,7 +110,7 @@ function cleanDatabase(onDatabaseCleaned) {
 //  });
 //});
 
-test.cb('Check GET request concepts with select format=json, when selected by default dataset', t => {
+test.cb('Check GET request: concepts with select format=json, when selected by default dataset', t => {
   t.plan(1);
 
   api.get('/api/ddf/concepts?format=json')
@@ -121,96 +122,53 @@ test.cb('Check GET request concepts with select format=json, when selected by de
     })
 });
 
-test.cb('Check GET request concepts headers with select format=wsJson, when selected by default dataset', t => {
-  t.plan(2);
-
-  const conceptsHeaders = [
-    "description",
-    "unit",
-    "drill_up",
-    "scales",
-    "color",
-    "indicator_url",
-    "domain",
-    "concept_type",
-    "name",
-    "concept"
-  ];
+test.cb('Check GET request: concepts headers with select format=wsJson, when selected by default dataset', t => {
+  t.plan(3);
 
   api.get('/api/ddf/concepts?format=wsJson')
     .set('Accept', 'application/x-ws+json')
     .expect(200)
     .end((err, res) => {
       t.deepEqual(res.body, ddfConceptsWsJsonFormat);
-      t.deepEqual(res.body.headers, conceptsHeaders);
+      t.deepEqual(res.body.headers, ddfConceptsWsJsonFormat.headers);
+      t.deepEqual(res.body.rows, ddfConceptsWsJsonFormat.rows);
 
       t.end();
     })
 });
 
-test.cb('Check GET request concepts with select format=ddfJson, when selected by default dataset', t => {
-  t.plan(3);
+test.cb('Check GET request: concepts with select format=ddfJson, when selected by default dataset', t => {
+  t.plan(5);
 
-  const conceptsValues = [
-    "code",
-    "color",
-    "country",
-    "description",
-    "domain",
-    "drill_up",
-    "epidemic_affected_annual_number",
-    "forest_products_removal_total_dollar",
-    "gapminder_list",
-    "geo",
-    "geographic_regions",
-    "global",
-    "god_id",
-    "gwid",
-    "hourly_compensation_us",
-    "income_per_person_gdppercapita_ppp_inflation_adjusted",
-    "indicator_url",
-    "landlocked",
-    "latitude",
-    "life_expectancy_years",
-    "longitude",
-    "main_religion_2008",
-    "name",
-    "name_long",
-    "name_short",
-    "number",
-    "population_total",
-    "scales",
-    "sg_gdp_p_cap_const_ppp2011_dollar",
-    "sg_gini",
-    "sg_population",
-    "shape_lores_svg",
-    "time",
-    "unit",
-    "world_4region"
-  ];
-
-  const conceptsProperties = [
-    "color",
-    "concept",
-    "concept_type",
-    "description",
-    "domain",
-    "drill_up",
-    "indicator_url",
-    "name",
-    "scales",
-    "unit"
-  ];
   api.get('/api/ddf/concepts?format=ddfJson')
     .set('Accept', 'application/x-ddf+json')
     .expect(200)
     .end((err, res) => {
       t.deepEqual(res.body, ddfConceptsDdfJsonFormat);
-      t.deepEqual(res.body.concepts.values, conceptsValues);
-      t.deepEqual(res.body.concepts.properties, conceptsProperties);
+      t.deepEqual(res.body.concepts.values, ddfConceptsDdfJsonFormat.concepts.values);
+      t.deepEqual(res.body.concepts.properties, ddfConceptsDdfJsonFormat.concepts.properties);
+      t.deepEqual(res.body.concepts.propertyValues, ddfConceptsDdfJsonFormat.concepts.propertyValues);
+      t.deepEqual(res.body.concepts.rows, ddfConceptsDdfJsonFormat.concepts.rows);
 
       t.end();
     })
+});
+
+test.cb('Check POST requests: concepts when default dataset was set', t => {
+  t.plan(5);
+  api.post(`/api/ddf/ql`)
+    .send({from: "concepts"})
+    .set('Accept', 'application/json')
+    .expect(200)
+    .expect('Content-Type', /application\/json/)
+    .end((error, res) => {
+      t.deepEqual(res.body, ddfConceptsForPostRequest);
+      t.deepEqual(res.body.concepts.values, ddfConceptsForPostRequest.concepts.values);
+      t.deepEqual(res.body.concepts.properties, ddfConceptsForPostRequest.concepts.properties);
+      t.deepEqual(res.body.concepts.propertyValues, ddfConceptsForPostRequest.concepts.propertyValues);
+      t.deepEqual(res.body.concepts.rows, ddfConceptsForPostRequest.concepts.rows);
+      t.end();
+    });
 });
 
 //test.cb.after('clean test database', t => {
