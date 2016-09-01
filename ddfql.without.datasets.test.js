@@ -38,7 +38,7 @@ function cleanDatabase(onDatabaseCleaned) {
   }, onDatabaseCleaned);
 }
 
-test.cb('check GET requests: concepts, entities, datapoints with parameter `format=json`, when default dataset wasn\'t set', t => {
+test.skip.cb('check GET requests: concepts, entities, datapoints with parameter `format=json`, when default dataset wasn\'t set', t => {
   const routes = ['concepts', 'datapoints', 'entities'];
   t.plan(routes.length);
 
@@ -56,7 +56,7 @@ test.cb('check GET requests: concepts, entities, datapoints with parameter `form
   });
 });
 
-test.cb('check GET requests: concepts, entities, datapoints with parameter `format=wsJson`, when default dataset wasn\'t set', t => {
+test.skip.cb('check GET requests: concepts, entities, datapoints with parameter `format=wsJson`, when default dataset wasn\'t set', t => {
   const routes = ['concepts', 'datapoints', 'entities'];
   t.plan(routes.length);
 
@@ -74,7 +74,7 @@ test.cb('check GET requests: concepts, entities, datapoints with parameter `form
   });
 });
 
-test.cb('check GET requests: concepts, entities, datapoints with parameter `format=ddfJson`, when default dataset wasn\'t set', t => {
+test.skip.cb('check GET requests: concepts, entities, datapoints with parameter `format=ddfJson`, when default dataset wasn\'t set', t => {
   const routes = ['concepts', 'datapoints', 'entities'];
   t.plan(routes.length);
 
@@ -92,7 +92,7 @@ test.cb('check GET requests: concepts, entities, datapoints with parameter `form
   });
 });
 
-test.cb('check POST requests: concepts, entities, datapoints, schemas, when default dataset wasn\'t set', t => {
+test.skip.cb('check POST requests: concepts, entities, datapoints, schemas, when default dataset wasn\'t set', t => {
   const routes = ['concepts', 'datapoints', 'entities', 'concepts.schema', 'entities.schema', 'datapoints.schema'];
   t.plan(routes.length);
 
