@@ -94,10 +94,11 @@ function _packEntities(rawDdf) {
 
     const conceptMask = _.reduce(conceptIndexs, (result, conceptIndex) => {
       const getConceptGid = (setOriginId) => conceptsByOriginId[setOriginId] && conceptsByOriginId[setOriginId][constants.GID];
+      const domainOriginId = entity.domain.toString();
       const entitySets = _.chain(entity.sets)
         .map(getConceptGid)
         .compact()
-        .concat([conceptsByOriginId[entity.domain][constants.GID]])
+        .concat([conceptsByOriginId[domainOriginId][constants.GID]])
         .value();
       const isExistedRelation = _.includes(entitySets, invertedConceptValues[conceptIndex]);
 

@@ -18,7 +18,8 @@ function ConceptsRepository() {
 module.exports = new RepositoryFactory(ConceptsRepository);
 
 ConceptsRepository.prototype.findConceptsByQuery = function (conceptsQuery, onPropertiesFound) {
-  return Concepts.find(conceptsQuery).lean().exec(onPropertiesFound);
+  const composedQuery = this._composeQuery(conceptsQuery);
+  return Concepts.find(composedQuery).lean().exec(onPropertiesFound);
 };
 
 ConceptsRepository.prototype.findConceptProperties = function (select, where, onPropertiesFound) {

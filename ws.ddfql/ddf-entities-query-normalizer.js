@@ -20,7 +20,8 @@ function substituteEntityJoinLinks(query, linksInJoinToValues) {
   traverse(query.where).forEach(function (link) {
     if (query.join.hasOwnProperty(link)) {
       const id = linksInJoinToValues[link];
-      this.update(id ? {$in: id} : link);
+      const value = id ? {$in: id} : link;
+      _.set(query.where, this.path, value);
     }
   });
   return query;
