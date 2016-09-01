@@ -1,9 +1,12 @@
 'use strict';
 
 import test from 'ava';
+import ddfConceptsJsonFormat from './ws.ddf.test.json/concepts.test.json';
+import ddfConceptsWsJsonFormat from './ws.ddf.test.json/concepts.wsjson.format.test.json'
+import ddfConceptsDdfJsonFormat from './ws.ddf.test.json/concepts.ddfjson.format.test.json'
+
 
 const _ = require('lodash');
-
 const shell = require('shelljs');
 const express = require('express');
 const fs = require('fs');
@@ -64,7 +67,7 @@ function runIncrementalUpdate(onIncrementalUpdateDone) {
   return shell.exec(command, (error) => {
     console.log('** incremental update complete');
 
-    return onIncrementalUpdateDone(error);
+    return setDefaultByCLI(onIncrementalUpdateDone);
   });
 }
 
@@ -73,7 +76,7 @@ function setDefaultByCLI(onSetDefaultByCLIDone) {
   return shell.exec(setDefaultcommand, (error) => {
     console.log('** chose default set');
 
-    //return onSetDefaultByCLIDone(error);
+    return onSetDefaultByCLIDone(error);
   })
 }
 
@@ -106,97 +109,109 @@ function cleanDatabase(onDatabaseCleaned) {
 //  });
 //});
 
-test.cb('check GET requests: concepts, entities, datapoints with parameter `format=json`, when default dataset wasn\'t set', t => {
-  const routes = ['concepts', 'datapoints', 'entities'];
-  t.plan(routes.length);
+test.cb('Check GET request concepts with select format=json, when selected by default dataset', t => {
+  t.plan(1);
 
-  return async.forEach(routes, (route, fecb) => {
-    return api.get(`/api/ddf/${route}?format=json`)
-      .set('Accept', 'application/json')
-      .expect(200)
-      .end((err, res) => {
-        t.deepEqual(res.body.error, 'Default dataset was not set');
-
-        return fecb();
-      })
-  }, (error) => {
-    return t.end(error);
-  });
+  api.get('/api/ddf/concepts?format=json')
+    .set('Accept', 'application/x-json')
+    .expect(200)
+    .end((err, res) => {
+      t.deepEqual(res.body, ddfConceptsJsonFormat);
+      t.end();
+    })
 });
 
-test.cb('check GET requests: concepts, entities, datapoints with parameter `format=wsJson`, when default dataset wasn\'t set', t => {
-  const routes = ['concepts', 'datapoints', 'entities'];
-  t.plan(routes.length);
+test.cb('Check GET request concepts headers with select format=wsJson, when selected by default dataset', t => {
+  t.plan(2);
 
-  return async.forEach(routes, (route, fecb) => {
-    return api.get(`/api/ddf/${route}?format=wsJson`)
-      .set('Accept', 'application/json')
-      .expect(200)
-      .end((err, res) => {
-        t.deepEqual(res.body.error, 'Default dataset was not set');
+  const conceptsHeaders = [
+    "description",
+    "unit",
+    "drill_up",
+    "scales",
+    "color",
+    "indicator_url",
+    "domain",
+    "concept_type",
+    "name",
+    "concept"
+  ];
 
-        return fecb();
-      });
-  }, (error) => {
-    return t.end(error);
-  });
+  api.get('/api/ddf/concepts?format=wsJson')
+    .set('Accept', 'application/x-ws+json')
+    .expect(200)
+    .end((err, res) => {
+      t.deepEqual(res.body, ddfConceptsWsJsonFormat);
+      t.deepEqual(res.body.headers, conceptsHeaders);
+
+      t.end();
+    })
 });
 
-test.cb('check GET requests: concepts, entities, datapoints with parameter `format=ddfJson`, when default dataset wasn\'t set', t => {
-  const routes = ['concepts', 'datapoints', 'entities'];
-  t.plan(routes.length);
+test.cb('Check GET request concepts with select format=ddfJson, when selected by default dataset', t => {
+  t.plan(3);
 
-  return async.forEach(routes, (route, fecb) => {
-    return api.get(`/api/ddf/${route}?format=ddfJson`)
-      .set('Accept', 'application/json')
-      .expect(200)
-      .end((err, res) => {
-        t.deepEqual(res.body.error, 'Default dataset was not set');
+  const conceptsValues = [
+    "code",
+    "color",
+    "country",
+    "description",
+    "domain",
+    "drill_up",
+    "epidemic_affected_annual_number",
+    "forest_products_removal_total_dollar",
+    "gapminder_list",
+    "geo",
+    "geographic_regions",
+    "global",
+    "god_id",
+    "gwid",
+    "hourly_compensation_us",
+    "income_per_person_gdppercapita_ppp_inflation_adjusted",
+    "indicator_url",
+    "landlocked",
+    "latitude",
+    "life_expectancy_years",
+    "longitude",
+    "main_religion_2008",
+    "name",
+    "name_long",
+    "name_short",
+    "number",
+    "population_total",
+    "scales",
+    "sg_gdp_p_cap_const_ppp2011_dollar",
+    "sg_gini",
+    "sg_population",
+    "shape_lores_svg",
+    "time",
+    "unit",
+    "world_4region"
+  ];
 
-        return fecb();
-      })
-  }, (error) => {
-    return t.end(error);
-  });
+  const conceptsProperties = [
+    "color",
+    "concept",
+    "concept_type",
+    "description",
+    "domain",
+    "drill_up",
+    "indicator_url",
+    "name",
+    "scales",
+    "unit"
+  ];
+  api.get('/api/ddf/concepts?format=ddfJson')
+    .set('Accept', 'application/x-ddf+json')
+    .expect(200)
+    .end((err, res) => {
+      t.deepEqual(res.body, ddfConceptsDdfJsonFormat);
+      t.deepEqual(res.body.concepts.values, conceptsValues);
+      t.deepEqual(res.body.concepts.properties, conceptsProperties);
+
+      t.end();
+    })
 });
-
-test.cb('check POST requests: concepts, entities, datapoints, schemas, when default dataset wasn\'t set', t => {
-  const routes = ['concepts', 'datapoints', 'entities', 'concepts.schema', 'entities.schema', 'datapoints.schema'];
-  t.plan(routes.length);
-
-  return async.forEach(routes, (route, fecb) => {
-    return api.post(`/api/ddf/ql`)
-      .send({from: route})
-      .set('Accept', 'application/json')
-      .expect(200)
-      .expect('Content-Type', /application\/json/)
-      .end((error, res) => {
-        t.deepEqual(res.body.error, 'Default dataset was not set');
-
-        return fecb();
-      });
-  }, (error) => {
-    return t.end(error);
-  });
-});
-
-//test.cb('Select concepts on WS endpoint without using query params and having only one version of dataset (right after importing)', t => {
-//  api.get('/api/ddf/concepts?format=wsJson')
-//    .set('Accept', 'application/json')
-//    .expect(200)
-//    .end((err, res) => {
-//      //console.log(res.body);
-//      t.deepEqual(res.body, undefined);
-//      //t.is(res.body).to.be.not.empty;
-//      //t.is(res.body).to.have.property('concepts');
-//      //t.is(res.body.concepts).to.have.property('values');
-//      //t.is(res.body.concepts).to.have.property('properties');
-//      //t.is(res.body.concepts).to.have.property('propertyValues');
-//      //t.is(res.body.concepts).to.have.property('rows');
-//      //t.is(res.body.concepts.values).to.include.members(expectedValues);
-//      t.end();
-//    })
-//});
 
 //test.cb.after('clean test database', t => {
 //  return cleanDatabase(t.end);
