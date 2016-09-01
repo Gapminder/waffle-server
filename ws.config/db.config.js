@@ -2,6 +2,7 @@
 const mongoose = require('mongoose');
 const config = require('./config');
 
+mongoose.Promise = require('bluebird');
 const db = mongoose.connection;
 mongoose.set('debug', config.MONGOOSE_DEBUG);
 mongoose.connect(config.MONGODB_URL);
