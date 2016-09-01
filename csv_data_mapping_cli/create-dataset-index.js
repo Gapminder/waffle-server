@@ -155,11 +155,11 @@ function _generateDatasetIndexFromDatapoints(pipe, done) {
     function (item, key, completeSearchForDatapoints) {
 
       const keyValuePair = getKeyValuePair(item);
-      const itemExists = pipe.datasetIndex.find(arrayItem => arrayItem.key == keyValuePair.key && arrayItem.value == keyValuePair.value);
+      const existedItem = pipe.datasetIndex.find(arrayItem => arrayItem.key == keyValuePair.key && arrayItem.value == keyValuePair.value);
 
       // check that item not exists
-      if (itemExists) {
-        pipe.datasetIndex[itemExists].file.push(item);
+      if (existedItem) {
+        existedItem.file.push(item);
       } else {
         pipe.datasetIndex.push({
           key: keyValuePair.key,
@@ -177,10 +177,12 @@ function _generateDatasetIndexFromDatapoints(pipe, done) {
   );
 
   function getKeyValuePair(item) {
-    const parseFilename = common.getMeasureDimensionFromFilename(item);
+    const parsedFilename = common.getMeasureDimensionFromFilename(item);
+
+    // FIXME: value should be array because we have multiple measures per file
     return {
-      key: parseFilename.dimension.join(','),
-      value: _.first(parseFilename.measure)
+      key: parsedFilename.dimensions.join(','),
+      value: _.first(parsedFilename.measures)
     };
   }
 }
