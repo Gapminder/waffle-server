@@ -120,8 +120,10 @@ function createConcepts(pipe, done) {
 
   logger.info('start process creating concepts');
 
+  const filename = 'ddf--concepts.csv';
+  const options = {transaction: pipe.transaction, dataset: pipe.dataset, resolvePath: pipe.resolvePath, filename};
   return async.waterfall([
-    async.constant({transaction: pipe.transaction, dataset: pipe.dataset, resolvePath: pipe.resolvePath}),
+    async.constant(options),
     _loadConcepts,
     _createConcepts,
     _getAllConcepts,
@@ -137,7 +139,7 @@ function createConcepts(pipe, done) {
 function _loadConcepts(pipe, done) {
   logger.info('** load concepts');
 
-  return readCsvFile(pipe.resolvePath('ddf--concepts.csv'), {}, (err, res) => {
+  return readCsvFile(pipe.resolvePath(pipe.filename), {}, (err, res) => {
     let concepts = _.map(res, mapDdfConceptsToWsModel(pipe));
     let uniqConcepts = _.uniqBy(concepts, 'gid');
 
@@ -514,8 +516,12 @@ function createDataPoints(pipe, done) {
 function getMeasureDimensionFromFilename (filename) {
   let parsedFileName = filename.replace(/^ddf--datapoints--|\.csv$/g, '').split('--by--');
   return {
-    measure: _.first(parsedFileName).split('--'),
-    dimension: _.last(parsedFileName).split('--')
+    measures: _.first(parsedFileName).split('--'),
+    dimensions: _.chain(parsedFileName)
+      .last()
+      .split('--')
+      .map(dimension => _.first(dimension.split('-')))
+      .value()
   };
 }
 
@@ -523,8 +529,8 @@ function _parseFilename(pipe, cb) {
   logger.info(`** parse filename '${pipe.filename}'`);
 
   const parseFilename = getMeasureDimensionFromFilename(pipe.filename);
-  const measureGids = parseFilename.measure;
-  const dimensionGids = parseFilename.dimension;
+  const measureGids = parseFilename.measures;
+  const dimensionGids = parseFilename.dimensions;
 
   pipe.measures = _.merge(_.pick(pipe.previousConcepts, measureGids), _.pick(pipe.concepts, measureGids));
   pipe.dimensions = _.merge(_.pick(pipe.previousConcepts, dimensionGids), _.pick(pipe.concepts, dimensionGids));
@@ -774,6 +780,7 @@ function mapDdfConceptsToWsModel(pipe) {
       subsetOf: [],
       dimensions: [],
 
+      sources: [pipe.filename],
       from: pipe.transaction.createdAt,
       to: constants.MAX_VERSION,
       dataset: pipe.dataset._id,
@@ -901,6 +908,7 @@ function mapDdfDataPointToWsModel(pipe) {
           isNumeric: _.isNumber(entry[measureGid]),
           from: pipe.transaction.createdAt,
           dataset: pipe.dataset._id,
+          sources: [pipe.filename],
           transaction: pipe.transactionId || pipe.transaction._id
         };
       })
