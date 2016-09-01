@@ -157,6 +157,7 @@ function applyChangesToConcepts(changedConcepts) {
     return async.forEachOfLimit(changedConcepts, constants.LIMIT_NUMBER_PROCESS, (changesToConcept, gid, onChangesApplied) => {
       const originalConceptQuery = {
         dataset: pipe.external.dataset._id,
+        transaction: pipe.external.transaction._id,
         from: {$lt: pipe.external.transaction.createdAt},
         to: constants.MAX_VERSION,
         gid: gid
@@ -169,7 +170,7 @@ function applyChangesToConcepts(changedConcepts) {
           return onChangesApplied(error);
         }
 
-        const updatedConcept = mergeConcepts(originalConcept, changesToConcept, pipe.external.transaction.createdAt);
+        const updatedConcept = mergeConcepts(originalConcept, changesToConcept, pipe.external.transaction);
         return mongoose.model('Concepts').create(updatedConcept, onChangesApplied);
       });
     }, error => {
@@ -200,7 +201,7 @@ function applyUpdatesToConcepts(changedConcepts, removedProperties) {
 
           const updates = changedConcepts[closedOriginalConcept.gid];
 
-          let updatedConcept = mergeConcepts(closedOriginalConcept, updates, pipe.external.transaction.createdAt);
+          let updatedConcept = mergeConcepts(closedOriginalConcept, updates, pipe.external.transaction);
           updatedConcept = omitRemovedProperties(updatedConcept, removedProperties);
           updatedConcept.properties = omitRemovedProperties(updatedConcept.properties, removedProperties);
 
@@ -313,8 +314,9 @@ function mergeConcepts(originalConcept, changesToConcept, currentVersion) {
   });
 
   updatedConcept = _.omit(updatedConcept, ['concept', 'drill_up', '_id', 'subsetOf', 'domain']);
-  updatedConcept.from = currentVersion;
+  updatedConcept.from = currentVersion.createdAt;
   updatedConcept.to = constants.MAX_VERSION;
+  updatedConcept.transaction = currentVersion._id;
   return updatedConcept;
 }
 

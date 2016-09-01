@@ -97,10 +97,13 @@ function normalizeJoin(query) {
 
     if (isEntityPropertyFilter(this.key, query)) {
       if (_.includes(this.path, 'where')) {
-        // const concept = _.first(_.split(this.key, '.'));
-        // const key = this.key.replace(`${concept}.`, '');
+        // TODO: `^${domainKey}\.` is just hack for temporary support of current query from Vizabi. It will be removed.
+        let domainPath = _.slice(this.path, 0, this.path.indexOf('where')).concat(['domain']);
+        const domainKey = _.get(query.join, domainPath);
+
+        const key = this.key.replace(new RegExp(`^${domainKey}\.`), '');
         normalizedFilter = {
-          [`properties.${this.key}`]: filterValue,
+          [`properties.${key}`]: filterValue,
         };
       }
     }
