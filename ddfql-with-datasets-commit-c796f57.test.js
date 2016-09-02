@@ -1,10 +1,11 @@
 'use strict';
 
 import test from 'ava';
-import ddfConceptsJsonFormat from './ws.ddf.test.json/concepts.test.json';
-import ddfConceptsWsJsonFormat from './ws.ddf.test.json/concepts.wsjson.format.test.json';
-import ddfConceptsDdfJsonFormat from './ws.ddf.test.json/concepts.ddfjson.format.test.json';
+import ddfConceptsJsonFormat from './ws.ddf.test.json/concepts-test.json';
+import ddfConceptsWsJsonFormat from './ws.ddf.test.json/concepts-wsjson-format-test.json';
+import ddfConceptsDdfJsonFormat from './ws.ddf.test.json/concepts-ddfjson-format-test.json';
 import ddfConceptsForPostRequest from './ws.ddf.test.json/ddf--concepts-for-post-request.json';
+import ddfDatapointsSelectSgPopulation from './ws.ddf.test.json/ddf--datapoints-sg_populations-only.json';
 
 
 const _ = require('lodash');
@@ -110,7 +111,7 @@ function cleanDatabase(onDatabaseCleaned) {
 //  });
 //});
 
-test.cb('Check GET request: concepts with select format=json, when selected by default dataset', t => {
+test.cb('Check GET request: concepts with select format=json, when default dataset was set', t => {
   t.plan(1);
 
   api.get('/api/ddf/concepts?format=json')
@@ -122,7 +123,24 @@ test.cb('Check GET request: concepts with select format=json, when selected by d
     })
 });
 
-test.cb('Check GET request: concepts headers with select format=wsJson, when selected by default dataset', t => {
+test.cb('Check GET request: datapoints with select=sg_population&key=geo,time, when default dataset was set', t => {
+  t.plan(4);
+
+  let datapointsUniqueValues = _.union(ddfDatapointsSelectSgPopulation.sg_population).length;
+
+  api.get('/api/ddf/datapoints?select=sg_population&key=geo,time')
+    .set('Accept', 'application/x-json')
+    .expect(200)
+    .end((err, res) => {
+      t.deepEqual(res.body.datapoints.values.length, datapointsUniqueValues);
+      t.deepEqual(res.body.datapoints.indicators, ["30"]);
+      t.deepEqual(res.body.datapoints.dimensions, ["9", "32"]);
+      t.deepEqual(res.body.datapoints.rows.length, ddfDatapointsSelectSgPopulation.sg_population.length);
+      t.end();
+    })
+});
+
+test.cb('Check GET request: concepts headers with select format=wsJson, when default dataset was set', t => {
   t.plan(3);
 
   api.get('/api/ddf/concepts?format=wsJson')
@@ -137,7 +155,7 @@ test.cb('Check GET request: concepts headers with select format=wsJson, when sel
     })
 });
 
-test.cb('Check GET request: concepts with select format=ddfJson, when selected by default dataset', t => {
+test.cb('Check GET request: concepts with select format=ddfJson, when default dataset was set', t => {
   t.plan(5);
 
   api.get('/api/ddf/concepts?format=ddfJson')
