@@ -7,6 +7,8 @@ import ddfConceptsDdfJsonFormat from './ws.ddf.test.json/concepts-ddfjson-format
 import ddfConceptsForPostRequest from './ws.ddf.test.json/ddf--concepts-for-post-request.json';
 import ddfDatapointsSelectSgPopulation from './ws.ddf.test.json/ddf--datapoints-sg_populations-only.json';
 import ddfEntitiesCountryJsonFormat from './ws.ddf.test.json/ddf--entities-json-format.json'
+import ddfEntitiesCountryWsJsonFormat from './ws.ddf.test.json/ddf--entities-wsjson-format.json';
+import ddfEntitiesCountryDdfJsonFormat from './ws.ddf.test.json/ddf--entities-ddfjson-format.json';
 
 const _ = require('lodash');
 const shell = require('shelljs');
@@ -174,11 +176,41 @@ test.cb('Check GET request: for datapoints with select=sg_population&key=geo,tim
 });
 
 test.cb('Check GET request: for entities with selected format=json, when default dataset was set', t => {
+  t.plan(1);
   api.get('/api/ddf/entities?format=json&key=geo&geo.is--country=true')
     .set('Accept', 'application/x-json')
     .expect(200)
     .end((err, res) => {
       t.deepEqual(res.body, ddfEntitiesCountryJsonFormat);
+
+      t.end();
+    })
+});
+
+test.cb('Check GET request: for entities with selected format=wsJson, when default dataset was set', t => {
+  t.plan(2);
+  api.get('/api/ddf/entities?format=wsJson&key=geo&geo.is--country=true')
+    .set('Accept', 'application/x-ws+json')
+    .expect(200)
+    .end((err, res) => {
+      t.deepEqual(res.body.headers, ddfEntitiesCountryWsJsonFormat.headers);
+      t.deepEqual(res.body.rows, ddfEntitiesCountryWsJsonFormat.rows);
+
+      t.end();
+    })
+});
+
+test.cb('Check GET request: for entities with selected format=ddfJson, when default dataset was set', t => {
+  t.plan(5);
+  api.get('/api/ddf/entities?format=ddfJson&key=geo&geo.is--country=true')
+    .set('Accept', 'application/x-ddf+json')
+    .expect(200)
+    .end((err, res) => {
+      t.deepEqual(res.body.values, ddfEntitiesCountryDdfJsonFormat.values);
+      t.deepEqual(res.body.properties, ddfEntitiesCountryDdfJsonFormat.properties);
+      t.deepEqual(res.body.entities.concepts, ddfEntitiesCountryDdfJsonFormat.entities.concepts);
+      t.deepEqual(res.body.propertyValues, ddfEntitiesCountryDdfJsonFormat.propertyValues);
+      t.deepEqual(res.body.rows, ddfEntitiesCountryDdfJsonFormat.rows);
 
       t.end();
     })
@@ -201,6 +233,25 @@ test.cb('Check POST requests: concepts when default dataset was set', t => {
       t.end();
     });
 });
+
+test.cb('Check POST requests: datapoints when default dataset was set', t => {
+  t.plan(5);
+  api.post(`/api/ddf/ql`)
+    .send({from: "concepts"})
+    .set('Accept', 'application/json')
+    .expect(200)
+    .expect('Content-Type', /application\/json/)
+    .end((error, res) => {
+      t.deepEqual(res.body, ddfConceptsForPostRequest);
+      t.deepEqual(res.body.concepts.values, ddfConceptsForPostRequest.concepts.values);
+      t.deepEqual(res.body.concepts.properties, ddfConceptsForPostRequest.concepts.properties);
+      t.deepEqual(res.body.concepts.propertyValues, ddfConceptsForPostRequest.concepts.propertyValues);
+      t.deepEqual(res.body.concepts.rows, ddfConceptsForPostRequest.concepts.rows);
+
+      t.end();
+    });
+});
+
 
 //test.cb.after('clean test database', t => {
 //  return cleanDatabase(t.end);
