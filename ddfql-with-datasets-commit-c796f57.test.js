@@ -6,7 +6,7 @@ import ddfConceptsWsJsonFormat from './ws.ddf.test.json/concepts-wsjson-format-t
 import ddfConceptsDdfJsonFormat from './ws.ddf.test.json/concepts-ddfjson-format-test.json';
 import ddfConceptsForPostRequest from './ws.ddf.test.json/ddf--concepts-for-post-request.json';
 import ddfDatapointsSelectSgPopulation from './ws.ddf.test.json/ddf--datapoints-sg_populations-only.json';
-
+import ddfEntitiesCountryJsonFormat from './ws.ddf.test.json/ddf--entities-json-format.json'
 
 const _ = require('lodash');
 const shell = require('shelljs');
@@ -119,23 +119,7 @@ test.cb('Check GET request: concepts with select format=json, when default datas
     .expect(200)
     .end((err, res) => {
       t.deepEqual(res.body, ddfConceptsJsonFormat);
-      t.end();
-    })
-});
 
-test.cb('Check GET request: datapoints with select=sg_population&key=geo,time, when default dataset was set', t => {
-  t.plan(4);
-
-  let datapointsUniqueValues = _.union(ddfDatapointsSelectSgPopulation.sg_population).length;
-
-  api.get('/api/ddf/datapoints?select=sg_population&key=geo,time')
-    .set('Accept', 'application/x-json')
-    .expect(200)
-    .end((err, res) => {
-      t.deepEqual(res.body.datapoints.values.length, datapointsUniqueValues);
-      t.deepEqual(res.body.datapoints.indicators, ["30"]);
-      t.deepEqual(res.body.datapoints.dimensions, ["9", "32"]);
-      t.deepEqual(res.body.datapoints.rows.length, ddfDatapointsSelectSgPopulation.sg_population.length);
       t.end();
     })
 });
@@ -172,6 +156,34 @@ test.cb('Check GET request: concepts with select format=ddfJson, when default da
     })
 });
 
+test.cb('Check GET request: for datapoints with select=sg_population&key=geo,time, when default dataset was set', t => {
+  t.plan(4);
+  let datapointsUniqueValues = _.union(ddfDatapointsSelectSgPopulation.sg_population).length;
+
+  api.get('/api/ddf/datapoints?select=sg_population&key=geo,time')
+    .set('Accept', 'application/x-json')
+    .expect(200)
+    .end((err, res) => {
+      t.deepEqual(res.body.datapoints.values.length, datapointsUniqueValues);
+      t.deepEqual(res.body.datapoints.indicators, ["30"]);
+      t.deepEqual(res.body.datapoints.dimensions, ["9", "32"]);
+      t.deepEqual(res.body.datapoints.rows.length, ddfDatapointsSelectSgPopulation.sg_population.length);
+
+      t.end();
+    })
+});
+
+test.cb('Check GET request: for entities with selected format=json, when default dataset was set', t => {
+  api.get('/api/ddf/entities?format=json&key=geo&geo.is--country=true')
+    .set('Accept', 'application/x-json')
+    .expect(200)
+    .end((err, res) => {
+      t.deepEqual(res.body, ddfEntitiesCountryJsonFormat);
+
+      t.end();
+    })
+});
+
 test.cb('Check POST requests: concepts when default dataset was set', t => {
   t.plan(5);
   api.post(`/api/ddf/ql`)
@@ -185,6 +197,7 @@ test.cb('Check POST requests: concepts when default dataset was set', t => {
       t.deepEqual(res.body.concepts.properties, ddfConceptsForPostRequest.concepts.properties);
       t.deepEqual(res.body.concepts.propertyValues, ddfConceptsForPostRequest.concepts.propertyValues);
       t.deepEqual(res.body.concepts.rows, ddfConceptsForPostRequest.concepts.rows);
+
       t.end();
     });
 });
