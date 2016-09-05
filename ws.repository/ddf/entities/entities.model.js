@@ -26,7 +26,7 @@ const originId = require('../origin-id.plugin');
  * @property {Models.DatasetTransactions} transaction - reference
  */
 let Entities = new Schema({
-  gid: {type: String, match: /^[a-zA-Z0-9\/\._-]*$/, index: true, required: true},
+  gid: {type: Schema.Types.Mixed, match: /^[a-zA-Z0-9\/\._-]*$/, index: true, required: true},
   originId: {type: Schema.Types.ObjectId},
 
   title: String,
