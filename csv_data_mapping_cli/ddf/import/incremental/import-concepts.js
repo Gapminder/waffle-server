@@ -157,7 +157,6 @@ function applyChangesToConcepts(changedConcepts) {
     return async.forEachOfLimit(changedConcepts, constants.LIMIT_NUMBER_PROCESS, (changesToConcept, gid, onChangesApplied) => {
       const originalConceptQuery = {
         dataset: pipe.external.dataset._id,
-        transaction: pipe.external.transaction._id,
         from: {$lt: pipe.external.transaction.createdAt},
         to: constants.MAX_VERSION,
         gid: gid
@@ -288,7 +287,7 @@ function getGid(conceptChange) {
   return conceptChange[conceptChange.gid];
 }
 
-function mergeConcepts(originalConcept, changesToConcept, currentVersion) {
+function mergeConcepts(originalConcept, changesToConcept, currentTransaction) {
   let updatedConcept = _.mergeWith(originalConcept, changesToConcept, (originalValue, changedValue, property) => {
     if (property === 'concept') {
       originalConcept.gid = changedValue;
@@ -314,9 +313,9 @@ function mergeConcepts(originalConcept, changesToConcept, currentVersion) {
   });
 
   updatedConcept = _.omit(updatedConcept, ['concept', 'drill_up', '_id', 'subsetOf', 'domain']);
-  updatedConcept.from = currentVersion.createdAt;
+  updatedConcept.from = currentTransaction.createdAt;
   updatedConcept.to = constants.MAX_VERSION;
-  updatedConcept.transaction = currentVersion._id;
+  updatedConcept.transaction = currentTransaction._id;
   return updatedConcept;
 }
 
