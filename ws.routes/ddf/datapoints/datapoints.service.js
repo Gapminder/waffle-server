@@ -64,12 +64,18 @@ function normalizeQueriesToDatapointsByDdfql(pipe, cb) {
     .keyBy('gid')
     .mapValues('originId')
     .value();
-  const normlizedQuery = ddfql.normalizeDatapoints(pipe.query, conceptsByGids);
 
-  return async.mapLimit(normlizedQuery.join, 10, (item, mcb) => {
+  const timeConcepts = _.chain(pipe.concepts)
+    .filter(concept => _.get(concept, 'properties.concept_type') === 'time')
+    .map('gid')
+    .value();
+
+  const normalizedQuery = ddfql.normalizeDatapoints(pipe.query, conceptsByGids, timeConcepts);
+
+  return async.mapLimit(normalizedQuery.join, 10, (item, mcb) => {
     return entitiesRepository.findEntityPropertiesByQuery(item, (error, entities) => mcb(error, _.map(entities, 'originId')));
   }, (err, substituteJoinLinks) => {
-    const promotedQuery = ddfql.substituteDatapointJoinLinks(normlizedQuery, substituteJoinLinks);
+    const promotedQuery = ddfql.substituteDatapointJoinLinks(normalizedQuery, substituteJoinLinks);
     const subDatapointQuery = promotedQuery.where;
 
     return queryDatapointsByDdfql(pipe, subDatapointQuery, (err, pipe) => {

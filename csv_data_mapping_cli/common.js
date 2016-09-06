@@ -11,12 +11,12 @@ const mongoose = require('mongoose');
 const constants = require('../ws.utils/constants');
 const reposService = require('../ws.services/repos.service');
 
-// geo mapping
-const geoMapping = require('./geo-mapping.json');
 const defaultEntityGroupTypes = ['entity_domain', 'entity_set', 'time', 'age'];
 
 const logger = require('../ws.config/log');
 const config = require('../ws.config/config');
+
+const ddfTimeUtils = require('ddf-time-utils');
 
 module.exports = {
   resolvePathToDdfFolder,
@@ -563,14 +563,14 @@ function __processRawDataPoints(pipe, cb) {
     let dictionary = _.keyBy(pipe.entities, 'gid');
     let gids = new Set();
     let entities = _.chain(res)
-      .reduce((result, entity) => {
+      .reduce((result, datapoint) => {
         _.each(pipe.dimensions, (concept) => {
           let domain = concept.domain || concept;
 
-          if (!dictionary[entity[concept.gid]] && !gids.has(entity[concept.gid])) {
-            let mappedEntity = mapDdfEntityToWsModel(entity, concept, domain, pipe);
+          if (!dictionary[datapoint[concept.gid]] && !gids.has(datapoint[concept.gid])) {
+            let mappedEntity = mapDdfEntityToWsModel(datapoint, concept, domain, pipe);
             result.push(mappedEntity);
-            gids.add(entity[concept.gid]);
+            gids.add(datapoint[concept.gid]);
           }
         });
 
@@ -750,7 +750,6 @@ function findDataPoints(pipe, done) {
   })
     .populate('dataset')
     .populate('transaction')
-    // .limit(5)
     .lean()
     .exec((err, res) => {
       console.timeEnd('find all datapoints');
@@ -792,7 +791,7 @@ function mapDdfConceptsToWsModel(pipe) {
 
 function mapDdfOriginalEntityToWsModel(pipe) {
   return (entry) => {
-    let gid = passGeoMapping(pipe, entry);
+    let gid = getGid(pipe, entry);
     let resolvedColumns = mapResolvedColumns(entry);
     let resolvedSets = mapResolvedSets(pipe, resolvedColumns);
     let _entry = _.mapValues(entry, property => {
@@ -814,7 +813,7 @@ function mapDdfOriginalEntityToWsModel(pipe) {
 
     const domainOriginId = _.get(pipe, 'entityDomain.originId', pipe.entityDomain);
 
-    return {
+    const entity = {
       gid: gid,
       title: _entry.name,
       sources: [pipe.filename],
@@ -828,15 +827,15 @@ function mapDdfOriginalEntityToWsModel(pipe) {
       dataset: pipe.dataset._id,
       transaction: pipe.transactionId || pipe.transaction._id
     };
+
+    return setTypeAndMillisForTimeEntity(pipe.entityDomain, gid, entity);
   };
 }
 
 function mapDdfEntityToWsModel(entity, concept, domain, pipe) {
-  let gid = process.env.USE_GEO_MAPPING === 'true' ? geoMapping[entity.gid] || entity.gid : entity.gid;
-
-  return {
-    gid: entity[concept.gid],
-    title: gid,
+  const gid = entity[concept.gid];
+  const wsEntity = {
+    gid: gid,
     sources: [pipe.filename],
     properties: entity,
 
@@ -849,6 +848,17 @@ function mapDdfEntityToWsModel(entity, concept, domain, pipe) {
     dataset: pipe.dataset._id,
     transaction: pipe.transactionId || pipe.transaction._id
   };
+
+  return setTypeAndMillisForTimeEntity(concept, gid, wsEntity);
+}
+
+function setTypeAndMillisForTimeEntity(concept, gid, entity) {
+  if (_.get(concept, 'properties.concept_type') === 'time') {
+    const timeDescriptor = ddfTimeUtils.parseTime(gid);
+    entity.millis = _.get(timeDescriptor, 'time');
+    entity.timeType = _.get(timeDescriptor, 'type');
+  }
+  return entity;
 }
 
 function mapResolvedSets(pipe, resolvedGids) {
@@ -952,16 +962,14 @@ function reduceUniqueNestedValues(data, propertyName) {
     .value();
 }
 
-function passGeoMapping(pipe, entry) {
+function getGid(pipe, entry) {
   let _value = entry[pipe.entitySet.gid] || (pipe.entitySet.domain && entry[pipe.entitySet.domain.gid]);
 
   if (!_value) {
     logger.warn(`Either '${pipe.entitySet.gid}' or '${pipe.entitySet.domain && pipe.entitySet.domain.gid}' columns weren't found in file '${pipe.filename}'`);
   }
 
-  let gid = process.env.USE_GEO_MAPPING === 'true' ? geoMapping[_value] || _value : _value;
-
-  return gid;
+  return _value;
 }
 
 function flatEntityRelations(pipe) {

@@ -101,16 +101,259 @@ test('should normalize where and join clauses', assert => {
       },
       "$time": {
         "domain": "time",
-        "gid": {"$lt": 2015}
+        "timeType": "YEAR_TYPE",
+        "millis": {
+          "$lt": 1420070400000
+        }
       },
       "$time2": {
         "domain": "time",
-        "gid": {"$eq": 1918}
+        "timeType": "YEAR_TYPE",
+        "millis": {
+          "$eq": -1640995200000
+        }
       }
     }
   };
 
-  assert.deepEqual(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql), normalizedDdfql);
+  assert.deepEqual(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, ['time']), normalizedDdfql);
+});
+
+test('should normalize where and join clauses - QUARTER time type should be parsed', assert => {
+  const ddfql = {
+    "select": {
+      "key": ["geo", "time"],
+      "value": [
+        "population", "life_expectancy", "gdp_per_cap", "gov_type"
+      ]
+    },
+    "from": "datapoints",
+    "where": {
+      "$and": [
+        {"time": "$time"},
+      ]
+    },
+    "join": {
+      "$time": {
+        "key": "time",
+        "where": {
+          "time": {"$lt": '2015q3'}
+        }
+      },
+    }
+  };
+
+  const normalizedDdfql = {
+    "select": {
+      "key": ["geo", "time"],
+      "value": [
+        "population", "life_expectancy", "gdp_per_cap", "gov_type"
+      ]
+    },
+    "from": "datapoints",
+    "where": {
+      "$and": [
+        {"dimensions": {"$size": 2}},
+        {
+          "$and": [
+            {"dimensions": "$time"},
+          ]
+        }
+      ]
+    },
+    "join": {
+      "$time": {
+        "domain": "time",
+        "timeType": "QUARTER_TYPE",
+        "millis": {"$lt": 1435708800000}
+      }
+    }
+  };
+
+  assert.deepEqual(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, ['time']), normalizedDdfql);
+});
+
+test('should normalize where and join clauses - YEAR time type should be parsed', assert => {
+  const ddfql = {
+    "select": {
+      "key": ["geo", "time"],
+      "value": [
+        "population", "life_expectancy", "gdp_per_cap", "gov_type"
+      ]
+    },
+    "from": "datapoints",
+    "where": {
+      "$and": [
+        {"time": "$time"},
+      ]
+    },
+    "join": {
+      "$time": {
+        "key": "time",
+        "where": {
+          "time": {"$lt": '2015'}
+        }
+      },
+    }
+  };
+
+  const normalizedDdfql = {
+    "select": {
+      "key": ["geo", "time"],
+      "value": [
+        "population", "life_expectancy", "gdp_per_cap", "gov_type"
+      ]
+    },
+    "from": "datapoints",
+    "where": {
+      "$and": [
+        {"dimensions": {"$size": 2}},
+        {
+          "$and": [
+            {"dimensions": "$time"}
+          ]
+        }
+      ]
+    },
+    "join": {
+      "$time": {
+        "domain": "time",
+        "timeType": "YEAR_TYPE",
+        "millis": {"$lt": 1420070400000}
+      }
+    }
+  };
+
+  assert.deepEqual(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, ['time']), normalizedDdfql);
+});
+
+test('should normalize where and join clauses - WEEK time type should be parsed', assert => {
+  const ddfql = {
+    "select": {
+      "key": ["geo", "time"],
+      "value": [
+        "population", "life_expectancy", "gdp_per_cap", "gov_type"
+      ]
+    },
+    "from": "datapoints",
+    "where": {
+      "$and": [
+        {"time": "$time"},
+      ]
+    },
+    "join": {
+      "$time": {
+        "key": "time",
+        "where": {
+          "$and": [{"time": {"$lt": "2015w5"}}, {"time": {"$gt": "2015w2"}}]
+        }
+      },
+    }
+  };
+
+  const normalizedDdfql = {
+    "select": {
+      "key": ["geo", "time"],
+      "value": [
+        "population", "life_expectancy", "gdp_per_cap", "gov_type"
+      ]
+    },
+    "from": "datapoints",
+    "where": {
+      "$and": [
+        {"dimensions": {"$size": 2}},
+        {
+          "$and": [
+            {"dimensions": "$time"}
+          ]
+        }
+      ]
+    },
+    "join": {
+      "$time": {
+        "domain": "time",
+        "$and": [
+          {
+            "timeType": "WEEK_TYPE",
+            "millis": {
+              "$lt": 1422230400000
+            }
+          },
+          {
+            "timeType": "WEEK_TYPE",
+            "millis": {
+              "$gt": 1420416000000
+            }
+          }
+        ]
+      }
+    }
+  };
+
+  assert.deepEqual(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, ['time']), normalizedDdfql);
+});
+
+test('should normalize where and join clauses - DATE time type should be parsed', assert => {
+  const ddfql = {
+    "select": {
+      "key": ["geo", "time"],
+      "value": [
+        "population", "life_expectancy", "gdp_per_cap", "gov_type"
+      ]
+    },
+    "from": "datapoints",
+    "where": {
+      "$and": [
+        {"time": "$time"},
+      ]
+    },
+    "join": {
+      "$time": {
+        "key": "time",
+        "where": {
+          "time": {"$and": [{"$lt": "20151201"}, {"$gt": "20130901"}]}
+        }
+      },
+    }
+  };
+
+  const normalizedDdfql = {
+    "select": {
+      "key": ["geo", "time"],
+      "value": [
+        "population", "life_expectancy", "gdp_per_cap", "gov_type"
+      ]
+    },
+    "from": "datapoints",
+    "where": {
+      "$and": [
+        {"dimensions": {"$size": 2}},
+        {
+          "$and": [
+            {"dimensions": "$time"}
+          ]
+        }
+      ]
+    },
+    "join": {
+      "$time": {
+        "domain": "time",
+        "timeType": "DATE_TYPE",
+        "millis": {
+          "$and": [
+            {
+              "$lt": 1448928000000
+            },
+            {
+              "$gt": 1377993600000
+            }
+          ]
+        }
+      }
+    }
+  };
+
+  assert.deepEqual(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, ['time']), normalizedDdfql);
 });
 
 test('should substitute concept placeholders with ids', assert => {
@@ -173,11 +416,13 @@ test('should substitute concept placeholders with ids', assert => {
       },
       "$time": {
         "domain": "time",
-        "gid": {"$lt": 2015}
+        "typeType": "YEAR_TYPE",
+        "millis": {"$lt": 1377993600000}
       },
       "$time2": {
         "domain": "time",
-        "gid": {"$eq": 1918}
+        "typeType": "YEAR_TYPE",
+        "millis": {"$eq": 1377993600000}
       }
     }
   };
@@ -232,11 +477,13 @@ test('should substitute concept placeholders with ids', assert => {
       },
       "$time": {
         "domain": "27a3470d3a8c9b37009b9bf9",
-        "gid": {"$lt": 2015}
+        "typeType": "YEAR_TYPE",
+        "millis": {"$lt": 1377993600000}
       },
       "$time2": {
         "domain": "27a3470d3a8c9b37009b9bf9",
-        "gid": {"$eq": 1918}
+        "typeType": "YEAR_TYPE",
+        "millis": {"$eq": 1377993600000}
       }
     }
   };
@@ -318,11 +565,13 @@ test('should substitute join link in where clause', assert => {
       },
       "$time": {
         "domain": "27a3470d3a8c9b37009b9bf9",
-        "gid": {"$lt": 2015}
+        "typeType": "YEAR_TYPE",
+        "millis": {"$lt": 1377993600000}
       },
       "$time2": {
         "domain": "27a3470d3a8c9b37009b9bf9",
-        "gid": {"$eq": 1918}
+        "typeType": "YEAR_TYPE",
+        "millis": {"$eq": 1377993600000}
       }
     }
   };
@@ -399,11 +648,13 @@ test('should substitute join link in where clause', assert => {
       },
       "$time": {
         "domain": "27a3470d3a8c9b37009b9bf9",
-        "gid": {"$lt": 2015}
+        "typeType": "YEAR_TYPE",
+        "millis": {"$lt": 1377993600000}
       },
       "$time2": {
         "domain": "27a3470d3a8c9b37009b9bf9",
-        "gid": {"$eq": 1918}
+        "typeType": "YEAR_TYPE",
+        "millis": {"$eq": 1377993600000}
       }
     }
   };
