@@ -231,8 +231,8 @@ function __parseEntityFilename(pipe, cb) {
   let entityDomainGid = _.first(parsedFilename);
   let entitySetGid = _.last(parsedFilename);
 
-  pipe.entitySet = pipe.previousConcepts[entitySetGid] || pipe.concepts[entitySetGid];
-  pipe.entityDomain = pipe.previousConcepts[entityDomainGid] || pipe.concepts[entityDomainGid];
+  pipe.entitySet = pipe.concepts[entitySetGid] || pipe.previousConcepts[entitySetGid];
+  pipe.entityDomain = pipe.concepts[entityDomainGid] || pipe.previousConcepts[entityDomainGid];
 
   return async.setImmediate(() => cb(null, pipe));
 }
