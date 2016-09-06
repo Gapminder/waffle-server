@@ -312,6 +312,7 @@ function _processOriginalEntities(pipe, done) {
     return (entitySet, cb) => async.waterfall([
       async.constant({
         entitySet: entitySet,
+        entityDomain: entitySet.type === 'entity_domain' ? entitySet : _.get(entitySet, 'domain', null),
         concepts: pipe.concepts,
         transaction: pipe.transaction,
         dataset: pipe.dataset,
@@ -811,6 +812,8 @@ function mapDdfOriginalEntityToWsModel(pipe) {
       return property;
     });
 
+    const domainOriginId = _.get(pipe, 'entityDomain.originId', pipe.entityDomain);
+
     return {
       gid: gid,
       title: _entry.name,
@@ -818,7 +821,7 @@ function mapDdfOriginalEntityToWsModel(pipe) {
       properties: _entry,
 
       originId: _entry.originId,
-      domain: pipe.entitySet.domain ? pipe.entitySet.domain.originId : pipe.entitySet.originId,
+      domain: domainOriginId,
       sets: resolvedSets,
 
       from: pipe.transaction.createdAt,
