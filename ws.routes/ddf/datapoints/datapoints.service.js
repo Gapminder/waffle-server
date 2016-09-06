@@ -8,7 +8,7 @@ const constants = require('../../../ws.utils/constants');
 const commonService = require('../../../ws.services/common.service');
 const conceptsService = require('../concepts/concepts.service');
 const entitiesService = require('../entities/entities.service');
-
+const ddfQueryValidator = require('../../../ws.ddfql/ddf-query-validator');
 const entitiesRepositoryFactory = require('../../../ws.repository/ddf/entities/entities.repository');
 const datapointsRepositoryFactory = require('../../../ws.repository/ddf/data-points/data-points.repository');
 
@@ -39,6 +39,7 @@ function collectDatapointsByDdfql(options, onMatchedDatapoints) {
 
   return async.waterfall([
     async.constant(pipe),
+    ddfQueryValidator.validateDdfQueryAsync,
     commonService.findDefaultDatasetAndTransaction,
     getConcepts,
     mapConcepts,
@@ -67,10 +68,21 @@ function normalizeQueriesToDatapointsByDdfql(pipe, cb) {
   const normlizedQuery = ddfql.normalizeDatapoints(pipe.query, conceptsByGids);
 
   return async.mapLimit(normlizedQuery.join, 10, (item, mcb) => {
+
+    const validateQuery = ddfQueryValidator.validateMongoQuery(item);
+    if(!validateQuery.valid) {
+      return cb(validateQuery.log, pipe);
+    }
+
     return entitiesRepository.findEntityPropertiesByQuery(item, (error, entities) => mcb(error, _.map(entities, 'originId')));
   }, (err, substituteJoinLinks) => {
     const promotedQuery = ddfql.substituteDatapointJoinLinks(normlizedQuery, substituteJoinLinks);
     const subDatapointQuery = promotedQuery.where;
+
+    const validateQuery = ddfQueryValidator.validateMongoQuery(subDatapointQuery);
+    if(!validateQuery.valid) {
+      return cb(validateQuery.log, pipe);
+    }
 
     return queryDatapointsByDdfql(pipe, subDatapointQuery, (err, pipe) => {
       console.timeEnd('get datapoints');
