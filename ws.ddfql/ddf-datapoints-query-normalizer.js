@@ -2,6 +2,7 @@
 
 const _ = require('lodash');
 const traverse = require('traverse');
+const ddfTimeUtils = require('ddf-time-utils');
 
 module.exports = {
   normalizeDatapoints: normalizeDatapoints,
@@ -10,8 +11,8 @@ module.exports = {
   substituteDatapointJoinLinks: substituteDatapointJoinLinks
 };
 
-function normalizeDatapoints(query, conceptsToIds) {
-  normalizeDatapointDdfQuery(query);
+function normalizeDatapoints(query, conceptsToIds, timeConcepts) {
+  normalizeDatapointDdfQuery(query, timeConcepts);
   substituteDatapointConceptsWithIds(query, conceptsToIds);
   return query;
 }
@@ -44,9 +45,9 @@ function substituteDatapointConceptsWithIds(query, conceptsToIds) {
   return query;
 }
 
-function normalizeDatapointDdfQuery(query) {
+function normalizeDatapointDdfQuery(query, timeConcepts) {
   normalizeWhere(query);
-  normalizeJoin(query);
+  normalizeJoin(query, timeConcepts);
   return query;
 }
 
@@ -85,14 +86,34 @@ function normalizeWhere(query) {
   };
 }
 
-function normalizeJoin(query) {
+function normalizeJoin(query, timeConcepts) {
   traverse(query.join).forEach(function (filterValue) {
     let normalizedFilter = null;
 
     if (isEntityFilter(this.key, query)) {
-      normalizedFilter = {
-        gid: filterValue
-      };
+      if (_.includes(timeConcepts, this.key)) {
+
+        let timeType = '';
+        normalizedFilter = {
+          millis: traverse(filterValue).map(function (value) {
+            if (this.notLeaf) {
+              return value;
+            }
+
+            const timeDescriptor = ddfTimeUtils.parseTime(value);
+            timeType = timeDescriptor.type;
+            return timeDescriptor.time;
+          })
+        };
+
+        // always set latest detected time type
+        const conditionsForTimeEntities = _.get(query.join, this.path.slice(0, this.path.length - 1));
+        _.set(conditionsForTimeEntities, 'timeType', timeType);
+      } else {
+        normalizedFilter = {
+          gid: filterValue
+        };
+      }
     }
 
     if (isEntityPropertyFilter(this.key, query)) {

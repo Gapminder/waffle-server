@@ -28,7 +28,6 @@ module.exports = function (options, done) {
   async.waterfall([
     async.constant(pipe),
     common.resolvePathToDdfFolder,
-    // resolvePathToTranslations,
     common.createTransaction,
     common.createDataset,
     ddfImportProcess.activateLifecycleHook('onDatasetCreated'),
@@ -37,11 +36,6 @@ module.exports = function (options, done) {
     common.createEntities,
     common.createDataPoints,
     common.updateConceptsDimensions,
-    // common.findLastDataset,
-    // common.findLastVersion,
-    // common.getAllConcepts,
-    // common.findDataPoints,
-    // common.updateConceptsDimensions
     createDatasetIndex,
     common.closeTransaction
   ], (importError, pipe) => {
