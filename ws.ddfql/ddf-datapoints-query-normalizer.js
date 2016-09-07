@@ -95,7 +95,7 @@ function normalizeJoin(query, timeConcepts) {
 
         let timeType = '';
         normalizedFilter = {
-          millis: traverse(filterValue).map(function (value) {
+          [`parsedProperties.${this.key}.millis`]: traverse(filterValue).map(function (value) {
             if (this.notLeaf) {
               return value;
             }
@@ -108,7 +108,7 @@ function normalizeJoin(query, timeConcepts) {
 
         // always set latest detected time type
         const conditionsForTimeEntities = _.get(query.join, this.path.slice(0, this.path.length - 1));
-        _.set(conditionsForTimeEntities, 'timeType', timeType);
+        conditionsForTimeEntities[`parsedProperties.${this.key}.timeType`] = timeType;
       } else {
         normalizedFilter = {
           gid: filterValue

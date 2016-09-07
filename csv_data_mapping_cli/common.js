@@ -132,6 +132,7 @@ function createConcepts(pipe, done) {
     _getAllConcepts
   ], (err, res) => {
     pipe.concepts = res.concepts;
+    pipe.timeConcepts = res.timeConcepts;
     return done(err, pipe);
   });
 }
@@ -207,6 +208,9 @@ function _getAllConcepts(pipe, done) {
     .lean()
     .exec((err, res) => {
       pipe.concepts = _.keyBy(res, 'gid');
+      pipe.timeConcepts = _.pickBy(pipe.concepts, (value, conceptGid) => {
+        return _.get(pipe.concepts[conceptGid], 'properties.concept_type') === 'time';
+      });
       return done(err, pipe);
     });
 }
@@ -272,6 +276,7 @@ function createEntities(pipe, done) {
   let _pipe = {
     transaction: pipe.transaction,
     concepts: pipe.concepts,
+    timeConcepts: pipe.timeConcepts,
     dataset: pipe.dataset,
     fileTemplates: pipe.fileTemplates,
     resolvePath: pipe.resolvePath
@@ -314,6 +319,7 @@ function _processOriginalEntities(pipe, done) {
         entitySet: entitySet,
         entityDomain: entitySet.type === 'entity_domain' ? entitySet : _.get(entitySet, 'domain', null),
         concepts: pipe.concepts,
+        timeConcepts: pipe.timeConcepts,
         transaction: pipe.transaction,
         dataset: pipe.dataset,
         resolvePath: pipe.resolvePath,
@@ -496,6 +502,7 @@ function createDataPoints(pipe, done) {
       async.constant({
         filename: filename,
         concepts: pipe.concepts,
+        timeConcepts: pipe.timeConcepts,
         transaction: pipe.transaction,
         dataset: pipe.dataset,
         resolvePath: pipe.resolvePath
@@ -813,11 +820,11 @@ function mapDdfOriginalEntityToWsModel(pipe) {
 
     const domainOriginId = _.get(pipe, 'entityDomain.originId', pipe.entityDomain);
 
-    const entity = {
+    return {
       gid: gid,
-      title: _entry.name,
       sources: [pipe.filename],
       properties: _entry,
+      parsedProperties: parseProperties(pipe.entityDomain, gid, _entry, pipe.timeConcepts),
 
       originId: _entry.originId,
       domain: domainOriginId,
@@ -827,17 +834,16 @@ function mapDdfOriginalEntityToWsModel(pipe) {
       dataset: pipe.dataset._id,
       transaction: pipe.transactionId || pipe.transaction._id
     };
-
-    return setTypeAndMillisForTimeEntity(pipe.entityDomain, gid, entity);
   };
 }
 
 function mapDdfEntityToWsModel(entity, concept, domain, pipe) {
   const gid = entity[concept.gid];
-  const wsEntity = {
+  return {
     gid: gid,
     sources: [pipe.filename],
     properties: entity,
+    parsedProperties: parseProperties(concept, gid, entity, pipe.timeConcepts),
 
     // originId: entity.originId,
     domain: domain.originId,
@@ -848,17 +854,31 @@ function mapDdfEntityToWsModel(entity, concept, domain, pipe) {
     dataset: pipe.dataset._id,
     transaction: pipe.transactionId || pipe.transaction._id
   };
-
-  return setTypeAndMillisForTimeEntity(concept, gid, wsEntity);
 }
 
-function setTypeAndMillisForTimeEntity(concept, gid, entity) {
-  if (_.get(concept, 'properties.concept_type') === 'time') {
-    const timeDescriptor = ddfTimeUtils.parseTime(gid);
-    entity.millis = _.get(timeDescriptor, 'time');
-    entity.timeType = _.get(timeDescriptor, 'type');
+function parseProperties(concept, entityGid, entityProperties, timeConcepts) {
+  if (_.isEmpty(timeConcepts)) {
+    return {};
   }
-  return entity;
+
+  let parsedProperties =
+    _.chain(entityProperties)
+    .pickBy((propValue, prop) => timeConcepts[prop])
+    .mapValues(toInternalTimeForm)
+    .value();
+
+  if (timeConcepts[concept.gid]) {
+    parsedProperties = _.extend(parsedProperties || {}, {[concept.gid]: toInternalTimeForm(entityGid)});
+  }
+  return parsedProperties;
+}
+
+function toInternalTimeForm(value) {
+  const timeDescriptor = ddfTimeUtils.parseTime(value);
+  return {
+    millis: _.get(timeDescriptor, 'time'),
+    timeType: _.get(timeDescriptor, 'type')
+  };
 }
 
 function mapResolvedSets(pipe, resolvedGids) {
