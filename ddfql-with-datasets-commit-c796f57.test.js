@@ -76,7 +76,7 @@ function runIncrementalUpdate(onIncrementalUpdateDone) {
 }
 
 function setDefaultByCLI(onSetDefaultByCLIDone) {
-  const setDefaultcommand = `REPO=git@github.com:VS-work/ddf--gapminder--systema_globalis--light.git LOGIN=dev@gapminder.org PASS=123 npm run set-default`;
+  const setDefaultcommand = `REPO=git@github.com:VS-work/ddf--gapminder--systema_globalis--light.git COMMIT=c796f57 LOGIN=dev@gapminder.org PASS=123 npm run set-default`;
   return shell.exec(setDefaultcommand, (error) => {
     console.log('** chose default set');
 
@@ -216,11 +216,29 @@ test.cb('Check GET request: for entities with selected format=ddfJson, when defa
     })
 });
 
-test.cb('Check POST requests: concepts when default dataset was set', t => {
+test.skip.cb('Check POST request : for concept.schema', t=> {
+  //const conceptsSchemaHeaders = ["description", "unit", "drill_up", "scales", "color", "indicator_url", "domian", "concept_type", "name", "concept"];
+  t.plan(1);
+  api.post('/api/ddf/concepts.schema')
+    .send( {"select": {
+    "key": ["key","value"],
+      "value": ["min(value)","max(value)"]
+  },
+  "from": "datapoints.schema"})
+    .set('Accept', 'application/x-ws+json')
+    .expect(200)
+    .end((err, res) => {
+      t.deepEqual(res.body, 35);
+
+      t.end();
+    })
+});
+
+test.cb('Check POST requests: concepts without select when default dataset was set', t => {
   t.plan(5);
   api.post(`/api/ddf/ql`)
     .send({from: "concepts"})
-    .set('Accept', 'application/json')
+    .set('Accept', 'application/x-ws+json')
     .expect(200)
     .expect('Content-Type', /application\/json/)
     .end((error, res) => {
@@ -234,11 +252,19 @@ test.cb('Check POST requests: concepts when default dataset was set', t => {
     });
 });
 
-test.cb('Check POST requests: datapoints when default dataset was set', t => {
+test.cb('Check POST requests: concepts with select when default dataset was set', t => {
   t.plan(5);
   api.post(`/api/ddf/ql`)
-    .send({from: "concepts"})
-    .set('Accept', 'application/json')
+    .send({
+      "select": {
+        "key": ["concept"],
+        "value": [
+          "concept_type", "name", "unit","color"
+        ]
+      },
+      "from": "concepts"
+    })
+    .set('Accept', 'application/x-ws+json')
     .expect(200)
     .expect('Content-Type', /application\/json/)
     .end((error, res) => {
@@ -247,6 +273,65 @@ test.cb('Check POST requests: datapoints when default dataset was set', t => {
       t.deepEqual(res.body.concepts.properties, ddfConceptsForPostRequest.concepts.properties);
       t.deepEqual(res.body.concepts.propertyValues, ddfConceptsForPostRequest.concepts.propertyValues);
       t.deepEqual(res.body.concepts.rows, ddfConceptsForPostRequest.concepts.rows);
+
+      t.end();
+    });
+});
+
+test.skip.cb('Check POST requests: datapoints without select when default dataset was set', t => {
+  t.plan(2);
+  api.post(`/api/ddf/ql`)
+    .send({
+      "from": "datapoints"
+    })
+    .set('Accept', 'application/x-ws+json')
+    .expect(200)
+    .expect('Content-Type', /application\/json/)
+    .end((error, res) => {
+      t.deepEqual(res.body.success, false);
+      t.deepEqual(res.body.error, 'You didn\'t select any column');
+
+      t.end();
+    });
+});
+
+test.skip.cb('Check POST requests: datapoints with select when default dataset was set', t => {
+  t.plan(1);
+  api.post(`/api/ddf/ql`)
+    .send({
+      "select": {
+        "key": ["geo", "time"],
+        "value": "sg_population"
+      },
+      "from": "datapoints"
+    })
+    .set('Accept', 'application/x-ws+json')
+    .expect(200)
+    .expect('Content-Type', /application\/json/)
+    .end((error, res) => {
+      //FIXME:when use POST request with query {select: {'key': [], 'value': []}}  res === undefined
+      t.deepEqual(res, undefined);
+
+      t.end();
+    });
+});
+
+test.skip.cb('Check POST requests: entities with select when default dataset was set', t => {
+  t.plan(1);
+  api.post(`/api/ddf/ql`)
+    .send({
+      "select": {
+        "key": ["geo"],
+        "value": ["name","_default","world_4region"]
+      },
+      "from": "entities"
+    })
+    .set('Accept', 'application/x-ws+json')
+    .expect(200)
+    .expect('Content-Type', /application\/json/)
+    .end((error, res) => {
+      //FIXME:when use POST request with query {select: {'key': [], 'value': []}}  res === undefined
+      t.deepEqual(res, undefined);
 
       t.end();
     });
