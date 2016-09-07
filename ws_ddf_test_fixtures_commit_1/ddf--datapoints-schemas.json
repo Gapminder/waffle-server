@@ -29,15 +29,6 @@
         "geo",
         "time"
       ],
-      "income_per_person_gdppercapita_ppp_inflation_adjusted",
-      142,
-      182700
-    ],
-    [
-      [
-        "geo",
-        "time"
-      ],
       "life_expectancy_years",
       1,
       84.1
@@ -65,6 +56,15 @@
         "geo",
         "time"
       ],
+      "sg_gini",
+      16.2,
+      74.3
+    ],
+    [
+      [
+        "geo",
+        "time"
+      ],
       "sg_population",
       50,
       1376048943
@@ -74,9 +74,9 @@
         "geo",
         "time"
       ],
-      "sg_gini",
-      16.2,
-      74.3
+      "income_per_person_gdppercapita_ppp_inflation_adjusted",
+      142,
+      182700
     ],
     [
       [
