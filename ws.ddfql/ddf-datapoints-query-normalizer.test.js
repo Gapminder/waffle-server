@@ -101,15 +101,15 @@ test('should normalize where and join clauses', assert => {
       },
       "$time": {
         "domain": "time",
-        "timeType": "YEAR_TYPE",
-        "millis": {
+        "parsedProperties.time.timeType": "YEAR_TYPE",
+        "parsedProperties.time.millis": {
           "$lt": 1420070400000
         }
       },
       "$time2": {
         "domain": "time",
-        "timeType": "YEAR_TYPE",
-        "millis": {
+        "parsedProperties.time.timeType": "YEAR_TYPE",
+        "parsedProperties.time.millis": {
           "$eq": -1640995200000
         }
       }
@@ -164,8 +164,8 @@ test('should normalize where and join clauses - QUARTER time type should be pars
     "join": {
       "$time": {
         "domain": "time",
-        "timeType": "QUARTER_TYPE",
-        "millis": {"$lt": 1435708800000}
+        "parsedProperties.time.timeType": "QUARTER_TYPE",
+        "parsedProperties.time.millis": {"$lt": 1435708800000}
       }
     }
   };
@@ -218,8 +218,8 @@ test('should normalize where and join clauses - YEAR time type should be parsed'
     "join": {
       "$time": {
         "domain": "time",
-        "timeType": "YEAR_TYPE",
-        "millis": {"$lt": 1420070400000}
+        "parsedProperties.time.timeType": "YEAR_TYPE",
+        "parsedProperties.time.millis": {"$lt": 1420070400000}
       }
     }
   };
@@ -274,14 +274,14 @@ test('should normalize where and join clauses - WEEK time type should be parsed'
         "domain": "time",
         "$and": [
           {
-            "timeType": "WEEK_TYPE",
-            "millis": {
+            "parsedProperties.time.timeType": "WEEK_TYPE",
+            "parsedProperties.time.millis": {
               "$lt": 1422230400000
             }
           },
           {
-            "timeType": "WEEK_TYPE",
-            "millis": {
+            "parsedProperties.time.timeType": "WEEK_TYPE",
+            "parsedProperties.time.millis": {
               "$gt": 1420416000000
             }
           }
@@ -338,8 +338,8 @@ test('should normalize where and join clauses - DATE time type should be parsed'
     "join": {
       "$time": {
         "domain": "time",
-        "timeType": "DATE_TYPE",
-        "millis": {
+        "parsedProperties.time.timeType": "DATE_TYPE",
+        "parsedProperties.time.millis": {
           "$and": [
             {
               "$lt": 1448928000000
@@ -416,13 +416,13 @@ test('should substitute concept placeholders with ids', assert => {
       },
       "$time": {
         "domain": "time",
-        "typeType": "YEAR_TYPE",
-        "millis": {"$lt": 1377993600000}
+        "parsedProperties.time.typeType": "YEAR_TYPE",
+        "parsedProperties.time.millis": {"$lt": 1377993600000}
       },
       "$time2": {
         "domain": "time",
-        "typeType": "YEAR_TYPE",
-        "millis": {"$eq": 1377993600000}
+        "parsedProperties.time.typeType": "YEAR_TYPE",
+        "parsedProperties.time.millis": {"$eq": 1377993600000}
       }
     }
   };
@@ -477,13 +477,13 @@ test('should substitute concept placeholders with ids', assert => {
       },
       "$time": {
         "domain": "27a3470d3a8c9b37009b9bf9",
-        "typeType": "YEAR_TYPE",
-        "millis": {"$lt": 1377993600000}
+        "parsedProperties.time.typeType": "YEAR_TYPE",
+        "parsedProperties.time.millis": {"$lt": 1377993600000}
       },
       "$time2": {
         "domain": "27a3470d3a8c9b37009b9bf9",
-        "typeType": "YEAR_TYPE",
-        "millis": {"$eq": 1377993600000}
+        "parsedProperties.time.typeType": "YEAR_TYPE",
+        "parsedProperties.time.millis": {"$eq": 1377993600000}
       }
     }
   };
@@ -565,13 +565,13 @@ test('should substitute join link in where clause', assert => {
       },
       "$time": {
         "domain": "27a3470d3a8c9b37009b9bf9",
-        "typeType": "YEAR_TYPE",
-        "millis": {"$lt": 1377993600000}
+        "parsedProperties.time.typeType": "YEAR_TYPE",
+        "parsedProperties.time.millis": {"$lt": 1377993600000}
       },
       "$time2": {
         "domain": "27a3470d3a8c9b37009b9bf9",
-        "typeType": "YEAR_TYPE",
-        "millis": {"$eq": 1377993600000}
+        "parsedProperties.time.typeType": "YEAR_TYPE",
+        "parsedProperties.time.millis": {"$eq": 1377993600000}
       }
     }
   };
@@ -648,13 +648,13 @@ test('should substitute join link in where clause', assert => {
       },
       "$time": {
         "domain": "27a3470d3a8c9b37009b9bf9",
-        "typeType": "YEAR_TYPE",
-        "millis": {"$lt": 1377993600000}
+        "parsedProperties.time.typeType": "YEAR_TYPE",
+        "parsedProperties.time.millis": {"$lt": 1377993600000}
       },
       "$time2": {
         "domain": "27a3470d3a8c9b37009b9bf9",
-        "typeType": "YEAR_TYPE",
-        "millis": {"$eq": 1377993600000}
+        "parsedProperties.time.typeType": "YEAR_TYPE",
+        "parsedProperties.time.millis": {"$eq": 1377993600000}
       }
     }
   };
