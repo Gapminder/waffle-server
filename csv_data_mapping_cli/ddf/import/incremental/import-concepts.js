@@ -169,7 +169,7 @@ function applyChangesToConcepts(changedConcepts) {
           return onChangesApplied(error);
         }
 
-        const updatedConcept = mergeConcepts(originalConcept, changesToConcept, pipe.external.transaction.createdAt);
+        const updatedConcept = mergeConcepts(originalConcept, changesToConcept, pipe.external.transaction);
         return mongoose.model('Concepts').create(updatedConcept, onChangesApplied);
       });
     }, error => {
@@ -200,7 +200,7 @@ function applyUpdatesToConcepts(changedConcepts, removedProperties) {
 
           const updates = changedConcepts[closedOriginalConcept.gid];
 
-          let updatedConcept = mergeConcepts(closedOriginalConcept, updates, pipe.external.transaction.createdAt);
+          let updatedConcept = mergeConcepts(closedOriginalConcept, updates, pipe.external.transaction);
           updatedConcept = omitRemovedProperties(updatedConcept, removedProperties);
           updatedConcept.properties = omitRemovedProperties(updatedConcept.properties, removedProperties);
 
@@ -287,7 +287,7 @@ function getGid(conceptChange) {
   return conceptChange[conceptChange.gid];
 }
 
-function mergeConcepts(originalConcept, changesToConcept, currentVersion) {
+function mergeConcepts(originalConcept, changesToConcept, currentTransaction) {
   let updatedConcept = _.mergeWith(originalConcept, changesToConcept, (originalValue, changedValue, property) => {
     if (property === 'concept') {
       originalConcept.gid = changedValue;
@@ -313,8 +313,9 @@ function mergeConcepts(originalConcept, changesToConcept, currentVersion) {
   });
 
   updatedConcept = _.omit(updatedConcept, ['concept', 'drill_up', '_id', 'subsetOf', 'domain']);
-  updatedConcept.from = currentVersion;
+  updatedConcept.from = currentTransaction.createdAt;
   updatedConcept.to = constants.MAX_VERSION;
+  updatedConcept.transaction = currentTransaction._id;
   return updatedConcept;
 }
 

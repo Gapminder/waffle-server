@@ -31,7 +31,7 @@ test('should normalize where and join clauses', assert => {
         "key": "geo",
         "where": {
           "$and": [
-            {"is--country": true},
+            {"geo.is--country": true},
             {"latitude": {"$lte": 0}}
           ]
         }

@@ -39,7 +39,8 @@ EntitiesRepository.prototype.findAllHavingGivenDomainsOrSets = function (domains
 };
 
 EntitiesRepository.prototype.findEntityPropertiesByQuery = function(entitiesQuery, onPropertiesFound) {
-  return Entities.find(entitiesQuery).lean().exec(onPropertiesFound);
+  const composedQuery = this._composeQuery(entitiesQuery);
+  return Entities.find(composedQuery).lean().exec(onPropertiesFound);
 };
 
 EntitiesRepository.prototype.findEntityProperties = function(entityDomainGid, select, where, onPropertiesFound) {

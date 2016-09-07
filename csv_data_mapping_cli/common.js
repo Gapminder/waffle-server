@@ -99,7 +99,7 @@ function createDataset(pipe, done) {
     createdAt: pipe.transaction.createdAt,
     createdBy: pipe.user._id
   }, (err, res) => {
-    pipe.dataset = res;
+    pipe.dataset = res.toObject();
     return done(err, pipe);
   });
 }
@@ -120,8 +120,10 @@ function createConcepts(pipe, done) {
 
   logger.info('start process creating concepts');
 
+  const filename = 'ddf--concepts.csv';
+  const options = {transaction: pipe.transaction, dataset: pipe.dataset, resolvePath: pipe.resolvePath, filename};
   return async.waterfall([
-    async.constant({transaction: pipe.transaction, dataset: pipe.dataset, resolvePath: pipe.resolvePath}),
+    async.constant(options),
     _loadConcepts,
     _createConcepts,
     _getAllConcepts,
@@ -137,7 +139,7 @@ function createConcepts(pipe, done) {
 function _loadConcepts(pipe, done) {
   logger.info('** load concepts');
 
-  return readCsvFile(pipe.resolvePath('ddf--concepts.csv'), {}, (err, res) => {
+  return readCsvFile(pipe.resolvePath(pipe.filename), {}, (err, res) => {
     let concepts = _.map(res, mapDdfConceptsToWsModel(pipe));
     let uniqConcepts = _.uniqBy(concepts, 'gid');
 
@@ -176,26 +178,26 @@ function _getAllConcepts(pipe, done) {
   logger.info('** get all concepts');
 
   mongoose.model('Concepts').find({
-    dataset: pipe.datasetId || pipe.dataset._id,
-    transaction: pipe.transactionId || pipe.transaction._id
+    dataset: pipe.dataset._id,
+    transaction: pipe.transaction._id
   }, null, {
     join: {
       domain: {
         $find: {
           dataset: pipe.dataset._id,
-          transaction: pipe.transactionId || pipe.transaction._id
+          transaction: pipe.transaction._id
         }
       },
       subsetOf: {
         $find: {
           dataset: pipe.dataset._id,
-          transaction: pipe.transactionId || pipe.transaction._id
+          transaction: pipe.transaction._id
         }
       },
       dimensions: {
         $find: {
           dataset: pipe.dataset._id,
-          transaction: pipe.transactionId || pipe.transaction._id
+          transaction: pipe.transaction._id
         }
       }
     }
@@ -310,6 +312,7 @@ function _processOriginalEntities(pipe, done) {
     return (entitySet, cb) => async.waterfall([
       async.constant({
         entitySet: entitySet,
+        entityDomain: entitySet.type === 'entity_domain' ? entitySet : _.get(entitySet, 'domain', null),
         concepts: pipe.concepts,
         transaction: pipe.transaction,
         dataset: pipe.dataset,
@@ -514,8 +517,12 @@ function createDataPoints(pipe, done) {
 function getMeasureDimensionFromFilename (filename) {
   let parsedFileName = filename.replace(/^ddf--datapoints--|\.csv$/g, '').split('--by--');
   return {
-    measure: _.first(parsedFileName).split('--'),
-    dimension: _.last(parsedFileName).split('--')
+    measures: _.first(parsedFileName).split('--'),
+    dimensions: _.chain(parsedFileName)
+      .last()
+      .split('--')
+      .map(dimension => _.first(dimension.split('-')))
+      .value()
   };
 }
 
@@ -523,8 +530,8 @@ function _parseFilename(pipe, cb) {
   logger.info(`** parse filename '${pipe.filename}'`);
 
   const parseFilename = getMeasureDimensionFromFilename(pipe.filename);
-  const measureGids = parseFilename.measure;
-  const dimensionGids = parseFilename.dimension;
+  const measureGids = parseFilename.measures;
+  const dimensionGids = parseFilename.dimensions;
 
   pipe.measures = _.merge(_.pick(pipe.previousConcepts, measureGids), _.pick(pipe.concepts, measureGids));
   pipe.dimensions = _.merge(_.pick(pipe.previousConcepts, dimensionGids), _.pick(pipe.concepts, dimensionGids));
@@ -774,6 +781,7 @@ function mapDdfConceptsToWsModel(pipe) {
       subsetOf: [],
       dimensions: [],
 
+      sources: [pipe.filename],
       from: pipe.transaction.createdAt,
       to: constants.MAX_VERSION,
       dataset: pipe.dataset._id,
@@ -804,6 +812,8 @@ function mapDdfOriginalEntityToWsModel(pipe) {
       return property;
     });
 
+    const domainOriginId = _.get(pipe, 'entityDomain.originId', pipe.entityDomain);
+
     return {
       gid: gid,
       title: _entry.name,
@@ -811,7 +821,7 @@ function mapDdfOriginalEntityToWsModel(pipe) {
       properties: _entry,
 
       originId: _entry.originId,
-      domain: pipe.entitySet.domain ? pipe.entitySet.domain.originId : pipe.entitySet.originId,
+      domain: domainOriginId,
       sets: resolvedSets,
 
       from: pipe.transaction.createdAt,
@@ -901,6 +911,7 @@ function mapDdfDataPointToWsModel(pipe) {
           isNumeric: _.isNumber(entry[measureGid]),
           from: pipe.transaction.createdAt,
           dataset: pipe.dataset._id,
+          sources: [pipe.filename],
           transaction: pipe.transactionId || pipe.transaction._id
         };
       })

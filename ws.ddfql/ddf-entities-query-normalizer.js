@@ -18,9 +18,10 @@ function normalizeEntities(query, concepts) {
 
 function substituteEntityJoinLinks(query, linksInJoinToValues) {
   traverse(query.where).forEach(function (link) {
-    if (query.join.hasOwnProperty(link)) {
+    if (query.join && query.join.hasOwnProperty(link)) {
       const id = linksInJoinToValues[link];
-      this.update(id ? {$in: id} : link);
+      const value = id ? {$in: id} : link;
+      _.set(query.where, this.path, value);
     }
   });
   return query;
@@ -60,20 +61,22 @@ function normalizeWhere(query, concepts) {
 
   traverse(query.where).forEach(function (filterValue) {
     let normalizedFilter = null;
+    const selectKey = _.first(query.select.key);
 
-    if (isEntityPropertyFilter(this.key, resolvedProperties)) {
+    if (isEntityPropertyFilter(selectKey, this.key, resolvedProperties)) {
       normalizedFilter = {
         [`properties.${this.key}`]: filterValue,
       };
     }
 
     if (normalizedFilter) {
-      replaceValueOnPath({
+      const options = {
         key: this.key,
         path: this.path,
         normalizedValue: normalizedFilter,
         queryFragment: query.where
-      });
+      };
+      replaceValueOnPath(options);
     }
   });
 }
@@ -84,8 +87,9 @@ function normalizeJoin(query, concepts) {
 
   traverse(query.join).forEach(function (filterValue) {
     let normalizedFilter = null;
+    const selectKey = _.first(query.select.key);
 
-    if (isEntityPropertyFilter(this.key, resolvedProperties)) {
+    if (isEntityPropertyFilter(selectKey, this.key, resolvedProperties)) {
       if (_.includes(this.path, 'where')) {
         normalizedFilter = {
           [`properties.${this.key}`]: filterValue,
@@ -159,8 +163,12 @@ function isSetFilter(key) {
   return key === 'sets';
 }
 
-function isEntityPropertyFilter(key, resolvedProperties) {
-  const normalizedKey = _.chain(key).split('.').first().replace(/^is--/, '').value();
+function isEntityPropertyFilter(selectKey, key, resolvedProperties) {
+  // TODO: `^${selectKey}\.` is just hack for temporary support of current query from Vizabi. It will be removed.
+  const normalizedKey = _.chain(key)
+    .replace(new RegExp(`^${selectKey}\.`), '')
+    .split('.').first().replace(/^is--/, '').value();
+
   return _.includes(resolvedProperties, normalizedKey);
 }
 
