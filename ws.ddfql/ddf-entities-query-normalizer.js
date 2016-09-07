@@ -3,6 +3,9 @@
 const _ = require('lodash');
 const traverse = require('traverse');
 
+const constants = require('../ws.utils/constants');
+const ddfTimeUtils = require('ddf-time-utils');
+
 module.exports = {
   normalizeEntities: normalizeEntities,
   normalizeEntityDdfQuery: normalizeEntityDdfQuery,
@@ -51,22 +54,34 @@ function substituteEntityConceptsWithIds(query, concepts) {
 }
 
 function normalizeEntityDdfQuery(query, concepts) {
+  if (_.isEmpty(query.join)) {
+    _.set(query, 'join', {});
+  }
+
   normalizeWhere(query, concepts);
   normalizeJoin(query, concepts);
   return query;
 }
 
 function normalizeWhere(query, concepts) {
-  const resolvedProperties = _.map(concepts, 'gid');
+  const timeConcepts = _.chain(concepts)
+    .filter(_.iteratee(['properties.concept_type', 'time']))
+    .map(constants.GID)
+    .value();
+  const conceptGids = _.map(concepts, 'gid');
 
   traverse(query.where).forEach(function (filterValue) {
     let normalizedFilter = null;
     const selectKey = _.first(query.select.key);
 
-    if (isEntityPropertyFilter(selectKey, this.key, resolvedProperties)) {
-      normalizedFilter = {
-        [`properties.${this.key}`]: filterValue,
-      };
+    if (isEntityPropertyFilter(selectKey, this.key, conceptGids)) {
+      if (isTimePropertyFilter(this.key, timeConcepts)) {
+        normalizedFilter = normalizeTimePropertyFilter(this.key, filterValue, this.path, 'where', query);
+      } else {
+        normalizedFilter = {
+          [`properties.${this.key}`]: filterValue,
+        };
+      }
     }
 
     if (normalizedFilter) {
@@ -81,7 +96,32 @@ function normalizeWhere(query, concepts) {
   });
 }
 
+function normalizeTimePropertyFilter(key, filterValue, path, property, query) {
+  let timeType = '';
+  const normalizedFilter = {
+    [`parsedProperties.${key}.millis`]: traverse(filterValue).map(function (value) {
+      if (this.notLeaf) {
+        return value;
+      }
+
+      const timeDescriptor = ddfTimeUtils.parseTime(value);
+      timeType = timeDescriptor.type;
+      return timeDescriptor.time;
+    })
+  };
+
+  // always set latest detected time type
+  const conditionsForTimeEntities = _.get(query[property], path.slice(0, path.length - 1));
+  conditionsForTimeEntities[`parsedProperties.${key}.timeType`] = timeType;
+
+  return normalizedFilter;
+}
+
 function normalizeJoin(query, concepts) {
+  const timeConcepts = _.chain(concepts)
+    .filter(_.iteratee(['properties.concept_type', 'time']))
+    .map(constants.GID)
+    .value();
   const conceptsByGid = _.keyBy(concepts, 'gid');
   const resolvedProperties = _.map(concepts, 'gid');
 
@@ -89,8 +129,10 @@ function normalizeJoin(query, concepts) {
     let normalizedFilter = null;
     const selectKey = _.first(query.select.key);
 
-    if (isEntityPropertyFilter(selectKey, this.key, resolvedProperties)) {
-      if (_.includes(this.path, 'where')) {
+    if (isEntityPropertyFilter(selectKey, this.key, resolvedProperties) && _.includes(this.path, 'where')) {
+      if (isTimePropertyFilter(this.key, timeConcepts)) {
+        normalizedFilter = normalizeTimePropertyFilter(this.key, filterValue, this.path, 'join', query);
+      } else {
         normalizedFilter = {
           [`properties.${this.key}`]: filterValue,
         };
@@ -161,6 +203,10 @@ function isDomainFilter(key) {
 
 function isSetFilter(key) {
   return key === 'sets';
+}
+
+function isTimePropertyFilter(key, timeConcepts) {
+  return _.includes(timeConcepts, key);
 }
 
 function isEntityPropertyFilter(selectKey, key, resolvedProperties) {
