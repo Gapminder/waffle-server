@@ -83,6 +83,7 @@ function normalizeWhere(query) {
     if (isEntityFilter(this.key, query)) {
       const join = _.get(query, 'join', {});
       const isUsedExistedLink = _.startsWith(filterValue, '$') && join.hasOwnProperty(filterValue);
+
       if (isUsedExistedLink) {
         normalizedFilter = {
           dimensions: filterValue,
@@ -90,10 +91,12 @@ function normalizeWhere(query) {
       } else {
         numParsedLinks++;
         const joinLink = `$parsed_${this.key}_${numParsedLinks}`;
+
         query.join[joinLink] = {
           key: this.key,
           where: {[this.key]: filterValue}
         };
+
         normalizedFilter = {
           dimensions: joinLink
         };
