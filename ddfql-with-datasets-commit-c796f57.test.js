@@ -4,11 +4,14 @@ import test from 'ava';
 import ddfConceptsJsonFormat from './ws.ddf.test.json/concepts-test.json';
 import ddfConceptsWsJsonFormat from './ws.ddf.test.json/concepts-wsjson-format-test.json';
 import ddfConceptsDdfJsonFormat from './ws.ddf.test.json/concepts-ddfjson-format-test.json';
-import ddfConceptsForPostRequest from './ws.ddf.test.json/ddf--concepts-for-post-request.json';
+import ddfConceptWithoutSelectForPostRequest from './ws.ddf.test.json/ddf--concepts-for-post-request.json';
 import ddfDatapointsSelectSgPopulation from './ws.ddf.test.json/ddf--datapoints-sg_populations-only.json';
 import ddfEntitiesCountryJsonFormat from './ws.ddf.test.json/ddf--entities-json-format.json'
 import ddfEntitiesCountryWsJsonFormat from './ws.ddf.test.json/ddf--entities-wsjson-format.json';
 import ddfEntitiesCountryDdfJsonFormat from './ws.ddf.test.json/ddf--entities-ddfjson-format.json';
+import ddfEntitiesForPostRequest from './ws.ddf.test.json/ddf--entities-with-select-for-post-request.json';
+import ddfDataointsForPostRequest from './ws.ddf.test.json/ddf--datapoints-with-select-for-post-request.json';
+import ddfConceptWithSelectForPostRequest from './ws.ddf.test.json/ddf--concept-with-select-for-post-request.json';
 
 const _ = require('lodash');
 const shell = require('shelljs');
@@ -242,19 +245,19 @@ test.cb('Check POST requests: concepts without select when default dataset was s
     .expect(200)
     .expect('Content-Type', /application\/json/)
     .end((error, res) => {
-      t.deepEqual(res.body, ddfConceptsForPostRequest);
-      t.deepEqual(res.body.concepts.values, ddfConceptsForPostRequest.concepts.values);
-      t.deepEqual(res.body.concepts.properties, ddfConceptsForPostRequest.concepts.properties);
-      t.deepEqual(res.body.concepts.propertyValues, ddfConceptsForPostRequest.concepts.propertyValues);
-      t.deepEqual(res.body.concepts.rows, ddfConceptsForPostRequest.concepts.rows);
+      t.deepEqual(res.body, ddfConceptWithoutSelectForPostRequest);
+      t.deepEqual(res.body.concepts.values, ddfConceptWithoutSelectForPostRequest.concepts.values);
+      t.deepEqual(res.body.concepts.properties, ddfConceptWithoutSelectForPostRequest.concepts.properties);
+      t.deepEqual(res.body.concepts.propertyValues, ddfConceptWithoutSelectForPostRequest.concepts.propertyValues);
+      t.deepEqual(res.body.concepts.rows, ddfConceptWithoutSelectForPostRequest.concepts.rows);
 
       t.end();
     });
 });
 
 test.cb('Check POST requests: concepts with select when default dataset was set', t => {
-  t.plan(5);
-  api.post(`/api/ddf/ql`)
+  t.plan(1);
+  api.post(`/api/ddf/ql?format=wsJson`)
     .send({
       "select": {
         "key": ["concept"],
@@ -268,22 +271,16 @@ test.cb('Check POST requests: concepts with select when default dataset was set'
     .expect(200)
     .expect('Content-Type', /application\/json/)
     .end((error, res) => {
-      t.deepEqual(res.body, ddfConceptsForPostRequest);
-      t.deepEqual(res.body.concepts.values, ddfConceptsForPostRequest.concepts.values);
-      t.deepEqual(res.body.concepts.properties, ddfConceptsForPostRequest.concepts.properties);
-      t.deepEqual(res.body.concepts.propertyValues, ddfConceptsForPostRequest.concepts.propertyValues);
-      t.deepEqual(res.body.concepts.rows, ddfConceptsForPostRequest.concepts.rows);
+      t.deepEqual(res.body, ddfConceptWithSelectForPostRequest);
 
       t.end();
     });
 });
 
-test.skip.cb('Check POST requests: datapoints without select when default dataset was set', t => {
+test.cb('Check POST requests: datapoints without select when default dataset was set', t => {
   t.plan(2);
   api.post(`/api/ddf/ql`)
-    .send({
-      "from": "datapoints"
-    })
+    .send({"from": "datapoints"})
     .set('Accept', 'application/x-ws+json')
     .expect(200)
     .expect('Content-Type', /application\/json/)
@@ -295,43 +292,115 @@ test.skip.cb('Check POST requests: datapoints without select when default datase
     });
 });
 
-test.skip.cb('Check POST requests: datapoints with select when default dataset was set', t => {
+test.cb('Check POST requests: datapoints with select when default dataset was set', t => {
   t.plan(1);
-  api.post(`/api/ddf/ql`)
+  api.post(`/api/ddf/ql?format=wsJson`)
     .send({
       "select": {
         "key": ["geo", "time"],
-        "value": "sg_population"
+        "value": [
+          "population_total", "sg_population"
+        ]
       },
-      "from": "datapoints"
+      "from": "datapoints",
+      "where": {
+        "$and": [
+          {"geo": "$geo"},
+          {"time": "$time"},
+          {
+            "$or": [
+              {"population_total": {"$gt": 100000}, "time": "$time2"},
+              {"sg_population": {"$gt": 30, "$lt": 70}}
+            ]
+          }
+        ]
+      },
+      "join": {
+        "$geo": {
+          "key": "geo",
+          "where": {
+            "$and": [
+              {"is--country": true},
+              {"latitude": {"$lte": 0}}
+            ]
+          }
+        },
+        "$time": {
+          "key": "time",
+          "where": {
+            "time": {"$lt": "2015"}
+          }
+        },
+        "$time2": {
+          "key": "time",
+          "where": {
+            "time": {"$eq": "1918"}
+          }
+        }
+      }
     })
     .set('Accept', 'application/x-ws+json')
     .expect(200)
     .expect('Content-Type', /application\/json/)
     .end((error, res) => {
-      //FIXME:when use POST request with query {select: {'key': [], 'value': []}}  res === undefined
-      t.deepEqual(res, undefined);
+      t.deepEqual(res.body, ddfDataointsForPostRequest);
 
       t.end();
     });
 });
 
-test.skip.cb('Check POST requests: entities with select when default dataset was set', t => {
+test.cb('Check POST requests: entities with select when default dataset was set', t => {
   t.plan(1);
-  api.post(`/api/ddf/ql`)
+  api.post(`/api/ddf/ql?format=wsJson`)
     .send({
       "select": {
         "key": ["geo"],
-        "value": ["name","_default","world_4region"]
+        "value": [
+          "name","_default","world_4region"
+        ]
       },
-      "from": "entities"
+      "from": "entities",
+      "where": {
+        "$and": [
+          {"is--country": true},
+          {"landlocked": "$landlocked"},
+          {
+            "$nor": [
+              {"latitude": {"$gt": -10,"$lt": 1 }, "world_4region": "$world_4region"},
+              {"longitude": {"$gt": 30, "$lt": 70}, "main_religion": "$main_religion_2008"}
+            ]
+          }
+        ]
+      },
+      "join": {
+        "$landlocked": {
+          "key": "landlocked",
+          "where": {
+            "$or": [
+              {"gwid": "i271"},
+              {"name": "Coastline"}
+            ]
+          }
+        },
+        "$world_4region": {
+          "key": "world_4region",
+          "where": {
+            "color": "#ff5872"
+          }
+        },
+        "$main_religion_2008": {
+          "key": "main_religion_2008",
+          "where": {
+            "main_religion_2008": {"$nin": ["eastern_religions"]}
+          }
+        }
+      }
     })
     .set('Accept', 'application/x-ws+json')
     .expect(200)
     .expect('Content-Type', /application\/json/)
     .end((error, res) => {
-      //FIXME:when use POST request with query {select: {'key': [], 'value': []}}  res === undefined
-      t.deepEqual(res, undefined);
+      t.deepEqual(res.body, ddfEntitiesForPostRequest);
 
       t.end();
     });
