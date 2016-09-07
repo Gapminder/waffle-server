@@ -1,17 +1,21 @@
 'use strict';
 
 import test from 'ava';
-import ddfConceptsJsonFormat from './ws.ddf.test.json/concepts-test.json';
-import ddfConceptsWsJsonFormat from './ws.ddf.test.json/concepts-wsjson-format-test.json';
-import ddfConceptsDdfJsonFormat from './ws.ddf.test.json/concepts-ddfjson-format-test.json';
-import ddfConceptWithoutSelectForPostRequest from './ws.ddf.test.json/ddf--concepts-for-post-request.json';
-import ddfDatapointsSelectSgPopulation from './ws.ddf.test.json/ddf--datapoints-sg_populations-only.json';
-import ddfEntitiesCountryJsonFormat from './ws.ddf.test.json/ddf--entities-json-format.json'
-import ddfEntitiesCountryWsJsonFormat from './ws.ddf.test.json/ddf--entities-wsjson-format.json';
-import ddfEntitiesCountryDdfJsonFormat from './ws.ddf.test.json/ddf--entities-ddfjson-format.json';
-import ddfEntitiesForPostRequest from './ws.ddf.test.json/ddf--entities-with-select-for-post-request.json';
-import ddfDataointsForPostRequest from './ws.ddf.test.json/ddf--datapoints-with-select-for-post-request.json';
-import ddfConceptWithSelectForPostRequest from './ws.ddf.test.json/ddf--concept-with-select-for-post-request.json';
+import ddfConceptsJsonFormat from './ws_ddf_test_fixtures_commit_1/concepts-test.json';
+import ddfConceptsWsJsonFormat from './ws_ddf_test_fixtures_commit_1/concepts-wsjson-format-test.json';
+import ddfConceptsDdfJsonFormat from './ws_ddf_test_fixtures_commit_1/concepts-ddfjson-format-test.json';
+import ddfConceptWithoutSelectForPostRequest from './ws_ddf_test_fixtures_commit_1/ddf--concepts-for-post-request.json';
+import ddfDatapointsSelectSgPopulation from './ws_ddf_test_fixtures_commit_1/ddf--datapoints-sg_populations-only.json';
+import ddfEntitiesCountryJsonFormat from './ws_ddf_test_fixtures_commit_1/ddf--entities-json-format.json'
+import ddfEntitiesCountryWsJsonFormat from './ws_ddf_test_fixtures_commit_1/ddf--entities-wsjson-format.json';
+import ddfEntitiesCountryDdfJsonFormat from './ws_ddf_test_fixtures_commit_1/ddf--entities-ddfjson-format.json';
+import ddfEntitiesForPostRequest from './ws_ddf_test_fixtures_commit_1/ddf--entities-with-select-for-post-request.json';
+import ddfDataointsForPostRequest from './ws_ddf_test_fixtures_commit_1/ddf--datapoints-with-select-for-post-request.json';
+import ddfConceptWithSelectForPostRequest from './ws_ddf_test_fixtures_commit_1/ddf--concept-with-select-for-post-request.json';
+import ddfConceptsSchemas from './ws_ddf_test_fixtures_commit_1/ddf--concepts-schemas.json';
+import ddfDatapointsSchemas from './ws_ddf_test_fixtures_commit_1/ddf--datapoints-schemas.json';
+import ddfEntitiesSchemas from './ws_ddf_test_fixtures_commit_1/ddf--entities-schemas.json';
+
 
 const _ = require('lodash');
 const shell = require('shelljs');
@@ -219,25 +223,7 @@ test.cb('Check GET request: for entities with selected format=ddfJson, when defa
     })
 });
 
-test.skip.cb('Check POST request : for concept.schema', t=> {
-  //const conceptsSchemaHeaders = ["description", "unit", "drill_up", "scales", "color", "indicator_url", "domian", "concept_type", "name", "concept"];
-  t.plan(1);
-  api.post('/api/ddf/concepts.schema')
-    .send( {"select": {
-    "key": ["key","value"],
-      "value": ["min(value)","max(value)"]
-  },
-  "from": "datapoints.schema"})
-    .set('Accept', 'application/x-ws+json')
-    .expect(200)
-    .end((err, res) => {
-      t.deepEqual(res.body, 35);
-
-      t.end();
-    })
-});
-
-test.cb('Check POST requests: concepts without select when default dataset was set', t => {
+test.cb('Check POST request: concepts without select when default dataset was set', t => {
   t.plan(5);
   api.post(`/api/ddf/ql`)
     .send({from: "concepts"})
@@ -255,8 +241,8 @@ test.cb('Check POST requests: concepts without select when default dataset was s
     });
 });
 
-test.cb('Check POST requests: concepts with select when default dataset was set', t => {
-  t.plan(1);
+test.cb('Check POST request: concepts with select when default dataset was set', t => {
+  t.plan(4);
   api.post(`/api/ddf/ql?format=wsJson`)
     .send({
       "select": {
@@ -272,12 +258,15 @@ test.cb('Check POST requests: concepts with select when default dataset was set'
     .expect('Content-Type', /application\/json/)
     .end((error, res) => {
       t.deepEqual(res.body, ddfConceptWithSelectForPostRequest);
+      t.deepEqual(res.body.headers, ddfConceptWithSelectForPostRequest.headers);
+      t.deepEqual(res.body.rows, ddfConceptWithSelectForPostRequest.rows);
+      t.deepEqual(res.body.rows.length, ddfConceptWithSelectForPostRequest.rows.length);
 
       t.end();
     });
 });
 
-test.cb('Check POST requests: datapoints without select when default dataset was set', t => {
+test.cb('Check POST request: datapoints without select when default dataset was set', t => {
   t.plan(2);
   api.post(`/api/ddf/ql`)
     .send({"from": "datapoints"})
@@ -292,8 +281,8 @@ test.cb('Check POST requests: datapoints without select when default dataset was
     });
 });
 
-test.cb('Check POST requests: datapoints with select when default dataset was set', t => {
-  t.plan(1);
+test.cb('Check POST request: datapoints with select when default dataset was set', t => {
+  t.plan(4);
   api.post(`/api/ddf/ql?format=wsJson`)
     .send({
       "select": {
@@ -344,13 +333,16 @@ test.cb('Check POST requests: datapoints with select when default dataset was se
     .expect('Content-Type', /application\/json/)
     .end((error, res) => {
       t.deepEqual(res.body, ddfDataointsForPostRequest);
+      t.deepEqual(res.body.headers, ddfDataointsForPostRequest.headers);
+      t.deepEqual(res.body.rows, ddfDataointsForPostRequest.rows);
+      t.deepEqual(res.body.rows.length, ddfDataointsForPostRequest.rows.length);
 
       t.end();
     });
 });
 
-test.cb('Check POST requests: entities with select when default dataset was set', t => {
-  t.plan(1);
+test.cb('Check POST request: entities with select when default dataset was set', t => {
+  t.plan(4);
   api.post(`/api/ddf/ql?format=wsJson`)
     .send({
       "select": {
@@ -401,10 +393,80 @@ test.cb('Check POST requests: entities with select when default dataset was set'
     .expect('Content-Type', /application\/json/)
     .end((error, res) => {
       t.deepEqual(res.body, ddfEntitiesForPostRequest);
+      t.deepEqual(res.body.headers, ddfEntitiesForPostRequest.headers);
+      t.deepEqual(res.body.rows, ddfEntitiesForPostRequest.rows);
+      t.deepEqual(res.body.rows.length, ddfEntitiesForPostRequest.rows.length);
 
       t.end();
     });
 });
+
+test.cb('Check POST request: for concept.schema', t=> {
+  t.plan(4);
+  api.post('/api/ddf/ql?format=wsJson')
+    .send({
+      "select": {
+        "key": ["key","value"],
+        "value": ["min(value)","max(value)"]
+      },
+      "from": "concepts.schema"
+    })
+    .set('Accept', 'application/x-ws+json')
+    .expect(200)
+    .end((err, res) => {
+      t.deepEqual(res.body, ddfConceptsSchemas);
+      t.deepEqual(res.body.headers, ddfConceptsSchemas.headers);
+      t.deepEqual(res.body.rows, ddfConceptsSchemas.rows);
+      t.deepEqual(res.body.rows.length, ddfConceptsSchemas.rows.length);
+
+      t.end();
+    })
+});
+
+test.cb('Check POST request: for datapoints.schema', t=> {
+  t.plan(4);
+  api.post('/api/ddf/ql?format=wsJson')
+    .send({
+      "select": {
+        "key": ["key","value"],
+        "value": ["min(value)","max(value)"]
+      },
+      "from": "datapoints.schema"
+    })
+    .set('Accept', 'application/x-ws+json')
+    .expect(200)
+    .end((err, res) => {
+      t.deepEqual(res.body, ddfDatapointsSchemas);
+      t.deepEqual(res.body.headers, ddfDatapointsSchemas.headers);
+      t.deepEqual(res.body.rows, ddfDatapointsSchemas.rows);
+      t.deepEqual(res.body.rows.length, ddfDatapointsSchemas.rows.length);
+
+      t.end();
+    })
+});
+
+test.cb('Check POST request: for entities.schema', t=> {
+  t.plan(4);
+  api.post('/api/ddf/ql?format=wsJson')
+    .send({
+      "select": {
+        "key": ["key","value"],
+        "value": ["min(value)","max(value)"]
+      },
+      "from": "entities.schema"
+    })
+    .set('Accept', 'application/x-ws+json')
+    .expect(200)
+    .end((err, res) => {
+      t.deepEqual(res.body, ddfEntitiesSchemas);
+      t.deepEqual(res.body.headers, ddfEntitiesSchemas.headers);
+      t.deepEqual(res.body.rows, ddfEntitiesSchemas.rows);
+      t.deepEqual(res.body.rows.length, ddfEntitiesSchemas.rows.length);
+
+      t.end();
+    })
+});
+
 
 
 //test.cb.after('clean test database', t => {
