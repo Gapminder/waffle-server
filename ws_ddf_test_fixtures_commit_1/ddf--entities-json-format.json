@@ -1479,6 +1479,23 @@
     "world_4region": "africa"
   },
   {
+    "code": "GMB",
+    "country": "gmb",
+    "gapminder_list": "Gambia",
+    "geo": "gmb",
+    "geographic_regions": "sub_saharan_africa",
+    "god_id": "GM",
+    "gwid": "i80",
+    "is--country": true,
+    "landlocked": "coastline",
+    "latitude": 13.5,
+    "longitude": -15.5,
+    "main_religion_2008": "muslim",
+    "name": "Gambia",
+    "number": 270,
+    "world_4region": "africa"
+  },
+  {
     "code": "",
     "country": "pse_gaza",
     "gapminder_list": "",
@@ -1544,23 +1561,6 @@
     "main_religion_2008": "christian",
     "name": "Ghana",
     "number": 288,
-    "world_4region": "africa"
-  },
-  {
-    "code": "GMB",
-    "country": "gmb",
-    "gapminder_list": "Gambia",
-    "geo": "gmb",
-    "geographic_regions": "sub_saharan_africa",
-    "god_id": "GM",
-    "gwid": "i80",
-    "is--country": true,
-    "landlocked": "coastline",
-    "latitude": 13.5,
-    "longitude": -15.5,
-    "main_religion_2008": "muslim",
-    "name": "Gambia",
-    "number": 270,
     "world_4region": "africa"
   },
   {
@@ -3094,23 +3094,6 @@
     "world_4region": "asia"
   },
   {
-    "code": "PAN",
-    "country": "pan",
-    "gapminder_list": "Panama",
-    "geo": "pan",
-    "geographic_regions": "america",
-    "god_id": "PA",
-    "gwid": "i172",
-    "is--country": true,
-    "landlocked": "coastline",
-    "latitude": 8.9936,
-    "longitude": -79.51973,
-    "main_religion_2008": "christian",
-    "name": "Panama",
-    "number": 591,
-    "world_4region": "americas"
-  },
-  {
     "code": "PNG",
     "country": "png",
     "gapminder_list": "Papua New Guinea",
@@ -3126,6 +3109,23 @@
     "name": "Papua New Guinea",
     "number": 598,
     "world_4region": "asia"
+  },
+  {
+    "code": "PAN",
+    "country": "pan",
+    "gapminder_list": "Panama",
+    "geo": "pan",
+    "geographic_regions": "america",
+    "god_id": "PA",
+    "gwid": "i172",
+    "is--country": true,
+    "landlocked": "coastline",
+    "latitude": 8.9936,
+    "longitude": -79.51973,
+    "main_religion_2008": "christian",
+    "name": "Panama",
+    "number": 591,
+    "world_4region": "americas"
   },
   {
     "code": "PRY",
@@ -3383,6 +3383,40 @@
     "world_4region": "africa"
   },
   {
+    "code": "SAU",
+    "country": "sau",
+    "gapminder_list": "Saudi Arabia",
+    "geo": "sau",
+    "geographic_regions": "middle_east_north_africa",
+    "god_id": "SA",
+    "gwid": "i196",
+    "is--country": true,
+    "landlocked": "coastline",
+    "latitude": 25,
+    "longitude": 45,
+    "main_religion_2008": "muslim",
+    "name": "Saudi Arabia",
+    "number": 682,
+    "world_4region": "asia"
+  },
+  {
+    "code": "SEN",
+    "country": "sen",
+    "gapminder_list": "Senegal",
+    "geo": "sen",
+    "geographic_regions": "sub_saharan_africa",
+    "god_id": "SN",
+    "gwid": "i197",
+    "is--country": true,
+    "landlocked": "coastline",
+    "latitude": 14.5,
+    "longitude": -14.25,
+    "main_religion_2008": "muslim",
+    "name": "Senegal",
+    "number": 686,
+    "world_4region": "africa"
+  },
+  {
     "code": "",
     "country": "srb",
     "gapminder_list": "Serbia",
@@ -3568,40 +3602,6 @@
     "name": "Somalia",
     "number": 706,
     "world_4region": "africa"
-  },
-  {
-    "code": "SEN",
-    "country": "sen",
-    "gapminder_list": "Senegal",
-    "geo": "sen",
-    "geographic_regions": "sub_saharan_africa",
-    "god_id": "SN",
-    "gwid": "i197",
-    "is--country": true,
-    "landlocked": "coastline",
-    "latitude": 14.5,
-    "longitude": -14.25,
-    "main_religion_2008": "muslim",
-    "name": "Senegal",
-    "number": 686,
-    "world_4region": "africa"
-  },
-  {
-    "code": "SAU",
-    "country": "sau",
-    "gapminder_list": "Saudi Arabia",
-    "geo": "sau",
-    "geographic_regions": "middle_east_north_africa",
-    "god_id": "SA",
-    "gwid": "i196",
-    "is--country": true,
-    "landlocked": "coastline",
-    "latitude": 25,
-    "longitude": 45,
-    "main_religion_2008": "muslim",
-    "name": "Saudi Arabia",
-    "number": 682,
-    "world_4region": "asia"
   },
   {
     "code": "",
@@ -4641,23 +4641,6 @@
     "world_4region": "europe"
   },
   {
-    "code": "ZWE",
-    "country": "zwe",
-    "gapminder_list": "Zimbabwe",
-    "geo": "zwe",
-    "geographic_regions": "sub_saharan_africa",
-    "god_id": "ZW",
-    "gwid": "i257",
-    "is--country": true,
-    "landlocked": "landlocked",
-    "latitude": -19,
-    "longitude": 29.75,
-    "main_religion_2008": "christian",
-    "name": "Zimbabwe",
-    "number": 716,
-    "world_4region": "africa"
-  },
-  {
     "code": "ZMB",
     "country": "zmb",
     "gapminder_list": "Zambia",
@@ -4672,6 +4655,23 @@
     "main_religion_2008": "christian",
     "name": "Zambia",
     "number": 894,
+    "world_4region": "africa"
+  },
+  {
+    "code": "ZWE",
+    "country": "zwe",
+    "gapminder_list": "Zimbabwe",
+    "geo": "zwe",
+    "geographic_regions": "sub_saharan_africa",
+    "god_id": "ZW",
+    "gwid": "i257",
+    "is--country": true,
+    "landlocked": "landlocked",
+    "latitude": -19,
+    "longitude": 29.75,
+    "main_religion_2008": "christian",
+    "name": "Zimbabwe",
+    "number": 716,
     "world_4region": "africa"
   }
 ]
