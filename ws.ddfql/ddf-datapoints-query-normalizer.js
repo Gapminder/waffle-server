@@ -3,6 +3,7 @@
 const _ = require('lodash');
 const traverse = require('traverse');
 const ddfTimeUtils = require('ddf-time-utils');
+const constants = require('../ws.utils/constants');
 
 module.exports = {
   normalizeDatapoints: normalizeDatapoints,
@@ -11,9 +12,19 @@ module.exports = {
   substituteDatapointJoinLinks: substituteDatapointJoinLinks
 };
 
-function normalizeDatapoints(query, conceptsToIds, timeConcepts) {
+function normalizeDatapoints(query, concepts) {
+  const timeConcepts = _.chain(concepts)
+    .filter(_.iteratee(['properties.concept_type', 'time']))
+    .map(constants.GID)
+    .value();
+  const conceptOriginIdsByGids = _.chain(concepts)
+    .keyBy(constants.GID)
+    .mapValues(constants.ORIGIN_ID)
+    .value();
+
   normalizeDatapointDdfQuery(query, timeConcepts);
-  substituteDatapointConceptsWithIds(query, conceptsToIds);
+  substituteDatapointConceptsWithIds(query, conceptOriginIdsByGids);
+
   return query;
 }
 
@@ -46,12 +57,19 @@ function substituteDatapointConceptsWithIds(query, conceptsToIds) {
 }
 
 function normalizeDatapointDdfQuery(query, timeConcepts) {
+  if (_.isEmpty(query.join)) {
+    _.set(query, 'join', {});
+  }
+
   normalizeWhere(query);
   normalizeJoin(query, timeConcepts);
+
   return query;
 }
 
 function normalizeWhere(query) {
+  let numParsedLinks = 0;
+
   traverse(query.where).forEach(function (filterValue) {
     let normalizedFilter = null;
 
@@ -63,9 +81,23 @@ function normalizeWhere(query) {
     }
 
     if (isEntityFilter(this.key, query)) {
-      normalizedFilter = {
-        dimensions: filterValue,
-      };
+      const join = _.get(query, 'join', {});
+      const isUsedExistedLink = _.startsWith(filterValue, '$') && join.hasOwnProperty(filterValue);
+      if (isUsedExistedLink) {
+        normalizedFilter = {
+          dimensions: filterValue,
+        };
+      } else {
+        numParsedLinks++;
+        const joinLink = `$parsed_${this.key}_${numParsedLinks}`;
+        query.join[joinLink] = {
+          key: this.key,
+          where: {[this.key]: filterValue}
+        };
+        normalizedFilter = {
+          dimensions: joinLink
+        };
+      }
     }
 
     if (normalizedFilter) {
@@ -130,9 +162,15 @@ function normalizeJoin(query, timeConcepts) {
     }
 
     if (this.key === 'key') {
-      normalizedFilter = {
-        domain: filterValue,
-      };
+      if (_.includes(timeConcepts, filterValue)) {
+        normalizedFilter = {
+          domain: filterValue,
+        };
+      } else {
+        normalizedFilter = {
+          domain: filterValue,
+        };
+      }
     }
 
     if (normalizedFilter) {

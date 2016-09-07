@@ -416,12 +416,12 @@ test('should substitute concept placeholders with ids', assert => {
       },
       "$time": {
         "domain": "time",
-        "parsedProperties.time.typeType": "YEAR_TYPE",
+        "parsedProperties.time.timeType": "YEAR_TYPE",
         "parsedProperties.time.millis": {"$lt": 1377993600000}
       },
       "$time2": {
         "domain": "time",
-        "parsedProperties.time.typeType": "YEAR_TYPE",
+        "parsedProperties.time.timeType": "YEAR_TYPE",
         "parsedProperties.time.millis": {"$eq": 1377993600000}
       }
     }
@@ -477,12 +477,12 @@ test('should substitute concept placeholders with ids', assert => {
       },
       "$time": {
         "domain": "27a3470d3a8c9b37009b9bf9",
-        "parsedProperties.time.typeType": "YEAR_TYPE",
+        "parsedProperties.time.timeType": "YEAR_TYPE",
         "parsedProperties.time.millis": {"$lt": 1377993600000}
       },
       "$time2": {
         "domain": "27a3470d3a8c9b37009b9bf9",
-        "parsedProperties.time.typeType": "YEAR_TYPE",
+        "parsedProperties.time.timeType": "YEAR_TYPE",
         "parsedProperties.time.millis": {"$eq": 1377993600000}
       }
     }
@@ -490,7 +490,6 @@ test('should substitute concept placeholders with ids', assert => {
 
   assert.deepEqual(ddfQueryNormalizer.substituteDatapointConceptsWithIds(normalizedDdfql, conceptsToIds), normalizedDdfqlWithSubstitutedConcepts);
 });
-
 
 test('should substitute join link in where clause', assert => {
   const linksInJoinToValues = {
@@ -565,12 +564,12 @@ test('should substitute join link in where clause', assert => {
       },
       "$time": {
         "domain": "27a3470d3a8c9b37009b9bf9",
-        "parsedProperties.time.typeType": "YEAR_TYPE",
+        "parsedProperties.time.timeType": "YEAR_TYPE",
         "parsedProperties.time.millis": {"$lt": 1377993600000}
       },
       "$time2": {
         "domain": "27a3470d3a8c9b37009b9bf9",
-        "parsedProperties.time.typeType": "YEAR_TYPE",
+        "parsedProperties.time.timeType": "YEAR_TYPE",
         "parsedProperties.time.millis": {"$eq": 1377993600000}
       }
     }
@@ -648,16 +647,154 @@ test('should substitute join link in where clause', assert => {
       },
       "$time": {
         "domain": "27a3470d3a8c9b37009b9bf9",
-        "parsedProperties.time.typeType": "YEAR_TYPE",
+        "parsedProperties.time.timeType": "YEAR_TYPE",
         "parsedProperties.time.millis": {"$lt": 1377993600000}
       },
       "$time2": {
         "domain": "27a3470d3a8c9b37009b9bf9",
-        "parsedProperties.time.typeType": "YEAR_TYPE",
+        "parsedProperties.time.timeType": "YEAR_TYPE",
         "parsedProperties.time.millis": {"$eq": 1377993600000}
       }
     }
   };
 
   assert.deepEqual(ddfQueryNormalizer.substituteDatapointJoinLinks(normalizedDdfql, linksInJoinToValues), normalizedDdfqlWithSubstitutedJoinLinks);
+});
+
+test('should normalized queries for quarters range', (assert) => {
+  const ddfql = {
+    "select": {
+      "key": ["geo", "quarter"],
+      "value": [
+        "sg_population"
+      ]
+    },
+    "from": "datapoints",
+    "where": {
+      "$and": [
+        {"quarter": "$quarter1"},
+        {"quarter": "$quarter2"}
+      ]
+    },
+    "join": {
+      "$quarter1": {
+        "key": "quarter",
+        "where": {
+          "quarter": {"$gt": "2012q4"}
+        }
+      },
+      "$quarter2": {
+        "key": "quarter",
+        "where": {
+          "quarter": {"$lt": "2015q3"}
+        }
+      }
+    }
+  };
+
+  const normalizedDdfql = {
+    "select": {
+      "key": ["geo", "quarter"],
+      "value": [
+        "sg_population"
+      ]
+    },
+    "from": "datapoints",
+    "where": {
+      "$and": [
+        {"dimensions": {"$size": 2}},
+        {
+          "$and": [
+            {"dimensions": "$quarter1"},
+            {"dimensions": "$quarter2"}
+          ]
+        }
+      ]
+    },
+    "join": {
+      "$quarter1": {
+        "domain": "quarter",
+        "parsedProperties.quarter.timeType": "QUARTER_TYPE",
+        "parsedProperties.quarter.millis": {"$gt": 1349049600000}
+      },
+      "$quarter2": {
+        "domain": "quarter",
+        "parsedProperties.quarter.timeType": "QUARTER_TYPE",
+        "parsedProperties.quarter.millis": {"$lt": 1435708800000}
+      }
+    }
+  };
+
+  const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, ['time', 'quarter']);
+
+  assert.deepEqual(actualDdfql, normalizedDdfql);
+});
+
+test('should create links in join section for entities filter', (assert) => {
+  const ddfql = {
+    "select": {
+      "key": ["geo", "quarter"],
+      "value": [
+        "sg_population"
+      ]
+    },
+    "from": "datapoints",
+    "where": {
+      "$and": [
+        {
+          "$or": [
+            {"quarter": "2012q4"},
+            {"quarter": "2015q3"}
+          ]
+        },
+        {"geo": "dza"}
+      ]
+    }
+  };
+
+  const normalizedDdfql = {
+    "select": {
+      "key": ["geo", "quarter"],
+      "value": [
+        "sg_population"
+      ]
+    },
+    "from": "datapoints",
+    "where": {
+      "$and": [
+        {"dimensions": {"$size": 2}},
+        {
+          "$and": [
+            {
+              "$or": [
+                {"dimensions": "$parsed_quarter_1"},
+                {"dimensions": "$parsed_quarter_2"}
+              ]
+            },
+            {"dimensions": "$parsed_geo_3"}
+          ]
+        }
+      ]
+    },
+    "join": {
+      "$parsed_quarter_1": {
+        "domain": "quarter",
+        "parsedProperties.quarter.timeType": "QUARTER_TYPE",
+        "parsedProperties.quarter.millis": 1349049600000
+      },
+      "$parsed_quarter_2": {
+        "domain": "quarter",
+        "parsedProperties.quarter.timeType": "QUARTER_TYPE",
+        "parsedProperties.quarter.millis": 1435708800000
+      },
+      "$parsed_geo_3": {
+        "domain": "geo",
+        "gid": "dza",
+      }
+    }
+  };
+
+  const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, ['time', 'quarter']);
+
+  assert.deepEqual(actualDdfql, normalizedDdfql);
 });
