@@ -1409,6 +1409,22 @@
       11.75
     ],
     [
+      "gmb",
+      "i80",
+      "Gambia",
+      "sub_saharan_africa",
+      "coastline",
+      "muslim",
+      "Gambia",
+      "GM",
+      "GMB",
+      270,
+      true,
+      "africa",
+      13.5,
+      -15.5
+    ],
+    [
       "pse_gaza",
       "",
       "Gaza Strip",
@@ -1471,22 +1487,6 @@
       "africa",
       8.1,
       -1.2
-    ],
-    [
-      "gmb",
-      "i80",
-      "Gambia",
-      "sub_saharan_africa",
-      "coastline",
-      "muslim",
-      "Gambia",
-      "GM",
-      "GMB",
-      270,
-      true,
-      "africa",
-      13.5,
-      -15.5
     ],
     [
       "gib",
@@ -2929,22 +2929,6 @@
       134.621
     ],
     [
-      "pan",
-      "i172",
-      "Panama",
-      "america",
-      "coastline",
-      "christian",
-      "Panama",
-      "PA",
-      "PAN",
-      591,
-      true,
-      "americas",
-      8.9936,
-      -79.51973
-    ],
-    [
       "png",
       "i173",
       "Papua New Guinea",
@@ -2959,6 +2943,22 @@
       "asia",
       -6,
       147
+    ],
+    [
+      "pan",
+      "i172",
+      "Panama",
+      "america",
+      "coastline",
+      "christian",
+      "Panama",
+      "PA",
+      "PAN",
+      591,
+      true,
+      "americas",
+      8.9936,
+      -79.51973
     ],
     [
       "pry",
@@ -3201,6 +3201,38 @@
       7
     ],
     [
+      "sau",
+      "i196",
+      "Saudi Arabia",
+      "middle_east_north_africa",
+      "coastline",
+      "muslim",
+      "Saudi Arabia",
+      "SA",
+      "SAU",
+      682,
+      true,
+      "asia",
+      25,
+      45
+    ],
+    [
+      "sen",
+      "i197",
+      "Senegal",
+      "sub_saharan_africa",
+      "coastline",
+      "muslim",
+      "Senegal",
+      "SN",
+      "SEN",
+      686,
+      true,
+      "africa",
+      14.5,
+      -14.25
+    ],
+    [
       "srb",
       "i198",
       "Serbia",
@@ -3375,38 +3407,6 @@
       "africa",
       6,
       48
-    ],
-    [
-      "sen",
-      "i197",
-      "Senegal",
-      "sub_saharan_africa",
-      "coastline",
-      "muslim",
-      "Senegal",
-      "SN",
-      "SEN",
-      686,
-      true,
-      "africa",
-      14.5,
-      -14.25
-    ],
-    [
-      "sau",
-      "i196",
-      "Saudi Arabia",
-      "middle_east_north_africa",
-      "coastline",
-      "muslim",
-      "Saudi Arabia",
-      "SA",
-      "SAU",
-      682,
-      true,
-      "asia",
-      25,
-      45
     ],
     [
       "som_somland",
@@ -4385,22 +4385,6 @@
       ""
     ],
     [
-      "zwe",
-      "i257",
-      "Zimbabwe",
-      "sub_saharan_africa",
-      "landlocked",
-      "christian",
-      "Zimbabwe",
-      "ZW",
-      "ZWE",
-      716,
-      true,
-      "africa",
-      -19,
-      29.75
-    ],
-    [
       "zmb",
       "i256",
       "Zambia",
@@ -4415,6 +4399,22 @@
       "africa",
       -14.33333,
       28.5
+    ],
+    [
+      "zwe",
+      "i257",
+      "Zimbabwe",
+      "sub_saharan_africa",
+      "landlocked",
+      "christian",
+      "Zimbabwe",
+      "ZW",
+      "ZWE",
+      716,
+      true,
+      "africa",
+      -19,
+      29.75
     ]
   ]
 }
