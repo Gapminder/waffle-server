@@ -55,6 +55,7 @@ Entities.plugin(originId, {
 });
 
 Entities.index({dataset: 1, from: 1, to: 1, domain: 1});
+Entities.index({dataset: 1, from: 1, to: 1, domain: 1, 'parsedProperties.time.millis': 1, 'parsedProperties.time.timeType': 1}, {sparse: true});
 Entities.index({dataset: 1, transaction: 1, originId: 1});
 Entities.index({originId: 1, dataset: 1, transaction: 1});
 Entities.index({originId: 1, dataset: 1, from: 1, to: 1});
