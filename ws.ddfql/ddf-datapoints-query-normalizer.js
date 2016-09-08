@@ -119,12 +119,17 @@ function normalizeWhere(query) {
     }
   });
 
+  const subWhere = query.where;
+
   query.where = {
     $and: [
-      {dimensions: {$size: _.size(query.select.key)}},
-      query.where
+      {dimensions: {$size: _.size(query.select.key)}}
     ]
   };
+
+  if (!_.isEmpty(subWhere)) {
+    query.where.$and.push(subWhere);
+  }
 }
 
 function normalizeJoin(query, timeConcepts) {

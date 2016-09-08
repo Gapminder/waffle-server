@@ -18,7 +18,7 @@ function normalizeEntities(query, concepts) {
 
   normalizeEntityDdfQuery(safeQuery, safeConcepts);
   substituteEntityConceptsWithIds(safeQuery, safeConcepts);
-  return safeConcepts;
+  return safeQuery;
 }
 
 function substituteEntityJoinLinks(query, linksInJoinToValues) {
@@ -72,7 +72,8 @@ function normalizeWhere(query, concepts) {
     .filter(_.iteratee(['properties.concept_type', 'time']))
     .map(constants.GID)
     .value();
-  const conceptGids = _.map(concepts, 'gid');
+  const conceptGids = _.map(concepts, constants.GID);
+  const conceptsByGids = _.keyBy(concepts, constants.GID);
 
   traverse(query.where).forEach(function (filterValue) {
     let normalizedFilter = null;
@@ -98,6 +99,24 @@ function normalizeWhere(query, concepts) {
       ddfQueryUtils.replaceValueOnPath(options);
     }
   });
+
+  const subWhere = query.where;
+
+  const conceptOriginId = _.get(conceptsByGids, `${query.select.key}.originId`, null);
+
+  query.where = {
+    $and: [
+      {$or: [
+        {domain: conceptOriginId},
+        {sets: conceptOriginId}
+      ]},
+    ]
+  };
+
+  if (!_.isEmpty(subWhere)) {
+    query.where.$and.push(subWhere);
+  }
+
 }
 
 function normalizeTimePropertyFilter(key, filterValue, path, property, query) {
