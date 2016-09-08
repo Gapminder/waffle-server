@@ -44,6 +44,8 @@ module.exports = serviceLocator => {
     const datasetName = _.first(req.decodedQuery.where.dataset);
     const version = _.first(req.decodedQuery.where.version);
 
+    req.ddfDataType = constants.DATAPOINTS;
+
     const options = {
       select,
       headers,

@@ -72,13 +72,17 @@ module.exports = serviceLocator => {
       query
     };
 
-    if (from === 'datapoints') {
+    if (from === constants.DATAPOINTS) {
+      req.ddfDataType = from;
       return datapointsService.collectDatapointsByDdfql(options, onEntriesCollected);
-    } else if (from === 'entities') {
+    } else if (from === constants.ENTITIES) {
+      req.ddfDataType = from;
       return entitiesService.collectEntitiesByDdfql(options, onEntriesCollected);
-    } else if (from === 'concepts') {
+    } else if (from === constants.CONCEPTS) {
+      req.ddfDataType = from;
       return conceptsService.collectConceptsByDdfql(options, onEntriesCollected);
     } else if (queryToSchema(from)) {
+      req.ddfDataType = constants.SCHEMA;
       req.query.format = 'wsJson';
       const onSchemaEntriesFound = routeUtils.respondWithRawDdf(req, res, next);
       return schemaService.findSchemaByDdfql(options.query, onSchemaEntriesFound);
