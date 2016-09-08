@@ -2,32 +2,36 @@
 
 const _ = require('lodash');
 const traverse = require('traverse');
-
-const constants = require('../ws.utils/constants');
 const ddfTimeUtils = require('ddf-time-utils');
 
+const constants = require('../ws.utils/constants');
+const ddfQueryUtils = require("./ddf-query-utils");
+
 module.exports = {
-  normalizeEntities: normalizeEntities,
-  normalizeEntityDdfQuery: normalizeEntityDdfQuery,
-  substituteEntityConceptsWithIds: substituteEntityConceptsWithIds,
-  substituteEntityJoinLinks: substituteEntityJoinLinks
+  normalizeEntities,
+  substituteEntityJoinLinks
 };
 
 function normalizeEntities(query, concepts) {
-  normalizeEntityDdfQuery(query, concepts);
-  substituteEntityConceptsWithIds(query, concepts);
-  return query;
+  const safeQuery = ddfQueryUtils.toSafeQuery(query);
+  const safeConcepts = concepts || [];
+
+  normalizeEntityDdfQuery(safeQuery, safeConcepts);
+  substituteEntityConceptsWithIds(safeQuery, safeConcepts);
+  return safeConcepts;
 }
 
 function substituteEntityJoinLinks(query, linksInJoinToValues) {
-  traverse(query.where).forEach(function (link) {
-    if (query.join && query.join.hasOwnProperty(link)) {
+  const safeQuery = ddfQueryUtils.toSafeQuery(query);
+
+  traverse(safeQuery.where).forEach(function (link) {
+    if (safeQuery.join.hasOwnProperty(link)) {
       const id = linksInJoinToValues[link];
       const value = id ? {$in: id} : link;
-      _.set(query.where, this.path, value);
+      _.set(safeQuery.where, this.path, value);
     }
   });
-  return query;
+  return safeQuery;
 }
 
 function substituteEntityConceptsWithIds(query, concepts) {
@@ -91,7 +95,7 @@ function normalizeWhere(query, concepts) {
         normalizedValue: normalizedFilter,
         queryFragment: query.where
       };
-      replaceValueOnPath(options);
+      ddfQueryUtils.replaceValueOnPath(options);
     }
   });
 }
@@ -151,7 +155,7 @@ function normalizeJoin(query, concepts) {
     }
 
     if (normalizedFilter) {
-      replaceValueOnPath({
+      ddfQueryUtils.replaceValueOnPath({
         key: this.key,
         path: this.path,
         normalizedValue: normalizedFilter,
@@ -166,7 +170,7 @@ function normalizeJoin(query, concepts) {
 function pullUpWhereSectionsInJoin(query) {
   traverse(query.join).forEach(function () {
     if (this.key === 'where') {
-      replaceValueOnPath({
+      ddfQueryUtils.replaceValueOnPath({
         key: this.key,
         path: this.path,
         queryFragment: query.join,
@@ -174,27 +178,6 @@ function pullUpWhereSectionsInJoin(query) {
       });
     }
   });
-}
-
-function replaceValueOnPath(options) {
-  // we need to do a step back in path
-  options.path.pop();
-  const path = options.path;
-
-  const key = options.key;
-  const normalizedValue = options.normalizedValue;
-  const queryFragment = options.queryFragment;
-
-  const value = _.get(queryFragment, path);
-
-  if (options.substituteEntryWithItsContent) {
-    const content = value[key];
-    delete value[key];
-    _.merge(value, content);
-  } else {
-    delete value[key];
-    _.set(queryFragment, path, _.merge(value, normalizedValue));
-  }
 }
 
 function isDomainFilter(key) {
