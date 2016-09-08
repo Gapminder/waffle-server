@@ -3,39 +3,45 @@
 const _ = require('lodash');
 const traverse = require('traverse');
 const ddfTimeUtils = require('ddf-time-utils');
+const ddfQueryUtils = require('./ddf-query-utils');
 const constants = require('../ws.utils/constants');
 
 module.exports = {
-  normalizeDatapoints: normalizeDatapoints,
-  normalizeDatapointDdfQuery: normalizeDatapointDdfQuery,
-  substituteDatapointConceptsWithIds: substituteDatapointConceptsWithIds,
-  substituteDatapointJoinLinks: substituteDatapointJoinLinks
+  normalizeDatapoints,
+  normalizeDatapointDdfQuery,
+  substituteDatapointConceptsWithIds,
+  substituteDatapointJoinLinks
 };
 
 function normalizeDatapoints(query, concepts) {
-  const timeConcepts = _.chain(concepts)
+  const safeQuery = ddfQueryUtils.toSafeQuery(query);
+  const safeConcepts = concepts || [];
+
+  const timeConcepts = _.chain(safeConcepts)
     .filter(_.iteratee(['properties.concept_type', 'time']))
     .map(constants.GID)
     .value();
-  const conceptOriginIdsByGids = _.chain(concepts)
+  const conceptOriginIdsByGids = _.chain(safeConcepts)
     .keyBy(constants.GID)
     .mapValues(constants.ORIGIN_ID)
     .value();
 
-  normalizeDatapointDdfQuery(query, timeConcepts);
-  substituteDatapointConceptsWithIds(query, conceptOriginIdsByGids);
+  normalizeDatapointDdfQuery(safeQuery, timeConcepts);
+  substituteDatapointConceptsWithIds(safeQuery, conceptOriginIdsByGids);
 
-  return query;
+  return safeQuery;
 }
 
 function substituteDatapointJoinLinks(query, linksInJoinToValues) {
-  traverse(query.where).forEach(function (link) {
-    if (query.join && query.join.hasOwnProperty(link)) {
+  const safeQuery = ddfQueryUtils.toSafeQuery(query);
+
+  traverse(safeQuery.where).forEach(function (link) {
+    if (safeQuery.join.hasOwnProperty(link)) {
       const id = linksInJoinToValues[link];
       this.update(id ? {$in: id} : link);
     }
   });
-  return query;
+  return safeQuery;
 }
 
 function substituteDatapointConceptsWithIds(query, conceptsToIds) {
@@ -104,7 +110,7 @@ function normalizeWhere(query) {
     }
 
     if (normalizedFilter) {
-      replaceValueOnPath({
+      ddfQueryUtils.replaceValueOnPath({
         key: this.key,
         path: this.path,
         normalizedValue: normalizedFilter,
@@ -177,7 +183,7 @@ function normalizeJoin(query, timeConcepts) {
     }
 
     if (normalizedFilter) {
-      replaceValueOnPath({
+      ddfQueryUtils.replaceValueOnPath({
         key: this.key,
         path: this.path,
         normalizedValue: normalizedFilter,
@@ -192,7 +198,7 @@ function normalizeJoin(query, timeConcepts) {
 function pullUpWhereSectionsInJoin(query) {
   traverse(query.join).forEach(function () {
     if (this.key === 'where') {
-      replaceValueOnPath({
+      ddfQueryUtils.replaceValueOnPath({
         key: this.key,
         path: this.path,
         queryFragment: query.join,
@@ -200,27 +206,6 @@ function pullUpWhereSectionsInJoin(query) {
       });
     }
   });
-}
-
-function replaceValueOnPath(options) {
-  // we need to do a step back in path
-  options.path.pop();
-  const path = options.path;
-
-  const key = options.key;
-  const normalizedValue = options.normalizedValue;
-  const queryFragment = options.queryFragment;
-
-  const value = _.get(queryFragment, path);
-
-  if (options.substituteEntryWithItsContent) {
-    const content = value[key];
-    delete value[key];
-    _.merge(value, content);
-  } else {
-    delete value[key];
-    _.set(queryFragment, path, _.merge(value, normalizedValue));
-  }
 }
 
 function isMeasureFilter(key, query) {

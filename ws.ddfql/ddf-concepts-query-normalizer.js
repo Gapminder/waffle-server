@@ -2,15 +2,17 @@
 
 const _ = require('lodash');
 const traverse = require('traverse');
+const ddfQueryUtils = require("./ddf-query-utils");
 
 module.exports = {
-  normalizeConcepts: normalizeConcepts,
-  normalizeConceptDdfQuery: normalizeConceptDdfQuery,
+  normalizeConcepts
 };
 
 function normalizeConcepts(query, concepts) {
-  normalizeConceptDdfQuery(query, concepts);
-  return query;
+  const safeQuery = ddfQueryUtils.toSafeQuery(query);
+  const safeConcepts = concepts || [];
+  normalizeConceptDdfQuery(safeQuery, safeConcepts);
+  return safeQuery;
 }
 
 function normalizeConceptDdfQuery(query, concepts) {
@@ -35,7 +37,7 @@ function normalizeWhere(query, concepts) {
     }
 
     if (normalizedFilter) {
-      replaceValueOnPath({
+      ddfQueryUtils.replaceValueOnPath({
         key: this.key,
         path: this.path,
         normalizedValue: normalizedFilter,
@@ -43,27 +45,6 @@ function normalizeWhere(query, concepts) {
       });
     }
   });
-}
-
-function replaceValueOnPath(options) {
-  // we need to do a step back in path
-  options.path.pop();
-  const path = options.path;
-
-  const key = options.key;
-  const normalizedValue = options.normalizedValue;
-  const queryFragment = options.queryFragment;
-
-  const value = _.get(queryFragment, path);
-
-  if (options.substituteEntryWithItsContent) {
-    const content = value[key];
-    delete value[key];
-    _.merge(value, content);
-  } else {
-    delete value[key];
-    _.set(queryFragment, path, _.merge(value, normalizedValue));
-  }
 }
 
 function isConceptPropertyFilter(key, resolvedProperties) {
