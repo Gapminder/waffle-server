@@ -45,6 +45,8 @@ module.exports = serviceLocator => {
 
     const sort = req.decodedQuery.sort;
 
+    req.ddfDataType = constants.CONCEPTS;
+
     let options = {
       headers,
       select,

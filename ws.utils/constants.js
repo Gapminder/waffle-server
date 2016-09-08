@@ -1,5 +1,9 @@
 'use strict';
 
+const CONCEPTS = 'concepts';
+const ENTITIES = 'entities';
+const DATAPOINTS = 'datapoints';
+
 module.exports = {
   //versioning
   MAX_VERSION: Number.MAX_SAFE_INTEGER,
@@ -11,10 +15,15 @@ module.exports = {
   DDF_REDIS_CACHE_LIFETIME: -1,
   DDF_REDIS_CACHE_NAME_META: 'metadata',
   DDF_REDIS_CACHE_NAME_TRANSLATIONS: 'translations',
-  DDF_REDIS_CACHE_NAME_ENTITIES: 'entities',
-  DDF_REDIS_CACHE_NAME_CONCEPTS: 'concepts',
-  DDF_REDIS_CACHE_NAME_DATAPOINTS: 'datapoints',
+  DDF_REDIS_CACHE_NAME_ENTITIES: ENTITIES,
+  DDF_REDIS_CACHE_NAME_CONCEPTS: CONCEPTS,
+  DDF_REDIS_CACHE_NAME_DATAPOINTS: DATAPOINTS,
   DDF_REDIS_CACHE_NAME_DDFQL: 'ddfql',
+
+  CONCEPTS,
+  ENTITIES,
+  DATAPOINTS,
+  SCHEMA: 'schema',
 
   GID: 'gid',
   ORIGIN_ID: 'originId',
