@@ -1,6 +1,6 @@
 import test from 'ava';
 
-import ddfEntitiesForPostRequest from './ws_ddf_test_fixtures_first_commit/entities-for-post-with-select.json';
+import ddfEntitiesForPostRequest from './ws_ddf_test_fixtures_second_commit/entities-for-post-with-select.json';
 
 const shell = require('shelljs');
 const express = require('express');
@@ -8,7 +8,7 @@ const git = require('simple-git');
 const api = require('supertest')('http://localhost:3000');
 
 function setDefaultSecondCommitByCLI(onSetDefaultSecondCommitByCLIDone) {
-  const setDefaultcommand = `REPO=git@github.com:VS-work/ddf--gapminder--systema_globalis--light.git COMMIT=c796f57 LOGIN=dev@gapminder.org PASS=123 npm run set-default`;
+  const setDefaultcommand = `REPO=git@github.com:VS-work/ddf--gapminder--systema_globalis--light.git COMMIT=15a90a5 LOGIN=dev@gapminder.org PASS=123 npm run set-default`;
   shell.cd('../../waffle-server-import-cli');
   return shell.exec(setDefaultcommand, (error) => {
     console.log('** chose default set');
@@ -82,3 +82,4 @@ test.cb('Check POST request: entities with select when default dataset was set',
       t.end();
     });
 });
+
