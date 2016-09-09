@@ -58,10 +58,6 @@ function substituteEntityConceptsWithIds(query, concepts) {
 }
 
 function normalizeEntityDdfQuery(query, concepts) {
-  if (_.isEmpty(query.join)) {
-    _.set(query, 'join', {});
-  }
-
   normalizeWhere(query, concepts);
   normalizeJoin(query, concepts);
   return query;
@@ -80,8 +76,8 @@ function normalizeWhere(query, concepts) {
     const selectKey = _.first(query.select.key);
 
     if (isEntityPropertyFilter(selectKey, this.key, conceptGids)) {
-      if (isTimePropertyFilter(this.key, timeConcepts)) {
-        normalizedFilter = normalizeTimePropertyFilter(this.key, filterValue, this.path, 'where', query);
+      if (ddfQueryUtils.isTimePropertyFilter(this.key, timeConcepts)) {
+        normalizedFilter = ddfQueryUtils.normalizeTimePropertyFilter(this.key, filterValue, this.path, query.where);
       } else {
         normalizedFilter = {
           [`properties.${this.key}`]: filterValue,
@@ -119,27 +115,6 @@ function normalizeWhere(query, concepts) {
 
 }
 
-function normalizeTimePropertyFilter(key, filterValue, path, property, query) {
-  let timeType = '';
-  const normalizedFilter = {
-    [`parsedProperties.${key}.millis`]: traverse(filterValue).map(function (value) {
-      if (this.notLeaf) {
-        return value;
-      }
-
-      const timeDescriptor = ddfTimeUtils.parseTime(value);
-      timeType = timeDescriptor.type;
-      return timeDescriptor.time;
-    })
-  };
-
-  // always set latest detected time type
-  const conditionsForTimeEntities = _.get(query[property], path.slice(0, path.length - 1));
-  conditionsForTimeEntities[`parsedProperties.${key}.timeType`] = timeType;
-
-  return normalizedFilter;
-}
-
 function normalizeJoin(query, concepts) {
   const timeConcepts = _.chain(concepts)
     .filter(_.iteratee(['properties.concept_type', 'time']))
@@ -153,8 +128,8 @@ function normalizeJoin(query, concepts) {
     const selectKey = _.first(query.select.key);
 
     if (isEntityPropertyFilter(selectKey, this.key, resolvedProperties) && _.includes(this.path, 'where')) {
-      if (isTimePropertyFilter(this.key, timeConcepts)) {
-        normalizedFilter = normalizeTimePropertyFilter(this.key, filterValue, this.path, 'join', query);
+      if (ddfQueryUtils.isTimePropertyFilter(this.key, timeConcepts)) {
+        normalizedFilter = ddfQueryUtils.normalizeTimePropertyFilter(this.key, filterValue, this.path, query.join);
       } else {
         normalizedFilter = {
           [`properties.${this.key}`]: filterValue,
@@ -205,10 +180,6 @@ function isDomainFilter(key) {
 
 function isSetFilter(key) {
   return key === 'sets';
-}
-
-function isTimePropertyFilter(key, timeConcepts) {
-  return _.includes(timeConcepts, key);
 }
 
 function isEntityPropertyFilter(selectKey, key, resolvedProperties) {
