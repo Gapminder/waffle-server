@@ -46,7 +46,7 @@ EntitiesRepository.prototype.findEntityPropertiesByQuery = function(entitiesQuer
 EntitiesRepository.prototype.findEntityProperties = function(entityDomainGid, select, where, onPropertiesFound) {
   const conceptQuery = this._composeQuery({
     gid: entityDomainGid,
-    'properties.concept_type': entityDomainGid === 'time' ? 'time' : 'entity_domain'
+    'properties.concept_type': {$in: ['time',  'entity_domain']}
   });
 
   return Concepts.findOne(conceptQuery).lean().exec((error, concept) => {

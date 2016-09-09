@@ -11,7 +11,7 @@ import constants from '../../../ws.utils/constants';
 // file = '/home/korel/Projects/ws-vizabi/waffle-server/ws.routes/data-post-processors/fixtures/datapoints.json';
 // jsonfile.writeFileSync(file, pipe.datapoints);
 
-test.cb('should pack input concepts data to ddfJson', assert => {
+test.skip.cb('should pack input concepts data to ddfJson', assert => {
   const headers = ['sg_population', 'energy_use_total'];
 
   const concepts = require('./../fixtures/concepts.json');

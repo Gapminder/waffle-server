@@ -45,6 +45,8 @@ module.exports = serviceLocator => {
     const headers = _.isEmpty(select) ? [] : _.union([domainGid], select);
     const sort = req.decodedQuery.sort;
 
+    req.ddfDataType = constants.ENTITIES;
+
     const options = {
       headers,
       select,

@@ -19,11 +19,11 @@ module.exports = {
 function validateDdfQueryAsync(pipe, onValidated) {
   return async.setImmediate(() => {
     const result = validateDdfQuery(pipe.query);
-    if(!result.valid) {
+    if (!result.valid) {
       return onValidated(result.log, pipe);
     }
     return onValidated(null, pipe);
-  })
+  });
 }
 
 // correct Query Structure by Mingo
@@ -47,10 +47,10 @@ function validateMongoQuery(query) {
   }
 
   // validate by available operators
-  traverse(query).map(function(item) {
+  traverse(query).forEach(function() {
     if(this.key) {
       const key = _.toString(this.key);
-      if(_.includes(key, "$") && !_.includes(AVAILABLE_QUERY_OPERATORS, key)) {
+      if(isInvalidQueryOperator(key)) {
         errorMessages.push("Invalid DDFQL-query. Validation by Operators, not acceptable: " + key);
       }
     }
@@ -82,7 +82,7 @@ function applyValidators(query, validators) {
     return operationResult;
   }
 
-  return applyValidators(query, _.tail(validators))
+  return applyValidators(query, _.tail(validators));
 }
 
 function _validateDdfQueryWhereClause(query) {
@@ -128,6 +128,10 @@ function createResponse (errorMessages) {
   return _.extend({}, VALID_RESPONSE, {
     valid: false,
     messages: errorMessages,
-    log: errorMessages.join("; ")
+    log: _.join(errorMessages, "; ")
   });
+}
+
+function isInvalidQueryOperator(operator) {
+  return _.startsWith(operator, "$") && !_.includes(AVAILABLE_QUERY_OPERATORS, operator);
 }

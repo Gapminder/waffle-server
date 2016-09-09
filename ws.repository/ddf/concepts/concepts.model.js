@@ -40,7 +40,6 @@ const Concepts = new Schema({
   gid: {type: String, match: /^[a-z0-9_]*$/, index: true, required: true},
   originId: {type: Schema.Types.ObjectId},
 
-  title: {type: String, required: true, index: true},
   type: {type: String, enum: ['entity_set', 'entity_domain', 'time', 'string', 'measure'], 'default': 'string', required: true},
   sources: [{type: String, required: true}],
 

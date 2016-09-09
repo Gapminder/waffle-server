@@ -35,6 +35,7 @@
     "cookie-parser": "1.4.1",
     "cors": "2.7.1",
     "csvtojson": "1.0.0",
+    "ddf-time-utils": "0.1.2",
     "ddf-validation": "^0.12.8",
     "express": "4.13.4",
     "express-redis-cache": "0.1.9",
