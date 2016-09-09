@@ -1,0 +1,11 @@
+{
+  "success": false,
+  "error": {
+    "name": "MongoError",
+    "message": "$not needs a regex or a document",
+    "waitedMS": 0,
+    "ok": 0,
+    "errmsg": "$not needs a regex or a document",
+    "code": 2
+  }
+}
