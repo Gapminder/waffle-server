@@ -29,6 +29,24 @@
         "geo",
         "time"
       ],
+      "hourly_compensation_us",
+      0.95,
+      65.86
+    ],
+    [
+      [
+        "geo",
+        "time"
+      ],
+      "income_per_person_gdppercapita_ppp_inflation_adjusted",
+      142,
+      182700
+    ],
+    [
+      [
+        "geo",
+        "time"
+      ],
       "life_expectancy_years",
       1,
       84.1
@@ -68,24 +86,6 @@
       "sg_population",
       50,
       1376048943
-    ],
-    [
-      [
-        "geo",
-        "time"
-      ],
-      "income_per_person_gdppercapita_ppp_inflation_adjusted",
-      142,
-      182700
-    ],
-    [
-      [
-        "geo",
-        "time"
-      ],
-      "hourly_compensation_us",
-      0.95,
-      65.86
     ]
   ]
 }
