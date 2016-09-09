@@ -841,12 +841,6 @@
       "africa"
     ],
     [
-      "myt",
-      "Mayotte",
-      null,
-      "africa"
-    ],
-    [
       "mex",
       "Mexico",
       null,
@@ -857,6 +851,12 @@
       "Micronesia, Fed. Sts.",
       null,
       "asia"
+    ],
+    [
+      "myt",
+      "Mayotte",
+      null,
+      "africa"
     ],
     [
       "mda",

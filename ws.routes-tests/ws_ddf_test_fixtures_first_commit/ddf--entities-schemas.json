@@ -146,6 +146,14 @@
       [
         "global"
       ],
+      "is--global",
+      null,
+      null
+    ],
+    [
+      [
+        "global"
+      ],
       "name",
       null,
       null
@@ -219,14 +227,6 @@
         "world_4region"
       ],
       "geo",
-      null,
-      null
-    ],
-    [
-      [
-        "global"
-      ],
-      "is--global",
       null,
       null
     ],
