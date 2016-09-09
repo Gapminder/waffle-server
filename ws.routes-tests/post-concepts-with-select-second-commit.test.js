@@ -1,8 +1,6 @@
-'use strict';
-
 import test from 'ava';
-import ddfConceptWithoutSelectForPostRequest from './ws_ddf_test_fixtures_second_commit/concepts-for-post-without-select.json';
 
+import ddfConceptWithSelectForPostRequest from './ws_ddf_test_fixtures_second_commit/concepts-for-post-with-select.json';
 
 const shell = require('shelljs');
 const express = require('express');
@@ -25,19 +23,32 @@ test.cb.before(t => {
   return setDefaultSecondCommitByCLI(t.end);
 });
 
-test.cb('Check POST request: concepts without select when default dataset was set', t => {
-  t.plan(4);
+test.cb('Check POST request: entities with select when default dataset was set', t => {
+  t.plan(1);
   api.post(`/api/ddf/ql?format=wsJson`)
-    .send({from: "concepts"})
+    .send({
+      "select": {
+        "key": ["concept"],
+        "value": [
+          "concept_type", "name", "unit","color"
+        ]
+      },
+      "from": "concepts",
+      "where": {
+        "$and": [
+          {"concept_type": {"$not": "entity_set"}},
+          {"color.palette._default": {"$exists": true}}
+        ]
+      }
+    })
     .set('Accept', 'application/x-ws+json')
     .expect(200)
     .expect('Content-Type', /application\/json/)
     .end((error, res) => {
-      t.deepEqual(res.body, ddfConceptWithoutSelectForPostRequest);
-      t.deepEqual(res.body.headers, ddfConceptWithoutSelectForPostRequest.headers);
-      t.deepEqual(res.body.rows, ddfConceptWithoutSelectForPostRequest.rows);
-      t.deepEqual(res.body.rows.length, ddfConceptWithoutSelectForPostRequest.rows.length);
+      t.deepEqual(res.body, ddfConceptWithSelectForPostRequest);
+
 
       t.end();
     });
 });
+
