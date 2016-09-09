@@ -3,7 +3,6 @@ import ddfEntitiesCountryJsonFormat from './ws_ddf_test_fixtures_second_commit/e
 import ddfEntitiesCountryWsJsonFormat from './ws_ddf_test_fixtures_second_commit/entities-without-params-wsjson.json';
 import ddfEntitiesCountryDdfJsonFormat from './ws_ddf_test_fixtures_second_commit/entities-without-params-ddfjson.json';
 
-const _ = require('lodash');
 const shell = require('shelljs');
 const express = require('express');
 const git = require('simple-git');
