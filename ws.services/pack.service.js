@@ -25,10 +25,8 @@ function composePackingFunction(data, formatType) {
     return async.seq(_toDdfJson, _pickDdfJsonProperties);
   } else if (formatType === 'json' && rawDdf) {
     return async.seq(_toDdfJson, _fromDdfJsonToJson);
-  } else if (formatType === 'wsJson' && rawDdf) {
-    return async.compose(_fromRawDdfToWsJson);
   } else {
-    return async.seq(_toDdfJson);
+    return _fromRawDdfToWsJson;
   }
 }
 

@@ -63,13 +63,8 @@ function substituteDatapointConceptsWithIds(query, conceptsToIds) {
 }
 
 function normalizeDatapointDdfQuery(query, timeConcepts) {
-  if (_.isEmpty(query.join)) {
-    _.set(query, 'join', {});
-  }
-
   normalizeWhere(query);
   normalizeJoin(query, timeConcepts);
-
   return query;
 }
 
@@ -137,24 +132,8 @@ function normalizeJoin(query, timeConcepts) {
     let normalizedFilter = null;
 
     if (isEntityFilter(this.key, query)) {
-      if (_.includes(timeConcepts, this.key)) {
-
-        let timeType = '';
-        normalizedFilter = {
-          [`parsedProperties.${this.key}.millis`]: traverse(filterValue).map(function (value) {
-            if (this.notLeaf) {
-              return value;
-            }
-
-            const timeDescriptor = ddfTimeUtils.parseTime(value);
-            timeType = timeDescriptor.type;
-            return timeDescriptor.time;
-          })
-        };
-
-        // always set latest detected time type
-        const conditionsForTimeEntities = _.get(query.join, this.path.slice(0, this.path.length - 1));
-        conditionsForTimeEntities[`parsedProperties.${this.key}.timeType`] = timeType;
+      if (ddfQueryUtils.isTimePropertyFilter(this.key, timeConcepts)) {
+        normalizedFilter = ddfQueryUtils.normalizeTimePropertyFilter(this.key, filterValue, this.path, query.join);
       } else {
         normalizedFilter = {
           gid: filterValue
@@ -176,15 +155,9 @@ function normalizeJoin(query, timeConcepts) {
     }
 
     if (this.key === 'key') {
-      if (_.includes(timeConcepts, filterValue)) {
-        normalizedFilter = {
-          domain: filterValue,
-        };
-      } else {
-        normalizedFilter = {
-          domain: filterValue,
-        };
-      }
+      normalizedFilter = {
+        domain: filterValue,
+      };
     }
 
     if (normalizedFilter) {

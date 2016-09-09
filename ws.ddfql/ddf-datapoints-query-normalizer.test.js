@@ -726,7 +726,6 @@ test('should normalized queries for quarters range', (assert) => {
   };
 
   const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, ['time', 'quarter']);
-
   assert.deepEqual(actualDdfql, normalizedDdfql);
 });
 
@@ -749,7 +748,8 @@ test('should create links in join section for entities filter', (assert) => {
         },
         {"geo": "dza"}
       ]
-    }
+    },
+    join: {}
   };
 
   const normalizedDdfql = {
@@ -795,6 +795,5 @@ test('should create links in join section for entities filter', (assert) => {
   };
 
   const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, ['time', 'quarter']);
-
   assert.deepEqual(actualDdfql, normalizedDdfql);
 });

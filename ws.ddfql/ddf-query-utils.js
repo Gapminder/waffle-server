@@ -1,10 +1,14 @@
 'use strict';
 
 const _ = require('lodash');
+const ddfTimeUtils = require('ddf-time-utils');
+const traverse = require('traverse');
 
 module.exports = {
   toSafeQuery,
-  replaceValueOnPath
+  replaceValueOnPath,
+  normalizeTimePropertyFilter,
+  isTimePropertyFilter
 };
 
 function toSafeQuery(query, options) {
@@ -48,3 +52,29 @@ function replaceValueOnPath(options) {
     _.set(queryFragment, path, _.merge(value, normalizedValue));
   }
 }
+
+function normalizeTimePropertyFilter(key, filterValue, path, query) {
+  let timeType = '';
+  const normalizedFilter = {
+    [`parsedProperties.${key}.millis`]: traverse(filterValue).map(function (value) {
+      if (this.notLeaf) {
+        return value;
+      }
+
+      const timeDescriptor = ddfTimeUtils.parseTime(value);
+      timeType = timeDescriptor.type;
+      return timeDescriptor.time;
+    })
+  };
+
+  // always set latest detected time type
+  const conditionsForTimeEntities = _.get(query, path.slice(0, path.length - 1));
+  conditionsForTimeEntities[`parsedProperties.${key}.timeType`] = timeType;
+
+  return normalizedFilter;
+}
+
+function isTimePropertyFilter(key, timeConcepts) {
+  return _.includes(timeConcepts, key);
+}
+
