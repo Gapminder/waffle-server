@@ -4,7 +4,6 @@ import test from 'ava';
 import ddfConceptWithoutSelectForPostRequest from './ws_ddf_test_fixtures_first_commit/concepts-for-post-without-select.json';
 
 
-const _ = require('lodash');
 const shell = require('shelljs');
 const express = require('express');
 const git = require('simple-git');
