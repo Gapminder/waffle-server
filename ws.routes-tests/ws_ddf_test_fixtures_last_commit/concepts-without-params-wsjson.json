@@ -114,6 +114,42 @@
       null,
       null,
       "",
+      null,
+      null,
+      "string",
+      "Tags",
+      "tags"
+    ],
+    [
+      "",
+      "",
+      null,
+      null,
+      "",
+      null,
+      null,
+      "entity_domain",
+      "Tag",
+      "tag"
+    ],
+    [
+      "",
+      "",
+      null,
+      null,
+      "",
+      null,
+      null,
+      "string",
+      "Tag parent",
+      "parent"
+    ],
+    [
+      "",
+      "",
+      null,
+      null,
+      "",
       "https://github.com/open-numbers/ddf--gapminder--dim_geo_countries_and_groups/blob/master/ddf--list--geo--country.csv",
       null,
       "entity_domain",
@@ -158,24 +194,6 @@
       "entity_set",
       "Landlocked",
       "landlocked"
-    ],
-    [
-      "",
-      "",
-      null,
-      [
-        "geographic_regions",
-        "landlocked",
-        "main_religion_updated",
-        "geo",
-        "geographic_regions_in_4_colors"
-      ],
-      "",
-      "https://github.com/open-numbers/ddf--gapminder--dim_geo_countries_and_groups/blob/master/ddf--list--geo--country.csv",
-      "geo",
-      "entity_set",
-      "Country",
-      "country"
     ],
     [
       "",
@@ -535,6 +553,49 @@
       "time",
       "Quarter",
       "quarter"
+    ],
+    [
+      "",
+      "",
+      "",
+      null,
+      "",
+      "",
+      "geo",
+      "entity_set",
+      "Capital",
+      "capital"
+    ],
+    [
+      "",
+      "",
+      "",
+      null,
+      "",
+      "",
+      "",
+      "time",
+      "",
+      "founding_date"
+    ],
+    [
+      "",
+      "",
+      null,
+      [
+        "geographic_regions",
+        "landlocked",
+        "main_religion_updated",
+        "geo",
+        "geographic_regions_in_4_colors",
+        "capital"
+      ],
+      "",
+      "https://github.com/open-numbers/ddf--gapminder--dim_geo_countries_and_groups/blob/master/ddf--list--geo--country.csv",
+      "geo",
+      "entity_set",
+      "Country",
+      "country"
     ]
   ]
 }

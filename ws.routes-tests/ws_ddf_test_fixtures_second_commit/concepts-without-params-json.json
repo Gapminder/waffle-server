@@ -313,6 +313,18 @@
   },
   {
     "color": null,
+    "concept": "parent",
+    "concept_type": "string",
+    "description": null,
+    "domain": null,
+    "drill_up": null,
+    "indicator_url": null,
+    "name": "Tag parent",
+    "scales": null,
+    "unit": null
+  },
+  {
+    "color": null,
     "concept": "population_total",
     "concept_type": "measure",
     "description": "Total population",
@@ -380,6 +392,30 @@
     "drill_up": null,
     "indicator_url": null,
     "name": "Shapes",
+    "scales": null,
+    "unit": null
+  },
+  {
+    "color": null,
+    "concept": "tag",
+    "concept_type": "entity_domain",
+    "description": null,
+    "domain": null,
+    "drill_up": null,
+    "indicator_url": null,
+    "name": "Tag",
+    "scales": null,
+    "unit": null
+  },
+  {
+    "color": null,
+    "concept": "tags",
+    "concept_type": "string",
+    "description": null,
+    "domain": null,
+    "drill_up": null,
+    "indicator_url": null,
+    "name": "Tags",
     "scales": null,
     "unit": null
   },

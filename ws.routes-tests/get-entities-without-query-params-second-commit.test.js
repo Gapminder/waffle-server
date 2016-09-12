@@ -3,6 +3,7 @@ import ddfEntitiesCountryJsonFormat from './ws_ddf_test_fixtures_second_commit/e
 import ddfEntitiesCountryWsJsonFormat from './ws_ddf_test_fixtures_second_commit/entities-without-params-wsjson.json';
 import ddfEntitiesCountryDdfJsonFormat from './ws_ddf_test_fixtures_second_commit/entities-without-params-ddfjson.json';
 
+const _ = require('lodash');
 const shell = require('shelljs');
 const express = require('express');
 const git = require('simple-git');
@@ -19,12 +20,12 @@ function setDefaultSecondCommitByCLI(onSetDefaultSecondCommitByCLIDone) {
 }
 
 test.cb.before(t => {
-  console.log('Set default first commit');
+  console.log('Set default second commit');
 
   return setDefaultSecondCommitByCLI(t.end);
 });
 
-test.skip.cb('Check GET request: for entities with selected format=json, when default dataset was set', t => {
+test.cb('Check GET request: for entities with selected format=json, when default dataset was set', t => {
   t.plan(1);
   api.get('/api/ddf/entities?format=json')
     .set('Accept', 'application/x-json')
