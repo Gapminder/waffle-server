@@ -18,7 +18,7 @@ function setDefaultSecondCommitByCLI(onSetDefaultSecondCommitByCLIDone) {
 }
 
 test.cb.before(t => {
-  console.log('Set default first commit');
+  console.log('Set default second commit');
 
   return setDefaultSecondCommitByCLI(t.end);
 });
