@@ -14,7 +14,8 @@ module.exports = function () {
     'datasets',
     'dataset-index',
     'entities',
-    'original-entities'
+    'original-entities',
+    'translations'
   ];
 
   _.forEach(ddfModels, (model) => {

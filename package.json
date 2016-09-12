@@ -61,7 +61,8 @@
     "traverse": "0.6.6",
     "validator": "5.4.0",
     "winston": "2.1.1",
-    "winston-daily-rotate-file": "1.0.1"
+    "winston-daily-rotate-file": "1.0.1",
+    "request": "2.74.0"
   },
   "devDependencies": {
     "ava": "github:valorkin/ava",
