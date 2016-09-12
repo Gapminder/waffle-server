@@ -39,10 +39,10 @@ function translateUsingGoogle(words, options, onTranslated) {
     }
 
     const translationResult = opts.splitBy ? toWords(translatedText, opts.splitBy) : translatedText;
-    return onTranslated(null, translationResult);
+    return onTranslated(null, _.zipObject(words, translationResult));
   });
 }
 
 function toWords(text, separator) {
-  return _.split(_.toLower(_.replace(text, /\s/g, '')), separator);
+  return _.split(_.replace(text, /\s/g, ''), separator);
 }

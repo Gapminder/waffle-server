@@ -5,7 +5,7 @@ const _ = require('lodash');
 /**
  * Models and repository bootstrap
  */
-module.exports = function () {
+module.exports = (function () {
   const ddfModels = [
     'users',
     'concepts',
@@ -21,4 +21,4 @@ module.exports = function () {
   _.forEach(ddfModels, (model) => {
     require(`./ddf/${model}/${model}.model`);
   });
-};
+})();

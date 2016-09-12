@@ -1,12 +1,14 @@
 import test from 'ava';
-// import '../../ws.config/db.config'
-// import translationService from './translations.service';
+import '../../ws.config/db.config'
+import '../../ws.repository/index'
 
-test.skip.cb('test cb', assert => {
+import translationService from './translations.service';
 
-  translationService.translateUsingGoogle(['hello', 'world', 'uniqueness'], {target: 'ru'}, (error, translatedText) => {
+test.cb('should translate given array of words via google translate', assert => {
 
-    assert.deepEqual(translatedText, ['привет', 'мир', 'уникальность']);
+  translationService.translateUsingGoogle(['hello', 'world'], {target: 'ru'}, (error, translatedText) => {
+
+    assert.deepEqual(translatedText, { hello: 'привет', world: 'мир' });
     assert.end();
   });
 });
