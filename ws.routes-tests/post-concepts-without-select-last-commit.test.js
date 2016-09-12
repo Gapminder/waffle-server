@@ -10,7 +10,7 @@ const git = require('simple-git');
 const api = require('supertest')('http://localhost:3000');
 
 function setDefaultSecondCommitByCLI(onSetDefaultSecondCommitByCLIDone) {
-  const setDefaultcommand = `REPO=git@github.com:VS-work/ddf--gapminder--systema_globalis--light.git COMMIT=80d5457 LOGIN=dev@gapminder.org PASS=123 npm run set-default`;
+  const setDefaultcommand = `REPO=git@github.com:VS-work/ddf--gapminder--systema_globalis--light.git COMMIT=abb011f LOGIN=dev@gapminder.org PASS=123 npm run set-default`;
   shell.cd('../../waffle-server-import-cli');
   return shell.exec(setDefaultcommand, (error) => {
     console.log('** chose default set');
@@ -26,7 +26,7 @@ test.cb.before(t => {
 });
 
 test.cb('Check POST request: concepts without select when default dataset was set', t => {
-  t.plan(4);
+  t.plan(1);
   api.post(`/api/ddf/ql?format=wsJson`)
     .send({from: "concepts"})
     .set('Accept', 'application/x-ws+json')
@@ -34,9 +34,7 @@ test.cb('Check POST request: concepts without select when default dataset was se
     .expect('Content-Type', /application\/json/)
     .end((error, res) => {
       t.deepEqual(res.body, ddfConceptWithoutSelectForPostRequest);
-      t.deepEqual(res.body.headers, ddfConceptWithoutSelectForPostRequest.headers);
-      t.deepEqual(res.body.rows, ddfConceptWithoutSelectForPostRequest.rows);
-      t.deepEqual(res.body.rows.length, ddfConceptWithoutSelectForPostRequest.rows.length);
+
 
       t.end();
     });

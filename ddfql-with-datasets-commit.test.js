@@ -1,6 +1,6 @@
 'use strict';
 
-//import test from 'ava';
+import test from 'ava';
 //import ddfConceptsJsonFormat from 'ws_ddf_test_fixtures_first_commit/concepts-without-params-json.json';
 //import ddfConceptsWsJsonFormat from 'ws_ddf_test_fixtures_first_commit/concepts-without-params-wsjson.json';
 //import ddfConceptsDdfJsonFormat from 'ws_ddf_test_fixtures_first_commit/concepts-without-params-ddfjson.json';
@@ -32,7 +32,7 @@ const models = [
 
 const mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost:27017/test');
-require('./../ws.repository/index.js')();
+require('./ws.repository/index.js')();
 
 function cloneCLIRepository(onCLIRepositoryCloned) {
   console.log('Clone cli repository');
@@ -95,21 +95,21 @@ function cleanDatabase(onDatabaseCleaned) {
   }, onDatabaseCleaned);
 }
 
-//test.cb.before(t => {
-//  console.log('Run cli process before testing');
-//
-//  return cleanDatabase((error) => {
-//    if (error) {
-//      return t.end(error);
-//    }
-//
-//    return cloneCLIRepository(t.end);
-//  });
-//});
+test.cb.before(t => {
+  console.log('Run cli process before testing');
+
+  //return cleanDatabase((error) => {
+  //  if (error) {
+  //    return t.end(error);
+  //  }
+
+    return cloneCLIRepository(t.end);
+  //});
+});
 
 
 
-test.cb('Check GET request: for datapoints with select=sg_population&key=geo,time, when default dataset was set', t => {
+test.skip.cb('Check GET request: for datapoints with select=sg_population&key=geo,time, when default dataset was set', t => {
   t.plan(4);
   let datapointsUniqueValues = _.union(ddfDatapointsSelectSgPopulation.sg_population).length;
 
@@ -126,7 +126,7 @@ test.cb('Check GET request: for datapoints with select=sg_population&key=geo,tim
     })
 });
 
-test.cb('Check GET request: for entities with selected format=json, when default dataset was set', t => {
+test.skip.cb('Check GET request: for entities with selected format=json, when default dataset was set', t => {
   t.plan(1);
   api.get('/api/ddf/entities?format=json&key=geo&geo.is--country=true')
     .set('Accept', 'application/x-json')
@@ -138,7 +138,7 @@ test.cb('Check GET request: for entities with selected format=json, when default
     })
 });
 
-test.cb('Check GET request: for entities with selected format=wsJson, when default dataset was set', t => {
+test.skip.cb('Check GET request: for entities with selected format=wsJson, when default dataset was set', t => {
   t.plan(2);
   api.get('/api/ddf/entities?format=wsJson&key=geo&geo.is--country=true')
     .set('Accept', 'application/x-ws+json')
@@ -167,7 +167,7 @@ test.skip.cb('Check GET request: for entities with selected format=ddfJson, when
     })
 });
 
-test.cb('Check POST request: concepts without select when default dataset was set', t => {
+test.skip.cb('Check POST request: concepts without select when default dataset was set', t => {
   t.plan(4);
   api.post(`/api/ddf/ql?format=wsJson`)
     .send({from: "concepts"})
@@ -184,7 +184,7 @@ test.cb('Check POST request: concepts without select when default dataset was se
     });
 });
 
-test.cb('Check POST request: concepts with select when default dataset was set', t => {
+test.skip.cb('Check POST request: concepts with select when default dataset was set', t => {
   t.plan(4);
   api.post(`/api/ddf/ql?format=wsJson`)
     .send({
@@ -208,7 +208,7 @@ test.cb('Check POST request: concepts with select when default dataset was set',
     });
 });
 
-test.cb('Check POST request: datapoints without select when default dataset was set', t => {
+test.skip.cb('Check POST request: datapoints without select when default dataset was set', t => {
   t.plan(2);
   api.post(`/api/ddf/ql`)
     .send({"from": "datapoints"})
@@ -285,7 +285,7 @@ test.skip.cb('Check POST request: datapoints with select when default dataset wa
 
 
 
-test.cb('Check POST request: for concept.schema', t=> {
+test.skip.cb('Check POST request: for concept.schema', t=> {
   t.plan(4);
   api.post('/api/ddf/ql?format=wsJson')
     .send({
@@ -307,7 +307,7 @@ test.cb('Check POST request: for concept.schema', t=> {
     })
 });
 
-test.cb('Check POST request: for datapoints.schema', t=> {
+test.skip.cb('Check POST request: for datapoints.schema', t=> {
   t.plan(4);
   api.post('/api/ddf/ql?format=wsJson')
     .send({
@@ -329,7 +329,7 @@ test.cb('Check POST request: for datapoints.schema', t=> {
     })
 });
 
-test.cb('Check POST request: for entities.schema', t=> {
+test.skip.cb('Check POST request: for entities.schema', t=> {
   t.plan(4);
   api.post('/api/ddf/ql?format=wsJson')
     .send({

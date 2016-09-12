@@ -7,6 +7,12 @@
   ],
   "rows": [
     [
+      "ala",
+      "Åland",
+      null,
+      "europe"
+    ],
+    [
       "afg",
       "Afghanistan",
       null,
@@ -73,14 +79,26 @@
       "europe"
     ],
     [
+      "abw",
+      "Aruba",
+      null,
+      "americas"
+    ],
+    [
       "aus",
       "Australia",
       null,
       "asia"
     ],
     [
-      "aaa",
-      "Aaa Azerbaijan",
+      "aut",
+      "Austria",
+      null,
+      "europe"
+    ],
+    [
+      "aze",
+      "Azerbaijan",
       null,
       "europe"
     ],
@@ -88,7 +106,7 @@
       "bhs",
       "Bahamas",
       null,
-      "new_region"
+      "americas"
     ],
     [
       "bhr",
@@ -111,6 +129,12 @@
     [
       "blr",
       "Belarus",
+      null,
+      "europe"
+    ],
+    [
+      "bel",
+      "Belgium",
       null,
       "europe"
     ],
@@ -154,7 +178,7 @@
       "bwa",
       "Botswana",
       null,
-      "new_region"
+      "africa"
     ],
     [
       "bra",
@@ -305,6 +329,18 @@
       "Cote d'Ivoire",
       null,
       "africa"
+    ],
+    [
+      "hrv",
+      "Croatia",
+      null,
+      "europe"
+    ],
+    [
+      "cub",
+      "Cuba",
+      null,
+      "americas"
     ],
     [
       "cyp",
@@ -579,12 +615,6 @@
     [
       "ind",
       "India",
-      null,
-      "asia"
-    ],
-    [
-      "idn",
-      "Indonesia",
       null,
       "asia"
     ],
@@ -883,12 +913,6 @@
       "africa"
     ],
     [
-      "nru",
-      "Nauru",
-      null,
-      "asia"
-    ],
-    [
       "npl",
       "Nepal",
       null,
@@ -1001,12 +1025,6 @@
       "Panama",
       null,
       "americas"
-    ],
-    [
-      "png",
-      "Papua New Guinea",
-      null,
-      "asia"
     ],
     [
       "pry",
@@ -1159,12 +1177,6 @@
       "europe"
     ],
     [
-      "slb",
-      "Solomon Islands",
-      null,
-      "asia"
-    ],
-    [
       "som",
       "Somalia",
       null,
@@ -1315,22 +1327,10 @@
       "asia"
     ],
     [
-      "tls",
-      "Timor-Leste",
-      null,
-      "asia"
-    ],
-    [
       "tgo",
       "Togo",
       null,
       "africa"
-    ],
-    [
-      "tkl",
-      "Tokelau",
-      null,
-      "asia"
     ],
     [
       "ton",
@@ -1367,12 +1367,6 @@
       "Turks and Caicos Islands",
       null,
       "americas"
-    ],
-    [
-      "tuv",
-      "Tuvalu",
-      null,
-      "asia"
     ],
     [
       "ussr",
@@ -1493,12 +1487,6 @@
       "Zimbabwe",
       null,
       "africa"
-    ],
-    [
-      "zzz",
-      "Zzz",
-      null,
-      "americas"
     ]
   ]
 }
