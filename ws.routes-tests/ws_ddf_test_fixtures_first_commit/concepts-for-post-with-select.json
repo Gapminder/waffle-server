@@ -1,11 +1,4 @@
 {
   "success": false,
-  "error": {
-    "name": "MongoError",
-    "message": "$not needs a regex or a document",
-    "waitedMS": 0,
-    "ok": 0,
-    "errmsg": "$not needs a regex or a document",
-    "code": 2
-  }
+  "error": "Invalid DDFQL-query. Validation of Where Clause: contain '.' in color.palette._default"
 }
