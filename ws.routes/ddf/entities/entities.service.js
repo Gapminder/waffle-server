@@ -3,9 +3,11 @@
 const _ = require('lodash');
 const async = require('async');
 
+const utils = require('../../utils');
 const ddfql = require('../../../ws.ddfql/ddf-entities-query-normalizer');
 const commonService = require('../../../ws.services/common.service');
 const conceptsService = require('../concepts/concepts.service');
+const ddfQueryValidator = require('../../../ws.ddfql/ddf-query-validator');
 const entitiesRepositoryFactory = require('../../../ws.repository/ddf/entities/entities.repository');
 
 module.exports = {
@@ -13,7 +15,7 @@ module.exports = {
   getConcepts,
   collectEntities,
   collectEntitiesByDdfql,
-  normalizeQueriesToEntitiesByDdfql,
+  normalizeQueriesToEntitiesByDdfql
 };
 
 function collectEntitiesByDdfql(options, cb) {
@@ -22,6 +24,7 @@ function collectEntitiesByDdfql(options, cb) {
 
   async.waterfall([
     async.constant(pipe),
+    ddfQueryValidator.validateDdfQueryAsync,
     commonService.findDefaultDatasetAndTransaction,
     getConcepts,
     normalizeQueriesToEntitiesByDdfql
@@ -38,6 +41,10 @@ function normalizeQueriesToEntitiesByDdfql(pipe, cb) {
   const normlizedQuery = ddfql.normalizeEntities(pipe.query, pipe.concepts);
 
   return async.mapLimit(normlizedQuery.join, 10, (item, mcb) => {
+    const validateQuery = ddfQueryValidator.validateMongoQuery(item);
+    if(!validateQuery.valid) {
+      return cb(validateQuery.log, pipe);
+    }
     return entitiesRepository
       .findEntityPropertiesByQuery(item, (error, entities) => {
         return mcb(error, _.map(entities, 'gid'));
@@ -45,6 +52,11 @@ function normalizeQueriesToEntitiesByDdfql(pipe, cb) {
   }, (err, substituteJoinLinks) => {
     const promotedQuery = ddfql.substituteEntityJoinLinks(normlizedQuery, substituteJoinLinks);
     const subEntityQuery = promotedQuery.where;
+
+    const validateQuery = ddfQueryValidator.validateMongoQuery(subEntityQuery);
+    if(!validateQuery.valid) {
+      return cb(validateQuery.log, pipe);
+    }
 
     return entitiesRepository
       .findEntityPropertiesByQuery(subEntityQuery, (error, entities) => {

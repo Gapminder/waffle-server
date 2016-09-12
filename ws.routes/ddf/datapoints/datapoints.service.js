@@ -8,7 +8,7 @@ const constants = require('../../../ws.utils/constants');
 const commonService = require('../../../ws.services/common.service');
 const conceptsService = require('../concepts/concepts.service');
 const entitiesService = require('../entities/entities.service');
-
+const ddfQueryValidator = require('../../../ws.ddfql/ddf-query-validator');
 const entitiesRepositoryFactory = require('../../../ws.repository/ddf/entities/entities.repository');
 const datapointsRepositoryFactory = require('../../../ws.repository/ddf/data-points/data-points.repository');
 
@@ -39,16 +39,43 @@ function collectDatapointsByDdfql(options, onMatchedDatapoints) {
 
   return async.waterfall([
     async.constant(pipe),
+    ddfQueryValidator.validateDdfQueryAsync,
     commonService.findDefaultDatasetAndTransaction,
     getConcepts,
     mapConcepts,
-    getEntities,
+    getEntitiesByDdfql,
     normalizeQueriesToDatapointsByDdfql
   ], (error, result) => {
     console.timeEnd('finish matching DataPoints');
 
     return onMatchedDatapoints(error, result);
   });
+}
+
+function getEntitiesByDdfql(pipe, cb) {
+  return async.map(pipe.resolvedDomainsAndSetGids, _getEntitiesByDomainOrSetGid, (err, result) => {
+    pipe.entityOriginIdsGroupedByDomain = _.mapValues(result, (value) => _.map(value, constants.ORIGIN_ID));
+    pipe.entities = _.flatMap(result);
+
+    return cb(err, pipe);
+  });
+
+  function _getEntitiesByDomainOrSetGid(domainGid, mcb) {
+    const _pipe = {
+      dataset: pipe.dataset,
+      version: pipe.version,
+      domainGid: domainGid,
+      headers: [],
+      where: {}
+    };
+
+    return entitiesService.getEntities(_pipe, (err, result) => {
+      if (err) {
+        return mcb(err);
+      }
+      return mcb(err, result.entities);
+    });
+  }
 }
 
 function normalizeQueriesToDatapointsByDdfql(pipe, cb) {
@@ -60,20 +87,27 @@ function normalizeQueriesToDatapointsByDdfql(pipe, cb) {
   }
 
   const entitiesRepository = entitiesRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version);
-  const conceptsByGids = _.chain(pipe.concepts)
-    .keyBy('gid')
-    .mapValues('originId')
-    .value();
-  const normlizedQuery = ddfql.normalizeDatapoints(pipe.query, conceptsByGids);
+  const normalizedQuery = ddfql.normalizeDatapoints(pipe.query, pipe.concepts);
 
-  return async.mapLimit(normlizedQuery.join, 10, (item, mcb) => {
+  return async.mapLimit(normalizedQuery.join, 10, (item, mcb) => {
+    const validateQuery = ddfQueryValidator.validateMongoQuery(item);
+    if(!validateQuery.valid) {
+      return cb(validateQuery.log, pipe);
+    }
+
     return entitiesRepository.findEntityPropertiesByQuery(item, (error, entities) => mcb(error, _.map(entities, 'originId')));
   }, (err, substituteJoinLinks) => {
-    const promotedQuery = ddfql.substituteDatapointJoinLinks(normlizedQuery, substituteJoinLinks);
+    const promotedQuery = ddfql.substituteDatapointJoinLinks(normalizedQuery, substituteJoinLinks);
     const subDatapointQuery = promotedQuery.where;
+
+    const validateQuery = ddfQueryValidator.validateMongoQuery(subDatapointQuery);
+    if(!validateQuery.valid) {
+      return cb(validateQuery.log, pipe);
+    }
 
     return queryDatapointsByDdfql(pipe, subDatapointQuery, (err, pipe) => {
       console.timeEnd('get datapoints');
+
       return cb(err, pipe);
     });
   });
@@ -166,7 +200,9 @@ function getEntities(pipe, cb) {
       where: where
     };
 
-    return entitiesService.getEntities(_pipe, (err, result) => mcb(err, result.entities));
+    return entitiesService.getEntities(_pipe, (err, result) => {
+      return mcb(err, result.entities);
+    });
   }
 }
 

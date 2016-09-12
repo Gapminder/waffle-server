@@ -5,6 +5,7 @@ const async = require('async');
 
 const ddfql = require('../../../ws.ddfql/ddf-concepts-query-normalizer');
 const commonService = require('../../../ws.services/common.service');
+const ddfQueryValidator = require('../../../ws.ddfql/ddf-query-validator');
 const conceptsRepositoryFactory = require('../../../ws.repository/ddf/concepts/concepts.repository');
 
 module.exports = {
@@ -20,6 +21,7 @@ function collectConceptsByDdfql(options, cb) {
 
   return async.waterfall([
     async.constant(pipe),
+    ddfQueryValidator.validateDdfQueryAsync,
     commonService.findDefaultDatasetAndTransaction,
     getAllConcepts,
     getConceptsByDdfql
@@ -48,6 +50,11 @@ function getAllConcepts(pipe, cb) {
 function getConceptsByDdfql(pipe, cb) {
   const conceptsRepository = conceptsRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version);
   const normalizedQuery = ddfql.normalizeConcepts(pipe.query, pipe.allConcepts);
+
+  const validateQuery = ddfQueryValidator.validateMongoQuery(normalizedQuery.where);
+  if(!validateQuery.valid) {
+    return cb(validateQuery.log, pipe);
+  }
 
   conceptsRepository
     .findConceptsByQuery(normalizedQuery.where, (error, concepts) => {

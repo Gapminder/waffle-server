@@ -11,12 +11,12 @@ const mongoose = require('mongoose');
 const constants = require('../ws.utils/constants');
 const reposService = require('../ws.services/repos.service');
 
-// geo mapping
-const geoMapping = require('./geo-mapping.json');
 const defaultEntityGroupTypes = ['entity_domain', 'entity_set', 'time', 'age'];
 
 const logger = require('../ws.config/log');
 const config = require('../ws.config/config');
+
+const ddfTimeUtils = require('ddf-time-utils');
 
 module.exports = {
   resolvePathToDdfFolder,
@@ -132,6 +132,7 @@ function createConcepts(pipe, done) {
     _getAllConcepts
   ], (err, res) => {
     pipe.concepts = res.concepts;
+    pipe.timeConcepts = res.timeConcepts;
     return done(err, pipe);
   });
 }
@@ -207,6 +208,9 @@ function _getAllConcepts(pipe, done) {
     .lean()
     .exec((err, res) => {
       pipe.concepts = _.keyBy(res, 'gid');
+      pipe.timeConcepts = _.pickBy(pipe.concepts, (value, conceptGid) => {
+        return _.get(pipe.concepts[conceptGid], 'properties.concept_type') === 'time';
+      });
       return done(err, pipe);
     });
 }
@@ -272,6 +276,7 @@ function createEntities(pipe, done) {
   let _pipe = {
     transaction: pipe.transaction,
     concepts: pipe.concepts,
+    timeConcepts: pipe.timeConcepts,
     dataset: pipe.dataset,
     fileTemplates: pipe.fileTemplates,
     resolvePath: pipe.resolvePath
@@ -314,6 +319,7 @@ function _processOriginalEntities(pipe, done) {
         entitySet: entitySet,
         entityDomain: entitySet.type === 'entity_domain' ? entitySet : _.get(entitySet, 'domain', null),
         concepts: pipe.concepts,
+        timeConcepts: pipe.timeConcepts,
         transaction: pipe.transaction,
         dataset: pipe.dataset,
         resolvePath: pipe.resolvePath,
@@ -496,6 +502,7 @@ function createDataPoints(pipe, done) {
       async.constant({
         filename: filename,
         concepts: pipe.concepts,
+        timeConcepts: pipe.timeConcepts,
         transaction: pipe.transaction,
         dataset: pipe.dataset,
         resolvePath: pipe.resolvePath
@@ -563,14 +570,14 @@ function __processRawDataPoints(pipe, cb) {
     let dictionary = _.keyBy(pipe.entities, 'gid');
     let gids = new Set();
     let entities = _.chain(res)
-      .reduce((result, entity) => {
+      .reduce((result, datapoint) => {
         _.each(pipe.dimensions, (concept) => {
           let domain = concept.domain || concept;
 
-          if (!dictionary[entity[concept.gid]] && !gids.has(entity[concept.gid])) {
-            let mappedEntity = mapDdfEntityToWsModel(entity, concept, domain, pipe);
+          if (!dictionary[datapoint[concept.gid]] && !gids.has(datapoint[concept.gid])) {
+            let mappedEntity = mapDdfEntityToWsModel(datapoint, concept, domain, pipe);
             result.push(mappedEntity);
-            gids.add(entity[concept.gid]);
+            gids.add(datapoint[concept.gid]);
           }
         });
 
@@ -750,7 +757,6 @@ function findDataPoints(pipe, done) {
   })
     .populate('dataset')
     .populate('transaction')
-    // .limit(5)
     .lean()
     .exec((err, res) => {
       console.timeEnd('find all datapoints');
@@ -792,7 +798,7 @@ function mapDdfConceptsToWsModel(pipe) {
 
 function mapDdfOriginalEntityToWsModel(pipe) {
   return (entry) => {
-    let gid = passGeoMapping(pipe, entry);
+    let gid = getGid(pipe, entry);
     let resolvedColumns = mapResolvedColumns(entry);
     let resolvedSets = mapResolvedSets(pipe, resolvedColumns);
     let _entry = _.mapValues(entry, property => {
@@ -816,9 +822,9 @@ function mapDdfOriginalEntityToWsModel(pipe) {
 
     return {
       gid: gid,
-      title: _entry.name,
       sources: [pipe.filename],
       properties: _entry,
+      parsedProperties: parseProperties(pipe.entityDomain, gid, _entry, pipe.timeConcepts),
 
       originId: _entry.originId,
       domain: domainOriginId,
@@ -832,13 +838,12 @@ function mapDdfOriginalEntityToWsModel(pipe) {
 }
 
 function mapDdfEntityToWsModel(entity, concept, domain, pipe) {
-  let gid = process.env.USE_GEO_MAPPING === 'true' ? geoMapping[entity.gid] || entity.gid : entity.gid;
-
+  const gid = entity[concept.gid];
   return {
-    gid: entity[concept.gid],
-    title: gid,
+    gid: gid,
     sources: [pipe.filename],
     properties: entity,
+    parsedProperties: parseProperties(concept, gid, entity, pipe.timeConcepts),
 
     // originId: entity.originId,
     domain: domain.originId,
@@ -848,6 +853,31 @@ function mapDdfEntityToWsModel(entity, concept, domain, pipe) {
     from: pipe.transaction.createdAt,
     dataset: pipe.dataset._id,
     transaction: pipe.transactionId || pipe.transaction._id
+  };
+}
+
+function parseProperties(concept, entityGid, entityProperties, timeConcepts) {
+  if (_.isEmpty(timeConcepts)) {
+    return {};
+  }
+
+  let parsedProperties =
+    _.chain(entityProperties)
+    .pickBy((propValue, prop) => timeConcepts[prop])
+    .mapValues(toInternalTimeForm)
+    .value();
+
+  if (timeConcepts[concept.gid]) {
+    parsedProperties = _.extend(parsedProperties || {}, {[concept.gid]: toInternalTimeForm(entityGid)});
+  }
+  return parsedProperties;
+}
+
+function toInternalTimeForm(value) {
+  const timeDescriptor = ddfTimeUtils.parseTime(value);
+  return {
+    millis: _.get(timeDescriptor, 'time'),
+    timeType: _.get(timeDescriptor, 'type')
   };
 }
 
@@ -952,16 +982,14 @@ function reduceUniqueNestedValues(data, propertyName) {
     .value();
 }
 
-function passGeoMapping(pipe, entry) {
+function getGid(pipe, entry) {
   let _value = entry[pipe.entitySet.gid] || (pipe.entitySet.domain && entry[pipe.entitySet.domain.gid]);
 
   if (!_value) {
     logger.warn(`Either '${pipe.entitySet.gid}' or '${pipe.entitySet.domain && pipe.entitySet.domain.gid}' columns weren't found in file '${pipe.filename}'`);
   }
 
-  let gid = process.env.USE_GEO_MAPPING === 'true' ? geoMapping[_value] || _value : _value;
-
-  return gid;
+  return _value;
 }
 
 function flatEntityRelations(pipe) {

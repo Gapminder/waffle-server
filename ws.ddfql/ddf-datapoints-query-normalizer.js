@@ -2,28 +2,46 @@
 
 const _ = require('lodash');
 const traverse = require('traverse');
+const ddfTimeUtils = require('ddf-time-utils');
+const ddfQueryUtils = require('./ddf-query-utils');
+const constants = require('../ws.utils/constants');
 
 module.exports = {
-  normalizeDatapoints: normalizeDatapoints,
-  normalizeDatapointDdfQuery: normalizeDatapointDdfQuery,
-  substituteDatapointConceptsWithIds: substituteDatapointConceptsWithIds,
-  substituteDatapointJoinLinks: substituteDatapointJoinLinks
+  normalizeDatapoints,
+  normalizeDatapointDdfQuery,
+  substituteDatapointConceptsWithIds,
+  substituteDatapointJoinLinks
 };
 
-function normalizeDatapoints(query, conceptsToIds) {
-  normalizeDatapointDdfQuery(query);
-  substituteDatapointConceptsWithIds(query, conceptsToIds);
-  return query;
+function normalizeDatapoints(query, concepts) {
+  const safeQuery = ddfQueryUtils.toSafeQuery(query);
+  const safeConcepts = concepts || [];
+
+  const timeConcepts = _.chain(safeConcepts)
+    .filter(_.iteratee(['properties.concept_type', 'time']))
+    .map(constants.GID)
+    .value();
+  const conceptOriginIdsByGids = _.chain(safeConcepts)
+    .keyBy(constants.GID)
+    .mapValues(constants.ORIGIN_ID)
+    .value();
+
+  normalizeDatapointDdfQuery(safeQuery, timeConcepts);
+  substituteDatapointConceptsWithIds(safeQuery, conceptOriginIdsByGids);
+
+  return safeQuery;
 }
 
 function substituteDatapointJoinLinks(query, linksInJoinToValues) {
-  traverse(query.where).forEach(function (link) {
-    if (query.join && query.join.hasOwnProperty(link)) {
+  const safeQuery = ddfQueryUtils.toSafeQuery(query);
+
+  traverse(safeQuery.where).forEach(function (link) {
+    if (safeQuery.join.hasOwnProperty(link)) {
       const id = linksInJoinToValues[link];
       this.update(id ? {$in: id} : link);
     }
   });
-  return query;
+  return safeQuery;
 }
 
 function substituteDatapointConceptsWithIds(query, conceptsToIds) {
@@ -44,13 +62,15 @@ function substituteDatapointConceptsWithIds(query, conceptsToIds) {
   return query;
 }
 
-function normalizeDatapointDdfQuery(query) {
+function normalizeDatapointDdfQuery(query, timeConcepts) {
   normalizeWhere(query);
-  normalizeJoin(query);
+  normalizeJoin(query, timeConcepts);
   return query;
 }
 
 function normalizeWhere(query) {
+  let numParsedLinks = 0;
+
   traverse(query.where).forEach(function (filterValue) {
     let normalizedFilter = null;
 
@@ -62,13 +82,30 @@ function normalizeWhere(query) {
     }
 
     if (isEntityFilter(this.key, query)) {
-      normalizedFilter = {
-        dimensions: filterValue,
-      };
+      const join = _.get(query, 'join', {});
+      const isUsedExistedLink = _.startsWith(filterValue, '$') && join.hasOwnProperty(filterValue);
+
+      if (isUsedExistedLink) {
+        normalizedFilter = {
+          dimensions: filterValue,
+        };
+      } else {
+        numParsedLinks++;
+        const joinLink = `$parsed_${this.key}_${numParsedLinks}`;
+
+        query.join[joinLink] = {
+          key: this.key,
+          where: {[this.key]: filterValue}
+        };
+
+        normalizedFilter = {
+          dimensions: joinLink
+        };
+      }
     }
 
     if (normalizedFilter) {
-      replaceValueOnPath({
+      ddfQueryUtils.replaceValueOnPath({
         key: this.key,
         path: this.path,
         normalizedValue: normalizedFilter,
@@ -77,22 +114,31 @@ function normalizeWhere(query) {
     }
   });
 
+  const subWhere = query.where;
+
   query.where = {
     $and: [
-      {dimensions: {$size: _.size(query.select.key)}},
-      query.where
+      {dimensions: {$size: _.size(query.select.key)}}
     ]
   };
+
+  if (!_.isEmpty(subWhere)) {
+    query.where.$and.push(subWhere);
+  }
 }
 
-function normalizeJoin(query) {
+function normalizeJoin(query, timeConcepts) {
   traverse(query.join).forEach(function (filterValue) {
     let normalizedFilter = null;
 
     if (isEntityFilter(this.key, query)) {
-      normalizedFilter = {
-        gid: filterValue
-      };
+      if (ddfQueryUtils.isTimePropertyFilter(this.key, timeConcepts)) {
+        normalizedFilter = ddfQueryUtils.normalizeTimePropertyFilter(this.key, filterValue, this.path, query.join);
+      } else {
+        normalizedFilter = {
+          gid: filterValue
+        };
+      }
     }
 
     if (isEntityPropertyFilter(this.key, query)) {
@@ -115,7 +161,7 @@ function normalizeJoin(query) {
     }
 
     if (normalizedFilter) {
-      replaceValueOnPath({
+      ddfQueryUtils.replaceValueOnPath({
         key: this.key,
         path: this.path,
         normalizedValue: normalizedFilter,
@@ -130,7 +176,7 @@ function normalizeJoin(query) {
 function pullUpWhereSectionsInJoin(query) {
   traverse(query.join).forEach(function () {
     if (this.key === 'where') {
-      replaceValueOnPath({
+      ddfQueryUtils.replaceValueOnPath({
         key: this.key,
         path: this.path,
         queryFragment: query.join,
@@ -138,27 +184,6 @@ function pullUpWhereSectionsInJoin(query) {
       });
     }
   });
-}
-
-function replaceValueOnPath(options) {
-  // we need to do a step back in path
-  options.path.pop();
-  const path = options.path;
-
-  const key = options.key;
-  const normalizedValue = options.normalizedValue;
-  const queryFragment = options.queryFragment;
-
-  const value = _.get(queryFragment, path);
-
-  if (options.substituteEntryWithItsContent) {
-    const content = value[key];
-    delete value[key];
-    _.merge(value, content);
-  } else {
-    delete value[key];
-    _.set(queryFragment, path, _.merge(value, normalizedValue));
-  }
 }
 
 function isMeasureFilter(key, query) {

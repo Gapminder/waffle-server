@@ -1,6 +1,7 @@
 'use strict';
 
 const _ = require('lodash');
+const ddfQueryUtils = require('./ddf-query-utils');
 
 const FUNCTION_OPERATORS = ['min', 'max', 'avg'];
 
@@ -9,16 +10,18 @@ module.exports = {
 };
 
 function normalize(query, options) {
-  switch(query.from) {
+  const safeQuery = ddfQueryUtils.toSafeQuery(query, {except: ['join']});
+
+  switch(safeQuery.from) {
     case 'concepts.schema':
-      return normalizeConceptsSchema(query, options);
+      return normalizeConceptsSchema(safeQuery, options);
     case 'entities.schema':
-      return normalizeEntitiesSchema(query, options);
+      return normalizeEntitiesSchema(safeQuery, options);
     case 'datapoints.schema':
-      return normalizeDatapointsSchema(query, options);
+      return normalizeDatapointsSchema(safeQuery, options);
     default:
-      console.error(`Schema given in a "from" clause does not exist: ${from}`);
-      return query;
+      console.error(`Schema given in a "from" clause does not exist: ${safeQuery.from}`);
+      return safeQuery;
   }
 }
 
@@ -43,7 +46,7 @@ function normalizeDatapointsSchema(query, options) {
 function normalizeWhere(query, options) {
   const $andClause = [{type: toSchemaType(query.from)}];
 
-  if (query.where) {
+  if (!_.isEmpty(_.keys(query.where))) {
     $andClause.push(query.where);
   }
 

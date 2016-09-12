@@ -8,6 +8,8 @@ const wsJsonPack = require('./../ws.routes/data-post-processors/pack/pack-ws.pro
 const ddfJsonPack = require('./../ws.routes/data-post-processors/pack/pack-ddf.processor.js');
 const ddfJsonUnpack = require('./../ws.routes/data-post-processors/pack/unpack-ddf.processor.js');
 
+const constants = require('./../ws.utils/constants');
+
 // FIXME: packToWsJson, packToCsv, packToJson
 module.exports = {
   csv: packToCsv,
@@ -18,21 +20,13 @@ module.exports = {
 };
 
 function composePackingFunction(data, formatType) {
-  switch(true) {
-    // TODO:
-    // case (formatType === 'ddfJson' && _.get(data, 'wsJson', false)):
-    //   return async.compose();
-    case (formatType === 'ddfJson' && !!_.get(data, 'rawDdf', false)):
-      return async.seq(_toDdfJson, _pickDdfJsonProperties);
-    case (formatType === 'json' && !!_.get(data, 'rawDdf', false)):
-      return async.seq(_toDdfJson, _fromDdfJsonToJson);
-    case (formatType === 'wsJson' && !!_.get(data, 'rawDdf', false)):
-      return async.compose(_fromRawDdfToWsJson);
-    // TODO:
-    // case (formatType === 'csv' && data):
-    //   return async.compose();
-    default:
-      return async.seq(_toDdfJson);
+  const rawDdf = !!_.get(data, 'rawDdf', false);
+  if (formatType === 'ddfJson' && rawDdf) {
+    return async.seq(_toDdfJson, _pickDdfJsonProperties);
+  } else if (formatType === 'json' && rawDdf) {
+    return async.seq(_toDdfJson, _fromDdfJsonToJson);
+  } else {
+    return _fromRawDdfToWsJson;
   }
 }
 
@@ -78,25 +72,17 @@ function packToWsJson(data, format, onSendResponse) {
 
 function _fromRawDdfToWsJson(data, next) {
   const rawDdf = _.get(data, 'rawDdf', {});
-  let json;
+  const ddfDataType = _.get(data, 'type');
+  let json = {};
 
-  // TODO: should be covered by unittest
-  switch (true) {
-    case (!_.isEmpty(rawDdf.datapoints)):
-      json = wsJsonPack.mapDatapoints(rawDdf);
-      break;
-    case (!_.isEmpty(rawDdf.entities)):
-      json = wsJsonPack.mapEntities(rawDdf);
-      break;
-    case (!_.isEmpty(rawDdf.concepts)):
-      json = wsJsonPack.mapConcepts(rawDdf);
-      break;
-    case (!_.isEmpty(rawDdf.schema)):
-      json = wsJsonPack.mapSchema(rawDdf);
-      break;
-    default:
-      json = {};
-      break;
+  if (ddfDataType === constants.DATAPOINTS) {
+    json = wsJsonPack.mapDatapoints(rawDdf);
+  } else if (ddfDataType === constants.ENTITIES) {
+    json = wsJsonPack.mapEntities(rawDdf);
+  } else if (ddfDataType === constants.CONCEPTS) {
+    json = wsJsonPack.mapConcepts(rawDdf);
+  } else if (ddfDataType === constants.SCHEMA) {
+    json = wsJsonPack.mapSchema(rawDdf);
   }
 
   return async.setImmediate(() => next(null, json));
@@ -110,38 +96,40 @@ function packToDdfJson(data, format, onSendResponse) {
 
 function _toDdfJson(data, next) {
   const rawDdf = _.get(data, 'rawDdf', data);
+  const ddfDataType = _.get(data, 'type');
   const json = {};
 
-  if (_.isEmpty(rawDdf)) {
-    return async.setImmediate(() => next(null, json));
+  if (!_.isEmpty(rawDdf)) {
+    if (ddfDataType === constants.DATAPOINTS) {
+      const concepts = ddfJsonPack.packConcepts(rawDdf);
+      json.concepts = concepts.packed;
+
+      const entities = ddfJsonPack.packEntities(rawDdf);
+      json.entities = entities.packed;
+
+      const datapoints = ddfJsonPack.packDatapoints(rawDdf, entities.meta.entityByOriginId);
+      json.datapoints = datapoints.packed;
+    } else if (ddfDataType === constants.CONCEPTS) {
+      const concepts = ddfJsonPack.packConcepts(rawDdf);
+      json.concepts = concepts.packed;
+    } else if (ddfDataType === constants.ENTITIES) {
+      const concepts = ddfJsonPack.packConcepts(rawDdf);
+      json.concepts = concepts.packed;
+
+      const entities = ddfJsonPack.packEntities(rawDdf);
+      json.entities = entities.packed;
+    }
   }
 
-  const concepts = ddfJsonPack.packConcepts(rawDdf);
-  json.concepts = concepts.packed;
-
-  if (_.isEmpty(rawDdf.entities)) {
-    return async.setImmediate(() => next(null, json));
-  }
-
-  const entities = ddfJsonPack.packEntities(rawDdf);
-  json.entities = entities.packed;
-
-  if (_.isEmpty(rawDdf.datapoints)) {
-    return async.setImmediate(() => next(null, json));
-  }
-
-  const datapoints = ddfJsonPack.packDatapoints(rawDdf, entities.meta.entityByOriginId);
-  json.datapoints = datapoints.packed;
-
-  return async.setImmediate(() => next(null, json));
+  return async.setImmediate(() => next(null, {json, ddfDataType}));
 }
 
 // FIXME: to remove when vizabi could read all geo props from ddfJson
 function _pickDdfJsonProperties(data, next) {
   const json = {
-    concepts: data.concepts,
-    entities: data.entities,
-    datapoints: data.datapoints
+    concepts: data.json.concepts,
+    entities: data.json.entities,
+    datapoints: data.json.datapoints
   };
 
   return async.setImmediate(() => next(null, json));
@@ -150,20 +138,15 @@ function _pickDdfJsonProperties(data, next) {
 function _fromDdfJsonToJson(data, next) {
   let json;
 
-  switch (true) {
-    case (!!_.get(data, 'datapoints.values.length', false)):
-      json = ddfJsonUnpack.unpackDdfDatapoints(data);
-      break;
-    case (!!_.get(data, 'entities.values.length', false)):
-      json = ddfJsonUnpack.unpackDdfEntities(data);
-      break;
-    case (!!_.get(data, 'concepts.values.length', false)):
-      json = ddfJsonUnpack.unpackDdfConcepts(data);
-      break;
-    default:
-      json = {};
-      break;
+  if (data.ddfDataType === constants.DATAPOINTS) {
+    json = ddfJsonUnpack.unpackDdfDatapoints(data.json);
+  } else if (data.ddfDataType === constants.ENTITIES) {
+    json = ddfJsonUnpack.unpackDdfEntities(data.json);
+  } else if (data.ddfDataType === constants.CONCEPTS) {
+    json = ddfJsonUnpack.unpackDdfConcepts(data.json);
+  } else {
+    json = {};
   }
 
-  return async.setImmediate(() => next(null, json))
+  return async.setImmediate(() => next(null, json));
 }

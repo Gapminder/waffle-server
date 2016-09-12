@@ -15,6 +15,7 @@ const MIME_TYPE_MAPPINGS = {
 module.exports = (req, res) => {
   let formatType = req.query.format;
   const data = req.rawData;
+  data.type = req.ddfDataType;
 
   return pack(data, formatType, (err, packedData) => {
     if (err) {
