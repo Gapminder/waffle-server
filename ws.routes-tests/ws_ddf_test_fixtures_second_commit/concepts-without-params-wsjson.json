@@ -16,6 +16,42 @@
       null,
       null,
       null,
+      null,
+      null,
+      null,
+      null,
+      "string",
+      "Tags",
+      "tags"
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      "entity_domain",
+      "Tag",
+      "tag"
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      "string",
+      "Tag parent",
+      "parent"
+    ],
+    [
+      null,
+      null,
+      null,
       [
         "ordinal"
       ],

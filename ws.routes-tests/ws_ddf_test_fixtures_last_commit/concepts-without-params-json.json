@@ -1,6 +1,18 @@
 [
   {
     "color_updated": "",
+    "concept": "capital",
+    "concept_type": "entity_set",
+    "description_updated": "",
+    "domain": "geo",
+    "drill_up": null,
+    "indicator_url": "",
+    "name": "Capital",
+    "new_string_property": "",
+    "unit": ""
+  },
+  {
+    "color_updated": "",
     "concept": "code",
     "concept_type": "string",
     "description_updated": "",
@@ -29,7 +41,7 @@
     "concept_type": "entity_set",
     "description_updated": "",
     "domain": "geo",
-    "drill_up": "[\"geographic_regions\",\"landlocked\",\"main_religion_updated\",\"geo\",\"geographic_regions_in_4_colors\"]",
+    "drill_up": "[\"geographic_regions\",\"landlocked\",\"main_religion_updated\",\"geo\",\"geographic_regions_in_4_colors\",\"capital\"]",
     "indicator_url": "https://github.com/open-numbers/ddf--gapminder--dim_geo_countries_and_groups/blob/master/ddf--list--geo--country.csv",
     "name": "Country",
     "new_string_property": "",
@@ -94,6 +106,18 @@
     "name": "Forest products removal, per ha",
     "new_string_property": "new value 3",
     "unit": "$"
+  },
+  {
+    "color_updated": "",
+    "concept": "founding_date",
+    "concept_type": "time",
+    "description_updated": "",
+    "domain": "",
+    "drill_up": null,
+    "indicator_url": "",
+    "name": "",
+    "new_string_property": "",
+    "unit": ""
   },
   {
     "color_updated": "",
@@ -337,6 +361,18 @@
   },
   {
     "color_updated": "",
+    "concept": "parent",
+    "concept_type": "string",
+    "description_updated": "",
+    "domain": null,
+    "drill_up": null,
+    "indicator_url": null,
+    "name": "Tag parent",
+    "new_string_property": "",
+    "unit": null
+  },
+  {
+    "color_updated": "",
     "concept": "population_total",
     "concept_type": "measure",
     "description_updated": "Total population",
@@ -404,6 +440,30 @@
     "drill_up": null,
     "indicator_url": null,
     "name": "Shapes",
+    "new_string_property": "",
+    "unit": null
+  },
+  {
+    "color_updated": "",
+    "concept": "tag",
+    "concept_type": "entity_domain",
+    "description_updated": "",
+    "domain": null,
+    "drill_up": null,
+    "indicator_url": null,
+    "name": "Tag",
+    "new_string_property": "",
+    "unit": null
+  },
+  {
+    "color_updated": "",
+    "concept": "tags",
+    "concept_type": "string",
+    "description_updated": "",
+    "domain": null,
+    "drill_up": null,
+    "indicator_url": null,
+    "name": "Tags",
     "new_string_property": "",
     "unit": null
   },

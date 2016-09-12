@@ -25,7 +25,7 @@ test.cb.before(t => {
   return setDefaultSecondCommitByCLI(t.end);
 });
 
-test.skip.cb('Check GET request: for entities with selected format=json, when default dataset was set', t => {
+test.cb('Check GET request: for entities with selected format=json, when default dataset was set', t => {
   t.plan(1);
   api.get('/api/ddf/entities?format=json')
     .set('Accept', 'application/x-json')

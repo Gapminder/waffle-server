@@ -1,7 +1,7 @@
 import test from 'ava';
-import ddfConceptsJsonFormat from './ws_ddf_test_fixtures_first_commit/concepts-without-params-json.json';
-import ddfConceptsWsJsonFormat from './ws_ddf_test_fixtures_first_commit/concepts-without-params-wsjson.json';
-import ddfConceptsDdfJsonFormat from './ws_ddf_test_fixtures_first_commit/concepts-without-params-ddfjson.json';
+import ddfConceptsJsonFormat from './ws_ddf_test_fixtures_second_commit/concepts-without-params-json.json';
+import ddfConceptsWsJsonFormat from './ws_ddf_test_fixtures_second_commit/concepts-without-params-wsjson.json';
+import ddfConceptsDdfJsonFormat from './ws_ddf_test_fixtures_second_commit/concepts-without-params-ddfjson.json';
 
 const shell = require('shelljs');
 const express = require('express');
