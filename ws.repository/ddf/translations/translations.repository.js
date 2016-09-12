@@ -8,7 +8,7 @@ function TranslationsRepository() {
 }
 
 TranslationsRepository.prototype.findByLanguage = function (lang, onLoaded) {
-  return onLoaded('TranslationsRepository.prototype.findByLanguage is not implemented');
+  return Translations.find({language: lang}).lean().exec(onLoaded);
 };
 
 module.exports = new TranslationsRepository();
