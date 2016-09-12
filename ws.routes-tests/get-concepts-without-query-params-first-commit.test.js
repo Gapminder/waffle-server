@@ -14,7 +14,7 @@ const api = require('supertest')('http://localhost:3000');
 
 
 function setDefaultFirstCommitByCLI(onSetDefaultByFirstCommitCLIDone) {
-  const setDefaultcommand = `REPO=git@github.com:VS-work/ddf--gapminder--systema_globalis--light.git COMMIT=c796f57 LOGIN=dev@gapminder.org PASS=123 npm run set-default`;
+  const setDefaultcommand = `REPO=git@github.com:VS-work/ddf--gapminder--systema_globalis--light.git COMMIT=803d9b1 LOGIN=dev@gapminder.org PASS=123 npm run set-default`;
   shell.cd('../../waffle-server-import-cli');
   return shell.exec(setDefaultcommand, (error) => {
     console.log('** chose default set');
