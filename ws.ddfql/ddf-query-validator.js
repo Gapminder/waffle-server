@@ -4,7 +4,11 @@ const _ = require('lodash');
 const async = require('async');
 const mingo = require('mingo');
 const traverse = require('traverse');
+
+const constants = require('../ws.utils/constants');
+
 const AVAILABLE_QUERY_OPERATORS = ["$eq", "$gt", "$gte", "$lt", "$lte", "$ne", "$in", "$nin", "$or", "$and", "$not", "$nor", "$size"];
+const MAX_AMOUNT_OF_MEASURES_IN_SELECT = 5;
 
 const VALID_RESPONSE = {
   valid: true
@@ -114,10 +118,22 @@ function _validateDdfQueryJoinClause(query) {
 }
 
 function _validateDdfQuerySelectClause(query) {
-  const clause = _.get(query, 'select', {});
-  return !clause.key
-    ? createResponse(["Invalid DDFQL-query. Validation of Select Clause: does not contain 'key'"])
-    : createResponse([]);
+  query = _.defaults(query, {
+    select: {},
+    from: ''
+  });
+
+  const errors = [];
+
+  if (!query.select.key) {
+    errors.push("Invalid DDFQL-query. Validation of Select Clause: does not contain 'key'");
+  }
+
+  if (query.from === constants.DATAPOINTS && _.size(query.select.value) > MAX_AMOUNT_OF_MEASURES_IN_SELECT) {
+    errors.push(`Invalid DDFQL-query. Validation of Select Clause: 'value' contains more than ${MAX_AMOUNT_OF_MEASURES_IN_SELECT} measures, please try again with less amount`);
+  }
+
+  return createResponse(errors);
 }
 
 function createResponse (errorMessages) {
