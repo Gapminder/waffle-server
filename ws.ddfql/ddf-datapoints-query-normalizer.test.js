@@ -62,6 +62,7 @@ test('should normalize where and join clauses', assert => {
     "where": {
       "$and": [
         {"dimensions": {"$size": 2}},
+        {"measure": {"$in": ["population", "life_expectancy", "gdp_per_cap", "gov_type"]}},
         {
           "$and": [
             {"dimensions": "$geo"},
@@ -154,6 +155,7 @@ test('should normalize where and join clauses - QUARTER time type should be pars
     "where": {
       "$and": [
         {"dimensions": {"$size": 2}},
+        {"measure": {"$in": ["population", "life_expectancy", "gdp_per_cap", "gov_type"]}},
         {
           "$and": [
             {"dimensions": "$time"},
@@ -208,6 +210,7 @@ test('should normalize where and join clauses - YEAR time type should be parsed'
     "where": {
       "$and": [
         {"dimensions": {"$size": 2}},
+        {"measure": {"$in": ["population", "life_expectancy", "gdp_per_cap", "gov_type"]}},
         {
           "$and": [
             {"dimensions": "$time"}
@@ -262,6 +265,7 @@ test('should normalize where and join clauses - WEEK time type should be parsed'
     "where": {
       "$and": [
         {"dimensions": {"$size": 2}},
+        {"measure": {"$in": ["population", "life_expectancy", "gdp_per_cap", "gov_type"]}},
         {
           "$and": [
             {"dimensions": "$time"}
@@ -328,6 +332,7 @@ test('should normalize where and join clauses - DATE time type should be parsed'
     "where": {
       "$and": [
         {"dimensions": {"$size": 2}},
+        {"measure": {"$in": ["population", "life_expectancy", "gdp_per_cap", "gov_type"]}},
         {
           "$and": [
             {"dimensions": "$time"}
@@ -703,6 +708,7 @@ test('should normalized queries for quarters range', (assert) => {
     "where": {
       "$and": [
         {"dimensions": {"$size": 2}},
+        {"measure": {"$in": ["sg_population"]}},
         {
           "$and": [
             {"dimensions": "$quarter1"},
@@ -763,6 +769,7 @@ test('should create links in join section for entities filter', (assert) => {
     "where": {
       "$and": [
         {"dimensions": {"$size": 2}},
+        {"measure": {"$in": ["sg_population"]}},
         {
           "$and": [
             {

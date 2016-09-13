@@ -2,7 +2,6 @@
 
 const _ = require('lodash');
 const traverse = require('traverse');
-const ddfTimeUtils = require('ddf-time-utils');
 const ddfQueryUtils = require('./ddf-query-utils');
 const constants = require('../ws.utils/constants');
 
@@ -46,8 +45,15 @@ function substituteDatapointJoinLinks(query, linksInJoinToValues) {
 
 function substituteDatapointConceptsWithIds(query, conceptsToIds) {
   traverse(query.where).forEach(function (concept) {
-    if (shouldSubstituteValueWithId(concept, query)) {
-      const id = conceptsToIds[concept];
+    if (shouldSubstituteValueWithId(concept, query, this.key)) {
+      let id;
+
+      if (_.isArray(concept)) {
+        id = _.map(concept, conceptGid => conceptsToIds[conceptGid]);
+      } else {
+        id = conceptsToIds[concept];
+      }
+
       this.update(id ? id : concept);
     }
   });
@@ -118,7 +124,8 @@ function normalizeWhere(query) {
 
   query.where = {
     $and: [
-      {dimensions: {$size: _.size(query.select.key)}}
+      {dimensions: {$size: _.size(query.select.key)}},
+      {measure: {$in: query.select.value}}
     ]
   };
 
@@ -205,5 +212,9 @@ function isOperator(key) {
 }
 
 function shouldSubstituteValueWithId(value, query) {
+  if (_.isArray(value)) {
+    return value.every(item => shouldSubstituteValueWithId(item, query));
+  }
+
   return isEntityFilter(value, query) || isMeasureFilter(value, query);
 }
