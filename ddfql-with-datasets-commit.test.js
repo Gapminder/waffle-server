@@ -88,18 +88,17 @@ function cleanDatabase(onDatabaseCleaned) {
   }, onDatabaseCleaned);
 }
 
-test.cb.before(t => {
-  console.log('Run cli process before testing');
-
-  //return cleanDatabase((error) => {
-  //  if (error) {
-  //    return t.end(error);
-  //  }
-
-    return cloneCLIRepository(t.end);
-  //});
-});
-
+//test.cb.before(t => {
+//  console.log('Run cli process before testing');
+//
+//return cleanDatabase((error) => {
+//  if (error) {
+//    return t.end(error);
+//  }
+//
+//    return cloneCLIRepository(t.end);
+//});
+//});
 
 
 test.skip.cb('Check GET request: for datapoints with select=sg_population&key=geo,time, when default dataset was set', t => {
@@ -184,10 +183,11 @@ test.skip.cb('Check POST request: concepts with select when default dataset was 
       "select": {
         "key": ["concept"],
         "value": [
-          "concept_type", "name", "unit","color"
+          "concept_type", "name", "unit", "color"
         ]
       },
-      "from": "concepts"})
+      "from": "concepts"
+    })
     .set('Accept', 'application/x-ws+json')
     .expect(200)
     .expect('Content-Type', /application\/json/)
@@ -277,14 +277,13 @@ test.skip.cb('Check POST request: datapoints with select when default dataset wa
 });
 
 
-
 test.skip.cb('Check POST request: for concept.schema', t=> {
   t.plan(4);
   api.post('/api/ddf/ql?format=wsJson')
     .send({
       "select": {
-        "key": ["key","value"],
-        "value": ["min(value)","max(value)"]
+        "key": ["key", "value"],
+        "value": ["min(value)", "max(value)"]
       },
       "from": "concepts.schema"
     })
@@ -305,8 +304,8 @@ test.skip.cb('Check POST request: for datapoints.schema', t=> {
   api.post('/api/ddf/ql?format=wsJson')
     .send({
       "select": {
-        "key": ["key","value"],
-        "value": ["min(value)","max(value)"]
+        "key": ["key", "value"],
+        "value": ["min(value)", "max(value)"]
       },
       "from": "datapoints.schema"
     })
@@ -327,8 +326,8 @@ test.skip.cb('Check POST request: for entities.schema', t=> {
   api.post('/api/ddf/ql?format=wsJson')
     .send({
       "select": {
-        "key": ["key","value"],
-        "value": ["min(value)","max(value)"]
+        "key": ["key", "value"],
+        "value": ["min(value)", "max(value)"]
       },
       "from": "entities.schema"
     })
@@ -343,7 +342,6 @@ test.skip.cb('Check POST request: for entities.schema', t=> {
       t.end();
     })
 });
-
 
 
 //test.cb.after('clean test database', t => {

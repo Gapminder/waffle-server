@@ -1,0 +1,4 @@
+{
+  "success": false,
+  "error": "Invalid DDFQL-query. Validation of Select Clause: does not contain 'key'"
+}
