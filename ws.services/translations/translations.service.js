@@ -4,7 +4,7 @@ const _ = require('lodash');
 const translateByGoogleTranslate = require('./google-translate-provider');
 const translationsRepository = require('../../ws.repository/ddf/translations/translations.repository');
 
-const langToWords = new Map();
+const dictionary = {};
 
 module.exports = {
   loadLanguage,
@@ -12,8 +12,8 @@ module.exports = {
 };
 
 function loadLanguage(lang, onTranslationForLangLoaded) {
-  if (langToWords.has(lang)) {
-    return onTranslationForLangLoaded(null, langToWords.get(lang));
+  if (dictionary[lang]) {
+    return onTranslationForLangLoaded(null, dictionary[lang], lang);
   }
 
   return translationsRepository.findByLanguage(lang, (error, translations) => {
@@ -21,8 +21,8 @@ function loadLanguage(lang, onTranslationForLangLoaded) {
       return onTranslationForLangLoaded(error);
     }
 
-    langToWords.set(lang, new Map(_.map(translations, translation => [translation.source, translation.target])));
-    return onTranslationForLangLoaded(null, translations);
+    dictionary[lang] = _.map(translations, translation => [translation.source, translation.target]);
+    return onTranslationForLangLoaded(null, dictionary[lang], lang);
   });
 }
 
