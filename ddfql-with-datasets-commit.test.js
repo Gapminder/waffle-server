@@ -1,8 +1,6 @@
 'use strict';
 
 import test from 'ava';
-//import ddfDatapointsSelectSgPopulation from 'ws_ddf_test_fixtures_first_commit/ddf--datapoints-sg_populations-only.json';
-//import ddfDataointsForPostRequest from 'ws_ddf_test_fixtures_first_commit/ddf--datapoints-with-select-for-post-request.json';
 //import ddfConceptsSchemas from 'ws_ddf_test_fixtures_first_commit/ddf--concepts-schemas.json';
 //import ddfDatapointsSchemas from 'ws_ddf_test_fixtures_first_commit/ddf--datapoints-schemas.json';
 //import ddfEntitiesSchemas from 'ws_ddf_test_fixtures_first_commit/ddf--entities-schemas.json';
