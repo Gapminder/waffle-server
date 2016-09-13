@@ -1,13 +1,8 @@
 'use strict';
 
 import test from 'ava';
-//import ddfConceptsJsonFormat from 'ws_ddf_test_fixtures_first_commit/concepts-without-params-json.json';
-//import ddfConceptsWsJsonFormat from 'ws_ddf_test_fixtures_first_commit/concepts-without-params-wsjson.json';
-//import ddfConceptsDdfJsonFormat from 'ws_ddf_test_fixtures_first_commit/concepts-without-params-ddfjson.json';
-//import ddfConceptWithoutSelectForPostRequest from 'ws_ddf_test_fixtures_first_commit/concepts-for-post-without-select.json';
 //import ddfDatapointsSelectSgPopulation from 'ws_ddf_test_fixtures_first_commit/ddf--datapoints-sg_populations-only.json';
 //import ddfDataointsForPostRequest from 'ws_ddf_test_fixtures_first_commit/ddf--datapoints-with-select-for-post-request.json';
-//import ddfConceptWithSelectForPostRequest from 'ws_ddf_test_fixtures_first_commit/concepts-for-post-with-select.json';
 //import ddfConceptsSchemas from 'ws_ddf_test_fixtures_first_commit/ddf--concepts-schemas.json';
 //import ddfDatapointsSchemas from 'ws_ddf_test_fixtures_first_commit/ddf--datapoints-schemas.json';
 //import ddfEntitiesSchemas from 'ws_ddf_test_fixtures_first_commit/ddf--entities-schemas.json';
