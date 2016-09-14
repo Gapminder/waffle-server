@@ -3,10 +3,13 @@
 const _ = require('lodash');
 const compression = require('compression');
 const transactionsService = require('./dataset-transactions.service');
+const translationsService = require('./translations/translations.service');
+const constants = require('../ws.utils/constants');
 
 module.exports = {
   findDefaultDatasetAndTransaction,
-  shouldCompress
+  shouldCompress,
+  translate
 };
 
 function shouldCompress(req, res) {
@@ -28,6 +31,22 @@ function findDefaultDatasetAndTransaction(pipe, done) {
     pipe.dataset = datasetAndTransaction.dataset;
     pipe.transaction = datasetAndTransaction.transaction;
     pipe.version = datasetAndTransaction.transaction.createdAt;
+    return done(null, pipe);
+  });
+}
+
+function translate(translationTargetName, pipe, done) {
+  if (!_.includes(constants.TRANSLATION_LANGUAGES, pipe.language)) {
+    return done(null, pipe);
+  }
+
+  return translationsService.loadLanguage(pipe.language, (error, dictionary) => {
+    pipe[translationTargetName] = _.map(pipe[translationTargetName], target => {
+      target.properties = _.mapValues(target.properties, value => {
+        return dictionary[_.toLower(value)] || value;
+      });
+      return target;
+    });
     return done(null, pipe);
   });
 }

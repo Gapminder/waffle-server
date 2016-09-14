@@ -5,25 +5,22 @@ const constants = require('../../ws.utils/constants');
 const translateUsingBingScrapper = require('./bing-translate-scrapper');
 const translationsRepository = require('../../ws.repository/ddf/translations/translations.repository');
 
-const dictionary = {};
-
 module.exports = {
   loadLanguage,
   translateUsingScrapper
 };
 
 function loadLanguage(lang, onTranslationForLangLoaded) {
-  if (dictionary[lang]) {
-    return onTranslationForLangLoaded(null, dictionary[lang], lang);
-  }
-
-  return translationsRepository.findByLanguage(lang, (error, translations) => {
+    return translationsRepository.findByLanguage(lang, (error, translations) => {
     if (error) {
       return onTranslationForLangLoaded(error);
     }
 
-    dictionary[lang] = _.map(translations, translation => [translation.source, translation.target]);
-    return onTranslationForLangLoaded(null, dictionary[lang], lang);
+    const dictionary = _.reduce(translations, (result, translation) => {
+      result[_.toLower(translation.source)] = translation.target;
+      return result;
+    }, {});
+    return onTranslationForLangLoaded(null, dictionary, lang);
   });
 }
 
