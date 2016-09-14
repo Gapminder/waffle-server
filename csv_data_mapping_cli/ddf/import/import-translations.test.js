@@ -6,7 +6,7 @@ import importTranslationsService from './import-translations.service';
 
 const translations = require('./fixtures/translations');
 
-test('should split into chunk huge array of translations', assert => {
+test.skip('should split into chunk huge array of translations', assert => {
   const splittedTranslationsChunks = importTranslationsService.divideWordsIntoChunks(translations)
 
   console.log(JSON.stringify(splittedTranslationsChunks, null, '\t'));
