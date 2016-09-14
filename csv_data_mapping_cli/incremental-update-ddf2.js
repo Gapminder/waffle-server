@@ -14,6 +14,7 @@ const constants = require('../ws.utils/constants');
 const ddfImportProcess = require('../ws.utils/ddf-import-process');
 
 const createDatasetIndex = require('./create-dataset-index');
+const translationsService = require('./ddf/import/import-translations.service');
 const processConceptChanges = require('./ddf/import/incremental/import-concepts')();
 
 const LIMIT_NUMBER_PROCESS = 10;
@@ -57,6 +58,7 @@ module.exports = function (options, done) {
     getAllPreviousConcepts,
     processEntitiesChanges,
     processDataPointsChanges,
+    translationsService.processTranslations,
     createDatasetIndex,
     common.closeTransaction
   ], (updateError, pipe) => {

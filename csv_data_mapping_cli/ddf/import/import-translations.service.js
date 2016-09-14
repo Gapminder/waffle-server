@@ -96,8 +96,6 @@ function filterExistedTranslations(pipe, done) {
 function translateToAnotherLanguage(pipe, done) {
   logger.info(`** translate all founded words to '${_.join(pipe.languages, ', ')}' languages`);
 
-  console.log(JSON.stringify(pipe.wordsToTranslateByLanguage['ru'], null, '\t'));
-
   return async.reduce(pipe.languages, [], (result, language, mscb) => {
     const words = pipe.wordsToTranslateByLanguage[language];
     const wordChunks = _divideWordsIntoChunks(words);
