@@ -9,6 +9,7 @@ const constants = require('../ws.utils/constants');
 const Concepts = mongoose.model('Concepts');
 const Entities = mongoose.model('Entities');
 const DataPoints = mongoose.model('DataPoints');
+const Translations = mongoose.model('Translations');
 
 const datasetsRepository = require('../ws.repository/ddf/datasets/datasets.repository');
 const transactionsRepository = require('../ws.repository/ddf/dataset-transactions/dataset-transactions.repository');
@@ -142,7 +143,8 @@ function getStatusOfLatestTransactionByDatasetName(datasetName, done) {
       const modifiedObjectsTasks = {
         concepts: done => Concepts.count(closedOrOpenedByVersionQuery, done),
         entities: done => Entities.count(closedOrOpenedByVersionQuery, done),
-        datapoints: done => DataPoints.count(closedOrOpenedByVersionQuery, done)
+        datapoints: done => DataPoints.count(closedOrOpenedByVersionQuery, done),
+        translations: done => Translations.count({}, done)
       };
 
       return async.parallelLimit(modifiedObjectsTasks, constants.LIMIT_NUMBER_PROCESS, (error, stats) => {
