@@ -5,11 +5,12 @@ const request = require("request");
 const striptags = require("striptags");
 const entities = require("entities");
 const Nightmare = require("nightmare");
-const nightmare = Nightmare({show: false, waitTimeout: 2000});
 
 const AMOUNT_OF_CHARACTERS_IN_SINGLE_REQUEST = 2000;
 
 module.exports = (opts, onTranslated) => {
+  const nightmare = Nightmare({show: false});
+
   opts = _.defaults(opts, {
     text: "text",
     source: "en",
@@ -22,8 +23,10 @@ module.exports = (opts, onTranslated) => {
 
   return nightmare
     .goto(makeTranslationServiceUrl(opts))
+    .insert('textarea#srcText', opts.text)
+    .wait(2000)
     .evaluate(function () {
-      return document.querySelector('#result_box').innerHTML;
+      return document.querySelector('#destText').innerHTML;
     })
     .end()
     .then(function (html) {
@@ -35,5 +38,5 @@ module.exports = (opts, onTranslated) => {
 };
 
 function makeTranslationServiceUrl(options) {
-  return `https://translate.google.com/#${options.source}/${options.target}/${encodeURI(options.text)}`;
+  return `https://www.bing.com/translator/?from=${options.source}&to=${options.target}`;
 }

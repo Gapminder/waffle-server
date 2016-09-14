@@ -1,15 +1,15 @@
 'use strict';
 
 const _ = require('lodash');
-const translateByGoogleTranslate = require('./google-translate-provider');
-const translateByYandexTranslate = require('./yandex-translate-provider');
+const constants = require('../../ws.utils/constants');
+const translateUsingBingScrapper = require('./bing-translate-scrapper');
 const translationsRepository = require('../../ws.repository/ddf/translations/translations.repository');
 
 const dictionary = {};
 
 module.exports = {
   loadLanguage,
-  translateUsingGoogle
+  translateUsingScrapper
 };
 
 function loadLanguage(lang, onTranslationForLangLoaded) {
@@ -27,23 +27,27 @@ function loadLanguage(lang, onTranslationForLangLoaded) {
   });
 }
 
-function translateUsingGoogle(words, options, onTranslated) {
-  const opts = _.defaults(options, {source: 'en', splitBy: '<>'});
+function translateUsingScrapper(words, options, onTranslated) {
+  const opts = _.defaults(options, {source: 'en', splitBy: constants.TRANSLATION_SEPARATOR});
 
   if (!opts.target) {
     return onTranslated('Target language was not provided for translation service');
   }
 
-  return translateByYandexTranslate(_.extend({}, {text: _.join(words, opts.splitBy)}, opts), (error, translatedText) => {
+  return translateUsingBingScrapper(_.extend({}, {text: _.join(words, opts.splitBy)}, opts), (error, translatedText) => {
     if (error) {
       return onTranslated(error);
     }
 
     const translationResult = opts.splitBy ? toWords(translatedText, opts.splitBy) : translatedText;
-    return onTranslated(null, _.zipObject(words, translationResult));
+    return onTranslated(null, _.map(words, (word, index) => ({
+      language: opts.target,
+      source: word,
+      target: translationResult[index]
+    })));
   });
 }
 
 function toWords(text, separator) {
-  return _.split(_.replace(text, /\s/g, ''), separator);
+  return _.split(text, separator);
 }
