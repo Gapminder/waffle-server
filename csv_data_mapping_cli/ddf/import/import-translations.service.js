@@ -42,7 +42,6 @@ function processTranslations(pipe, done) {
     async.constant(options),
     findAllTranslations,
     filterExistedTranslations,
-    translateToAnotherLanguage,
     createTranslations
   ], error => {
     return done(error, pipe);
@@ -78,42 +77,37 @@ function filterExistedTranslations(pipe, done) {
     const wordsToTranslateByLanguage = _.reduce(pipe.languages, (result, language) => {
       const translationsByLanguage = _.map(translationsByLanguages[language], 'source');
 
-      result[language] = _.chain(pipe.rawTranslations)
+      result = _.chain(pipe.rawTranslations)
         .filter((rawTranslation) => _.size(rawTranslation) < constants.TRANSLATION_CHUNK_LIMIT && !_.isObject(rawTranslation) && !_.isNil(rawTranslation))
-        .uniq()
         .difference(translationsByLanguage)
+        .concat(result)
         .value();
 
       return result;
-    }, {});
+    }, []);
 
-    pipe.wordsToTranslateByLanguage = wordsToTranslateByLanguage;
+    pipe.wordsToTranslateByLanguage = _.uniq(wordsToTranslateByLanguage);
 
     return done(null, pipe);
   });
 }
 
-function translateToAnotherLanguage(pipe, done) {
+function createTranslations(pipe, done) {
   logger.info(`** translate all founded words to '${_.join(pipe.languages, ', ')}' languages`);
 
-  return async.reduce(pipe.languages, [], (result, language, mscb) => {
-    const words = pipe.wordsToTranslateByLanguage[language];
-    const wordChunks = _divideWordsIntoChunks(words);
+  const createTranslationsByChunks = async.seq(_translateToAnotherLanguage, _createTranslationsFromChunk);
+  const words = pipe.wordsToTranslateByLanguage;
+  const wordChunks = _divideWordsIntoChunks(words);
+  const wordChunksByLanguage = _.flatMap(wordChunks, (wordChunk) => {
+    return _.map(pipe.languages, (language) => ({words: wordChunk, language, transaction: pipe.transaction}));
+  });
 
-    logger.info(`**** translate ${_.sumBy(wordChunks, 'length')} words to '${language}' language`);
-
-    return _translateWordsByChunks(wordChunks, language, (error, translatedChunks) => {
-      if (error) {
-        return mscb(error);
-      }
-      result = result.concat(translatedChunks);
-      return mscb(null, result);
-    });
-  }, (error, translatedWords) => {
-
-    pipe.translatedWords = _.map(translatedWords, (word) => _.extend(word, {transaction: pipe.transaction._id}));
-
-    return done(error, pipe);
+  let index = 0;
+  return async.eachSeries(wordChunksByLanguage, (chunk, escb) => {
+    logger.info(`**** translate ${chunk.words.length} words from ${++index} chunk into '${chunk.language}' language`);
+    return createTranslationsByChunks(chunk, escb);
+  }, (err) => {
+    return done(err, pipe);
   });
 }
 
@@ -124,41 +118,48 @@ function _divideWordsIntoChunks(words) {
   let lastChunkLength = 0;
 
   const wordChunks = _.reduce(words, (chunks, word) => {
-    const wordSize = _.size(word);
-    const translationSeparatorLength = constants.TRANSLATION_SEPARATOR.length;
-    const currentChunkLength = lastChunkLength + translationSeparatorLength + wordSize;
+    const encodedWord = encodeURI(word);
+    const wordLength = encodedWord.length;
+    const translationSeparatorLength = encodeURI(constants.TRANSLATION_SEPARATOR).length;
+    const currentChunkLength = lastChunkLength + translationSeparatorLength + wordLength;
 
-      if (currentChunkLength >= constants.TRANSLATION_CHUNK_LIMIT) {
-        chunkIndex++;
-      }
+    if (currentChunkLength >= constants.TRANSLATION_CHUNK_LIMIT) {
+      chunkIndex++;
+    }
 
-      if (_.isEmpty(chunks[chunkIndex])) {
-        lastChunkLength = wordSize;
-        chunks[chunkIndex] = [word];
-        return chunks;
-      }
-
-      lastChunkLength += translationSeparatorLength + wordSize;
-      chunks[chunkIndex].push(word);
-
+    if (_.isEmpty(chunks[chunkIndex])) {
+      lastChunkLength = wordLength;
+      chunks[chunkIndex] = [word];
       return chunks;
-    }, []);
+    }
+
+    lastChunkLength += translationSeparatorLength + wordLength;
+    chunks[chunkIndex].push(word);
+
+    return chunks;
+  }, []);
 
   return wordChunks;
 }
 
-function _translateWordsByChunks(wordChunks, language, done) {
-  let index = 0;
-  return async.concatSeries(wordChunks, (wordChunk, cscb) => {
-    logger.info(`**** translate words from ${++index} chunk`);
-    const options = {splitBy: constants.TRANSLATION_SEPARATOR, target: language};
+function _translateToAnotherLanguage(pipe, done) {
+  const options = {splitBy: constants.TRANSLATION_SEPARATOR, target: pipe.language};
 
-    return translateService.translateUsingScrapper(wordChunk, options, cscb);
-  }, done);
+  return translateService.translateUsingScrapper(pipe.words, options, (error, translatedWords) => {
+    if (error) {
+      return done(error);
+    }
+
+    pipe.translatedWords = _.map(translatedWords, (word) => {
+      return _.extend(word, {transaction: pipe.transaction._id})
+    });
+
+    return done(null, pipe);
+  });
 }
 
-function createTranslations(pipe, done) {
-  logger.info('** create translations documents');
+function _createTranslationsFromChunk(pipe, done) {
+  logger.info('** create translations documents from chunk');
 
   return async.eachLimit(
     _.chunk(pipe.translatedWords, 100),
