@@ -4,7 +4,7 @@ import '../../ws.repository/index'
 
 import translationService from './translations.service';
 
-test.cb('should translate given array of words via google translate', assert => {
+test.skip.cb('should translate given array of words via google translate', assert => {
 
   translationService.translateUsingGoogle(['hello', 'world'], {target: 'ru'}, (error, translatedText) => {
 
