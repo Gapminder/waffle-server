@@ -2,6 +2,7 @@
 
 const _ = require('lodash');
 const translateByGoogleTranslate = require('./google-translate-provider');
+const translateByYandexTranslate = require('./yandex-translate-provider');
 const translationsRepository = require('../../ws.repository/ddf/translations/translations.repository');
 
 const dictionary = {};
@@ -33,7 +34,7 @@ function translateUsingGoogle(words, options, onTranslated) {
     return onTranslated('Target language was not provided for translation service');
   }
 
-  return translateByGoogleTranslate(_.extend({}, {text: _.join(words, opts.splitBy)}, opts), (error, translatedText) => {
+  return translateByYandexTranslate(_.extend({}, {text: _.join(words, opts.splitBy)}, opts), (error, translatedText) => {
     if (error) {
       return onTranslated(error);
     }
