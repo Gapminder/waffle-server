@@ -44,7 +44,13 @@ function processTranslations(pipe, done) {
     filterExistedTranslations,
     createTranslations
   ], error => {
-    return done(error, pipe);
+    if (error) {
+      logger.warn(error);
+    }
+    // intentionally skipping error, because we don't want to
+    // break importing or incremental updating process
+    // in case of errors during translation creation
+    return done(null, pipe);
   });
 }
 
