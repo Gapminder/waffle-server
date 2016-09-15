@@ -41,12 +41,17 @@ function translate(translationTargetName, pipe, done) {
   }
 
   return translationsService.loadLanguage(pipe.language, (error, dictionary) => {
+    if (_.isEmpty(dictionary)) {
+      return done(null, pipe);
+    }
+
     pipe[translationTargetName] = _.map(pipe[translationTargetName], target => {
       target.properties = _.mapValues(target.properties, value => {
         return dictionary[_.toLower(value)] || value;
       });
       return target;
     });
+
     return done(null, pipe);
   });
 }
