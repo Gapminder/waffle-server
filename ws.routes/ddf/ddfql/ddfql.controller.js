@@ -51,6 +51,7 @@ module.exports = serviceLocator => {
 
     const query = _.get(req, 'body', {});
     const where = _.get(req, 'body.where', {});
+    const language = _.get(req, 'body.language', {});
     const select = _.get(req, 'body.select.value', []);
     const domainGids = _.get(req, 'body.select.key', []);
     const headers = _.union(domainGids, select);
@@ -69,7 +70,8 @@ module.exports = serviceLocator => {
       groupBy,
       datasetName,
       version,
-      query
+      query,
+      language
     };
 
     if (from === constants.DATAPOINTS) {

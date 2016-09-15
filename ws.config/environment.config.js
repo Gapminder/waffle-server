@@ -42,6 +42,8 @@ module.exports = Object.freeze({
   LOG_TRANSPORTS: DEFAULT_LOG_TRANSPORTS[NODE_ENV] || DEFAULT_LOG_TRANSPORTS[DEFAULT_NODE_ENV],
   LOG_TABS: '\t\t\t',
 
+  MONGODB_URL: 'mongodb://localhost:27017',
+
   REDIS_HOST: process.env.REDIS_HOST || 'localhost',
   REDIS_PORT: process.env.REDIS_PORT || 6379,
 

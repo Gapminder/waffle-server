@@ -16,7 +16,8 @@ const ddfModels = [
   'datasets',
   'entities',
   'original-entities',
-  'users'
+  'users',
+  'translations'
 ];
 
 _.forEach(ddfModels, model => require(`../ws.repository/ddf/${model}/${model}.model`));

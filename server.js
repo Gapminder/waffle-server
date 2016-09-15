@@ -12,7 +12,7 @@ app.use(bodyParser.json({limit: '10mb'}));
 
 var serviceLocator = require('./ws.service-locator')(app);
 
-require('./ws.repository')();
+require('./ws.repository');
 require('./ws.config')(serviceLocator);
 require('./ws.routes')(serviceLocator);
 
