@@ -320,7 +320,8 @@ function cleanDdfRedisCache(onCacheCleaned) {
   const cacheCleaningTasks = [
     done => cache.del(`${constants.DDF_REDIS_CACHE_NAME_CONCEPTS}*`, done),
     done => cache.del(`${constants.DDF_REDIS_CACHE_NAME_ENTITIES}*`, done),
-    done => cache.del(`${constants.DDF_REDIS_CACHE_NAME_DATAPOINTS}*`, done)
+    done => cache.del(`${constants.DDF_REDIS_CACHE_NAME_DATAPOINTS}*`, done),
+    done => cache.del(`${constants.DDF_REDIS_CACHE_NAME_DDFQL}*`, done),
   ];
 
   return async.parallelLimit(cacheCleaningTasks, constants.LIMIT_NUMBER_PROCESS, onCacheCleaned);
