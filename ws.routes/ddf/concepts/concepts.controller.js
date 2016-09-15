@@ -39,7 +39,7 @@ module.exports = serviceLocator => {
     const datasetName = _.first(req.decodedQuery.where.dataset);
     const version = _.first(req.decodedQuery.where.version);
     const domainGids = _.first(req.decodedQuery.where.key);
-    const domainGid = _.first(domainGids);
+    const domainGid = domainGids;
     const select = req.decodedQuery.select;
     const headers = _.isEmpty(select) ? [] : _.union([domainGid], select);
 
