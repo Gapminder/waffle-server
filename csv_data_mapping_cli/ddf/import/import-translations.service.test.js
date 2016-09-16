@@ -1,13 +1,16 @@
-import test from 'ava';
-import * as _ from 'lodash';
-import '../../../ws.config/db.config'
-import '../../../ws.repository/index'
-import importTranslationsService from './import-translations.service';
+'use strict';
 
-const translations = require('./fixtures/translations');
+const _  = require('lodash');
+// require('../../../ws.config/db.config');
+// require('../../../ws.repository/index');
+// const importTranslationsService  = require('./import-translations.service');
+const chai  = require('chai');
+const expect = chai.expect;
 
-test('should split into chunk huge array of translations', assert => {
-  const splittedTranslationsChunks = importTranslationsService.divideWordsIntoChunks(translations)
+// const translations = require('./fixtures/translations');
+
+it('should split into chunk huge array of translations', () => {
+  // const splittedTranslationsChunks = importTranslationsService.divideWordsIntoChunks(translations);
 
   // assert.deepEqual(splittedTranslationsChunks.length, 9);
   // assert.deepEqual(_.sumBy(splittedTranslationsChunks, 'length'), 1162);

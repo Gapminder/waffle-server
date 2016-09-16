@@ -1,10 +1,14 @@
-import test from 'ava';
-import sinon from 'sinon';
-import proxyquire from 'proxyquire';
+'use strict';
+
+const sinon = require('sinon');
+const proxyquire = require('proxyquire');
+const chai = require('chai');
+
+const expect = chai.expect;
 
 let req, res;
 
-test.beforeEach(() => {
+beforeEach(() => {
   req = {
     query: {
       format: 'json'
@@ -27,8 +31,7 @@ test.beforeEach(() => {
   };
 });
 
-test.cb('should respond with application/json content type when json format parameter was given', assert => {
-  assert.plan(2);
+it('should respond with application/json content type when json format parameter was given', done => {
   //arrange
   let packedData = [{
     "geo": "usa",
@@ -45,13 +48,13 @@ test.cb('should respond with application/json content type when json format para
   const stubbedPackMiddleware = proxyquire('./index', {
     './pack.processor': (rawData, formatType, cb) => {
       //assert
-      assert.deepEqual(rawData, req.rawData);
-      assert.is(formatType, req.query.format);
+      expect(rawData).to.deep.equal(req.rawData);
+      expect(formatType).to.equal(req.query.format);
 
       cb(null, packedData);
 
       resMock.verify();
-      assert.end();
+      done();
     }
   });
 
@@ -59,8 +62,7 @@ test.cb('should respond with application/json content type when json format para
   stubbedPackMiddleware(req, res);
 });
 
-test.cb('should respond with application/x-ws+json content type when wsJson format parameter was given', assert => {
-  assert.plan(2);
+it('should respond with application/x-ws+json content type when wsJson format parameter was given', done => {
   //arrange
   let packedData = {
     "headers": ["geo", "year", "gini"],
@@ -76,13 +78,13 @@ test.cb('should respond with application/x-ws+json content type when wsJson form
   const stubbedPackMiddleware = proxyquire('./index', {
     './pack.processor': (rawData, formatType, cb) => {
       //assert
-      assert.deepEqual(rawData, req.rawData);
-      assert.is(formatType, req.query.format);
+      expect(rawData).to.deep.equal(req.rawData);
+      expect(formatType).to.equal(req.query.format);
 
       cb(null, packedData);
 
       resMock.verify();
-      assert.end();
+      done();
     }
   });
 
@@ -90,8 +92,7 @@ test.cb('should respond with application/x-ws+json content type when wsJson form
   stubbedPackMiddleware(req, res);
 });
 
-test.cb('should respond with application/x-ddf+json content type when ddf format parameter was given', assert => {
-  assert.plan(2);
+it('should respond with application/x-ddf+json content type when ddf format parameter was given', done => {
   //arrange
   let packedData = {
     concepts: {
@@ -118,13 +119,13 @@ test.cb('should respond with application/x-ddf+json content type when ddf format
   const stubbedPackMiddleware = proxyquire('./index', {
     './pack.processor': (rawData, formatType, cb) => {
       //assert
-      assert.deepEqual(rawData, req.rawData);
-      assert.is(formatType, req.query.format);
+      expect(rawData).to.deep.equal(req.rawData);
+      expect(formatType).to.equal(req.query.format);
 
       cb(null, packedData);
 
       resMock.verify();
-      assert.end();
+      done();
     }
   });
 
@@ -132,8 +133,7 @@ test.cb('should respond with application/x-ddf+json content type when ddf format
   stubbedPackMiddleware(req, res);
 });
 
-test.cb('should respond with application/x-ddf+json content type when unknown format parameter was given', assert => {
-  assert.plan(2);
+it('should respond with application/x-ddf+json content type when unknown format parameter was given', done => {
   //arrange
   let packedData = {
     concepts: {
@@ -160,13 +160,13 @@ test.cb('should respond with application/x-ddf+json content type when unknown fo
   const stubbedPackMiddleware = proxyquire('./index', {
     './pack.processor': (rawData, formatType, cb) => {
       //assert
-      assert.deepEqual(rawData, req.rawData);
-      assert.is(formatType, req.query.format);
+      expect(rawData).to.deep.equal(req.rawData);
+      expect(formatType).to.equal(req.query.format);
 
       cb(null, packedData);
 
       resMock.verify();
-      assert.end();
+      done();
     }
   });
 
@@ -174,8 +174,7 @@ test.cb('should respond with application/x-ddf+json content type when unknown fo
   stubbedPackMiddleware(req, res);
 });
 
-test.cb('should respond with text/csv content type when csv format parameter was given', assert => {
-  assert.plan(2);
+it('should respond with text/csv content type when csv format parameter was given', done => {
   //arrange
   let packedData = [
     '"geo","year","gini"',
@@ -191,13 +190,13 @@ test.cb('should respond with text/csv content type when csv format parameter was
   const stubbedPackMiddleware = proxyquire('./index', {
     './pack.processor': (rawData, formatType, cb) => {
       //assert
-      assert.deepEqual(rawData, req.rawData);
-      assert.is(formatType, req.query.format);
+      expect(rawData).to.deep.equal(req.rawData);
+      expect(formatType).to.equal(req.query.format);
 
       cb(null, packedData);
 
       resMock.verify();
-      assert.end();
+      done();
     }
   });
 
@@ -205,8 +204,7 @@ test.cb('should respond with text/csv content type when csv format parameter was
   stubbedPackMiddleware(req, res);
 });
 
-test.cb('should respond with error when error occured and turn off redis cache', assert => {
-  assert.plan(2);
+it('should respond with error when error occured and turn off redis cache', done => {
   //arrange
   let expectedError = {message: 'Crash!!!'};
 
@@ -217,17 +215,17 @@ test.cb('should respond with error when error occured and turn off redis cache',
   const stubbedPackMiddleware = proxyquire('./index', {
     '../../../ws.config/log': {
       error: (actualError) => {
-        assert.deepEqual(actualError, expectedError);
+        expect(actualError).to.deep.equal(expectedError);
       }
     },
     './pack.processor': (rawData, formatType, cb) => {
       cb(expectedError);
 
       //assert
-      assert.is(res.use_express_redis_cache, false);
+      expect(res.use_express_redis_cache).to.equal(false);
 
       resMock.verify();
-      assert.end();
+      done();
     }
   });
 

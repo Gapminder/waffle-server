@@ -1,32 +1,36 @@
-import test from 'ava';
-import _ from 'lodash';
-import toPrecision from './toPrecision.processor';
+'use strict';
 
-test('should return input as is when undefined as input was given', assert => {
+const _ = require('lodash');
+const chai = require('chai');
+const toPrecision = require('./toPrecision.processor');
+
+const expect = chai.expect;
+
+it('should return input as is when undefined as input was given', () => {
   //act
   const actual = toPrecision(undefined);
 
   //assert
-  assert.is(actual, undefined);
+  expect(actual).to.equal(undefined);
 });
 
-test('should return input as is when null as input was given', assert => {
+it('should return input as is when null as input was given', () => {
   //act
   const actual = toPrecision(null);
 
   //assert
-  assert.is(actual, null);
+  expect(actual).to.equal(null);
 });
 
-test('should return empty array when empty array as input was given', assert => {
+it('should return empty array when empty array as input was given', () => {
   //act
   const actual = toPrecision([]);
 
   //assert
-  assert.deepEqual(actual, []);
+  expect(actual).to.deep.equal([]);
 });
 
-test('should spawn values with a given precision - one measure column given', assert => {
+it('should spawn values with a given precision - one measure column given', () => {
   //arrange
   const input = [
     ["usa", 2004, 1.00213123123],
@@ -55,10 +59,10 @@ test('should spawn values with a given precision - one measure column given', as
   const actual = toPrecision(input, columnsToProcess, precisionLevel);
 
   //assert
-  assert.deepEqual(actual, expected);
+  expect(actual).to.deep.equal(expected);
 });
 
-test('should spawn values with a given precision - few measure columns given', assert => {
+it('should spawn values with a given precision - few measure columns given', () => {
   //arrange
   const input = [
     ["usa", 2004, 1.00213123123, 1.00213123123],
@@ -87,10 +91,10 @@ test('should spawn values with a given precision - few measure columns given', a
   const actual = toPrecision(input, columnsToProcess, precisionLevel);
 
   //assert
-  assert.deepEqual(actual, expected);
+  expect(actual).to.deep.equal(expected);
 });
 
-test('should spawn values with a given precision - for given measure column only', assert => {
+it('should spawn values with a given precision - for given measure column only', () => {
   //arrange
   const input = [
     ["usa", 2004, 1.00213123123, 1.00213123123],
@@ -119,10 +123,10 @@ test('should spawn values with a given precision - for given measure column only
   const actual = toPrecision(input, columnsToProcess, precisionLevel);
 
   //assert
-  assert.deepEqual(actual, expected);
+  expect(actual).to.deep.equal(expected);
 });
 
-test('should return input as is, when not existing columns to process given', assert => {
+it('should return input as is, when not existing columns to process given', () => {
   //arrange
   const input = [
     ["usa", 2004],
@@ -141,10 +145,10 @@ test('should return input as is, when not existing columns to process given', as
   const actual = toPrecision(input, columnsToProcess, precisionLevel);
 
   //assert
-  assert.deepEqual(actual, input);
+  expect(actual).to.deep.equal(input);
 });
 
-test('should return input as is if no precision level was given', assert => {
+it('should return input as is if no precision level was given', () => {
   //arrange
   const input = [
     ["usa", 2004, 1.00213123123],
@@ -162,10 +166,10 @@ test('should return input as is if no precision level was given', assert => {
   const actual = toPrecision(input, columnsToProcess);
 
   //assert
-  assert.deepEqual(actual, input);
+  expect(actual).to.deep.equal(input);
 });
 
-test('should spawn values with a given precision for all columns when columns to process were not given', assert => {
+it('should spawn values with a given precision for all columns when columns to process were not given', () => {
   //arrange
   const input = [
     ["usa", 2004, 1.00213123123, 1.00213123123],
@@ -193,10 +197,10 @@ test('should spawn values with a given precision for all columns when columns to
   const actual = toPrecision(input, null, precisionLevel);
 
   //assert
-  assert.deepEqual(actual, expected);
+  expect(actual).to.deep.equal(expected);
 });
 
-test('should return input as is when given precision level cannot be parsed as a number', assert => {
+it('should return input as is when given precision level cannot be parsed as a number', () => {
   //arrange
   const input = [
     ["usa", 2004, 1.00213123123, 1.00213123123],
@@ -214,11 +218,11 @@ test('should return input as is when given precision level cannot be parsed as a
   const actual = toPrecision(input, null, precisionLevel);
 
   //assert
-  assert.deepEqual(actual, input);
+  expect(actual).to.deep.equal(input);
 });
 
 
-test('should return input with 0 precision level when given level is less than 0', assert => {
+it('should return input with 0 precision level when given level is less than 0', () => {
   //arrange
   const input = [
     ["usa", 2004, 1.00213123123, 1.00213123123],
@@ -246,10 +250,10 @@ test('should return input with 0 precision level when given level is less than 0
   const actual = toPrecision(input, null, precisionLevel);
 
   //assert
-  assert.deepEqual(actual, expected);
+  expect(actual).to.deep.equal(expected);
 });
 
-test('should return input with 15 precision level when given level is more than 15', assert => {
+it('should return input with 15 precision level when given level is more than 15', () => {
   //arrange
   const input = [
     ["usa", 2004, 1.00213123123, 1.00213123123],
@@ -267,5 +271,5 @@ test('should return input with 15 precision level when given level is more than 
   const actual = toPrecision(input, null, precisionLevel);
 
   //assert
-  assert.deepEqual(actual, input);
+  expect(actual).to.deep.equal(input);
 });

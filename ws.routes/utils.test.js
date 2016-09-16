@@ -1,8 +1,12 @@
-import test from 'ava';
-import sinon from 'sinon';
-import utils from './utils';
+'use strict';
 
-test('should decode incoming query and extend request object with a decodedQuery param', assert => {
+const sinon = require('sinon');
+const chai = require('chai');
+const utils = require('./utils');
+
+const expect = chai.expect;
+
+it('should decode incoming query and extend request object with a decodedQuery param', () => {
   //arrange
   let req = {
     query: {
@@ -17,15 +21,15 @@ test('should decode incoming query and extend request object with a decodedQuery
   };
 
   let expected = {
-    select:['geo', 'time', 'pop'],
+    select: ['geo', 'time', 'pop'],
     where: {
-      geo:['ind','chn'],
-      'geo.region':['afr', 'europe'],
-      'geo.cat':['region', 'country'],
-      time:[1800,[2000, 2010],2015]
+      geo: ['ind', 'chn'],
+      'geo.region': ['afr', 'europe'],
+      'geo.cat': ['region', 'country'],
+      time: [1800, [2000, 2010], 2015]
     },
-    sort: {geo: 'asc',time: 'desc'},
-    gapfilling: {interpolation: 'log',extrapolation: 3}
+    sort: {geo: 'asc', time: 'desc'},
+    gapfilling: {interpolation: 'log', extrapolation: 3}
   };
 
   let next = sinon.spy();
@@ -34,11 +38,11 @@ test('should decode incoming query and extend request object with a decodedQuery
   utils.decodeQuery(req, null, next);
 
   //assert
-  assert.truthy(next.calledOnce);
-  assert.deepEqual(req.decodedQuery, expected);
+  expect(next.calledOnce).to.be.ok;
+  expect(req.decodedQuery).to.deep.equal(expected);
 });
 
-test('should decode incoming query sort param - "true" as value for property should be substituted with "asc"', assert => {
+it('should decode incoming query sort param - "true" as value for property should be substituted with "asc"', () => {
   //arrange
   let req = {
     query: {
@@ -47,17 +51,18 @@ test('should decode incoming query sort param - "true" as value for property sho
   };
 
   let expected = {
-    sort: {geo: 'asc',time: 'desc'}
+    sort: {geo: 'asc', time: 'desc'}
   };
 
   //act
-  utils.decodeQuery(req, null, assert => {});
+  utils.decodeQuery(req, null, () => {
+  });
 
   //assert
-  assert.deepEqual(req.decodedQuery.sort, expected.sort);
+  expect(req.decodedQuery.sort).to.deep.equal(expected.sort);
 });
 
-test('should decode incoming query sort param - incoming sort request param will be sanitized (omit all invalid values)', assert => {
+it('should decode incoming query sort param - incoming sort request param will be sanitized (omit all invalid values)', () => {
   //arrange
   let req = {
     query: {
@@ -70,13 +75,14 @@ test('should decode incoming query sort param - incoming sort request param will
   };
 
   //act
-  utils.decodeQuery(req, null, assert => {});
+  utils.decodeQuery(req, null, () => {
+  });
 
   //assert
-  assert.deepEqual(req.decodedQuery.sort, expected.sort);
+  expect(req.decodedQuery.sort).to.deep.equal(expected.sort);
 });
 
-test('should decode incoming query sort param - empty sort param will spawn empty object', assert => {
+it('should decode incoming query sort param - empty sort param will spawn empty object', () => {
   //arrange
   let req = {
     query: {
@@ -89,13 +95,14 @@ test('should decode incoming query sort param - empty sort param will spawn empt
   };
 
   //act
-  utils.decodeQuery(req, null, assert => {});
+  utils.decodeQuery(req, null, () => {
+  });
 
   //assert
-  assert.deepEqual(req.decodedQuery.sort, expected.sort);
+  expect(req.decodedQuery.sort).to.deep.equal(expected.sort);
 });
 
-test('should apply default values for decoded query and call next middleware', assert => {
+it('should apply default values for decoded query and call next middleware', () => {
   //arrange
   let req = {query: {}};
   let next = sinon.spy();
@@ -104,7 +111,7 @@ test('should apply default values for decoded query and call next middleware', a
   utils.decodeQuery(req, null, next);
 
   //assert
-  assert.truthy(next.calledOnce);
-  assert.truthy(req.decodedQuery);
-  assert.deepEqual(req.decodedQuery.select, []);
+  expect(next.calledOnce).to.be.ok;
+  expect(req.decodedQuery).to.be.ok;
+  expect(req.decodedQuery.select).to.deep.equal([]);
 });

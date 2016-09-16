@@ -1,8 +1,12 @@
-import _ from 'lodash';
-import test from 'ava';
-import unpackProcessor from './unpack-ddf.processor';
+'use strict';
 
-test('should ddfJson concept data into json format', assert => {
+const _ = require('lodash');
+const chai = require('chai');
+const unpackProcessor = require('./unpack-ddf.processor');
+
+const expect = chai.expect;
+
+it('should ddfJson concept data into json format', () => {
   const packedJson = require('./../fixtures/ddf-json-concepts.json');
   const expectedHeaders = ["description_long","concept","name","concept_type","domain","indicator_url","scales","drill_up","unit","interpolation","description"];
   const expectedRows = [
@@ -68,16 +72,16 @@ test('should ddfJson concept data into json format', assert => {
       "description": null
     }];
 
-  return unpackProcessor.unpackDdfConcepts(packedJson, (err, unpackedJson) => {
+  unpackProcessor.unpackDdfConcepts(packedJson, (err, unpackedJson) => {
     const actualHeaders = _.chain(unpackedJson).flatMap((concept) => _.keys(concept)).uniq().value();
 
-    assert.true(_.isArray(unpackedJson));
-    assert.deepEqual(actualHeaders.sort(), expectedHeaders.sort());
-    assert.deepEqual(_.sortBy(unpackedJson, 'concept'), expectedRows);
+    expect(_.isArray(unpackedJson)).to.equal(true);
+    expect(actualHeaders.sort()).to.deep.equal(expectedHeaders.sort());
+    expect(_.sortBy(unpackedJson, 'concept')).to.deep.equal(expectedRows);
   });
 });
 
-test('should unpack ddfJson entities data into json format', assert => {
+it('should unpack ddfJson entities data into json format', () => {
   const packedJson = require('./../fixtures/ddf-json-entities.json');
   const expectedHeaders = [
     "country", "gwid", "name", "geographic_regions", "income_groups", "landlocked", "geographic_regions_in_4_colors",
@@ -301,13 +305,13 @@ test('should unpack ddfJson entities data into json format', assert => {
   unpackProcessor.unpackDdfEntities(packedJson, (err, unpackedJson) => {
     const actualHeaders = _.chain(unpackedJson).flatMap((entity) => _.keys(entity)).uniq().value();
 
-    assert.true(_.isArray(unpackedJson));
-    assert.deepEqual(actualHeaders.sort(), expectedHeaders.sort());
-    assert.deepEqual(_.sortBy(unpackedJson, ['name', 'year']), expectedRows);
+    expect(_.isArray(unpackedJson)).to.equal(true);
+    expect(actualHeaders.sort()).to.deep.equal(expectedHeaders.sort());
+    expect(_.sortBy(unpackedJson, ['name', 'year'])).to.deep.equal(expectedRows);
   });
 });
 
-test('should unpack ddfJson datapoints data into json format', assert => {
+it('should unpack ddfJson datapoints data into json format', () => {
   const packedJson = require('./../fixtures/ddf-json-datapoints.json');
   const expectedHeaders = ["energy_use_total","geo","sg_population","time"];
   const expectedRows = [
@@ -322,9 +326,9 @@ test('should unpack ddfJson datapoints data into json format', assert => {
   unpackProcessor.unpackDdfDatapoints(packedJson, (err, unpackedJson) => {
     const actualHeaders = _.chain(unpackedJson).flatMap((entity) => _.keys(entity)).uniq().value();
 
-    assert.true(_.isArray(unpackedJson));
-    assert.deepEqual(actualHeaders.sort(), expectedHeaders.sort());
-    assert.deepEqual(unpackedJson, expectedRows);
+    expect(_.isArray(unpackedJson)).to.equal(true);
+    expect(actualHeaders.sort()).to.deep.equal(expectedHeaders.sort());
+    expect(unpackedJson).to.deep.equal(expectedRows);
   });
 });
 

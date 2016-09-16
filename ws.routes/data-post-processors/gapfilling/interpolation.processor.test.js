@@ -1,8 +1,12 @@
-import _ from 'lodash'
-import test from 'ava'
-import interpolate from './interpolation.processor'
+'use strict';
 
-test('should return empty result when input was empty', assert => {
+const _ = require('lodash');
+const chai = require('chai');
+const interpolate = require('./interpolation.processor');
+
+const expect = chai.expect;
+
+it('should return empty result when input was empty', () => {
   //arrange
   const input = [];
 
@@ -10,10 +14,10 @@ test('should return empty result when input was empty', assert => {
   const actual = interpolate(input);
 
   //assert
-  assert.deepEqual(actual, input);
+  expect(actual).to.deep.equal(input);
 });
 
-test('should return input as is when there is nothing to interpolate', assert => {
+it('should return input as is when there is nothing to interpolate', () => {
   //arrange
   const input = [
     ["usa", 2004, 71.7],
@@ -27,10 +31,10 @@ test('should return input as is when there is nothing to interpolate', assert =>
   const actual = interpolate(input, _.range(2, 3));
 
   //assert
-  assert.deepEqual(actual, input);
+  expect(actual).to.deep.equal(input);
 });
 
-test('should return input as is when there is nothing to interpolate - all measure values are null', assert => {
+it('should return input as is when there is nothing to interpolate - all measure values are null', () => {
   //arrange
   const input = [
     ["usa", 2004, null],
@@ -44,10 +48,10 @@ test('should return input as is when there is nothing to interpolate - all measu
   const actual = interpolate(input, _.range(2, 3));
 
   //assert
-  assert.deepEqual(actual, input);
+  expect(actual).to.deep.equal(input);
 });
 
-test('should interpolate measure values for a given range - only one mesaure used', assert => {
+it('should interpolate measure values for a given range - only one mesaure used', () => {
   //arrange
   const input = [
     ["armenia", 2004, null],
@@ -75,10 +79,10 @@ test('should interpolate measure values for a given range - only one mesaure use
   const actual = interpolate(input, _.range(2, 3));
 
   //assert
-  assert.deepEqual(actual, expected);
+  expect(actual).to.deep.equal(expected);
 });
 
-test('should interpolate measure values for a given range - only one measure used, measure values have 2 gaps', assert => {
+it('should interpolate measure values for a given range - only one measure used, measure values have 2 gaps', () => {
   //arrange
   const input = [
     ["usa", 2000, 71.7],
@@ -112,10 +116,10 @@ test('should interpolate measure values for a given range - only one measure use
   const actual = interpolate(input, _.range(2, 3));
 
   //assert
-  assert.deepEqual(actual, expected);
+  expect(actual).to.deep.equal(expected);
 });
 
-test('should interpolate measure values for a given range - only one mesaure used, years have gaps', assert => {
+it('should interpolate measure values for a given range - only one mesaure used, years have gaps', () => {
   //arrange
   const input = [
     ["usa", 2000, 71.7],
@@ -145,10 +149,10 @@ test('should interpolate measure values for a given range - only one mesaure use
   const actual = interpolate(input, _.range(2, 3));
 
   //assert
-  assert.deepEqual(actual, expected);
+  expect(actual).to.deep.equal(expected);
 });
 
-test('should return input as is when it is impossible to interpolate value - only one existing value is available', assert => {
+it('should return input as is when it is impossible to interpolate value - only one existing value is available', () => {
   //arrange
   const input = [
     ['angola', 1999, null],
@@ -166,10 +170,10 @@ test('should return input as is when it is impossible to interpolate value - onl
   const actual = interpolate(input, _.range(2, 3));
 
   //assert
-  assert.deepEqual(actual, expected);
+  expect(actual).to.deep.equal(expected);
 });
 
-test('should interpolate few measures values for a given range - only one existing value is available', assert => {
+it('should interpolate few measures values for a given range - only one existing value is available', () => {
   //arrange
   const input = [
     ["usa", 2004, null, 68.5],
@@ -195,10 +199,10 @@ test('should interpolate few measures values for a given range - only one existi
   const actual = interpolate(input, _.range(2, 4));
 
   //assert
-  assert.deepEqual(actual, expected);
+  expect(actual).to.deep.equal(expected);
 });
 
-test('should interpolate measure values for a given range - few countries are in the input', assert => {
+it('should interpolate measure values for a given range - few countries are in the input', () => {
   //arrange
   const input = [
     ["angola", 2000, 74.0],
@@ -226,5 +230,5 @@ test('should interpolate measure values for a given range - few countries are in
   const actual = interpolate(input, _.range(2, 3));
 
   //assert
-  assert.deepEqual(actual, expected);
+  expect(actual).to.deep.equal(expected);
 });

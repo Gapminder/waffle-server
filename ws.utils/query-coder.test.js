@@ -1,7 +1,11 @@
-import test from 'ava';
-import coder from './query-coder';
+'use strict';
 
-test('should decode time params - undefined value given', assert => {
+const chai = require('chai');
+const coder = require('./query-coder');
+
+const expect = chai.expect;
+
+it('should decode time params - undefined value given', () => {
   //arrange
   let input = undefined;
 
@@ -9,10 +13,10 @@ test('should decode time params - undefined value given', assert => {
   let actual = coder.decodeParam(input);
 
   //assert
-  assert.deepEqual(actual, input);
+  expect(actual).to.deep.equal(input);
 });
 
-test('should decode time params - empty string value given', assert => {
+it('should decode time params - empty string value given', () => {
   //arrange
   let input = '';
 
@@ -20,10 +24,10 @@ test('should decode time params - empty string value given', assert => {
   let actual = coder.decodeParam(input);
 
   //assert
-  assert.deepEqual(actual, input);
+  expect(actual).to.deep.equal(input);
 });
 
-test('should decode time params - null value given', assert => {
+it('should decode time params - null value given', () => {
   //arrange
   let input = null;
 
@@ -31,10 +35,10 @@ test('should decode time params - null value given', assert => {
   let actual = coder.decodeParam(input);
 
   //assert
-  assert.deepEqual(actual, input);
+  expect(actual).to.deep.equal(input);
 });
 
-test('should decode time params - one time value given', assert => {
+it('should decode time params - one time value given', () => {
   //arrange
   let input = '1950';
 
@@ -42,10 +46,10 @@ test('should decode time params - one time value given', assert => {
   let actual = coder.decodeParam(input);
 
   //assert
-  assert.deepEqual(actual, [1950]);
+  expect(actual).to.deep.equal([1950]);
 });
 
-test('should decode time params - few time values given', assert => {
+it('should decode time params - few time values given', () => {
   //arrange
   let input = '1951,1952';
 
@@ -53,10 +57,10 @@ test('should decode time params - few time values given', assert => {
   let actual = coder.decodeParam(input);
 
   //assert
-  assert.deepEqual(actual, [1951, 1952]);
+  expect(actual).to.deep.equal([1951, 1952]);
 });
 
-test('should decode time params - time range given', assert => {
+it('should decode time params - time range given', () => {
   //arrange
   let input = '1953:1954';
 
@@ -64,10 +68,10 @@ test('should decode time params - time range given', assert => {
   let actual = coder.decodeParam(input);
 
   //assert
-  assert.deepEqual(actual, [[1953, 1954]]);
+  expect(actual).to.deep.equal([[1953, 1954]]);
 });
 
-test('should decode time params - time range and specific time values are given', assert => {
+it('should decode time params - time range and specific time values are given', () => {
   //arrange
   let input = '1890,1953:1954,1986';
 
@@ -75,10 +79,10 @@ test('should decode time params - time range and specific time values are given'
   let actual = coder.decodeParam(input);
 
   //assert
-  assert.deepEqual(actual, [1890,[1953, 1954],1986]);
+  expect(actual).to.deep.equal([1890, [1953, 1954], 1986]);
 });
 
-test('should decode time params - few time ranges and specific time values are given', assert => {
+it('should decode time params - few time ranges and specific time values are given', () => {
   //arrange
   let input = '1890,1953:1954,1986,2010:2015';
 
@@ -86,10 +90,10 @@ test('should decode time params - few time ranges and specific time values are g
   let actual = coder.decodeParam(input);
 
   //assert
-  assert.deepEqual(actual, [1890,[1953, 1954],1986,[2010, 2015]]);
+  expect(actual).to.deep.equal([1890, [1953, 1954], 1986, [2010, 2015]]);
 });
 
-test('should encode time params - null value given', assert => {
+it('should encode time params - null value given', () => {
   //arrange
   let input = null;
 
@@ -97,10 +101,10 @@ test('should encode time params - null value given', assert => {
   let actual = coder.encodeParam(input);
 
   //assert
-  assert.deepEqual(actual, input);
+  expect(actual).to.deep.equal(input);
 });
 
-test('should encode time params - undefined value given', assert => {
+it('should encode time params - undefined value given', () => {
   //arrange
   let input = undefined;
 
@@ -108,10 +112,10 @@ test('should encode time params - undefined value given', assert => {
   let actual = coder.encodeParam(input);
 
   //assert
-  assert.deepEqual(actual, input);
+  expect(actual).to.deep.equal(input);
 });
 
-test('should encode time params - empty array value given', assert => {
+it('should encode time params - empty array value given', () => {
   //arrange
   let input = [];
 
@@ -119,10 +123,10 @@ test('should encode time params - empty array value given', assert => {
   let actual = coder.encodeParam(input);
 
   //assert
-  assert.deepEqual(actual, '');
+  expect(actual).to.deep.equal('');
 });
 
-test('should encode time params - one time value given', assert => {
+it('should encode time params - one time value given', () => {
   //arrange
   let input = 1986;
 
@@ -130,10 +134,10 @@ test('should encode time params - one time value given', assert => {
   let actual = coder.encodeParam(input);
 
   //assert
-  assert.deepEqual(actual, 1986);
+  expect(actual).to.deep.equal(1986);
 });
 
-test('should encode time params - few time values given', assert => {
+it('should encode time params - few time values given', () => {
   //arrange
   let input = [1986, 1987];
 
@@ -141,10 +145,10 @@ test('should encode time params - few time values given', assert => {
   let actual = coder.encodeParam(input);
 
   //assert
-  assert.deepEqual(actual, '1986,1987');
+  expect(actual).to.deep.equal('1986,1987');
 });
 
-test('should encode time params - time range given', assert => {
+it('should encode time params - time range given', () => {
   //arrange
   let input = [[1986, 1987]];
 
@@ -153,32 +157,32 @@ test('should encode time params - time range given', assert => {
   let actual = coder.encodeParam(input, depth);
 
   //assert
-  assert.deepEqual(actual, '1986:1987');
+  expect(actual).to.deep.equal('1986:1987');
 });
 
-test('should encode time params - time range and specific time values are given', assert => {
+it('should encode time params - time range and specific time values are given', () => {
   //arrange
-  let input = [1890,[1953, '1954'],1986];
+  let input = [1890, [1953, '1954'], 1986];
 
   //act
   let actual = coder.encodeParam(input);
 
   //assert
-  assert.deepEqual(actual, '1890,1953:1954,1986');
+  expect(actual).to.deep.equal('1890,1953:1954,1986');
 });
 
-test('should encode time params - few time ranges and specific time values are given', assert => {
+it('should encode time params - few time ranges and specific time values are given', () => {
   //arrange
-  let input = [1890,[1953, '1954'],1986, ['2010', '2015']];
+  let input = [1890, [1953, '1954'], 1986, ['2010', '2015']];
 
   //act
   let actual = coder.encodeParam(input);
 
   //assert
-  assert.deepEqual(actual, '1890,1953:1954,1986,2010:2015');
+  expect(actual).to.deep.equal('1890,1953:1954,1986,2010:2015');
 });
 
-test('should decode gapfilling params - from given properly formatted string as an array', assert => {
+it('should decode gapfilling params - from given properly formatted string as an array', () => {
   //arrange
   let input = 'interpolation:exp,extrapolation:3';
 
@@ -186,10 +190,10 @@ test('should decode gapfilling params - from given properly formatted string as 
   let actual = coder.decodeParam(input);
 
   //assert
-  assert.deepEqual(actual, [['interpolation', 'exp'], ['extrapolation', 3]]);
+  expect(actual).to.deep.equal([['interpolation', 'exp'], ['extrapolation', 3]]);
 });
 
-test('should decode gapfilling params - from given properly formatted string as an array - empty property will be stored a string', assert => {
+it('should decode gapfilling params - from given properly formatted string as an array - empty property will be stored a string', () => {
   //arrange
   let input = 'interpolation,extrapolation:3';
 
@@ -197,10 +201,10 @@ test('should decode gapfilling params - from given properly formatted string as 
   let actual = coder.decodeParam(input);
 
   //assert
-  assert.deepEqual(actual, ['interpolation', ['extrapolation', 3]]);
+  expect(actual).to.deep.equal(['interpolation', ['extrapolation', 3]]);
 });
 
-test('should decode gapfilling params - from given properly formatted string as an object', assert => {
+it('should decode gapfilling params - from given properly formatted string as an object', () => {
   //arrange
   let input = 'interpolation:exp,extrapolation:3';
 
@@ -208,10 +212,10 @@ test('should decode gapfilling params - from given properly formatted string as 
   let actual = coder.decodeParam(input, coder.toObject);
 
   //assert
-  assert.deepEqual(actual, {interpolation: 'exp', extrapolation: 3});
+  expect(actual).to.deep.equal({interpolation: 'exp', extrapolation: 3});
 });
 
-test('should decode gapfilling params - from given properly formatted string as an object - empty property will have default "true" value', assert => {
+it('should decode gapfilling params - from given properly formatted string as an object - empty property will have default "true" value', () => {
   //arrange
   let input = 'interpolation,extrapolation:3';
 
@@ -219,10 +223,10 @@ test('should decode gapfilling params - from given properly formatted string as 
   let actual = coder.decodeParam(input, coder.toObject);
 
   //assert
-  assert.deepEqual(actual, {interpolation: true, extrapolation: 3});
+  expect(actual).to.deep.equal({interpolation: true, extrapolation: 3});
 });
 
-test('should encode gapfilling params - from given array', assert => {
+it('should encode gapfilling params - from given array', () => {
   //arrange
   let input = [['interpolation', 'exp'], ['extrapolation', '3']];
 
@@ -230,10 +234,10 @@ test('should encode gapfilling params - from given array', assert => {
   let actual = coder.encodeParam(input);
 
   //assert
-  assert.deepEqual(actual, 'interpolation:exp,extrapolation:3');
+  expect(actual).to.deep.equal('interpolation:exp,extrapolation:3');
 });
 
-test('should encode gapfilling params - from given array - interpolation given without value', assert => {
+it('should encode gapfilling params - from given array - interpolation given without value', () => {
   //arrange
   let input = ['interpolation', ['extrapolation', '3']];
 
@@ -241,10 +245,10 @@ test('should encode gapfilling params - from given array - interpolation given w
   let actual = coder.encodeParam(input);
 
   //assert
-  assert.deepEqual(actual, 'interpolation,extrapolation:3');
+  expect(actual).to.deep.equal('interpolation,extrapolation:3');
 });
 
-test('should encode gapfilling params - from given object', assert => {
+it('should encode gapfilling params - from given object', () => {
   //arrange
   let input = {interpolation: 'exp', extrapolation: 3};
 
@@ -252,10 +256,10 @@ test('should encode gapfilling params - from given object', assert => {
   let actual = coder.encodeParam(input);
 
   //assert
-  assert.deepEqual(actual, 'interpolation:exp,extrapolation:3');
+  expect(actual).to.deep.equal('interpolation:exp,extrapolation:3');
 });
 
-test('should encode gapfilling params - from given object - given object always encoded as a flat structure', assert => {
+it('should encode gapfilling params - from given object - given object always encoded as a flat structure', () => {
   //arrange
   let input = {interpolation: {some: 42}, extrapolation: 3};
 
@@ -263,10 +267,10 @@ test('should encode gapfilling params - from given object - given object always 
   let actual = coder.encodeParam(input);
 
   //assert
-  assert.deepEqual(actual, 'interpolation:%5Bobject%20Object%5D,extrapolation:3');
+  expect(actual).to.deep.equal('interpolation:%5Bobject%20Object%5D,extrapolation:3');
 });
 
-test('should encode gapfilling params - from given object - property with "true" value is interpreted as a property without value in the encoded string', assert => {
+it('should encode gapfilling params - from given object - property with "true" value is interpreted as a property without value in the encoded string', () => {
   //arrange
   let input = {interpolation: 'exp', extrapolation: true};
 
@@ -274,19 +278,19 @@ test('should encode gapfilling params - from given object - property with "true"
   let actual = coder.encodeParam(input);
 
   //assert
-  assert.deepEqual(actual, 'interpolation:exp,extrapolation');
+  expect(actual).to.deep.equal('interpolation:exp,extrapolation');
 });
 
-test('WS communication example - WSReader encodes query - select, where, gapfilling are given to WSReader', assert => {
+it('WS communication example - WSReader encodes query - select, where, gapfilling are given to WSReader', () => {
   //arrange:
   //WSReader get query from DataManager
   let input = {
     select: ['geo', 'time', 'pop'],
     where: {
-      geo:['ind','chn'],
-      'geo.region':['afr', 'europe'],
-      'geo.cat':['region', 'country'],
-      time:[1800,[2000, 2010],2015]
+      geo: ['ind', 'chn'],
+      'geo.region': ['afr', 'europe'],
+      'geo.cat': ['region', 'country'],
+      time: [1800, [2000, 2010], 2015]
     },
     gapfilling: {
       interpolation: 'log',
@@ -306,10 +310,10 @@ test('WS communication example - WSReader encodes query - select, where, gapfill
 
   //assert:
   let expectedEncodedQuery = 'select=geo,time,pop&geo=ind,chn&geo.region=afr,europe&geo.cat=region,country&time=1800,2000:2010,2015&gapfilling=interpolation:log,extrapolation:3';
-  assert.is(actualEncodedQuery, expectedEncodedQuery);
+  expect(actualEncodedQuery).to.equal(expectedEncodedQuery);
 });
 
-test('WS communication example - WS decodes query sent by WSReader - select, where, gapfilling are given to WS in the request.query object', assert => {
+it('WS communication example - WS decodes query sent by WSReader - select, where, gapfilling are given to WS in the request.query object', () => {
   //arrange:
   //In this form we get WSReader query string parsed by express
   //Example query: select=geo,time,pop&geo=ind,chn&geo.region=afr,europe&geo.cat=region,country&time=1800,2000:2010,2015&gapfilling=interpolation:log,extrapolation:3;
@@ -349,15 +353,15 @@ test('WS communication example - WS decodes query sent by WSReader - select, whe
   //assert:
   //WSReader query in form expected by WS.
   let expected = {
-    select:['geo', 'time', 'pop'],
+    select: ['geo', 'time', 'pop'],
     where: {
-      geo:['ind','chn'],
-      'geo.region':['afr', 'europe'],
-      'geo.cat':['region', 'country'],
-      time:[1800,[2000, 2010],2015]
+      geo: ['ind', 'chn'],
+      'geo.region': ['afr', 'europe'],
+      'geo.cat': ['region', 'country'],
+      time: [1800, [2000, 2010], 2015]
     },
-    gapfilling: {interpolation: 'log',extrapolation: 3}
+    gapfilling: {interpolation: 'log', extrapolation: 3}
   };
 
-  assert.deepEqual(actual, expected);
+  expect(actual).to.deep.equal(expected);
 });
