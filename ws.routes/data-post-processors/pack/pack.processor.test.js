@@ -1,7 +1,11 @@
-import test from 'ava';
-import pack from './pack.processor.js';
+'use strict';
 
-test.skip.cb('should pack input data as CSV', assert => {
+const chai = require('chai');
+const pack = require('./pack.processor.js');
+
+const expect = chai.expect;
+
+xit('should pack input data as CSV', done => {
   let input = {
     headers: ['geo', 'year', 'gini'],
     rows: [
@@ -27,12 +31,12 @@ test.skip.cb('should pack input data as CSV', assert => {
   ].join('\n');
 
   pack(input, 'csv', (err, csv) => {
-    assert.deepEqual(csv, expected);
-    assert.end();
+    expect(csv).to.deep.equal(expected);
+    done();
   });
 });
 
-test.skip.cb('should pack input data as JSON', assert => {
+xit('should pack input data as JSON', done => {
   let input = {
     headers: ['geo', 'year', 'gini'],
     rows: [
@@ -85,12 +89,12 @@ test.skip.cb('should pack input data as JSON', assert => {
   ];
 
   pack(input, 'json', (err, json) => {
-    assert.deepEqual(json, expected);
-    assert.end();
+    expect(json).to.deep.equal(expected);
+    done();
   });
 });
 
-test.skip.cb('should respond with WsJson by default', assert => {
+xit('should respond with WsJson by default', done => {
   let input = {
     headers: ['geo', 'year', 'gini'],
     rows: [
@@ -105,7 +109,7 @@ test.skip.cb('should respond with WsJson by default', assert => {
   };
 
   pack(input, 'bla-bla', (err, wsJson) => {
-    assert.deepEqual(wsJson, input);
-    assert.end();
+    expect(wsJson).to.deep.equal(input);
+    done();
   });
 });

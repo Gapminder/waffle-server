@@ -1,10 +1,14 @@
-import test from 'ava';
-import '../../ws.config/db.config'
-import '../../ws.repository/index'
+'use strict';
 
-import translationService from './translations.service';
+const chai = require('chai');
 
-test.skip.cb('should translate given array of words via google translate', assert => {
+// import '../../ws.config/db.config'
+require('../../ws.repository/index');
+// import translationService from './translations.service';
+
+const expect = chai.expect;
+
+xit('should translate given array of words via google translate', done => {
 
   const words =  ['America',
     'i263',
@@ -220,10 +224,10 @@ test.skip.cb('should translate given array of words via google translate', asser
     'CHN' ];
   translationService.translateUsingScrapper(words, {target: 'ru'}, (error, translatedText) => {
     console.log(JSON.stringify(translatedText, null, '\t'));
-    assert.deepEqual(translatedText, [
-      { language: 'ru', source: 'hello', target: 'привет' },
-      { language: 'ru', source: 'world', target: 'мир' }
+    expect(translatedText).to.deep.equal([
+      {language: 'ru', source: 'hello', target: 'привет'},
+      {language: 'ru', source: 'world', target: 'мир'}
     ]);
-    assert.end();
+    done();
   });
 });

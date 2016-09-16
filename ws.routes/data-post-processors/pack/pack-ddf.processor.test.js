@@ -1,7 +1,11 @@
-import _ from 'lodash';
-import pack from './pack.processor.js';
-import test from 'ava';
-import constants from '../../../ws.utils/constants';
+'use strict';
+
+const _ = require('lodash');
+const chai = require('chai');
+const pack = require('./pack.processor.js');
+const constants = require('../../../ws.utils/constants');
+
+const expect = chai.expect;
 
 // var jsonfile = require('jsonfile');
 // var file = '/home/korel/Projects/ws-vizabi/waffle-server/ws.routes/data-post-processors/fixtures/entities.json';
@@ -11,7 +15,7 @@ import constants from '../../../ws.utils/constants';
 // file = '/home/korel/Projects/ws-vizabi/waffle-server/ws.routes/data-post-processors/fixtures/datapoints.json';
 // jsonfile.writeFileSync(file, pipe.datapoints);
 
-test.skip.cb('should pack input concepts data to ddfJson', assert => {
+xit('should pack input concepts data to ddfJson', done => {
   const headers = ['sg_population', 'energy_use_total'];
 
   const concepts = require('./../fixtures/concepts.json');
@@ -65,21 +69,21 @@ test.skip.cb('should pack input concepts data to ddfJson', assert => {
     //   '/home/korel/Projects/ws-vizabi/waffle-server/ws.routes/data-post-processors/fixtures/ddf-json-concepts.json';
     // jsonfile.writeFileSync(file, json);
 
-    assert.true(_.isObject(json.concepts));
-    assert.true(_.isNil(json.entities));
-    assert.true(_.isNil(json.datapoints));
+    expect(_.isObject(json.concepts)).to.equal(true);
+    expect(_.isNil(json.entities)).to.equal(true);
+    expect(_.isNil(json.datapoints)).to.equal(true);
 
-    assert.deepEqual(json.concepts.values, expectedConceptGids);
-    assert.deepEqual(json.concepts.properties, expectedConceptProperties);
-    assert.deepEqual(json.concepts.propertyValues, expectedConceptPropertyValues);
-    assert.deepEqual(json.concepts.rows, expectedConceptRows);
+    expect(json.concepts.values).to.deep.equal(expectedConceptGids);
+    expect(json.concepts.properties).to.deep.equal(expectedConceptProperties);
+    expect(json.concepts.propertyValues).to.deep.equal(expectedConceptPropertyValues);
+    expect(json.concepts.rows).to.deep.equal(expectedConceptRows);
 
-    assert.end();
+    done();
   });
 });
 
 // FIXME: not work
-test.skip.cb('should pack input entities data with domain geo to ddfJson', assert => {
+xit('should pack input entities data with domain geo to ddfJson', done => {
   const concepts = require('./../fixtures/concepts.json');
   const expectedConceptGids = ['geo'];
   const expectedConceptProperties = ["concept", "concept_type", "description", "description_long", "domain", "drill_up", "indicator_url", "interpolation", "name", "scales", "unit"];
@@ -312,25 +316,25 @@ test.skip.cb('should pack input entities data with domain geo to ddfJson', asser
     //   '/home/korel/Projects/ws-vizabi/waffle-server/ws.routes/data-post-processors/fixtures/ddf-json-entities.json';
     // jsonfile.writeFileSync(file, json);
 
-    assert.true(_.isObject(json.entities));
-    assert.true(_.isObject(json.concepts));
-    assert.true(_.isNil(json.datapoints));
+    expect(_.isObject(json.entities)).to.equal(true);
+    expect(_.isObject(json.concepts)).to.equal(true);
+    expect(_.isNil(json.datapoints)).to.equal(true);
 
-    assert.deepEqual(json.concepts.values.sort(), expectedConceptGids.sort());
-    assert.deepEqual(json.concepts.properties.sort(), expectedConceptProperties.sort());
-    assert.deepEqual(json.concepts.propertyValues.sort(), expectedConceptPropertyValues.sort());
-    assert.deepEqual(json.concepts.rows, expectedConceptRows);
+    expect(json.concepts.values.sort()).to.deep.equal(expectedConceptGids.sort());
+    expect(json.concepts.properties.sort()).to.deep.equal(expectedConceptProperties.sort());
+    expect(json.concepts.propertyValues.sort()).to.deep.equal(expectedConceptPropertyValues.sort());
+    expect(json.concepts.rows).to.deep.equal(expectedConceptRows);
 
-    assert.deepEqual(json.entities.values.sort(), expectedEntityGids.sort());
-    assert.deepEqual(json.entities.properties.sort(), expectedEntityProperties.sort());
-    assert.deepEqual(json.entities.propertyValues.sort(), expectedEntityProperiesValues.sort());
-    assert.deepEqual(json.entities.rows, expectedEntitiesRows);
+    expect(json.entities.values.sort()).to.deep.equal(expectedEntityGids.sort());
+    expect(json.entities.properties.sort()).to.deep.equal(expectedEntityProperties.sort());
+    expect(json.entities.propertyValues.sort()).to.deep.equal(expectedEntityProperiesValues.sort());
+    expect(json.entities.rows).to.deep.equal(expectedEntitiesRows);
 
-    assert.end();
+    done();
   });
 });
 
-test.skip.cb('should pack input entities data with domain time to ddfJson', assert => {
+xit('should pack input entities data with domain time to ddfJson', done => {
   const concepts = require('./../fixtures/concepts.json');
   const expectedConceptGids = ['geo', 'lng_value', 'time'];
   const expectedConceptProperties = ["concept", "concept_type", "description", "description_long", "domain", "drill_up", "indicator_url", "interpolation", "name", "scales", "unit"];
@@ -565,25 +569,25 @@ test.skip.cb('should pack input entities data with domain time to ddfJson', asse
     //   '/home/korel/Projects/ws-vizabi/waffle-server/ws.routes/data-post-processors/fixtures/ddf-json-entities.json';
     // jsonfile.writeFileSync(file, json);
 
-    assert.true(_.isObject(json.entities));
-    assert.true(_.isObject(json.concepts));
-    assert.true(_.isNil(json.datapoints));
+    expect(_.isObject(json.entities)).to.equal(true);
+    expect(_.isObject(json.concepts)).to.equal(true);
+    expect(_.isNil(json.datapoints)).to.equal(true);
 
-    assert.deepEqual(json.concepts.values.sort(), expectedConceptGids.sort());
-    assert.deepEqual(json.concepts.properties.sort(), expectedConceptProperties.sort());
-    assert.deepEqual(json.concepts.propertyValues.sort(), expectedConceptPropertyValues.sort());
-    assert.deepEqual(json.concepts.rows, expectedConceptRows);
+    expect(json.concepts.values.sort()).to.deep.equal(expectedConceptGids.sort());
+    expect(json.concepts.properties.sort()).to.deep.equal(expectedConceptProperties.sort());
+    expect(json.concepts.propertyValues.sort()).to.deep.equal(expectedConceptPropertyValues.sort());
+    expect(json.concepts.rows).to.deep.equal(expectedConceptRows);
 
-    assert.deepEqual(json.entities.values.sort(), expectedEntityGids.sort());
-    assert.deepEqual(json.entities.properties.sort(), expectedEntityProperties.sort());
-    assert.deepEqual(json.entities.propertyValues.sort(), expectedEntityProperiesValues.sort());
-    assert.deepEqual(json.entities.rows, expectedEntitiesRows);
+    expect(json.entities.values.sort()).to.deep.equal(expectedEntityGids.sort());
+    expect(json.entities.properties.sort()).to.deep.equal(expectedEntityProperties.sort());
+    expect(json.entities.propertyValues.sort()).to.deep.equal(expectedEntityProperiesValues.sort());
+    expect(json.entities.rows).to.deep.equal(expectedEntitiesRows);
 
-    assert.end();
+    done();
   });
 });
 
-test.skip.cb('should pack input datapoints data to ddfJson', assert => {
+xit('should pack input datapoints data to ddfJson', done => {
   const headers = ['sg_population', 'energy_use_total'];
   const concepts = require('./../fixtures/concepts.json');
   const expectedConceptGids = ['energy_use_total', 'geo', 'sg_population', 'time'];
@@ -808,23 +812,24 @@ test.skip.cb('should pack input datapoints data to ddfJson', assert => {
     headers: headers
   };
 
-  pack(input, 'ddfJson', (err, json) => {
-    assert.true(_.isObject(json.entities));
-    assert.true(_.isObject(json.concepts));
-    assert.true(_.isObject(json.datapoints));
-    assert.true(!_.isEmpty(json.entities));
-    assert.true(!_.isEmpty(json.concepts));
-    assert.true(json.concepts.rows.length === expectedConceptGids.length);
-    assert.true(json.entities.rows.length === expectedEntityGids.length + 1);
 
-    assert.deepEqual(json.concepts.values.sort(), expectedConceptGids.sort());
-    assert.deepEqual(json.entities.values.sort(), expectedEntityGids.sort());
+  pack({rawDdf: input}, 'ddfJson', (err, json) => {
+    expect(_.isObject(json.entities)).to.equal(true);
+    expect(_.isObject(json.concepts)).to.equal(true);
+    expect(_.isObject(json.datapoints)).to.equal(true);
+    expect(!_.isEmpty(json.entities)).to.equal(true);
+    expect(!_.isEmpty(json.concepts)).to.equal(true);
+    expect(json.concepts.rows.length === expectedConceptGids.length).to.equal(true);
+    expect(json.entities.rows.length === expectedEntityGids.length + 1).to.equal(true);
 
-    assert.deepEqual(json.datapoints.values.sort(), expectedValues.sort());
-    assert.deepEqual(json.datapoints.indicators.sort(), expectedIndicators.sort());
-    assert.deepEqual(json.datapoints.dimensions.sort(), expectedDimensions.sort());
-    assert.deepEqual(json.datapoints.rows, expectedDatapointsRows);
+    expect(json.concepts.values.sort()).to.deep.equal(expectedConceptGids.sort());
+    expect(json.entities.values.sort()).to.deep.equal(expectedEntityGids.sort());
 
-    assert.end();
+    expect(json.datapoints.values.sort()).to.deep.equal(expectedValues.sort());
+    expect(json.datapoints.indicators.sort()).to.deep.equal(expectedIndicators.sort());
+    expect(json.datapoints.dimensions.sort()).to.deep.equal(expectedDimensions.sort());
+    expect(json.datapoints.rows).to.deep.equal(expectedDatapointsRows);
+
+    done();
   });
 });

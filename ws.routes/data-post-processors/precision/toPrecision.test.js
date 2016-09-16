@@ -1,10 +1,12 @@
-import test from 'ava';
-import sinon from 'sinon';
-import rewire from 'rewire';
+'use strict';
 
-const toPrecisionMiddleware = rewire('./index');
+const sinon = require('sinon');
+const chai = require('chai');
+const proxyquire = require('proxyquire');
 
-test('should process data with a given precision level and call next middleware', assert => {
+const expect = chai.expect;
+
+it('should process data with a given precision level and call next middleware', () => {
   //arrange
   let req = {
     query: {
@@ -20,21 +22,23 @@ test('should process data with a given precision level and call next middleware'
 
   let next = sinon.spy();
 
-  toPrecisionMiddleware.__set__('toPrecision', (wsJsonRows, columns, precisionLevel) => {
-    //assert
-    assert.deepEqual(wsJsonRows, req.wsJson.rows);
-    assert.is(columns, null);
-    assert.is(precisionLevel, req.query.precisionLevel);
+  const toPrecisionMiddleware = proxyquire('./index', {
+    './toPrecision.processor': (wsJsonRows, columns, precisionLevel) => {
+      //assert
+      expect(wsJsonRows).to.deep.equal(req.wsJson.rows);
+      expect(columns).to.equal(null);
+      expect(precisionLevel).to.equal(req.query.precisionLevel);
+    }
   });
 
   //act
   toPrecisionMiddleware(req, null, next);
 
   //assert
-  assert.truthy(next.calledOnce);
+  expect(next.calledOnce).to.be.ok;
 });
 
-test('should not process data when wsJson was not given but should call next middleware', assert => {
+it('should not process data when wsJson was not given but should call next middleware', () => {
   //arrange
   let req = {
     wsJson: null
@@ -43,17 +47,19 @@ test('should not process data when wsJson was not given but should call next mid
   let next = sinon.spy();
   let toPrecision = sinon.spy();
 
-  toPrecisionMiddleware.__set__('toPrecision', toPrecision);
+  const toPrecisionMiddleware = proxyquire('./index', {
+    './toPrecision.processor': toPrecision
+  });
 
   //act
   toPrecisionMiddleware(req, null, next);
 
   //assert
-  assert.truthy(next.calledOnce);
-  assert.is(toPrecision.called, false);
+  expect(next.calledOnce).to.be.ok;
+  expect(toPrecision.called).to.equal(false);
 });
 
-test('should not process data when wsJson was given with no rows but should call next middleware', assert => {
+it('should not process data when wsJson was given with no rows but should call next middleware', () => {
   //arrange
   let req = {
     wsJson: {
@@ -64,12 +70,14 @@ test('should not process data when wsJson was given with no rows but should call
   let next = sinon.spy();
   let toPrecision = sinon.spy();
 
-  toPrecisionMiddleware.__set__('toPrecision', toPrecision);
+  const toPrecisionMiddleware = proxyquire('./index', {
+    './toPrecision.processor': toPrecision
+  });
 
   //act
   toPrecisionMiddleware(req, null, next);
 
   //assert
-  assert.truthy(next.calledOnce);
-  assert.is(toPrecision.called, false);
+  expect(next.calledOnce).to.be.ok;
+  expect(toPrecision.called).to.equal(false);
 });

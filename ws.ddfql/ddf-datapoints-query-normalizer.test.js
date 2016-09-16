@@ -1,9 +1,11 @@
 'use strict';
 
-import test from 'ava';
-import ddfQueryNormalizer from './ddf-datapoints-query-normalizer';
+const chai = require('chai');
+const ddfQueryNormalizer = require('./ddf-datapoints-query-normalizer');
 
-test('should normalize where and join clauses', assert => {
+const expect = chai.expect;
+
+it('should normalize where and join clauses', () => {
   const ddfql = {
     "select": {
       "key": ["geo", "time"],
@@ -117,10 +119,10 @@ test('should normalize where and join clauses', assert => {
     }
   };
 
-  assert.deepEqual(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, ['time']), normalizedDdfql);
+  expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, ['time'])).to.deep.equal(normalizedDdfql);
 });
 
-test('should normalize where and join clauses - QUARTER time type should be parsed', assert => {
+it('should normalize where and join clauses - QUARTER time type should be parsed', () => {
   const ddfql = {
     "select": {
       "key": ["geo", "time"],
@@ -172,10 +174,10 @@ test('should normalize where and join clauses - QUARTER time type should be pars
     }
   };
 
-  assert.deepEqual(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, ['time']), normalizedDdfql);
+  expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, ['time'])).to.deep.equal(normalizedDdfql);
 });
 
-test('should normalize where and join clauses - YEAR time type should be parsed', assert => {
+it('should normalize where and join clauses - YEAR time type should be parsed', () => {
   const ddfql = {
     "select": {
       "key": ["geo", "time"],
@@ -227,10 +229,10 @@ test('should normalize where and join clauses - YEAR time type should be parsed'
     }
   };
 
-  assert.deepEqual(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, ['time']), normalizedDdfql);
+  expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, ['time'])).to.deep.equal(normalizedDdfql);
 });
 
-test('should normalize where and join clauses - WEEK time type should be parsed', assert => {
+it('should normalize where and join clauses - WEEK time type should be parsed', () => {
   const ddfql = {
     "select": {
       "key": ["geo", "time"],
@@ -294,10 +296,10 @@ test('should normalize where and join clauses - WEEK time type should be parsed'
     }
   };
 
-  assert.deepEqual(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, ['time']), normalizedDdfql);
+  expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, ['time'])).to.deep.equal(normalizedDdfql);
 });
 
-test('should normalize where and join clauses - DATE time type should be parsed', assert => {
+it('should normalize where and join clauses - DATE time type should be parsed', () => {
   const ddfql = {
     "select": {
       "key": ["geo", "time"],
@@ -358,10 +360,10 @@ test('should normalize where and join clauses - DATE time type should be parsed'
     }
   };
 
-  assert.deepEqual(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, ['time']), normalizedDdfql);
+  expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, ['time'])).to.deep.equal(normalizedDdfql);
 });
 
-test('should substitute concept placeholders with ids', assert => {
+it('should substitute concept placeholders with ids', () => {
   const conceptsToIds = {
     geo: "17a3470d3a8c9b37009b9bf9",
     time: "27a3470d3a8c9b37009b9bf9",
@@ -493,10 +495,10 @@ test('should substitute concept placeholders with ids', assert => {
     }
   };
 
-  assert.deepEqual(ddfQueryNormalizer.substituteDatapointConceptsWithIds(normalizedDdfql, conceptsToIds), normalizedDdfqlWithSubstitutedConcepts);
+  expect(ddfQueryNormalizer.substituteDatapointConceptsWithIds(normalizedDdfql, conceptsToIds)).to.deep.equal(normalizedDdfqlWithSubstitutedConcepts);
 });
 
-test('should substitute join link in where clause', assert => {
+it('should substitute join link in where clause', () => {
   const linksInJoinToValues = {
     $geo: [
       "27a3470d3a8c9b37009b9bf9",
@@ -663,10 +665,10 @@ test('should substitute join link in where clause', assert => {
     }
   };
 
-  assert.deepEqual(ddfQueryNormalizer.substituteDatapointJoinLinks(normalizedDdfql, linksInJoinToValues), normalizedDdfqlWithSubstitutedJoinLinks);
+  expect(ddfQueryNormalizer.substituteDatapointJoinLinks(normalizedDdfql, linksInJoinToValues)).to.deep.equal(normalizedDdfqlWithSubstitutedJoinLinks);
 });
 
-test('should normalized queries for quarters range', (assert) => {
+it('should normalized queries for quarters range', () => {
   const ddfql = {
     "select": {
       "key": ["geo", "quarter"],
@@ -732,10 +734,10 @@ test('should normalized queries for quarters range', (assert) => {
   };
 
   const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, ['time', 'quarter']);
-  assert.deepEqual(actualDdfql, normalizedDdfql);
+  expect(actualDdfql, normalizedDdfql);
 });
 
-test('should create links in join section for entities filter', (assert) => {
+it('should create links in join section for entities filter', () => {
   const ddfql = {
     "select": {
       "key": ["geo", "quarter"],
@@ -802,5 +804,5 @@ test('should create links in join section for entities filter', (assert) => {
   };
 
   const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, ['time', 'quarter']);
-  assert.deepEqual(actualDdfql, normalizedDdfql);
+  expect(actualDdfql).to.deep.equal(normalizedDdfql);
 });

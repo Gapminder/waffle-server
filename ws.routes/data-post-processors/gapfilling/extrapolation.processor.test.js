@@ -1,9 +1,13 @@
-import _ from 'lodash';
-import test from 'ava';
+'use strict';
 
-import extrapolate from './extrapolation.processor';
+const _ = require('lodash');
+const chai = require('chai');
 
-test('should return empty result when input was empty', assert => {
+const extrapolate = require('./extrapolation.processor');
+
+const expect = chai.expect;
+
+it('should return empty result when input was empty', () => {
   //arrange
   const input = [];
 
@@ -11,10 +15,10 @@ test('should return empty result when input was empty', assert => {
   const actual = extrapolate(input);
 
   //assert
-  assert.deepEqual(actual, input);
+  expect(actual).to.deep.equal(input);
 });
 
-test('should return input as is when there is nothing to extrapolate - only one row is given with null measure value', assert => {
+it('should return input as is when there is nothing to extrapolate - only one row is given with null measure value', () => {
   //arrange
   const input = [
     ["usa", 2004, null]
@@ -24,10 +28,10 @@ test('should return input as is when there is nothing to extrapolate - only one 
   const actual = extrapolate(input, _.range(2, 3));
 
   //assert
-  assert.deepEqual(actual, input);
+  expect(actual).to.deep.equal(input);
 });
 
-test('should return input as is when there is nothing to extrapolate - all measure values are null', assert => {
+it('should return input as is when there is nothing to extrapolate - all measure values are null', () => {
   //arrange
   const input = [
     ["usa", 2004, null],
@@ -41,10 +45,10 @@ test('should return input as is when there is nothing to extrapolate - all measu
   const actual = extrapolate(input, _.range(2, 3));
 
   //assert
-  assert.deepEqual(actual, input);
+  expect(actual).to.deep.equal(input);
 });
 
-test('should return input as is when column indexes to extrapolate were not given', assert => {
+it('should return input as is when column indexes to extrapolate were not given', () => {
   //arrange
   const input = [
     ['angola', 1998, null],
@@ -60,10 +64,10 @@ test('should return input as is when column indexes to extrapolate were not give
   const actual = extrapolate(input);
 
   //assert
-  assert.deepEqual(actual, input);
+  expect(actual).to.deep.equal(input);
 });
 
-test('should extrapolate measure values for a given range - only one existing value is available', assert => {
+it('should extrapolate measure values for a given range - only one existing value is available', () => {
   //arrange
   const input = [
     ['angola', 1998, null],
@@ -89,10 +93,10 @@ test('should extrapolate measure values for a given range - only one existing va
   const actual = extrapolate(input, _.range(2, 3));
 
   //assert
-  assert.deepEqual(actual, expected);
+  expect(actual).to.deep.equal(expected);
 });
 
-test('should extrapolate measure values for a given range - few existing values are available', assert => {
+it('should extrapolate measure values for a given range - few existing values are available', () => {
   //arrange
   const input = [
     ['angola', 1997, null],
@@ -122,10 +126,10 @@ test('should extrapolate measure values for a given range - few existing values 
   const actual = extrapolate(input, _.range(2, 3));
 
   //assert
-  assert.deepEqual(actual, expected);
+  expect(actual).to.deep.equal(expected);
 });
 
-test('should extrapolate few measures values for a given range - only one existing value is available', assert => {
+it('should extrapolate few measures values for a given range - only one existing value is available', () => {
   //arrange
   const input = [
     ['angola', 1997, null, null],
@@ -155,10 +159,10 @@ test('should extrapolate few measures values for a given range - only one existi
   const actual = extrapolate(input, _.range(2, 4));
 
   //assert
-  assert.deepEqual(actual, expected);
+  expect(actual).to.deep.equal(expected);
 });
 
-test('should extrapolate few measures values for a given range - few existing values are available', assert => {
+it('should extrapolate few measures values for a given range - few existing values are available', () => {
   //arrange
   const input = [
     ['angola', 1997, null, null],
@@ -188,10 +192,10 @@ test('should extrapolate few measures values for a given range - few existing va
   const actual = extrapolate(input, _.range(2, 4));
 
   //assert
-  assert.deepEqual(actual, expected);
+  expect(actual).to.deep.equal(expected);
 });
 
-test('should extrapolate measure values for a given range - only one existing value is available, few countries', assert => {
+it('should extrapolate measure values for a given range - only one existing value is available, few countries', () => {
   //arrange
   const input = [
     ['angola', 1998, null],
@@ -217,10 +221,10 @@ test('should extrapolate measure values for a given range - only one existing va
   const actual = extrapolate(input, _.range(2, 3));
 
   //assert
-  assert.deepEqual(actual, expected);
+  expect(actual).to.deep.equal(expected);
 });
 
-test('should extrapolate measure values for a given range - only one existing value is available, few countries and years unordered', assert => {
+it('should extrapolate measure values for a given range - only one existing value is available, few countries and years unordered', () => {
   //arrange
   const input = [
     ['angola', 1998, null],
@@ -248,10 +252,10 @@ test('should extrapolate measure values for a given range - only one existing va
   const actual = extrapolate(input, _.range(2, 3));
 
   //assert
-  assert.deepEqual(actual, expected);
+  expect(actual).to.deep.equal(expected);
 });
 
-test('should extrapolate measure values for a given range and given number of years', assert => {
+it('should extrapolate measure values for a given range and given number of years', () => {
   //arrange
   const input = [
     ['angola', 1997, null],
@@ -281,10 +285,10 @@ test('should extrapolate measure values for a given range and given number of ye
   });
 
   //assert
-  assert.deepEqual(actual, expected);
+  expect(actual).to.deep.equal(expected);
 });
 
-test('should extrapolate measure values for a given range and given number of years - given number of years exceeds amount of data', assert => {
+it('should extrapolate measure values for a given range and given number of years - given number of years exceeds amount of data', () => {
   //arrange
   const input = [
     ['angola', 1997, null],
@@ -314,5 +318,5 @@ test('should extrapolate measure values for a given range and given number of ye
   });
 
   //assert
-  assert.deepEqual(actual, expected);
+  expect(actual).to.deep.equal(expected);
 });

@@ -1,10 +1,13 @@
-import test from 'ava';
-import sinon from 'sinon';
-import rewire from 'rewire';
+'use strict';
 
-const gapfillingMiddleware = rewire('./index');
+const sinon = require('sinon');
+const proxyquire = require('proxyquire');
+const chai = require('chai');
 
-test('should not process data when wsJson was not given but should call next middleware', assert => {
+const expect = chai.expect;
+
+it('should not process data when wsJson was not given but should call next middleware', () => {
+
   //arrange
   let req = {
     wsJson: null
@@ -16,21 +19,23 @@ test('should not process data when wsJson was not given but should call next mid
   let extrapolate = sinon.spy();
   let expandYears = sinon.spy();
 
-  gapfillingMiddleware.__set__('interpolate', interpolate);
-  gapfillingMiddleware.__set__('extrapolate', extrapolate);
-  gapfillingMiddleware.__set__('expandYears', expandYears);
+  const gapfillingMiddleware = proxyquire('./index.js', {
+    './interpolation.processor': interpolate,
+    './extrapolation.processor': extrapolate,
+    './yearsExpander.processor': expandYears
+  });
 
   //act
   gapfillingMiddleware(req, null, next);
 
   //assert
-  assert.truthy(next.calledOnce);
-  assert.is(interpolate.called, false);
-  assert.is(extrapolate.called, false);
-  assert.is(expandYears.called, false);
+  expect(next.calledOnce).to.be.ok;
+  expect(interpolate.called).to.equal(false);
+  expect(extrapolate.called).to.equal(false);
+  expect(expandYears.called).to.equal(false);
 });
 
-test('should not process data when wsJson was given with no rows but should call next middleware', assert => {
+it('should not process data when wsJson was given with no rows but should call next middleware', () => {
   //arrange
   let req = {
     wsJson: {
@@ -44,21 +49,23 @@ test('should not process data when wsJson was given with no rows but should call
   let extrapolate = sinon.spy();
   let expandYears = sinon.spy();
 
-  gapfillingMiddleware.__set__('interpolate', interpolate);
-  gapfillingMiddleware.__set__('extrapolate', extrapolate);
-  gapfillingMiddleware.__set__('expandYears', expandYears);
+  const gapfillingMiddleware = proxyquire('./index', {
+    './interpolation.processor': interpolate,
+    './extrapolation.processor': extrapolate,
+    './yearsExpander.processor': expandYears
+  });
 
   //act
   gapfillingMiddleware(req, null, next);
 
   //assert
-  assert.truthy(next.calledOnce);
-  assert.is(interpolate.called, false);
-  assert.is(extrapolate.called, false);
-  assert.is(expandYears.called, false);
+  expect(next.calledOnce).to.be.ok;
+  expect(interpolate.called).to.equal(false);
+  expect(extrapolate.called).to.equal(false);
+  expect(expandYears.called).to.equal(false);
 });
 
-test('should not process data when gapfilling param was not given, though it should call next middleware', assert => {
+it('should not process data when gapfilling param was not given, though it should call next middleware', () => {
   //arrange
   let req = {
     decodedQuery: {},
@@ -82,21 +89,23 @@ test('should not process data when gapfilling param was not given, though it sho
   let extrapolate = sinon.spy();
   let expandYears = sinon.spy();
 
-  gapfillingMiddleware.__set__('interpolate', interpolate);
-  gapfillingMiddleware.__set__('extrapolate', extrapolate);
-  gapfillingMiddleware.__set__('expandYears', expandYears);
+  const gapfillingMiddleware = proxyquire('./index', {
+    './interpolation.processor': interpolate,
+    './extrapolation.processor': extrapolate,
+    './yearsExpander.processor': expandYears
+  });
 
   //act
   gapfillingMiddleware(req, null, next);
 
   //assert
-  assert.truthy(next.calledOnce);
-  assert.is(interpolate.called, false);
-  assert.is(extrapolate.called, false);
-  assert.is(expandYears.called, false);
+  expect(next.calledOnce).to.be.ok;
+  expect(interpolate.called).to.equal(false);
+  expect(extrapolate.called).to.equal(false);
+  expect(expandYears.called).to.equal(false);
 });
 
-test('should interpolate data', assert => {
+it('should interpolate data', () => {
   //arrange
   let req = {
     decodedQuery: {
@@ -123,19 +132,21 @@ test('should interpolate data', assert => {
   let interpolate = sinon.mock();
   interpolate.once().withArgs(req.wsJson.rows, [2, 3], options);
 
-  gapfillingMiddleware.__set__('interpolate', interpolate);
-  gapfillingMiddleware.__set__('extrapolate', extrapolate);
+  const gapfillingMiddleware = proxyquire('./index', {
+    './interpolation.processor': interpolate,
+    './extrapolation.processor': extrapolate,
+  });
 
   //act
   gapfillingMiddleware(req, null, next);
 
   //assert
   interpolate.verify();
-  assert.truthy(next.calledOnce);
-  assert.is(extrapolate.called, false);
+  expect(next.calledOnce).to.be.ok;
+  expect(extrapolate.called).to.equal(false);
 });
 
-test('should extrapolate data', assert => {
+it('should extrapolate data', () => {
   //arrange
   let req = {
     decodedQuery: {
@@ -162,19 +173,20 @@ test('should extrapolate data', assert => {
   let extrapolate = sinon.mock();
   extrapolate.once().withArgs(req.wsJson.rows, [2, 3], options);
 
-  gapfillingMiddleware.__set__('interpolate', interpolate);
-  gapfillingMiddleware.__set__('extrapolate', extrapolate);
-
+  const gapfillingMiddleware = proxyquire('./index', {
+    './interpolation.processor': interpolate,
+    './extrapolation.processor': extrapolate,
+  });
   //act
   gapfillingMiddleware(req, null, next);
 
   //assert
-  assert.truthy(next.calledOnce);
-  assert.is(interpolate.called, false);
+  expect(next.calledOnce).to.be.ok;
+  expect(interpolate.called).to.equal(false);
   extrapolate.verify();
 });
 
-test('should extrapolate and interpolate data', assert => {
+it('should extrapolate and interpolate data', () => {
   //arrange
   let req = {
     decodedQuery: {
@@ -204,19 +216,21 @@ test('should extrapolate and interpolate data', assert => {
   let extrapolate = sinon.mock();
   extrapolate.once().withArgs(req.wsJson.rows, [2, 3], options).returns(req.wsJson.rows);
 
-  gapfillingMiddleware.__set__('interpolate', interpolate);
-  gapfillingMiddleware.__set__('extrapolate', extrapolate);
+  const gapfillingMiddleware = proxyquire('./index', {
+    './interpolation.processor': interpolate,
+    './extrapolation.processor': extrapolate,
+  });
 
   //act
   gapfillingMiddleware(req, null, next);
 
   //assert
-  assert.truthy(next.calledOnce);
+  expect(next.calledOnce).to.be.ok;
   interpolate.verify();
   extrapolate.verify();
 });
 
-test('should expand years extrapolate and interpolate data', assert => {
+it('should expand years extrapolate and interpolate data', () => {
   //arrange
   let req = {
     decodedQuery: {
@@ -253,15 +267,17 @@ test('should expand years extrapolate and interpolate data', assert => {
   let expandYears = sinon.mock();
   expandYears.once().withArgs(req.wsJson.rows, {from: 2000, to: 2005}).returns(req.wsJson.rows);
 
-  gapfillingMiddleware.__set__('interpolate', interpolate);
-  gapfillingMiddleware.__set__('extrapolate', extrapolate);
-  gapfillingMiddleware.__set__('expandYears', expandYears);
+  const gapfillingMiddleware = proxyquire('./index', {
+    './interpolation.processor': interpolate,
+    './extrapolation.processor': extrapolate,
+    './yearsExpander.processor': expandYears
+  });
 
   //act
   gapfillingMiddleware(req, null, next);
 
   //assert
-  assert.truthy(next.calledOnce);
+  expect(next.calledOnce).to.be.ok;
   interpolate.verify();
   extrapolate.verify();
   expandYears.verify();

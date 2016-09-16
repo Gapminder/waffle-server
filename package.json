@@ -4,9 +4,8 @@
   "description": "Waffle server",
   "main": "app.js",
   "scripts": {
-    "test": "./node_modules/.bin/nyc --all --include='**/*.js' ./node_modules/.bin/ava",
-    "test:coverage-report": "npm run test && ./node_modules/.bin/nyc report --reporter=html",
-    "test:ava": "./node_modules/.bin/ava",
+    "test": "gulp test",
+    "test:coverage": "istanbul --include-all-sources cover _mocha -- -R spec 'ws*/**/*.test.js'",
     "swagger": "./node_modules/.bin/gulp swagger",
     "dev": "NODE_ENV=development npm run start",
     "prestart": "npm run swagger",
@@ -16,13 +15,6 @@
     "preversion": "npm test",
     "version": "npm run changelog && git add CHANGELOG.md",
     "postversion": "git push origin master && git push --tags && npm run github-release"
-  },
-  "ava": {
-    "files": [
-      "**/*.test.js"
-    ],
-    "failFast": true,
-    "verbose": true
   },
   "dependencies": {
     "JSONStream": "1.1.2",
@@ -67,7 +59,6 @@
     "winston-daily-rotate-file": "1.0.1"
   },
   "devDependencies": {
-    "ava": "github:valorkin/ava",
     "chai": "3.4.1",
     "conventional-changelog": "1.1.0",
     "conventional-changelog-cli": "1.1.1",
@@ -76,11 +67,10 @@
     "gulp": "3.9.0",
     "gulp-eslint": "1.1.1",
     "gulp-mocha": "2.2.0",
+    "istanbul": "0.4.5",
     "mocha": "2.3.4",
-    "nyc": "7.0.0",
     "pre-commit": "1.1.2",
     "proxyquire": "1.7.10",
-    "rewire": "2.5.1",
     "sinon": "1.17.2",
     "supertest": "1.1.0",
     "swagger2-utils": "2.0.10",

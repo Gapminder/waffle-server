@@ -1,11 +1,15 @@
-import _ from'lodash';
-import test from 'ava';
+'use strict';
 
-import interpolate from './interpolation.processor';
-import extrapolate from './extrapolation.processor';
-import expandYears from './yearsExpander.processor';
+const _ = require('lodash');
+const chai = require('chai');
 
-test('should interpolate and extrapolate measure values for a given range - only one measure used', assert => {
+const interpolate = require('./interpolation.processor');
+const extrapolate = require('./extrapolation.processor');
+const expandYears = require('./yearsExpander.processor');
+
+const expect = chai.expect;
+
+it('should interpolate and extrapolate measure values for a given range - only one measure used', () => {
   //arrange
   const input = [
     ["usa", 2004, null],
@@ -33,10 +37,10 @@ test('should interpolate and extrapolate measure values for a given range - only
   actual = extrapolate(actual, measureColumnIndexes);
 
   //assert
-  assert.deepEqual(actual, expected);
+  expect(actual).to.deep.equal(expected);
 });
 
-test('should interpolate and extrapolate measures values for a given range', assert => {
+it('should interpolate and extrapolate measures values for a given range', () => {
   //arrange
   const input = [
     ["usa", 2004, null, null],
@@ -64,10 +68,10 @@ test('should interpolate and extrapolate measures values for a given range', ass
   actual = extrapolate(actual, measureColumnIndexes);
 
   //assert
-  assert.deepEqual(actual, expected);
+  expect(actual).to.deep.equal(expected);
 });
 
-test('should expand input data with years according to the given range', assert => {
+it('should expand input data with years according to the given range', () => {
   //arrange
   const input = [
     ["usa", 2004, 71.7],
@@ -109,10 +113,10 @@ test('should expand input data with years according to the given range', assert 
   });
 
   //assert
-  assert.deepEqual(actual, expected);
+  expect(actual).to.deep.equal(expected);
 });
 
-test('should interpolate and extrapolate measures values for a given range with years expanded', assert => {
+it('should interpolate and extrapolate measures values for a given range with years expanded', () => {
   //arrange
   const input = [
     ["usa", 2004, null, null],
@@ -149,5 +153,5 @@ test('should interpolate and extrapolate measures values for a given range with 
   actual = extrapolate(actual, measureColumnIndexes);
 
   //assert
-  assert.deepEqual(actual, expected);
+  expect(actual).to.deep.equal(expected);
 });
