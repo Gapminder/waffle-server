@@ -10,5 +10,5 @@ const Translations = new Schema({
   transaction: {type: Schema.Types.ObjectId, ref: 'DatasetTransactions', required: true}
 });
 
-Translations.index({language: 1, source: 1}, {unique: true});
+Translations.index({language: 1});
 module.exports = mongoose.model('Translations', Translations);

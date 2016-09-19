@@ -84,7 +84,7 @@ function filterExistedTranslations(pipe, done) {
       const translationsByLanguage = _.map(translationsByLanguages[language], 'source');
 
       result = _.chain(pipe.rawTranslations)
-        .filter((rawTranslation) => _.size(rawTranslation) < constants.TRANSLATION_CHUNK_LIMIT && !_.isObject(rawTranslation) && !_.isNil(rawTranslation))
+        .filter((rawTranslation) => _.size(rawTranslation) < constants.TRANSLATION_CHUNK_LIMIT && !_.isObject(rawTranslation) && !_.isNil(rawTranslation) && !_.isNumber(rawTranslation))
         .difference(translationsByLanguage)
         .concat(result)
         .value();
@@ -103,7 +103,7 @@ function createTranslations(pipe, done) {
 
   const createTranslationsByChunks = async.seq(_translateToAnotherLanguage, _createTranslationsFromChunk);
   const words = pipe.wordsToTranslateByLanguage;
-  const wordChunks = _divideWordsIntoChunks(words);
+  const wordChunks = _divideWordsIntoChunks(words, pipe.languages);
   const wordChunksByLanguage = _.flatMap(wordChunks, (wordChunk) => {
     return _.map(pipe.languages, (language) => ({words: wordChunk, language, transaction: pipe.transaction}));
   });
@@ -117,8 +117,8 @@ function createTranslations(pipe, done) {
   });
 }
 
-function _divideWordsIntoChunks(words) {
-  logger.info('**** divide words into chunks');
+function _divideWordsIntoChunks(words, languages) {
+  logger.info(`**** divide words into chunks`);
 
   let chunkIndex = 0;
   let lastChunkLength = 0;
@@ -144,6 +144,8 @@ function _divideWordsIntoChunks(words) {
 
     return chunks;
   }, []);
+
+  logger.info(`**** divided into ${_.size(wordChunks) * _.size(languages)} chunks`);
 
   return wordChunks;
 }
@@ -178,5 +180,10 @@ function _createTranslationsFromChunk(pipe, done) {
 }
 
 function __createTranslationsDocuments(chunk, done) {
-  return mongoose.model('Translations').create(chunk, done);
+  return mongoose.model('Translations').create(chunk, (error) => {
+    if (error) {
+      logger.error(error);
+    }
+    return done();
+  });
 }
