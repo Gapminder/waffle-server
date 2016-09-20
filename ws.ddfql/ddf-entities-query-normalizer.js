@@ -2,7 +2,6 @@
 
 const _ = require('lodash');
 const traverse = require('traverse');
-const ddfTimeUtils = require('ddf-time-utils');
 
 const constants = require('../ws.utils/constants');
 const ddfQueryUtils = require("./ddf-query-utils");
@@ -83,6 +82,12 @@ function normalizeWhere(query, concepts) {
           [`properties.${this.key}`]: filterValue,
         };
       }
+    }
+
+    if (selectKey === this.key) {
+      normalizedFilter = {
+        gid: filterValue
+      };
     }
 
     if (normalizedFilter) {
