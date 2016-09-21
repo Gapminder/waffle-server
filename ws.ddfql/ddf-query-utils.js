@@ -61,6 +61,10 @@ function normalizeTimePropertyFilter(key, filterValue, path, query) {
         return value;
       }
 
+      if (_.isObject(value) && _.isEmpty(value)) {
+        return value;
+      }
+
       const timeDescriptor = ddfTimeUtils.parseTime(value);
       timeType = timeDescriptor.type;
       return timeDescriptor.time;
