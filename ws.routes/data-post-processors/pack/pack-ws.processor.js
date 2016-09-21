@@ -3,6 +3,8 @@
 const _ = require('lodash');
 const constants = require('../../../ws.utils/constants');
 
+const DATAPOINT_KEY_SEPARATOR = ':';
+
 // FIXME: wsJson, csv, json pack processors
 module.exports = {
   mapConcepts: mapConceptToWsJson,
@@ -82,32 +84,36 @@ function mapDatapointsToWsJson(data) {
     .mapKeys(constants.ORIGIN_ID)
     .value();
 
+  const selectedConceptsOriginIds = _.keys(selectedConceptsByOriginId);
+
   const conceptsByOriginId = _.keyBy(data.concepts, constants.ORIGIN_ID);
   const entitiesByOriginId = _.keyBy(data.entities, constants.ORIGIN_ID);
 
   const rows = _.chain(data.datapoints)
     .reduce((result, datapoint) => {
-      const complexKey = _getComplexKey(entitiesByOriginId, selectedConceptsByOriginId, data.headers, datapoint);
+      const partialRow = {};
+      const datapointKeyParts = [];
 
-      if (!result[complexKey]) {
-        result[complexKey] = {};
+      _.each(datapoint.dimensions, (dimension) => {
+        const originEntity = entitiesByOriginId[dimension];
+        const domainGid = _getGidOfSelectedConceptByEntity(selectedConceptsByOriginId, selectedConceptsOriginIds, originEntity);
 
-        _.each(datapoint.dimensions, (dimension) => {
-          const originEntity = entitiesByOriginId[dimension];
-          const domainGid = _getGidOfSelectedConceptByEntity(selectedConceptsByOriginId, originEntity);
+        partialRow[domainGid] = originEntity[constants.GID];
+        datapointKeyParts.push(originEntity[constants.GID]);
+      });
 
-          result[complexKey][domainGid] = originEntity[constants.GID];
-        });
-      }
-
+      const datapointKey = datapointKeyParts.join(DATAPOINT_KEY_SEPARATOR);
       const measureGid = conceptsByOriginId[datapoint.measure][constants.GID];
-      result[complexKey][measureGid] = datapoint.value;
+      partialRow[measureGid] = datapoint.value;
 
+      if (!result[datapointKey]) {
+        result[datapointKey] = partialRow;
+        return result;
+      }
+      _.extend(result[datapointKey], partialRow);
       return result;
     }, {})
-    .map((row) => {
-      return _.map(data.headers, column => (_.isNaN(_.toNumber(row[column])) ? row[column] : +row[column]) || undefined);
-    })
+    .map(row => _.map(data.headers, column => coerceValue(row[column])))
     .value();
 
   return {
@@ -116,28 +122,12 @@ function mapDatapointsToWsJson(data) {
   };
 }
 
-function _getComplexKey(entities, selectedConceptsByOriginId, headers, datapoint) {
-  return _.chain(datapoint.dimensions)
-    .map((dimension) => {
-      return entities[dimension];
-    })
-    .sortBy((originEntity) => {
-      const domainGid = _getGidOfSelectedConceptByEntity(selectedConceptsByOriginId, originEntity);
-
-      return headers.indexOf(domainGid);
-    })
-    .map(constants.GID)
-    .join(':')
-    .value();
+function _getGidOfSelectedConceptByEntity(selectedConceptsByOriginId, selectedConceptsOriginIds, entity) {
+  const conceptOriginIds = _.map(_.concat(entity.domain, entity.sets), _.toString);
+  const originIdOfSelectedConcept = _.find(selectedConceptsOriginIds, originId => _.includes(conceptOriginIds, originId));
+  return _.get(selectedConceptsByOriginId[originIdOfSelectedConcept], constants.GID);
 }
 
-function _getGidOfSelectedConceptByEntity(selectedConceptsByOriginId, entity) {
-  const conceptOriginIds = _.concat(entity.domain, entity.sets);
-  const originIdOfSelectedConcept = _.intersection(_.keys(selectedConceptsByOriginId), _.map(conceptOriginIds, _.toString));
-
-  if (originIdOfSelectedConcept.length === 0 || originIdOfSelectedConcept.length > 1) {
-    console.error('Header was populated incorrectly');
-  }
-
-  return selectedConceptsByOriginId[_.first(originIdOfSelectedConcept)][constants.GID];
+function coerceValue(value) {
+  return (_.isNaN(_.toNumber(value)) ? value : +value) || undefined;
 }
