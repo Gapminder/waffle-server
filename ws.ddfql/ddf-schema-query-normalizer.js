@@ -26,20 +26,21 @@ function normalize(query, options) {
 }
 
 function normalizeConceptsSchema(query, options) {
-  normalizeWhere(query, options);
-  normalizeSelect(query);
-  return query;
+  return normalizeSchema(query, options);
 }
 
 function normalizeEntitiesSchema(query, options) {
-  normalizeWhere(query, options);
-  normalizeSelect(query);
-  return query;
+  return normalizeSchema(query, options);
 }
 
 function normalizeDatapointsSchema(query, options) {
+  return normalizeSchema(query, options);
+}
+
+function normalizeSchema(query, options) {
   normalizeWhere(query, options);
   normalizeSelect(query);
+  ddfQueryUtils.normalizeOrderBy(query);
   return query;
 }
 

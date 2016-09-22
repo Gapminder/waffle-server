@@ -55,7 +55,7 @@ module.exports = serviceLocator => {
     const select = _.get(req, 'body.select.value', []);
     const domainGids = _.get(req, 'body.select.key', []);
     const headers = _.union(domainGids, select);
-    const sort = _.get(req, 'body.order_by', {});
+    const sort = _.get(req, 'body.order_by', []);
     const groupBy = _.get(req, 'body.group_by', {});
     const datasetName = _.chain(req).get('body.dataset', []).first().value();
     const version = _.chain(req).get('body.version', []).first().value();

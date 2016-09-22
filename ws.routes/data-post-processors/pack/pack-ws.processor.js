@@ -2,6 +2,7 @@
 
 const _ = require('lodash');
 const constants = require('../../../ws.utils/constants');
+const ddfQueryUtils = require('../../../ws.ddfql/ddf-query-utils');
 
 const DATAPOINT_KEY_SEPARATOR = ':';
 
@@ -20,7 +21,7 @@ function mapSchemaToWsJson(data) {
   }, []));
 
   const headers = _.map(data.headers, header => data.aliases[header] ? data.aliases[header] : header);
-  return {headers, rows};
+  return {headers, rows: sortRows(rows, data.query, headers)};
 }
 
 function mapConceptToWsJson(data) {
@@ -35,7 +36,7 @@ function mapConceptToWsJson(data) {
     return _mapConceptPropertiesToWsJson(select, concept);
   });
 
-  return { headers: select, rows };
+  return { headers: select, rows: sortRows(rows, data.query, data.headers) };
 }
 
 function _mapConceptPropertiesToWsJson(select, concept) {
@@ -56,7 +57,7 @@ function mapEntitiesToWsJson(data) {
     return _mapEntitiesPropertiesToWsJson(data.domainGid, select, entity);
   });
 
-  return { headers: select, rows };
+  return { headers: select, rows: sortRows(rows, data.query, data.headers) };
 }
 
 function _mapEntitiesPropertiesToWsJson(entityDomainGid, select, entity) {
@@ -118,7 +119,7 @@ function mapDatapointsToWsJson(data) {
 
   return {
     headers: data.headers,
-    rows: _.sortBy(rows, ['0', '1'])
+    rows: sortRows(rows, data.query, data.headers)
   };
 }
 
@@ -130,4 +131,9 @@ function _getGidOfSelectedConceptByEntity(selectedConceptsByOriginId, selectedCo
 
 function coerceValue(value) {
   return (_.isNaN(_.toNumber(value)) ? value : +value) || undefined;
+}
+
+function sortRows(rows, query, headers) {
+  const ordering = ddfQueryUtils.convertOrderByForWsJson(_.get(query, 'order_by', []), headers);
+  return _.isEmpty(ordering.columnsToSort) ? rows : _.orderBy(rows, ordering.columnsToSort, ordering.columnsSortDirections);
 }

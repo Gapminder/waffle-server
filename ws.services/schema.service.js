@@ -34,6 +34,11 @@ function _findSchemaByDdfql(pipe, done) {
       return done(error);
     }
 
-    return done(null, {schema: schemaData, headers: _.keys(normalizedQuery.select), aliases: normalizedQuery.aliases});
+    return done(null, {
+      schema: schemaData,
+      headers: _.keys(normalizedQuery.select),
+      aliases: normalizedQuery.aliases,
+      query: pipe.query
+    });
   });
 }

@@ -17,6 +17,7 @@ function normalizeConcepts(query, concepts) {
 
 function normalizeConceptDdfQuery(query, concepts) {
   normalizeWhere(query, concepts);
+  ddfQueryUtils.normalizeOrderBy(query);
   return query;
 }
 

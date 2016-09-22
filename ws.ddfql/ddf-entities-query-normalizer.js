@@ -59,6 +59,7 @@ function substituteEntityConceptsWithIds(query, concepts) {
 function normalizeEntityDdfQuery(query, concepts) {
   normalizeWhere(query, concepts);
   normalizeJoin(query, concepts);
+  ddfQueryUtils.normalizeOrderBy(query);
   return query;
 }
 

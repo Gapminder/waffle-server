@@ -71,6 +71,7 @@ function substituteDatapointConceptsWithIds(query, conceptsToIds) {
 function normalizeDatapointDdfQuery(query, timeConcepts) {
   normalizeWhere(query);
   normalizeJoin(query, timeConcepts);
+  ddfQueryUtils.normalizeOrderBy(query);
   return query;
 }
 

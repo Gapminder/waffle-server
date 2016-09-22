@@ -25,6 +25,9 @@ module.exports = {
   DATAPOINTS,
   SCHEMA: 'schema',
 
+  ASC_SORTING_DIRECTION: 'asc',
+  DESC_SORTING_DIRECTION: 'desc',
+
   GID: 'gid',
   ORIGIN_ID: 'originId',
   IS_OPERATOR: '.is--',
