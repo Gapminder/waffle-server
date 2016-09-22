@@ -2,11 +2,11 @@
 
 const _ = require('lodash');
 const async = require('async');
-const mongoose = require('mongoose');
 const logger = require('../../../ws.config/log');
 
 const constants = require('../../../ws.utils/constants');
 const translateService = require('../../../ws.services/translations/translations.service.js');
+const translationsRepository = require('../../../ws.repository/ddf/translations/translations.repository');
 
 module.exports = {
   processTranslations,
@@ -57,13 +57,7 @@ function processTranslations(pipe, done) {
 function findAllTranslations(pipe, done) {
   logger.info('** find all translations');
 
-  const query = {
-    language: {$in: pipe.languages}
-  };
-
-  return mongoose.model('Translations').find(query)
-    .lean()
-    .exec((error, translations) => {
+  return translationsRepository.findByLanguages(pipe.languages, (error, translations) => {
     if (error) {
       return done(error);
     }
@@ -159,7 +153,7 @@ function _translateToAnotherLanguage(pipe, done) {
     }
 
     pipe.translatedWords = _.map(translatedWords, (word) => {
-      return _.extend(word, {transaction: pipe.transaction._id})
+      return _.extend(word, {transaction: pipe.transaction._id});
     });
 
     return done(null, pipe);
@@ -180,7 +174,7 @@ function _createTranslationsFromChunk(pipe, done) {
 }
 
 function __createTranslationsDocuments(chunk, done) {
-  return mongoose.model('Translations').create(chunk, (error) => {
+  return translationsRepository.create(chunk, (error) => {
     if (error) {
       logger.error(error);
     }
