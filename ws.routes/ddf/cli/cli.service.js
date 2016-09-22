@@ -17,9 +17,9 @@ const constants = require('../../../ws.utils/constants');
 const authService = require('../../../ws.services/auth.service');
 const reposService = require('../../../ws.services/repos.service');
 const datasetsService = require('../../../ws.services/datasets.service');
-const importDdfService = require('../../../csv_data_mapping_cli/import-ddf2');
+const importDdfService = require('../../../ws.import/import-ddf.service');
 const transactionsService = require('../../../ws.services/dataset-transactions.service');
-const incrementalUpdateService = require('../../../csv_data_mapping_cli/incremental-update-ddf2');
+const incrementalUpdateService = require('../../../ws.import/incremental/update-ddf');
 
 const ddfValidationConfig = {
   datapointlessMode: true,

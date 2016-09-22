@@ -2,11 +2,11 @@
 
 const _ = require('lodash');
 const async = require('async');
-const logger = require('../../../ws.config/log');
+const logger = require('../ws.config/log');
 
-const constants = require('../../../ws.utils/constants');
-const translateService = require('../../../ws.services/translations/translations.service.js');
-const translationsRepository = require('../../../ws.repository/ddf/translations/translations.repository');
+const constants = require('../ws.utils/constants');
+const translateService = require('../ws.services/translations/translations.service.js');
+const translationsRepository = require('../ws.repository/ddf/translations/translations.repository');
 
 module.exports = {
   processTranslations,

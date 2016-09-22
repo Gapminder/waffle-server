@@ -7,15 +7,15 @@ const async = require('async');
 
 const mongoose = require('mongoose');
 
-const common = require('./common');
-const logger = require('../ws.config/log');
-const config = require('../ws.config/config');
-const constants = require('../ws.utils/constants');
-const ddfImportProcess = require('../ws.utils/ddf-import-process');
+const common = require('./../common');
+const logger = require('../../ws.config/log');
+const config = require('../../ws.config/config');
+const constants = require('../../ws.utils/constants');
+const ddfImportProcess = require('../../ws.utils/ddf-import-process');
 
-const createDatasetIndex = require('./create-dataset-index');
-const translationsService = require('./ddf/import/import-translations.service');
-const processConceptChanges = require('./ddf/import/incremental/import-concepts')();
+const createDatasetIndex = require('./../import-dataset-index.service');
+const translationsService = require('./../import-translations.service');
+const processConceptChanges = require('./update-concepts')();
 
 const LIMIT_NUMBER_PROCESS = 10;
 

@@ -4,8 +4,8 @@ const _ = require('lodash');
 const async = require('async');
 const mongoose = require('mongoose');
 
-const ddfImportProcess = require('../../../../ws.utils/ddf-import-process');
-const constants = require('../../../../ws.utils/constants');
+const ddfImportProcess = require('../../ws.utils/ddf-import-process');
+const constants = require('../../ws.utils/constants');
 const mappers = require('./mappers');
 
 module.exports = () => {
