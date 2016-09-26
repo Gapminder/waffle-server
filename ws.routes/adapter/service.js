@@ -12,15 +12,15 @@ const cache = require('../../ws.utils/redis-cache');
 const config = require('../../ws.config/config');
 const constants = require('../../ws.utils/constants');
 
-const pathToVizabiData = '../../csv_data_mapping_cli/vizabi/';
+const pathToVizabiData = '../../ws.import/vizabi/';
 
 module.exports = function (serviceLocator) {
   const app = serviceLocator.getApplication();
 
   const router = express.Router();
 
-  const mcPrecomputedShapes = require('../../csv_data_mapping_cli/fixtures/mc_precomputed_shapes.json');
-  const world50m = require('../../csv_data_mapping_cli/fixtures/world-50m.json');
+  const mcPrecomputedShapes = require('../../ws.import/fixtures/mc_precomputed_shapes.json');
+  const world50m = require('../../ws.import/fixtures/world-50m.json');
 
   router.get('/api/vizabi/translation/:lang.json',
     cors(),

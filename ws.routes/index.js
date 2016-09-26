@@ -8,5 +8,6 @@ module.exports = function (serviceLocator) {
   require('./ddf/concepts')(serviceLocator);
   require('./ddf/ddfql')(serviceLocator);
   require('./ddf/cli')(serviceLocator);
+  require('./ddf/translations')(serviceLocator);
 };
 

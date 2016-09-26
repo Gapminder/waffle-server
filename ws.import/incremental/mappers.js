@@ -1,8 +1,8 @@
 'use strict';
 
 const _ = require('lodash');
-const ddfImportProcess = require('../../../../ws.utils/ddf-import-process');
-const constants = require('../../../../ws.utils/constants');
+const ddfImportProcess = require('../../ws.utils/ddf-import-process');
+const constants = require('../../ws.utils/constants');
 
 const JSON_COLUMNS = ['color', 'scales', 'drill_up'];
 

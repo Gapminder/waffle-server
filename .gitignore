@@ -33,4 +33,4 @@ dumps
 swagger.json
 
 # Directory for GitHub repositories
-/csv_data_mapping_cli/repos
+/ws.import/repos
