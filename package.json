@@ -79,9 +79,6 @@
     "through2": "2.0.1",
     "vinyl": "1.2.0"
   },
-  "peerDependencies": {
-    "forever": "0.15.1"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/Gapminder/waffle-server.git"
