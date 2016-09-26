@@ -5,6 +5,9 @@
   "main": "app.js",
   "scripts": {
     "test": "gulp test",
+    "pree2e": "echo pre e2e",
+    "poste2e": "echo post e2e",
+    "e2e": "gulp e2e",
     "test:coverage": "istanbul --include-all-sources cover _mocha -- -R spec 'ws*/**/*.test.js'",
     "swagger": "./node_modules/.bin/gulp swagger",
     "dev": "NODE_ENV=development npm run start",

@@ -7,7 +7,7 @@ gulp.task('test', () => {
   return runMochaOn(['ws*/**/*.test.js']);
 });
 
-gulp.task('test:e2e', () => {
+gulp.task('e2e', () => {
   return runMochaOn(['**/*.e2e.js']);
 });
 
