@@ -29,6 +29,7 @@ it('should normalize schema where clause - For the dimensions geo and year, what
         {"key": ["geo", "year"]}
       ]
     },
+    "order_by": [],
     "aliases": {}
   };
 
@@ -59,6 +60,7 @@ it('should normalize schema where clause - In what dimensionality can I get popu
         {"value": "population"}
       ]
     },
+    "order_by": [],
     "aliases": {}
   };
 
@@ -89,7 +91,8 @@ it('should normalize schema where clause - What entity properties are available 
         {"key": ["geo"]}
       ]
     },
-    "aliases": {}
+    "aliases": {},
+    "order_by": []
   };
 
   expect(schemaQueryNormalizer.normalize(schemaDdfql)).to.deep.equal(normalizedSchemaDdfql);
@@ -115,7 +118,8 @@ it('should normalize schema where clause - What concept properties are available
         {"type": "concepts"},
       ]
     },
-    "aliases": {}
+    "aliases": {},
+    "order_by": []
   };
 
   expect(schemaQueryNormalizer.normalize(schemaDdfql)).to.deep.equal(normalizedSchemaDdfql);
@@ -142,7 +146,8 @@ it('should normalize schema where clause that contains functions - What datapoin
     "aliases": {
       "min": "min(value)",
       "max": "max(value)"
-    }
+    },
+    "order_by": []
   };
 
   expect(schemaQueryNormalizer.normalize(schemaDdfql)).to.deep.equal(normalizedSchemaDdfql);

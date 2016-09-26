@@ -50,7 +50,8 @@ it('should normalize where and join clauses', () => {
           "time": {"$eq": 1918}
         }
       }
-    }
+    },
+    "order_by": ["geo", {"time": "asc"}]
   };
 
   const normalizedDdfql = {
@@ -116,7 +117,8 @@ it('should normalize where and join clauses', () => {
           "$eq": -1640995200000
         }
       }
-    }
+    },
+    "order_by": [{"geo": "asc"}, {"time": "asc"}]
   };
 
   expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, ['time'])).to.deep.equal(normalizedDdfql);
@@ -662,7 +664,8 @@ it('should substitute join link in where clause', () => {
         "parsedProperties.time.timeType": "YEAR_TYPE",
         "parsedProperties.time.millis": {"$eq": 1377993600000}
       }
-    }
+    },
+    "order_by": []
   };
 
   expect(ddfQueryNormalizer.substituteDatapointJoinLinks(normalizedDdfql, linksInJoinToValues)).to.deep.equal(normalizedDdfqlWithSubstitutedJoinLinks);

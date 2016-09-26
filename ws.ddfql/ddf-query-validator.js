@@ -7,7 +7,8 @@ const traverse = require('traverse');
 
 const constants = require('../ws.utils/constants');
 
-const AVAILABLE_QUERY_OPERATORS = ["$eq", "$gt", "$gte", "$lt", "$lte", "$ne", "$in", "$nin", "$or", "$and", "$not", "$nor", "$size"];
+const AVAILABLE_QUERY_OPERATORS = new Set(['$eq', '$gt', '$gte', '$lt', '$lte', '$ne', '$in', '$nin', '$or', '$and', '$not', '$nor', '$size']);
+const SORT_DIRECTIONS = new Set([constants.ASC_SORTING_DIRECTION, constants.DESC_SORTING_DIRECTION]);
 const MAX_AMOUNT_OF_MEASURES_IN_SELECT = 5;
 
 const VALID_RESPONSE = {
@@ -70,7 +71,8 @@ function validateDdfQuery (query) {
   return applyValidators(query, [
     _validateDdfQueryWhereClause,
     _validateDdfQueryJoinClause,
-    _validateDdfQuerySelectClause
+    _validateDdfQuerySelectClause,
+    _validateDdfQueryOrderByClause
   ]);
 }
 
@@ -136,6 +138,61 @@ function _validateDdfQuerySelectClause(query) {
   return createResponse(errors);
 }
 
+function _validateDdfQueryOrderByClause(query) {
+  query = _.defaults(query, {
+    order_by: []
+  });
+
+  const errorMessages = [];
+  if (!_.isArray(query.order_by)) {
+    errorMessages.push(createOrderByErrorMessage(`order_by should contain an array. Was: ${JSON.stringify(query.order_by)}`));
+  }
+
+  const propertiesAvailableForSorting = new Set(_.concat(_.get(query, 'select.key', []), _.get(query, 'select.value', [])));
+
+  _.reduce(query.order_by, (errorMessages, orderByItem) => {
+    if (_.isNil(orderByItem)) {
+      errorMessages.push(createOrderByErrorMessage('order_by should not contain empty values'));
+    }
+
+    if (_.isArray(orderByItem)) {
+      errorMessages.push(createOrderByErrorMessage('order_by cannot contain arrays as its elements'));
+    }
+
+    if (!_.isString(orderByItem) && !_.isObject(orderByItem)) {
+      errorMessages.push(createOrderByErrorMessage('order_by should contain only string and objects'));
+    }
+
+    if (_.isObject(orderByItem)) {
+      if (_.size(orderByItem) !== 1) {
+        errorMessages.push(createOrderByErrorMessage(
+          `object in order_by clause should contain only one key. Was ${JSON.stringify(_.keys(orderByItem))}`)
+        );
+      }
+
+      const allSortDirectionAreValid = _.every(orderByItem, sortDirection => SORT_DIRECTIONS.has(sortDirection));
+
+      if (!allSortDirectionAreValid) {
+        errorMessages.push(createOrderByErrorMessage(
+          `object in order_by clause should contain only following sort directions: 'asc', 'desc'. Was ${JSON.stringify(orderByItem)}`)
+        );
+      }
+
+      const allPropertiesAreAvailableForSorting = _.every(orderByItem, (sortDirection, property) => propertiesAvailableForSorting.has(property));
+
+      if (!allPropertiesAreAvailableForSorting) {
+        errorMessages.push(createOrderByErrorMessage(
+          `order_by clause should contain only properties from select.key and select.value. Was ${JSON.stringify(orderByItem)}`)
+        );
+      }
+    }
+
+    return errorMessages;
+  }, errorMessages);
+
+  return createResponse(errorMessages);
+}
+
 function createResponse (errorMessages) {
   if(_.isEmpty(errorMessages)) {
     return VALID_RESPONSE;
@@ -149,5 +206,9 @@ function createResponse (errorMessages) {
 }
 
 function isInvalidQueryOperator(operator) {
-  return _.startsWith(operator, "$") && !_.includes(AVAILABLE_QUERY_OPERATORS, operator);
+  return _.startsWith(operator, "$") && !AVAILABLE_QUERY_OPERATORS.has(operator);
+}
+
+function createOrderByErrorMessage(message) {
+  return `Invalid DDFQL-query. Validation of order_by clause: ${message}`;
 }

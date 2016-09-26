@@ -2,13 +2,16 @@
 
 const _ = require('lodash');
 const ddfTimeUtils = require('ddf-time-utils');
+const constants = require('../ws.utils/constants');
 const traverse = require('traverse');
 
 module.exports = {
   toSafeQuery,
   replaceValueOnPath,
   normalizeTimePropertyFilter,
-  isTimePropertyFilter
+  isTimePropertyFilter,
+  normalizeOrderBy,
+  convertOrderByForWsJson
 };
 
 function toSafeQuery(query, options) {
@@ -25,6 +28,10 @@ function toSafeQuery(query, options) {
 
   if (!_.includes(safeOptions.except, 'select')) {
     safeQuery.select = _.get(safeQuery, 'select', {});
+  }
+
+  if (!_.includes(safeOptions.except, 'order_by')) {
+    safeQuery.order_by = _.get(safeQuery, 'order_by', []);
   }
 
   return safeQuery;
@@ -51,6 +58,20 @@ function replaceValueOnPath(options) {
     delete value[key];
     _.set(queryFragment, path, _.merge(value, normalizedValue));
   }
+}
+
+function normalizeOrderBy(query) {
+  if (!_.isArray(query.order_by)) {
+    return;
+  }
+
+  query.order_by = _.map(query.order_by, statement => {
+    if (_.isObject(statement)) {
+      return statement;
+    }
+
+    return {[statement]: constants.ASC_SORTING_DIRECTION};
+  });
 }
 
 function normalizeTimePropertyFilter(key, filterValue, path, query) {
@@ -80,5 +101,20 @@ function normalizeTimePropertyFilter(key, filterValue, path, query) {
 
 function isTimePropertyFilter(key, timeConcepts) {
   return _.includes(timeConcepts, key);
+}
+
+function convertOrderByForWsJson(orderBy, headers) {
+  const propertyIndexToSortDirection = _.map(orderBy, sortDescriptor => {
+    const propertyToSort = _.first(_.keys(sortDescriptor));
+    const propertyToSortIndex = _.findIndex(headers, header => propertyToSort === header);
+    return [String(propertyToSortIndex), sortDescriptor[propertyToSort]];
+  });
+
+  const unzippedPropertyIndexToSortDirection = _.unzip(propertyIndexToSortDirection);
+
+  return {
+    columnsToSort: _.first(unzippedPropertyIndexToSortDirection),
+    columnsSortDirections: _.last(unzippedPropertyIndexToSortDirection)
+  };
 }
 
