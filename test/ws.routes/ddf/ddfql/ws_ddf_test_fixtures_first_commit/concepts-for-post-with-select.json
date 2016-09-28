@@ -1,4 +1,0 @@
-{
-  "success": false,
-  "error": "Invalid DDFQL-query. Validation of Where Clause: contain '.' in color.palette._default"
-}

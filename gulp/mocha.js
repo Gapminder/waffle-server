@@ -9,11 +9,9 @@ gulp.task('test', () => {
 });
 
 gulp.task('e2e', () => {
-  return runMochaOn(['**/*.e2e.js']);
+  return runMochaOn(['test/**/*.e2e.js'], {timeout: 200000});
 });
 
-function runMochaOn(path) {
-  return gulp.src(['!node_modules/**'].concat(path), {read: false}).pipe(mocha({
-    env: {'NODE_ENV': NODE_ENV}
-  }));
+function runMochaOn(path, options) {
+  return gulp.src(['!node_modules/**'].concat(path), {read: false}).pipe(mocha(options));
 }
