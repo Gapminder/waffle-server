@@ -1,4 +1,0 @@
-{
-  "success": false,
-  "error": "You choose select column(s) 'population, life_expectancy, gdp_per_cap, gov_type' which aren't present in choosen dataset"
-}
