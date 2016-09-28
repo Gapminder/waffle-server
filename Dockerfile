@@ -1,7 +1,7 @@
 FROM ubuntu:14.04
 
 RUN apt-get update
-RUN apt-get install -y git python build-essential libssl-dev openssh-server curl redis-tools
+RUN apt-get install -y git python build-essential libssl-dev openssh-server curl redis-tools nfs-common
 
 #RUN curl -sL https://deb.nodesource.com/setup_5.x | sudo -E bash -
 #RUN curl -sL https://deb.nodesource.com/setup_4.x | sudo -E bash -
@@ -38,9 +38,6 @@ EXPOSE 3000
 ARG REDIS_HOST
 ENV REDIS_HOST ${REDIS_HOST}
 
-ARG NEO4J_URL
-ENV NEO4J_URL ${NEO4J_URL}
-
 ARG MONGODB_URL
 ENV MONGODB_URL ${MONGODB_URL}
 
@@ -55,6 +52,9 @@ ENV PATH_TO_DDF_REPOSITORIES ${PATH_TO_DDF_REPOSITORIES}
 ARG NEW_RELIC_LICENSE_KEY
 ENV NEW_RELIC_LICENSE_KEY ${NEW_RELIC_LICENSE_KEY}
 
-ENV NODE_ENV production
+ENV NODE_ENV productiona
+
+ENV TERM xterm-256color
+
 ENTRYPOINT ["/usr/bin/ssh-agent"]
 CMD ["/home/waffle-server/docker_run.js"]
