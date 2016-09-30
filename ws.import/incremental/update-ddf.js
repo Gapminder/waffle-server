@@ -410,7 +410,7 @@ function ___fakeLoadRawOriginalEntities(pipe, done) {
 
   function mergeUpdatedAndChangedEntities(updatedEntities, changedEntities) {
     return _.mapValues(_.groupBy(_.concat(updatedEntities, changedEntities), getGid), values => {
-      return _.merge.apply(null, _.flatMap(values, value => value['data-update']));
+      return _.merge.apply(null, _.flatMap(values, value => _.extend(_.omit(value, 'data-update', 'gid'), value['data-update'])));
     });
   }
 }
