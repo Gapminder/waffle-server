@@ -2,10 +2,9 @@ var _ = require('lodash');
 var path = require('path');
 var winston = require('winston');
 var dailyRotateFile = require('winston-daily-rotate-file');
+const config = require('./config');
 
-module.exports = function (app) {
-  var config = app.get('config');
-
+module.exports = (function () {
   var consoleTransport = new (winston.transports.Console)({
     name: 'console',
     level: config.LOG_LEVEL,
@@ -49,7 +48,5 @@ module.exports = function (app) {
     transports: transports
   });
 
-  app.set('log', logger);
-
   return logger;
-};
+}());

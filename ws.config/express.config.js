@@ -1,25 +1,24 @@
-var path = require('path');
-var express = require('express');
-var bodyParser = require('body-parser');
-var methodOverride = require('method-override');
+'use strict';
 
-var passport = require('passport');
-var logger = require('morgan');
-var favicon = require('static-favicon');
-var cookieParser = require('cookie-parser');
+const path = require('path');
+const logger = require('morgan');
+const favicon = require('static-favicon');
+const express = require('express');
+const passport = require('passport');
+const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
+const methodOverride = require('method-override');
 
-var session = require('express-session');
-var RedisStore = require('connect-redis')(session);
+const session = require('express-session');
+const RedisStore = require('connect-redis')(session);
 
-module.exports = function (app) {
-  // get all data/stuff of the body (POST) parameters
-// parse application/json
+const REQUEST_BODY_SIZE_LIMIT = '50mb';
+
+module.exports = app => {
   app.use(favicon());
   app.use(logger('dev'));
-  app.use(bodyParser.json({limit: '50MB'}));
-
-  app.use(bodyParser.json({type: 'application/vnd.api+json'}));
-  app.use(bodyParser.urlencoded({extended: true}));
+  app.use(bodyParser.json({limit: REQUEST_BODY_SIZE_LIMIT, type: 'application/vnd.api+json'}));
+  app.use(bodyParser.urlencoded({limit: REQUEST_BODY_SIZE_LIMIT, extended: true}));
   app.use(methodOverride('X-HTTP-Method-Override'));
   app.use(cookieParser());
   app.use(session({
@@ -32,16 +31,4 @@ module.exports = function (app) {
   app.use(passport.initialize());
   app.use(passport.session());
   app.set('passport', passport);
-
-// generic req logger
-/*  app.use(function (req, res, next) {
-    var self = this;
-    function _next() {
-      var args = Array.prototype.slice.apply(arguments);
-      console.log(req.method, req.url, req.params, req.body);
-      next.apply(self, args);
-    }
-
-    req.next = _next();
-  });*/
 };

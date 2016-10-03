@@ -42,14 +42,20 @@ module.exports = Object.freeze({
   LOG_TRANSPORTS: DEFAULT_LOG_TRANSPORTS[NODE_ENV] || DEFAULT_LOG_TRANSPORTS[DEFAULT_NODE_ENV],
   LOG_TABS: '\t\t\t',
 
-  REDIS_HOST: 'localhost',
-  REDIS_PORT: 6379,
-  
+  MONGODB_URL: 'mongodb://localhost:27017',
+
+  REDIS_HOST: process.env.REDIS_HOST || 'localhost',
+  REDIS_PORT: process.env.REDIS_PORT || 6379,
+
   NODE_ENV: NODE_ENV,
   SESSION_TIMEOUT: 60000,
 
   MONGOOSE_DEBUG: false,
   CLEAR_MONGO_DB_COLLECTIONS: false,
 
-  PATH_TO_DDF_FOLDER: '../open-numbers/ddf--gapminder_world/output'
+  PATH_TO_DDF_FOLDER: '../open-numbers/ddf--gapminder_world',
+  PATH_TO_DDF_REPOSITORIES: './ws.import/repos',
+  PATH_TO_DIFF_DDF_RESULT_FILE: '../waffle-server-import-cli/requests/operation-result.json',
+
+  CLEAN_EXPORT: false
 });

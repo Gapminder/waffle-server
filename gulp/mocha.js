@@ -4,7 +4,7 @@ const gulp = require('gulp');
 const mocha = require('gulp-mocha');
 
 gulp.task('test', () => {
-  return runMochaOn(['**/*.spec.js']);
+  return runMochaOn(['ws*/**/*.test.js']);
 });
 
 gulp.task('test:e2e', () => {

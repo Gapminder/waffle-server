@@ -34,14 +34,13 @@ Before this script use please, read carefully the next comments:
  2. Put this script into the directory.
  3. Put [run script](./run) from current directory into the directory.
  4. Edit [run script](./run) script: put into this script AWS S3 credentials (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, S3_BUCKET).
- 5. Get MongoDB dump with `gapminder-tools` DB and put it (unpacked `dump` directory) into the directory.
- 6. Run this script.
+ 5. Run this script.
 
 ## Specification of query accepted by WS API
 please read [query specification accepted by WS Public API](ws-public-api.md)
 
 ## Starting auto-generating documentation:
- - to view the local versions of the documentation, you need run ` ./swagger.sh `, also can specify the HOST using param ` WS_URL `, default ` localhost:3000 ` 
+ - to view the local versions of the documentation, you need run ` ./swagger.sh `, also can specify the HOST using param ` WS_URL `, default ` localhost:3000 `
  - to view for documentation through [editor swagger] (http://editor.swagger.io/#/) need to go the route `/swagger-docs.json`
  - to view swagger.json take the route `/api-docs.json'`
 
@@ -49,52 +48,48 @@ please read [query specification accepted by WS Public API](ws-public-api.md)
 
 ```
 ├── lint
-├── swagger
 ├── test
-├── changelog
-├── release
-└─┬ default
-  ├── lint
-  └── test
+├── test:e2e
+├── swagger
+└─ default
+ ├── lint
+ ├── test
+ └── swagger
 ```
 
 1. `gulp lint` - checks codebase using `eslint`
 2. `gulp swagger` - generates swagger.json based on the swagger-jsdoc comments in the code
 3. `gulp test` - runs all the unit tests
-4. `gulp changelog` - generates content for `CHANGELOG.md` file with changes that have happened since last release
-5. `gulp release` - this one is a bit more complicated. Let's start with what it needs in order to run.
-  - `GITHUB_RELEASE_TOKEN` environment variable should be set up for this task:
+4. `gulp test:e2e` - runs all the end to end tests
 
-    Example: `GITHUB_RELEASE_TOKEN=aaaaaaaaaabbbbbbbbbbccccccccccffffffffff gulp release`
-    If `GITHUB_RELEASE_TOKEN` is not provided - error will be thrown and nothing happens.
 
-  - this task understands following parameters:
-    - `--major` (having initially version **0.0.0** by applying this option it will be changed to **1.0.0**).
+## Release
+1. `npm run changelog` - generates content for `CHANGELOG.md` file with changes that have happened since last release
+2. `npm version` - this one is a bit more complicated. Let's start with what it needs in order to run.
+  - `CONVENTIONAL_GITHUB_RELEASER_TOKEN` environment variable should be set up for this command:
 
-        Example:
-        ```
-          GITHUB_RELEASE_TOKEN=aaaaaaaaaabbbbbbbbbbccccccccccffffffffff gulp release --major
-        ```
+    Example: `CONVENTIONAL_GITHUB_RELEASER_TOKEN=aaaaaaaaaabbbbbbbbbbccccccccccffffffffff npm version minor`
 
-    - `--minor` (having initially version **0.0.0** by applying this option it will be changed to **0.1.0**)
+  - this command understands following parameters:
+    - `major` (having initially version **0.0.0** by applying this option it will be changed to **1.0.0**).
 
         Example:
         ```
-          GITHUB_RELEASE_TOKEN=aaaaaaaaaabbbbbbbbbbccccccccccffffffffff gulp release --minor
+          CONVENTIONAL_GITHUB_RELEASER_TOKEN=aaaaaaaaaabbbbbbbbbbccccccccccffffffffff npm version major
         ```
 
-    - `--patch` (having initially version **0.0.0** by applying this option it will be changed to **0.0.1**)
-
-        Example:
-        ```
-          GITHUB_RELEASE_TOKEN=aaaaaaaaaabbbbbbbbbbccccccccccffffffffff gulp release --patch
-        ```
-
-    - By default `--patch is used` so point above is equivalent to:
+    - `minor` (having initially version **0.0.0** by applying this option it will be changed to **0.1.0**)
 
         Example:
         ```
-          GITHUB_RELEASE_TOKEN=aaaaaaaaaabbbbbbbbbbccccccccccffffffffff gulp release
+          CONVENTIONAL_GITHUB_RELEASER_TOKEN=aaaaaaaaaabbbbbbbbbbccccccccccffffffffff npm version minor
+        ```
+
+    - `patch` (having initially version **0.0.0** by applying this option it will be changed to **0.0.1**)
+
+        Example:
+        ```
+          CONVENTIONAL_GITHUB_RELEASER_TOKEN=aaaaaaaaaabbbbbbbbbbccccccccccffffffffff npm version patch
         ```
 
     During the release process two files will be changed and pushed to github:
@@ -102,6 +97,8 @@ please read [query specification accepted by WS Public API](ws-public-api.md)
       2. package.json - because of bumped version.
 
     **Note:** `aaaaaaaaaabbbbbbbbbbccccccccccffffffffff` - is the fake token. In order to generate proper one you need to do following: [github tutorial](https://help.github.com/articles/creating-an-access-token-for-command-line-use)
+
+    **Important note:** you should merge `development` branch into `master` and **performing `npm verison` on `master`** branch according to our [gitflow](https://github.com/valor-software/valor-style-guides/tree/master/gitflow)
 
     **Even more important note:** while generating token (using tutorial given above) you need to choose which permissions should be granted to it. For our *release purposes* you need to choose all permissions under the section `repo`
 

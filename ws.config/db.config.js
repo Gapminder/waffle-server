@@ -1,28 +1,20 @@
 //eslint-disable
-var mongoose = require('mongoose');
-var Neo4j = require('node-neo4j');
+const mongoose = require('mongoose');
+const config = require('./config');
 
-module.exports = function (app) {
-  var config = app.get('config');
-  var mongoUri = config.MONGODB_URL;
-  var db = mongoose.connection;
+mongoose.Promise = require('bluebird');
+const db = mongoose.connection;
+mongoose.set('debug', config.MONGOOSE_DEBUG);
+mongoose.connect(config.MONGODB_URL);
 
-  mongoose.set('debug', false);
-  mongoose.connect(mongoUri);
+db.on('error', function (err) {
+  console.log('db connect error', err);
+});
 
-  var neo4jDb = new Neo4j(config.NEO4J_URL);
+db.once('open', function () {
+  console.log('db connect good');
+});
 
-  app.set('neo4jDb', neo4jDb);
-
-  db.on('error', function (err) {
-    console.log('db connect error', err);
-  });
-
-  db.once('open', function () {
-    console.log('db connect good');
-  });
-
-  db.once('close', function () {
-    console.log('db connect close');
-  });
-};
+db.once('close', function () {
+  console.log('db connect close');
+});
