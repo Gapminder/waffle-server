@@ -4,7 +4,7 @@
   "description": "Waffle server",
   "main": "app.js",
   "scripts": {
-    "test": "gulp test",
+    "test": "NODE_ENV=test gulp test",
     "test:coverage": "istanbul --include-all-sources cover _mocha -- -R spec 'ws*/**/*.test.js'",
     "swagger": "./node_modules/.bin/gulp swagger",
     "dev": "NODE_ENV=development npm run start",
@@ -69,7 +69,7 @@
     "eslint": "3.6.0",
     "gulp": "3.9.1",
     "gulp-eslint": "3.0.1",
-    "gulp-mocha": "3.0.1",
+    "gulp-spawn-mocha": "3.1.0",
     "istanbul": "0.4.5",
     "mocha": "3.0.2",
     "pre-commit": "1.1.3",
