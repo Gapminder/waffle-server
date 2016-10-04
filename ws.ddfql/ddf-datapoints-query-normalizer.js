@@ -16,16 +16,12 @@ function normalizeDatapoints(query, concepts) {
   const safeQuery = ddfQueryUtils.toSafeQuery(query);
   const safeConcepts = concepts || [];
 
-  const timeConcepts = _.chain(safeConcepts)
-    .filter(_.iteratee(['properties.concept_type', 'time']))
-    .map(constants.GID)
-    .value();
   const conceptOriginIdsByGids = _.chain(safeConcepts)
     .keyBy(constants.GID)
     .mapValues(constants.ORIGIN_ID)
     .value();
 
-  normalizeDatapointDdfQuery(safeQuery, timeConcepts);
+  normalizeDatapointDdfQuery(safeQuery, concepts);
   substituteDatapointConceptsWithIds(safeQuery, conceptOriginIdsByGids);
 
   return safeQuery;
@@ -68,14 +64,14 @@ function substituteDatapointConceptsWithIds(query, conceptsToIds) {
   return query;
 }
 
-function normalizeDatapointDdfQuery(query, timeConcepts) {
-  normalizeWhere(query);
-  normalizeJoin(query, timeConcepts);
+function normalizeDatapointDdfQuery(query, concepts) {
+  normalizeWhere(query, concepts);
+  normalizeJoin(query, concepts);
   ddfQueryUtils.normalizeOrderBy(query);
   return query;
 }
 
-function normalizeWhere(query) {
+function normalizeWhere(query, concepts) {
   let numParsedLinks = 0;
 
   traverse(query.where).forEach(function (filterValue) {
@@ -125,7 +121,10 @@ function normalizeWhere(query) {
 
   query.where = {
     $and: [
-      {dimensions: {$size: _.size(query.select.key)}},
+      {dimensions: {
+        $size: _.size(query.select.key),
+        $all: getParsedDomainSubQuery(query, concepts)
+      }},
       {measure: {$in: query.select.value}}
     ]
   };
@@ -135,17 +134,47 @@ function normalizeWhere(query) {
   }
 }
 
-function normalizeJoin(query, timeConcepts) {
+function getParsedDomainSubQuery(query, concepts) {
+  const conceptsByGids = _.keyBy(concepts, constants.GID);
+  const conceptsByOriginIds = _.keyBy(concepts, constants.ORIGIN_ID);
+
+  return _.map(query.select.key, conceptGid => {
+    const concept = conceptsByGids[conceptGid];
+    const domain = concept.domain ? conceptsByOriginIds[concept.domain] : concept;
+    const parsedDomainJoinLink = `$parsed_domain_${domain[constants.GID]}_${Math.random()}`;
+
+    query.join[parsedDomainJoinLink] = {
+      key: domain[constants.GID],
+      where: {}
+    };
+    return {$elemMatch: parsedDomainJoinLink};
+  });
+}
+
+function normalizeJoin(query, concepts) {
+  const conceptsGids = _.map(concepts, constants.GID);
+  const timeConcepts = _.chain(concepts)
+    .filter(_.iteratee(['properties.concept_type', 'time']))
+    .map(constants.GID)
+    .value();
+
   traverse(query.join).forEach(function (filterValue) {
     let normalizedFilter = null;
 
     if (isEntityFilter(this.key, query)) {
       if (ddfQueryUtils.isTimePropertyFilter(this.key, timeConcepts)) {
         normalizedFilter = ddfQueryUtils.normalizeTimePropertyFilter(this.key, filterValue, this.path, query.join);
-      } else {
+      } else if (_.isString(filterValue)) {
         normalizedFilter = {
           gid: filterValue
         };
+      } else if (_.isObject(filterValue) && !_.isEmpty(filterValue)) {
+        normalizedFilter = _.mapKeys(filterValue, (subFilter, key) => {
+          if (_.includes(conceptsGids, key.replace(/^is\-\-/g, ''))) {
+            return `properties.${key}`;
+          }
+          return key;
+        });
       }
     }
 

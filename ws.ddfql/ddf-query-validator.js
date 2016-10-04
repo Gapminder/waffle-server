@@ -7,7 +7,7 @@ const traverse = require('traverse');
 
 const constants = require('../ws.utils/constants');
 
-const AVAILABLE_QUERY_OPERATORS = new Set(['$eq', '$gt', '$gte', '$lt', '$lte', '$ne', '$in', '$nin', '$or', '$and', '$not', '$nor', '$size']);
+const AVAILABLE_QUERY_OPERATORS = new Set(['$eq', '$gt', '$gte', '$lt', '$lte', '$ne', '$in', '$nin', '$or', '$and', '$not', '$nor', '$size', '$all', '$elemMatch']);
 const SORT_DIRECTIONS = new Set([constants.ASC_SORTING_DIRECTION, constants.DESC_SORTING_DIRECTION]);
 const MAX_AMOUNT_OF_MEASURES_IN_SELECT = 5;
 
