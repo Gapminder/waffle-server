@@ -392,7 +392,7 @@ describe('ddf datapoints query normalizer', () => {
       "from": "datapoints",
       "where": {
         "$and": [
-          {"time": "$time"},
+          {"time": "$time"}
         ]
       },
       "join": {
@@ -892,8 +892,8 @@ describe('ddf datapoints query normalizer', () => {
           {"dimensions": {
             "$size": 2,
             "$all": [
-              {$elemMatch: "$parsed_domain_geo_1"},
-              {$elemMatch: "$parsed_domain_quarter_1"}
+              {$elemMatch: "$parsed_domain_geo_4"},
+              {$elemMatch: "$parsed_domain_quarter_5"}
             ]
           }},
           {"measure": {"$in": ["sg_population"]}},
@@ -925,26 +925,27 @@ describe('ddf datapoints query normalizer', () => {
           "domain": "geo",
           "gid": "dza",
         },
-        "$parsed_domain_geo_1": {
+        "$parsed_domain_geo_4": {
           "domain": "geo",
         },
-        "$parsed_domain_quarter_1": {
+        "$parsed_domain_quarter_5": {
           "domain": "quarter"
         }
       }
     };
 
-    const mock = sinon.mock(Math);
-    mock.expects("random").twice().returns(1);
+    let numParsedLinks = 0;
+    sinon.stub(Math, "random", () => {
+      return ++numParsedLinks;
+    });
 
     const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, concepts);
     expect(actualDdfql).to.deep.equal(normalizedDdfql);
 
-    mock.verify();
-    mock.restore();
+    Math.random.restore();
   });
 
-  it('should normalize where and join clauses for simpliest query to datapoints', () => {
+  it('should normalize query without where and join clauses', () => {
     const ddfql = {
         "from": "datapoints",
         "select": {
@@ -971,7 +972,7 @@ describe('ddf datapoints query normalizer', () => {
             "$size": 2,
             "$all": [
               {$elemMatch: "$parsed_domain_geo_1"},
-              {$elemMatch: "$parsed_domain_time_1"}
+              {$elemMatch: "$parsed_domain_time_2"}
             ]
           }},
           {"measure": {"$in": ["sg_population"]}},
@@ -981,23 +982,24 @@ describe('ddf datapoints query normalizer', () => {
         "$parsed_domain_geo_1": {
           "domain": "geo",
         },
-        "$parsed_domain_time_1": {
+        "$parsed_domain_time_2": {
           "domain": "time"
         }
       }
     };
 
-    const mock = sinon.mock(Math);
-    mock.expects("random").twice().returns(1);
+    let numParsedLinks = 0;
+    sinon.stub(Math, "random", () => {
+      return ++numParsedLinks;
+    });
 
     const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, concepts);
     expect(actualDdfql).to.deep.equal(normalizedDdfql);
 
-    mock.verify();
-    mock.restore();
+    Math.random.restore();
   });
 
-  it('should parse and normalize join clauses for simpliest query to datapoints', () => {
+  it('should parse `{"geo": {"is--country": true}}` in where clause', () => {
     const ddfql = {
       "from": "datapoints",
       "select": {
@@ -1027,8 +1029,8 @@ describe('ddf datapoints query normalizer', () => {
           {"dimensions": {
             "$size": 2,
             "$all": [
-              {$elemMatch: "$parsed_domain_geo_1"},
-              {$elemMatch: "$parsed_domain_time_1"}
+              {$elemMatch: "$parsed_domain_geo_3"},
+              {$elemMatch: "$parsed_domain_time_4"}
             ]
           }},
           {"measure": {"$in": ["sg_population"]}},
@@ -1048,22 +1050,91 @@ describe('ddf datapoints query normalizer', () => {
           "parsedProperties.time.timeType": "YEAR_TYPE",
           "parsedProperties.time.millis": {"$lte": 1420070400000, "$gte": -5364662400000}
         },
-        "$parsed_domain_geo_1": {
+        "$parsed_domain_geo_3": {
           "domain": "geo",
         },
-        "$parsed_domain_time_1": {
+        "$parsed_domain_time_4": {
           "domain": "time"
         }
       }
     };
 
-    const mock = sinon.mock(Math);
-    mock.expects("random").twice().returns(1);
+    let numParsedLinks = 0;
+    sinon.stub(Math, "random", () => {
+      return ++numParsedLinks;
+    });
 
     const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, concepts);
     expect(actualDdfql).to.deep.equal(normalizedDdfql);
 
-    mock.verify();
-    mock.restore();
+    Math.random.restore();
+  });
+
+  it('should parse `{"geo.is--country": true}` in where clause', () => {
+    const ddfql = {
+      "from": "datapoints",
+      "select": {
+        "key": ["geo", "time"],
+        "value": ["sg_population"]
+      },
+      "where": {
+        "$and": [
+          {"geo.is--country": true},
+          {"time": {"$gte": 1800, "$lte": 2015}}
+        ]
+      },
+      join: {}
+    };
+
+    const normalizedDdfql = {
+      "select": {
+        "key": ["geo", "time"],
+        "value": ["sg_population"]
+      },
+      "from": "datapoints",
+      "where": {
+        "$and": [
+          {"dimensions": {
+            "$size": 2,
+            "$all": [
+              {$elemMatch: "$parsed_domain_geo_3"},
+              {$elemMatch: "$parsed_domain_time_4"}
+            ]
+          }},
+          {"measure": {"$in": ["sg_population"]}},
+          {"$and": [
+            {"dimensions": "$parsed_geo_1"},
+            {"dimensions": "$parsed_time_2"}
+          ]}
+        ],
+      },
+      "join": {
+        "$parsed_geo_1": {
+          "domain": "geo",
+          "properties.is--country": true
+        },
+        "$parsed_time_2": {
+          "domain": "time",
+          "parsedProperties.time.timeType": "YEAR_TYPE",
+          "parsedProperties.time.millis": {"$lte": 1420070400000, "$gte": -5364662400000}
+        },
+        "$parsed_domain_geo_3": {
+          "domain": "geo",
+        },
+        "$parsed_domain_time_4": {
+          "domain": "time"
+        }
+      }
+    };
+
+    let numParsedLinks = 0;
+    sinon.stub(Math, "random", () => {
+      return ++numParsedLinks;
+    });
+
+    const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, concepts);
+    expect(actualDdfql).to.deep.equal(normalizedDdfql);
+
+    Math.random.restore();
   });
 });

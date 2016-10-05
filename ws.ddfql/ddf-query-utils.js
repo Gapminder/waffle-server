@@ -5,13 +5,21 @@ const ddfTimeUtils = require('ddf-time-utils');
 const constants = require('../ws.utils/constants');
 const traverse = require('traverse');
 
+const normalizeKey = _.flow([cutPrefixByDot, _.partialRight(_.split, '.'), _.first, cutPrefixByDashes]);
+
 module.exports = {
   toSafeQuery,
   replaceValueOnPath,
   normalizeTimePropertyFilter,
   isTimePropertyFilter,
   normalizeOrderBy,
-  convertOrderByForWsJson
+  convertOrderByForWsJson,
+  isEntityPropertyFilter,
+  getPrefixByDot,
+  cutPrefixByDashes,
+  cutPrefixByDot,
+  wrapEntityProperties,
+  normalizeKey
 };
 
 function toSafeQuery(query, options) {
@@ -118,3 +126,26 @@ function convertOrderByForWsJson(orderBy, headers) {
   };
 }
 
+function isEntityPropertyFilter(key, resolvedProperties) {
+  return _.includes(resolvedProperties, normalizeKey(key));
+}
+
+function getPrefixByDot(value) {
+  return _.chain(value).split('.').first().value();
+}
+
+function cutPrefixByDot(value, prefix) {
+  if (prefix) {
+    return _.replace(value, new RegExp(`^${prefix}\.`), '');
+  }
+
+  return _.replace(value, /^\w*\./, '');
+}
+
+function cutPrefixByDashes(value) {
+  return _.replace(value, /^is--/, '');
+}
+
+function wrapEntityProperties(key) {
+  return `properties.${key}`;
+}
