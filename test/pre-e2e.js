@@ -14,7 +14,7 @@ e2eUtils.dropMongoDb();
 e2eUtils.stopWaffleServer();
 e2eUtils.startWaffleServer();
 
-shell.exec('sleep 7');
+shell.exec('sleep 12');
 
 const cliUtils = require('./cli.utils');
 process.on('SIGINT', () => {

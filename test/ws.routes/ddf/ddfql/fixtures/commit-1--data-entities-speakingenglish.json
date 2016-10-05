@@ -1,0 +1,16 @@
+{
+  "headers": [
+    "company",
+    "name"
+  ],
+  "rows": [
+    [
+      "mic",
+      "Microsoft"
+    ],
+    [
+      "gap",
+      "Gapminder"
+    ]
+  ]
+}

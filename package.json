@@ -84,7 +84,7 @@
     "synchronize": "2.0.0",
     "through2": "2.0.1",
     "vinyl": "1.2.0",
-    "waffle-server-import-cli": "2.4.4"
+    "waffle-server-import-cli": "2.4.5"
   },
   "repository": {
     "type": "git",
