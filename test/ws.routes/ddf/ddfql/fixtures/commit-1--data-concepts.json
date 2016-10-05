@@ -1,0 +1,52 @@
+{
+  "headers": [
+    "concept"
+  ],
+  "rows": [
+    [
+      "company"
+    ],
+    [
+      "english_speaking"
+    ],
+    [
+      "foundation"
+    ],
+    [
+      "company_size"
+    ],
+    [
+      "name"
+    ],
+    [
+      "anno"
+    ],
+    [
+      "lines_of_code"
+    ],
+    [
+      "region"
+    ],
+    [
+      "country"
+    ],
+    [
+      "num_users"
+    ],
+    [
+      "latitude"
+    ],
+    [
+      "longitude"
+    ],
+    [
+      "full_name"
+    ],
+    [
+      "project"
+    ],
+    [
+      "domain"
+    ]
+  ]
+}

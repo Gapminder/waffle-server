@@ -10,5 +10,5 @@ module.exports = {
   },
   wsUid: 'ws-e2e',
   wsLogLevel: 'debug',
-  repo: 'git@github.com:VS-work/ddf--gapminder--systema_globalis--light.git'
+  repo: 'git@github.com:VS-work/ddf--ws-testing.git'
 };
