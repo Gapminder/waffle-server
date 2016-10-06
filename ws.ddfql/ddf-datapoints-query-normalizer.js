@@ -16,17 +16,8 @@ function normalizeDatapoints(query, concepts) {
   const safeQuery = ddfQueryUtils.toSafeQuery(query);
   const safeConcepts = concepts || [];
 
-  const timeConcepts = _.chain(safeConcepts)
-    .filter(_.iteratee(['properties.concept_type', 'time']))
-    .map(constants.GID)
-    .value();
-  const conceptOriginIdsByGids = _.chain(safeConcepts)
-    .keyBy(constants.GID)
-    .mapValues(constants.ORIGIN_ID)
-    .value();
-
-  normalizeDatapointDdfQuery(safeQuery, timeConcepts);
-  substituteDatapointConceptsWithIds(safeQuery, conceptOriginIdsByGids);
+  normalizeDatapointDdfQuery(safeQuery, safeConcepts);
+  substituteDatapointConceptsWithIds(safeQuery, safeConcepts);
 
   return safeQuery;
 }
@@ -43,15 +34,24 @@ function substituteDatapointJoinLinks(query, linksInJoinToValues) {
   return safeQuery;
 }
 
-function substituteDatapointConceptsWithIds(query, conceptsToIds) {
+function substituteDatapointConceptsWithIds(query, concepts) {
+  const conceptOriginIdsByGids = _.chain(concepts)
+    .keyBy(constants.GID)
+    .mapValues(constants.ORIGIN_ID)
+    .value();
+
   traverse(query.where).forEach(function (concept) {
     if (shouldSubstituteValueWithId(concept, query, this.key)) {
       let id;
 
       if (_.isArray(concept)) {
-        id = _.map(concept, conceptGid => conceptsToIds[conceptGid]);
+        id = _.chain(concept)
+          .filter((conceptGid) => !!conceptOriginIdsByGids[conceptGid])
+          .map(conceptGid => conceptOriginIdsByGids[conceptGid].toString())
+          .value();
       } else {
-        id = conceptsToIds[concept];
+        id = _.get(conceptOriginIdsByGids, concept, false);
+        id = id ? id.toString() : id;
       }
 
       this.update(id ? id : concept);
@@ -60,24 +60,22 @@ function substituteDatapointConceptsWithIds(query, conceptsToIds) {
 
   traverse(query.join).forEach(function (concept) {
     if (shouldSubstituteValueWithId(concept, query)) {
-      const id = conceptsToIds[concept];
-      this.update(id ? id : concept);
+      const id = _.get(conceptOriginIdsByGids, concept, false);
+      this.update(id ? id.toString() : concept);
     }
   });
 
   return query;
 }
 
-function normalizeDatapointDdfQuery(query, timeConcepts) {
-  normalizeWhere(query);
-  normalizeJoin(query, timeConcepts);
+function normalizeDatapointDdfQuery(query, concepts) {
+  normalizeWhere(query, concepts);
+  normalizeJoin(query, concepts);
   ddfQueryUtils.normalizeOrderBy(query);
   return query;
 }
 
-function normalizeWhere(query) {
-  let numParsedLinks = 0;
-
+function normalizeWhere(query, concepts) {
   traverse(query.where).forEach(function (filterValue) {
     let normalizedFilter = null;
 
@@ -89,26 +87,13 @@ function normalizeWhere(query) {
     }
 
     if (isEntityFilter(this.key, query)) {
-      const join = _.get(query, 'join', {});
-      const isUsedExistedLink = _.startsWith(filterValue, '$') && join.hasOwnProperty(filterValue);
-
-      if (isUsedExistedLink) {
-        normalizedFilter = {
-          dimensions: filterValue,
-        };
-      } else {
-        numParsedLinks++;
-        const joinLink = `$parsed_${this.key}_${numParsedLinks}`;
-
-        query.join[joinLink] = {
-          key: this.key,
-          where: {[this.key]: filterValue}
-        };
-
-        normalizedFilter = {
-          dimensions: joinLink
-        };
-      }
+      normalizedFilter = evaluateNormalizedFilterByEntityFilter(filterValue, this.key, query);
+    } else if (isEntityFilter(ddfQueryUtils.getPrefixByDot(this.key), query)) {
+      const domainKey = ddfQueryUtils.getPrefixByDot(this.key);
+      const domainWhere = {
+        [ddfQueryUtils.cutPrefixByDot(this.key)]: filterValue
+      };
+      normalizedFilter = evaluateNormalizedFilterByEntityFilter(domainWhere, domainKey, query);
     }
 
     if (normalizedFilter) {
@@ -125,7 +110,10 @@ function normalizeWhere(query) {
 
   query.where = {
     $and: [
-      {dimensions: {$size: _.size(query.select.key)}},
+      {dimensions: {
+        $size: _.size(query.select.key),
+        $all: getParsedDomainSubQuery(query, concepts)
+      }},
       {measure: {$in: query.select.value}}
     ]
   };
@@ -135,29 +123,80 @@ function normalizeWhere(query) {
   }
 }
 
-function normalizeJoin(query, timeConcepts) {
+function evaluateNormalizedFilterByEntityFilter(filterValue, key, query) {
+  const join = _.get(query, 'join', {});
+  const isUsedExistedLink = _.startsWith(filterValue, '$') && join.hasOwnProperty(filterValue);
+
+  if (isUsedExistedLink) {
+    return {
+      dimensions: filterValue,
+    };
+  }
+
+  const joinLink = `$parsed_${key}_${Math.random()}`;
+
+  query.join[joinLink] = {
+    key: key,
+    where: {[key]: filterValue}
+  };
+
+  return {
+    dimensions: joinLink
+  };
+
+}
+
+function getParsedDomainSubQuery(query, concepts) {
+  const conceptsByGids = _.keyBy(concepts, constants.GID);
+  const conceptsByOriginIds = _.keyBy(concepts, constants.ORIGIN_ID);
+
+  return _.map(query.select.key, conceptGid => {
+    const concept = conceptsByGids[conceptGid];
+    const domain = concept.domain ? conceptsByOriginIds[concept.domain] : concept;
+    const parsedDomainJoinLink = `$parsed_domain_${domain[constants.GID]}_${Math.random()}`;
+
+    query.join[parsedDomainJoinLink] = {
+      key: domain[constants.GID],
+      where: {}
+    };
+    return {$elemMatch: parsedDomainJoinLink};
+  });
+}
+
+function normalizeJoin(query, concepts) {
+  const conceptGids = _.map(concepts, constants.GID);
+  const timeConcepts = _.chain(concepts)
+    .filter(_.iteratee(['properties.concept_type', 'time']))
+    .map(constants.GID)
+    .value();
+
   traverse(query.join).forEach(function (filterValue) {
     let normalizedFilter = null;
 
     if (isEntityFilter(this.key, query)) {
       if (ddfQueryUtils.isTimePropertyFilter(this.key, timeConcepts)) {
         normalizedFilter = ddfQueryUtils.normalizeTimePropertyFilter(this.key, filterValue, this.path, query.join);
-      } else {
+      } else if (!_.isObject(filterValue)) {
         normalizedFilter = {
           gid: filterValue
         };
+      } else {
+        normalizedFilter = _.mapKeys(filterValue, (subFilter, subkey) => {
+          if (ddfQueryUtils.isEntityPropertyFilter(subkey, conceptGids)) {
+            return ddfQueryUtils.wrapEntityProperties(subkey);
+          }
+          return subkey;
+        });
       }
     }
 
-    if (isEntityPropertyFilter(this.key, query)) {
+    if (isDatapointEntityPropertyFilter(this.key, query)) {
       if (_.includes(this.path, 'where')) {
-        // TODO: `^${domainKey}\.` is just hack for temporary support of current query from Vizabi. It will be removed.
-        let domainPath = _.slice(this.path, 0, this.path.indexOf('where')).concat(['domain']);
-        const domainKey = _.get(query.join, domainPath);
+        const domainKey = getDomainKey(this.path, query);
 
-        const key = this.key.replace(new RegExp(`^${domainKey}\.`), '');
+        const key = ddfQueryUtils.cutPrefixByDot(this.key, domainKey);
         normalizedFilter = {
-          [`properties.${key}`]: filterValue,
+          [ddfQueryUtils.wrapEntityProperties(key)]: filterValue,
         };
       }
     }
@@ -181,6 +220,11 @@ function normalizeJoin(query, timeConcepts) {
   pullUpWhereSectionsInJoin(query);
 }
 
+function getDomainKey(path, query) {
+  let domainPath = _.slice(path, 0, path.indexOf('where')).concat(['domain']);
+  return _.get(query.join, domainPath);
+}
+
 function pullUpWhereSectionsInJoin(query) {
   traverse(query.join).forEach(function () {
     if (this.key === 'where') {
@@ -202,7 +246,7 @@ function isEntityFilter(key, query) {
   return _.includes(query.select.key, key);
 }
 
-function isEntityPropertyFilter(key, query) {
+function isDatapointEntityPropertyFilter(key, query) {
   // const concept = _.head(_.split(key, '.'));
   // return _.includes(query.select.key, concept) && _.includes(key, `${concept}.`);
   return !isEntityFilter(key, query) && !isOperator(key) && isNaN(Number(key));

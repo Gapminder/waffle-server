@@ -35,8 +35,8 @@ function substituteEntityJoinLinks(query, linksInJoinToValues) {
 
 function substituteEntityConceptsWithIds(query, concepts) {
   const conceptsToIds = _.chain(concepts)
-    .keyBy('gid')
-    .mapValues('originId')
+    .keyBy(constants.GID)
+    .mapValues(constants.ORIGIN_ID)
     .value();
 
   traverse(query.where).forEach(function (concept) {
@@ -75,12 +75,12 @@ function normalizeWhere(query, concepts) {
     let normalizedFilter = null;
     const selectKey = _.first(query.select.key);
 
-    if (isEntityPropertyFilter(selectKey, this.key, conceptGids)) {
+    if (ddfQueryUtils.isEntityPropertyFilter(this.key, conceptGids)) {
       if (ddfQueryUtils.isTimePropertyFilter(this.key, timeConcepts)) {
         normalizedFilter = ddfQueryUtils.normalizeTimePropertyFilter(this.key, filterValue, this.path, query.where);
       } else {
         normalizedFilter = {
-          [`properties.${this.key}`]: filterValue,
+          [ddfQueryUtils.wrapEntityProperties(this.key)]: filterValue,
         };
       }
     }
@@ -104,7 +104,7 @@ function normalizeWhere(query, concepts) {
 
   const subWhere = query.where;
 
-  const conceptOriginId = _.get(conceptsByGids, `${query.select.key}.originId`, null);
+  const conceptOriginId = _.get(conceptsByGids, `${query.select.key}.${constants.ORIGIN_ID}`, null);
 
   query.where = {
     $and: [
@@ -126,19 +126,18 @@ function normalizeJoin(query, concepts) {
     .filter(_.iteratee(['properties.concept_type', 'time']))
     .map(constants.GID)
     .value();
-  const conceptsByGid = _.keyBy(concepts, 'gid');
-  const resolvedProperties = _.map(concepts, 'gid');
+  const conceptsByGid = _.keyBy(concepts, constants.GID);
+  const resolvedProperties = _.map(concepts, constants.GID);
 
   traverse(query.join).forEach(function (filterValue) {
     let normalizedFilter = null;
-    const selectKey = _.first(query.select.key);
 
-    if (isEntityPropertyFilter(selectKey, this.key, resolvedProperties) && _.includes(this.path, 'where')) {
+    if (ddfQueryUtils.isEntityPropertyFilter(this.key, resolvedProperties) && _.includes(this.path, 'where')) {
       if (ddfQueryUtils.isTimePropertyFilter(this.key, timeConcepts)) {
         normalizedFilter = ddfQueryUtils.normalizeTimePropertyFilter(this.key, filterValue, this.path, query.join);
       } else {
         normalizedFilter = {
-          [`properties.${this.key}`]: filterValue,
+          [ddfQueryUtils.wrapEntityProperties(this.key)]: filterValue,
         };
       }
     }
@@ -186,15 +185,6 @@ function isDomainFilter(key) {
 
 function isSetFilter(key) {
   return key === 'sets';
-}
-
-function isEntityPropertyFilter(selectKey, key, resolvedProperties) {
-  // TODO: `^${selectKey}\.` is just hack for temporary support of current query from Vizabi. It will be removed.
-  const normalizedKey = _.chain(key)
-    .replace(new RegExp(`^${selectKey}\.`), '')
-    .split('.').first().replace(/^is--/, '').value();
-
-  return _.includes(resolvedProperties, normalizedKey);
 }
 
 function shouldSubstituteValueWithId(key) {

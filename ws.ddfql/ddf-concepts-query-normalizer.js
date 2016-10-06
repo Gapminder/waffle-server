@@ -23,7 +23,7 @@ function normalizeConceptDdfQuery(query, concepts) {
 
 function normalizeWhere(query, concepts) {
   const resolvedProperties = _.chain(concepts)
-    .map('gid')
+    .map(constants.GID)
     .concat(['concept', 'concept_type'])
     .sort()
     .value();
@@ -33,7 +33,7 @@ function normalizeWhere(query, concepts) {
 
     if (isConceptPropertyFilter(this.key, resolvedProperties)) {
       normalizedFilter = {
-        [`properties.${this.key}`]: filterValue,
+        [ddfQueryUtils.wrapEntityProperties(this.key)]: filterValue,
       };
     }
 
