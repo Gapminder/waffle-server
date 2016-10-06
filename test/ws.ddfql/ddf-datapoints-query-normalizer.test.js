@@ -12,8 +12,8 @@ const concepts = [
   {gid: 'country'}
 ];
 
-describe('ddf datapoints query normalizer', () => {
-  it('should normalize where and join clauses', () => {
+describe('ddf datapoints query normalizer - queries simplification', () => {
+  it('should normalize where and join clauses for full example', () => {
     const ddfql = {
       "select": {
         "key": ["geo", "time"],
@@ -150,7 +150,291 @@ describe('ddf datapoints query normalizer', () => {
     mock.restore();
   });
 
-  it('should normalize where and join clauses - QUARTER time type should be parsed', () => {
+  it('should create links in join section for entities filter', () => {
+    const ddfql = {
+      "select": {
+        "key": ["geo", "quarter"],
+        "value": [
+          "sg_population"
+        ]
+      },
+      "from": "datapoints",
+      "where": {
+        "$and": [
+          {
+            "$or": [
+              {"quarter": "2012q4"},
+              {"quarter": "2015q3"}
+            ]
+          },
+          {"geo": "dza"}
+        ]
+      },
+      join: {}
+    };
+
+    const normalizedDdfql = {
+      "select": {
+        "key": ["geo", "quarter"],
+        "value": [
+          "sg_population"
+        ]
+      },
+      "from": "datapoints",
+      "where": {
+        "$and": [
+          {"dimensions": {
+            "$size": 2,
+            "$all": [
+              {$elemMatch: "$parsed_domain_geo_4"},
+              {$elemMatch: "$parsed_domain_quarter_5"}
+            ]
+          }},
+          {"measure": {"$in": ["sg_population"]}},
+          {
+            "$and": [
+              {
+                "$or": [
+                  {"dimensions": "$parsed_quarter_1"},
+                  {"dimensions": "$parsed_quarter_2"}
+                ]
+              },
+              {"dimensions": "$parsed_geo_3"}
+            ]
+          }
+        ]
+      },
+      "join": {
+        "$parsed_quarter_1": {
+          "domain": "quarter",
+          "parsedProperties.quarter.timeType": "QUARTER_TYPE",
+          "parsedProperties.quarter.millis": 1349049600000
+        },
+        "$parsed_quarter_2": {
+          "domain": "quarter",
+          "parsedProperties.quarter.timeType": "QUARTER_TYPE",
+          "parsedProperties.quarter.millis": 1435708800000
+        },
+        "$parsed_geo_3": {
+          "domain": "geo",
+          "gid": "dza",
+        },
+        "$parsed_domain_geo_4": {
+          "domain": "geo",
+        },
+        "$parsed_domain_quarter_5": {
+          "domain": "quarter"
+        }
+      }
+    };
+
+    let numParsedLinks = 0;
+    sinon.stub(Math, "random", () => {
+      return ++numParsedLinks;
+    });
+
+    const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, concepts);
+    expect(actualDdfql).to.deep.equal(normalizedDdfql);
+
+    Math.random.restore();
+  });
+
+  it('should normalize query without where and join clauses', () => {
+    const ddfql = {
+      "from": "datapoints",
+      "select": {
+        "key": [
+          "geo",
+          "time"
+        ],
+        "value": [
+          "sg_population"
+        ]
+      },
+      "join": {}
+    };
+
+    const normalizedDdfql = {
+      "select": {
+        "key": ["geo", "time"],
+        "value": ["sg_population"]
+      },
+      "from": "datapoints",
+      "where": {
+        "$and": [
+          {"dimensions": {
+            "$size": 2,
+            "$all": [
+              {$elemMatch: "$parsed_domain_geo_1"},
+              {$elemMatch: "$parsed_domain_time_2"}
+            ]
+          }},
+          {"measure": {"$in": ["sg_population"]}},
+        ]
+      },
+      "join": {
+        "$parsed_domain_geo_1": {
+          "domain": "geo",
+        },
+        "$parsed_domain_time_2": {
+          "domain": "time"
+        }
+      }
+    };
+
+    let numParsedLinks = 0;
+    sinon.stub(Math, "random", () => {
+      return ++numParsedLinks;
+    });
+
+    const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, concepts);
+    expect(actualDdfql).to.deep.equal(normalizedDdfql);
+
+    Math.random.restore();
+  });
+
+  it('should parse `{"geo": {"is--country": true}}` in where clause', () => {
+    const ddfql = {
+      "from": "datapoints",
+      "select": {
+        "key": ["geo", "time"],
+        "value": ["sg_population"]
+      },
+      "where": {
+        "$and": [
+          {
+            "geo": {"is--country": true}
+          }, {
+            "time": {"$gte": 1800, "$lte": 2015}
+          }
+        ]
+      },
+      join: {}
+    };
+
+    const normalizedDdfql = {
+      "select": {
+        "key": ["geo", "time"],
+        "value": ["sg_population"]
+      },
+      "from": "datapoints",
+      "where": {
+        "$and": [
+          {"dimensions": {
+            "$size": 2,
+            "$all": [
+              {$elemMatch: "$parsed_domain_geo_3"},
+              {$elemMatch: "$parsed_domain_time_4"}
+            ]
+          }},
+          {"measure": {"$in": ["sg_population"]}},
+          {"$and": [
+            {"dimensions": "$parsed_geo_1"},
+            {"dimensions": "$parsed_time_2"}
+          ]}
+        ],
+      },
+      "join": {
+        "$parsed_geo_1": {
+          "domain": "geo",
+          "properties.is--country": true
+        },
+        "$parsed_time_2": {
+          "domain": "time",
+          "parsedProperties.time.timeType": "YEAR_TYPE",
+          "parsedProperties.time.millis": {"$lte": 1420070400000, "$gte": -5364662400000}
+        },
+        "$parsed_domain_geo_3": {
+          "domain": "geo",
+        },
+        "$parsed_domain_time_4": {
+          "domain": "time"
+        }
+      }
+    };
+
+    let numParsedLinks = 0;
+    sinon.stub(Math, "random", () => {
+      return ++numParsedLinks;
+    });
+
+    const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, concepts);
+    expect(actualDdfql).to.deep.equal(normalizedDdfql);
+
+    Math.random.restore();
+  });
+
+  it('should parse `{"geo.is--country": true}` in where clause', () => {
+    const ddfql = {
+      "from": "datapoints",
+      "select": {
+        "key": ["geo", "time"],
+        "value": ["sg_population"]
+      },
+      "where": {
+        "$and": [
+          {"geo.is--country": true},
+          {"time": {"$gte": 1800, "$lte": 2015}}
+        ]
+      },
+      join: {}
+    };
+
+    const normalizedDdfql = {
+      "select": {
+        "key": ["geo", "time"],
+        "value": ["sg_population"]
+      },
+      "from": "datapoints",
+      "where": {
+        "$and": [
+          {"dimensions": {
+            "$size": 2,
+            "$all": [
+              {$elemMatch: "$parsed_domain_geo_3"},
+              {$elemMatch: "$parsed_domain_time_4"}
+            ]
+          }},
+          {"measure": {"$in": ["sg_population"]}},
+          {"$and": [
+            {"dimensions": "$parsed_geo_1"},
+            {"dimensions": "$parsed_time_2"}
+          ]}
+        ],
+      },
+      "join": {
+        "$parsed_geo_1": {
+          "domain": "geo",
+          "properties.is--country": true
+        },
+        "$parsed_time_2": {
+          "domain": "time",
+          "parsedProperties.time.timeType": "YEAR_TYPE",
+          "parsedProperties.time.millis": {"$lte": 1420070400000, "$gte": -5364662400000}
+        },
+        "$parsed_domain_geo_3": {
+          "domain": "geo",
+        },
+        "$parsed_domain_time_4": {
+          "domain": "time"
+        }
+      }
+    };
+
+    let numParsedLinks = 0;
+    sinon.stub(Math, "random", () => {
+      return ++numParsedLinks;
+    });
+
+    const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, concepts);
+    expect(actualDdfql).to.deep.equal(normalizedDdfql);
+
+    Math.random.restore();
+  });
+});
+
+describe('ddf datapoints query normalizer - different time types', () => {
+  it('should be parsed QUARTER time type', () => {
     const ddfql = {
       "select": {
         "key": ["geo", "time"],
@@ -161,16 +445,16 @@ describe('ddf datapoints query normalizer', () => {
       "from": "datapoints",
       "where": {
         "$and": [
-          {"time": "$time"},
+          {"time": "$time"}
         ]
       },
       "join": {
         "$time": {
           "key": "time",
           "where": {
-            "time": {"$lt": '2015q3'}
+            "time": {"$lt": "2015q3"}
           }
-        },
+        }
       }
     };
 
@@ -223,7 +507,7 @@ describe('ddf datapoints query normalizer', () => {
     mock.restore();
   });
 
-  it('should normalize where and join clauses - YEAR time type should be parsed', () => {
+  it('should be parsed YEAR time type', () => {
     const ddfql = {
       "select": {
         "key": ["geo", "time"],
@@ -296,7 +580,7 @@ describe('ddf datapoints query normalizer', () => {
     mock.restore();
   });
 
-  it('should normalize where and join clauses - WEEK time type should be parsed', () => {
+  it('should be parsed WEEK time type', () => {
     const ddfql = {
       "select": {
         "key": ["geo", "time"],
@@ -381,7 +665,7 @@ describe('ddf datapoints query normalizer', () => {
     mock.restore();
   });
 
-  it('should normalize where and join clauses - DATE time type should be parsed', () => {
+  it('should be parsed DATE time type', () => {
     const ddfql = {
       "select": {
         "key": ["geo", "time"],
@@ -399,9 +683,12 @@ describe('ddf datapoints query normalizer', () => {
         "$time": {
           "key": "time",
           "where": {
-            "time": {"$and": [{"$lt": "20151201"}, {"$gt": "20130901"}]}
+            "$and": [
+              {"time": {"$lt": "20151201"}},
+              {"time": {"$gt": "20130901"}}
+            ]
           }
-        },
+        }
       }
     };
 
@@ -432,18 +719,21 @@ describe('ddf datapoints query normalizer', () => {
       },
       "join": {
         "$time": {
-          "domain": "time",
-          "parsedProperties.time.timeType": "DATE_TYPE",
-          "parsedProperties.time.millis": {
-            "$and": [
-              {
+          "$and": [
+            {
+              "parsedProperties.time.timeType": "DATE_TYPE",
+              "parsedProperties.time.millis": {
                 "$lt": 1448928000000
-              },
-              {
+              }
+            },
+            {
+              "parsedProperties.time.timeType": "DATE_TYPE",
+              "parsedProperties.time.millis": {
                 "$gt": 1377993600000
               }
-            ]
-          }
+            }
+          ],
+          "domain": "time"
         },
         "$parsed_domain_geo_1": {
           "domain": "geo",
@@ -463,15 +753,104 @@ describe('ddf datapoints query normalizer', () => {
     mock.restore();
   });
 
-  it('should substitute concept placeholders with ids', () => {
-    const conceptsToIds = {
-      geo: "17a3470d3a8c9b37009b9bf9",
-      time: "27a3470d3a8c9b37009b9bf9",
-      population: "37a3470d3a8c9b37009b9bf9",
-      life_expectancy: "47a3470d3a8c9b37009b9bf9",
-      gdp_per_cap: "57a3470d3a8c9b37009b9bf9",
-      gov_type: "67a3470d3a8c9b37009b9bf9",
+  it('should normalized queries for quarters range', () => {
+    const ddfql = {
+      "select": {
+        "key": ["geo", "quarter"],
+        "value": [
+          "sg_population"
+        ]
+      },
+      "from": "datapoints",
+      "where": {
+        "$and": [
+          {"quarter": "$quarter1"},
+          {"quarter": "$quarter2"}
+        ]
+      },
+      "join": {
+        "$quarter1": {
+          "key": "quarter",
+          "where": {
+            "quarter": {"$gt": "2012q4"}
+          }
+        },
+        "$quarter2": {
+          "key": "quarter",
+          "where": {
+            "quarter": {"$lt": "2015q3"}
+          }
+        }
+      }
     };
+
+    const normalizedDdfql = {
+      "select": {
+        "key": ["geo", "quarter"],
+        "value": [
+          "sg_population"
+        ]
+      },
+      "from": "datapoints",
+      "where": {
+        "$and": [
+          {"dimensions": {
+            "$size": 2,
+            "$all": [
+              {$elemMatch: "$parsed_domain_geo_1"},
+              {$elemMatch: "$parsed_domain_time_1"}
+            ]
+          }},
+          {"measure": {"$in": ["sg_population"]}},
+          {
+            "$and": [
+              {"dimensions": "$quarter1"},
+              {"dimensions": "$quarter2"}
+            ]
+          }
+        ]
+      },
+      "join": {
+        "$quarter1": {
+          "domain": "quarter",
+          "parsedProperties.quarter.timeType": "QUARTER_TYPE",
+          "parsedProperties.quarter.millis": {"$gt": 1349049600000}
+        },
+        "$quarter2": {
+          "domain": "quarter",
+          "parsedProperties.quarter.timeType": "QUARTER_TYPE",
+          "parsedProperties.quarter.millis": {"$lt": 1435708800000}
+        },
+        "$parsed_domain_geo_1": {
+          "domain": "geo",
+        },
+        "$parsed_domain_time_1": {
+          "domain": "time"
+        }
+      }
+    };
+
+    const mock = sinon.mock(Math);
+    mock.expects("random").twice().returns(1);
+
+    const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, concepts);
+    expect(actualDdfql, normalizedDdfql);
+
+    mock.verify();
+    mock.restore();
+  });
+});
+
+describe('ddf datapoints query normalizer - substitute links', () => {
+  it('should substitute concept placeholders with ids', () => {
+    const conceptsToIds = [
+      {gid: "geo", originId: "17a3470d3a8c9b37009b9bf9"},
+      {gid: "time", originId: "27a3470d3a8c9b37009b9bf9"},
+      {gid: "population", originId: "37a3470d3a8c9b37009b9bf9"},
+      {gid: "life_expectancy", originId: "47a3470d3a8c9b37009b9bf9"},
+      {gid: "gdp_per_cap", originId: "57a3470d3a8c9b37009b9bf9"},
+      {gid: "gov_type", originId: "67a3470d3a8c9b37009b9bf9"},
+    ];
 
     const normalizedDdfql = {
       "select": {
@@ -767,374 +1146,5 @@ describe('ddf datapoints query normalizer', () => {
     };
 
     expect(ddfQueryNormalizer.substituteDatapointJoinLinks(normalizedDdfql, linksInJoinToValues)).to.deep.equal(normalizedDdfqlWithSubstitutedJoinLinks);
-  });
-
-  it('should normalized queries for quarters range', () => {
-    const ddfql = {
-      "select": {
-        "key": ["geo", "quarter"],
-        "value": [
-          "sg_population"
-        ]
-      },
-      "from": "datapoints",
-      "where": {
-        "$and": [
-          {"quarter": "$quarter1"},
-          {"quarter": "$quarter2"}
-        ]
-      },
-      "join": {
-        "$quarter1": {
-          "key": "quarter",
-          "where": {
-            "quarter": {"$gt": "2012q4"}
-          }
-        },
-        "$quarter2": {
-          "key": "quarter",
-          "where": {
-            "quarter": {"$lt": "2015q3"}
-          }
-        }
-      }
-    };
-
-    const normalizedDdfql = {
-      "select": {
-        "key": ["geo", "quarter"],
-        "value": [
-          "sg_population"
-        ]
-      },
-      "from": "datapoints",
-      "where": {
-        "$and": [
-          {"dimensions": {
-            "$size": 2,
-            "$all": [
-              {$elemMatch: "$parsed_domain_geo_1"},
-              {$elemMatch: "$parsed_domain_time_1"}
-            ]
-          }},
-          {"measure": {"$in": ["sg_population"]}},
-          {
-            "$and": [
-              {"dimensions": "$quarter1"},
-              {"dimensions": "$quarter2"}
-            ]
-          }
-        ]
-      },
-      "join": {
-        "$quarter1": {
-          "domain": "quarter",
-          "parsedProperties.quarter.timeType": "QUARTER_TYPE",
-          "parsedProperties.quarter.millis": {"$gt": 1349049600000}
-        },
-        "$quarter2": {
-          "domain": "quarter",
-          "parsedProperties.quarter.timeType": "QUARTER_TYPE",
-          "parsedProperties.quarter.millis": {"$lt": 1435708800000}
-        },
-        "$parsed_domain_geo_1": {
-          "domain": "geo",
-        },
-        "$parsed_domain_time_1": {
-          "domain": "time"
-        }
-      }
-    };
-
-    const mock = sinon.mock(Math);
-    mock.expects("random").twice().returns(1);
-
-    const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, concepts);
-    expect(actualDdfql, normalizedDdfql);
-
-    mock.verify();
-    mock.restore();
-  });
-
-  it('should create links in join section for entities filter', () => {
-    const ddfql = {
-      "select": {
-        "key": ["geo", "quarter"],
-        "value": [
-          "sg_population"
-        ]
-      },
-      "from": "datapoints",
-      "where": {
-        "$and": [
-          {
-            "$or": [
-              {"quarter": "2012q4"},
-              {"quarter": "2015q3"}
-            ]
-          },
-          {"geo": "dza"}
-        ]
-      },
-      join: {}
-    };
-
-    const normalizedDdfql = {
-      "select": {
-        "key": ["geo", "quarter"],
-        "value": [
-          "sg_population"
-        ]
-      },
-      "from": "datapoints",
-      "where": {
-        "$and": [
-          {"dimensions": {
-            "$size": 2,
-            "$all": [
-              {$elemMatch: "$parsed_domain_geo_4"},
-              {$elemMatch: "$parsed_domain_quarter_5"}
-            ]
-          }},
-          {"measure": {"$in": ["sg_population"]}},
-          {
-            "$and": [
-              {
-                "$or": [
-                  {"dimensions": "$parsed_quarter_1"},
-                  {"dimensions": "$parsed_quarter_2"}
-                ]
-              },
-              {"dimensions": "$parsed_geo_3"}
-            ]
-          }
-        ]
-      },
-      "join": {
-        "$parsed_quarter_1": {
-          "domain": "quarter",
-          "parsedProperties.quarter.timeType": "QUARTER_TYPE",
-          "parsedProperties.quarter.millis": 1349049600000
-        },
-        "$parsed_quarter_2": {
-          "domain": "quarter",
-          "parsedProperties.quarter.timeType": "QUARTER_TYPE",
-          "parsedProperties.quarter.millis": 1435708800000
-        },
-        "$parsed_geo_3": {
-          "domain": "geo",
-          "gid": "dza",
-        },
-        "$parsed_domain_geo_4": {
-          "domain": "geo",
-        },
-        "$parsed_domain_quarter_5": {
-          "domain": "quarter"
-        }
-      }
-    };
-
-    let numParsedLinks = 0;
-    sinon.stub(Math, "random", () => {
-      return ++numParsedLinks;
-    });
-
-    const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, concepts);
-    expect(actualDdfql).to.deep.equal(normalizedDdfql);
-
-    Math.random.restore();
-  });
-
-  it('should normalize query without where and join clauses', () => {
-    const ddfql = {
-        "from": "datapoints",
-        "select": {
-        "key": [
-          "geo",
-          "time"
-        ],
-        "value": [
-          "sg_population"
-        ]
-      },
-      "join": {}
-    };
-
-    const normalizedDdfql = {
-      "select": {
-        "key": ["geo", "time"],
-        "value": ["sg_population"]
-      },
-      "from": "datapoints",
-      "where": {
-        "$and": [
-          {"dimensions": {
-            "$size": 2,
-            "$all": [
-              {$elemMatch: "$parsed_domain_geo_1"},
-              {$elemMatch: "$parsed_domain_time_2"}
-            ]
-          }},
-          {"measure": {"$in": ["sg_population"]}},
-        ]
-      },
-      "join": {
-        "$parsed_domain_geo_1": {
-          "domain": "geo",
-        },
-        "$parsed_domain_time_2": {
-          "domain": "time"
-        }
-      }
-    };
-
-    let numParsedLinks = 0;
-    sinon.stub(Math, "random", () => {
-      return ++numParsedLinks;
-    });
-
-    const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, concepts);
-    expect(actualDdfql).to.deep.equal(normalizedDdfql);
-
-    Math.random.restore();
-  });
-
-  it('should parse `{"geo": {"is--country": true}}` in where clause', () => {
-    const ddfql = {
-      "from": "datapoints",
-      "select": {
-        "key": ["geo", "time"],
-        "value": ["sg_population"]
-      },
-      "where": {
-        "$and": [
-          {
-            "geo": {"is--country": true}
-          }, {
-            "time": {"$gte": 1800, "$lte": 2015}
-          }
-        ]
-      },
-      join: {}
-    };
-
-    const normalizedDdfql = {
-      "select": {
-        "key": ["geo", "time"],
-        "value": ["sg_population"]
-      },
-      "from": "datapoints",
-      "where": {
-        "$and": [
-          {"dimensions": {
-            "$size": 2,
-            "$all": [
-              {$elemMatch: "$parsed_domain_geo_3"},
-              {$elemMatch: "$parsed_domain_time_4"}
-            ]
-          }},
-          {"measure": {"$in": ["sg_population"]}},
-          {"$and": [
-            {"dimensions": "$parsed_geo_1"},
-            {"dimensions": "$parsed_time_2"}
-          ]}
-        ],
-      },
-      "join": {
-        "$parsed_geo_1": {
-          "domain": "geo",
-          "properties.is--country": true
-        },
-        "$parsed_time_2": {
-          "domain": "time",
-          "parsedProperties.time.timeType": "YEAR_TYPE",
-          "parsedProperties.time.millis": {"$lte": 1420070400000, "$gte": -5364662400000}
-        },
-        "$parsed_domain_geo_3": {
-          "domain": "geo",
-        },
-        "$parsed_domain_time_4": {
-          "domain": "time"
-        }
-      }
-    };
-
-    let numParsedLinks = 0;
-    sinon.stub(Math, "random", () => {
-      return ++numParsedLinks;
-    });
-
-    const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, concepts);
-    expect(actualDdfql).to.deep.equal(normalizedDdfql);
-
-    Math.random.restore();
-  });
-
-  it('should parse `{"geo.is--country": true}` in where clause', () => {
-    const ddfql = {
-      "from": "datapoints",
-      "select": {
-        "key": ["geo", "time"],
-        "value": ["sg_population"]
-      },
-      "where": {
-        "$and": [
-          {"geo.is--country": true},
-          {"time": {"$gte": 1800, "$lte": 2015}}
-        ]
-      },
-      join: {}
-    };
-
-    const normalizedDdfql = {
-      "select": {
-        "key": ["geo", "time"],
-        "value": ["sg_population"]
-      },
-      "from": "datapoints",
-      "where": {
-        "$and": [
-          {"dimensions": {
-            "$size": 2,
-            "$all": [
-              {$elemMatch: "$parsed_domain_geo_3"},
-              {$elemMatch: "$parsed_domain_time_4"}
-            ]
-          }},
-          {"measure": {"$in": ["sg_population"]}},
-          {"$and": [
-            {"dimensions": "$parsed_geo_1"},
-            {"dimensions": "$parsed_time_2"}
-          ]}
-        ],
-      },
-      "join": {
-        "$parsed_geo_1": {
-          "domain": "geo",
-          "properties.is--country": true
-        },
-        "$parsed_time_2": {
-          "domain": "time",
-          "parsedProperties.time.timeType": "YEAR_TYPE",
-          "parsedProperties.time.millis": {"$lte": 1420070400000, "$gte": -5364662400000}
-        },
-        "$parsed_domain_geo_3": {
-          "domain": "geo",
-        },
-        "$parsed_domain_time_4": {
-          "domain": "time"
-        }
-      }
-    };
-
-    let numParsedLinks = 0;
-    sinon.stub(Math, "random", () => {
-      return ++numParsedLinks;
-    });
-
-    const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, concepts);
-    expect(actualDdfql).to.deep.equal(normalizedDdfql);
-
-    Math.random.restore();
   });
 });

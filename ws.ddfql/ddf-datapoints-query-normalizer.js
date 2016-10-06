@@ -16,13 +16,8 @@ function normalizeDatapoints(query, concepts) {
   const safeQuery = ddfQueryUtils.toSafeQuery(query);
   const safeConcepts = concepts || [];
 
-  const conceptOriginIdsByGids = _.chain(safeConcepts)
-    .keyBy(constants.GID)
-    .mapValues(constants.ORIGIN_ID)
-    .value();
-
-  normalizeDatapointDdfQuery(safeQuery, concepts);
-  substituteDatapointConceptsWithIds(safeQuery, conceptOriginIdsByGids);
+  normalizeDatapointDdfQuery(safeQuery, safeConcepts);
+  substituteDatapointConceptsWithIds(safeQuery, safeConcepts);
 
   return safeQuery;
 }
@@ -39,15 +34,24 @@ function substituteDatapointJoinLinks(query, linksInJoinToValues) {
   return safeQuery;
 }
 
-function substituteDatapointConceptsWithIds(query, conceptsToIds) {
+function substituteDatapointConceptsWithIds(query, concepts) {
+  const conceptOriginIdsByGids = _.chain(concepts)
+    .keyBy(constants.GID)
+    .mapValues(constants.ORIGIN_ID)
+    .value();
+
   traverse(query.where).forEach(function (concept) {
     if (shouldSubstituteValueWithId(concept, query, this.key)) {
       let id;
 
       if (_.isArray(concept)) {
-        id = _.map(concept, conceptGid => conceptsToIds[conceptGid]);
+        id = _.chain(concept)
+          .filter((conceptGid) => !!conceptOriginIdsByGids[conceptGid])
+          .map(conceptGid => conceptOriginIdsByGids[conceptGid].toString())
+          .value();
       } else {
-        id = conceptsToIds[concept];
+        id = _.get(conceptOriginIdsByGids, concept, false);
+        id = id ? id.toString() : id;
       }
 
       this.update(id ? id : concept);
@@ -56,8 +60,8 @@ function substituteDatapointConceptsWithIds(query, conceptsToIds) {
 
   traverse(query.join).forEach(function (concept) {
     if (shouldSubstituteValueWithId(concept, query)) {
-      const id = conceptsToIds[concept];
-      this.update(id ? id : concept);
+      const id = _.get(conceptOriginIdsByGids, concept, false);
+      this.update(id ? id.toString() : concept);
     }
   });
 
@@ -181,7 +185,7 @@ function normalizeJoin(query, concepts) {
           if (ddfQueryUtils.isEntityPropertyFilter(subkey, conceptGids)) {
             return ddfQueryUtils.wrapEntityProperties(subkey);
           }
-          return key;
+          return subkey;
         });
       }
     }

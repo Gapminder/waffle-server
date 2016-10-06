@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "test": "NODE_ENV=test gulp test",
-    "test:coverage": "istanbul --include-all-sources cover _mocha -- -R spec 'ws*/**/*.test.js'",
+    "test:coverage": "istanbul --include-all-sources cover _mocha -- -R spec 'test/**/*.test.js'",
     "swagger": "./node_modules/.bin/gulp swagger",
     "dev": "NODE_ENV=development npm run start",
     "prestart": "npm run swagger",
