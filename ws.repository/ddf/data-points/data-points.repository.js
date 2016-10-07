@@ -18,11 +18,6 @@ function DataPointsRepository() {
 
 module.exports = new RepositoryFactory(DataPointsRepository);
 
-/**
- *
- * @param subDatapointQuery
- * @param onDatapointsFound
- */
 DataPointsRepository.prototype.findForGivenMeasuresAndDimensions = function(subDatapointQuery, onDatapointsFound) {
   const query = this._composeQuery(subDatapointQuery);
 
@@ -54,15 +49,26 @@ DataPointsRepository.prototype.findStats = function (params, onDatapointsFound) 
     })
     .group({
       _id: '$measure',
-      min: {$min: '$value'},
-      max: {$max: '$value'},
-      avg: {$avg: '$value'}
+      'min(value)': {$min: '$value'},
+      'max(value)': {$max: '$value'},
+      'avg(value)': {$avg: '$value'}
     }).exec((error, stats) => {
       if (error) {
         return onDatapointsFound(error);
       }
 
-      return onDatapointsFound(null, _.head(stats));
+      return onDatapointsFound(null, _.omit(_.head(stats), '_id'));
     });
 };
 
+DataPointsRepository.prototype.findDistinctDimensionsOriginIdsByMeasure = function (params, onDimensionsFound) {
+  const query = this._composeQuery({ measure: ObjectId(params.measureId) });
+
+  return DataPoints.distinct('dimensions', query).exec((error, dimensions) => {
+      if (error) {
+        return onDimensionsFound(error);
+      }
+
+      return onDimensionsFound(null, _.map(dimensions, _.toString));
+    });
+};

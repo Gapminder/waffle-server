@@ -6,7 +6,6 @@ const ddfQueryUtils = require('../../../ws.ddfql/ddf-query-utils');
 
 const DATAPOINT_KEY_SEPARATOR = ':';
 
-// FIXME: wsJson, csv, json pack processors
 module.exports = {
   mapConcepts: mapConceptToWsJson,
   mapEntities: mapEntitiesToWsJson,
@@ -15,13 +14,20 @@ module.exports = {
 };
 
 function mapSchemaToWsJson(data) {
-  const rows = _.map(data.schema, schemaDoc => _.reduce(data.headers, (schemaRow, header) => {
-    schemaRow.push(schemaDoc[header]);
-    return schemaRow;
-  }, []));
+  const rows = [];
 
-  const headers = _.map(data.headers, header => data.aliases[header] ? data.aliases[header] : header);
-  return {headers, rows: sortRows(rows, data.query, headers)};
+  _.forEach(data.schemaChunks, schemaChunk => {
+    _.forEach(schemaChunk.schema, schemaDoc => {
+      const row = _.reduce(schemaChunk.headers, (schemaRow, header) => {
+        schemaRow.push(schemaDoc[header]);
+        return schemaRow;
+      }, []);
+      rows.push(row);
+    });
+  });
+
+  const query = _.get(_.first(data.schemaChunks), 'query', {});
+  return {headers: data.originalHeaders, rows: sortRows(rows, query, data.originalHeaders)};
 }
 
 function mapConceptToWsJson(data) {

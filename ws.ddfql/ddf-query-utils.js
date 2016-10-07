@@ -19,7 +19,8 @@ module.exports = {
   cutPrefixByDashes,
   cutPrefixByDot,
   wrapEntityProperties,
-  normalizeKey
+  normalizeKey,
+  pullUpWhereSectionsInJoin
 };
 
 function toSafeQuery(query, options) {
@@ -105,6 +106,19 @@ function normalizeTimePropertyFilter(key, filterValue, path, query) {
   conditionsForTimeEntities[`parsedProperties.${key}.timeType`] = timeType;
 
   return normalizedFilter;
+}
+
+function pullUpWhereSectionsInJoin(query) {
+  traverse(query.join).forEach(function () {
+    if (this.key === 'where') {
+      replaceValueOnPath({
+        key: this.key,
+        path: this.path,
+        queryFragment: query.join,
+        substituteEntryWithItsContent: true
+      });
+    }
+  });
 }
 
 function isTimePropertyFilter(key, timeConcepts) {

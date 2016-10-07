@@ -163,20 +163,7 @@ function normalizeJoin(query, concepts) {
     }
   });
 
-  pullUpWhereSectionsInJoin(query);
-}
-
-function pullUpWhereSectionsInJoin(query) {
-  traverse(query.join).forEach(function () {
-    if (this.key === 'where') {
-      ddfQueryUtils.replaceValueOnPath({
-        key: this.key,
-        path: this.path,
-        queryFragment: query.join,
-        substituteEntryWithItsContent: true
-      });
-    }
-  });
+  ddfQueryUtils.pullUpWhereSectionsInJoin(query);
 }
 
 function isDomainFilter(key) {

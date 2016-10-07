@@ -10,6 +10,7 @@ const datapointsRepositoryFactory = require('../ws.repository/ddf/data-points/da
 const common = require('./common');
 const logger = require('../ws.config/log');
 const constants = require('../ws.utils/constants');
+const ddfUtils = require('../ws.utils/ddf.utils');
 
 const entityOriginIdsCache = new Map();
 
@@ -200,9 +201,9 @@ function _populateDatasetIndexWithOriginIds(pipe, done) {
     index.valueOriginId = getOriginId(index.value);
 
     return async.waterfall([
-      async.constant({dataset: pipe.dataset, transacton: pipe.transaction, version: pipe.transaction.createdAt, index}),
+      async.constant({dataset: pipe.dataset, transacton: pipe.transaction, version: pipe.transaction.createdAt, index, concepts: pipe.concepts}),
       findEntityOriginIds,
-      findDatapointsStatsForMeasure
+      calculateDdfqlFunctions
     ], onIndexPopulated);
   }, (error, populatedDatasetIndexes) => {
     entityOriginIdsCache.clear();
@@ -239,7 +240,7 @@ function findEntityOriginIds(pipe, done) {
   const cacheKey = `${pipe.dataset._id}${pipe.version}${_.join(pipe.index.key, ',')}`;
   if (entityOriginIdsCache.has(cacheKey)) {
     return async.setImmediate(() => {
-      pipe.entityOriginIds = entityOriginIdsCache.get(cacheKey);
+      _.extend(pipe, entityOriginIdsCache.get(cacheKey));
       done(null, pipe);
     });
   }
@@ -250,28 +251,63 @@ function findEntityOriginIds(pipe, done) {
         return done(error);
       }
 
-      pipe.entityOriginIds = _.map(entities, 'originId');
-      entityOriginIdsCache.set(cacheKey, pipe.entityOriginIds);
-      return done(null, pipe);
+      entityOriginIdsCache.set(cacheKey, {entityOriginIds: _.map(entities, 'originId'), entities});
+      return done(null, _.extend(pipe, entityOriginIdsCache.get(cacheKey)));
     });
 }
 
-function findDatapointsStatsForMeasure(pipe, done) {
+function calculateDdfqlFunctions(pipe, done) {
   if (pipe.index.type !== 'datapoints') {
     return async.setImmediate(() => done(null, pipe.index));
   }
 
-  return datapointsRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version).findStats({
-    measureId: pipe.index.valueOriginId,
-    entityIds: pipe.entityOriginIds,
-    dimensionsSize: _.size(pipe.index.key)
-  }, (error, stats) => {
-    if (error) {
-      return done(error);
-    }
+  const datapointRepository = datapointsRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version);
 
-    _.merge(pipe.index, _.omit(stats, '_id'));
-    return done(null, pipe.index);
+  return async.parallelLimit({
+      statsForGivenMeasure: done => datapointRepository.findStats({
+        measureId: pipe.index.valueOriginId,
+        entityIds: pipe.entityOriginIds,
+        dimensionsSize: _.size(pipe.index.key)
+      }, done),
+      dimensionsDefinedForGivenMeasure: done => datapointRepository.findDistinctDimensionsOriginIdsByMeasure({
+        measureId: pipe.index.valueOriginId
+      }, done)
+    },
+    constants.LIMIT_NUMBER_PROCESS,
+    (error, result) => {
+      if (error) {
+        return done(error);
+      }
+
+      const statsForIndexKey = calculateStatsForIndexKey(
+        pipe.concepts,
+        pipe.entities,
+        result.dimensionsDefinedForGivenMeasure
+      );
+
+      pipe.index = _.reduce(statsForIndexKey, (index, indexKeyStats) => _.merge(index, indexKeyStats), pipe.index);
+      pipe.index = _.merge(pipe.index, result.statsForGivenMeasure);
+
+      return done(null, pipe.index);
+    });
+}
+
+function calculateStatsForIndexKey(concepts, entities, dimensionsDefinedForGivenMeasure) {
+  const timeConceptsByOriginId = _.keyBy(ddfUtils.filterTimeConcepts(concepts), 'originId');
+
+  const timeEntitiesByDomainOriginId = _.chain(entities)
+    .filter(entity => _.includes(dimensionsDefinedForGivenMeasure, _.toString(entity.originId)))
+    .groupBy('domain')
+    .pickBy((entities, domain) => timeConceptsByOriginId[domain])
+    .value();
+
+  return _.mapValues(timeEntitiesByDomainOriginId, (timeEntities, timeDomainOriginId) => {
+    const timeDomainGid = timeConceptsByOriginId[timeDomainOriginId].gid;
+    const pathToMillis = `parsedProperties.${timeDomainGid}.millis`;
+    return {
+      [`max(${timeDomainGid})`]: _.get(_.maxBy(timeEntities, pathToMillis), 'gid'),
+      [`min(${timeDomainGid})`]: _.get(_.minBy(timeEntities, pathToMillis), 'gid')
+    };
   });
 }
 
