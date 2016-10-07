@@ -1,10 +1,12 @@
 {
   "headers": [
-    "company"
+    "company",
+    "is--foundation"
   ],
   "rows": [
     [
-      "gap"
+      "gap",
+      true
     ]
   ]
 }
