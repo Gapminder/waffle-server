@@ -1,52 +1,84 @@
 {
   "headers": [
-    "concept"
+    "concept",
+    "concept_type",
+    "domain"
   ],
   "rows": [
     [
+      "company",
+      "entity_domain",
+      null
+    ],
+    [
+      "english_speaking",
+      "entity_set",
       "company"
     ],
     [
-      "english_speaking"
+      "foundation",
+      "entity_set",
+      "company"
     ],
     [
-      "foundation"
+      "company_size",
+      "entity_set",
+      "company"
     ],
     [
-      "company_size"
+      "name",
+      "string",
+      null
     ],
     [
-      "name"
+      "anno",
+      "time",
+      "year"
     ],
     [
-      "anno"
+      "lines_of_code",
+      "measure",
+      null
     ],
     [
-      "lines_of_code"
+      "region",
+      "entity_domain",
+      null
     ],
     [
-      "region"
+      "country",
+      "string",
+      null
     ],
     [
-      "country"
+      "num_users",
+      "measure",
+      null
     ],
     [
-      "num_users"
+      "latitude",
+      "measure",
+      null
     ],
     [
-      "latitude"
+      "longitude",
+      "measure",
+      null
     ],
     [
-      "longitude"
+      "full_name",
+      "string",
+      null
     ],
     [
-      "full_name"
+      "project",
+      "entity_domain",
+      null
     ],
     [
-      "project"
-    ],
-    [
-      "domain"
+      "domain",
+      "string",
+      null
     ]
   ]
 }
