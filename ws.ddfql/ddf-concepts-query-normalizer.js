@@ -3,6 +3,7 @@
 const _ = require('lodash');
 const traverse = require('traverse');
 const ddfQueryUtils = require("./ddf-query-utils");
+const constants = require("../ws.utils/constants");
 
 module.exports = {
   normalizeConcepts

@@ -6,36 +6,36 @@ const e2eUtils = require('./../../../e2e.utils');
 const fs = require('fs');
 const expect = require('chai').expect;
 
-const fixtureSchemaConcepts = require('./fixtures/commit-1--schema-concepts');
-const fixtureSchemaEntities = require('./fixtures/commit-1--schema-entities');
-const fixtureSchemaDatapoints = require('./fixtures/commit-1--schema-datapoints');
-const fixtureSchemaDatapointsMinMax = require('./fixtures/commit-1--schema-datapoints--min-max.json');
-const fixtureSchemaDatapointsAvg = require('./fixtures/commit-1--schema-datapoints--avg.json');
+const fixtureSchemaConcepts = require('./fixtures/commit-2--schema-concepts');
+const fixtureSchemaEntities = require('./fixtures/commit-2--schema-entities');
+const fixtureSchemaDatapoints = require('./fixtures/commit-2--schema-datapoints');
+const fixtureSchemaDatapointsMinMax = require('./fixtures/commit-2--schema-datapoints--min-max.json');
+const fixtureSchemaDatapointsAvg = require('./fixtures/commit-2--schema-datapoints--avg.json');
 
-const fixtureDataConcepts = require('./fixtures/commit-1--data-concepts.json');
-const fixtureDataEntities = require('./fixtures/commit-1--data-entities.json');
-const fixtureDataEntitiesSpeakingEnglish = require('./fixtures/commit-1--data-entities-speakingenglish.json');
-const fixtureDataEntitiesFoundation = require('./fixtures/commit-1--data-entities-foundation.json');
-const fixtureDataEntitiesCompanySize = require('./fixtures/commit-1--data-entities-companysize.json');
-const fixtureDataConceptsEntitySet = require('./fixtures/commit-1--data-concepts-etityset.json');
-const fixtureDataConceptsMeasure = require('./fixtures/commit-1--data-concepts-measure.json');
-const fixtureDataConceptsString = require('./fixtures/commit-1--data-concepts-string.json');
+const fixtureDataConcepts = require('./fixtures/commit-2--data-concepts.json');
+const fixtureDataEntities = require('./fixtures/commit-2--data-entities.json');
+const fixtureDataEntitiesSpeakingEnglish = require('./fixtures/commit-2--data-entities-speakingenglish.json');
+const fixtureDataEntitiesFoundation = require('./fixtures/commit-2--data-entities-foundation.json');
+const fixtureDataEntitiesCompanySize = require('./fixtures/commit-2--data-entities-companysize.json');
+const fixtureDataConceptsEntitySet = require('./fixtures/commit-2--data-concepts-etityset.json');
+const fixtureDataConceptsMeasure = require('./fixtures/commit-2--data-concepts-measure.json');
+const fixtureDataConceptsString = require('./fixtures/commit-2--data-concepts-string.json');
 
-const fixtureDatapointsLinesOfCodeByCompanyAnno = require('./fixtures/commit-1--datapoints-linesofcode_by_company_anno.json');
-const fixtureDatapointsCompanySizeByCompanyAnno = require('./fixtures/commit-1--datapoints-companysize_by_company_anno.json');
-const fixtureDatapointsLinesOfCodeByCompanyProject = require('./fixtures/commit-1--datapoints-companysize_by_company_project.json');
-const fixtureDatapointsLinesOfCodeByCompanyProjectAnno = require('./fixtures/commit-1--datapoints-companysize_by_company_project_anno.json');
+const fixtureDatapointsLinesOfCodeByCompanyAnno = require('./fixtures/commit-2--datapoints-linesofcode_by_company_anno.json');
+const fixtureDatapointsCompanySizeByCompanyAnno = require('./fixtures/commit-2--datapoints-companysize_by_company_anno.json');
+const fixtureDatapointsLinesOfCodeByCompanyProject = require('./fixtures/commit-2--datapoints-companysize_by_company_project.json');
+const fixtureDatapointsLinesOfCodeByCompanyProjectAnno = require('./fixtures/commit-2--datapoints-companysize_by_company_project_anno.json');
 
-const fixtureQueryOperatorsLinesOfCodeByCompanyAnnoWithCondition = require('./fixtures/commit-1--operators-linesofcode_by_company_anno.json');
-const fixtureQueryOperatorsCompanySizeByCompanyAnnoWithCondition = require('./fixtures/commit-1--operators-companysize_by_company_anno.json');
-const fixtureQueryOperatorsLinesOfCodeByCompanyProjectWithCondition = require('./fixtures/commit-1--operators-companysize_by_company_project.json');
-const fixtureQueryOperatorsLinesOfCodeByCompanyProjectAnnoWithCondition = require('./fixtures/commit-1--operators-companysize_by_company_project_anno.json');
+const fixtureQueryOperatorsLinesOfCodeByCompanyAnnoWithCondition = require('./fixtures/commit-2--operators-linesofcode_by_company_anno.json');
+const fixtureQueryOperatorsCompanySizeByCompanyAnnoWithCondition = require('./fixtures/commit-2--operators-companysize_by_company_anno.json');
+const fixtureQueryOperatorsLinesOfCodeByCompanyProjectWithCondition = require('./fixtures/commit-2--operators-companysize_by_company_project.json');
+const fixtureQueryOperatorsLinesOfCodeByCompanyProjectAnnoWithCondition = require('./fixtures/commit-2--operators-companysize_by_company_project_anno.json');
 
 
-describe("Initial State", function() {
+describe("State Version 1", function() {
 
   before(done => {
-    cliUtils.setDefaultCommit('c4866bc', done);
+    cliUtils.setDefaultCommit('10a740f', done);
   });
 
   describe("Schema", function() {
@@ -224,7 +224,7 @@ describe("Initial State", function() {
       const ddfql = {
         "select": {
           "key": ["company"],
-          "value": ["company", "name", "is--english_speaking"]
+          "value": ["company", "name", "is--english_speaking", "additional_column"]
         },
         "from": "entities",
         "where": {
