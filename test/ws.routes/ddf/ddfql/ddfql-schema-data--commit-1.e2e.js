@@ -10,6 +10,7 @@ const fixtureSchemaConcepts = require('./fixtures/commit-1--schema-concepts');
 const fixtureSchemaEntities = require('./fixtures/commit-1--schema-entities');
 const fixtureSchemaDatapoints = require('./fixtures/commit-1--schema-datapoints');
 const fixtureSchemaDatapointsMinMax = require('./fixtures/commit-1--schema-datapoints--min-max.json');
+const fixtureSchemaDatapointsAvg = require('./fixtures/commit-1--schema-datapoints--avg.json');
 
 const fixtureDataConcepts = require('./fixtures/commit-1--data-concepts.json');
 const fixtureDataEntities = require('./fixtures/commit-1--data-entities.json');
@@ -96,6 +97,21 @@ describe("Initial State", function() {
       });
     });
 
+    it('should return correct Min/Max values for datapoints schema', done => {
+      const ddfql = {
+        "select": {
+          "key": ["key","value"],
+          "value": ["avg(value)"]
+        },
+        "from": "datapoints.schema"
+      };
+
+      e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
+        expect(response.body).to.deep.equal(fixtureSchemaDatapointsAvg);
+        done();
+      });
+    });
+
   });
 
   describe("Concepts", function() {
@@ -174,12 +190,12 @@ describe("Initial State", function() {
 
   });
 
-  describe("Data", function() {
+  describe("Unconditional Queries", function() {
 
     it('should return list of all concepts', done => {
       const ddfql = {
         "select": {
-          "key": ["concept"]
+          "key": ["concept", "concept_type", "domain"]
         },
         "from": "concepts"
       };
@@ -204,11 +220,11 @@ describe("Initial State", function() {
       });
     });
 
-    it('should return list of entities that speaking english', done => {
+    it('should return list of entities that are part of english_speaking entityset', done => {
       const ddfql = {
         "select": {
           "key": ["company"],
-          "value": ["company", "name"]
+          "value": ["company", "name", "is--english_speaking"]
         },
         "from": "entities",
         "where": {
@@ -226,11 +242,11 @@ describe("Initial State", function() {
       });
     });
 
-    it('should return list of entities that has foundation', done => {
+    it('should return list of entities that are part of foundation etitiyset', done => {
       const ddfql = {
         "select": {
           "key": ["company"],
-          "value": ["company"]
+          "value": ["company", "is--foundation"]
         },
         "from": "entities",
         "where": {
@@ -248,11 +264,11 @@ describe("Initial State", function() {
       });
     });
 
-    it('should return list of entities that has company size', done => {
+    it('should return list of entities that are part of company_size entityset', done => {
       const ddfql = {
         "select": {
-          "key": ["company"],
-          "value": ["company"]
+          "key": ["company_size"],
+          "value": ["company_size", "full_name", "is--company_size"]
         },
         "from": "entities",
         "where": {
@@ -420,7 +436,7 @@ describe("Initial State", function() {
 
   });
 
-  describe("Query Operators", function() {
+  describe("Datapoints by Conditions", function() {
 
     it('should return filtered list of values for lines_of_code by company and anno according to conditions', done => {
 
@@ -437,7 +453,7 @@ describe("Initial State", function() {
             {"company": "$company"},
             {"anno": "$anno"},
             {"lines_of_code": {"$gt": 50000}},
-            {"anno": {"$gt": 2015}}
+            {"anno": {"$gt": 2014, "$lt": 2016}}
           ]
         },
         "join": {
