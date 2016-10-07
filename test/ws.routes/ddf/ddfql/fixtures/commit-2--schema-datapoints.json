@@ -1,8 +1,7 @@
 {
   "headers": [
     "key",
-    "value",
-    "avg(value)"
+    "value"
   ],
   "rows": [
     [
@@ -10,16 +9,14 @@
         "company",
         "anno"
       ],
-      "company_size",
-      null
+      "company_size"
     ],
     [
       [
         "company",
         "anno"
       ],
-      "lines_of_code",
-      284920.75
+      "lines_of_code"
     ],
     [
       [
@@ -27,24 +24,21 @@
         "project",
         "anno"
       ],
-      "lines_of_code",
-      149053.375
+      "lines_of_code"
     ],
     [
       [
         "company",
         "project"
       ],
-      "lines_of_code",
-      1702551.3333333333
+      "lines_of_code"
     ],
     [
       [
         "company",
         "project"
       ],
-      "num_users",
-      9470.875
+      "num_users"
     ]
   ]
 }

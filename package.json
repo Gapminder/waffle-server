@@ -4,11 +4,11 @@
   "description": "Waffle server",
   "main": "app.js",
   "scripts": {
-    "test": "gulp test",
+    "test": "NODE_ENV=test gulp test",
     "pree2e": "node ./test/pre-e2e.js",
     "e2e": "gulp e2e",
     "poste2e": "node ./test/post-e2e.js",
-    "test:coverage": "istanbul --include-all-sources cover _mocha -- -R spec 'ws*/**/*.test.js'",
+    "test:coverage": "istanbul --include-all-sources cover _mocha -- -R spec 'test/**/*.test.js'",
     "swagger": "./node_modules/.bin/gulp swagger",
     "dev": "NODE_ENV=development npm run start",
     "prestart": "npm run swagger",
