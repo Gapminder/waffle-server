@@ -72,9 +72,13 @@ describe('repos service', () => {
       }
     });
 
-    stubbedReposService.cloneRepo('fake repo', 'any commit', error => {
-      expect(error).to.equal('Cannot clone repo from fake repo');
+    var d = require('domain').create();
+    d.on('error', (error) => {
+      expect(error.toString()).to.have.string('Error: spawn git ENOENT');
       done();
+    });
+    d.run(() => {
+      stubbedReposService.cloneRepo('fake repo', 'any commit');
     });
   });
 
