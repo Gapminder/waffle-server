@@ -9,7 +9,7 @@ const path = require('path');
 const config = require('../ws.config/config');
 const logger = require('../ws.config/log');
 
-const isTestNodeEnv = config.NODE_ENV === 'test';
+const isTestNodeEnv = process.env.NODE_ENV === 'test';
 const git = require('simple-git');
 
 module.exports = {

@@ -67,18 +67,14 @@ describe('repos service', () => {
       },
       '../ws.config/log': {
         error: (error) => {
-          expect(error).to.contain(`fatal: repository \'fake repo\' does not exist\n`);
+          expect(error).exist;
         }
       }
     });
 
-    var d = require('domain').create();
-    d.on('error', (error) => {
-      expect(error.toString()).to.have.string('Error: spawn git ENOENT');
+    stubbedReposService.cloneRepo('fake repo', 'any commit', error => {
+      expect(error).to.equal('Cannot clone repo from fake repo');
       done();
-    });
-    d.run(() => {
-      stubbedReposService.cloneRepo('fake repo', 'any commit');
     });
   });
 
