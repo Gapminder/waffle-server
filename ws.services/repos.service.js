@@ -9,7 +9,6 @@ const path = require('path');
 const config = require('../ws.config/config');
 const logger = require('../ws.config/log');
 
-const isTestNodeEnv = config.NODE_ENV === 'test';
 const git = require('simple-git');
 
 module.exports = {
@@ -55,7 +54,6 @@ function _cloneRepo(githubUrl, commit, pathToRepo, onCloned) {
   }
 
   return git(path.resolve(config.PATH_TO_DDF_REPOSITORIES))
-    .silent(isTestNodeEnv)
     .clone(githubUrl, pathToRepo, cloneError => {
     if (cloneError) {
       logger.error(cloneError);

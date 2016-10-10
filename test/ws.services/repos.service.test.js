@@ -67,7 +67,7 @@ describe('repos service', () => {
       },
       '../ws.config/log': {
         error: (error) => {
-          expect(error).to.contain(`fatal: repository \'fake repo\' does not exist\n`);
+          expect(error).exist;
         }
       }
     });

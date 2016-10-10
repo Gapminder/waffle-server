@@ -3,6 +3,7 @@
 const _ = require('lodash');
 const traverse = require('traverse');
 const ddfQueryUtils = require("./ddf-query-utils");
+const constants = require('../ws.utils/constants');
 
 module.exports = {
   normalizeConcepts
@@ -49,6 +50,6 @@ function normalizeWhere(query, concepts) {
 }
 
 function isConceptPropertyFilter(key, resolvedProperties) {
-  const normalizedKey = _.chain(key).split('.').first().value();
+  const normalizedKey = ddfQueryUtils.getPrefixByDot(key);
   return _.includes(resolvedProperties, normalizedKey);
 }
