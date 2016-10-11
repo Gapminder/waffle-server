@@ -37,7 +37,7 @@ const fixtureQueryOperatorsNumUsersByCompanyProjectWithCondition = require('./fi
 describe("State Version 2 (3rd commit)", function() {
 
   before(done => {
-    cliUtils.setDefaultCommit('83fe02f', done);
+    cliUtils.setDefaultCommit('152801e', done);
   });
 
   describe("Schema", function() {

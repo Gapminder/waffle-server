@@ -54,6 +54,18 @@
     ],
     [
       [
+        "project"
+      ],
+      "name"
+    ],
+    [
+      [
+        "region"
+      ],
+      "full_name_changed"
+    ],
+    [
+      [
         "company"
       ],
       "name"
@@ -69,18 +81,6 @@
         "company"
       ],
       "region"
-    ],
-    [
-      [
-        "project"
-      ],
-      "name"
-    ],
-    [
-      [
-        "region"
-      ],
-      "full_name_changed"
     ]
   ]
 }
