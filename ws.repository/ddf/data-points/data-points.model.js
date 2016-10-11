@@ -1,38 +1,10 @@
 'use strict';
 
-let mongoose = require('mongoose');
-let Schema = mongoose.Schema;
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 const originId = require('../origin-id.plugin');
 
-/**
- * @typedef DimensionSchema
- * @memberof Models
- *
- * @param {Models.Concepts.originId} domain - established entity name
- * @param {Models.Entities.originId} entity - established entity name
- */
-let DimensionSchema = new Schema({
-  domain: {type: Schema.Types.ObjectId},
-  entity: {type: Schema.Types.ObjectId}
-}, {_id: false});
-
-/**
- * @typedef {Object} DataPoints
- * @memberof Models
- *
- * @property {Mixed} value - data this DataPoint contains at the given coordinates
- * @property {Array<String>} sources - filenames of source item
- *
- * @property {Boolean} isNumeric - value of the measure?
- * @property {Models.Concepts.originId} measure - points to measure this DataPoint has value for
- * @property {Array<Models.Entities.originId>} dimensions - contains objects that are define point for the data
- *
- * @property {Number} from - entity start version
- * @property {Number} to - entity end version (or Infinity)
- * @property {Models.Datasets} dataset - reference
- * @property {Models.DatasetTransactions} transaction - reference
- */
-let DataPoints = new Schema({
+const DataPoints = new Schema({
   value: {type: Schema.Types.Mixed, required: true},
   sources: [{type: String, required: true}],
 

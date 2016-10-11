@@ -217,25 +217,12 @@ function normalizeJoin(query, concepts) {
     }
   });
 
-  pullUpWhereSectionsInJoin(query);
+  ddfQueryUtils.pullUpWhereSectionsInJoin(query);
 }
 
 function getDomainKey(path, query) {
   let domainPath = _.slice(path, 0, path.indexOf('where')).concat(['domain']);
   return _.get(query.join, domainPath);
-}
-
-function pullUpWhereSectionsInJoin(query) {
-  traverse(query.join).forEach(function () {
-    if (this.key === 'where') {
-      ddfQueryUtils.replaceValueOnPath({
-        key: this.key,
-        path: this.path,
-        queryFragment: query.join,
-        substituteEntryWithItsContent: true
-      });
-    }
-  });
 }
 
 function isMeasureFilter(key, query) {
