@@ -12,29 +12,30 @@ module.exports = {
 function normalizeConcepts(query, concepts) {
   const safeQuery = ddfQueryUtils.toSafeQuery(query);
   const safeConcepts = concepts || [];
-  normalizeConceptDdfQuery(safeQuery, safeConcepts);
+  const conceptGids = ddfQueryUtils.getConceptGids(safeConcepts);
+  const domainGids = ddfQueryUtils.getDomainGids(safeConcepts);
+  const options = Object.freeze({
+    concepts: safeConcepts,
+    conceptGids,
+    domainGids
+  });
+  normalizeConceptDdfQuery(safeQuery, options);
   return safeQuery;
 }
 
-function normalizeConceptDdfQuery(query, concepts) {
-  normalizeWhere(query, concepts);
+function normalizeConceptDdfQuery(query, options) {
+  normalizeWhere(query, options);
   ddfQueryUtils.normalizeOrderBy(query);
   return query;
 }
 
-function normalizeWhere(query, concepts) {
-  const resolvedProperties = _.chain(concepts)
-    .map(constants.GID)
-    .concat(['concept', 'concept_type'])
-    .sort()
-    .value();
-
+function normalizeWhere(query, options) {
   traverse(query.where).forEach(function (filterValue) {
     let normalizedFilter = null;
 
-    if (isConceptPropertyFilter(this.key, resolvedProperties)) {
+    if (isConceptPropertyFilter(this.key, options.conceptGids)) {
       normalizedFilter = {
-        [ddfQueryUtils.wrapEntityProperties(this.key)]: filterValue,
+        [ddfQueryUtils.wrapEntityProperties(this.key, options)]: filterValue,
       };
     }
 

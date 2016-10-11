@@ -1,16 +1,34 @@
 'use strict';
 
-const sinon = require('sinon');
 const chai = require('chai');
+const sinon = require('sinon');
+const ddfQueryUtils = require('../../ws.ddfql/ddf-query-utils');
 const ddfQueryNormalizer = require('./../../ws.ddfql/ddf-datapoints-query-normalizer');
 
 const expect = chai.expect;
-const concepts = [
-  {gid: 'time', properties: {concept_type: 'time'}},
+const concepts = Object.freeze([
+  {gid: 'time', originId: "27a3470d3a8c9b37009b9bf9", properties: {concept_type: 'time'}},
   {gid: 'quarter', properties: {concept_type: 'time'}},
-  {gid: 'geo'},
-  {gid: 'country'}
-];
+  {gid: 'geo', originId: "17a3470d3a8c9b37009b9bf9", properties: {concept_type: 'entity_domain'}},
+  {gid: 'country', properties: {concept_type: 'entity_set'}},
+  {gid: 'latitude', properties: {concept_type: 'measure'}},
+  {gid: "population", originId: "37a3470d3a8c9b37009b9bf9", properties: {concept_type: 'measure'}},
+  {gid: "life_expectancy", originId: "47a3470d3a8c9b37009b9bf9", properties: {concept_type: 'measure'}},
+  {gid: "gdp_per_cap", originId: "57a3470d3a8c9b37009b9bf9", properties: {concept_type: 'measure'}},
+  {gid: "gov_type", originId: "67a3470d3a8c9b37009b9bf9", properties: {concept_type: 'measure'}},
+  {gid: 'company', originId: '17a3470d3a8c9b37009b9bf9', properties: {concept_type: 'entity_domain'}},
+  {gid: 'project', originId: '27a3470d3a8c9b37009b9bf9', properties: {concept_type: 'entity_domain'}},
+  {gid: 'lines_of_code', originId: '37a3470d3a8c9b37009b9bf9', properties: {concept_type: 'measure'}}
+]);
+const options = Object.freeze({
+  concepts,
+  conceptOriginIdsByGids: ddfQueryUtils.getConceptOriginIdsByGids(concepts),
+  conceptGids: ddfQueryUtils.getConceptGids(concepts),
+  domainGids: ddfQueryUtils.getDomainGids(concepts),
+  timeConcepts: ddfQueryUtils.getTimeConcepts(concepts),
+  conceptsByGids: ddfQueryUtils.getConceptsByGids(concepts),
+  conceptsByOriginIds: ddfQueryUtils.getConceptsByOriginIds(concepts),
+});
 
 describe('ddf datapoints query normalizer - queries simplification', () => {
   it('should normalize where and join clauses for full example', () => {
@@ -75,8 +93,8 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
           {"dimensions": {
             "$size": 2,
             "$all": [
-              {$elemMatch: "$parsed_domain_geo_1"},
-              {$elemMatch: "$parsed_domain_time_1"}
+              {"$elemMatch": "$parsed_domain_geo_1"},
+              {"$elemMatch": "$parsed_domain_time_1"}
             ]
           }},
           {"measure": {"$in": ["population", "life_expectancy", "gdp_per_cap", "gov_type"]}},
@@ -144,7 +162,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     const mock = sinon.mock(Math);
     mock.expects("random").twice().returns(1);
 
-    expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, concepts)).to.deep.equal(normalizedDdfql);
+    expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options)).to.deep.equal(normalizedDdfql);
 
     mock.verify();
     mock.restore();
@@ -170,7 +188,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
           {"geo": "dza"}
         ]
       },
-      join: {}
+      "join": {}
     };
 
     const normalizedDdfql = {
@@ -186,8 +204,8 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
           {"dimensions": {
             "$size": 2,
             "$all": [
-              {$elemMatch: "$parsed_domain_geo_4"},
-              {$elemMatch: "$parsed_domain_quarter_5"}
+              {"$elemMatch": "$parsed_domain_geo_4"},
+              {"$elemMatch": "$parsed_domain_quarter_5"}
             ]
           }},
           {"measure": {"$in": ["sg_population"]}},
@@ -233,7 +251,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       return ++numParsedLinks;
     });
 
-    const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, concepts);
+    const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options);
     expect(actualDdfql).to.deep.equal(normalizedDdfql);
 
     Math.random.restore();
@@ -265,8 +283,8 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
           {"dimensions": {
             "$size": 2,
             "$all": [
-              {$elemMatch: "$parsed_domain_geo_1"},
-              {$elemMatch: "$parsed_domain_time_2"}
+              {"$elemMatch": "$parsed_domain_geo_1"},
+              {"$elemMatch": "$parsed_domain_time_2"}
             ]
           }},
           {"measure": {"$in": ["sg_population"]}},
@@ -287,13 +305,13 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       return ++numParsedLinks;
     });
 
-    const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, concepts);
+    const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options);
     expect(actualDdfql).to.deep.equal(normalizedDdfql);
 
     Math.random.restore();
   });
 
-  it('should parse `{"geo": {"is--country": true}}` in where clause', () => {
+  it('should parse `{"join": "where": {"is--country": true}}` in where clause', () => {
     const ddfql = {
       "from": "datapoints",
       "select": {
@@ -302,14 +320,18 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       },
       "where": {
         "$and": [
-          {
-            "geo": {"is--country": true}
-          }, {
-            "time": {"$gte": 1800, "$lte": 2015}
-          }
+          { "geo": "$geo" },
+          { "time": {"$gte": 1800, "$lte": 2015} }
         ]
       },
-      join: {}
+      "join": {
+        "$geo": {
+          "key": "geo",
+          "where": {
+            "is--country": true
+          }
+        }
+      }
     };
 
     const normalizedDdfql = {
@@ -323,31 +345,31 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
           {"dimensions": {
             "$size": 2,
             "$all": [
-              {$elemMatch: "$parsed_domain_geo_3"},
-              {$elemMatch: "$parsed_domain_time_4"}
+              {"$elemMatch": "$parsed_domain_geo_2"},
+              {"$elemMatch": "$parsed_domain_time_3"}
             ]
           }},
           {"measure": {"$in": ["sg_population"]}},
           {"$and": [
-            {"dimensions": "$parsed_geo_1"},
-            {"dimensions": "$parsed_time_2"}
+            {"dimensions": "$geo"},
+            {"dimensions": "$parsed_time_1"}
           ]}
         ],
       },
       "join": {
-        "$parsed_geo_1": {
+        "$geo": {
           "domain": "geo",
           "properties.is--country": true
         },
-        "$parsed_time_2": {
+        "$parsed_time_1": {
           "domain": "time",
           "parsedProperties.time.timeType": "YEAR_TYPE",
           "parsedProperties.time.millis": {"$lte": 1420070400000, "$gte": -5364662400000}
         },
-        "$parsed_domain_geo_3": {
+        "$parsed_domain_geo_2": {
           "domain": "geo",
         },
-        "$parsed_domain_time_4": {
+        "$parsed_domain_time_3": {
           "domain": "time"
         }
       }
@@ -358,13 +380,13 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       return ++numParsedLinks;
     });
 
-    const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, concepts);
+    const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options);
     expect(actualDdfql).to.deep.equal(normalizedDdfql);
 
     Math.random.restore();
   });
 
-  it('should parse `{"geo.is--country": true}` in where clause', () => {
+  it('should parse `{"join": "where": {"geo.is--country": true}}` in where clause', () => {
     const ddfql = {
       "from": "datapoints",
       "select": {
@@ -373,11 +395,18 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       },
       "where": {
         "$and": [
-          {"geo.is--country": true},
+          {"geo": "$geo"},
           {"time": {"$gte": 1800, "$lte": 2015}}
         ]
       },
-      join: {}
+      "join": {
+        "$geo": {
+          "key": "geo",
+          "where": {
+            "geo.is--country": true
+          }
+        }
+      }
     };
 
     const normalizedDdfql = {
@@ -391,31 +420,31 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
           {"dimensions": {
             "$size": 2,
             "$all": [
-              {$elemMatch: "$parsed_domain_geo_3"},
-              {$elemMatch: "$parsed_domain_time_4"}
+              {"$elemMatch": "$parsed_domain_geo_2"},
+              {"$elemMatch": "$parsed_domain_time_3"}
             ]
           }},
           {"measure": {"$in": ["sg_population"]}},
           {"$and": [
-            {"dimensions": "$parsed_geo_1"},
-            {"dimensions": "$parsed_time_2"}
+            {"dimensions": "$geo"},
+            {"dimensions": "$parsed_time_1"}
           ]}
         ],
       },
       "join": {
-        "$parsed_geo_1": {
+        "$geo": {
           "domain": "geo",
           "properties.is--country": true
         },
-        "$parsed_time_2": {
+        "$parsed_time_1": {
           "domain": "time",
           "parsedProperties.time.timeType": "YEAR_TYPE",
           "parsedProperties.time.millis": {"$lte": 1420070400000, "$gte": -5364662400000}
         },
-        "$parsed_domain_geo_3": {
+        "$parsed_domain_geo_2": {
           "domain": "geo",
         },
-        "$parsed_domain_time_4": {
+        "$parsed_domain_time_3": {
           "domain": "time"
         }
       }
@@ -426,7 +455,138 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       return ++numParsedLinks;
     });
 
-    const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, concepts);
+    const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options);
+    expect(actualDdfql).to.deep.equal(normalizedDdfql);
+
+    Math.random.restore();
+  });
+
+  it('should parse and normalize query with geo and time domains', () => {
+    const ddfql = {
+      "from": "datapoints",
+      "select": {
+        "key": [
+          "geo",
+          "time"
+        ],
+        "value": [
+          "sg_population"
+        ]
+      },
+      "where": {
+        "$and":[
+          {"geo": {"$in": ["dza", "usa", "ukr"]}}
+        ]
+      },
+      "join": {}
+    };
+
+    const normalizedDdfql = {
+      "select": {
+        "key": ["geo", "time"],
+        "value": ["sg_population"]
+      },
+      "from": "datapoints",
+      "where": {
+        "$and": [
+          {"dimensions": {
+            "$size": 2,
+            "$all": [
+              {"$elemMatch": "$parsed_domain_geo_2"},
+              {"$elemMatch": "$parsed_domain_time_3"}
+            ]
+          }},
+          {"measure": {"$in": ["sg_population"]}},
+          {
+            "$and":[
+              {"dimensions": "$parsed_geo_1"}
+            ]
+          }
+        ]
+      },
+      "join": {
+        "$parsed_geo_1": {
+          "domain": "geo",
+          "gid": {"$in": ["dza", "usa", "ukr"]}
+        },
+        "$parsed_domain_time_3": {
+          "domain": "time"
+        },
+        "$parsed_domain_geo_2": {
+          "domain": "geo",
+        }
+      }
+    };
+
+    let numParsedLinks = 0;
+    sinon.stub(Math, "random", () => {
+      return ++numParsedLinks;
+    });
+
+    const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options);
+    expect(actualDdfql).to.deep.equal(normalizedDdfql);
+
+    Math.random.restore();
+  });
+
+  it('should parse and normalize query with project and company domains', () => {
+    const ddfql = {
+      "select": {
+        "key": ["company", "project"],
+        "value": ["lines_of_code"]
+      },
+      "from": "datapoints",
+      "where": {
+        "$and": [
+          {"project": {"$ne": "xbox", "$nin": ["office"], "$in": ["vizabi","ws","mic"]}}
+        ]
+      },
+      "join": {}
+    };
+
+    const normalizedDdfql = {
+      "select": {
+        "key": ["company", "project"],
+        "value": ["lines_of_code"]
+      },
+      "from": "datapoints",
+      "where": {
+        "$and": [
+          {"dimensions": {
+            "$size": 2,
+            "$all": [
+              {"$elemMatch": "$parsed_domain_company_2"},
+              {"$elemMatch": "$parsed_domain_project_3"}
+            ]
+          }},
+          {"measure": {"$in": ["lines_of_code"]}},
+          {
+            "$and":[
+              {"dimensions": "$parsed_project_1"},
+            ]
+          }
+        ]
+      },
+      "join": {
+        "$parsed_project_1": {
+          "domain": "project",
+          "gid": {"$ne": "xbox", "$nin": ["office"], "$in": ["vizabi","ws","mic"]}
+        },
+        "$parsed_domain_company_2": {
+          "domain": "company"
+        },
+        "$parsed_domain_project_3": {
+          "domain": "project"
+        }
+      }
+    };
+
+    let numParsedLinks = 0;
+    sinon.stub(Math, "random", () => {
+      return ++numParsedLinks;
+    });
+
+    const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options);
     expect(actualDdfql).to.deep.equal(normalizedDdfql);
 
     Math.random.restore();
@@ -471,8 +631,8 @@ describe('ddf datapoints query normalizer - different time types', () => {
           {"dimensions": {
             "$size": 2,
             "$all": [
-              {$elemMatch: "$parsed_domain_geo_1"},
-              {$elemMatch: "$parsed_domain_time_1"}
+              {"$elemMatch": "$parsed_domain_geo_1"},
+              {"$elemMatch": "$parsed_domain_time_1"}
             ]
           }},
           {"measure": {"$in": ["population", "life_expectancy", "gdp_per_cap", "gov_type"]}},
@@ -501,7 +661,7 @@ describe('ddf datapoints query normalizer - different time types', () => {
     const mock = sinon.mock(Math);
     mock.expects("random").twice().returns(1);
 
-    expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, concepts)).to.deep.equal(normalizedDdfql);
+    expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options)).to.deep.equal(normalizedDdfql);
 
     mock.verify();
     mock.restore();
@@ -525,7 +685,7 @@ describe('ddf datapoints query normalizer - different time types', () => {
         "$time": {
           "key": "time",
           "where": {
-            "time": {"$lt": '2015'}
+            "time": {"$lt": "2015"}
           }
         },
       }
@@ -544,8 +704,8 @@ describe('ddf datapoints query normalizer - different time types', () => {
           {"dimensions": {
             "$size": 2,
             "$all": [
-              {$elemMatch: "$parsed_domain_geo_1"},
-              {$elemMatch: "$parsed_domain_time_1"}
+              {"$elemMatch": "$parsed_domain_geo_1"},
+              {"$elemMatch": "$parsed_domain_time_1"}
             ]
           }},
           {"measure": {"$in": ["population", "life_expectancy", "gdp_per_cap", "gov_type"]}},
@@ -574,7 +734,7 @@ describe('ddf datapoints query normalizer - different time types', () => {
     const mock = sinon.mock(Math);
     mock.expects("random").twice().returns(1);
 
-    expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, concepts)).to.deep.equal(normalizedDdfql);
+    expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options)).to.deep.equal(normalizedDdfql);
 
     mock.verify();
     mock.restore();
@@ -617,8 +777,8 @@ describe('ddf datapoints query normalizer - different time types', () => {
           {"dimensions": {
             "$size": 2,
             "$all": [
-              {$elemMatch: "$parsed_domain_geo_1"},
-              {$elemMatch: "$parsed_domain_time_1"}
+              {"$elemMatch": "$parsed_domain_geo_1"},
+              {"$elemMatch": "$parsed_domain_time_1"}
             ]
           }},
           {"measure": {"$in": ["population", "life_expectancy", "gdp_per_cap", "gov_type"]}},
@@ -659,7 +819,7 @@ describe('ddf datapoints query normalizer - different time types', () => {
     const mock = sinon.mock(Math);
     mock.expects("random").twice().returns(1);
 
-    expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, concepts)).to.deep.equal(normalizedDdfql);
+    expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options)).to.deep.equal(normalizedDdfql);
 
     mock.verify();
     mock.restore();
@@ -705,8 +865,8 @@ describe('ddf datapoints query normalizer - different time types', () => {
           {"dimensions": {
             "$size": 2,
             "$all": [
-              {$elemMatch: "$parsed_domain_geo_1"},
-              {$elemMatch: "$parsed_domain_time_1"}
+              {"$elemMatch": "$parsed_domain_geo_1"},
+              {"$elemMatch": "$parsed_domain_time_1"}
             ]
           }},
           {"measure": {"$in": ["population", "life_expectancy", "gdp_per_cap", "gov_type"]}},
@@ -747,7 +907,7 @@ describe('ddf datapoints query normalizer - different time types', () => {
     const mock = sinon.mock(Math);
     mock.expects("random").twice().returns(1);
 
-    expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, concepts)).to.deep.equal(normalizedDdfql);
+    expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options)).to.deep.equal(normalizedDdfql);
 
     mock.verify();
     mock.restore();
@@ -797,8 +957,8 @@ describe('ddf datapoints query normalizer - different time types', () => {
           {"dimensions": {
             "$size": 2,
             "$all": [
-              {$elemMatch: "$parsed_domain_geo_1"},
-              {$elemMatch: "$parsed_domain_time_1"}
+              {"$elemMatch": "$parsed_domain_geo_1"},
+              {"$elemMatch": "$parsed_domain_time_1"}
             ]
           }},
           {"measure": {"$in": ["sg_population"]}},
@@ -833,7 +993,7 @@ describe('ddf datapoints query normalizer - different time types', () => {
     const mock = sinon.mock(Math);
     mock.expects("random").twice().returns(1);
 
-    const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, concepts);
+    const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options);
     expect(actualDdfql, normalizedDdfql);
 
     mock.verify();
@@ -843,15 +1003,6 @@ describe('ddf datapoints query normalizer - different time types', () => {
 
 describe('ddf datapoints query normalizer - substitute links', () => {
   it('should substitute concept placeholders with ids', () => {
-    const conceptsToIds = [
-      {gid: "geo", originId: "17a3470d3a8c9b37009b9bf9"},
-      {gid: "time", originId: "27a3470d3a8c9b37009b9bf9"},
-      {gid: "population", originId: "37a3470d3a8c9b37009b9bf9"},
-      {gid: "life_expectancy", originId: "47a3470d3a8c9b37009b9bf9"},
-      {gid: "gdp_per_cap", originId: "57a3470d3a8c9b37009b9bf9"},
-      {gid: "gov_type", originId: "67a3470d3a8c9b37009b9bf9"},
-    ];
-
     const normalizedDdfql = {
       "select": {
         "key": ["geo", "time"],
@@ -974,7 +1125,7 @@ describe('ddf datapoints query normalizer - substitute links', () => {
       }
     };
 
-    expect(ddfQueryNormalizer.substituteDatapointConceptsWithIds(normalizedDdfql, conceptsToIds)).to.deep.equal(normalizedDdfqlWithSubstitutedConcepts);
+    expect(ddfQueryNormalizer.substituteDatapointConceptsWithIds(normalizedDdfql, options)).to.deep.equal(normalizedDdfqlWithSubstitutedConcepts);
   });
 
   it('should substitute join link in where clause', () => {
@@ -1044,6 +1195,7 @@ describe('ddf datapoints query normalizer - substitute links', () => {
         "$geo": {
           "domain": "17a3470d3a8c9b37009b9bf9",
           "$and": [
+            {"gid": {"$in": ["dza", "usa", "ukr"]}},
             {"properties.is--country": true},
             {"properties.latitude": {"$lte": 0}}
           ]
@@ -1127,6 +1279,7 @@ describe('ddf datapoints query normalizer - substitute links', () => {
         "$geo": {
           "domain": "17a3470d3a8c9b37009b9bf9",
           "$and": [
+            {"gid": {"$in": ["dza", "usa", "ukr"]}},
             {"properties.is--country": true},
             {"properties.latitude": {"$lte": 0}}
           ]
