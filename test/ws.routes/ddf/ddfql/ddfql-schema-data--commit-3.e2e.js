@@ -6,36 +6,38 @@ const e2eUtils = require('./../../../e2e.utils');
 const fs = require('fs');
 const expect = require('chai').expect;
 
-const fixtureSchemaConcepts = require('./fixtures/commit-1--schema-concepts');
-const fixtureSchemaEntities = require('./fixtures/commit-1--schema-entities');
-const fixtureSchemaDatapoints = require('./fixtures/commit-1--schema-datapoints');
-const fixtureSchemaDatapointsMinMax = require('./fixtures/commit-1--schema-datapoints--min-max.json');
-const fixtureSchemaDatapointsAvg = require('./fixtures/commit-1--schema-datapoints--avg.json');
+const fixtureSchemaConcepts = require('./fixtures/commit-3--schema-concepts');
+const fixtureSchemaEntities = require('./fixtures/commit-3--schema-entities');
+const fixtureSchemaDatapoints = require('./fixtures/commit-3--schema-datapoints');
+const fixtureSchemaDatapointsMinMax = require('./fixtures/commit-3--schema-datapoints--min-max.json');
+const fixtureSchemaDatapointsAvg = require('./fixtures/commit-3--schema-datapoints--avg.json');
 
-const fixtureDataConcepts = require('./fixtures/commit-1--data-concepts.json');
-const fixtureDataEntities = require('./fixtures/commit-1--data-entities.json');
-const fixtureDataEntitiesSpeakingEnglish = require('./fixtures/commit-1--data-entities-speakingenglish.json');
-const fixtureDataEntitiesFoundation = require('./fixtures/commit-1--data-entities-foundation.json');
-const fixtureDataEntitiesCompanySize = require('./fixtures/commit-1--data-entities-companysize.json');
-const fixtureDataConceptsEntitySet = require('./fixtures/commit-1--data-concepts-etityset.json');
-const fixtureDataConceptsMeasure = require('./fixtures/commit-1--data-concepts-measure.json');
-const fixtureDataConceptsString = require('./fixtures/commit-1--data-concepts-string.json');
+const fixtureDataConcepts = require('./fixtures/commit-3--data-concepts.json');
+const fixtureDataEntities = require('./fixtures/commit-3--data-entities.json');
+const fixtureDataEntitiesSpeakingEnglish = require('./fixtures/commit-3--data-entities-speakingenglish.json');
+const fixtureDataEntitiesFoundation = require('./fixtures/commit-3--data-entities-foundation.json');
+const fixtureDataEntitiesCompanySize = require('./fixtures/commit-3--data-entities-companysize.json');
+const fixtureDataConceptsEntitySet = require('./fixtures/commit-3--data-concepts-etityset.json');
+const fixtureDataConceptsMeasure = require('./fixtures/commit-3--data-concepts-measure.json');
+const fixtureDataConceptsString = require('./fixtures/commit-3--data-concepts-string.json');
 
-const fixtureDatapointsLinesOfCodeByCompanyAnno = require('./fixtures/commit-1--datapoints-linesofcode_by_company_anno.json');
-const fixtureDatapointsCompanySizeByCompanyAnno = require('./fixtures/commit-1--datapoints-companysize_by_company_anno.json');
-const fixtureDatapointsLinesOfCodeByCompanyProject = require('./fixtures/commit-1--datapoints-companysize_by_company_project.json');
-const fixtureDatapointsLinesOfCodeByCompanyProjectAnno = require('./fixtures/commit-1--datapoints-companysize_by_company_project_anno.json');
+const fixtureDatapointsLinesOfCodeByCompanyAnno = require('./fixtures/commit-3--datapoints-linesofcode_by_company_anno.json');
+const fixtureDatapointsCompanySizeByCompanyAnno = require('./fixtures/commit-3--datapoints-companysize_by_company_anno.json');
+const fixtureDatapointsLinesOfCodeByCompanyProject = require('./fixtures/commit-3--datapoints-linesofcode_by_company_project.json');
+const fixtureDatapointsLinesOfCodeByCompanyProjectAnno = require('./fixtures/commit-3--datapoints-linesofcode_by_company_project_anno.json');
+const fixtureDatapointsNumUsersByCompanyProject = require('./fixtures/commit-3--datapoints-numusers_by_company_project.json');
 
-const fixtureQueryOperatorsLinesOfCodeByCompanyAnnoWithCondition = require('./fixtures/commit-1--operators-linesofcode_by_company_anno.json');
-const fixtureQueryOperatorsCompanySizeByCompanyAnnoWithCondition = require('./fixtures/commit-1--operators-companysize_by_company_anno.json');
-const fixtureQueryOperatorsLinesOfCodeByCompanyProjectWithCondition = require('./fixtures/commit-1--operators-companysize_by_company_project.json');
-const fixtureQueryOperatorsLinesOfCodeByCompanyProjectAnnoWithCondition = require('./fixtures/commit-1--operators-companysize_by_company_project_anno.json');
+const fixtureQueryOperatorsLinesOfCodeByCompanyAnnoWithCondition = require('./fixtures/commit-3--operators-linesofcode_by_company_anno.json');
+const fixtureQueryOperatorsCompanySizeByCompanyAnnoWithCondition = require('./fixtures/commit-3--operators-companysize_by_company_anno.json');
+const fixtureQueryOperatorsLinesOfCodeByCompanyProjectWithCondition = require('./fixtures/commit-3--operators-companysize_by_company_project.json');
+const fixtureQueryOperatorsLinesOfCodeByCompanyProjectAnnoWithCondition = require('./fixtures/commit-3--operators-companysize_by_company_project_anno.json');
+const fixtureQueryOperatorsNumUsersByCompanyProjectWithCondition = require('./fixtures/commit-3--operators-numusers_by_company_project.json');
 
 
-describe("Initial State", function() {
+describe("State Version 2 (3rd commit)", function() {
 
   before(done => {
-    cliUtils.setDefaultCommit('c4866bc', done);
+    cliUtils.setDefaultCommit('83fe02f', done);
   });
 
   describe("Schema", function() {
@@ -195,7 +197,7 @@ describe("Initial State", function() {
     it('should return list of all concepts', done => {
       const ddfql = {
         "select": {
-          "key": ["concept", "concept_type", "domain"]
+          "key": ["concept", "concept_type", "domain", "additional_column"]
         },
         "from": "concepts"
       };
@@ -224,7 +226,7 @@ describe("Initial State", function() {
       const ddfql = {
         "select": {
           "key": ["company"],
-          "value": ["company", "name", "is--english_speaking"]
+          "value": ["company", "name", "is--english_speaking", "additional_column"]
         },
         "from": "entities",
         "where": {
@@ -268,7 +270,7 @@ describe("Initial State", function() {
       const ddfql = {
         "select": {
           "key": ["company_size"],
-          "value": ["company_size", "full_name", "is--company_size"]
+          "value": ["company_size", "full_name_changed", "is--company_size", "full_name"]
         },
         "from": "entities",
         "where": {
@@ -434,6 +436,41 @@ describe("Initial State", function() {
 
     });
 
+    it('should return correct list of values for num_users by company and project', done => {
+
+      const ddfql = {
+        "select": {
+          "key": ["company", "project"],
+          "value": ["num_users"]
+        },
+        "from": "datapoints",
+        "where": {
+          "$and": [
+            {"company": "$company"},
+            {"project": "$project"}
+          ]
+        },
+        "join": {
+          "$company":{
+            "key": "company",
+            "where": {
+            }
+          },
+          "$project": {
+            "key": "project",
+            "where": {
+            }
+          }
+        }
+      };
+
+      e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
+        expect(response.body).to.deep.equal(fixtureDatapointsNumUsersByCompanyProject);
+        done();
+      });
+
+    });
+
   });
 
   describe("Datapoints by Conditions", function() {
@@ -585,6 +622,47 @@ describe("Initial State", function() {
 
       e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
         expect(response.body).to.deep.equal(fixtureQueryOperatorsLinesOfCodeByCompanyProjectAnnoWithCondition);
+        done();
+      });
+
+    });
+
+    it('should return filtered list of values for num_users by company and project according to conditions', done => {
+
+      const ddfql = {
+        "select": {
+          "key": ["company", "project"],
+          "value": ["num_users"]
+        },
+        "from": "datapoints",
+        "where": {
+          "$and": [
+            {"company": "$company"},
+            {"project": "$project"}
+            /*
+              ToDo::query operators
+                {"project": {"$ne": "ws"}},
+                {"company": {"$nin": ["mic"]}},
+                {"lines_of_code": {"$gt": 450000}}
+            */
+          ]
+        },
+        "join": {
+          "$company":{
+            "key": "company",
+            "where": {
+            }
+          },
+          "$project": {
+            "key": "project",
+            "where": {
+            }
+          }
+        }
+      };
+
+      e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
+        expect(response.body).to.deep.equal(fixtureQueryOperatorsNumUsersByCompanyProjectWithCondition);
         done();
       });
 
