@@ -29,8 +29,8 @@ const fixtureDatapointsNumUsersByCompanyProject = require('./fixtures/commit-3--
 
 const fixtureQueryOperatorsLinesOfCodeByCompanyAnnoWithCondition = require('./fixtures/commit-3--operators-linesofcode_by_company_anno.json');
 const fixtureQueryOperatorsCompanySizeByCompanyAnnoWithCondition = require('./fixtures/commit-3--operators-companysize_by_company_anno.json');
-const fixtureQueryOperatorsLinesOfCodeByCompanyProjectWithCondition = require('./fixtures/commit-3--operators-companysize_by_company_project.json');
-const fixtureQueryOperatorsLinesOfCodeByCompanyProjectAnnoWithCondition = require('./fixtures/commit-3--operators-companysize_by_company_project_anno.json');
+const fixtureQueryOperatorsLinesOfCodeByCompanyProjectWithCondition = require('./fixtures/commit-3--operators-linesofcode_by_company_project.json');
+const fixtureQueryOperatorsLinesOfCodeByCompanyProjectAnnoWithCondition = require('./fixtures/commit-3--operators-linesofcode_by_company_project_anno.json');
 const fixtureQueryOperatorsNumUsersByCompanyProjectWithCondition = require('./fixtures/commit-3--operators-numusers_by_company_project.json');
 
 
@@ -208,7 +208,7 @@ describe("State Version 2 (3rd commit)", function() {
       });
     });
 
-    it('should return list of all entities', done => {
+    xit('should return list of all entities', done => {
       const ddfql = {
         "select": {
           "key": ["company"]
@@ -222,7 +222,7 @@ describe("State Version 2 (3rd commit)", function() {
       });
     });
 
-    it('should return list of entities that are part of english_speaking entityset', done => {
+    xit('should return list of entities that are part of english_speaking entityset', done => {
       const ddfql = {
         "select": {
           "key": ["company"],
@@ -244,7 +244,7 @@ describe("State Version 2 (3rd commit)", function() {
       });
     });
 
-    it('should return list of entities that are part of foundation etitiyset', done => {
+    xit('should return list of entities that are part of foundation etitiyset', done => {
       const ddfql = {
         "select": {
           "key": ["company"],
@@ -266,7 +266,7 @@ describe("State Version 2 (3rd commit)", function() {
       });
     });
 
-    it('should return list of entities that are part of company_size entityset', done => {
+    xit('should return list of entities that are part of company_size entityset', done => {
       const ddfql = {
         "select": {
           "key": ["company_size"],
@@ -292,6 +292,27 @@ describe("State Version 2 (3rd commit)", function() {
 
   describe("Datapoints", function() {
 
+    xit('should return correct list of values for company_size by company and anno', done => {
+
+      const ddfql = {
+        "select": {
+          "key": ["company", "anno"],
+          "value": [
+            "company_size"
+          ]
+        },
+        "from": "datapoints",
+        "where": {
+        }
+      };
+
+      e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
+        expect(response.body).to.deep.equal(fixtureDatapointsCompanySizeByCompanyAnno);
+        done();
+      });
+
+    });
+
     it('should return correct list of values for lines_of_code by company and anno', done => {
 
       const ddfql = {
@@ -303,64 +324,11 @@ describe("State Version 2 (3rd commit)", function() {
         },
         "from": "datapoints",
         "where": {
-          "$and": [
-            {"company": "$company"},
-            {"anno": "$anno"}
-          ]
-        },
-        "join": {
-          "$company":{
-            "key": "company",
-            "where": {
-            }
-          },
-          "$anno": {
-            "key": "anno",
-            "where": {
-            }
-          }
         }
       };
 
       e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
         expect(response.body).to.deep.equal(fixtureDatapointsLinesOfCodeByCompanyAnno);
-        done();
-      });
-
-    });
-
-    it('should return correct list of values for company_size by company and anno', done => {
-
-      const ddfql = {
-        "select": {
-          "key": ["company", "anno"],
-          "value": [
-            "company_size"
-          ]
-        },
-        "from": "datapoints",
-        "where": {
-          "$and": [
-            {"company": "$company"},
-            {"anno": "$anno"}
-          ]
-        },
-        "join": {
-          "$company":{
-            "key": "company",
-            "where": {
-            }
-          },
-          "$anno": {
-            "key": "anno",
-            "where": {
-            }
-          }
-        }
-      };
-
-      e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
-        expect(response.body).to.deep.equal(fixtureDatapointsCompanySizeByCompanyAnno);
         done();
       });
 
@@ -375,22 +343,6 @@ describe("State Version 2 (3rd commit)", function() {
         },
         "from": "datapoints",
         "where": {
-          "$and": [
-            {"company": "$company"},
-            {"project": "$project"}
-          ]
-        },
-        "join": {
-          "$company":{
-            "key": "company",
-            "where": {
-            }
-          },
-          "$project": {
-            "key": "project",
-            "where": {
-            }
-          }
         }
       };
 
@@ -410,22 +362,6 @@ describe("State Version 2 (3rd commit)", function() {
         },
         "from": "datapoints",
         "where": {
-          "$and": [
-            {"company": "$company"},
-            {"project": "$project"}
-          ]
-        },
-        "join": {
-          "$company":{
-            "key": "company",
-            "where": {
-            }
-          },
-          "$project": {
-            "key": "project",
-            "where": {
-            }
-          }
         }
       };
 
@@ -445,22 +381,6 @@ describe("State Version 2 (3rd commit)", function() {
         },
         "from": "datapoints",
         "where": {
-          "$and": [
-            {"company": "$company"},
-            {"project": "$project"}
-          ]
-        },
-        "join": {
-          "$company":{
-            "key": "company",
-            "where": {
-            }
-          },
-          "$project": {
-            "key": "project",
-            "where": {
-            }
-          }
         }
       };
 
@@ -475,6 +395,31 @@ describe("State Version 2 (3rd commit)", function() {
 
   describe("Datapoints by Conditions", function() {
 
+    xit('should return filtered list of values for company_size by company and anno according to conditions', done => {
+
+      const ddfql = {
+        "select": {
+          "key": ["company", "anno"],
+          "value": [
+            "company_size"
+          ]
+        },
+        "from": "datapoints",
+        "where": {
+          "$and": [
+            {"company_size": {"$eq": "small"}},
+            {"anno": {"$lt": 2016}}
+          ]
+        }
+      };
+
+      e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
+        expect(response.body).to.deep.equal(fixtureQueryOperatorsCompanySizeByCompanyAnnoWithCondition);
+        done();
+      });
+
+    });
+
     it('should return filtered list of values for lines_of_code by company and anno according to conditions', done => {
 
       const ddfql = {
@@ -487,67 +432,14 @@ describe("State Version 2 (3rd commit)", function() {
         "from": "datapoints",
         "where": {
           "$and": [
-            {"company": "$company"},
-            {"anno": "$anno"},
             {"lines_of_code": {"$gt": 50000}},
             {"anno": {"$gt": 2014, "$lt": 2016}}
           ]
-        },
-        "join": {
-          "$company":{
-            "key": "company",
-            "where": {
-            }
-          },
-          "$anno": {
-            "key": "anno",
-            "where": {
-            }
-          }
         }
       };
 
       e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
         expect(response.body).to.deep.equal(fixtureQueryOperatorsLinesOfCodeByCompanyAnnoWithCondition);
-        done();
-      });
-
-    });
-
-    it('should return filtered list of values for company_size by company and anno according to conditions', done => {
-
-      const ddfql = {
-        "select": {
-          "key": ["company", "anno"],
-          "value": [
-            "company_size"
-          ]
-        },
-        "from": "datapoints",
-        "where": {
-          "$and": [
-            {"company": "$company"},
-            {"anno": "$anno"},
-            {"company_size": {"$eq": "small"}},
-            {"anno": {"$lt": 2016}}
-          ]
-        },
-        "join": {
-          "$company":{
-            "key": "company",
-            "where": {
-            }
-          },
-          "$anno": {
-            "key": "anno",
-            "where": {
-            }
-          }
-        }
-      };
-
-      e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
-        expect(response.body).to.deep.equal(fixtureQueryOperatorsCompanySizeByCompanyAnnoWithCondition);
         done();
       });
 
@@ -563,22 +455,8 @@ describe("State Version 2 (3rd commit)", function() {
         "from": "datapoints",
         "where": {
           "$and": [
-            {"company": "$company"},
-            {"project": "$project"},
-            {"project": {"$ne": "xbox", "$nin": ["office"], "$in": ["vizabi","ws","mic"]}}
+            {"project": {"$ne": "xbox", "$nin": ["office"], "$in": ["vizabi","ws","mcrsft"]}}
           ]
-        },
-        "join": {
-          "$company":{
-            "key": "company",
-            "where": {
-            }
-          },
-          "$project": {
-            "key": "project",
-            "where": {
-            }
-          }
         }
       };
 
@@ -599,24 +477,10 @@ describe("State Version 2 (3rd commit)", function() {
         "from": "datapoints",
         "where": {
           "$and": [
-            {"company": "$company"},
-            {"project": "$project"},
             {"project": {"$ne": "ws"}},
-            {"company": {"$nin": ["mic"]}},
+            {"company": {"$nin": ["mcrsft"]}},
             {"lines_of_code": {"$gt": 450000}}
           ]
-        },
-        "join": {
-          "$company":{
-            "key": "company",
-            "where": {
-            }
-          },
-          "$project": {
-            "key": "project",
-            "where": {
-            }
-          }
         }
       };
 
@@ -637,27 +501,10 @@ describe("State Version 2 (3rd commit)", function() {
         "from": "datapoints",
         "where": {
           "$and": [
-            {"company": "$company"},
-            {"project": "$project"}
-            /*
-              ToDo::query operators
-                {"project": {"$ne": "ws"}},
-                {"company": {"$nin": ["mic"]}},
-                {"lines_of_code": {"$gt": 450000}}
-            */
+            {"company": {"$nin": ["gap"]}},
+            {"project": {"$ne": "ws"}},
+            {"num_users": {"$gt": 4}}
           ]
-        },
-        "join": {
-          "$company":{
-            "key": "company",
-            "where": {
-            }
-          },
-          "$project": {
-            "key": "project",
-            "where": {
-            }
-          }
         }
       };
 

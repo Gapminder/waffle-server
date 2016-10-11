@@ -6,28 +6,13 @@
   ],
   "rows": [
     [
+      "gap",
+      2015,
+      "small"
+    ],
+    [
       "mcrsft",
       1975,
-      "small"
-    ],
-    [
-      "mcrsft",
-      2015,
-      "large"
-    ],
-    [
-      "mcrsft",
-      2016,
-      "large"
-    ],
-    [
-      "gap",
-      2015,
-      "small"
-    ],
-    [
-      "gap",
-      2016,
       "small"
     ]
   ]
