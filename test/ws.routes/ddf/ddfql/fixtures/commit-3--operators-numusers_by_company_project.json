@@ -6,34 +6,14 @@
   ],
   "rows": [
     [
-      "mic",
-      "windows",
-      4
-    ],
-    [
-      "mic",
+      "mcrsft",
       "xbox",
       6
     ],
     [
-      "mic",
+      "mcrsft",
       "office",
       333
-    ],
-    [
-      "gap",
-      "vizabi",
-      54345
-    ],
-    [
-      "gap",
-      "ws",
-      312
-    ],
-    [
-      "valor",
-      "ws",
-      6765
     ]
   ]
 }
