@@ -24,6 +24,7 @@ const DatasetTransactions = new Schema({
   createdBy: {type: Schema.Types.ObjectId, ref: 'Users', required: true},
   createdAt: {type: Number, 'default': Date.now(), required: true},
 
+  timeSpentInMillis: Number,
   dataset: {type: Schema.Types.ObjectId, ref: 'Datasets'},
 
   commit: {type: String}

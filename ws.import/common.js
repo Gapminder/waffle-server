@@ -81,7 +81,10 @@ function closeTransaction(pipe, done) {
 
   mongoose.model('DatasetTransactions').findOneAndUpdate({
     _id: pipe.transaction._id
-  }, {$set: {isClosed: true}}, (err) => {
+  }, {$set: {
+      isClosed: true,
+      timeSpentInMillis: Date.now() - pipe.transaction.createdAt
+    }}, (err) => {
     return done(err, pipe);
   });
 }
