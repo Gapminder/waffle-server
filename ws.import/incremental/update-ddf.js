@@ -283,7 +283,7 @@ function ___closeAllEntitiesBySource(pipe, cb) {
     from: {$lte: pipe.transaction.createdAt},
     to: constants.MAX_VERSION,
     domain: pipe.entityDomain.originId,
-    sets : pipe.entitySet && pipe.entityDomain.originId !== pipe.entitySet.originId ? pipe.entitySet.originId : {$size: 0}
+    sets : getQuerySetsClause(pipe.entityDomain, pipe.entitySet)
   };
 
   return mongoose.model('Entities').update(
@@ -301,7 +301,7 @@ function ___getAllEntitiesBySource(pipe, cb) {
     from: {$lte: pipe.transaction.createdAt},
     to: pipe.transaction.createdAt,
     domain: pipe.entityDomain.originId,
-    sets : pipe.entitySet && pipe.entityDomain.originId !== pipe.entitySet.originId ? pipe.entitySet.originId : {$size: 0}
+    sets : getQuerySetsClause(pipe.entityDomain, pipe.entitySet)
   };
 
   return mongoose.model('Entities').find(query)
@@ -334,7 +334,7 @@ function ____closeEntity(pipe) {
       from: {$lte: pipe.transaction.createdAt},
       to: constants.MAX_VERSION,
       domain: pipe.entityDomain.originId,
-      sets : pipe.entitySet && pipe.entityDomain.originId !== pipe.entitySet.originId ? pipe.entitySet.originId : {$size: 0}
+      sets : getQuerySetsClause(pipe.entityDomain, pipe.entitySet)
     }, properties);
 
     return mongoose.model('Entities').findOneAndUpdate(query, {$set: {to: pipe.transaction.createdAt}}, {new: true})
@@ -670,4 +670,8 @@ function getComplexKey(obj) {
     .map(key => `${key}:${obj[key]}`)
     .join('--')
     .value();
+}
+
+function getQuerySetsClause(entityDomain, entitySet) {
+  return entitySet && entityDomain.originId !== entitySet.originId ? entitySet.originId : {$size: 0};
 }

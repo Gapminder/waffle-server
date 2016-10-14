@@ -2,6 +2,7 @@
 
 const cliUtils = require('./../../../cli.utils.js');
 const e2eUtils = require('./../../../e2e.utils');
+const e2eEnv = require('./../../../e2e.env');
 
 const fs = require('fs');
 const expect = require('chai').expect;
@@ -37,7 +38,7 @@ const fixtureQueryOperatorsNumUsersByCompanyProjectWithCondition = require('./fi
 describe("Initial State (1st commit)", function() {
 
   before(done => {
-    cliUtils.setDefaultCommit('3810a5e', done);
+    cliUtils.setDefaultCommit(e2eEnv.repoCommits.init, done);
   });
 
   describe("Schema", function() {
