@@ -58,7 +58,7 @@ module.exports = function (options, done) {
     getAllPreviousConcepts,
     processEntitiesChanges,
     processDataPointsChanges,
-    translationsService.processTranslations,
+    // translationsService.processTranslations,
     createDatasetIndex,
     common.closeTransaction
   ], (updateError, pipe) => {
@@ -283,7 +283,7 @@ function ___closeAllEntitiesBySource(pipe, cb) {
     from: {$lte: pipe.transaction.createdAt},
     to: constants.MAX_VERSION,
     domain: pipe.entityDomain.originId,
-    sets : pipe.entitySet ? pipe.entitySet.originId : {$size: 0}
+    sets : pipe.entitySet && pipe.entityDomain.originId !== pipe.entitySet.originId ? pipe.entitySet.originId : {$size: 0}
   };
 
   return mongoose.model('Entities').update(
@@ -301,7 +301,7 @@ function ___getAllEntitiesBySource(pipe, cb) {
     from: {$lte: pipe.transaction.createdAt},
     to: pipe.transaction.createdAt,
     domain: pipe.entityDomain.originId,
-    sets : pipe.entitySet ? pipe.entitySet.originId : {$size: 0}
+    sets : pipe.entitySet && pipe.entityDomain.originId !== pipe.entitySet.originId ? pipe.entitySet.originId : {$size: 0}
   };
 
   return mongoose.model('Entities').find(query)
@@ -334,7 +334,7 @@ function ____closeEntity(pipe) {
       from: {$lte: pipe.transaction.createdAt},
       to: constants.MAX_VERSION,
       domain: pipe.entityDomain.originId,
-      sets : pipe.entitySet ? pipe.entitySet.originId : {$size: 0}
+      sets : pipe.entitySet && pipe.entityDomain.originId !== pipe.entitySet.originId ? pipe.entitySet.originId : {$size: 0}
     }, properties);
 
     return mongoose.model('Entities').findOneAndUpdate(query, {$set: {to: pipe.transaction.createdAt}}, {new: true})

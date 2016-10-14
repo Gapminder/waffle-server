@@ -1,19 +1,22 @@
 {
   "headers": [
     "company_size",
-    "full_name",
-    "is--company_size"
+    "full_name_changed",
+    "is--company_size",
+    "full_name"
   ],
   "rows": [
     [
       "small",
       "Not very big",
-      true
+      true,
+      null
     ],
     [
       "large",
       "VERY BIG!!!$(#(*#*($",
-      true
+      true,
+      null
     ]
   ]
 }

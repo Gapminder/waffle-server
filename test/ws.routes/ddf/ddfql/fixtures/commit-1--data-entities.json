@@ -10,13 +10,7 @@
       "gap"
     ],
     [
-      "gap"
-    ],
-    [
-      "small"
-    ],
-    [
-      "large"
+      "valor"
     ],
     [
       "mic"
@@ -25,7 +19,13 @@
       "gap"
     ],
     [
-      "valor"
+      "gap"
+    ],
+    [
+      "small"
+    ],
+    [
+      "large"
     ]
   ]
 }

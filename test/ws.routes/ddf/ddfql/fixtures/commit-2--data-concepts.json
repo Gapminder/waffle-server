@@ -7,12 +7,6 @@
   ],
   "rows": [
     [
-      "english_speaking",
-      "entity_set",
-      "company",
-      ""
-    ],
-    [
       "company_size",
       "entity_set",
       "company",
@@ -49,6 +43,12 @@
       ""
     ],
     [
+      "english_speaking",
+      "entity_set",
+      "company",
+      ""
+    ],
+    [
       "name",
       "string",
       null,
@@ -57,7 +57,7 @@
     [
       "anno",
       "time",
-      "year",
+      null,
       ""
     ],
     [
