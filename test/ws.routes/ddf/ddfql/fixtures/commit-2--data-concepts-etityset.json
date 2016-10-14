@@ -5,15 +5,15 @@
   ],
   "rows": [
     [
-      "english_speaking",
-      "entity_set"
-    ],
-    [
       "company_size",
       "entity_set"
     ],
     [
       "foundation",
+      "entity_set"
+    ],
+    [
+      "english_speaking",
       "entity_set"
     ]
   ]

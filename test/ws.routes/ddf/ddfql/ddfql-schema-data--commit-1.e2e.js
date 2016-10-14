@@ -37,7 +37,7 @@ const fixtureQueryOperatorsNumUsersByCompanyProjectWithCondition = require('./fi
 describe("Initial State (1st commit)", function() {
 
   before(done => {
-    cliUtils.setDefaultCommit('7112e1f', done);
+    cliUtils.setDefaultCommit('3810a5e', done);
   });
 
   describe("Schema", function() {
@@ -51,6 +51,8 @@ describe("Initial State (1st commit)", function() {
       };
 
       e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
+        response.body.rows.sort();
+        fixtureSchemaConcepts.rows.sort();
         expect(response.body).to.deep.equal(fixtureSchemaConcepts);
         done();
       });
@@ -65,6 +67,8 @@ describe("Initial State (1st commit)", function() {
       };
 
       e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
+        response.body.rows.sort();
+        fixtureSchemaEntities.rows.sort();
         expect(response.body).to.deep.equal(fixtureSchemaEntities);
         done();
       });
@@ -79,6 +83,8 @@ describe("Initial State (1st commit)", function() {
       };
 
       e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
+        response.body.rows.sort();
+        fixtureSchemaDatapoints.rows.sort();
         expect(response.body).to.deep.equal(fixtureSchemaDatapoints);
         done();
       });
@@ -94,6 +100,8 @@ describe("Initial State (1st commit)", function() {
       };
 
       e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
+        response.body.rows.sort();
+        fixtureSchemaDatapointsMinMax.rows.sort();
         expect(response.body).to.deep.equal(fixtureSchemaDatapointsMinMax);
         done();
       });
@@ -109,6 +117,8 @@ describe("Initial State (1st commit)", function() {
       };
 
       e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
+        response.body.rows.sort();
+        fixtureSchemaDatapointsAvg.rows.sort();
         expect(response.body).to.deep.equal(fixtureSchemaDatapointsAvg);
         done();
       });
@@ -137,6 +147,8 @@ describe("Initial State (1st commit)", function() {
       };
 
       e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
+        response.body.rows.sort();
+        fixtureDataConceptsEntitySet.rows.sort();
         expect(response.body).to.deep.equal(fixtureDataConceptsEntitySet);
         done();
       });
@@ -161,6 +173,8 @@ describe("Initial State (1st commit)", function() {
       };
 
       e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
+        response.body.rows.sort();
+        fixtureDataConceptsMeasure.rows.sort();
         expect(response.body).to.deep.equal(fixtureDataConceptsMeasure);
         done();
       });
@@ -185,6 +199,8 @@ describe("Initial State (1st commit)", function() {
       };
 
       e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
+        response.body.rows.sort();
+        fixtureDataConceptsString.rows.sort();
         expect(response.body).to.deep.equal(fixtureDataConceptsString);
         done();
       });
@@ -203,6 +219,8 @@ describe("Initial State (1st commit)", function() {
       };
 
       e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
+        response.body.rows.sort();
+        fixtureDataConcepts.rows.sort();
         expect(response.body).to.deep.equal(fixtureDataConcepts);
         done();
       });
@@ -217,12 +235,14 @@ describe("Initial State (1st commit)", function() {
       };
 
       e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
+        response.body.rows.sort();
+        fixtureDataEntities.rows.sort();
         expect(response.body).to.deep.equal(fixtureDataEntities);
         done();
       });
     });
 
-    xit('should return list of entities that are part of english_speaking entityset', done => {
+    it('should return list of entities that are part of english_speaking entityset', done => {
       const ddfql = {
         "select": {
           "key": ["company"],
@@ -239,12 +259,14 @@ describe("Initial State (1st commit)", function() {
       };
 
       e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
+        response.body.rows.sort();
+        fixtureDataEntitiesSpeakingEnglish.rows.sort();
         expect(response.body).to.deep.equal(fixtureDataEntitiesSpeakingEnglish);
         done();
       });
     });
 
-    xit('should return list of entities that are part of foundation etitiyset', done => {
+    it('should return list of entities that are part of foundation etitiyset', done => {
       const ddfql = {
         "select": {
           "key": ["company"],
@@ -261,12 +283,14 @@ describe("Initial State (1st commit)", function() {
       };
 
       e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
+        response.body.rows.sort();
+        fixtureDataEntitiesFoundation.rows.sort();
         expect(response.body).to.deep.equal(fixtureDataEntitiesFoundation);
         done();
       });
     });
 
-    xit('should return list of entities that are part of company_size entityset', done => {
+    it('should return list of entities that are part of company_size entityset', done => {
       const ddfql = {
         "select": {
           "key": ["company_size"],
@@ -283,6 +307,8 @@ describe("Initial State (1st commit)", function() {
       };
 
       e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
+        response.body.rows.sort();
+        fixtureDataEntitiesCompanySize.rows.sort();
         expect(response.body).to.deep.equal(fixtureDataEntitiesCompanySize);
         done();
       });
@@ -307,6 +333,8 @@ describe("Initial State (1st commit)", function() {
       };
 
       e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
+        response.body.rows.sort();
+        fixtureDatapointsCompanySizeByCompanyAnno.rows.sort();
         expect(response.body).to.deep.equal(fixtureDatapointsCompanySizeByCompanyAnno);
         done();
       });
@@ -328,6 +356,8 @@ describe("Initial State (1st commit)", function() {
       };
 
       e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
+        response.body.rows.sort();
+        fixtureDatapointsLinesOfCodeByCompanyAnno.rows.sort();
         expect(response.body).to.deep.equal(fixtureDatapointsLinesOfCodeByCompanyAnno);
         done();
       });
@@ -347,6 +377,8 @@ describe("Initial State (1st commit)", function() {
       };
 
       e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
+        response.body.rows.sort();
+        fixtureDatapointsLinesOfCodeByCompanyProject.rows.sort();
         expect(response.body).to.deep.equal(fixtureDatapointsLinesOfCodeByCompanyProject);
         done();
       });
@@ -366,6 +398,8 @@ describe("Initial State (1st commit)", function() {
       };
 
       e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
+        response.body.rows.sort();
+        fixtureDatapointsLinesOfCodeByCompanyProjectAnno.rows.sort();
         expect(response.body).to.deep.equal(fixtureDatapointsLinesOfCodeByCompanyProjectAnno);
         done();
       });
@@ -385,6 +419,8 @@ describe("Initial State (1st commit)", function() {
       };
 
       e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
+        response.body.rows.sort();
+        fixtureDatapointsNumUsersByCompanyProject.rows.sort();
         expect(response.body).to.deep.equal(fixtureDatapointsNumUsersByCompanyProject);
         done();
       });
@@ -414,6 +450,8 @@ describe("Initial State (1st commit)", function() {
       };
 
       e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
+        response.body.rows.sort();
+        fixtureQueryOperatorsCompanySizeByCompanyAnnoWithCondition.rows.sort();
         expect(response.body).to.deep.equal(fixtureQueryOperatorsCompanySizeByCompanyAnnoWithCondition);
         done();
       });
@@ -439,6 +477,8 @@ describe("Initial State (1st commit)", function() {
       };
 
       e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
+        response.body.rows.sort();
+        fixtureQueryOperatorsLinesOfCodeByCompanyAnnoWithCondition.rows.sort();
         expect(response.body).to.deep.equal(fixtureQueryOperatorsLinesOfCodeByCompanyAnnoWithCondition);
         done();
       });
@@ -461,6 +501,8 @@ describe("Initial State (1st commit)", function() {
       };
 
       e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
+        response.body.rows.sort();
+        fixtureQueryOperatorsLinesOfCodeByCompanyProjectWithCondition.rows.sort();
         expect(response.body).to.deep.equal(fixtureQueryOperatorsLinesOfCodeByCompanyProjectWithCondition);
         done();
       });
@@ -485,6 +527,8 @@ describe("Initial State (1st commit)", function() {
       };
 
       e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
+        response.body.rows.sort();
+        fixtureQueryOperatorsLinesOfCodeByCompanyProjectAnnoWithCondition.rows.sort();
         expect(response.body).to.deep.equal(fixtureQueryOperatorsLinesOfCodeByCompanyProjectAnnoWithCondition);
         done();
       });
@@ -509,6 +553,8 @@ describe("Initial State (1st commit)", function() {
       };
 
       e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
+        response.body.rows.sort();
+        fixtureQueryOperatorsNumUsersByCompanyProjectWithCondition.rows.sort();
         expect(response.body).to.deep.equal(fixtureQueryOperatorsNumUsersByCompanyProjectWithCondition);
         done();
       });

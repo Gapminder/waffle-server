@@ -20,12 +20,6 @@
       [
         "english_speaking"
       ],
-      "company"
-    ],
-    [
-      [
-        "english_speaking"
-      ],
       "is--english_speaking"
     ],
     [
@@ -44,25 +38,7 @@
       [
         "foundation"
       ],
-      "company"
-    ],
-    [
-      [
-        "foundation"
-      ],
       "is--foundation"
-    ],
-    [
-      [
-        "project"
-      ],
-      "name"
-    ],
-    [
-      [
-        "region"
-      ],
-      "full_name_changed"
     ],
     [
       [
@@ -81,6 +57,18 @@
         "company"
       ],
       "region"
+    ],
+    [
+      [
+        "project"
+      ],
+      "name"
+    ],
+    [
+      [
+        "region"
+      ],
+      "full_name_changed"
     ]
   ]
 }
