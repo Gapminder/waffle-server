@@ -68,7 +68,10 @@ describe('repos service', () => {
       '../ws.config/log': {
         error: (error) => {
           expect(error).exist;
-        }
+        },
+        info: (msg) => {
+          expect(msg).exist;
+        },
       }
     });
 
@@ -111,7 +114,10 @@ describe('repos service', () => {
       '../ws.config/log': {
         error: (error) => {
           expect(error).to.contain('some error');
-        }
+        },
+        info: (msg) => {
+          expect(msg).exist;
+        },
       }
     });
 

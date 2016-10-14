@@ -32,9 +32,6 @@ module.exports = (function () {
     // { error: 0, warn: 1, info: 2, verbose: 3, debug: 4, silly: 5 }
     LOG_LEVEL: process.env.LOG_LEVEL || DEFAULT_CONFIG.LOG_LEVEL,
 
-    LOG_TABS: process.env.LOG_TABS || DEFAULT_CONFIG.LOG_TABS,
-    LOG_TRANSPORTS: process.env.LOG_TRANSPORTS ? process.env.LOG_TRANSPORTS.split(',') : DEFAULT_CONFIG.LOG_TRANSPORTS,
-
     DEFAULT_OPTIONS_CONVERTING_JSON_TO_CSV: {
       DELIMITER: {
         FIELD: ';',
