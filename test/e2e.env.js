@@ -14,6 +14,7 @@ module.exports = {
   repoCommits: {
     init: '3810a5e',
     version_1: '0807fcb',
-    version_2: '30a2b3b'
+    version_2: '30a2b3b',
+    version_3: '2bc810d'
   }
 };
