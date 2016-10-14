@@ -31,7 +31,7 @@
     "cors": "2.8.1",
     "csvtojson": "1.0.2",
     "ddf-time-utils": "0.1.6",
-    "ddf-validation": "0.12.10",
+    "ddf-validation": "^0.12.10",
     "entities": "1.1.1",
     "express": "4.14.0",
     "express-redis-cache": "0.4.2",
@@ -84,7 +84,7 @@
     "synchronize": "2.0.0",
     "through2": "2.0.1",
     "vinyl": "1.2.0",
-    "waffle-server-import-cli": "2.4.10"
+    "waffle-server-import-cli": "^2.4.10"
   },
   "repository": {
     "type": "git",
