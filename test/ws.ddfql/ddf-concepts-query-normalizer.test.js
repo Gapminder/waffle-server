@@ -7,8 +7,8 @@ const expect = chai.expect;
 const concepts = [
   {gid: 'time', properties: {concept_type: 'time'}},
   {gid: 'quarter', properties: {concept_type: 'time'}},
-  {gid: 'geo'},
-  {gid: 'country'},
+  {gid: 'geo', properties: {concept_type: 'entity_domain'}},
+  {gid: 'country', properties: {concept_type: 'entity_set'}},
   {gid: 'color'}
 ];
 

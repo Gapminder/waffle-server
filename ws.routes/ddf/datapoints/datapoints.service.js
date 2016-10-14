@@ -119,6 +119,9 @@ function normalizeQueriesToDatapointsByDdfql(pipe, cb) {
       }
 
       console.timeEnd('get datapoints');
+      if(err) {
+        return cb(err);
+      }
       logger.info(`${_.size(pipe.datapoints)} items of datapoints were selected`);
 
       return cb(null, pipe);

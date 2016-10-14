@@ -1,0 +1,22 @@
+{
+  "headers": [
+    "company",
+    "name",
+    "is--english_speaking",
+    "additional_column"
+  ],
+  "rows": [
+    [
+      "gap",
+      "Gapminder",
+      true,
+      "any text 2"
+    ],
+    [
+      "mcrsft",
+      "Microsoft",
+      true,
+      "any text 1"
+    ]
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "headers": [
+    "concept",
+    "concept_type"
+  ],
+  "rows": [
+    [
+      "company_size",
+      "entity_set"
+    ],
+    [
+      "foundation",
+      "entity_set"
+    ],
+    [
+      "english_speaking",
+      "entity_set"
+    ]
+  ]
+}
