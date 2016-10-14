@@ -37,7 +37,7 @@ module.exports = function (options, done) {
     common.createEntities,
     common.createDataPoints,
     common.updateConceptsDimensions,
-    translationsService.processTranslations,
+    // translationsService.processTranslations,
     createDatasetIndex,
     common.closeTransaction
   ], (importError, pipe) => {

@@ -1,0 +1,22 @@
+{
+  "headers": [
+    "company",
+    "name",
+    "is--english_speaking",
+    "additional_column"
+  ],
+  "rows": [
+    [
+      "mic",
+      "Microsoft",
+      true,
+      "any text 1"
+    ],
+    [
+      "gap",
+      "Gapminder",
+      true,
+      "any text 2"
+    ]
+  ]
+}

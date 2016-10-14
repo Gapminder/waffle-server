@@ -1,0 +1,24 @@
+{
+  "headers": [
+    "concept",
+    "concept_type"
+  ],
+  "rows": [
+    [
+      "name",
+      "string"
+    ],
+    [
+      "country",
+      "string"
+    ],
+    [
+      "full_name",
+      "string"
+    ],
+    [
+      "domain",
+      "string"
+    ]
+  ]
+}
