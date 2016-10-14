@@ -53,6 +53,7 @@ function _cloneRepo(githubUrl, commit, pathToRepo, onCloned) {
     return onCloned(`Incorrect github url was given: ${githubUrl}`);
   }
 
+  logger.info(`** Start cloning dataset: ${githubUrl}`);
   return git(path.resolve(config.PATH_TO_DDF_REPOSITORIES))
     .clone(githubUrl, pathToRepo, cloneError => {
     if (cloneError) {
@@ -60,6 +61,7 @@ function _cloneRepo(githubUrl, commit, pathToRepo, onCloned) {
       return onCloned(`Cannot clone repo from ${githubUrl}`);
     }
 
+    logger.info(`** Dataset has been cloned: ${githubUrl}`);
     return checkoutRepo(pathToRepo, commit, onCloned);
   });
 }

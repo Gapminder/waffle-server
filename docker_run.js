@@ -15,7 +15,7 @@ shell.exec('/usr/bin/forever start -c \"/usr/bin/node --stack_trace_limit=0\" -m
 if (!REDIS_HOST){
   console.log("-- ERROR: REDIS_HOST is not set. Exit.");
   process.exit(1);
-};
+}
 console.log(`++ Redis address: ${REDIS_HOST}`);
 
 function register_us(){
@@ -28,16 +28,16 @@ function register_us(){
     else {
       console.log("-- ERROR: Could not determine local ip address. Exit.");
       process.exit(1);
-    };
+    }
 
     if (shell.exec('/usr/bin/forever list | /bin/grep server.js | wc -l',  {silent:true}).stdout != 1) {
         console.log("-- ERROR: ws is failed to start. Exit.");
         shell.exec('/usr/bin/forever stopall');
         process.exit(1);
-    };
+    }
 
     shell.exec('sleep 2');
-  };
-};
+  }
+}
 
 register_us();

@@ -58,7 +58,7 @@ module.exports = function (options, done) {
     getAllPreviousConcepts,
     processEntitiesChanges,
     processDataPointsChanges,
-    translationsService.processTranslations,
+    // translationsService.processTranslations,
     createDatasetIndex,
     common.closeTransaction
   ], (updateError, pipe) => {
