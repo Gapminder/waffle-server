@@ -18,8 +18,8 @@ module.exports = bunyan.createLogger({
       level: config.LOG_LEVEL,
       type: 'rotating-file',
       path: path.join(__dirname, '/../logs/waffle.log'),
-      period: 'hourly',
-      count: 10
+      period: 'daily',
+      count: 3
     },
     {
       level: config.LOG_LEVEL,
