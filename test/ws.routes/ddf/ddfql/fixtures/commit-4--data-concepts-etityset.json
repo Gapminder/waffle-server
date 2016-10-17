@@ -1,0 +1,16 @@
+{
+  "headers": [
+    "concept",
+    "concept_type"
+  ],
+  "rows": [
+    [
+      "company_scale",
+      "entity_set"
+    ],
+    [
+      "english_speaking",
+      "entity_set"
+    ]
+  ]
+}
