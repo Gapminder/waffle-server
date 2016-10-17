@@ -5,6 +5,11 @@ var express = require('express');
 var app = express();
 
 const config = require('./ws.config/config');
+const logger = require('./ws.config/log');
+
+process.on('uncaughtException', function(err) {
+  logger.error(err);
+});
 
 var bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
