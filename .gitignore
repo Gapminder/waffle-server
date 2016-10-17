@@ -35,7 +35,7 @@ swagger.json
 # Directory for GitHub repositories
 /ws.import/repos
 
-settings_gapminder.txt
+settings_gapminder*.txt
 settings_valor.txt
 dev
 dev.pub
