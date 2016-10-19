@@ -1,0 +1,9 @@
+export AWS_ACCESS_KEY_ID=
+export AWS_SECRET_ACCESS_KEY=
+export MONGODB_URL=""
+export NEWRELIC_KEY=""
+export AWS_SSH_KEY_NAME=""
+export HAPROXY_ECR_NAME=""
+export NODE_ECR_NAME=""
+export AWS_DEFAULT_REGION=""
+
