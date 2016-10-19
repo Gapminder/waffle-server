@@ -1,11 +1,14 @@
 FROM ubuntu:14.04
 
 RUN apt-get update
-RUN apt-get install -y git python build-essential libssl-dev openssh-server curl redis-tools nfs-common
+RUN apt-get install -y git python build-essential libssl-dev openssh-server curl redis-tools nfs-common rsyslog
 
 #RUN curl -sL https://deb.nodesource.com/setup_5.x | sudo -E bash -
 #RUN curl -sL https://deb.nodesource.com/setup_4.x | sudo -E bash -
 RUN curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
+
+COPY ./deployment/rsys_conf/rsyslog.conf /etc/rsyslog.conf
+COPY ./deployment/rsys_conf/ws.conf /etc/rsyslog.d/ws.conf
 
 #Install Node.js v6.x
 RUN apt-get install -y nodejs
