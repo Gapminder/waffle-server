@@ -1,0 +1,506 @@
+[
+  {
+    "name": "Categorizations",
+    "parent": "",
+    "tag": "categorizations",
+    "undefined": "categorizations"
+  },
+  {
+    "name": "Economy",
+    "parent": "",
+    "tag": "economy",
+    "undefined": "economy"
+  },
+  {
+    "name": "Education",
+    "parent": "",
+    "tag": "education",
+    "undefined": "education"
+  },
+  {
+    "name": "Energy",
+    "parent": "",
+    "tag": "energy",
+    "undefined": "energy"
+  },
+  {
+    "name": "Environment",
+    "parent": "",
+    "tag": "environment",
+    "undefined": "environment"
+  },
+  {
+    "name": "For advanced users",
+    "parent": "",
+    "tag": "advanced",
+    "undefined": "advanced"
+  },
+  {
+    "name": "Health",
+    "parent": "",
+    "tag": "health",
+    "undefined": "health"
+  },
+  {
+    "name": "Infrastructure",
+    "parent": "",
+    "tag": "infrastructure",
+    "undefined": "infrastructure"
+  },
+  {
+    "name": "Population",
+    "parent": "",
+    "tag": "population",
+    "undefined": "population"
+  },
+  {
+    "name": "Society",
+    "parent": "",
+    "tag": "society",
+    "undefined": "society"
+  },
+  {
+    "name": "Work",
+    "parent": "",
+    "tag": "work",
+    "undefined": "work"
+  },
+  {
+    "name": "Aid given",
+    "parent": "economy",
+    "tag": "aid_given",
+    "undefined": "aid_given"
+  },
+  {
+    "name": "Aid received",
+    "parent": "economy",
+    "tag": "aid_received",
+    "undefined": "aid_received"
+  },
+  {
+    "name": "Debt & trade",
+    "parent": "economy",
+    "tag": "debt_trade",
+    "undefined": "debt_trade"
+  },
+  {
+    "name": "Economic situation",
+    "parent": "economy",
+    "tag": "economic_situation",
+    "undefined": "economic_situation"
+  },
+  {
+    "name": "Incomes & growth",
+    "parent": "economy",
+    "tag": "incomes_growth",
+    "undefined": "incomes_growth"
+  },
+  {
+    "name": "Poverty & inequality",
+    "parent": "economy",
+    "tag": "poverty_inequality",
+    "undefined": "poverty_inequality"
+  },
+  {
+    "name": "Sectors",
+    "parent": "economy",
+    "tag": "sectors",
+    "undefined": "sectors"
+  },
+  {
+    "name": "Achievement",
+    "parent": "education",
+    "tag": "achievement",
+    "undefined": "achievement"
+  },
+  {
+    "name": "Gender equality",
+    "parent": "education",
+    "tag": "gender_equality",
+    "undefined": "gender_equality"
+  },
+  {
+    "name": "Literacy",
+    "parent": "education",
+    "tag": "literacy",
+    "undefined": "literacy"
+  },
+  {
+    "name": "Mean years in school",
+    "parent": "education",
+    "tag": "mean_years_in_school",
+    "undefined": "mean_years_in_school"
+  },
+  {
+    "name": "School enrolment",
+    "parent": "education",
+    "tag": "school_enrolment",
+    "undefined": "school_enrolment"
+  },
+  {
+    "name": "Schooling cost",
+    "parent": "education",
+    "tag": "schooling_cost",
+    "undefined": "schooling_cost"
+  },
+  {
+    "name": "Coal",
+    "parent": "energy",
+    "tag": "coal",
+    "undefined": "coal"
+  },
+  {
+    "name": "Electricity",
+    "parent": "energy",
+    "tag": "electricity",
+    "undefined": "electricity"
+  },
+  {
+    "name": "Hydro",
+    "parent": "energy",
+    "tag": "hydro",
+    "undefined": "hydro"
+  },
+  {
+    "name": "Natural gas",
+    "parent": "energy",
+    "tag": "natural_gas",
+    "undefined": "natural_gas"
+  },
+  {
+    "name": "Nuclear",
+    "parent": "energy",
+    "tag": "nuclear",
+    "undefined": "nuclear"
+  },
+  {
+    "name": "Oil",
+    "parent": "energy",
+    "tag": "oil",
+    "undefined": "oil"
+  },
+  {
+    "name": "Total",
+    "parent": "energy",
+    "tag": "total",
+    "undefined": "total"
+  },
+  {
+    "name": "Disasters",
+    "parent": "environment",
+    "tag": "disasters",
+    "undefined": "disasters"
+  },
+  {
+    "name": "Emissions",
+    "parent": "environment",
+    "tag": "emissions",
+    "undefined": "emissions"
+  },
+  {
+    "name": "Forestry",
+    "parent": "environment",
+    "tag": "forestry",
+    "undefined": "forestry"
+  },
+  {
+    "name": "Geography",
+    "parent": "environment",
+    "tag": "geography",
+    "undefined": "geography"
+  },
+  {
+    "name": "Water",
+    "parent": "environment",
+    "tag": "environment_water",
+    "undefined": "environment_water"
+  },
+  {
+    "name": "Advanced debt & trade",
+    "parent": "advanced",
+    "tag": "advanced_debt_trade",
+    "undefined": "advanced_debt_trade"
+  },
+  {
+    "name": "Alternative child mortality data",
+    "parent": "advanced",
+    "tag": "alternative_child_mortality_data",
+    "undefined": "alternative_child_mortality_data"
+  },
+  {
+    "name": "Alternative demography indicators",
+    "parent": "advanced",
+    "tag": "alternative_demography_indicators",
+    "undefined": "alternative_demography_indicators"
+  },
+  {
+    "name": "Alternative energy",
+    "parent": "advanced",
+    "tag": "alternative_energy",
+    "undefined": "alternative_energy"
+  },
+  {
+    "name": "Alternative GDP data",
+    "parent": "advanced",
+    "tag": "alternative_gdp_data",
+    "undefined": "alternative_gdp_data"
+  },
+  {
+    "name": "Alternative health data",
+    "parent": "advanced",
+    "tag": "alternative_health_data",
+    "undefined": "alternative_health_data"
+  },
+  {
+    "name": "Alternative other data",
+    "parent": "advanced",
+    "tag": "alternative_other_data",
+    "undefined": "alternative_other_data"
+  },
+  {
+    "name": "Alternative poverty measures",
+    "parent": "advanced",
+    "tag": "alternative_poverty_measures",
+    "undefined": "alternative_poverty_measures"
+  },
+  {
+    "name": "Data quality (use as color)",
+    "parent": "advanced",
+    "tag": "data_quality_use_as_color",
+    "undefined": "data_quality_use_as_color"
+  },
+  {
+    "name": "Economic growth",
+    "parent": "advanced",
+    "tag": "economic_growth",
+    "undefined": "economic_growth"
+  },
+  {
+    "name": "families",
+    "parent": "advanced",
+    "tag": "families",
+    "undefined": "families"
+  },
+  {
+    "name": "Geography and infrastructure",
+    "parent": "advanced",
+    "tag": "geography_infrastructure",
+    "undefined": "geography_infrastructure"
+  },
+  {
+    "name": "Injury deaths by gender, age, road user",
+    "parent": "advanced",
+    "tag": "injury_deaths_by_gender_age_road_user",
+    "undefined": "injury_deaths_by_gender_age_road_user"
+  },
+  {
+    "name": "Projections",
+    "parent": "advanced",
+    "tag": "projections",
+    "undefined": "projections"
+  },
+  {
+    "name": "Years (use as color)",
+    "parent": "advanced",
+    "tag": "years_use_as_color",
+    "undefined": "years_use_as_color"
+  },
+  {
+    "name": "Cancer, female",
+    "parent": "health",
+    "tag": "cancer_female",
+    "undefined": "cancer_female"
+  },
+  {
+    "name": "Cancer, male",
+    "parent": "health",
+    "tag": "cancer_male",
+    "undefined": "cancer_male"
+  },
+  {
+    "name": "Causes of child deaths",
+    "parent": "health",
+    "tag": "causes_of_child_deaths",
+    "undefined": "causes_of_child_deaths"
+  },
+  {
+    "name": "Causes of newborn deaths",
+    "parent": "health",
+    "tag": "causes_of_newborn_deaths",
+    "undefined": "causes_of_newborn_deaths"
+  },
+  {
+    "name": "Health Economics",
+    "parent": "health",
+    "tag": "health_economics",
+    "undefined": "health_economics"
+  },
+  {
+    "name": "HIV",
+    "parent": "health",
+    "tag": "hiv",
+    "undefined": "hiv"
+  },
+  {
+    "name": "Injuries and accidents",
+    "parent": "health",
+    "tag": "injuries_and_accidents",
+    "undefined": "injuries_and_accidents"
+  },
+  {
+    "name": "Malaria",
+    "parent": "health",
+    "tag": "malaria",
+    "undefined": "malaria"
+  },
+  {
+    "name": "Maternal health",
+    "parent": "health",
+    "tag": "maternal_health",
+    "undefined": "maternal_health"
+  },
+  {
+    "name": "Mental health",
+    "parent": "health",
+    "tag": "mental_health",
+    "undefined": "mental_health"
+  },
+  {
+    "name": "Newborn & Infants",
+    "parent": "health",
+    "tag": "newborn_infants",
+    "undefined": "newborn_infants"
+  },
+  {
+    "name": "Nutrition",
+    "parent": "health",
+    "tag": "nutrition",
+    "undefined": "nutrition"
+  },
+  {
+    "name": "Risk factors",
+    "parent": "health",
+    "tag": "risk_factors",
+    "undefined": "risk_factors"
+  },
+  {
+    "name": "TB (tuberculosis)",
+    "parent": "health",
+    "tag": "tb_tuberculosis",
+    "undefined": "tb_tuberculosis"
+  },
+  {
+    "name": "Teeth",
+    "parent": "health",
+    "tag": "teeth",
+    "undefined": "teeth"
+  },
+  {
+    "name": "Vaccine",
+    "parent": "health",
+    "tag": "vaccine",
+    "undefined": "vaccine"
+  },
+  {
+    "name": "Communication",
+    "parent": "infrastructure",
+    "tag": "communication",
+    "undefined": "communication"
+  },
+  {
+    "name": "Sanitation",
+    "parent": "infrastructure",
+    "tag": "sanitation",
+    "undefined": "sanitation"
+  },
+  {
+    "name": "Traffic",
+    "parent": "infrastructure",
+    "tag": "traffic",
+    "undefined": "traffic"
+  },
+  {
+    "name": "Water",
+    "parent": "infrastructure",
+    "tag": "infrastructure_water",
+    "undefined": "infrastructure_water"
+  },
+  {
+    "name": "Both sexes by age (%)",
+    "parent": "population",
+    "tag": "both_sexes_by_age",
+    "undefined": "both_sexes_by_age"
+  },
+  {
+    "name": "Both sexes by age (total)",
+    "parent": "population",
+    "tag": "both_sexes_by_age_total",
+    "undefined": "both_sexes_by_age_total"
+  },
+  {
+    "name": "Female by age (%)",
+    "parent": "population",
+    "tag": "female_by_age",
+    "undefined": "female_by_age"
+  },
+  {
+    "name": "Male by age (%)",
+    "parent": "population",
+    "tag": "male_by_age",
+    "undefined": "male_by_age"
+  },
+  {
+    "name": "Population growth",
+    "parent": "population",
+    "tag": "population_growth",
+    "undefined": "population_growth"
+  },
+  {
+    "name": "Sex ratio",
+    "parent": "population",
+    "tag": "sex_ratio",
+    "undefined": "sex_ratio"
+  },
+  {
+    "name": "Urbanization",
+    "parent": "population",
+    "tag": "urbanization",
+    "undefined": "urbanization"
+  },
+  {
+    "name": "War & peace",
+    "parent": "society",
+    "tag": "war_peace",
+    "undefined": "war_peace"
+  },
+  {
+    "name": "Employment by sector",
+    "parent": "work",
+    "tag": "employment_by_sector",
+    "undefined": "employment_by_sector"
+  },
+  {
+    "name": "Employment by status",
+    "parent": "work",
+    "tag": "employment_by_status",
+    "undefined": "employment_by_status"
+  },
+  {
+    "name": "Employment rate",
+    "parent": "work",
+    "tag": "employment_rate",
+    "undefined": "employment_rate"
+  },
+  {
+    "name": "Labour force participation",
+    "parent": "work",
+    "tag": "labour_force_participation",
+    "undefined": "labour_force_participation"
+  },
+  {
+    "name": "Unemployment",
+    "parent": "work",
+    "tag": "unemployment",
+    "undefined": "unemployment"
+  }
+]

@@ -1,0 +1,601 @@
+{
+  "headers": [
+    "new_string_property",
+    "description_updated",
+    "unit",
+    "drill_up",
+    "color_updated",
+    "indicator_url",
+    "domain",
+    "concept_type",
+    "name",
+    "concept"
+  ],
+  "rows": [
+    [
+      "",
+      "updated description",
+      "",
+      null,
+      "{\"palette\": {\"muslim\": \"#71c44c\", \"eastern_religions\": \"#f05656\", \"christian\": \"#7487ef\"}, \"selectable\": false}",
+      "http://spreadsheets.google.com/spreadsheet/pub?key=0ArtujvvFrPjVdHUzTGVicFJZQ1NjaFhqelV5SDNxMVE",
+      "geo",
+      "entity_set",
+      "Main religion updated",
+      "main_religion_updated"
+    ],
+    [
+      "",
+      "New Entity Set",
+      "",
+      null,
+      "{\"palette\": {\"america\": [\"#7feb00\", \"#5de200\", \"#81f201\", \"#00b900\", \"#b5ea32\", \"#008d36\"], \"asia\": [\"#ff5872\", \"#ff5178\", \"#ff658a\", \"#da0025\", \"#fa4e73\", \"#b2043a\"], \"_default\": [\"#ffb600\", \"#ffaa14\", \"#ffc500\", \"#fb6d19\", \"#ffb600\", \"#9b4838\"], \"europe\": [\"#ffe700\", \"#fbdd00\", \"#fff400\", \"#fbaf09\", \"#ffe700\", \"#b17f4a\"], \"africa\": [\"#00d5e9\", \"#00c8ec\", \"#00e1ec\", \"#0098df\", \"#77dff7\", \"#0586c6\"]}, \"selectable\": false}",
+      "http://spreadsheets.google.com/spreadsheet/pub?key=0ArfEDsV3bBwCdHlocWJBM1Uyd1ZPeHduU3c4WGplMEE",
+      "geo",
+      "entity_set",
+      "Geographic regions in 4 colors",
+      "geographic_regions_in_4_colors"
+    ],
+    [
+      "new value 3",
+      "Total annual value of forest products in current USD per hectares, including both wood and non-wood removal during that year.",
+      "$",
+      null,
+      "",
+      "http://spreadsheets.google.com/pub?key=pp59adS3CHWd9CVdfFx1dEw",
+      "",
+      "measure",
+      "Forest products removal, per ha",
+      "forest_products_removal_per_ha_dollar"
+    ],
+    [
+      "",
+      "Total number of people getting affected, injured or killed in extreme temperature during the given year.",
+      "annual",
+      null,
+      "",
+      "http://spreadsheets.google.com/pub?key=ryPd-H6Kn3wcHC50zyImqUg",
+      "",
+      "measure",
+      "Extreme temperature affected",
+      "extreme_temperature_affected_annual_number"
+    ],
+    [
+      "new value 5",
+      "new updated value for description",
+      "",
+      null,
+      "",
+      "",
+      "",
+      "string",
+      "Description Updated as Column",
+      "description_updated"
+    ],
+    [
+      "",
+      "",
+      "",
+      null,
+      "",
+      "",
+      "",
+      "string",
+      "Name Short Updated",
+      "name_short_updated"
+    ],
+    [
+      "new value 4",
+      "Updated Color",
+      "",
+      null,
+      "",
+      "",
+      "",
+      "string",
+      "Color Updated",
+      "color_updated"
+    ],
+    [
+      "",
+      "Test new String Property",
+      "",
+      null,
+      "",
+      "",
+      "",
+      "string",
+      "New String Property",
+      "new_string_property"
+    ],
+    [
+      "",
+      "",
+      null,
+      null,
+      "",
+      null,
+      null,
+      "string",
+      "Tags",
+      "tags"
+    ],
+    [
+      "",
+      "",
+      null,
+      null,
+      "",
+      null,
+      null,
+      "entity_domain",
+      "Tag",
+      "tag"
+    ],
+    [
+      "",
+      "",
+      null,
+      null,
+      "",
+      null,
+      null,
+      "string",
+      "Tag parent",
+      "parent"
+    ],
+    [
+      "",
+      "",
+      null,
+      null,
+      "",
+      "https://github.com/open-numbers/ddf--gapminder--dim_geo_countries_and_groups/blob/master/ddf--list--geo--country.csv",
+      null,
+      "entity_domain",
+      "Geographic location",
+      "geo"
+    ],
+    [
+      "new value 1",
+      "",
+      null,
+      null,
+      {
+        "selectable": false,
+        "palette": {
+          "east_asia_pacific": "#f03838",
+          "sub_saharan_africa": "#4e7af0",
+          "europe_central_asia": "#f49d37",
+          "south_asia": "#35d1d1",
+          "middle_east_north_africa": "#5be56b",
+          "america": "#ebcc21"
+        }
+      },
+      "http://spreadsheets.google.com/pub?key=phT4mwjvEuGBtdf1ZeO7_PQ",
+      "geo",
+      "entity_set",
+      "Geographic regions",
+      "geographic_regions"
+    ],
+    [
+      "",
+      "",
+      null,
+      null,
+      {
+        "palette": {
+          "landlocked": "#f05656",
+          "coastline": "#7487ef"
+        }
+      },
+      "http://spreadsheets.google.com/pub?key=rBwKBodk7Y08pGiA4OAfzUA",
+      "geo",
+      "entity_set",
+      "Landlocked",
+      "landlocked"
+    ],
+    [
+      "",
+      "",
+      null,
+      null,
+      {
+        "selectable": false,
+        "shades": {
+          "shade": 3,
+          "fill1": 0,
+          "print_stroke": 5,
+          "print_fill": 4,
+          "fill2": 1,
+          "fill3": 2
+        },
+        "palette": {
+          "americas": [
+            "#7feb00",
+            "#5de200",
+            "#81f201",
+            "#00b900",
+            "#b5ea32",
+            "#008d36"
+          ],
+          "europe": [
+            "#ffe700",
+            "#fbdd00",
+            "#fff400",
+            "#fbaf09",
+            "#ffe700",
+            "#b17f4a"
+          ],
+          "_default": [
+            "#ffb600",
+            "#ffaa14",
+            "#ffc500",
+            "#fb6d19",
+            "#ffb600",
+            "#9b4838"
+          ],
+          "africa": [
+            "#00d5e9",
+            "#00c8ec",
+            "#00e1ec",
+            "#0098df",
+            "#77dff7",
+            "#0586c6"
+          ],
+          "asia": [
+            "#ff5872",
+            "#ff5178",
+            "#ff658a",
+            "#da0025",
+            "#fa4e73",
+            "#b2043a"
+          ]
+        }
+      },
+      "http://spreadsheets.google.com/spreadsheet/pub?key=0ArfEDsV3bBwCdHlocWJBM1Uyd1ZPeHduU3c4WGplMEE",
+      "geo",
+      "entity_set",
+      "World Regions",
+      "world_4region"
+    ],
+    [
+      "new value 2",
+      "",
+      null,
+      null,
+      "",
+      null,
+      "geo",
+      "entity_set",
+      "World",
+      "global"
+    ],
+    [
+      "",
+      "",
+      "degrees",
+      null,
+      "",
+      "https://github.com/open-numbers/ddf--gapminder--dim_geo_countries_and_groups/blob/master/ddf--list--geo--country.csv",
+      null,
+      "measure",
+      "Latitude",
+      "latitude"
+    ],
+    [
+      "",
+      "",
+      "degrees",
+      null,
+      "",
+      "https://github.com/open-numbers/ddf--gapminder--dim_geo_countries_and_groups/blob/master/ddf--list--geo--country.csv",
+      null,
+      "measure",
+      "Longitude",
+      "longitude"
+    ],
+    [
+      "",
+      "Amount of financial compensation for each non-working hour, counted by US$. ",
+      "$",
+      null,
+      "",
+      "http://spreadsheets.google.com/pub?key=rEF20Sw6Sy7tn4DKsKSDDMQ",
+      null,
+      "measure",
+      "Hourly compensation",
+      "hourly_compensation_us"
+    ],
+    [
+      "",
+      "The average number of years a newborn child would live if current mortality patterns were to stay the same. ",
+      "years",
+      null,
+      "",
+      "http://spreadsheets.google.com/pub?key=phAwcNAVuyj2tPLxKvvnNPA",
+      null,
+      "measure",
+      "Life expectancy",
+      "life_expectancy_years"
+    ],
+    [
+      "",
+      "Gross domestic product per person adjusted for differences in purchasing power (in international dollars, fixed 2005 prices, PPP based on 2005 ICP). ",
+      "$/year (GDP/capita)",
+      null,
+      "",
+      "http://spreadsheets.google.com/pub?key=phAwcNAVuyj1jiMAkmq1iMg",
+      null,
+      "measure",
+      "Income per person",
+      "income_per_person_gdppercapita_ppp_inflation_adjusted"
+    ],
+    [
+      "",
+      "Total population",
+      "people",
+      null,
+      "",
+      "http://spreadsheets.google.com/pub?key=phAwcNAVuyj0XOoBL_n5tAQ",
+      null,
+      "measure",
+      "Population",
+      "population_total"
+    ],
+    [
+      "",
+      "",
+      null,
+      null,
+      "",
+      "http://www.gapminder.org/news/data-sources-dont-panic-end-poverty",
+      null,
+      "measure",
+      "SG Population",
+      "sg_population"
+    ],
+    [
+      "",
+      "",
+      null,
+      null,
+      "",
+      "http://www.gapminder.org/news/data-sources-dont-panic-end-poverty",
+      null,
+      "measure",
+      "SG Gini",
+      "sg_gini"
+    ],
+    [
+      "",
+      "exp",
+      null,
+      null,
+      {
+        "palette": {
+          "0": "#62CCE3",
+          "1": "#B4DE79",
+          "2": "#E1CE00",
+          "3": "#F77481"
+        }
+      },
+      "http://www.gapminder.org/news/data-sources-dont-panic-end-poverty",
+      null,
+      "measure",
+      "SG gdp p cap const ppp2011_dollar",
+      "sg_gdp_p_cap_const_ppp2011_dollar"
+    ],
+    [
+      "",
+      "",
+      null,
+      null,
+      "",
+      null,
+      null,
+      "string",
+      "Indicator url",
+      "indicator_url"
+    ],
+    [
+      "",
+      "",
+      null,
+      null,
+      "",
+      "https://github.com/open-numbers/ddf--gapminder--dim_geo_countries_and_groups/blob/master/ddf--list--geo--country.csv",
+      null,
+      "string",
+      "Name",
+      "name"
+    ],
+    [
+      "",
+      "",
+      null,
+      null,
+      "",
+      null,
+      null,
+      "string",
+      "Unit",
+      "unit"
+    ],
+    [
+      "",
+      "",
+      null,
+      null,
+      "",
+      null,
+      null,
+      "string",
+      "Name Long",
+      "name_long"
+    ],
+    [
+      "",
+      "",
+      null,
+      null,
+      "",
+      null,
+      null,
+      "string",
+      "Gapminder list",
+      "gapminder_list"
+    ],
+    [
+      "",
+      "",
+      null,
+      null,
+      "",
+      null,
+      null,
+      "string",
+      "GOD_ID",
+      "god_id"
+    ],
+    [
+      "",
+      "",
+      null,
+      null,
+      "",
+      null,
+      null,
+      "string",
+      "CODE",
+      "code"
+    ],
+    [
+      "",
+      "",
+      null,
+      null,
+      "",
+      null,
+      null,
+      "string",
+      "Number",
+      "number"
+    ],
+    [
+      "",
+      "",
+      null,
+      null,
+      "",
+      null,
+      null,
+      "string",
+      "Gwid",
+      "gwid"
+    ],
+    [
+      "",
+      "",
+      null,
+      null,
+      "",
+      null,
+      null,
+      "string",
+      "Domain",
+      "domain"
+    ],
+    [
+      "",
+      "",
+      null,
+      null,
+      "",
+      null,
+      null,
+      "string",
+      "drill up",
+      "drill_up"
+    ],
+    [
+      "",
+      "",
+      null,
+      null,
+      "",
+      null,
+      null,
+      "string",
+      "Shapes",
+      "shape_lores_svg"
+    ],
+    [
+      "",
+      "",
+      null,
+      null,
+      "",
+      null,
+      null,
+      "time",
+      "Time",
+      "time"
+    ],
+    [
+      "",
+      "",
+      "",
+      null,
+      "",
+      "",
+      "",
+      "time",
+      "Quarter",
+      "quarter"
+    ],
+    [
+      "",
+      "",
+      "",
+      null,
+      "",
+      "",
+      "geo",
+      "entity_set",
+      "Capital",
+      "capital"
+    ],
+    [
+      "",
+      "",
+      "",
+      null,
+      "",
+      "",
+      "",
+      "time",
+      "",
+      "founding_date"
+    ],
+    [
+      "",
+      "",
+      null,
+      [
+        "geographic_regions",
+        "landlocked",
+        "main_religion_updated",
+        "geo",
+        "geographic_regions_in_4_colors",
+        "capital"
+      ],
+      "",
+      "https://github.com/open-numbers/ddf--gapminder--dim_geo_countries_and_groups/blob/master/ddf--list--geo--country.csv",
+      "geo",
+      "entity_set",
+      "Country",
+      "country"
+    ]
+  ]
+}
