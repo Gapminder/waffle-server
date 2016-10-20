@@ -11,7 +11,7 @@ const mongoose = require('mongoose');
 const constants = require('../ws.utils/constants');
 const reposService = require('../ws.services/repos.service');
 
-const defaultEntityGroupTypes = ['entity_domain', 'entity_set', 'time', 'age'];
+const defaultEntityGroupTypes = ['entity_domain', 'entity_set', 'time'];
 
 const logger = require('../ws.config/log');
 const config = require('../ws.config/config');
@@ -22,33 +22,40 @@ const DEFAULT_CHUNK_SIZE = 2000;
 const MONGODB_DOC_CREATION_THREADS_AMOUNT = 3;
 
 module.exports = {
-  resolvePathToDdfFolder,
-  createTransaction,
-  createDataset,
-  updateTransaction,
-  createConcepts,
-  createEntities,
-  createDataPoints,
-  _createDataPoints,
-  findDataset,
-  getAllConcepts: _getAllConcepts,
-  findAllEntities: _findAllEntities,
-  processOriginalEntities: _processOriginalEntities,
-  mapDdfOriginalEntityToWsModel: mapDdfOriginalEntityToWsModel,
-  createOriginalEntities: __createOriginalEntities,
-  findAllOriginalEntities: _findAllOriginalEntities,
-  createEntitiesBasedOnOriginalEntities: _createEntitiesBasedOnOriginalEntities,
-  clearOriginalEntities: _clearOriginalEntities,
-  addEntityDrillups: _addEntityDrillups,
-  findDataPoints,
-  processRawDataPoints: __processRawDataPoints,
+  // File utils
+  readCsvFile,
   parseFilename: _parseFilename,
-  createEntitiesBasedOnDataPoints: _createEntitiesBasedOnDataPoints,
-  updateConceptsDimensions: _updateConceptsDimensions,
-  closeTransaction,
-  addConceptSubsetOf: _addConceptSubsetOf,
+  resolvePathToDdfFolder,
   getMeasureDimensionFromFilename,
-  readCsvFile
+
+  // Concepts
+  getAllConcepts: _getAllConcepts,
+  createConcepts,
+  addConceptSubsetOf: _addConceptSubsetOf,
+  updateConceptsDimensions: _updateConceptsDimensions,
+  createEntities,
+
+  // Entities
+  findAllEntities: _findAllEntities,
+  storeEntitiesToDb: __storeEntitiesToDb,
+  addEntityDrillups: _addEntityDrillups,
+  createEntitiesBasedOnDataPoints: _createEntitiesBasedOnDataPoints,
+  mapDdfEntityToWsModel,
+
+  //Datapoints
+  createDataPoints,
+  findDataPoints,
+  _createDataPoints,
+  processRawDataPoints: __processRawDataPoints,
+
+  //Dataset
+  createDataset,
+  findDataset,
+
+  //Transaction
+  createTransaction,
+  closeTransaction,
+  updateTransaction
 };
 
 function resolvePathToDdfFolder(pipe, done) {
@@ -292,10 +299,7 @@ function createEntities(pipe, done) {
 
   async.waterfall([
     async.constant(_pipe),
-    _processOriginalEntities,
-    _findAllOriginalEntities,
-    _createEntitiesBasedOnOriginalEntities,
-    _clearOriginalEntities,
+    _processEntities,
     _findAllEntities,
     _addEntityDrillups,
     _findAllEntities
@@ -305,23 +309,19 @@ function createEntities(pipe, done) {
   });
 }
 
-function _processOriginalEntities(pipe, done) {
-  // Entities could be in many files with duplicates
-  // so for handling this case, we need to add all of them
-  // in temporaty collection OriginalEntities
-  // and then analyze and merge all duplicates
-  logger.info('** process original entities');
+function _processEntities(pipe, done) {
+  logger.info('** process entities');
 
   let entitySets = _.filter(pipe.concepts, concept => defaultEntityGroupTypes.indexOf(concept.type) > -1);
 
   async.eachLimit(
     entitySets,
     constants.LIMIT_NUMBER_PROCESS,
-    _processEntities(pipe),
+    __processEntitiesPerConcept(pipe),
     err => done(err, pipe)
   );
 
-  function _processEntities(pipe) {
+  function __processEntitiesPerConcept(pipe) {
     return (entitySet, cb) => async.waterfall([
       async.constant({
         entitySet: entitySet,
@@ -333,108 +333,51 @@ function _processOriginalEntities(pipe, done) {
         resolvePath: pipe.resolvePath,
         fileTemplates: pipe.fileTemplates
       }),
-      __loadOriginalEntities,
-      __createOriginalEntities
+      __loadEntities,
+      __storeEntitiesToDb
     ], cb);
   }
 }
 
-function __loadOriginalEntities(_pipe, cb) {
+function __loadEntities(_pipe, cb) {
   _pipe.filename = _pipe.entitySet.domain
     ? _pipe.fileTemplates.getFilenameOfEntitySetEntities(_pipe.entitySet)
     : _pipe.fileTemplates.getFilenameOfEntityDomainEntities(_pipe.entitySet);
 
-  logger.info(`**** load original entities from file ${_pipe.filename}`);
+  logger.info(`**** load entities from file ${_pipe.filename}`);
 
   readCsvFile(_pipe.resolvePath(_pipe.filename), {}, (err, res) => {
-    let originalEntities = _.map(res, mapDdfOriginalEntityToWsModel(_pipe));
-    let uniqOriginalEntities = _.uniqBy(originalEntities, 'gid');
+    let entities = _.map(res, mapDdfEntityToWsModel(_pipe));
+    let uniqEntities = _.uniqBy(entities, 'gid');
 
-    if (uniqOriginalEntities.length !== originalEntities.length) {
+    if (uniqEntities.length !== entities.length) {
       return cb('All entity gid\'s should be unique within the Entity Set or Entity Domain!');
     }
 
-    _pipe.raw = {
-      originalEntities
-    };
+    _pipe.entities = entities;
     return cb(err, _pipe);
   });
 }
 
-function __createOriginalEntities(pipe, done) {
-  if (_.isEmpty(pipe.raw.originalEntities)) {
+function __storeEntitiesToDb(pipe, done) {
+  if (_.isEmpty(pipe.entities)) {
     logger.warn(`file '${pipe.filename}' is empty or doesn't exist.`);
 
     return async.setImmediate(() => done(null, pipe));
   }
 
-  logger.info(`**** create original entities from file '${pipe.filename}'`);
+  logger.info(`**** store entities from file '${pipe.filename}' to db`);
 
   return async.eachLimit(
-    _.chunk(pipe.raw.originalEntities, DEFAULT_CHUNK_SIZE),
+    _.chunk(pipe.entities, DEFAULT_CHUNK_SIZE),
     MONGODB_DOC_CREATION_THREADS_AMOUNT,
-    ___createOriginalEntities,
+    (chunk, cb) => mongoose.model('Entities').create(chunk, (err) => {
+      return cb(err);
+    }),
     (err) => {
       return done(err, pipe);
     }
   );
-
-  function ___createOriginalEntities(chunk, cb) {
-    return mongoose.model('OriginalEntities').create(chunk, (err) => {
-      return cb(err);
-    });
-  }
-}
-
-function _findAllOriginalEntities(pipe, done) {
-  logger.info('** find all original entities');
-
-  mongoose.model('OriginalEntities').find({
-    dataset: pipe.dataset._id,
-    transaction: pipe.transactionId || pipe.transaction._id
-  })
-    .populate('dataset')
-    .populate('transaction')
-    .lean()
-    .exec((err, res) => {
-      pipe.originalEntities = res;
-      return done(err, pipe);
-    });
-}
-
-function _createEntitiesBasedOnOriginalEntities(pipe, done) {
-  if (_.isEmpty(pipe.originalEntities)) {
-    logger.warn(`There is no original entities.`);
-
-    return async.setImmediate(() => done(null, pipe));
-  }
-
-  logger.info(`** create entities based on original entities`);
-
-  // FIXME: REMOVE ALL REFERENCE TO ORIGINAL ENTITIES FROM IMPORT AND INCREMENTAL UPDATE
-  return async.eachLimit(
-    _.chunk(pipe.originalEntities, DEFAULT_CHUNK_SIZE),
-    MONGODB_DOC_CREATION_THREADS_AMOUNT,
-    _createEntities, (err) => {
-      return done(err, pipe);
-    });
-
-  function _createEntities(chunk, cb) {
-    return mongoose.model('Entities').create(chunk, (err) => {
-      return cb(err);
-    });
-  }
-}
-
-function _clearOriginalEntities(pipe, cb) {
-  logger.info('** clear original entities');
-
-  mongoose.model('OriginalEntities').remove({
-    dataset: pipe.dataset._id,
-    transaction: pipe.transactionId || pipe.transaction._id
-  }, err => {
-    return cb(err, pipe);
-  });
 }
 
 function _findAllEntities(pipe, done) {
@@ -587,7 +530,7 @@ function __processRawDataPoints(pipe, cb) {
           let domain = concept.domain || concept;
 
           if (!dictionary[datapoint[concept.gid]] && !gids.has(datapoint[concept.gid])) {
-            let mappedEntity = mapDdfEntityToWsModel(datapoint, concept, domain, pipe);
+            let mappedEntity = mapDdfInDatapointsFoundEntityToWsModel(datapoint, concept, domain, pipe);
             result.push(mappedEntity);
             gids.add(datapoint[concept.gid]);
           }
@@ -811,7 +754,7 @@ function mapDdfConceptsToWsModel(pipe) {
   };
 }
 
-function mapDdfOriginalEntityToWsModel(pipe) {
+function mapDdfEntityToWsModel(pipe) {
   return (entry) => {
     let gid = getGid(pipe, entry);
     let resolvedColumns = mapResolvedColumns(entry);
@@ -852,7 +795,7 @@ function mapDdfOriginalEntityToWsModel(pipe) {
   };
 }
 
-function mapDdfEntityToWsModel(entity, concept, domain, pipe) {
+function mapDdfInDatapointsFoundEntityToWsModel(entity, concept, domain, pipe) {
   const gid = entity[concept.gid];
   return {
     gid: gid,
