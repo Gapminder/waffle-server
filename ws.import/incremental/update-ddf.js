@@ -223,7 +223,7 @@ function _processEntititesFile(pipe) {
 }
 
 function __parseEntityFilename(pipe, cb) {
-  logger.info(`**** load original entities from file ${pipe.filename}`);
+  logger.info(`**** load entities from file ${pipe.filename}`);
 
   let parsedFilename = pipe.filename
     .replace('ddf--entities--', '')
@@ -365,18 +365,15 @@ function __createAndUpdateEntities(pipe, cb) {
 
   return async.waterfall([
     async.constant(_pipe),
-    ___fakeLoadRawOriginalEntities,
-    pipe.common.createOriginalEntities,
-    pipe.common.findAllOriginalEntities,
-    pipe.common.createEntitiesBasedOnOriginalEntities,
-    pipe.common.clearOriginalEntities,
+    ___fakeLoadRawEntities,
+    pipe.common.storeEntitiesToDb,
     __getAllEntities,
     pipe.common.addEntityDrillups,
     __getAllEntities
   ], cb);
 }
 
-function ___fakeLoadRawOriginalEntities(pipe, done) {
+function ___fakeLoadRawEntities(pipe, done) {
   let removedEntitiesGids = _.chain(pipe.fileChanges.remove)
     .keyBy(getGid)
     .keys()
@@ -389,7 +386,7 @@ function ___fakeLoadRawOriginalEntities(pipe, done) {
   let mergedChangedEntities = _.merge(changedClosedEntities, _mergedChangedEntities);
 
   let updatedEntities = _.map(mergedChangedEntities, ____formRawEntities(pipe));
-  let createdEntities = _.map(pipe.fileChanges.create, pipe.common.mapDdfOriginalEntityToWsModel(pipe));
+  let createdEntities = _.map(pipe.fileChanges.create, pipe.common.mapDdfEntityToWsModel(pipe));
 
   let fakeLoadedEntities = _.concat([], createdEntities, updatedEntities);
   let uniqEntities = _.uniqBy(fakeLoadedEntities, 'gid');
@@ -398,9 +395,7 @@ function ___fakeLoadRawOriginalEntities(pipe, done) {
     return async.setImmediate(() => done('All entity gid\'s should be unique within the Entity Set or Entity Domain!'));
   }
 
-  pipe.raw ={
-    originalEntities: fakeLoadedEntities
-  };
+  pipe.entities = fakeLoadedEntities;
 
   return async.setImmediate(() => done(null, pipe));
 
@@ -416,7 +411,7 @@ function ___fakeLoadRawOriginalEntities(pipe, done) {
 }
 
 function ____formRawEntities(pipe) {
-  let mapper = pipe.common.mapDdfOriginalEntityToWsModel(pipe);
+  let mapper = pipe.common.mapDdfEntityToWsModel(pipe);
   return (entity, entityGid) => {
     let closedEntity = pipe.closedEntities[entityGid];
     let originId = closedEntity ? closedEntity.originId : null;
