@@ -1,14 +1,119 @@
 'use strict';
 
 const _ = require('lodash');
-const ddfImportProcess = require('../../ws.utils/ddf-import-process');
+const ddfTimeUtils = require('ddf-time-utils');
+
 const constants = require('../../ws.utils/constants');
+const logger = require('../../ws.config/log');
+const ddfImportProcess = require('../../ws.utils/ddf-import-process');
 
 const JSON_COLUMNS = ['color', 'scales', 'drill_up'];
 
 module.exports = {
-  mapDdfConceptsToWsModel
+  mapDdfConceptsToWsModel,
+  mapDdfInDatapointsFoundEntityToWsModel,
+  mapDdfDataPointToWsModel
 };
+
+function mapDdfDataPointToWsModel(pipe) {
+  const entitiesBySet = _.chain(pipe.entities).filter(entity => !_.isEmpty(entity.sets)).keyBy(entity => {
+    const set = _.head(entity.sets);
+    const keySet = _.get(set, 'originId', set);
+    return `${entity.gid}-${keySet}`;
+  }).value();
+
+  const entitiesByDomain = _.chain(pipe.entities).filter(entity => _.isEmpty(entity.sets)).keyBy(entity => {
+    const domain = entity.domain;
+    const keyDomain = _.get(domain, 'originId', domain);
+    return `${entity.gid}-${keyDomain}`;
+  }).value();
+
+  const entitiesByGid = _.keyBy(pipe.entities, 'gid');
+
+  return function (entry) {
+    let isValidEntry = _.chain(entry)
+      .values()
+      .every((value, key) => !(_.isNil(value) && key === 'originId'))
+      .value();
+
+    if (!isValidEntry) {
+      return [];
+    }
+
+    const dimensions = _.chain(entry)
+      .pick(_.keys(pipe.dimensions))
+      .reduce((result, entityGid, conceptGid) => {
+        const key = `${entityGid}-${pipe.concepts[conceptGid].originId}`;
+        const entity = entitiesByDomain[key] || entitiesBySet[key] || entitiesByGid[entityGid];
+        result.push(entity.originId);
+        return result;
+      }, [])
+      .value();
+
+    return _.chain(entry)
+      .pick(_.keys(pipe.measures))
+      .map((datapointValue, measureGid) => {
+        const datapointValueAsNumber = _.toNumber(datapointValue);
+        return {
+          value: _.isNaN(datapointValueAsNumber) ? datapointValue : datapointValueAsNumber,
+          measure: pipe.measures[measureGid].originId,
+          dimensions: dimensions,
+          originId: entry.originId,
+
+          isNumeric: _.isNumber(entry[measureGid]),
+          from: pipe.transaction.createdAt,
+          dataset: pipe.dataset._id,
+          sources: [pipe.filename],
+          transaction: pipe.transactionId || pipe.transaction._id
+        };
+      })
+      .value();
+  };
+}
+
+function mapDdfInDatapointsFoundEntityToWsModel(entity, concept, domain, context, externalContext) {
+  const gid = entity[concept.gid];
+  return {
+    gid: gid,
+    sources: [context.filename || filename],
+    properties: entity,
+    parsedProperties: parseProperties(concept, gid, entity, externalContext.timeConcepts),
+
+    // originId: entity.originId,
+    domain: domain.originId,
+    sets: concept.type === 'entity_set' ? [concept.originId] : [],
+    drillups: [],
+
+    from: externalContext.transaction.createdAt,
+    dataset: externalContext.dataset._id,
+    transaction: externalContext.transactionId || externalContext.transaction._id
+  };
+}
+
+function parseProperties(concept, entityGid, entityProperties, timeConcepts) {
+  if (_.isEmpty(timeConcepts)) {
+    return {};
+  }
+
+  let parsedProperties =
+    _.chain(entityProperties)
+      .pickBy((propValue, prop) => timeConcepts[prop])
+      .mapValues(toInternalTimeForm)
+      .value();
+
+  if (timeConcepts[concept.gid]) {
+    parsedProperties = _.extend(parsedProperties || {}, {[concept.gid]: toInternalTimeForm(entityGid)});
+  }
+  return parsedProperties;
+}
+
+function toInternalTimeForm(value) {
+  const timeDescriptor = ddfTimeUtils.parseTime(value);
+  return {
+    millis: _.get(timeDescriptor, 'time'),
+    timeType: _.get(timeDescriptor, 'type')
+  };
+}
 
 function mapDdfConceptsToWsModel(version, datasetId, transactionId) {
   return entry => {

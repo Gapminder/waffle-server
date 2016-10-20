@@ -9,6 +9,7 @@ const translationsService = require('./import-translations.service');
 const defaultEntityGroupTypes = ['entity_domain', 'entity_set', 'time', 'age'];
 const defaultMeasureTypes = ['measure'];
 const common = require('./common');
+const importDatapoints = require('./import-ddf-datapoints.service');
 const config = require('../ws.config/config');
 
 module.exports = function (options, done) {
@@ -35,7 +36,8 @@ module.exports = function (options, done) {
     common.updateTransaction,
     common.createConcepts,
     common.createEntities,
-    common.createDataPoints,
+    // common.createDataPoints,
+    importDatapoints,
     common.updateConceptsDimensions,
     // translationsService.processTranslations,
     createDatasetIndex,

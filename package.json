@@ -17,7 +17,8 @@
     "github-release": "./node_modules/.bin/conventional-github-releaser -p angular",
     "preversion": "npm test",
     "version": "npm run changelog && git add CHANGELOG.md",
-    "postversion": "git push origin master && git push --tags && npm run github-release"
+    "postversion": "git push origin master && git push --tags && npm run github-release",
+    "mongo:clean": "./mongo.sh"
   },
   "dependencies": {
     "JSONStream": "1.2.1",
@@ -30,13 +31,14 @@
     "connect-redis": "3.1.0",
     "cookie-parser": "1.4.3",
     "cors": "2.8.1",
-    "csvtojson": "1.0.2",
+    "csvtojson": "1.0.3",
     "ddf-time-utils": "0.1.6",
     "ddf-validation": "^0.12.10",
     "entities": "1.1.1",
     "express": "4.14.0",
     "express-redis-cache": "0.4.2",
     "express-session": "1.14.1",
+    "highland": "2.10.0",
     "json2csv": "3.7.0",
     "kerberos": "0.0.21",
     "lodash": "4.16.2",

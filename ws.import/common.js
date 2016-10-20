@@ -17,6 +17,7 @@ const logger = require('../ws.config/log');
 const config = require('../ws.config/config');
 
 const ddfTimeUtils = require('ddf-time-utils');
+const hi = require('highland');
 
 const DEFAULT_CHUNK_SIZE = 2000;
 const MONGODB_DOC_CREATION_THREADS_AMOUNT = 3;
