@@ -16,19 +16,7 @@ module.exports = {
 };
 
 function mapDdfDataPointToWsModel(pipe) {
-  const entitiesBySet = _.chain(pipe.entities).filter(entity => !_.isEmpty(entity.sets)).keyBy(entity => {
-    const set = _.head(entity.sets);
-    const keySet = _.get(set, 'originId', set);
-    return `${entity.gid}-${keySet}`;
-  }).value();
 
-  const entitiesByDomain = _.chain(pipe.entities).filter(entity => _.isEmpty(entity.sets)).keyBy(entity => {
-    const domain = entity.domain;
-    const keyDomain = _.get(domain, 'originId', domain);
-    return `${entity.gid}-${keyDomain}`;
-  }).value();
-
-  const entitiesByGid = _.keyBy(pipe.entities, 'gid');
 
   return function (entry) {
     let isValidEntry = _.chain(entry)
@@ -44,7 +32,7 @@ function mapDdfDataPointToWsModel(pipe) {
       .pick(_.keys(pipe.dimensions))
       .reduce((result, entityGid, conceptGid) => {
         const key = `${entityGid}-${pipe.concepts[conceptGid].originId}`;
-        const entity = entitiesByDomain[key] || entitiesBySet[key] || entitiesByGid[entityGid];
+        const entity = pipe.entities.entitiesByDomain[key] || pipe.entities.entitiesBySet[key] || pipe.entities.entitiesByGid[entityGid];
         result.push(entity.originId);
         return result;
       }, [])

@@ -51,11 +51,10 @@ function startDatapointsCreation(externalContext, done) {
 }
 
 function createEntitiesFoundInDatapointsSaverWithCache() {
-  const entitiesFoundInDatapointsGids = new Set();
-  const entitiesFoundInDatapointsCache = [];
+  const entitiesFoundInDatapointsCache = {};
   return (entities) => {
     const notSeenEntities = _.reduce(entities, (result, entity) => {
-      if (!entitiesFoundInDatapointsGids.has(entity.gid)) {
+      if (!entitiesFoundInDatapointsCache[entity.gid]) {
         result.push(entity);
       }
       return result;
@@ -67,11 +66,10 @@ function createEntitiesFoundInDatapointsSaverWithCache() {
 
     return storeEntitiesToDb(notSeenEntities)
       .then(entityModels => {
-        _.forEach(_.map(entityModels, '_doc'), entity => {
-          entitiesFoundInDatapointsGids.add(entity.gid);
-          entitiesFoundInDatapointsCache.push(entity);
-        });
-        return entitiesFoundInDatapointsCache;
+        return _.reduce(_.map(entityModels, '_doc'), (cache, entity) => {
+          cache[entity.gid] = entity;
+          return cache;
+        }, entitiesFoundInDatapointsCache);
       });
   };
 }
@@ -79,7 +77,24 @@ function createEntitiesFoundInDatapointsSaverWithCache() {
 function saveDatapoints(datapointsByFilename, externalContextFrozen) {
   return entities => {
     return Promise.all(_.map(datapointsByFilename, datapoints => {
-      const entitiesForDimensionsConstruction = _.concat(datapoints.context.entities, entities);
+      const entitiesForDimensionsConstruction =
+      _.reduce(datapoints.context.entities, (result, entity) => {
+        if (_.isEmpty(entity.sets)) {
+          const domain = entity.domain;
+          const keyDomain = _.get(domain, 'originId', domain);
+          result.entitiesByDomain[`${entity.gid}-${keyDomain}`] = entity;
+        } else {
+          const set = _.head(entity.sets);
+          const keySet = _.get(set, 'originId', set);
+          result.entitiesBySet[`${entity.gid}-${keySet}`] = entity;
+        }
+
+        result.entitiesByGid[entity.gid] = entity;
+        return result;
+      }, {entitiesBySet: {}, entitiesByDomain: {}, entitiesByGid: {}});
+
+      _.extend(entitiesForDimensionsConstruction.entitiesByGid, entities);
+
       return mapAndStoreDatapointsToDb(datapoints, entitiesForDimensionsConstruction, externalContextFrozen);
     }));
   };
@@ -136,32 +151,7 @@ function findAllEntities(externalContext) {
   return mongoose.model('Entities').find({
     dataset: externalContext.dataset._id,
     transaction: externalContext.transactionId || externalContext.transaction._id
-  }, null, {
-    join: {
-      domain: {
-        $find: {
-          dataset: externalContext.dataset._id,
-          transaction: externalContext.transactionId || externalContext.transaction._id
-        }
-      },
-      sets: {
-        $find: {
-          dataset: externalContext.dataset._id,
-          transaction: externalContext.transactionId || externalContext.transaction._id
-        }
-      },
-      drillups: {
-        $find: {
-          dataset: externalContext.dataset._id,
-          transaction: externalContext.transactionId || externalContext.transaction._id
-        }
-      }
-    }
-  })
-    .populate('dataset')
-    .populate('transaction')
-    .lean()
-    .exec();
+  }).lean().exec();
 }
 
 function parseFilename(filename, externalContext) {
