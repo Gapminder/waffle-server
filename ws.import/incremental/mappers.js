@@ -16,8 +16,6 @@ module.exports = {
 };
 
 function mapDdfDataPointToWsModel(pipe) {
-
-
   return function (entry) {
     let isValidEntry = _.chain(entry)
       .values()
@@ -32,7 +30,12 @@ function mapDdfDataPointToWsModel(pipe) {
       .pick(_.keys(pipe.dimensions))
       .reduce((result, entityGid, conceptGid) => {
         const key = `${entityGid}-${pipe.concepts[conceptGid].originId}`;
-        const entity = pipe.entities.entitiesByDomain[key] || pipe.entities.entitiesBySet[key] || pipe.entities.entitiesByGid[entityGid];
+        const entity =
+          pipe.entities.byDomain[key]
+          || pipe.entities.bySet[key]
+          || pipe.entities.byGid[entityGid]
+          || pipe.entities.foundInDatapointsByGid[entityGid];
+
         result.push(entity.originId);
         return result;
       }, [])

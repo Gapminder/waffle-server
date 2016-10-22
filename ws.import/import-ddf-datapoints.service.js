@@ -20,7 +20,7 @@ const config = require('../ws.config/config');
 const ddfTimeUtils = require('ddf-time-utils');
 const hi = require('highland');
 
-const DEFAULT_CHUNK_SIZE = 2000;
+const DEFAULT_CHUNK_SIZE = 1500;
 const MONGODB_DOC_CREATION_THREADS_AMOUNT = 3;
 
 module.exports = startDatapointsCreation;
@@ -75,27 +75,10 @@ function createEntitiesFoundInDatapointsSaverWithCache() {
 }
 
 function saveDatapoints(datapointsByFilename, externalContextFrozen) {
-  return entities => {
+  return entitiesFoundInDatapointsByGid => {
     return Promise.all(_.map(datapointsByFilename, datapoints => {
-      const entitiesForDimensionsConstruction =
-      _.reduce(datapoints.context.entities, (result, entity) => {
-        if (_.isEmpty(entity.sets)) {
-          const domain = entity.domain;
-          const keyDomain = _.get(domain, 'originId', domain);
-          result.entitiesByDomain[`${entity.gid}-${keyDomain}`] = entity;
-        } else {
-          const set = _.head(entity.sets);
-          const keySet = _.get(set, 'originId', set);
-          result.entitiesBySet[`${entity.gid}-${keySet}`] = entity;
-        }
-
-        result.entitiesByGid[entity.gid] = entity;
-        return result;
-      }, {entitiesBySet: {}, entitiesByDomain: {}, entitiesByGid: {}});
-
-      _.extend(entitiesForDimensionsConstruction.entitiesByGid, entities);
-
-      return mapAndStoreDatapointsToDb(datapoints, entitiesForDimensionsConstruction, externalContextFrozen);
+      datapoints.context.entities.foundInDatapointsByGid = entitiesFoundInDatapointsByGid;
+      return mapAndStoreDatapointsToDb(datapoints, externalContextFrozen);
     }));
   };
 }
@@ -114,10 +97,11 @@ function createDatapoints(externalContextFrozen) {
       return hi(findAllEntitiesMemoized(externalContextFrozen))
         .map(entities => _.extend(context, {entities}));
     })
-    .flatMap(context => {
+    .map(context => {
       return readCsvFile(externalContextFrozen.resolvePath(context.filename), {})
         .map(datapoint => ({datapoint, context}));
     })
+    .parallel(MONGODB_DOC_CREATION_THREADS_AMOUNT)
     .map(({datapoint, context}) => {
       const entitiesFoundInDatapoint = findEntitiesInDatapoint(datapoint, context, externalContextFrozen);
       return {datapoint, entitiesFoundInDatapoint, context};
@@ -151,7 +135,22 @@ function findAllEntities(externalContext) {
   return mongoose.model('Entities').find({
     dataset: externalContext.dataset._id,
     transaction: externalContext.transactionId || externalContext.transaction._id
-  }).lean().exec();
+  }).lean().exec().then(entities => {
+    return _.reduce(entities, (result, entity) => {
+      if (_.isEmpty(entity.sets)) {
+        const domain = entity.domain;
+        const keyDomain = _.get(domain, 'originId', domain);
+        result.byDomain[`${entity.gid}-${keyDomain}`] = entity;
+      } else {
+        const set = _.head(entity.sets);
+        const keySet = _.get(set, 'originId', set);
+        result.bySet[`${entity.gid}-${keySet}`] = entity;
+      }
+
+      result.byGid[entity.gid] = entity;
+      return result;
+    }, {bySet: {}, byDomain: {}, byGid: {}});
+  });
 }
 
 function parseFilename(filename, externalContext) {
@@ -180,7 +179,7 @@ function parseFilename(filename, externalContext) {
 }
 
 function findEntitiesInDatapoint(datapoint, context, externalContext) {
-  const dictionary = _.keyBy(context.entities, 'gid');
+  const dictionary = context.entities.byGid;
   const gids = new Set();
   const entitiesFoundInDatapoint = [];
 
@@ -206,13 +205,13 @@ function storeEntitiesToDb(entities) {
   return mongoose.model('Entities').create(entities);
 }
 
-function mapAndStoreDatapointsToDb(datapoints, entities, externalContext) {
+function mapAndStoreDatapointsToDb(datapoints, externalContext) {
   logger.info(`** create data points`);
   const datapointMapper = mappers.mapDdfDataPointToWsModel(_.extend({
     measures: datapoints.measures,
     filename: datapoints.filename,
     dimensions: datapoints.dimensions,
-    entities
+    entities: datapoints.context.entities
   }, externalContext));
 
   const wsDatapoints = _.flatMap(datapoints.datapoints, datapoint => {
