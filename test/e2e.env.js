@@ -15,6 +15,6 @@ module.exports = {
     init: 'dd40f5b',
     version_1: '8bdd93f',
     version_2: 'ee66b74',
-    version_3: '794b7c3'
+    version_3: '6c213cd'
   }
 };

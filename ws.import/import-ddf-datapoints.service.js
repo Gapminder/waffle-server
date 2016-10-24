@@ -8,16 +8,13 @@ const Converter = require('csvtojson').Converter;
 
 const mongoose = require('mongoose');
 const constants = require('../ws.utils/constants');
-const reposService = require('../ws.services/repos.service');
-
-const defaultEntityGroupTypes = ['entity_domain', 'entity_set', 'time'];
+const entitiesRepositoryFactory = require('../ws.repository/ddf/entities/entities.repository');
 
 const common = require('./common');
 const mappers = require('./incremental/mappers');
 const logger = require('../ws.config/log');
 const config = require('../ws.config/config');
 
-const ddfTimeUtils = require('ddf-time-utils');
 const hi = require('highland');
 
 const DEFAULT_CHUNK_SIZE = 1500;
@@ -131,11 +128,9 @@ function createDatapoints(externalContextFrozen) {
 
 function findAllEntities(externalContext) {
   logger.info('** find all entities');
-
-  return mongoose.model('Entities').find({
-    dataset: externalContext.dataset._id,
-    transaction: externalContext.transactionId || externalContext.transaction._id
-  }).lean().exec().then(entities => {
+  return entitiesRepositoryFactory.latestVersion(externalContext.dataset._id, externalContext.transaction.createdAt)
+    .findAll()
+    .then(entities => {
     return _.reduce(entities, (result, entity) => {
       if (_.isEmpty(entity.sets)) {
         const domain = entity.domain;

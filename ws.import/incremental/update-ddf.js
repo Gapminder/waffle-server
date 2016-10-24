@@ -15,6 +15,7 @@ const ddfImportProcess = require('../../ws.utils/ddf-import-process');
 
 const createDatasetIndex = require('./../import-dataset-index.service');
 const translationsService = require('./../import-translations.service');
+const entitiesRepositoryFactory = require('../../ws.repository/ddf/entities/entities.repository');
 const processConceptChanges = require('./update-concepts')();
 
 const LIMIT_NUMBER_PROCESS = 10;
@@ -462,83 +463,16 @@ function _processDataPointFile(pipe) {
 
 function __getAllEntities(pipe, done) {
   logger.info('** get all entities');
-
-  mongoose.model('Entities').find({
-    dataset: pipe.dataset._id,
-    from: { $lte: pipe.transaction.createdAt },
-    to: constants.MAX_VERSION,
-    'properties.language': { $not: { $in: ['en', 'se'] } }
-  }, null, {
-    join: {
-      domain: {
-        $find: {
-          dataset: pipe.dataset._id,
-          from: { $lte: pipe.transaction.createdAt },
-          to: constants.MAX_VERSION
-        }
-      },
-      sets: {
-        $find: {
-          dataset: pipe.dataset._id,
-          from: { $lte: pipe.transaction.createdAt },
-          to: constants.MAX_VERSION
-        }
-      },
-      drillups: {
-        $find: {
-          dataset: pipe.dataset._id,
-          from: { $lte: pipe.transaction.createdAt },
-          to: constants.MAX_VERSION
-        }
-      }
-    }
-  })
-    .populate('dataset')
-    .populate('transaction')
-    .lean()
-    .exec((err, res) => {
+  return entitiesRepositoryFactory.latestVersion(pipe.dataset._id, pipe.transaction.createdAt)
+    .findAllPopulated((err, res) => {
       pipe.entities = res;
       return done(err, pipe);
     });
 }
 
 function __getAllPreviousEntities(pipe, done) {
-  logger.info('** get all entities');
-
-  mongoose.model('Entities').find({
-    dataset: pipe.dataset._id,
-    from: { $lt: pipe.transaction.createdAt },
-    to: pipe.transaction.createdAt,
-    'properties.language': { $not: { $in: ['en', 'se'] } }
-  }, null, {
-    join: {
-      domain: {
-        $find: {
-          dataset: pipe.dataset._id,
-          from: { $lt: pipe.transaction.createdAt },
-          to: pipe.transaction.createdAt
-        }
-      },
-      sets: {
-        $find: {
-          dataset: pipe.dataset._id,
-          from: { $lt: pipe.transaction.createdAt },
-          to: pipe.transaction.createdAt
-        }
-      },
-      drillups: {
-        $find: {
-          dataset: pipe.dataset._id,
-          from: { $lt: pipe.transaction.createdAt },
-          to: pipe.transaction.createdAt
-        }
-      }
-    }
-  })
-    .populate('dataset')
-    .populate('transaction')
-    .lean()
-    .exec((err, res) => {
+  return entitiesRepositoryFactory.previousVersion(pipe.dataset._id, pipe.transaction.createdAt)
+    .findAllPopulated((err, res) => {
       pipe.previousEntities = res;
       return done(err, pipe);
     });
