@@ -133,6 +133,7 @@ function findAllEntities(externalContext) {
 }
 
 function segregateEntities(entities) {
+  //FIXME: Segregation is a workaround for issue related to having same gid in couple entity files
   return _.reduce(entities, (result, entity) => {
     if (_.isEmpty(entity.sets)) {
       const domain = entity.domain;

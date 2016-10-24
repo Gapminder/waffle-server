@@ -36,7 +36,6 @@ module.exports = function (options, done) {
     common.updateTransaction,
     common.createConcepts,
     common.createEntities,
-    // common.createDataPoints,
     importDatapoints,
     common.updateConceptsDimensions,
     // translationsService.processTranslations,

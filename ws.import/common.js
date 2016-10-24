@@ -46,7 +46,6 @@ module.exports = {
   mapDdfEntityToWsModel,
 
   //Datapoints
-  createDataPoints,
   _createDataPoints,
   processRawDataPoints: __processRawDataPoints,
 
@@ -381,43 +380,6 @@ function _addEntityDrillups(pipe, done) {
   }, (err) => {
     return done(err, pipe);
   });
-}
-
-function createDataPoints(pipe, done) {
-  logger.info('start process creating data points');
-  fs.readdir(pipe.pathToDdfFolder, (err, _filenames) => {
-    const filenames = _filenames.filter(filename => /^ddf--datapoints--/.test(filename));
-    pipe.filenames = filenames;
-
-    async.forEachOfSeries(
-      filenames,
-      _processDataPoints(pipe),
-      err => done(err, pipe)
-    );
-  });
-
-  function _processDataPoints(pipe) {
-    return (filename, key, cb) => async.waterfall([
-      async.constant({
-        filename: filename,
-        concepts: pipe.concepts,
-        timeConcepts: pipe.timeConcepts,
-        transaction: pipe.transaction,
-        dataset: pipe.dataset,
-        resolvePath: pipe.resolvePath
-      }),
-      _parseFilename,
-      _findAllEntities,
-      _loadDataPoints,
-      _createEntitiesBasedOnDataPoints,
-      _findAllEntities,
-      _createDataPoints
-    ], err => {
-      logger.info(`** Processed ${key + 1} of ${pipe.filenames.length} files`);
-
-      return cb(err);
-    });
-  }
 }
 
 function getMeasureDimensionFromFilename(filename) {
