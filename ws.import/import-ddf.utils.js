@@ -3,13 +3,15 @@
 const _ = require('lodash');
 const async = require('async');
 const validator = require('validator');
+const ddfTimeUtils = require('ddf-time-utils');
 
 const RESERVED_PROPERTIES = ['properties', 'dimensions', 'subsetOf', 'from', 'to', 'originId', 'gid', 'domain', 'type'];
 
 module.exports = {
   activateLifecycleHook,
   isJson,
-  isPropertyReserved
+  isPropertyReserved,
+  parseProperties
 };
 
 function activateLifecycleHook(hookName) {
@@ -36,3 +38,27 @@ function isJsonLike(value) {
   return /^\[.*\]$|^{.*}$/g.test(value);
 }
 
+function parseProperties(concept, entityGid, entityProperties, timeConcepts) {
+  if (_.isEmpty(timeConcepts)) {
+    return {};
+  }
+
+  let parsedProperties =
+    _.chain(entityProperties)
+      .pickBy((propValue, prop) => timeConcepts[prop])
+      .mapValues(toInternalTimeForm)
+      .value();
+
+  if (timeConcepts[concept.gid]) {
+    parsedProperties = _.extend(parsedProperties || {}, {[concept.gid]: toInternalTimeForm(entityGid)});
+  }
+  return parsedProperties;
+}
+
+function toInternalTimeForm(value) {
+  const timeDescriptor = ddfTimeUtils.parseTime(value);
+  return {
+    millis: _.get(timeDescriptor, 'time'),
+    timeType: _.get(timeDescriptor, 'type')
+  };
+}

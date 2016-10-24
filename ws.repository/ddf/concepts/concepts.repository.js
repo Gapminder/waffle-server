@@ -41,6 +41,27 @@ ConceptsRepository.prototype.countBy = function (where, onCounted) {
   return Concepts.count(countQuery, onCounted);
 };
 
+ConceptsRepository.prototype.findAllPopulated = function (done) {
+  const composedQuery = this._composeQuery();
+  return Concepts.find(composedQuery, null, {
+    join: {
+      domain: {
+        $find: composedQuery
+      },
+      subsetOf: {
+        $find: composedQuery
+      },
+      dimensions: {
+        $find: composedQuery
+      }
+    }
+  })
+    .populate('dataset')
+    .populate('transaction')
+    .lean()
+    .exec(done);
+};
+
 ConceptsRepository.prototype.findAll = function (onFound) {
   const countQuery = this._composeQuery();
   return Concepts.find(countQuery).lean().exec(onFound);

@@ -7,6 +7,7 @@ const mongoose = require('mongoose');
 const entitiesRepositoryFactory = require('../ws.repository/ddf/entities/entities.repository.js');
 const datapointsRepositoryFactory = require('../ws.repository/ddf/data-points/data-points.repository.js');
 
+const datapointUtils = require('./datapoints.utils');
 const common = require('./common');
 const logger = require('../ws.config/log');
 const constants = require('../ws.utils/constants');
@@ -177,7 +178,7 @@ function _generateDatasetIndexFromDatapoints(pipe, done) {
   );
 
   function getKeyValuePair(item) {
-    const parsedFilename = common.getMeasureDimensionFromFilename(item);
+    const parsedFilename = datapointUtils.getMeasureDimensionFromFilename(item);
 
     // FIXME: value should be array because we have multiple measures per file
     return {

@@ -18,15 +18,39 @@ function DataPointsRepository() {
 
 module.exports = new RepositoryFactory(DataPointsRepository);
 
-/**
- *
- * @param subDatapointQuery
- * @param onDatapointsFound
- */
 DataPointsRepository.prototype.findForGivenMeasuresAndDimensions = function(subDatapointQuery, onDatapointsFound) {
   const query = this._composeQuery(subDatapointQuery);
 
   return DataPoints.find(query).lean().exec(onDatapointsFound);
+};
+
+DataPointsRepository.prototype.findForGivenMeasuresAndDimensions = function(subDatapointQuery, onDatapointsFound) {
+  const query = this._composeQuery(subDatapointQuery);
+
+  return DataPoints.find(query).lean().exec(onDatapointsFound);
+};
+
+DataPointsRepository.prototype.findForGivenMeasuresAndDimensions = function(subDatapointQuery, onDatapointsFound) {
+  const query = this._composeQuery(subDatapointQuery);
+
+  return DataPoints.find(query).lean().exec(onDatapointsFound);
+};
+
+DataPointsRepository.prototype.closeDatapointByMeasureAndDimensionsAndValue = function(options, onDatapointClosed) {
+  const {measureOriginId, dimensionsSize, dimensionsEntityOriginIds, datapointValue} = options;
+
+  const query = this._composeQuery({
+    measure: measureOriginId,
+    dimensions: {
+      $size: dimensionsSize,
+      $not: {$elemMatch: {$nin: dimensionsEntityOriginIds}}
+    },
+    value: _.toNumber(datapointValue)
+  });
+
+  return DataPoints.findOneAndUpdate(query, {$set: {to: this.version}}, {new: true})
+    .lean()
+    .exec(onDatapointClosed);
 };
 
 DataPointsRepository.prototype.findStats = function (params, onDatapointsFound) {

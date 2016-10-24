@@ -4,32 +4,31 @@ const _ = require('lodash');
 const async = require('async');
 const mongoose = require('mongoose');
 
-const ddfImportProcess = require('../../ws.utils/ddf-import-process');
+const conceptsRepositoryFactory = require('../../ws.repository/ddf/concepts/concepts.repository');
+const ddfImportUtils = require('../import-ddf.utils');
 const constants = require('../../ws.utils/constants');
 const mappers = require('./mappers');
 
-module.exports = () => {
-  return (pipe, done) => {
-    if (!pipe.allChanges['ddf--concepts.csv']) {
-      return done(null, pipe);
-    }
+module.exports = (pipe, done) => {
+  if (!pipe.allChanges['ddf--concepts.csv']) {
+    return done(null, pipe);
+  }
 
-    const conceptChanges = pipe.allChanges['ddf--concepts.csv'];
-    const remove = conceptChanges.body.remove;
-    const create = conceptChanges.body.create;
-    const change = conceptChanges.body.change;
-    const update = conceptChanges.body.update;
-    const removedProperties = conceptChanges.header.remove;
+  const conceptChanges = pipe.allChanges['ddf--concepts.csv'];
+  const remove = conceptChanges.body.remove;
+  const create = conceptChanges.body.create;
+  const change = conceptChanges.body.change;
+  const update = conceptChanges.body.update;
+  const removedProperties = conceptChanges.header.remove;
 
-    return async.waterfall([
-      async.constant({external: pipe, internal: {}}),
-      processRemovedConcepts(remove),
-      processCreatedConcepts(create),
-      processUpdatedConcepts(mergeConceptModifications(change, update), removedProperties)
-    ], error => {
-      return done(error, pipe);
-    });
-  };
+  return async.waterfall([
+    async.constant({external: pipe, internal: {}}),
+    processRemovedConcepts(remove),
+    processCreatedConcepts(create),
+    processUpdatedConcepts(mergeConceptModifications(change, update), removedProperties)
+  ], error => {
+    return done(error, pipe);
+  });
 };
 
 function processRemovedConcepts(removedConcepts) {
@@ -215,15 +214,8 @@ function applyUpdatesToConcepts(changedConcepts, removedProperties) {
 
 function  getAllConcepts() {
   return (pipe, done) => {
-    return mongoose.model('Concepts').find({
-      dataset: pipe.external.dataset._id,
-      from: {$lte: pipe.external.transaction.createdAt},
-      to: constants.MAX_VERSION
-    })
-      .populate('dataset')
-      .populate('transaction')
-      .lean()
-      .exec((error, res) => {
+    return conceptsRepositoryFactory.latestVersion(pipe.external.dataset._id, pipe.external.transaction.createdAt)
+      .findAll((error, res) => {
         pipe.internal.concepts = _.keyBy(res, 'gid');
         return done(error, pipe);
       });
@@ -297,17 +289,17 @@ function mergeConcepts(originalConcept, changesToConcept, currentTransaction) {
       originalConcept.type = changedValue === 'time' ? 'entity_domain' : changedValue;
     }
 
-    if (ddfImportProcess.isJson(changedValue)) {
+    if (ddfImportUtils.isJson(changedValue)) {
       return JSON.parse(changedValue);
     }
 
-    if (ddfImportProcess.isPropertyReserved(property)) {
+    if (ddfImportUtils.isPropertyReserved(property)) {
       return originalValue;
     }
   });
 
   _.mergeWith(updatedConcept.properties, changesToConcept, (originalValue, changedValue) => {
-    if (ddfImportProcess.isJson(changedValue)) {
+    if (ddfImportUtils.isJson(changedValue)) {
       return JSON.parse(changedValue);
     }
   });
@@ -333,6 +325,6 @@ function mergeConceptModifications(conceptChanges, conceptUpdates) {
 
 function omitRemovedProperties(concept, removedProperties) {
   return _.omitBy(concept, (value, property) => {
-    return _.includes(removedProperties, property) && !ddfImportProcess.isPropertyReserved(property);
+    return _.includes(removedProperties, property) && !ddfImportUtils.isPropertyReserved(property);
   });
 }
