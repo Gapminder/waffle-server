@@ -3,7 +3,6 @@
 const _ = require('lodash');
 const compression = require('compression');
 const transactionsService = require('./dataset-transactions.service');
-const translationsService = require('./translations/translations.service');
 const constants = require('../ws.utils/constants');
 
 module.exports = {
@@ -36,22 +35,16 @@ function findDefaultDatasetAndTransaction(pipe, done) {
 }
 
 function translate(translationTargetName, pipe, done) {
-  if (!_.includes(constants.TRANSLATION_LANGUAGES, pipe.language)) {
+  if (!_.includes(pipe.transaction.languages, pipe.language)) {
     return done(null, pipe);
   }
 
-  return translationsService.loadLanguage(pipe.language, (error, dictionary) => {
-    if (_.isEmpty(dictionary)) {
-      return done(null, pipe);
-    }
-
-    pipe[translationTargetName] = _.map(pipe[translationTargetName], target => {
-      target.properties = _.mapValues(target.properties, value => {
-        return dictionary[_.toLower(value)] || value;
-      });
-      return target;
+  pipe[translationTargetName] = _.map(pipe[translationTargetName], target => {
+    target.properties = _.mapValues(target.properties, (value, key) => {
+      return target.languages[pipe.language][key] || value;
     });
-
-    return done(null, pipe);
+    return target;
   });
+
+  return done(null, pipe);
 }

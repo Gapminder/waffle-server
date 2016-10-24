@@ -4,7 +4,7 @@ const async = require('async');
 
 const ddfImportUtils = require('./import-ddf.utils');
 const createDatasetIndex = require('./import-dataset-index.service');
-const translationsService = require('./import-translations.service');
+const importTranslations = require('./import-translations.service');
 
 const defaultEntityGroupTypes = ['entity_domain', 'entity_set', 'time', 'age'];
 const defaultMeasureTypes = ['measure'];
@@ -38,7 +38,7 @@ module.exports = function (options, done) {
     common.createEntities,
     importDatapoints,
     common.updateConceptsDimensions,
-    // translationsService.processTranslations,
+    importTranslations,
     createDatasetIndex,
     common.closeTransaction
   ], (importError, pipe) => {

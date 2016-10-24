@@ -3,6 +3,9 @@
 const _ = require('lodash');
 const path = require('path');
 const bunyan = require('bunyan');
+const PrettyStream = require('bunyan-prettystream');
+const prettyStdOut = new PrettyStream();
+prettyStdOut.pipe(process.stdout);
 
 const config = require('./config');
 
@@ -22,8 +25,9 @@ module.exports = bunyan.createLogger({
       count: 3
     },
     {
+      src: config.NODE_ENV === 'development' || config.NODE_ENV === 'local',
       level: config.LOG_LEVEL,
-      stream: process.stdout
+      stream: prettyStdOut
     }
   ]
 });

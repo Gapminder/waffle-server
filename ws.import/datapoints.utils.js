@@ -189,13 +189,18 @@ function mapAndStoreDatapointsToDb(datapointsFromSameFile, externalContext) {
 }
 
 function getMeasureDimensionFromFilename(filename) {
-  let parsedFileName = filename.replace(/^ddf--datapoints--|\.csv$/g, '').split('--by--');
+  const parsedFileName = filename.replace(/^ddf--(\w*)--|\.csv$/g, '');
+
+  const parsedEntries = parsedFileName.split('--by--');
+  const measures = _.first(parsedEntries).split('--');
+  const dimensions = _.chain(parsedEntries)
+    .last()
+    .split('--')
+    .map(dimension => _.first(dimension.split('-')))
+    .value();
+
   return {
-    measures: _.first(parsedFileName).split('--'),
-    dimensions: _.chain(parsedFileName)
-      .last()
-      .split('--')
-      .map(dimension => _.first(dimension.split('-')))
-      .value()
+    measures,
+    dimensions
   };
 }

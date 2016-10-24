@@ -106,6 +106,34 @@ EntitiesRepository.prototype.findEntityProperties = function(entityDomainGid, se
   });
 };
 
+EntitiesRepository.prototype.addTranslationsForGivenProperties = function (properties, context) {
+  const domainOriginId = _.chain(context.domains)
+    .values()
+    .first()
+    .get(`${constants.ORIGIN_ID}`, null)
+    .value();
+  const setsOriginIds = _.map(context.sets, constants.ORIGIN_ID);
+  const entityGid = _.chain({})
+    .assign(context.sets,context.domains)
+    .map(concept => _.get(properties, `${concept.gid}`, null))
+    .compact()
+    .first()
+    .value();
+
+  const subEntityQuery = getSubQueryFromDomainAndSets(domainOriginId, setsOriginIds, entityGid);
+
+  const query = this._composeQuery(subEntityQuery);
+  const updateQuery = {
+    $set: {
+      languages: {
+        [context.language]: properties
+      }
+    }
+  };
+
+  return Entities.update(query, updateQuery).exec();
+};
+
 function makePositiveProjectionFor(properties) {
   const positiveProjectionValues = _.fill(new Array(_.size(properties)), 1);
   return toPropertiesDotNotation(_.chain(properties).zipObject(positiveProjectionValues).value());
@@ -114,3 +142,12 @@ function makePositiveProjectionFor(properties) {
 function toPropertiesDotNotation(object) {
   return _.mapKeys(object, (value, property) => property === 'gid' ? property : `properties.${property}`);
 }
+
+function getSubQueryFromDomainAndSets(domainOriginId, setsOriginIds, gid) {
+  return {
+    gid: gid,
+    domain: domainOriginId,
+    sets: {$not: {$elemMatch: {$nin : setsOriginIds}}}
+  };
+}
+

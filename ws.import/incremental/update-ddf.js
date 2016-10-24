@@ -14,11 +14,11 @@ const constants = require('../../ws.utils/constants');
 const ddfImportUtils = require('../import-ddf.utils');
 
 const createDatasetIndex = require('./../import-dataset-index.service');
-const translationsService = require('./../import-translations.service');
 const entitiesRepositoryFactory = require('../../ws.repository/ddf/entities/entities.repository');
 const conceptsRepositoryFactory = require('../../ws.repository/ddf/concepts/concepts.repository');
 const updateConcepts = require('./update-concepts');
 const updateDatapoints = require('./update-datapoints');
+const updateTranslations = require('./update-translations');
 
 const LIMIT_NUMBER_PROCESS = 10;
 
@@ -60,7 +60,7 @@ module.exports = function (options, done) {
     getAllPreviousConcepts,
     processEntitiesChanges,
     updateDatapoints,
-    // translationsService.processTranslations,
+    // updateTranslations,
     createDatasetIndex,
     common.closeTransaction
   ], (updateError, pipe) => {
@@ -351,12 +351,13 @@ function ___fakeLoadRawEntities(pipe, done) {
 
 function ____formRawEntities(pipe) {
   let mapper = pipe.common.mapDdfEntityToWsModel(pipe);
-  return (entity, entityGid) => {
-    let closedEntity = pipe.closedEntities[entityGid];
-    let originId = closedEntity ? closedEntity.originId : null;
-    let result = _.assign(entity, {originId});
+  return (properties, entityGid) => {
+    const closedEntity = pipe.closedEntities[entityGid];
+    const originId = closedEntity ? closedEntity.originId : null;
+    const languages = closedEntity.languages || null;
+    const context = {originId, languages};
 
-    return mapper(result);
+    return mapper(properties, context);
   };
 }
 

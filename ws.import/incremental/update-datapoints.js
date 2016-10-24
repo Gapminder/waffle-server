@@ -176,7 +176,8 @@ function _____updateDataPoint(pipe, entities, datapoint) {
       measureOriginId: measure.originId,
       dimensionsSize: _.size(pipe.dimensions),
       dimensionsEntityOriginIds: _.map(entities, 'originId'),
-      datapointValue: datapoint[measure.gid]
+      datapointValue: datapoint[measure.gid],
+      languages: _.get(datapoint, 'languages', null)
     };
 
     return datapointsRepositoryFactory.latestExceptCurrentVersion(pipe.dataset._id, pipe.transaction.createdAt)

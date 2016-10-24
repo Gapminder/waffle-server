@@ -67,6 +67,23 @@ ConceptsRepository.prototype.findAll = function (onFound) {
   return Concepts.find(countQuery).lean().exec(onFound);
 };
 
+ConceptsRepository.prototype.addTranslationsForGivenProperties = function (properties, context) {
+  const subEntityQuery = {
+    gid: properties.concept
+  };
+
+  const query = this._composeQuery(subEntityQuery);
+  const updateQuery = {
+    $set: {
+      languages: {
+        [context.language]: properties
+      }
+    }
+  };
+
+  return Concepts.update(query, updateQuery).exec();
+};
+
 //TODO: Move this in utils that should be common across all repositories
 function makePositiveProjectionFor(properties) {
   const positiveProjectionValues = _.fill(new Array(_.size(properties)), 1);

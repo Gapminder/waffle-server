@@ -1,183 +1,138 @@
 'use strict';
 
+const fs = require('fs');
 const _ = require('lodash');
-const async = require('async');
+const hi = require('highland');
+const mongoose = require('mongoose');
+const Converter = require('csvtojson').Converter;
+
+const common = require('./common');
 const logger = require('../ws.config/log');
-
 const constants = require('../ws.utils/constants');
-const translateService = require('../ws.services/translations/translations.service.js');
-const translationsRepository = require('../ws.repository/ddf/translations/translations.repository');
+const entitiesUtils = require('./entities.utils');
+const datapointsUtils = require('./datapoints.utils');
+const datapointsRepository = require('../ws.repository/ddf/data-points/data-points.repository');
+const entitiesRepository = require('../ws.repository/ddf/entities/entities.repository');
+const conceptsRepository = require('../ws.repository/ddf/concepts/concepts.repository');
 
-module.exports = {
-  processTranslations,
-  divideWordsIntoChunks: _divideWordsIntoChunks
-};
+const translationsPattern = /^ddf--translation--(([a-z]{2}-[a-z]{2,})|([a-z]{2,}))--/;
 
-function processTranslations(pipe, done) {
+module.exports = importTranslations_Hi;
+
+function importTranslations_Hi(externalContext, done) {
   logger.info('start process creating translations');
-  const conceptsByType = _.groupBy(pipe.concepts, 'type');
-  const stringConcepts = conceptsByType['string'];
-  const stringConceptsGids = _.map(stringConcepts, constants.GID);
 
-  const concepts = _.values(pipe.concepts);
+  const externalContextFrozen = Object.freeze(_.pick(externalContext, [
+    'pathToDdfFolder',
+    'concepts',
+    'entities',
+    'transaction',
+    'dataset',
+    'resolvePath'
+  ]));
+  const parsedLanguages = new Set();
 
-  const rawTranslations = _.chain(pipe.entities)
-    .concat(concepts)
-    .flatMap((entry) => _.chain(entry)
-      .get('properties', {})
-      .pick(stringConceptsGids)
-      .values()
-      .value()
-    )
-    .uniq()
-    .compact()
-    .value();
+  const readdir = hi.wrapCallback(fs.readdir);
 
-  const options = {
-    transaction: pipe.transaction,
-    languages: constants.TRANSLATION_LANGUAGES,
-    rawTranslations
-  };
-  return async.waterfall([
-    async.constant(options),
-    findAllTranslations,
-    filterExistedTranslations,
-    createTranslations
-  ], error => {
-    if (error) {
-      logger.warn(error);
-    }
-    // intentionally skipping error, because we don't want to
-    // break importing or incremental updating process
-    // in case of errors during translation creation
-    return done(null, pipe);
-  });
-}
-
-function findAllTranslations(pipe, done) {
-  logger.info('** find all translations');
-
-  return translationsRepository.findByLanguages(pipe.languages, (error, translations) => {
-    if (error) {
-      return done(error);
-    }
-
-    pipe.translations = translations;
-
-    return done(null, pipe);
-  });
-}
-
-function filterExistedTranslations(pipe, done) {
-  logger.info('** filter existed translations');
-
-  const translationsByLanguages = _.groupBy(pipe.translations, 'language');
-
-  return async.setImmediate(() => {
-    const wordsToTranslateByLanguage = _.reduce(pipe.languages, (result, language) => {
-      const translationsByLanguage = _.map(translationsByLanguages[language], 'source');
-
-      result = _.chain(pipe.rawTranslations)
-        .filter((rawTranslation) => _.size(rawTranslation) < constants.TRANSLATION_CHUNK_LIMIT && !_.isObject(rawTranslation) && !_.isNil(rawTranslation) && !_.isNumber(rawTranslation))
-        .difference(translationsByLanguage)
-        .concat(result)
-        .value();
-
-      return result;
-    }, []);
-
-    pipe.wordsToTranslateByLanguage = _.uniq(wordsToTranslateByLanguage);
-
-    return done(null, pipe);
-  });
-}
-
-function createTranslations(pipe, done) {
-  logger.info(`** translate all founded words to '${_.join(pipe.languages, ', ')}' languages`);
-
-  const createTranslationsByChunks = async.seq(_translateToAnotherLanguage, _createTranslationsFromChunk);
-  const words = pipe.wordsToTranslateByLanguage;
-  const wordChunks = _divideWordsIntoChunks(words, pipe.languages);
-  const wordChunksByLanguage = _.flatMap(wordChunks, (wordChunk) => {
-    return _.map(pipe.languages, (language) => ({words: wordChunk, language, transaction: pipe.transaction}));
-  });
-
-  let index = 0;
-  return async.eachSeries(wordChunksByLanguage, (chunk, escb) => {
-    logger.info(`**** translate ${chunk.words.length} words from ${++index} chunk into '${chunk.language}' language`);
-    return createTranslationsByChunks(chunk, escb);
-  }, (err) => {
-    return done(err, pipe);
-  });
-}
-
-function _divideWordsIntoChunks(words, languages) {
-  logger.info(`**** divide words into chunks`);
-
-  let chunkIndex = 0;
-  let lastChunkLength = 0;
-
-  const wordChunks = _.reduce(words, (chunks, word) => {
-    const encodedWord = encodeURI(word);
-    const wordLength = encodedWord.length;
-    const translationSeparatorLength = encodeURI(constants.TRANSLATION_SEPARATOR).length;
-    const currentChunkLength = lastChunkLength + translationSeparatorLength + wordLength;
-
-    if (currentChunkLength >= constants.TRANSLATION_CHUNK_LIMIT) {
-      chunkIndex++;
-    }
-
-    if (_.isEmpty(chunks[chunkIndex])) {
-      lastChunkLength = wordLength;
-      chunks[chunkIndex] = [word];
-      return chunks;
-    }
-
-    lastChunkLength += translationSeparatorLength + wordLength;
-    chunks[chunkIndex].push(word);
-
-    return chunks;
-  }, []);
-
-  logger.info(`**** divided into ${_.size(wordChunks) * _.size(languages)} chunks`);
-
-  return wordChunks;
-}
-
-function _translateToAnotherLanguage(pipe, done) {
-  const options = {splitBy: constants.TRANSLATION_SEPARATOR, target: pipe.language};
-
-  return translateService.translateUsingScrapper(pipe.words, options, (error, translatedWords) => {
-    if (error) {
-      return done(error);
-    }
-
-    pipe.translatedWords = _.map(translatedWords, (word) => {
-      return _.extend(word, {transaction: pipe.transaction._id});
-    });
-
-    return done(null, pipe);
-  });
-}
-
-function _createTranslationsFromChunk(pipe, done) {
-  logger.info('** create translations documents from chunk');
-
-  return async.eachLimit(
-    _.chunk(pipe.translatedWords, 100),
-    constants.LIMIT_NUMBER_PROCESS,
-    __createTranslationsDocuments,
-    (err) => {
-      return done(err, pipe);
-    }
-  );
-}
-
-function __createTranslationsDocuments(chunk, done) {
-  return translationsRepository.create(chunk, (error) => {
-    if (error) {
+  return readdir(externalContextFrozen.pathToDdfFolder)
+    .flatMap(filenames => {
+      return hi(filenames);
+    })
+    .filter(filename => {
+      return translationsPattern.test(filename)
+    })
+    .map(filename => {
+      return parseFilename(filename, parsedLanguages, externalContextFrozen);
+    })
+    .flatMap((context) => {
+      return readCsvFile_Hi(externalContextFrozen.resolvePath(context.filename), {})
+        .map(row => ({row, context}));
+    })
+    .map(({row, context}) => {
+      return hi(createFoundTranslation(row, context, externalContextFrozen));
+    })
+    .errors(error => {
       logger.error(error);
-    }
-    return done();
+      return done(error);
+    })
+    .done(() => {
+      return updateTransactionLanguages(parsedLanguages, externalContextFrozen, (error) => {
+        if (error) {
+          return done(error);
+        }
+
+        logger.info('finished process creating translations');
+
+        return done(null, externalContext);
+      });
+    });
+}
+
+function parseFilename(filename, languages, externalContext) {
+  logger.info(`** parse filename '${filename}'`);
+
+  const language = filename.match(translationsPattern)[1];
+  const dataFilename = filename.replace(translationsPattern, 'ddf--');
+  const translatedModel = dataFilename.match(/^ddf--(\w{1,})--/)[1];
+
+  if (_.isEmpty(language)) {
+    throw Error(`file '${filename}' doesn't have any language.`);
+  }
+
+  languages.add(language);
+  logger.info(`** parsed language: ${language}`);
+  logger.info(`** parsed data filename: ${dataFilename}`);
+  logger.info(`** parsed translated model: ${translatedModel}`);
+
+  let parsedConcepts;
+
+  if (translatedModel === constants.DATAPOINTS) {
+    parsedConcepts = datapointsUtils.parseFilename(dataFilename, externalContext);
+  }
+
+  if (translatedModel === constants.ENTITIES) {
+    parsedConcepts = entitiesUtils.parseFilename(dataFilename, externalContext);
+  }
+
+  return _.assign({}, {filename, translatedModel, language}, parsedConcepts);
+}
+
+function readCsvFile_Hi(filepath) {
+  return hi(fs.createReadStream(filepath, 'utf-8').pipe(new Converter({constructResult: false}, {objectMode: true})));
+}
+
+function createFoundTranslation(properties, context, externalContext) {
+  if (context.translatedModel === constants.DATAPOINTS) {
+    return datapointsRepository
+      .currentVersion(externalContext.dataset._id, externalContext.transaction.createdAt)
+      .addTranslationsForGivenProperties(properties, context);
+  }
+
+  if (context.translatedModel === constants.ENTITIES) {
+    return entitiesRepository
+      .currentVersion(externalContext.dataset._id, externalContext.transaction.createdAt)
+      .addTranslationsForGivenProperties(properties, context);
+  }
+
+  if (context.translatedModel === constants.CONCEPTS) {
+    return conceptsRepository
+      .currentVersion(externalContext.dataset._id, externalContext.transaction.createdAt)
+      .addTranslationsForGivenProperties(properties, context);
+  }
+
+  return;
+}
+
+function updateTransactionLanguages(parsedLanguages, externalContext, done) {
+  let languages = [];
+
+  parsedLanguages.forEach(lang =>{
+    languages.push(lang);
   });
+
+  return mongoose.model('DatasetTransactions').update({_id: externalContext.transaction._id}, {
+    $set: {
+      languages
+    }
+  }).exec(done);
 }

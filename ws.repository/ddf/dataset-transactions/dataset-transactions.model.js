@@ -26,7 +26,7 @@ const DatasetTransactions = new Schema({
 
   timeSpentInMillis: Number,
   dataset: {type: Schema.Types.ObjectId, ref: 'Datasets'},
-  langiages: [],
+  languages: [{type: String}],
 
   commit: {type: String}
 });
