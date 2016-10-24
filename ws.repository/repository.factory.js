@@ -37,7 +37,7 @@ VersionedModelRepositoryFactory.prototype.previousVersion = function (datasetId,
 
   const versionQueryFragment = {
     dataset: datasetId,
-    from: {$lte: version},
+    from: {$lt: version},
     to: version
   };
 

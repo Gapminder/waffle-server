@@ -4,6 +4,7 @@ const _ = require('lodash');
 const async = require('async');
 const mongoose = require('mongoose');
 
+const conceptsRepositoryFactory = require('../../ws.repository/ddf/concepts/concepts.repository');
 const ddfImportProcess = require('../../ws.utils/ddf-import-process');
 const constants = require('../../ws.utils/constants');
 const mappers = require('./mappers');
@@ -215,15 +216,8 @@ function applyUpdatesToConcepts(changedConcepts, removedProperties) {
 
 function  getAllConcepts() {
   return (pipe, done) => {
-    return mongoose.model('Concepts').find({
-      dataset: pipe.external.dataset._id,
-      from: {$lte: pipe.external.transaction.createdAt},
-      to: constants.MAX_VERSION
-    })
-      .populate('dataset')
-      .populate('transaction')
-      .lean()
-      .exec((error, res) => {
+    return conceptsRepositoryFactory.latestVersion(pipe.external.dataset._id, pipe.external.transaction.createdAt)
+      .findAll((error, res) => {
         pipe.internal.concepts = _.keyBy(res, 'gid');
         return done(error, pipe);
       });

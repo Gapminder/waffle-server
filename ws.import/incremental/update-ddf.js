@@ -16,6 +16,7 @@ const ddfImportProcess = require('../../ws.utils/ddf-import-process');
 const createDatasetIndex = require('./../import-dataset-index.service');
 const translationsService = require('./../import-translations.service');
 const entitiesRepositoryFactory = require('../../ws.repository/ddf/entities/entities.repository');
+const conceptsRepositoryFactory = require('../../ws.repository/ddf/concepts/concepts.repository');
 const processConceptChanges = require('./update-concepts')();
 
 const LIMIT_NUMBER_PROCESS = 10;
@@ -70,7 +71,11 @@ module.exports = function (options, done) {
     }
 
 
-    return done(updateError, {datasetName: pipe.dataset.name, version: pipe.transaction.createdAt, transactionId: pipe.transaction._id});
+    return done(updateError, {
+      datasetName: pipe.dataset.name,
+      version: pipe.transaction.createdAt,
+      transactionId: pipe.transaction._id
+    });
   });
 };
 
@@ -100,82 +105,16 @@ function addTransactionToDatasetVersions(pipe, done) {
 }
 
 function getAllConcepts(pipe, done) {
-  logger.info('** get all concepts');
-
-  mongoose.model('Concepts').find({
-    dataset: pipe.dataset._id,
-    from: { $lte: pipe.transaction.createdAt },
-    to: constants.MAX_VERSION
-  }, null, {
-    join: {
-      domain: {
-        $find: {
-          dataset: pipe.dataset._id,
-          from: { $lte: pipe.transaction.createdAt },
-          to: constants.MAX_VERSION
-        }
-      },
-      subsetOf: {
-        $find: {
-          dataset: pipe.dataset._id,
-          from: { $lte: pipe.transaction.createdAt },
-          to: constants.MAX_VERSION
-        }
-      },
-      dimensions: {
-        $find: {
-          dataset: pipe.dataset._id,
-          from: { $lte: pipe.transaction.createdAt },
-          to: constants.MAX_VERSION
-        }
-      }
-    }
-  })
-    .populate('dataset')
-    .populate('transaction')
-    .lean()
-    .exec((err, res) => {
+  return conceptsRepositoryFactory.latestVersion(pipe.dataset._id, pipe.transaction.createdAt)
+    .findAllPopulated((err, res) => {
       pipe.concepts = _.keyBy(res, 'gid');
       return done(err, pipe);
     });
 }
 
 function getAllPreviousConcepts(pipe, done) {
-  logger.info('** get all concepts');
-
-  mongoose.model('Concepts').find({
-    dataset: pipe.dataset._id,
-    from: { $lt: pipe.transaction.createdAt },
-    to: pipe.transaction.createdAt
-  }, null, {
-    join: {
-      domain: {
-        $find: {
-          dataset: pipe.dataset._id,
-          from: { $lt: pipe.transaction.createdAt },
-          to: pipe.transaction.createdAt
-        }
-      },
-      subsetOf: {
-        $find: {
-          dataset: pipe.dataset._id,
-          from: { $lt: pipe.transaction.createdAt },
-          to: pipe.transaction.createdAt
-        }
-      },
-      dimensions: {
-        $find: {
-          dataset: pipe.dataset._id,
-          from: { $lt: pipe.transaction.createdAt },
-          to: pipe.transaction.createdAt
-        }
-      }
-    }
-  })
-    .populate('dataset')
-    .populate('transaction')
-    .lean()
-    .exec((err, res) => {
+  return conceptsRepositoryFactory.previousVersion(pipe.dataset._id, pipe.transaction.createdAt)
+    .findAllPopulated((err, res) => {
       pipe.previousConcepts = _.keyBy(res, 'gid');
       return done(err, pipe);
     });
@@ -284,7 +223,7 @@ function ___closeAllEntitiesBySource(pipe, cb) {
     from: {$lte: pipe.transaction.createdAt},
     to: constants.MAX_VERSION,
     domain: pipe.entityDomain.originId,
-    sets : getQuerySetsClause(pipe.entityDomain, pipe.entitySet)
+    sets: getQuerySetsClause(pipe.entityDomain, pipe.entitySet)
   };
 
   return mongoose.model('Entities').update(
@@ -302,7 +241,7 @@ function ___getAllEntitiesBySource(pipe, cb) {
     from: {$lte: pipe.transaction.createdAt},
     to: pipe.transaction.createdAt,
     domain: pipe.entityDomain.originId,
-    sets : getQuerySetsClause(pipe.entityDomain, pipe.entitySet)
+    sets: getQuerySetsClause(pipe.entityDomain, pipe.entitySet)
   };
 
   return mongoose.model('Entities').find(query)
@@ -335,7 +274,7 @@ function ____closeEntity(pipe) {
       from: {$lte: pipe.transaction.createdAt},
       to: constants.MAX_VERSION,
       domain: pipe.entityDomain.originId,
-      sets : getQuerySetsClause(pipe.entityDomain, pipe.entitySet)
+      sets: getQuerySetsClause(pipe.entityDomain, pipe.entitySet)
     }, properties);
 
     return mongoose.model('Entities').findOneAndUpdate(query, {$set: {to: pipe.transaction.createdAt}}, {new: true})
@@ -500,7 +439,7 @@ function ___updateRemovedDataPoints(removedDataPoints, pipe) {
       ____closeDataPoint(pipe),
       (err) => {
         return cb(err);
-    });
+      });
   };
 }
 
@@ -540,7 +479,7 @@ function _____updateDataPoint(pipe, entities, datapoint) {
       dimensions: {
         $size: _.size(pipe.dimensions),
         // TODO: get the point to presentation
-        $not: {$elemMatch: {$nin : _.map(entities, 'originId') }}
+        $not: {$elemMatch: {$nin: _.map(entities, 'originId')}}
       },
       value: _.toNumber(datapoint[measure.gid])
     }, {$set: {to: pipe.transaction.createdAt}}, {new: true})

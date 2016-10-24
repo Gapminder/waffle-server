@@ -12,6 +12,8 @@ const constants = require('../ws.utils/constants');
 const reposService = require('../ws.services/repos.service');
 
 const defaultEntityGroupTypes = ['entity_domain', 'entity_set', 'time'];
+const entitiesRepositoryFactory = require('../ws.repository/ddf/entities/entities.repository');
+const conceptsRepositoryFactory = require('../ws.repository/ddf/concepts/concepts.repository');
 
 const logger = require('../ws.config/log');
 const config = require('../ws.config/config');
@@ -45,7 +47,6 @@ module.exports = {
 
   //Datapoints
   createDataPoints,
-  findDataPoints,
   _createDataPoints,
   processRawDataPoints: __processRawDataPoints,
 
@@ -192,37 +193,8 @@ function _createConcepts(pipe, done) {
 }
 
 function _getAllConcepts(pipe, done) {
-  logger.info('** get all concepts');
-
-  mongoose.model('Concepts').find({
-    dataset: pipe.dataset._id,
-    transaction: pipe.transaction._id
-  }, null, {
-    join: {
-      domain: {
-        $find: {
-          dataset: pipe.dataset._id,
-          transaction: pipe.transaction._id
-        }
-      },
-      subsetOf: {
-        $find: {
-          dataset: pipe.dataset._id,
-          transaction: pipe.transaction._id
-        }
-      },
-      dimensions: {
-        $find: {
-          dataset: pipe.dataset._id,
-          transaction: pipe.transaction._id
-        }
-      }
-    }
-  })
-    .populate('dataset')
-    .populate('transaction')
-    .lean()
-    .exec((err, res) => {
+  return conceptsRepositoryFactory.latestVersion(pipe.dataset._id, pipe.transaction.createdAt)
+    .findAllPopulated((err, res) => {
       pipe.concepts = _.keyBy(res, 'gid');
       pipe.timeConcepts = _.pickBy(pipe.concepts, (value, conceptGid) => {
         return _.get(pipe.concepts[conceptGid], 'properties.concept_type') === 'time';
@@ -382,37 +354,8 @@ function __storeEntitiesToDb(pipe, done) {
 }
 
 function _findAllEntities(pipe, done) {
-  logger.info('** find all entities');
-
-  mongoose.model('Entities').find({
-    dataset: pipe.dataset._id,
-    transaction: pipe.transactionId || pipe.transaction._id
-  }, null, {
-    join: {
-      domain: {
-        $find: {
-          dataset: pipe.dataset._id,
-          transaction: pipe.transactionId || pipe.transaction._id
-        }
-      },
-      sets: {
-        $find: {
-          dataset: pipe.dataset._id,
-          transaction: pipe.transactionId || pipe.transaction._id
-        }
-      },
-      drillups: {
-        $find: {
-          dataset: pipe.dataset._id,
-          transaction: pipe.transactionId || pipe.transaction._id
-        }
-      }
-    }
-  })
-    .populate('dataset')
-    .populate('transaction')
-    .lean()
-    .exec((err, res) => {
+  return entitiesRepositoryFactory.latestVersion(pipe.dataset._id, pipe.transaction.createdAt)
+    .findAllPopulated((err, res) => {
       pipe.entities = res;
       return done(err, pipe);
     });
@@ -693,36 +636,6 @@ function findDataset(pipe, done) {
     });
 }
 
-function findDataPoints(pipe, done) {
-  console.time('find all datapoints');
-  mongoose.model('DataPoints').find({
-    dataset: pipe.dataset._id,
-    transaction: pipe.transactionId || pipe.transaction._id
-  }, null, {
-    join: {
-      dimensions: {
-        $find: {
-          dataset: pipe.dataset._id,
-          transaction: pipe.transactionId || pipe.transaction._id
-        }
-      },
-      measure: {
-        $find: {
-          dataset: pipe.dataset._id,
-          transaction: pipe.transactionId || pipe.transaction._id
-        }
-      }
-    }
-  })
-    .populate('dataset')
-    .populate('transaction')
-    .lean()
-    .exec((err, res) => {
-      console.timeEnd('find all datapoints');
-      pipe.datapoints = res;
-      return done(err, pipe);
-    });
-}
 //*** Mappers ***
 function mapDdfConceptsToWsModel(pipe) {
   return function (entry, rowNumber) {

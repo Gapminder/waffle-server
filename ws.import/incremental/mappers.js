@@ -62,15 +62,15 @@ function mapDdfDataPointToWsModel(pipe) {
   };
 }
 
-function mapDdfInDatapointsFoundEntityToWsModel(entity, concept, domain, context, externalContext) {
-  const gid = entity[concept.gid];
+function mapDdfInDatapointsFoundEntityToWsModel(datapoint, concept, domain, context, externalContext) {
+  const gid = datapoint[concept.gid];
   return {
     gid: gid,
     sources: [context.filename || filename],
-    properties: entity,
-    parsedProperties: parseProperties(concept, gid, entity, externalContext.timeConcepts),
+    properties: datapoint,
+    parsedProperties: parseProperties(concept, gid, datapoint, externalContext.timeConcepts),
 
-    // originId: entity.originId,
+    // originId: datapoint.originId,
     domain: domain.originId,
     sets: concept.type === 'entity_set' ? [concept.originId] : [],
     drillups: [],

@@ -1,21 +1,17 @@
 'use strict';
 
 const _ = require('lodash');
+const hi = require('highland');
 const fs = require('fs');
-const path = require('path');
-const async = require('async');
-const Converter = require('csvtojson').Converter;
 
+const Converter = require('csvtojson').Converter;
 const mongoose = require('mongoose');
-const constants = require('../ws.utils/constants');
-const entitiesRepositoryFactory = require('../ws.repository/ddf/entities/entities.repository');
 
 const common = require('./common');
-const mappers = require('./incremental/mappers');
 const logger = require('../ws.config/log');
-const config = require('../ws.config/config');
-
-const hi = require('highland');
+const mappers = require('./incremental/mappers');
+const constants = require('../ws.utils/constants');
+const entitiesRepositoryFactory = require('../ws.repository/ddf/entities/entities.repository');
 
 const DEFAULT_CHUNK_SIZE = 1500;
 const MONGODB_DOC_CREATION_THREADS_AMOUNT = 3;
@@ -47,6 +43,39 @@ function startDatapointsCreation(externalContext, done) {
     });
 }
 
+function createDatapoints(externalContextFrozen) {
+  const findAllEntitiesMemoized = _.memoize(findAllEntities);
+  const saveEntitiesFoundInDatapoints = createEntitiesFoundInDatapointsSaverWithCache();
+
+  return hi.wrapCallback(fs.readdir)(externalContextFrozen.pathToDdfFolder)
+    .flatMap(filenames => hi(filenames))
+    .filter(filename => /^ddf--datapoints--/.test(filename))
+    .flatMap(filename => {
+      const {measures, dimensions} = parseFilename(filename, externalContextFrozen);
+      return hi(findAllEntitiesMemoized(externalContextFrozen))
+        .map(segregatedEntities => ({filename, measures, dimensions, segregatedEntities}));
+    })
+    .map(context => {
+      return readCsvFile(externalContextFrozen.resolvePath(context.filename), {})
+        .map(datapoint => ({datapoint, context}));
+    })
+    .parallel(MONGODB_DOC_CREATION_THREADS_AMOUNT)
+    .map(({datapoint, context}) => {
+      const entitiesFoundInDatapoint = findEntitiesInDatapoint(datapoint, context, externalContextFrozen);
+      return {datapoint, entitiesFoundInDatapoint, context};
+    })
+    .batch(DEFAULT_CHUNK_SIZE)
+    .flatMap(datapointsBatch => {
+      const datapointsByFilename = groupDatapointsByFilename(datapointsBatch);
+      const entitiesFoundInDatapoints = _.flatten(_.map(datapointsBatch, 'entitiesFoundInDatapoint'));
+
+      return hi(
+        saveEntitiesFoundInDatapoints(entitiesFoundInDatapoints)
+          .then(saveDatapoints(datapointsByFilename, externalContextFrozen))
+      );
+    });
+}
+
 function createEntitiesFoundInDatapointsSaverWithCache() {
   const entitiesFoundInDatapointsCache = {};
   return (entities) => {
@@ -73,79 +102,49 @@ function createEntitiesFoundInDatapointsSaverWithCache() {
 
 function saveDatapoints(datapointsByFilename, externalContextFrozen) {
   return entitiesFoundInDatapointsByGid => {
-    return Promise.all(_.map(datapointsByFilename, datapoints => {
-      datapoints.context.entities.foundInDatapointsByGid = entitiesFoundInDatapointsByGid;
-      return mapAndStoreDatapointsToDb(datapoints, externalContextFrozen);
+    return Promise.all(_.map(datapointsByFilename, datapointsFromSameFile => {
+      datapointsFromSameFile.context.segregatedEntities.foundInDatapointsByGid = entitiesFoundInDatapointsByGid;
+      return mapAndStoreDatapointsToDb(datapointsFromSameFile, externalContextFrozen);
     }));
   };
 }
-function createDatapoints(externalContextFrozen) {
-  const findAllEntitiesMemoized = _.memoize(findAllEntities);
-  const saveEntitiesFoundInDatapoints = createEntitiesFoundInDatapointsSaverWithCache();
 
-  return hi.wrapCallback(fs.readdir)(externalContextFrozen.pathToDdfFolder)
-    .flatMap(filenames => hi(filenames))
-    .filter(filename => /^ddf--datapoints--/.test(filename))
-    .map(filename => {
-      const {measures, dimensions} = parseFilename(filename, externalContextFrozen);
-      return {filename, measures, dimensions};
+function groupDatapointsByFilename(datapointsBatch) {
+  return _.chain(datapointsBatch)
+    .groupBy('context.filename')
+    .mapValues((datapoints, filename) => {
+      const anyDatapoint = _.head(datapoints);
+      return {
+        filename,
+        datapoints,
+        context: anyDatapoint.context,
+        measures: _.get(anyDatapoint, 'context.measures'),
+        dimensions: _.get(anyDatapoint, 'context.dimensions'),
+      };
     })
-    .flatMap(context => {
-      return hi(findAllEntitiesMemoized(externalContextFrozen))
-        .map(entities => _.extend(context, {entities}));
-    })
-    .map(context => {
-      return readCsvFile(externalContextFrozen.resolvePath(context.filename), {})
-        .map(datapoint => ({datapoint, context}));
-    })
-    .parallel(MONGODB_DOC_CREATION_THREADS_AMOUNT)
-    .map(({datapoint, context}) => {
-      const entitiesFoundInDatapoint = findEntitiesInDatapoint(datapoint, context, externalContextFrozen);
-      return {datapoint, entitiesFoundInDatapoint, context};
-    })
-    .batch(DEFAULT_CHUNK_SIZE)
-    .flatMap(datapointsBatch => {
-      const datapointsByFilename = _.chain(datapointsBatch)
-        .groupBy('context.filename')
-        .mapValues((datapoints, filename) => {
-          const anyDatapoint = _.head(datapoints);
-          return {
-            filename,
-            datapoints,
-            context: anyDatapoint.context,
-            measures: _.get(anyDatapoint, 'context.measures'),
-            dimensions: _.get(anyDatapoint, 'context.dimensions'),
-          };
-        })
-        .value();
-
-      return hi(
-        saveEntitiesFoundInDatapoints(_.flatten(_.map(datapointsBatch, 'entitiesFoundInDatapoint')))
-          .then(saveDatapoints(datapointsByFilename, externalContextFrozen))
-      );
-    });
+    .value();
 }
 
 function findAllEntities(externalContext) {
   logger.info('** find all entities');
   return entitiesRepositoryFactory.latestVersion(externalContext.dataset._id, externalContext.transaction.createdAt)
     .findAll()
-    .then(entities => {
-    return _.reduce(entities, (result, entity) => {
-      if (_.isEmpty(entity.sets)) {
-        const domain = entity.domain;
-        const keyDomain = _.get(domain, 'originId', domain);
-        result.byDomain[`${entity.gid}-${keyDomain}`] = entity;
-      } else {
-        const set = _.head(entity.sets);
-        const keySet = _.get(set, 'originId', set);
-        result.bySet[`${entity.gid}-${keySet}`] = entity;
-      }
+    .then(segregateEntities);
+}
 
-      result.byGid[entity.gid] = entity;
-      return result;
-    }, {bySet: {}, byDomain: {}, byGid: {}});
-  });
+function segregateEntities(entities) {
+  return _.reduce(entities, (result, entity) => {
+    if (_.isEmpty(entity.sets)) {
+      const domain = entity.domain;
+      result.byDomain[`${entity.gid}-${_.get(domain, 'originId', domain)}`] = entity;
+    } else {
+      const set = _.head(entity.sets);
+      result.bySet[`${entity.gid}-${_.get(set, 'originId', set)}`] = entity;
+    }
+
+    result.byGid[entity.gid] = entity;
+    return result;
+  }, {bySet: {}, byDomain: {}, byGid: {}});
 }
 
 function parseFilename(filename, externalContext) {
@@ -155,7 +154,6 @@ function parseFilename(filename, externalContext) {
   const measureGids = parseFilename.measures;
   const dimensionGids = parseFilename.dimensions;
 
-  //TODO: Previous concepts? Incremental update?
   const measures = _.merge(_.pick(externalContext.previousConcepts, measureGids), _.pick(externalContext.concepts, measureGids));
   const dimensions = _.merge(_.pick(externalContext.previousConcepts, dimensionGids), _.pick(externalContext.concepts, dimensionGids));
 
@@ -174,21 +172,29 @@ function parseFilename(filename, externalContext) {
 }
 
 function findEntitiesInDatapoint(datapoint, context, externalContext) {
-  const dictionary = context.entities.byGid;
-  const gids = new Set();
-  const entitiesFoundInDatapoint = [];
+  const alreadyFoundEntitiyGids = new Set();
 
-  _.each(context.dimensions, (concept) => {
+  return _.reduce(context.dimensions, (entitiesFoundInDatapoint, concept) => {
     const domain = concept.domain || concept;
+    const entityGid = datapoint[concept.gid];
+    const existedEntity = context.segregatedEntities.byGid[entityGid];
+    const alreadyFoundEntity = alreadyFoundEntitiyGids.has(entityGid);
 
-    if (!dictionary[datapoint[concept.gid]] && !gids.has(datapoint[concept.gid])) {
-      const entityFoundInDatapoint = mappers.mapDdfInDatapointsFoundEntityToWsModel(datapoint, concept, domain, context, externalContext);
+    if (!existedEntity && !alreadyFoundEntity) {
+      const entityFoundInDatapoint = mappers.mapDdfInDatapointsFoundEntityToWsModel(
+        datapoint,
+        concept,
+        domain,
+        context,
+        externalContext
+      );
+
+      alreadyFoundEntitiyGids.add(entityGid);
       entitiesFoundInDatapoint.push(entityFoundInDatapoint);
-      gids.add(datapoint[concept.gid]);
     }
-  });
 
-  return entitiesFoundInDatapoint;
+    return entitiesFoundInDatapoint;
+  }, []);
 }
 
 function storeEntitiesToDb(entities) {
@@ -200,22 +206,28 @@ function storeEntitiesToDb(entities) {
   return mongoose.model('Entities').create(entities);
 }
 
-function mapAndStoreDatapointsToDb(datapoints, externalContext) {
+function mapAndStoreDatapointsToDb(datapointsFromSameFile, externalContext) {
   logger.info(`** create data points`);
-  const datapointMapper = mappers.mapDdfDataPointToWsModel(_.extend({
-    measures: datapoints.measures,
-    filename: datapoints.filename,
-    dimensions: datapoints.dimensions,
-    entities: datapoints.context.entities
-  }, externalContext));
 
-  const wsDatapoints = _.flatMap(datapoints.datapoints, datapoint => {
-    return datapointMapper(datapoint.datapoint);
+  const {measures, filename, dimensions, context: {segregatedEntities: entities}} = datapointsFromSameFile;
+
+  const mappingContext = _.extend({
+    measures,
+    filename,
+    dimensions,
+    entities
+  }, externalContext);
+
+  const toWsDatapoint = mappers.mapDdfDataPointToWsModel(mappingContext);
+
+  const wsDatapoints = _.flatMap(datapointsFromSameFile.datapoints, datapointWithContext => {
+    return toWsDatapoint(datapointWithContext.datapoint);
   });
 
-  return  mongoose.model('DataPoints').create(wsDatapoints);
+  return mongoose.model('DataPoints').create(wsDatapoints);
 }
 
 function readCsvFile(filepath) {
-  return hi(fs.createReadStream(filepath, 'utf-8').pipe(new Converter({constructResult: false}, {objectMode: true})));
+  return hi(fs.createReadStream(filepath, 'utf-8')
+    .pipe(new Converter({constructResult: false}, {objectMode: true})));
 }
