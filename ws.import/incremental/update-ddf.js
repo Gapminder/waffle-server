@@ -478,7 +478,6 @@ function _____updateDataPoint(pipe, entities, datapoint) {
       measure: measure.originId,
       dimensions: {
         $size: _.size(pipe.dimensions),
-        // TODO: get the point to presentation
         $not: {$elemMatch: {$nin: _.map(entities, 'originId')}}
       },
       value: _.toNumber(datapoint[measure.gid])
