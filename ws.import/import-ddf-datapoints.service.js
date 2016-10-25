@@ -11,6 +11,7 @@ const common = require('./common');
 const logger = require('../ws.config/log');
 const mappers = require('./incremental/mappers');
 const constants = require('../ws.utils/constants');
+const datapointsUtils = require('./datapoints.utils');
 const entitiesRepositoryFactory = require('../ws.repository/ddf/entities/entities.repository');
 
 const DEFAULT_CHUNK_SIZE = 1500;
@@ -51,7 +52,7 @@ function createDatapoints(externalContextFrozen) {
     .flatMap(filenames => hi(filenames))
     .filter(filename => /^ddf--datapoints--/.test(filename))
     .flatMap(filename => {
-      const {measures, dimensions} = parseFilename(filename, externalContextFrozen);
+      const {measures, dimensions} = datapointsUtils.parseFilename(filename, externalContextFrozen);
       return hi(findAllEntitiesMemoized(externalContextFrozen))
         .map(segregatedEntities => ({filename, measures, dimensions, segregatedEntities}));
     })
@@ -129,47 +130,7 @@ function findAllEntities(externalContext) {
   logger.info('** find all entities');
   return entitiesRepositoryFactory.latestVersion(externalContext.dataset._id, externalContext.transaction.createdAt)
     .findAll()
-    .then(segregateEntities);
-}
-
-function segregateEntities(entities) {
-  //FIXME: Segregation is a workaround for issue related to having same gid in couple entity files
-  return _.reduce(entities, (result, entity) => {
-    if (_.isEmpty(entity.sets)) {
-      const domain = entity.domain;
-      result.byDomain[`${entity.gid}-${_.get(domain, 'originId', domain)}`] = entity;
-    } else {
-      const set = _.head(entity.sets);
-      result.bySet[`${entity.gid}-${_.get(set, 'originId', set)}`] = entity;
-    }
-
-    result.byGid[entity.gid] = entity;
-    return result;
-  }, {bySet: {}, byDomain: {}, byGid: {}});
-}
-
-function parseFilename(filename, externalContext) {
-  logger.info(`** parse filename '${filename}'`);
-
-  const parseFilename = common.getMeasureDimensionFromFilename(filename);
-  const measureGids = parseFilename.measures;
-  const dimensionGids = parseFilename.dimensions;
-
-  const measures = _.merge(_.pick(externalContext.previousConcepts, measureGids), _.pick(externalContext.concepts, measureGids));
-  const dimensions = _.merge(_.pick(externalContext.previousConcepts, dimensionGids), _.pick(externalContext.concepts, dimensionGids));
-
-  if (_.isEmpty(measures)) {
-    throw Error(`file '${filename}' doesn't have any measure.`);
-  }
-
-  if (_.isEmpty(dimensions)) {
-    throw Error(`file '${filename}' doesn't have any dimensions.`);
-  }
-
-  logger.info(`** parsed measures: ${_.keys(measures)}`);
-  logger.info(`** parsed dimensions: ${_.keys(dimensions)}`);
-
-  return {measures, dimensions};
+    .then(datapointsUtils.segregateEntities);
 }
 
 function findEntitiesInDatapoint(datapoint, context, externalContext) {
