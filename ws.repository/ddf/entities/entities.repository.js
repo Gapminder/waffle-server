@@ -43,6 +43,32 @@ EntitiesRepository.prototype.findEntityPropertiesByQuery = function(entitiesQuer
   return Entities.find(composedQuery).lean().exec(onPropertiesFound);
 };
 
+EntitiesRepository.prototype.findAllPopulated = function (done) {
+  const composedQuery = this._composeQuery();
+  return Entities.find(composedQuery, null, {
+    join: {
+      domain: {
+        $find: composedQuery
+      },
+      sets: {
+        $find: composedQuery
+      },
+      drillups: {
+        $find: composedQuery
+      }
+    }
+  })
+    .populate('dataset')
+    .populate('transaction')
+    .lean()
+    .exec(done);
+};
+
+EntitiesRepository.prototype.findAll = function (done) {
+  const composedQuery = this._composeQuery();
+  return Entities.find(composedQuery).lean().exec(done);
+};
+
 EntitiesRepository.prototype.findEntityProperties = function(entityDomainGid, select, where, onPropertiesFound) {
   const conceptQuery = this._composeQuery({
     gid: entityDomainGid,

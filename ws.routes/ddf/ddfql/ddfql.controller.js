@@ -40,8 +40,8 @@ module.exports = serviceLocator => {
   return app.use(router);
 
   function getDdfStats(req, res, next) {
-    logger.debug({req}, 'DDFQL URL');
-    logger.debug({obj: req.body}, 'DDFQL');
+    logger.info({req}, 'DDFQL URL');
+    logger.info({obj: req.body}, 'DDFQL');
 
     const from = req.body.from;
     const onEntriesCollected = routeUtils.respondWithRawDdf(req, res, next);

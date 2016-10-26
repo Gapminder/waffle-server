@@ -51,6 +51,7 @@ const Concepts = new Schema({
   scales: [String],
   metadata: {},
   properties: {},
+  languages: {},
 
   isNumeric: {type: Boolean, index: true, sparse: true},
   domain: {type: Schema.Types.ObjectId, sparse: true},

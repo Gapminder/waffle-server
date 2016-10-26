@@ -33,6 +33,7 @@ let Entities = new Schema({
   sources: [{type: String, required: true}],
   isOwnParent: Boolean,
   properties: {},
+  languages: {},
 
   // should be required
   domain: {type: Schema.Types.ObjectId, required: true},
