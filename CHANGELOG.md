@@ -1,3 +1,13 @@
+<a name="1.1.1"></a>
+## [1.1.1](https://github.com/Gapminder/waffle-server/compare/v1.1.0...v1.1.1) (2016-10-26)
+
+
+### Bug Fixes
+
+* **deployment:** escape mongo url ([6fdb35e](https://github.com/Gapminder/waffle-server/commit/6fdb35e))
+
+
+
 <a name="1.1.0"></a>
 # [1.1.0](https://github.com/Gapminder/waffle-server/compare/v1.0.0...v1.1.0) (2016-10-26)
 
