@@ -5,13 +5,28 @@ const ddfTimeUtils = require('ddf-time-utils');
 const constants = require('../ws.utils/constants');
 const traverse = require('traverse');
 
+const normalizeKey = _.flow([cutPrefixByDot, _.partialRight(_.split, '.'), _.first, cutPrefixByDashes]);
+
 module.exports = {
   toSafeQuery,
   replaceValueOnPath,
   normalizeTimePropertyFilter,
   isTimePropertyFilter,
+  isDomainPropertyFilter,
   normalizeOrderBy,
-  convertOrderByForWsJson
+  convertOrderByForWsJson,
+  isEntityPropertyFilter,
+  getPrefixByDot,
+  cutPrefixByDashes,
+  cutPrefixByDot,
+  wrapEntityProperties,
+  normalizeKey,
+  getConceptGids,
+  getDomainGids,
+  getTimeConcepts,
+  getConceptOriginIdsByGids,
+  getConceptsByGids,
+  getConceptsByOriginIds
 };
 
 function toSafeQuery(query, options) {
@@ -93,14 +108,18 @@ function normalizeTimePropertyFilter(key, filterValue, path, query) {
   };
 
   // always set latest detected time type
-  const conditionsForTimeEntities = _.get(query, path.slice(0, path.length - 1));
+  const conditionsForTimeEntities = _.get(query, path.slice(0, path.length - 1), []);
   conditionsForTimeEntities[`parsedProperties.${key}.timeType`] = timeType;
 
   return normalizedFilter;
 }
 
-function isTimePropertyFilter(key, timeConcepts) {
-  return _.includes(timeConcepts, key);
+function isTimePropertyFilter(key, options) {
+  return _.includes(options.timeConcepts, key);
+}
+
+function isDomainPropertyFilter(key, options) {
+  return _.includes(options.domainGids, key);
 }
 
 function convertOrderByForWsJson(orderBy, headers) {
@@ -118,3 +137,79 @@ function convertOrderByForWsJson(orderBy, headers) {
   };
 }
 
+function isEntityPropertyFilter(key, options) {
+  return _.includes(options.conceptGids, normalizeKey(key, options.domainGids));
+}
+
+function getPrefixByDot(value) {
+  return _.chain(value).split('.').first().value();
+}
+
+function cutPrefixByDot(value, prefix) {
+  if (_.isNil(prefix)) {
+    return _.replace(value, /^\w*\./, '');
+  }
+
+  if (_.isEmpty(prefix)) {
+    return value;
+  }
+
+  if (_.isArray(prefix)) {
+    return _.replace(value, new RegExp(`^(${_.join(prefix, '|')})\.`), '');
+  }
+
+  return _.replace(value, new RegExp(`^${prefix}\.`), '');
+}
+
+function cutPrefixByDashes(value) {
+  return _.replace(value, /^is--/, '');
+}
+
+function wrapEntityProperties(key, options) {
+  const propertyName = cutPrefixByDot(key, options.domainGids);
+
+  if (!isTimePropertyFilter(key, options) && isEntityPropertyFilter(propertyName, options)) {
+    return `properties.${propertyName}`;
+  }
+
+  return propertyName;
+}
+
+function getConceptGids(concepts) {
+  return _.chain(concepts)
+    .map(constants.GID)
+    .concat(['concept_type', 'concept'])
+    .sort()
+    .value();
+}
+
+function getDomainGids(concepts) {
+  return _.chain(concepts)
+    .filter(concept => {
+      return _.includes(['entity_domain', 'entity_set', 'time'], _.get(concept, 'properties.concept_type', null));
+    })
+    .map(constants.GID)
+    .value();
+}
+
+function getTimeConcepts(concepts) {
+  return _.chain(concepts)
+    .filter(_.iteratee(['properties.concept_type', 'time']))
+    .map(constants.GID)
+    .value();
+}
+
+function getConceptOriginIdsByGids(concepts) {
+  return _.chain(concepts)
+    .keyBy(constants.GID)
+    .mapValues(constants.ORIGIN_ID)
+    .value();
+}
+
+function getConceptsByGids(concepts) {
+  return _.keyBy(concepts, constants.GID);
+}
+
+function getConceptsByOriginIds(concepts) {
+  return _.keyBy(concepts, constants.ORIGIN_ID);
+}

@@ -5,7 +5,10 @@
   "main": "app.js",
   "scripts": {
     "test": "gulp test",
-    "test:coverage": "istanbul --include-all-sources cover _mocha -- -R spec 'ws*/**/*.test.js'",
+    "pree2e": "node ./test/pre-e2e.js",
+    "e2e": "gulp e2e",
+    "poste2e": "node ./test/post-e2e.js",
+    "test:coverage": "istanbul --include-all-sources cover _mocha -- -R spec 'test/**/*.test.js'",
     "swagger": "./node_modules/.bin/gulp swagger",
     "dev": "NODE_ENV=development npm run start",
     "prestart": "npm run swagger",
@@ -22,13 +25,14 @@
     "bcryptjs": "2.3.0",
     "bluebird": "3.4.6",
     "body-parser": "1.15.2",
+    "bunyan": "1.8.1",
     "compression": "1.6.2",
     "connect-redis": "3.1.0",
     "cookie-parser": "1.4.3",
     "cors": "2.8.1",
     "csvtojson": "1.0.2",
     "ddf-time-utils": "0.1.6",
-    "ddf-validation": "0.12.10",
+    "ddf-validation": "^0.12.10",
     "entities": "1.1.1",
     "express": "4.14.0",
     "express-redis-cache": "0.4.2",
@@ -57,9 +61,7 @@
     "swagger-jsdoc": "1.7.0",
     "through2": "2.0.1",
     "traverse": "0.6.6",
-    "validator": "5.7.0",
-    "winston": "2.2.0",
-    "winston-daily-rotate-file": "1.3.1"
+    "validator": "5.7.0"
   },
   "devDependencies": {
     "chai": "3.5.0",
@@ -67,9 +69,10 @@
     "conventional-changelog-cli": "1.2.0",
     "conventional-github-releaser": "1.1.3",
     "eslint": "3.6.0",
+    "forever": "0.15.2",
     "gulp": "3.9.1",
     "gulp-eslint": "3.0.1",
-    "gulp-mocha": "3.0.1",
+    "gulp-spawn-mocha": "3.1.0",
     "istanbul": "0.4.5",
     "mocha": "3.0.2",
     "pre-commit": "1.1.3",
@@ -77,8 +80,10 @@
     "sinon": "1.17.6",
     "supertest": "2.0.0",
     "swagger2-utils": "2.0.10",
+    "synchronize": "2.0.0",
     "through2": "2.0.1",
-    "vinyl": "1.2.0"
+    "vinyl": "1.2.0",
+    "waffle-server-import-cli": "^2.4.10"
   },
   "repository": {
     "type": "git",

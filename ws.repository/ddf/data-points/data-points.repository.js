@@ -44,6 +44,14 @@ DataPointsRepository.prototype.findStats = function (params, onDatapointsFound) 
 
   return DataPoints.aggregate()
     .match(query)
+    .project({
+      measure: 1,
+      value: 1,
+      dimensionsMatched: {$setIsSubset: ['$dimensions', entityIds]}
+    })
+    .match({
+      dimensionsMatched: true
+    })
     .group({
       _id: '$measure',
       min: {$min: '$value'},

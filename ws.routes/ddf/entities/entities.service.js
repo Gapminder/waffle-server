@@ -113,8 +113,6 @@ function collectEntities(options, cb) {
   ],  (error, result) => {
     console.timeEnd('finish Entities stats');
 
-    result.domainGid = pipe.domainGid;
-
     return cb(error, result);
   });
 }

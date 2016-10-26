@@ -1,0 +1,37 @@
+{
+  "headers": [
+    "key",
+    "value"
+  ],
+  "rows": [
+    [
+      [
+        "company",
+        "anno"
+      ],
+      "company_scale"
+    ],
+    [
+      [
+        "company",
+        "anno"
+      ],
+      "lines_of_code"
+    ],
+    [
+      [
+        "company",
+        "project",
+        "anno"
+      ],
+      "lines_of_code"
+    ],
+    [
+      [
+        "company",
+        "project"
+      ],
+      "lines_of_code"
+    ]
+  ]
+}

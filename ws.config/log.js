@@ -1,52 +1,29 @@
-var _ = require('lodash');
-var path = require('path');
-var winston = require('winston');
-var dailyRotateFile = require('winston-daily-rotate-file');
+'use strict';
+
+const _ = require('lodash');
+const path = require('path');
+const bunyan = require('bunyan');
+
 const config = require('./config');
 
-module.exports = (function () {
-  var consoleTransport = new (winston.transports.Console)({
-    name: 'console',
-    level: config.LOG_LEVEL,
-    handleExceptions: true,
-    timestamp: true,
-    colorize: true,
-    // prettyPrint: true,
-    humanReadableUnhandledException: true,
-    showLevel: true,
-    json: false
-  });
+function objSerializer(obj) {
+  return obj;
+}
 
-  var dailyRotateFileTransport = new (dailyRotateFile)({
-    name: 'file',
-    datePattern: '.yyyy-MM-ddTHH',
-    filename: path.join(__dirname, '/../logs/waffle.log'),
-    level: config.LOG_LEVEL,
-    timestamp: true,
-    json: false,
-    handleExceptions: true,
-    prettyPrint: true
-  });
-
-  var defaultTransports = {
-    console: consoleTransport,
-    file: dailyRotateFileTransport
-  };
-
-  var transports = config.LOG_TRANSPORTS.map(transportName => {
-    var transport = defaultTransports[transportName];
-
-    if (!transport) {
-      throw new Error('Given LOG_TRANSPORTS contains not supported value');
+module.exports = bunyan.createLogger({
+  name: 'WAFFLE_SERVER',
+  serializers: _.extend({obj: objSerializer}, bunyan.stdSerializers),
+  streams: [
+    {
+      level: config.LOG_LEVEL,
+      type: 'rotating-file',
+      path: path.join(__dirname, '/../logs/waffle.log'),
+      period: 'daily',
+      count: 3
+    },
+    {
+      level: config.LOG_LEVEL,
+      stream: process.stdout
     }
-
-    return transport;
-  });
-
-  var logger = new (winston.Logger)({
-    exitOnError: false,
-    transports: transports
-  });
-
-  return logger;
-}());
+  ]
+});

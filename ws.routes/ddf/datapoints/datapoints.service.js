@@ -82,34 +82,49 @@ function normalizeQueriesToDatapointsByDdfql(pipe, cb) {
   console.time('get datapoints');
 
   if (_.isEmpty(pipe.measures)) {
-    logger.error('Measure should present in select property');
-    return cb(null, pipe);
+    const error = 'Measure should present in select property';
+    logger.error(error);
+    return cb(error, pipe);
   }
 
   const entitiesRepository = entitiesRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version);
   const normalizedQuery = ddfql.normalizeDatapoints(pipe.query, pipe.concepts);
 
-  return async.mapLimit(normalizedQuery.join, 10, (item, mcb) => {
-    const validateQuery = ddfQueryValidator.validateMongoQuery(item);
+  return async.mapLimit(normalizedQuery.join, 10, (joinQuery, mcb) => {
+    const validateQuery = ddfQueryValidator.validateMongoQuery(joinQuery);
+
     if(!validateQuery.valid) {
       return cb(validateQuery.log, pipe);
     }
 
-    return entitiesRepository.findEntityPropertiesByQuery(item, (error, entities) => mcb(error, _.map(entities, 'originId')));
+    return entitiesRepository.findEntityPropertiesByQuery(joinQuery, (error, entities) => {
+      return mcb(error, _.map(entities, constants.ORIGIN_ID));
+    });
   }, (err, substituteJoinLinks) => {
+    if (err) {
+      return cb(err, pipe);
+    }
+
     const promotedQuery = ddfql.substituteDatapointJoinLinks(normalizedQuery, substituteJoinLinks);
     const subDatapointQuery = promotedQuery.where;
-
     const validateQuery = ddfQueryValidator.validateMongoQuery(subDatapointQuery);
+
     if(!validateQuery.valid) {
       return cb(validateQuery.log, pipe);
     }
 
     return queryDatapointsByDdfql(pipe, subDatapointQuery, (err, pipe) => {
+      if (err) {
+        return cb(err, pipe);
+      }
+
       console.timeEnd('get datapoints');
+      if(err) {
+        return cb(err);
+      }
       logger.info(`${_.size(pipe.datapoints)} items of datapoints were selected`);
 
-      return cb(err, pipe);
+      return cb(null, pipe);
     });
   });
 }

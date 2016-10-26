@@ -1,0 +1,19 @@
+{
+  "headers": [
+    "company",
+    "name",
+    "is--english_speaking"
+  ],
+  "rows": [
+    [
+      "mic",
+      "Microsoft",
+      true
+    ],
+    [
+      "gap",
+      "Gapminder",
+      true
+    ]
+  ]
+}

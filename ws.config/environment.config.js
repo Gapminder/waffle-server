@@ -12,13 +12,6 @@ const DEFAULT_LOG_LEVELS = Object.freeze({
   production: 'error'
 });
 
-const DEFAULT_LOG_TRANSPORTS = Object.freeze({
-  local: ['console', 'file'],
-  development: ['console'],
-  stage: ['file'],
-  production: ['file']
-});
-
 const DEFAULT_HOST_URLS = Object.freeze({
   local: 'http://localhost',
   development: 'https://waffle-server-dev.gapminderdev.org',
@@ -39,8 +32,6 @@ module.exports = Object.freeze({
   INNER_PORT: 3000,
 
   LOG_LEVEL: DEFAULT_LOG_LEVELS[NODE_ENV] || DEFAULT_LOG_LEVELS[DEFAULT_NODE_ENV],
-  LOG_TRANSPORTS: DEFAULT_LOG_TRANSPORTS[NODE_ENV] || DEFAULT_LOG_TRANSPORTS[DEFAULT_NODE_ENV],
-  LOG_TABS: '\t\t\t',
 
   MONGODB_URL: 'mongodb://localhost:27017',
 

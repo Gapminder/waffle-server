@@ -34,7 +34,7 @@ module.exports = serviceLocator => {
   return app.use(router);
 
   function ddfEntitiesStats(req, res, next) {
-    logger.debug('URL: \n%s%s', config.LOG_TABS, req.originalUrl);
+    logger.debug('URL: \n%s', req.originalUrl);
 
     const where = _.omit(req.decodedQuery.where, constants.EXCLUDED_QUERY_PARAMS);
     const datasetName = _.first(req.decodedQuery.where.dataset);

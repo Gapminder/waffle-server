@@ -1,3 +1,2 @@
-./deployment
-settings_gapminder.txt
+settings_gapminder*.txt
 settings_valor.txt

@@ -1,0 +1,56 @@
+{
+  "headers": [
+    "key",
+    "value",
+    "min(value)",
+    "max(value)"
+  ],
+  "rows": [
+    [
+      [
+        "company",
+        "anno"
+      ],
+      "company_size",
+      "large",
+      "small"
+    ],
+    [
+      [
+        "company",
+        "anno"
+      ],
+      "lines_of_code",
+      49595,
+      531062
+    ],
+    [
+      [
+        "company",
+        "project",
+        "anno"
+      ],
+      "lines_of_code",
+      9877,
+      479679
+    ],
+    [
+      [
+        "company",
+        "project"
+      ],
+      "lines_of_code",
+      4857,
+      4893993
+    ],
+    [
+      [
+        "company",
+        "project"
+      ],
+      "num_users",
+      4,
+      54345
+    ]
+  ]
+}

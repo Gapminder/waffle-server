@@ -18,6 +18,9 @@ const config = require('../ws.config/config');
 
 const ddfTimeUtils = require('ddf-time-utils');
 
+const DEFAULT_CHUNK_SIZE = 2000;
+const MONGODB_DOC_CREATION_THREADS_AMOUNT = 3;
+
 module.exports = {
   resolvePathToDdfFolder,
   createTransaction,
@@ -81,7 +84,12 @@ function closeTransaction(pipe, done) {
 
   mongoose.model('DatasetTransactions').findOneAndUpdate({
     _id: pipe.transaction._id
-  }, {$set: {isClosed: true}}, (err) => {
+  }, {
+    $set: {
+      isClosed: true,
+      timeSpentInMillis: Date.now() - pipe.transaction.createdAt
+    }
+  }, (err) => {
     return done(err, pipe);
   });
 }
@@ -162,8 +170,8 @@ function _createConcepts(pipe, done) {
   logger.info('** create concepts documents');
 
   async.eachLimit(
-    _.chunk(pipe.raw.concepts, 100),
-    constants.LIMIT_NUMBER_PROCESS,
+    _.chunk(pipe.raw.concepts, DEFAULT_CHUNK_SIZE),
+    MONGODB_DOC_CREATION_THREADS_AMOUNT,
     __createConcepts,
     (err) => {
       return done(err, pipe);
@@ -362,8 +370,9 @@ function __createOriginalEntities(pipe, done) {
 
   logger.info(`**** create original entities from file '${pipe.filename}'`);
 
-  return async.eachSeries(
-    _.chunk(pipe.raw.originalEntities, 100),
+  return async.eachLimit(
+    _.chunk(pipe.raw.originalEntities, DEFAULT_CHUNK_SIZE),
+    MONGODB_DOC_CREATION_THREADS_AMOUNT,
     ___createOriginalEntities,
     (err) => {
       return done(err, pipe);
@@ -403,9 +412,12 @@ function _createEntitiesBasedOnOriginalEntities(pipe, done) {
   logger.info(`** create entities based on original entities`);
 
   // FIXME: REMOVE ALL REFERENCE TO ORIGINAL ENTITIES FROM IMPORT AND INCREMENTAL UPDATE
-  return async.each(_.chunk(pipe.originalEntities, 100), _createEntities, (err) => {
-    return done(err, pipe);
-  });
+  return async.eachLimit(
+    _.chunk(pipe.originalEntities, DEFAULT_CHUNK_SIZE),
+    MONGODB_DOC_CREATION_THREADS_AMOUNT,
+    _createEntities, (err) => {
+      return done(err, pipe);
+    });
 
   function _createEntities(chunk, cb) {
     return mongoose.model('Entities').create(chunk, (err) => {
@@ -521,7 +533,7 @@ function createDataPoints(pipe, done) {
   }
 }
 
-function getMeasureDimensionFromFilename (filename) {
+function getMeasureDimensionFromFilename(filename) {
   let parsedFileName = filename.replace(/^ddf--datapoints--|\.csv$/g, '').split('--by--');
   return {
     measures: _.first(parsedFileName).split('--'),
@@ -596,7 +608,7 @@ function __processRawDataPoints(pipe, cb) {
 
 function _createEntitiesBasedOnDataPoints(pipe, cb) {
   if (_.isEmpty(pipe.raw.entities)) {
-    logger.log(`** There is no new entities in data points file.`);
+    logger.info(`** There is no new entities in data points file.`);
 
     return async.setImmediate(() => cb(null, pipe));
   }
@@ -620,12 +632,15 @@ function _createDataPoints(pipe, cb) {
 
   logger.info(`** create data points`);
 
-  async.eachSeries(_.chunk(dataPoints, 100), (dataPoint, plcb) => {
-    mongoose.model('DataPoints').create(dataPoint, err => plcb(err));
-  }, (err) => {
-    pipe.raw = {};
-    return cb(err, pipe);
-  });
+  async.eachLimit(
+    _.chunk(dataPoints, DEFAULT_CHUNK_SIZE),
+    MONGODB_DOC_CREATION_THREADS_AMOUNT,
+    (dataPoint, plcb) => {
+      mongoose.model('DataPoints').create(dataPoint, err => plcb(err));
+    }, (err) => {
+      pipe.raw = {};
+      return cb(err, pipe);
+    });
 }
 
 function _updateConceptsDimensions(pipe, cb) {
@@ -863,9 +878,9 @@ function parseProperties(concept, entityGid, entityProperties, timeConcepts) {
 
   let parsedProperties =
     _.chain(entityProperties)
-    .pickBy((propValue, prop) => timeConcepts[prop])
-    .mapValues(toInternalTimeForm)
-    .value();
+      .pickBy((propValue, prop) => timeConcepts[prop])
+      .mapValues(toInternalTimeForm)
+      .value();
 
   if (timeConcepts[concept.gid]) {
     parsedProperties = _.extend(parsedProperties || {}, {[concept.gid]: toInternalTimeForm(entityGid)});

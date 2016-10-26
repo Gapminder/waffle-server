@@ -130,7 +130,11 @@ function _getGidOfSelectedConceptByEntity(selectedConceptsByOriginId, selectedCo
 }
 
 function coerceValue(value) {
-  return (_.isNaN(_.toNumber(value)) ? value : +value) || undefined;
+  if (_.isNil(value)) {
+    return null;
+  }
+
+  return _.isNaN(_.toNumber(value)) ? value : +value;
 }
 
 function sortRows(rows, query, headers) {
