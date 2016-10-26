@@ -17,8 +17,7 @@
     "github-release": "./node_modules/.bin/conventional-github-releaser -p angular",
     "preversion": "npm test",
     "version": "npm run changelog && git add CHANGELOG.md",
-    "postversion": "git push origin master && git push --tags && npm run github-release",
-    "mongo:clean": "./mongo.sh"
+    "postversion": "git push origin master && git push --tags && npm run github-release"
   },
   "dependencies": {
     "JSONStream": "1.2.1",

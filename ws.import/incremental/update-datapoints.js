@@ -1,26 +1,19 @@
 'use strict';
 
 const _ = require('lodash');
-const fs = require('fs');
-const path = require('path');
 const async = require('async');
 
-const mongoose = require('mongoose');
-
-const common = require('./../common');
 const logger = require('../../ws.config/log');
 const config = require('../../ws.config/config');
 const constants = require('../../ws.utils/constants');
-const ddfImportProcess = require('../../ws.utils/ddf-import-process');
 
-const translationsService = require('./../import-translations.service');
 const entitiesRepositoryFactory = require('../../ws.repository/ddf/entities/entities.repository');
 const datapointsRepositoryFactory = require('../../ws.repository/ddf/data-points/data-points.repository');
 const datapointsUtils = require('../datapoints.utils');
 
 const hi = require('highland');
 
-module.exports = processDataPointsChanges;
+module.exports = startDatapointsCreation;
 
 function startDatapointsCreation(externalContext, done) {
   logger.info('start process of updating data points');
@@ -48,55 +41,66 @@ function startDatapointsCreation(externalContext, done) {
     });
 }
 
-function findAllEntities(externalContext) {
-  return entitiesRepositoryFactory.latestVersion(externalContext.dataset._id, externalContext.transaction.createdAt)
-    .findAll()
-    .then(datapointsUtils.segregateEntities);
-}
-
 function findAllPreviousEntities(externalContext) {
   return entitiesRepositoryFactory.previousVersion(externalContext.dataset._id, externalContext.transaction.createdAt)
     .findAll()
     .then(datapointsUtils.segregateEntities);
 }
 
-
 function createDatapoints(externalContextFrozen) {
-  const findAllEntitiesMemoized = _.memoize(findAllEntities);
+  const findAllEntitiesMemoized = _.memoize(datapointsUtils.findAllEntities);
+
   const findAllPreviousEntitiesMemoized = _.memoize(findAllPreviousEntities);
 
-  return hi(_.keys(externalContextFrozen.allChanges))
-    .filter(filename => filename.match(/ddf--datapoints--/g))
-    .map(filename => ({filename, fileChanges: externalContextFrozen.allChanges[filename]}))
+  const saveEntitiesFoundInDatapoints = datapointsUtils.createEntitiesFoundInDatapointsSaverWithCache();
+
+  const saveDatapointsAndEntitiesFoundInThem = _.curry(datapointsUtils.saveDatapointsAndEntitiesFoundInThem)(
+    saveEntitiesFoundInDatapoints,
+    externalContextFrozen
+  );
+
+  const datapointsWithFoundEntitiesStream = hi(_.keys(externalContextFrozen.allChanges))
+    .filter(filename => {
+      return filename.match(/ddf--datapoints--/g);
+    })
+    .map(filename => {
+      return {filename, fileChanges: externalContextFrozen.allChanges[filename].body};
+    })
     .flatMap(({filename, fileChanges}) => {
       const {measures, dimensions} = datapointsUtils.parseFilename(filename, externalContextFrozen);
-      return hi(findAllEntitiesMemoized(externalContextFrozen))
-        .map(segregatedEntities => ({filename, measures, dimensions, fileChanges, segregatedEntities}))
-        .flatMap(context => {
-          return hi(findAllPreviousEntitiesMemoized(externalContextFrozen))
-            .map(segregatedPreviousEntities => _.extend(context, {segregatedPreviousEntities}, externalContextFrozen));
+
+      const segregatedEntitiesStream = hi(findAllEntitiesMemoized(externalContextFrozen))
+        .map(segregatedEntities => ({segregatedEntities}));
+
+      const segregatedPreviousEntitiesStream = hi(findAllPreviousEntitiesMemoized(externalContextFrozen))
+        .map(segregatedPreviousEntities => ({segregatedPreviousEntities}));
+
+      return hi([segregatedEntitiesStream, segregatedPreviousEntitiesStream])
+        .sequence()
+        .reduce([], (result, segregatedEntities) => {
+          result.push(segregatedEntities);
+          return result;
+        })
+        .map(previousAndCurrentSegregatedEntities => {
+          return _.extend({filename, measures, dimensions, fileChanges}, ... [externalContextFrozen, ...previousAndCurrentSegregatedEntities]);
         });
     })
-    .map(hi.wrapCallback(__closeRemovedAndUpdatedDataPoints));
+    .flatMap(context => {
+      return hi.wrapCallback(__closeRemovedAndUpdatedDataPoints)(context);
+    })
+    .flatMap(context => {
+      const toRawDatapoint = _.curry(formRawDataPoint)(context);
+      const updatedDataPoints = _.map(context.fileChanges.update, toRawDatapoint);
+      const changedDataPoints = _.map(context.fileChanges.change, toRawDatapoint);
+      return hi(_.concat(context.fileChanges.create, updatedDataPoints, changedDataPoints))
+        .map(datapoint => {
+          const entitiesFoundInDatapoint = datapointsUtils.findEntitiesInDatapoint(datapoint, context, externalContextFrozen);
+          return {datapoint, entitiesFoundInDatapoint, context};
+        });
+    });
+
+  return saveDatapointsAndEntitiesFoundInThem(datapointsWithFoundEntitiesStream);
 }
-
-
-function _processDataPointFile(pipe) {
-  let key = 1;
-  return (fileChanges, filename, cb) => async.waterfall([
-    __closeRemovedAndUpdatedDataPoints,
-    __fakeLoadRawDataPoints,
-    __wrapProcessRawDataPoints,
-    common.createEntitiesBasedOnDataPoints,
-    __getAllEntities,
-    common._createDataPoints,
-  ], err => {
-    logger.info(`** Processed ${key++} of ${_.keys(pipe.datapointsFiles).length} files`);
-
-    return cb(err);
-  });
-}
-
 
 function __closeRemovedAndUpdatedDataPoints(pipe, done) {
   logger.info(`** close data points`);
@@ -112,6 +116,13 @@ function __closeRemovedAndUpdatedDataPoints(pipe, done) {
   });
 }
 
+function formRawDataPoint(pipe, datapoint) {
+  const complexKey = getComplexKey(datapoint['data-origin']);
+  const closedOriginDatapoint = pipe.closedDataPoints[complexKey];
+  const originId = closedOriginDatapoint ? closedOriginDatapoint.originId : null;
+  return _.defaults({originId}, datapoint['data-update'], datapoint['data-origin']);
+}
+
 function ___updateRemovedDataPoints(removedDataPoints, pipe) {
   return (cb) => {
     return async.eachLimit(
@@ -124,10 +135,18 @@ function ___updateRemovedDataPoints(removedDataPoints, pipe) {
   };
 }
 
-function ____closeDataPoint(pipe) {
-  let groupedPreviousEntities = _.groupBy(pipe.previousEntities, 'gid');
-  let groupedEntities = _.groupBy(pipe.entities, 'gid');
+function ___updateChangedDataPoints(changedDataPoints, pipe) {
+  return (cb) => {
+    return async.mapLimit(
+      _.map(changedDataPoints, 'data-origin'),
+      constants.LIMIT_NUMBER_PROCESS,
+      ____closeDataPoint(pipe),
+      cb
+    );
+  };
+}
 
+function ____closeDataPoint(pipe) {
   return (datapoint, ecb) => {
     let entityGids = _.chain(datapoint)
       .pick(_.keys(pipe.dimensions))
@@ -136,7 +155,7 @@ function ____closeDataPoint(pipe) {
       .value();
 
     let entities = _.flatMap(entityGids, (gid) => {
-      return groupedEntities[gid] || groupedPreviousEntities[gid];
+      return pipe.segregatedEntities.groupedByGid[gid] || pipe.segregatedPreviousEntities.groupedByGid[gid];
     });
 
     return async.eachLimit(
@@ -173,41 +192,6 @@ function _____updateDataPoint(pipe, entities, datapoint) {
   };
 }
 
-function ___updateChangedDataPoints(changedDataPoints, pipe) {
-  return (cb) => {
-    return async.mapLimit(
-      _.map(changedDataPoints, 'data-origin'),
-      constants.LIMIT_NUMBER_PROCESS,
-      ____closeDataPoint(pipe),
-      cb
-    );
-  };
-}
-
-function __fakeLoadRawDataPoints(pipe, done) {
-  let updatedDataPoints = _.map(pipe.fileChanges.update, ___formRawDataPoint(pipe));
-  let changedDataPoints = _.map(pipe.fileChanges.change, ___formRawDataPoint(pipe));
-  let fakeLoadedDatapoints = _.concat(pipe.fileChanges.create, updatedDataPoints, changedDataPoints);
-
-  pipe.fakeLoadedDatapoints = fakeLoadedDatapoints;
-
-  return async.setImmediate(() => done(null, pipe));
-}
-
-function ___formRawDataPoint(pipe) {
-  return (datapoint) => {
-    let complexKey = getComplexKey(datapoint['data-origin']);
-    let closedOriginDatapoint = pipe.closedDataPoints[complexKey];
-    let originId = closedOriginDatapoint ? closedOriginDatapoint.originId : null;
-    return _.defaults({originId}, datapoint['data-update'], datapoint['data-origin']);
-  };
-}
-
-function __wrapProcessRawDataPoints(pipe, done) {
-  return common.processRawDataPoints(pipe, done)(null, pipe.fakeLoadedDatapoints);
-}
-
-// UTILS FUNCTIONS
 function getComplexKey(obj) {
   return _.chain(obj)
     .keys()

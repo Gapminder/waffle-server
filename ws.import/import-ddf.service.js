@@ -2,7 +2,7 @@
 
 const async = require('async');
 
-const ddfImportProcess = require('../ws.utils/ddf-import-process');
+const ddfImportUtils = require('./import-ddf.utils');
 const createDatasetIndex = require('./import-dataset-index.service');
 const translationsService = require('./import-translations.service');
 
@@ -32,7 +32,7 @@ module.exports = function (options, done) {
     common.resolvePathToDdfFolder,
     common.createTransaction,
     common.createDataset,
-    ddfImportProcess.activateLifecycleHook('onDatasetCreated'),
+    ddfImportUtils.activateLifecycleHook('onDatasetCreated'),
     common.updateTransaction,
     common.createConcepts,
     common.createEntities,

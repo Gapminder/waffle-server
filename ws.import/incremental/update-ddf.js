@@ -11,7 +11,7 @@ const common = require('./../common');
 const logger = require('../../ws.config/log');
 const config = require('../../ws.config/config');
 const constants = require('../../ws.utils/constants');
-const ddfImportProcess = require('../../ws.utils/ddf-import-process');
+const ddfImportUtils = require('../import-ddf.utils');
 
 const createDatasetIndex = require('./../import-dataset-index.service');
 const translationsService = require('./../import-translations.service');
@@ -50,7 +50,7 @@ module.exports = function (options, done) {
     async.constant(pipe),
     common.resolvePathToDdfFolder,
     common.createTransaction,
-    ddfImportProcess.activateLifecycleHook('onTransactionCreated'),
+    ddfImportUtils.activateLifecycleHook('onTransactionCreated'),
     common.findDataset,
     common.updateTransaction,
     getPreviousTransaction,

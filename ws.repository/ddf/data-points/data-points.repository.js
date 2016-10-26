@@ -18,11 +18,6 @@ function DataPointsRepository() {
 
 module.exports = new RepositoryFactory(DataPointsRepository);
 
-/**
- *
- * @param subDatapointQuery
- * @param onDatapointsFound
- */
 DataPointsRepository.prototype.findForGivenMeasuresAndDimensions = function(subDatapointQuery, onDatapointsFound) {
   const query = this._composeQuery(subDatapointQuery);
 
