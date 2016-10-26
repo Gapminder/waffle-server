@@ -7,7 +7,7 @@ AWS=$(which aws) || true
 function help {
  echo -e "\
   Usage:
-    
+
     ./awstackops <command> [settings file]
 
   Commands:
@@ -127,7 +127,7 @@ ParameterKey=InstanceType,ParameterValue=${ECS_INSTANCE_TYPE} \
 ParameterKey=InstanceTypeECacheRedis,ParameterValue=${REDIS_INSTANCE_TYPE} \
 ParameterKey=RedisPort,ParameterValue=${REDIS_PORT} \
 ParameterKey=MaxClusterInstances,ParameterValue=${MAX_CLUSTER_INSTANCES} \
-ParameterKey=MongoDBUrl,ParameterValue=${MONGODB_URL} \
+ParameterKey=MongoDBUrl,ParameterValue=\"${MONGODB_URL}\" \
 ParameterKey=NewRelicKey,ParameterValue=${NEWRELIC_KEY} \
 ParameterKey=DdfRepoPath,ParameterValue=${DDF_REPO_PATH} \
 ParameterKey=DefaultUserPassword,ParameterValue=${DEFAULT_USER_PASSWORD}"
