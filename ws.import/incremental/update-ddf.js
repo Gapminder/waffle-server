@@ -5,8 +5,6 @@ const fs = require('fs');
 const path = require('path');
 const async = require('async');
 
-const mongoose = require('mongoose');
-
 const common = require('./../common');
 const logger = require('../../ws.config/log');
 const config = require('../../ws.config/config');
@@ -37,9 +35,8 @@ module.exports = function (options, done) {
     changedFiles,
     allChanges,
     mapFilenameToCollectionName,
-    common,
-    commit: options.commit || process.env.DDF_REPO_COMMIT,
-    datasetName: options.datasetName || process.env.DDF_DATASET_NAME,
+    commit: options.commit,
+    datasetName: options.datasetName,
     config,
     lifecycleHooks: options.lifecycleHooks,
     user: options.user
@@ -52,9 +49,7 @@ module.exports = function (options, done) {
     common.createTransaction,
     ddfImportUtils.activateLifecycleHook('onTransactionCreated'),
     common.findDataset,
-    common.updateTransaction,
-    getPreviousTransaction,
-    addTransactionToDatasetVersions,
+    common.establishTransactionForDataset,
     updateConcepts,
     getAllConcepts,
     getAllPreviousConcepts,
@@ -77,31 +72,6 @@ module.exports = function (options, done) {
     });
   });
 };
-
-function getPreviousTransaction(pipe, done) {
-  logger.info('get previous transaction');
-
-  mongoose.model('DatasetTransactions').findOne({
-    createdAt: pipe.dataset.versions[pipe.dataset.versions.length - 1]
-  })
-    .lean()
-    .exec((err, res) => {
-      pipe.transactionId = res._id;
-      return done(err, pipe);
-    });
-}
-
-function addTransactionToDatasetVersions(pipe, done) {
-  logger.info('get previous transaction');
-
-  mongoose.model('Datasets').update({_id: pipe.dataset._id}, {
-    $addToSet: {
-      versions: pipe.transaction.createdAt
-    }
-  }, (err) => {
-    return done(err, pipe);
-  });
-}
 
 function getAllConcepts(pipe, done) {
   return conceptsRepositoryFactory.latestVersion(pipe.dataset._id, pipe.transaction.createdAt)
@@ -144,8 +114,7 @@ function _processEntititesFile(pipe) {
       previousConcepts: pipe.previousConcepts,
       concepts: pipe.concepts,
       transaction: pipe.transaction,
-      dataset: pipe.dataset,
-      common: pipe.common
+      dataset: pipe.dataset
     };
 
     return async.waterfall([
@@ -218,35 +187,25 @@ function ___processChangedColumnsBySource(pipe, cb) {
 }
 
 function ___closeAllEntitiesBySource(pipe, cb) {
-  let query = {
-    dataset: pipe.dataset._id,
-    from: {$lte: pipe.transaction.createdAt},
-    to: constants.MAX_VERSION,
+  const query = {
     domain: pipe.entityDomain.originId,
     sets: getQuerySetsClause(pipe.entityDomain, pipe.entitySet)
   };
 
-  return mongoose.model('Entities').update(
-    query,
-    {$set: {to: pipe.transaction.createdAt}},
-    {multi: true},
-    (err) => {
-      return cb(err, pipe);
-    });
+  return entitiesRepositoryFactory
+    .latestVersion(pipe.dataset._id, pipe.transaction.createdAt)
+    .closeByDomainAndSets(query, err => cb(err, pipe));
 }
 
 function ___getAllEntitiesBySource(pipe, cb) {
-  let query = {
-    dataset: pipe.dataset._id,
-    from: {$lte: pipe.transaction.createdAt},
-    to: pipe.transaction.createdAt,
+  const query = {
     domain: pipe.entityDomain.originId,
     sets: getQuerySetsClause(pipe.entityDomain, pipe.entitySet)
   };
 
-  return mongoose.model('Entities').find(query)
-    .lean()
-    .exec((err, docs) => {
+  return entitiesRepositoryFactory
+    .previousVersion(pipe.dataset._id, pipe.transaction.createdAt)
+    .findByDomainAndSets(query, (err, docs) => {
       return cb(err, docs);
     });
 }
@@ -265,27 +224,25 @@ function ___updateRemovedEntities(removedEntities, pipe) {
 }
 
 function ____closeEntity(pipe) {
-  return (entity, ecb) => {
-    let properties = {};
-    properties[`properties.${entity.gid}`] = entity[entity.gid];
+  const entitiesRepository = entitiesRepositoryFactory.latestVersion(pipe.dataset._id, pipe.transaction.createdAt);
 
-    let query = _.assign({
-      dataset: pipe.dataset._id,
-      from: {$lte: pipe.transaction.createdAt},
-      to: constants.MAX_VERSION,
+  return (entity, ecb) => {
+    const query = _.assign({
       domain: pipe.entityDomain.originId,
       sets: getQuerySetsClause(pipe.entityDomain, pipe.entitySet)
-    }, properties);
+    }, {[`properties.${entity.gid}`]: entity[entity.gid]});
 
-    return mongoose.model('Entities').findOneAndUpdate(query, {$set: {to: pipe.transaction.createdAt}}, {new: true})
-      .lean()
-      .exec((err, doc) => {
-        if (doc) {
-          pipe.closedEntities[doc.gid] = doc;
-        }
+    return entitiesRepository.closeOneByQuery(query, (err, doc) => {
+      if (err) {
+        return ecb(err);
+      }
 
-        return ecb(err, pipe);
-      });
+      if (doc) {
+        pipe.closedEntities[doc.gid] = doc;
+      }
+
+      return ecb(null, pipe);
+    });
   };
 }
 
@@ -300,15 +257,14 @@ function __createAndUpdateEntities(pipe, cb) {
     concepts: pipe.concepts,
     transaction: pipe.transaction,
     dataset: pipe.dataset,
-    common: pipe.common
   };
 
   return async.waterfall([
     async.constant(_pipe),
     ___fakeLoadRawEntities,
-    pipe.common.storeEntitiesToDb,
+    common.storeEntitiesToDb,
     __getAllEntities,
-    pipe.common.addEntityDrillups,
+    common.addEntityDrillups,
     __getAllEntities
   ], cb);
 }
@@ -326,7 +282,7 @@ function ___fakeLoadRawEntities(pipe, done) {
   let mergedChangedEntities = _.merge(changedClosedEntities, _mergedChangedEntities);
 
   let updatedEntities = _.map(mergedChangedEntities, ____formRawEntities(pipe));
-  let createdEntities = _.map(pipe.fileChanges.create, pipe.common.mapDdfEntityToWsModel(pipe));
+  let createdEntities = _.map(pipe.fileChanges.create, common.mapDdfEntityToWsModel(pipe));
 
   let fakeLoadedEntities = _.concat([], createdEntities, updatedEntities);
   let uniqEntities = _.uniqBy(fakeLoadedEntities, 'gid');
@@ -351,7 +307,7 @@ function ___fakeLoadRawEntities(pipe, done) {
 }
 
 function ____formRawEntities(pipe) {
-  let mapper = pipe.common.mapDdfEntityToWsModel(pipe);
+  let mapper = common.mapDdfEntityToWsModel(pipe);
   return (properties, entityGid) => {
     const closedEntity = pipe.closedEntities[entityGid];
     const originId = closedEntity ? closedEntity.originId : null;

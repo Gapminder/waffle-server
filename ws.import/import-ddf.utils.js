@@ -1,6 +1,8 @@
 'use strict';
 
 const _ = require('lodash');
+const fs = require('fs');
+const hi = require('highland');
 const async = require('async');
 const validator = require('validator');
 const ddfTimeUtils = require('ddf-time-utils');

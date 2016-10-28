@@ -1,6 +1,5 @@
 'use strict';
 
-const mongoose = require('mongoose');
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const UniqueTokenStrategy = require('passport-unique-token').Strategy;
@@ -48,13 +47,7 @@ module.exports = (function () {
 
   function enableLocalStrategy() {
     passport.use(new LocalStrategy((username, password, done) => {
-        const Users = mongoose.model('Users');
-        return Users.findOne({
-          $or: [
-            {username: new RegExp('^' + username + '$', 'i')},
-            {email: username}
-          ]
-        }, (error, user) => {
+        return usersRepository.findUserByEmail(username, (error, user) => {
           if (error) {
             return done(error);
           }

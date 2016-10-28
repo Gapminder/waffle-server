@@ -6,12 +6,11 @@ const mongoose = require('mongoose');
 
 const constants = require('../ws.utils/constants');
 
-const Concepts = mongoose.model('Concepts');
-const Entities = mongoose.model('Entities');
-const DataPoints = mongoose.model('DataPoints');
-
 const datasetsRepository = require('../ws.repository/ddf/datasets/datasets.repository');
 const transactionsRepository = require('../ws.repository/ddf/dataset-transactions/dataset-transactions.repository');
+const conceptsRepositoryFactory = require('../ws.repository/ddf/concepts/concepts.repository');
+const entitiesRepositoryFactory = require('../ws.repository/ddf/entities/entities.repository');
+const datapointsRepositoryFactory = require('../ws.repository/ddf/data-points/data-points.repository');
 
 module.exports = {
   setLastError,
@@ -89,8 +88,8 @@ function rollbackFailedTransactionFor(datasetName, onRollbackCompleted) {
     const failedVersion = failedTransaction.createdAt;
 
     const rollbackTasks =
-      _.chain([DataPoints, Entities, Concepts])
-        .map(model => [rollbackRemovedTask(model, failedVersion), rollbackNewTask(model, failedVersion)])
+      _.chain([conceptsRepositoryFactory, entitiesRepositoryFactory, datapointsRepositoryFactory])
+        .map(repositoryFactory => toRollbackFunction(repositoryFactory, failedVersion))
         .flatten()
         .map(rollbackTask => (done => async.retry(retryConfig, rollbackTask, done)))
         .value();
@@ -99,20 +98,25 @@ function rollbackFailedTransactionFor(datasetName, onRollbackCompleted) {
       done => datasetsRepository.forceLock(datasetName, done),
       done => async.parallelLimit(rollbackTasks, constants.LIMIT_NUMBER_PROCESS, done),
       done => transactionsRepository.removeById(failedTransaction._id, done),
-      done => datasetsRepository.removeVersion(datasetName, failedVersion, done),
       done => datasetsRepository.forceUnlock(datasetName, done),
-      done => datasetsRepository.removeDatasetWithoutVersionsByName(datasetName, done)
+      done => _removeDatasetWithoutTransactions(failedTransaction.dataset, done)
     ],
     onRollbackCompleted);
   });
+}
 
-  function rollbackRemovedTask(model, versionToRollback) {
-    return done => model.update({to: versionToRollback}, {$set: {to: constants.MAX_VERSION}}, {multi: true}).lean().exec(done);
-  }
+function toRollbackFunction(repositoryFactory, versionToRollback) {
+  const repository = repositoryFactory.versionAgnostic();
+  return repository.rollback.bind(repository, versionToRollback);
+}
 
-  function rollbackNewTask(model, versionToRollback) {
-    return done => model.remove({from: versionToRollback}, done);
-  }
+function _removeDatasetWithoutTransactions(datasetId, done) {
+  return transactionsRepository.countByDataset(datasetId, (error, amount) => {
+    if (amount > 0) {
+      return done();
+    }
+    return datasetsRepository.removeById(datasetId, done);
+  });
 }
 
 function _findLatestFailedTransactionByDatasetName(datasetName, done) {
@@ -137,12 +141,15 @@ function getStatusOfLatestTransactionByDatasetName(datasetName, done) {
       }
 
       const version = latestTransaction.createdAt;
-      const closedOrOpenedByVersionQuery = {$or: [{from: version}, {to: version}], dataset: dataset._id};
+
+      const conceptsRepository = conceptsRepositoryFactory.closedOrOpenedInGivenVersion(dataset._id, version);
+      const entitiesRepository = entitiesRepositoryFactory.closedOrOpenedInGivenVersion(dataset._id, version);
+      const datapointsRepository = datapointsRepositoryFactory.closedOrOpenedInGivenVersion(dataset._id, version);
 
       const modifiedObjectsTasks = {
-        concepts: done => Concepts.count(closedOrOpenedByVersionQuery, done),
-        entities: done => Entities.count(closedOrOpenedByVersionQuery, done),
-        datapoints: done => DataPoints.count(closedOrOpenedByVersionQuery, done)
+        concepts: done => conceptsRepository.count(done),
+        entities: done => entitiesRepository.count(done),
+        datapoints: done => datapointsRepository.count(done),
       };
 
       return async.parallelLimit(modifiedObjectsTasks, constants.LIMIT_NUMBER_PROCESS, (error, stats) => {

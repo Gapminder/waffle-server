@@ -33,7 +33,7 @@ module.exports = function (options, done) {
     common.createTransaction,
     common.createDataset,
     ddfImportUtils.activateLifecycleHook('onDatasetCreated'),
-    common.updateTransaction,
+    common.establishTransactionForDataset,
     common.createConcepts,
     common.createEntities,
     importDatapoints,

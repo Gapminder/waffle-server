@@ -2,6 +2,7 @@
 
 const _ = require('lodash');
 const util = require('util');
+const async = require('async');
 
 const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
@@ -9,6 +10,7 @@ const DataPoints = mongoose.model('DataPoints');
 
 const RepositoryFactory = require('../../repository.factory');
 const repositoryModel = require('../../repository.model');
+const constants = require('../../../ws.utils/constants');
 
 util.inherits(DataPointsRepository, repositoryModel);
 
@@ -18,22 +20,31 @@ function DataPointsRepository() {
 
 module.exports = new RepositoryFactory(DataPointsRepository);
 
-DataPointsRepository.prototype.findForGivenMeasuresAndDimensions = function (subDatapointQuery, onDatapointsFound) {
+DataPointsRepository.prototype.create = function(datapointOrBatchOfDatapoints, done) {
+  return DataPoints.create(datapointOrBatchOfDatapoints, done);
+};
+
+DataPointsRepository.prototype.count = function (onCounted) {
+  const countQuery = this._composeQuery();
+  return DataPoints.count(countQuery, onCounted);
+};
+
+DataPointsRepository.prototype.rollback = function (versionToRollback, onRolledback) {
+  return async.parallelLimit([
+    done => DataPoints.update({to: versionToRollback}, {$set: {to: constants.MAX_VERSION}}, {multi: true}).lean().exec(done),
+    done => DataPoints.remove({from: versionToRollback}, done)
+  ], constants.LIMIT_NUMBER_PROCESS, onRolledback);
+};
+
+DataPointsRepository.prototype.findForGivenMeasuresAndDimensions = function(subDatapointQuery, onDatapointsFound) {
   const query = this._composeQuery(subDatapointQuery);
 
   return DataPoints.find(query).lean().exec(onDatapointsFound);
 };
 
-DataPointsRepository.prototype.findForGivenMeasuresAndDimensions = function (subDatapointQuery, onDatapointsFound) {
-  const query = this._composeQuery(subDatapointQuery);
-
-  return DataPoints.find(query).lean().exec(onDatapointsFound);
-};
-
-DataPointsRepository.prototype.findForGivenMeasuresAndDimensions = function (subDatapointQuery, onDatapointsFound) {
-  const query = this._composeQuery(subDatapointQuery);
-
-  return DataPoints.find(query).lean().exec(onDatapointsFound);
+DataPointsRepository.prototype.findDistinctDimensionsByMeasure = function(measureId, done) {
+  const query = this._composeQuery({measure: measureId});
+  return DataPoints.distinct('dimensions', query).lean().exec(done);
 };
 
 DataPointsRepository.prototype.closeDatapointByMeasureAndDimensionsAndValue = function (options, onDatapointClosed) {

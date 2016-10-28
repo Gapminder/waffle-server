@@ -2,7 +2,6 @@
 
 const _ = require('lodash');
 const async = require('async');
-const mongoose = require('mongoose');
 
 const conceptsRepositoryFactory = require('../../ws.repository/ddf/concepts/concepts.repository');
 const ddfImportUtils = require('../import-ddf.utils');
@@ -34,17 +33,14 @@ module.exports = (pipe, done) => {
 
 function processRemovedConcepts(removedConcepts) {
   return (pipe, done) => {
+
+    const conceptsRepository = conceptsRepositoryFactory.latestExceptCurrentVersion(
+      pipe.external.dataset._id,
+      pipe.external.transaction.createdAt
+    );
+
     return async.eachLimit(removedConcepts, constants.LIMIT_NUMBER_PROCESS, (removedConcept, onConceptClosed) => {
-      const originalConceptQuery = {
-        dataset: pipe.external.dataset._id,
-        from: {$lt: pipe.external.transaction.createdAt},
-        to: constants.MAX_VERSION,
-        gid: getGid(removedConcept)
-      };
-
-      const conceptsClosingQuery = {$set: {to: pipe.external.transaction.createdAt}};
-
-      return mongoose.model('Concepts').findOneAndUpdate(originalConceptQuery, conceptsClosingQuery, {new: false}).lean().exec(onConceptClosed);
+      return conceptsRepository.closeByGid(getGid(removedConcept), onConceptClosed);
     }, error => {
       return done(error, pipe);
     });
@@ -109,10 +105,13 @@ function createConcepts(conceptChanges) {
     }
 
     const chunkSize = 100;
-    return async.eachLimit(_.chunk(concepts, chunkSize), constants.LIMIT_NUMBER_PROCESS, (chunk, onConceptsChunkCreated) => {
-        return mongoose.model('Concepts').create(chunk, onConceptsChunkCreated);
-      },
-      error => {
+
+    const conceptsRepository = conceptsRepositoryFactory.versionAgnostic(pipe.external.dataset._id);
+
+    return async.eachLimit(_.chunk(concepts, chunkSize), constants.LIMIT_NUMBER_PROCESS,
+      (chunk, onConceptsChunkCreated) => {
+        return conceptsRepository.create(chunk, onConceptsChunkCreated);
+      }, error => {
         return done(error, pipe);
       });
   };
@@ -120,57 +119,47 @@ function createConcepts(conceptChanges) {
 
 function getDrillupsOfChangedConcepts() {
   return (pipe, done) => {
-    const dillupsOfChangedConceptsQuery = {
-      dataset: pipe.external.dataset._id,
-      from: pipe.external.transaction.createdAt
-    };
-    return mongoose.model('Concepts').distinct('properties.drill_up', dillupsOfChangedConceptsQuery).lean().exec((error, drillUps) => {
-      if (error) {
-        return done(error);
-      }
+    conceptsRepositoryFactory
+      .allOpenedInGivenVersion(pipe.external.dataset._id, pipe.external.transaction.createdAt)
+      .findDistinctDrillups((error, drillUps) => {
+        if (error) {
+          return done(error);
+        }
 
-      pipe.internal.drillUps = _.compact(drillUps);
-      return done(error, pipe);
-    });
+        pipe.internal.drillUps = _.compact(drillUps);
+        return done(error, pipe);
+      });
   };
 }
 
 function getDomainsOfChangedConcepts() {
   return (pipe, done) => {
-    const dillupsOfChangedConceptsQuery = {
-      dataset: pipe.external.dataset._id,
-      from: pipe.external.transaction.createdAt
-    };
-    return mongoose.model('Concepts').distinct('properties.domain', dillupsOfChangedConceptsQuery).lean().exec((error, domains) => {
-      if (error) {
-        return done(error);
-      }
+    return conceptsRepositoryFactory
+      .allOpenedInGivenVersion(pipe.external.dataset._id, pipe.external.transaction.createdAt)
+      .findDistinctDomains((error, domains) => {
+        if (error) {
+          return done(error);
+        }
 
-      pipe.internal.domains = _.compact(domains);
-      return done(error, pipe);
-    });
+        pipe.internal.domains = _.compact(domains);
+        return done(error, pipe);
+      });
   };
 }
 
 function applyChangesToConcepts(changedConcepts) {
   return (pipe, done) => {
+    const conceptsRepository = conceptsRepositoryFactory
+      .latestExceptCurrentVersion(pipe.external.dataset._id, pipe.external.transaction.createdAt);
+
     return async.forEachOfLimit(changedConcepts, constants.LIMIT_NUMBER_PROCESS, (changesToConcept, gid, onChangesApplied) => {
-      const originalConceptQuery = {
-        dataset: pipe.external.dataset._id,
-        from: {$lt: pipe.external.transaction.createdAt},
-        to: constants.MAX_VERSION,
-        gid: gid
-      };
-
-      const conceptsClosingQuery = {$set: {to: pipe.external.transaction.createdAt}};
-
-      return mongoose.model('Concepts').findOneAndUpdate(originalConceptQuery, conceptsClosingQuery, {new: false}).lean().exec((error, originalConcept) => {
+      conceptsRepository.closeByGid(gid, (error, originalConcept) => {
         if (error) {
           return onChangesApplied(error);
         }
 
         const updatedConcept = mergeConcepts(originalConcept, changesToConcept, pipe.external.transaction);
-        return mongoose.model('Concepts').create(updatedConcept, onChangesApplied);
+        return conceptsRepository.create(updatedConcept, onChangesApplied);
       });
     }, error => {
       return done(error, pipe);
@@ -180,20 +169,16 @@ function applyChangesToConcepts(changedConcepts) {
 
 function applyUpdatesToConcepts(changedConcepts, removedProperties) {
   return (pipe, done) => {
-    const originalConceptQuery = {
-      dataset: pipe.external.dataset._id,
-      from: {$lt: pipe.external.transaction.createdAt},
-      to: constants.MAX_VERSION
-    };
+    const conceptsRepository = conceptsRepositoryFactory
+      .latestExceptCurrentVersion(pipe.external.dataset._id, pipe.external.transaction.createdAt);
 
-    const conceptsClosingQuery = {$set: {to: pipe.external.transaction.createdAt}};
-    return mongoose.model('Concepts').find(originalConceptQuery).lean().exec((error, originalConcepts) => {
+    return conceptsRepository.findAll((error, originalConcepts) => {
       if (error) {
         return done(error);
       }
 
       return async.eachLimit(originalConcepts, constants.LIMIT_NUMBER_PROCESS, (originalConcept, onUpdateApplied) => {
-        mongoose.model('Concepts').findOneAndUpdate({_id: originalConcept._id}, conceptsClosingQuery, {new: false}).lean().exec((error, closedOriginalConcept) => {
+        conceptsRepository.closeById(originalConcept._id, (error, closedOriginalConcept) => {
           if (error) {
             return onUpdateApplied(error);
           }
@@ -204,7 +189,7 @@ function applyUpdatesToConcepts(changedConcepts, removedProperties) {
           updatedConcept = omitRemovedProperties(updatedConcept, removedProperties);
           updatedConcept.properties = omitRemovedProperties(updatedConcept.properties, removedProperties);
 
-          return mongoose.model('Concepts').create(updatedConcept, onUpdateApplied);
+          return conceptsRepository.create(updatedConcept, onUpdateApplied);
         });
       }, error => {
         return done(error, pipe);
@@ -225,6 +210,10 @@ function  getAllConcepts() {
 
 function populateConceptsDrillups() {
   return (pipe, done) => {
+
+    const conceptsRepository = conceptsRepositoryFactory
+      .allOpenedInGivenVersion(pipe.external.dataset._id, pipe.external.transaction.createdAt);
+
     return async.eachLimit(pipe.internal.drillUps, constants.LIMIT_NUMBER_PROCESS, (gid, onDrillupsPopulated) => {
       let concept = pipe.internal.concepts[gid];
 
@@ -232,19 +221,7 @@ function populateConceptsDrillups() {
         return async.setImmediate(onDrillupsPopulated);
       }
 
-      const drillupsOfNewlyCreatedConceptsQuery = {
-        'properties.drill_up': gid,
-        dataset: pipe.external.dataset._id,
-        from: pipe.external.transaction.createdAt
-      };
-
-      const drillupsPopulationQuery = {
-        $addToSet: {
-          'subsetOf': concept.originId
-        }
-      };
-
-      return mongoose.model('Concepts').update(drillupsOfNewlyCreatedConceptsQuery, drillupsPopulationQuery, {multi: true}, onDrillupsPopulated);
+      return conceptsRepository.addSubsetOfByGid({gid, parentConceptId: concept.originId}, onDrillupsPopulated);
     }, error => {
       return done(error, pipe);
     });
@@ -253,6 +230,9 @@ function populateConceptsDrillups() {
 
 function populateConceptsDomains() {
   return (pipe, done) => {
+    const conceptsRepository = conceptsRepositoryFactory
+      .allOpenedInGivenVersion(pipe.external.dataset._id, pipe.external.transaction.createdAt);
+
     return async.eachLimit(pipe.internal.domains, constants.LIMIT_NUMBER_PROCESS, (gid, onDomainPopulated) => {
       let concept = pipe.internal.concepts[gid];
 
@@ -260,14 +240,7 @@ function populateConceptsDomains() {
         return async.setImmediate(onDomainPopulated);
       }
 
-      const domainsOfNewlyCreatedConceptsQuery = {
-        'properties.domain': gid,
-        dataset: pipe.external.dataset._id,
-        from: pipe.external.transaction.createdAt
-      };
-
-      const domainsPopulationQuery = {$set: {'domain': concept.originId}};
-      mongoose.model('Concepts').update(domainsOfNewlyCreatedConceptsQuery, domainsPopulationQuery, {multi: true}, onDomainPopulated);
+      return conceptsRepository.setDomainByGid({gid, domainConceptId: concept.originId}, onDomainPopulated);
     }, error => {
       return done(error, pipe);
     });

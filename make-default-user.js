@@ -2,6 +2,7 @@ const _ = require('lodash');
 const usersRepository = require('./ws.repository/ddf/users/users.repository');
 const config = require('./ws.config/config');
 const logger = require('./ws.config/log');
+const constants = require('./ws.utils/constants');
 
 module.exports = () => {
   if (_.isEmpty(config.DEFAULT_USER_PASSWORD)) {
@@ -10,7 +11,7 @@ module.exports = () => {
 
   const user = {
     name: 'John Doe',
-    email: 'dev@gapminder.org',
+    email: constants.DEFAULT_USER_EMAIL,
     username: 'dev',
     password: config.DEFAULT_USER_PASSWORD
   };

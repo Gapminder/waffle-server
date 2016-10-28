@@ -3,20 +3,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-/**
- * @typedef {Object} DatasetTransactions
- * @memberof Models
- *
- * @property {String} name - transaction's name (human readable)
- * @property {Boolean} isClosed - the transaction is finished successfull
- *
- * @property {Models.Users} createdBy - this transaction's owner
- * @property {Date} createdAt - timestamp when this DatasetTransaction was created
- *
- * @property {Models.Datasets} dataset - of version, could be only one
- */
 const DatasetTransactions = new Schema({
-  name: {type: String, required: true, unique: true, index: true},
   isClosed: {type: Boolean, 'default': false},
   isDefault: {type: Boolean, 'default': false},
   lastError: {type: String},
@@ -28,7 +15,7 @@ const DatasetTransactions = new Schema({
   dataset: {type: Schema.Types.ObjectId, ref: 'Datasets'},
   languages: [{type: String}],
 
-  commit: {type: String}
+  commit: {type: String, required: true}
 });
 
 DatasetTransactions.index({dataset: 1, commit: 1});
