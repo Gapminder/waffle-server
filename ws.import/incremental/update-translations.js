@@ -3,10 +3,17 @@
 const fs = require('fs');
 const _ = require('lodash');
 const hi = require('highland');
-const logger = require('../../ws.config/log');
+const mongoose = require('mongoose');
+const Converter = require('csvtojson').Converter;
 
 const common = require('../common');
+const logger = require('../../ws.config/log');
 const constants = require('../../ws.utils/constants');
+const entitiesUtils = require('../entities.utils');
+const datapointsUtils = require('../datapoints.utils');
+const datapointsRepository = require('../../ws.repository/ddf/data-points/data-points.repository');
+const entitiesRepository = require('../../ws.repository/ddf/entities/entities.repository');
+const conceptsRepository = require('../../ws.repository/ddf/concepts/concepts.repository');
 
 const translationsPattern = /^ddf--translation--(([a-z]{2}-[a-z]{2,})|([a-z]{2,}))--/;
 
@@ -16,82 +23,110 @@ function importTranslations_Hi(externalContext, done) {
   logger.info('start process creating translations');
 
   const externalContextFrozen = Object.freeze(_.pick(externalContext, [
-    'pathToDdfFolder',
+    'allChanges',
     'concepts',
-    'entities',
+    'timeConcepts',
     'transaction',
     'dataset',
-    'resolvePath'
   ]));
+  const parsedLanguages = new Set();
 
-  const readdir = hi.wrapCallback(fs.readdir);
-
-  return readdir(externalContextFrozen.pathToDdfFolder)
-    .flatMap(filenames => {
-      return hi(filenames);
-    })
+  return hi(_.keys(externalContextFrozen.allChanges))
     .filter(filename => {
       return translationsPattern.test(filename)
     })
     .map(filename => {
-      const {translatedModel, measures, dimensions, language} = _parseFilename_Hi(filename, externalContext);
-      return {filename, translatedModel, language, measures, dimensions};
+      return {filename, fileChanges: externalContextFrozen.allChanges[filename].body};
+    })
+    .flatMap(({filename, fileChanges}) => {
+      const supplies = parseFilename(filename, parsedLanguages, externalContextFrozen);
+      return _.assign({}, supplies, {fileChanges});
     })
     .flatMap((context) => {
-      return readCsvFile_Hi(externalContextFrozen.resolvePath(context.filename), {})
+      return hi(context.fileChanges)
         .map(row => ({row, context}));
     })
     .map(({row, context}) => {
-      return hi(createFoundTranslation(row, context));
+      return hi(createFoundTranslation(row, context, externalContextFrozen));
     })
     .errors(error => {
       logger.error(error);
       return done(error);
     })
     .done(() => {
-      logger.info('finished process creating translations');
-      return done(null, externalContext);
+      return updateTransactionLanguages(parsedLanguages, externalContextFrozen, (error) => {
+        if (error) {
+          return done(error);
+        }
+
+        logger.info('finished process creating translations');
+
+        return done(null, externalContext);
+      });
     });
 }
 
-function _parseFilename_Hi(filename, externalContext) {
+function parseFilename(filename, languages, externalContext) {
   logger.info(`** parse filename '${filename}'`);
 
   const language = filename.match(translationsPattern)[1];
   const dataFilename = filename.replace(translationsPattern, 'ddf--');
-  const parsedFilename = common.getMeasureDimensionFromFilename(dataFilename);
   const translatedModel = dataFilename.match(/^ddf--(\w{1,})--/)[1];
-  const measureGids = parsedFilename.measures;
-  const dimensionGids = parsedFilename.dimensions;
-
-  const measures = _.pick(externalContext.concepts, measureGids);
-  const dimensions = _.pick(externalContext.concepts, dimensionGids);
-
-  if (_.isEmpty(measures)) {
-    throw Error(`file '${filename}' doesn't have any measure.`);
-  }
-
-  if (_.isEmpty(dimensions)) {
-    throw Error(`file '${filename}' doesn't have any dimensions.`);
-  }
 
   if (_.isEmpty(language)) {
     throw Error(`file '${filename}' doesn't have any language.`);
   }
 
+  languages.add(language);
   logger.info(`** parsed language: ${language}`);
-  logger.info(`** parsed translated model: ${translatedModel}`);
   logger.info(`** parsed data filename: ${dataFilename}`);
-  logger.info(`** parsed measures: ${_.keys(measures)}`);
-  logger.info(`** parsed dimensions: ${_.keys(dimensions)}`);
+  logger.info(`** parsed translated model: ${translatedModel}`);
 
-  return {translatedModel, measures, dimensions, language};
+  let parsedConcepts;
+
+  if (translatedModel === constants.DATAPOINTS) {
+    parsedConcepts = datapointsUtils.parseFilename(dataFilename, externalContext);
+  }
+
+  if (translatedModel === constants.ENTITIES) {
+    parsedConcepts = entitiesUtils.parseFilename(dataFilename, externalContext);
+  }
+
+  return _.assign({}, {filename, translatedModel, language}, parsedConcepts);
 }
 
-function readCsvFile_Hi(filepath) {
-  return hi(fs.createReadStream(filepath, 'utf-8').pipe(new Converter({constructResult: false}, {objectMode: true})));
-}
+function createFoundTranslation(properties, context, externalContext) {
+  if (context.translatedModel === constants.DATAPOINTS) {
+    return datapointsRepository
+      .currentVersion(externalContext.dataset._id, externalContext.transaction.createdAt)
+      .addTranslationsForGivenProperties(properties, context);
+  }
 
-function createFoundTranslation(row, context) {
+  if (context.translatedModel === constants.ENTITIES) {
+    return entitiesRepository
+      .currentVersion(externalContext.dataset._id, externalContext.transaction.createdAt)
+      .addTranslationsForGivenProperties(properties, context);
+  }
+
+  if (context.translatedModel === constants.CONCEPTS) {
+    return conceptsRepository
+      .currentVersion(externalContext.dataset._id, externalContext.transaction.createdAt)
+      .addTranslationsForGivenProperties(properties, context);
+  }
+
   return;
+}
+
+function updateTransactionLanguages(parsedLanguages, externalContext, done) {
+  let languages = [];
+
+  parsedLanguages.forEach(lang =>{
+    languages.push(lang);
+  });
+
+  return mongoose.model('DatasetTransactions').update({_id: externalContext.transaction._id}, {
+    $set: {
+      languages
+    }
+  }).exec(done);
 }

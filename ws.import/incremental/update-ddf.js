@@ -190,7 +190,8 @@ function __closeRemovedAndUpdatedEntities(pipe, cb) {
   return async.parallel([
     ___updateRemovedEntities(pipe.fileChanges.remove, pipe),
     ___updateRemovedEntities(pipe.fileChanges.update, pipe),
-    ___updateRemovedEntities(pipe.fileChanges.change, pipe)
+    ___updateRemovedEntities(pipe.fileChanges.change, pipe),
+    ___updateRemovedEntities(pipe.fileChanges.translate, pipe)
   ], (err) => {
     return cb(err, pipe);
   });
@@ -321,7 +322,7 @@ function ___fakeLoadRawEntities(pipe, done) {
   let _changedClosedEntities = _.omit(closedEntities, removedEntitiesGids);
   let changedClosedEntities = _.mapValues(_changedClosedEntities, (entity) => _.omit(entity, pipe.removedColumns));
 
-  let _mergedChangedEntities = mergeUpdatedAndChangedEntities(pipe.fileChanges.update, pipe.fileChanges.change);
+  let _mergedChangedEntities = mergeUpdatedAndChangedEntities(pipe.fileChanges.update, pipe.fileChanges.change, pipe.fileChanges.translate);
   let mergedChangedEntities = _.merge(changedClosedEntities, _mergedChangedEntities);
 
   let updatedEntities = _.map(mergedChangedEntities, ____formRawEntities(pipe));

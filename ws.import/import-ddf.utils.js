@@ -5,7 +5,7 @@ const async = require('async');
 const validator = require('validator');
 const ddfTimeUtils = require('ddf-time-utils');
 
-const RESERVED_PROPERTIES = ['properties', 'dimensions', 'subsetOf', 'from', 'to', 'originId', 'gid', 'domain', 'type'];
+const RESERVED_PROPERTIES = ['properties', 'dimensions', 'subsetOf', 'from', 'to', 'originId', 'gid', 'domain', 'type', 'languages'];
 
 module.exports = {
   activateLifecycleHook,
