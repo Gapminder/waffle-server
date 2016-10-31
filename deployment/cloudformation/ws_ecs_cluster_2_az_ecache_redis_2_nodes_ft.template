@@ -711,6 +711,10 @@
       "Description": "ddf repositories path",
       "Default": "/home/waffle-server/ddf"
     },
+    "NodeEnv": {
+      "Type": "String",
+      "Description": "Current application environment"
+    },
     "DefaultUserPassword": {
       "Type": "String",
       "Description": "",
@@ -968,6 +972,12 @@
                 "Name": "NEW_RELIC_LICENSE_KEY",
                 "Value": {
                   "Ref": "NewRelicKey"
+                }
+              },
+              {
+                "Name": "NODE_ENV",
+                "Value": {
+                  "Ref": "NodeEnv"
                 }
               },
               {
