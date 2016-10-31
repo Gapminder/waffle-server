@@ -1,3 +1,18 @@
+<a name="1.1.2"></a>
+## [1.1.2](https://github.com/Gapminder/waffle-server/compare/v1.1.1...v1.1.2) (2016-10-31)
+
+
+### Bug Fixes
+
+* **test:** update e2e dataset commits ([8d8770e](https://github.com/Gapminder/waffle-server/commit/8d8770e))
+
+
+### Features
+
+* **log:** add env markers to log messages ([88d446a](https://github.com/Gapminder/waffle-server/commit/88d446a))
+
+
+
 <a name="1.1.1"></a>
 ## [1.1.1](https://github.com/Gapminder/waffle-server/compare/v1.1.0...v1.1.1) (2016-10-26)
 
