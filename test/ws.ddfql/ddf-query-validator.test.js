@@ -24,7 +24,7 @@ const concepts = [
 ];
 
 describe('ddf query validator', () => {
-  it('should validate ddf query with key contains .', () => {
+  it('Should return error message: Invalid DDFQL-query. Validation of Where Clause: contain \'.\'', () => {
     const ddfql = {
       "select": {
         "key": ["company"],
@@ -42,7 +42,7 @@ describe('ddf query validator', () => {
     const message = ddfQueryValidator.validateDdfQuery(ddfql, concepts).messages;
     expect(message.toString()).to.contain('Invalid DDFQL-query. Validation of Where Clause: contain \'.\' in');
   });
-  it('should validate ddf query without "$"', () => {
+  it('Should return error message: Invalid DDFQL-query. Validation of Join Clause: does not contain \'$\'', () => {
     const ddfql = {
       "select": {
         "key": ["company"],
@@ -72,7 +72,7 @@ describe('ddf query validator', () => {
     const message = ddfQueryValidator.validateDdfQuery(ddfql, concepts).messages;
     expect(message.toString()).to.contain('Invalid DDFQL-query. Validation of Join Clause: does not contain \'$\' in ');
   });
-  it('should validate ddf query with true', () => {
+  it('This query should be validated as valid:true', () => {
     const ddfql = {
       "select": {
         "key": ["company"],
@@ -102,7 +102,7 @@ describe('ddf query validator', () => {
     const message = ddfQueryValidator.validateDdfQuery(ddfql, concepts);
     expect(message.valid).to.be.true;
   });
-  it('should validate ddf query for select without key', () => {
+  it('Should return error message: Invalid DDFQL-query. Validation of Select Clause: does not contain \'key\'', () => {
     const ddfql = {
       "select": {
         "value": ["company", "name", "is--english_speaking"]
@@ -131,7 +131,8 @@ describe('ddf query validator', () => {
     const message = ddfQueryValidator.validateDdfQuery(ddfql, concepts).messages;
     expect(message.toString()).to.contain('Invalid DDFQL-query. Validation of Select Clause: does not contain \'key\'');
   });
-  it('should validate ddf query for select with more than 5 values', () => {
+  it('Should return error message: Invalid DDFQL-query. Validation of Select Clause: \'value\' ' +
+    'contains more than 5 measures, please try again with less amount', () => {
     const ddfql = {
       "select": {
         "key": ["company"],
