@@ -1,9 +1,25 @@
 export AWS_ACCESS_KEY_ID=
 export AWS_SECRET_ACCESS_KEY=
+export DEFAULT_USER_PASSWORD=
 export MONGODB_URL=""
 export NEWRELIC_KEY=""
+export MAX_CLUSTER_INSTANCES=
+export MIN_CLUSTER_INSTANCES=
 export AWS_SSH_KEY_NAME=""
 export HAPROXY_ECR_NAME=""
 export NODE_ECR_NAME=""
+export REDIS_INSTANCE_TYPE=""
+export ECS_INSTANCE_TYPE=""
 export AWS_DEFAULT_REGION=""
+export NODE_ENV="production"
+
+
+
+
+
+
+
+
+
+
 

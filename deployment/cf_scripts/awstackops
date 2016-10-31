@@ -34,6 +34,7 @@ function help {
       REDIS_INSTANCE_TYPE   -> cache.t2.micro
       REDIS_PORT            -> 6379
       MAX_CLUSTER_INSTANCES -> 10
+      MIN_CLUSTER_INSTANCES -> 2
       DDF_REPO_PATH         -> /home/waffle-server/ddf
       DEFAULT_USER_PASSWORD -> 123
       CF_TEMPLATE           -> ../cloudformation/ws_ecs_cluster_2_az_ecache_single_redis.template
@@ -56,6 +57,7 @@ ECS_INSTANCE_TYPE=${ECS_INSTANCE_TYPE:-"t2.micro"}
 REDIS_INSTANCE_TYPE=${REDIS_INSTANCE_TYPE:-"cache.t2.micro"}
 REDIS_PORT=${REDIS_PORT:-"6379"}
 MAX_CLUSTER_INSTANCES=${MAX_CLUSTER_INSTANCES:-"10"}
+MIN_CLUSTER_INSTANCES=${MIN_CLUSTER_INSTANCES:-"2"}
 DDF_REPO_PATH=${DDF_REPO_PATH:-"/home/waffle-server/ddf"}
 DEFAULT_USER_PASSWORD=${DEFAULT_USER_PASSWORD:-"123"}
 
@@ -127,8 +129,10 @@ ParameterKey=InstanceType,ParameterValue=${ECS_INSTANCE_TYPE} \
 ParameterKey=InstanceTypeECacheRedis,ParameterValue=${REDIS_INSTANCE_TYPE} \
 ParameterKey=RedisPort,ParameterValue=${REDIS_PORT} \
 ParameterKey=MaxClusterInstances,ParameterValue=${MAX_CLUSTER_INSTANCES} \
+ParameterKey=MinClusterInstances,ParameterValue=${MIN_CLUSTER_INSTANCES} \
 ParameterKey=MongoDBUrl,ParameterValue=\"${MONGODB_URL}\" \
 ParameterKey=NewRelicKey,ParameterValue=${NEWRELIC_KEY} \
+ParameterKey=NodeEnv,ParameterValue=${NODE_ENV} \
 ParameterKey=DdfRepoPath,ParameterValue=${DDF_REPO_PATH} \
 ParameterKey=DefaultUserPassword,ParameterValue=${DEFAULT_USER_PASSWORD}"
 
