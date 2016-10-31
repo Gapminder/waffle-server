@@ -11,7 +11,7 @@ function objSerializer(obj) {
 }
 
 module.exports = bunyan.createLogger({
-  name: 'WAFFLE_SERVER',
+  name: `WS_${config.LOG_MARKER}`,
   serializers: _.extend({obj: objSerializer}, bunyan.stdSerializers),
   streams: [
     {
