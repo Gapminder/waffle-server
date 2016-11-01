@@ -58,8 +58,7 @@ function parseFilename(filename, externalContext) {
     throw Error(`file '${filename}' doesn't have any dimensions.`);
   }
 
-  logger.info(`** parsed measures: ${_.keys(measures)}`);
-  logger.info(`** parsed dimensions: ${_.keys(dimensions)}`);
+  logger.info(`** parsed measures: ${_.keys(measures)}`, `** parsed dimensions: ${_.keys(dimensions)}`);
 
   return {measures, dimensions};
 }
@@ -189,14 +188,14 @@ function mapAndStoreDatapointsToDb(datapointsFromSameFile, externalContext) {
 }
 
 function getMeasureDimensionFromFilename(filename) {
-  const parsedFileName = filename.replace(/^ddf--(\w*)--|\.csv$/g, '');
+  const parsedFileName = _.replace(filename, /^ddf--(\w*)--|\.csv$/g, '');
+  const parsedEntries = _.split(parsedFileName, '--by--');
+  const measures = _.chain(parsedEntries).first().split('--').value();
 
-  const parsedEntries = parsedFileName.split('--by--');
-  const measures = _.first(parsedEntries).split('--');
   const dimensions = _.chain(parsedEntries)
     .last()
     .split('--')
-    .map(dimension => _.first(dimension.split('-')))
+    .map(dimension => _.chain(dimension).split('-').first().value())
     .value();
 
   return {

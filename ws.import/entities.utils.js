@@ -11,26 +11,23 @@ module.exports = {
 function parseFilename(filename, externalContext) {
   logger.info(`** parse filename '${filename}'`);
 
-  const parsedFilename = getDomainAndSetsFromFilename(filename);
-  const domainGids = [parsedFilename.domain];
-  const setGids = parsedFilename.sets;
-  const domains = _.pick(externalContext.concepts, domainGids);
+  const {domain: domainGid, sets: setGids} = getDomainAndSetsFromFilename(filename);
+  const domains = _.pick(externalContext.concepts, [domainGid]);
   const sets = _.pick(externalContext.concepts, setGids);
 
   if (_.isEmpty(domains)) {
     throw Error(`file '${filename}' doesn't have any domain.`);
   }
 
-  logger.info(`** parsed domain: ${_.keys(domains)}`);
-  logger.info(`** parsed set: ${_.keys(sets)}`);
+  logger.info(`** parsed domain: ${_.keys(domains)}`, `** parsed set: ${_.keys(sets)}`);
 
   return {domains, sets};
 }
 
 function getDomainAndSetsFromFilename(filename) {
-  const parsedFileName = filename.replace(/^ddf--(\w*)--|\.csv$/g, '')
-  const parsedEntries = parsedFileName.split('--');
-  const domain = _.first(parsedEntries);
+  const parsedFileName = _.replace(filename, /^ddf--(\w*)--|\.csv$/g, '');
+  const parsedEntries = _.split(parsedFileName, '--');
+  const domain = _.head(parsedEntries);
   const sets = _.tail(parsedEntries);
 
   return {

@@ -67,7 +67,7 @@ ConceptsRepository.prototype.findAll = function (onFound) {
   return Concepts.find(countQuery).lean().exec(onFound);
 };
 
-ConceptsRepository.prototype.addTranslationsForGivenProperties = function (properties, context) {
+ConceptsRepository.prototype.addTranslationsForGivenProperties = function (properties, context, done) {
   const subEntityQuery = {
     gid: properties.concept
   };
@@ -81,7 +81,7 @@ ConceptsRepository.prototype.addTranslationsForGivenProperties = function (prope
     }
   };
 
-  return Concepts.update(query, updateQuery).exec();
+  return Concepts.update(query, updateQuery).exec(done);
 };
 
 //TODO: Move this in utils that should be common across all repositories

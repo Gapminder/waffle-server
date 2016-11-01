@@ -5,13 +5,16 @@ const async = require('async');
 const validator = require('validator');
 const ddfTimeUtils = require('ddf-time-utils');
 
+const Converter = require('csvtojson').Converter;
+
 const RESERVED_PROPERTIES = ['properties', 'dimensions', 'subsetOf', 'from', 'to', 'originId', 'gid', 'domain', 'type', 'languages'];
 
 module.exports = {
   activateLifecycleHook,
   isJson,
   isPropertyReserved,
-  parseProperties
+  parseProperties,
+  readCsvFile
 };
 
 function activateLifecycleHook(hookName) {
@@ -61,4 +64,9 @@ function toInternalTimeForm(value) {
     millis: _.get(timeDescriptor, 'time'),
     timeType: _.get(timeDescriptor, 'type')
   };
+}
+
+function readCsvFile(filepath) {
+  return hi(fs.createReadStream(filepath, 'utf-8')
+    .pipe(new Converter({constructResult: false}, {objectMode: true})));
 }

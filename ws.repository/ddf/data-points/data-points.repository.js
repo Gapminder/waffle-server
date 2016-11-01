@@ -53,7 +53,7 @@ DataPointsRepository.prototype.closeDatapointByMeasureAndDimensionsAndValue = fu
     .exec(onDatapointClosed);
 };
 
-DataPointsRepository.prototype.addTranslationsForGivenProperties = function (properties, context) {
+DataPointsRepository.prototype.addTranslationsForGivenProperties = function (properties, context, done) {
   const dimensionProperties = _.pick(properties, _.keys(context.dimensions));
   const measureProperties = _.pick(properties, _.keys(context.measures));
 
@@ -70,7 +70,7 @@ DataPointsRepository.prototype.addTranslationsForGivenProperties = function (pro
     }
   };
 
-  return DataPoints.update(query, updateQuery, {multi: true}).exec();
+  return DataPoints.update(query, updateQuery, {multi: true}).exec(done);
 };
 
 DataPointsRepository.prototype.findStats = function (params, onDatapointsFound) {

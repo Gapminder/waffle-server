@@ -4,9 +4,8 @@ const _ = require('lodash');
 const hi = require('highland');
 const fs = require('fs');
 
-const Converter = require('csvtojson').Converter;
-
 const logger = require('../ws.config/log');
+const ddfUtils = require('./import-ddf.utils');
 const constants = require('../ws.utils/constants');
 const datapointsUtils = require('./datapoints.utils');
 
@@ -58,7 +57,7 @@ function createDatapoints(externalContextFrozen) {
         .map(segregatedEntities => ({filename, measures, dimensions, segregatedEntities}));
     })
     .map(context => {
-      return readCsvFile(externalContextFrozen.resolvePath(context.filename), {})
+      return ddfUtils.readCsvFile(externalContextFrozen.resolvePath(context.filename), {})
         .map(datapoint => ({datapoint, context}));
     })
     .parallel(MONGODB_DOC_CREATION_THREADS_AMOUNT)
@@ -68,9 +67,4 @@ function createDatapoints(externalContextFrozen) {
     });
 
   return saveDatapointsAndEntitiesFoundInThem(datapointsAndFoundEntitiesStream);
-}
-
-function readCsvFile(filepath) {
-  return hi(fs.createReadStream(filepath, 'utf-8')
-    .pipe(new Converter({constructResult: false}, {objectMode: true})));
 }

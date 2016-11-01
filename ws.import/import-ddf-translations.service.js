@@ -3,12 +3,14 @@
 const fs = require('fs');
 const _ = require('lodash');
 const hi = require('highland');
+
 const logger = require('../ws.config/log');
+const ddfUtils = require('./import-ddf.utils');
 const translationsUtils = require('./translations.utils');
 
-module.exports = importTranslations_Hi;
+module.exports = importTranslations;
 
-function importTranslations_Hi(externalContext, done) {
+function importTranslations(externalContext, done) {
   logger.info('start process creating translations');
 
   const externalContextFrozen = Object.freeze(_.pick(externalContext, [
@@ -34,7 +36,7 @@ function importTranslations_Hi(externalContext, done) {
       return translationsUtils.parseFilename(filename, parsedLanguages, externalContextFrozen);
     })
     .flatMap((context) => {
-      return translationsUtils.readCsvFile_Hi(externalContextFrozen.resolvePath(context.filename), {})
+      return ddfUtils.readCsvFile(externalContextFrozen.resolvePath(context.filename), {})
         .map(row => ({row, context}));
     })
     .map(({row, context}) => {
