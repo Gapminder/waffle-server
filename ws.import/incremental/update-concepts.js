@@ -94,8 +94,7 @@ function createConcepts(conceptChanges) {
   return (pipe, done) => {
     let concepts = _.map(conceptChanges, mappers.mapDdfConceptsToWsModel(
       pipe.external.transaction.createdAt,
-      pipe.external.dataset._id,
-      pipe.external.transaction._id
+      pipe.external.dataset._id
     ));
 
     let uniqConcepts = _.uniqBy(concepts, 'gid');

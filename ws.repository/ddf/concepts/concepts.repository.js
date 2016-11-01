@@ -105,7 +105,6 @@ ConceptsRepository.prototype.findAllPopulated = function (done) {
     }
   })
     .populate('dataset')
-    .populate('transaction')
     .lean()
     .exec(done);
 };

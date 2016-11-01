@@ -440,12 +440,6 @@ function mapDdfConceptsToWsModel(pipe) {
       title: _entry.name || _entry.title,
       type: (_entry.concept_type === 'time') ? 'entity_domain' : _entry.concept_type,
 
-      tags: _entry.tags,
-      tooltip: _entry.tooltip,
-      indicatorUrl: _entry.indicator_url,
-      color: _entry.color,
-      unit: _entry.unit,
-      scales: _entry.scales,
       properties: _entry,
 
       domain: null,
@@ -455,8 +449,7 @@ function mapDdfConceptsToWsModel(pipe) {
       sources: [pipe.filename],
       from: pipe.transaction.createdAt,
       to: constants.MAX_VERSION,
-      dataset: pipe.dataset._id,
-      transaction: pipe.transaction._id
+      dataset: pipe.dataset._id
     };
   };
 }
@@ -498,8 +491,7 @@ function mapDdfEntityToWsModel(pipe) {
       sets: resolvedSets,
 
       from: pipe.transaction.createdAt,
-      dataset: pipe.dataset._id,
-      transaction: pipe.transaction._id
+      dataset: pipe.dataset._id
     };
   };
 }
