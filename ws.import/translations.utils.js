@@ -17,56 +17,14 @@ const conceptsRepository = require('../ws.repository/ddf/concepts/concepts.repos
 
 const translationsPattern = /^ddf--translation--(([a-z]{2}-[a-z]{2,})|([a-z]{2,}))--/;
 
-module.exports = importTranslations_Hi;
+module.exports = {
+  parseFilename,
+  readCsvFile_Hi,
+  createFoundTranslation,
+  updateTransactionLanguages,
 
-function importTranslations_Hi(externalContext, done) {
-  logger.info('start process creating translations');
-
-  const externalContextFrozen = Object.freeze(_.pick(externalContext, [
-    'pathToDdfFolder',
-    'concepts',
-    'entities',
-    'transaction',
-    'dataset',
-    'resolvePath'
-  ]));
-  const parsedLanguages = new Set();
-
-  const readdir = hi.wrapCallback(fs.readdir);
-
-  return readdir(externalContextFrozen.pathToDdfFolder)
-    .flatMap(filenames => {
-      return hi(filenames);
-    })
-    .filter(filename => {
-      return translationsPattern.test(filename)
-    })
-    .map(filename => {
-      return parseFilename(filename, parsedLanguages, externalContextFrozen);
-    })
-    .flatMap((context) => {
-      return readCsvFile_Hi(externalContextFrozen.resolvePath(context.filename), {})
-        .map(row => ({row, context}));
-    })
-    .map(({row, context}) => {
-      return hi(createFoundTranslation(row, context, externalContextFrozen));
-    })
-    .errors(error => {
-      logger.error(error);
-      return done(error);
-    })
-    .done(() => {
-      return updateTransactionLanguages(parsedLanguages, externalContextFrozen, (error) => {
-        if (error) {
-          return done(error);
-        }
-
-        logger.info('finished process creating translations');
-
-        return done(null, externalContext);
-      });
-    });
-}
+  translationsPattern
+};
 
 function parseFilename(filename, languages, externalContext) {
   logger.info(`** parse filename '${filename}'`);

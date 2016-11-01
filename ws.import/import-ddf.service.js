@@ -4,7 +4,7 @@ const async = require('async');
 
 const ddfImportUtils = require('./import-ddf.utils');
 const createDatasetIndex = require('./import-dataset-index.service');
-const importTranslations = require('./import-translations.service');
+const importTranslations = require('./import-ddf-translations.service');
 
 const defaultEntityGroupTypes = ['entity_domain', 'entity_set', 'time', 'age'];
 const defaultMeasureTypes = ['measure'];

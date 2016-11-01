@@ -3,8 +3,8 @@
 const fs = require('fs');
 const _ = require('lodash');
 const hi = require('highland');
-const logger = require('../../ws.config/log');
-const translationsUtils = require('../translations.utils');
+const logger = require('../ws.config/log');
+const translationsUtils = require('./translations.utils');
 
 module.exports = importTranslations_Hi;
 
@@ -12,27 +12,29 @@ function importTranslations_Hi(externalContext, done) {
   logger.info('start process creating translations');
 
   const externalContextFrozen = Object.freeze(_.pick(externalContext, [
-    'allChanges',
+    'pathToDdfFolder',
     'concepts',
-    'timeConcepts',
+    'entities',
     'transaction',
     'dataset',
+    'resolvePath'
   ]));
   const parsedLanguages = new Set();
 
-  return hi(_.keys(externalContextFrozen.allChanges))
+  const readdir = hi.wrapCallback(fs.readdir);
+
+  return readdir(externalContextFrozen.pathToDdfFolder)
+    .flatMap(filenames => {
+      return hi(filenames);
+    })
     .filter(filename => {
       return translationsUtils.translationsPattern.test(filename)
     })
     .map(filename => {
-      return {filename, fileChanges: externalContextFrozen.allChanges[filename].body};
-    })
-    .flatMap(({filename, fileChanges}) => {
-      const supplies = translationsUtils.parseFilename(filename, parsedLanguages, externalContextFrozen);
-      return _.assign({}, supplies, {fileChanges});
+      return translationsUtils.parseFilename(filename, parsedLanguages, externalContextFrozen);
     })
     .flatMap((context) => {
-      return hi(context.fileChanges)
+      return translationsUtils.readCsvFile_Hi(externalContextFrozen.resolvePath(context.filename), {})
         .map(row => ({row, context}));
     })
     .map(({row, context}) => {
