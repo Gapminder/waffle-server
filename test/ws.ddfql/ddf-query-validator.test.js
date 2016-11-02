@@ -26,11 +26,6 @@ const concepts = [
 describe('ddf query validator', () => {
   it('should return error message: Invalid DDFQL-query. Validation of Where Clause: contain \'.\'', () => {
     const ddfql = {
-      "select": {
-        "key": ["company"],
-        "value": ["company", "name", "is--english_speaking"]
-      },
-      "from": "entities",
       "where": {
         "$and": [
           {
@@ -48,21 +43,6 @@ describe('ddf query validator', () => {
 
   it('should return error message: Invalid DDFQL-query. Validation of Join Clause: does not contain \'$\'', () => {
     const ddfql = {
-      "select": {
-        "key": ["company"],
-        "value": ["company", "name", "is--english_speaking"]
-      },
-      "from": "entities",
-      "where": {
-        "$and": [
-          {
-            "$or":[
-              {"domain": {"$in": ["17a3470d3a8c9b37009b9bf9"]}},
-              {"sets": {"$in": ["17a3470d3a8c9b37009b9bf9"]}}
-            ]
-          }
-        ]
-      },
       "join": {
         "geo": {
           key: "geo",
@@ -118,26 +98,6 @@ describe('ddf query validator', () => {
       "select": {
         "value": ["company", "name", "is--english_speaking"]
       },
-      "from": "entities",
-      "where": {
-        "$and": [
-          {
-            "$or":[
-              {"domain": {"$in": ["17a3470d3a8c9b37009b9bf9"]}},
-              {"sets": {"$in": ["17a3470d3a8c9b37009b9bf9"]}}
-            ]
-          }
-        ]
-      },
-      "join": {
-        "$geo": {
-          key: "geo",
-          where: {
-            "is--country": true,
-            "latitude": { "$lte": 0 },
-          }
-        }
-      },
     };
 
     const message = ddfQueryValidator.validateDdfQuery(ddfql, concepts).messages;
@@ -154,25 +114,6 @@ describe('ddf query validator', () => {
         "value": ["company", "name", "english_speaking", "geo", "time", "landlocked"]
       },
       "from": "datapoints",
-      "where": {
-        "$and": [
-          {
-            "$or":[
-              {"domain": {"$in": ["17a3470d3a8c9b37009b9bf9"]}},
-              {"sets": {"$in": ["17a3470d3a8c9b37009b9bf9"]}}
-            ]
-          }
-        ]
-      },
-      "join": {
-        "$geo": {
-          key: "geo",
-          where: {
-            "is--country": true,
-            "latitude": { "$lte": 0 },
-          }
-        }
-      },
     };
 
     const message = ddfQueryValidator.validateDdfQuery(ddfql, concepts).messages;
@@ -188,26 +129,7 @@ describe('ddf query validator', () => {
         "value": ["company", "name", "english_speaking", "geo"]
       },
       "from": "datapoints",
-      "where": {
-        "$and": [
-          {
-            "$or":[
-              {"domain": {"$in": ["17a3470d3a8c9b37009b9bf9"]}},
-              {"sets": {"$in": ["17a3470d3a8c9b37009b9bf9"]}}
-            ]
-          }
-        ]
-      },
       "order_by": "life_expectancy",
-      "join": {
-        "$geo": {
-          key: "geo",
-          where: {
-            "is--country": true,
-            "latitude": { "$lte": 0 },
-          }
-        }
-      },
     };
 
     const message = ddfQueryValidator.validateDdfQuery(ddfql, concepts).messages;
@@ -223,26 +145,7 @@ describe('ddf query validator', () => {
         "value": ["company", "name", "english_speaking", "geo"]
       },
       "from": "datapoints",
-      "where": {
-        "$and": [
-          {
-            "$or":[
-              {"domain": {"$in": ["17a3470d3a8c9b37009b9bf9"]}},
-              {"sets": {"$in": ["17a3470d3a8c9b37009b9bf9"]}}
-            ]
-          }
-        ]
-      },
       "order_by": [,],
-      "join": {
-        "$geo": {
-          key: "geo",
-          where: {
-            "is--country": true,
-            "latitude": { "$lte": 0 },
-          }
-        }
-      },
     };
 
     const message = ddfQueryValidator.validateDdfQuery(ddfql, concepts).messages[0];
@@ -258,26 +161,7 @@ describe('ddf query validator', () => {
         "value": ["company", "name", "english_speaking", "geo"]
       },
       "from": "datapoints",
-      "where": {
-        "$and": [
-          {
-            "$or":[
-              {"domain": {"$in": ["17a3470d3a8c9b37009b9bf9"]}},
-              {"sets": {"$in": ["17a3470d3a8c9b37009b9bf9"]}}
-            ]
-          }
-        ]
-      },
       "order_by": [["",""]],
-      "join": {
-        "$geo": {
-          key: "geo",
-          where: {
-            "is--country": true,
-            "latitude": { "$lte": 0 },
-          }
-        }
-      },
     };
 
     const message = ddfQueryValidator.validateDdfQuery(ddfql, concepts).messages;
@@ -296,26 +180,7 @@ describe('ddf query validator', () => {
         "value": ["company", "name", "english_speaking", "geo"]
       },
       "from": "datapoints",
-      "where": {
-        "$and": [
-          {
-            "$or":[
-              {"domain": {"$in": ["17a3470d3a8c9b37009b9bf9"]}},
-              {"sets": {"$in": ["17a3470d3a8c9b37009b9bf9"]}}
-            ]
-          }
-        ]
-      },
       "order_by": [{"": "asc"},{"": "top"}],
-      "join": {
-        "$geo": {
-          key: "geo",
-          where: {
-            "is--country": true,
-            "latitude": { "$lte": 0 },
-          }
-        }
-      },
     };
 
     const message = ddfQueryValidator.validateDdfQuery(ddfql, concepts).messages;
