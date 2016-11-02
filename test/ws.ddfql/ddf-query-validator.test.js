@@ -1,6 +1,3 @@
-/**
- * Created by tvaleriy on 10/25/16.
- */
 'use strict';
 
 const chai = require('chai');
