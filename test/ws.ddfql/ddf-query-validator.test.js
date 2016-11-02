@@ -24,7 +24,7 @@ const concepts = [
 ];
 
 describe('ddf query validator', () => {
-  it('Should return error message: Invalid DDFQL-query. Validation of Where Clause: contain \'.\'', () => {
+  it('should return error message: Invalid DDFQL-query. Validation of Where Clause: contain \'.\'', () => {
     const ddfql = {
       "select": {
         "key": ["company"],
@@ -39,10 +39,14 @@ describe('ddf query validator', () => {
         ]
       }
     };
+
     const message = ddfQueryValidator.validateDdfQuery(ddfql, concepts).messages;
-    expect(message.toString()).to.contain('Invalid DDFQL-query. Validation of Where Clause: contain \'.\' in');
+    const expectedMessage = 'Invalid DDFQL-query. Validation of Where Clause: contain \'.\' in';
+
+    expect(message.toString()).to.contain(expectedMessage);
   });
-  it('Should return error message: Invalid DDFQL-query. Validation of Join Clause: does not contain \'$\'', () => {
+
+  it('should return error message: Invalid DDFQL-query. Validation of Join Clause: does not contain \'$\'', () => {
     const ddfql = {
       "select": {
         "key": ["company"],
@@ -69,10 +73,14 @@ describe('ddf query validator', () => {
         }
       },
     };
+
     const message = ddfQueryValidator.validateDdfQuery(ddfql, concepts).messages;
-    expect(message.toString()).to.contain('Invalid DDFQL-query. Validation of Join Clause: does not contain \'$\' in ');
+    const expectedMessage = 'Invalid DDFQL-query. Validation of Join Clause: does not contain \'$\' in ';
+
+    expect(message.toString()).to.contain(expectedMessage);
   });
-  it('This query should be validated as valid:true', () => {
+
+  it('should validate query without errors', () => {
     const ddfql = {
       "select": {
         "key": ["company"],
@@ -99,10 +107,13 @@ describe('ddf query validator', () => {
         }
       },
     };
+
     const message = ddfQueryValidator.validateDdfQuery(ddfql, concepts);
+
     expect(message.valid).to.be.true;
   });
-  it('Should return error message: Invalid DDFQL-query. Validation of Select Clause: does not contain \'key\'', () => {
+
+  it('should return error message: Invalid DDFQL-query. Validation of Select Clause: does not contain \'key\'', () => {
     const ddfql = {
       "select": {
         "value": ["company", "name", "is--english_speaking"]
@@ -128,11 +139,15 @@ describe('ddf query validator', () => {
         }
       },
     };
+
     const message = ddfQueryValidator.validateDdfQuery(ddfql, concepts).messages;
-    expect(message.toString()).to.contain('Invalid DDFQL-query. Validation of Select Clause: does not contain \'key\'');
+    const expectedMessage = 'Invalid DDFQL-query. Validation of Select Clause: does not contain \'key\'';
+
+    expect(message.toString()).to.contain(expectedMessage);
   });
-  it('Should return error message: Invalid DDFQL-query. Validation of Select Clause: \'value\' ' +
-    'contains more than 5 measures, please try again with less amount', () => {
+
+  it(`should return error message: Invalid DDFQL-query. Validation of Select Clause: \'value\' 
+  contains more than 5 measures, please try again with less amount`, () => {
     const ddfql = {
       "select": {
         "key": ["company"],
@@ -159,8 +174,156 @@ describe('ddf query validator', () => {
         }
       },
     };
+
     const message = ddfQueryValidator.validateDdfQuery(ddfql, concepts).messages;
-    expect(message.toString()).to.contain('Invalid DDFQL-query. Validation of Select Clause: \'value\' ' +
-      'contains more than 5 measures, please try again with less amount');
+    const expectedMessage = 'Invalid DDFQL-query. Validation of Select Clause: \'value\' contains more than 5 measures, please try again with less amount';
+
+    expect(message.toString()).to.contain(expectedMessage);
   });
+
+  it('should return error message: order_by should contain an array', () => {
+    const ddfql = {
+      "select": {
+        "key": ["company"],
+        "value": ["company", "name", "english_speaking", "geo"]
+      },
+      "from": "datapoints",
+      "where": {
+        "$and": [
+          {
+            "$or":[
+              {"domain": {"$in": ["17a3470d3a8c9b37009b9bf9"]}},
+              {"sets": {"$in": ["17a3470d3a8c9b37009b9bf9"]}}
+            ]
+          }
+        ]
+      },
+      "order_by": "life_expectancy",
+      "join": {
+        "$geo": {
+          key: "geo",
+          where: {
+            "is--country": true,
+            "latitude": { "$lte": 0 },
+          }
+        }
+      },
+    };
+
+    const message = ddfQueryValidator.validateDdfQuery(ddfql, concepts).messages;
+    const expectedMessage = 'Invalid DDFQL-query. Validation of order_by clause: order_by should contain an array.';
+
+    expect(message.toString()).to.contain(expectedMessage);
+  });
+
+  it('should return error message: order_by should not contain empty values', () => {
+    const ddfql = {
+      "select": {
+        "key": ["company"],
+        "value": ["company", "name", "english_speaking", "geo"]
+      },
+      "from": "datapoints",
+      "where": {
+        "$and": [
+          {
+            "$or":[
+              {"domain": {"$in": ["17a3470d3a8c9b37009b9bf9"]}},
+              {"sets": {"$in": ["17a3470d3a8c9b37009b9bf9"]}}
+            ]
+          }
+        ]
+      },
+      "order_by": [,],
+      "join": {
+        "$geo": {
+          key: "geo",
+          where: {
+            "is--country": true,
+            "latitude": { "$lte": 0 },
+          }
+        }
+      },
+    };
+
+    const message = ddfQueryValidator.validateDdfQuery(ddfql, concepts).messages[0];
+    const expectedMessage = 'Invalid DDFQL-query. Validation of order_by clause: order_by should not contain empty values';
+
+    expect(message.toString()).to.contain(expectedMessage);
+  });
+
+  it('should return error message: order_by cannot contain arrays as its elements', () => {
+    const ddfql = {
+      "select": {
+        "key": ["company"],
+        "value": ["company", "name", "english_speaking", "geo"]
+      },
+      "from": "datapoints",
+      "where": {
+        "$and": [
+          {
+            "$or":[
+              {"domain": {"$in": ["17a3470d3a8c9b37009b9bf9"]}},
+              {"sets": {"$in": ["17a3470d3a8c9b37009b9bf9"]}}
+            ]
+          }
+        ]
+      },
+      "order_by": [["",""]],
+      "join": {
+        "$geo": {
+          key: "geo",
+          where: {
+            "is--country": true,
+            "latitude": { "$lte": 0 },
+          }
+        }
+      },
+    };
+
+    const message = ddfQueryValidator.validateDdfQuery(ddfql, concepts).messages;
+    const expectedMessage1 = 'Invalid DDFQL-query. Validation of order_by clause: order_by cannot contain arrays as its elements';
+    const expectedMessage2 = 'Invalid DDFQL-query. Validation of order_by clause: object in order_by clause should contain only one key. Was ["0","1"]';
+
+    expect(message[0].toString()).to.contain(expectedMessage1);
+    expect(message[1].toString()).to.contain(expectedMessage2);
+  });
+
+  it(`should return error message: object in order_by clause should contain only following sort directions: 
+  "asc", "desc"`, () => {
+    const ddfql = {
+      "select": {
+        "key": ["company"],
+        "value": ["company", "name", "english_speaking", "geo"]
+      },
+      "from": "datapoints",
+      "where": {
+        "$and": [
+          {
+            "$or":[
+              {"domain": {"$in": ["17a3470d3a8c9b37009b9bf9"]}},
+              {"sets": {"$in": ["17a3470d3a8c9b37009b9bf9"]}}
+            ]
+          }
+        ]
+      },
+      "order_by": [{"": "asc"},{"": "top"}],
+      "join": {
+        "$geo": {
+          key: "geo",
+          where: {
+            "is--country": true,
+            "latitude": { "$lte": 0 },
+          }
+        }
+      },
+    };
+
+    const message = ddfQueryValidator.validateDdfQuery(ddfql, concepts).messages;
+    const expectedMessage1 = 'Invalid DDFQL-query. Validation of order_by clause: order_by clause should contain only properties from select.key and select.value.';
+    const expectedMessage2 = 'Invalid DDFQL-query. Validation of order_by clause: object in order_by clause should contain only following sort directions: \'asc\', \'desc\'.';
+
+    expect(message[0].toString()).to.contain(expectedMessage1);
+    expect(message[1].toString()).to.contain(expectedMessage2);
+  });
+
 });
