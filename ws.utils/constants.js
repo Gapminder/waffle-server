@@ -3,6 +3,7 @@
 const CONCEPTS = 'concepts';
 const ENTITIES = 'entities';
 const DATAPOINTS = 'datapoints';
+const TRANSLATIONS = 'translations';
 
 module.exports = {
   //versioning
@@ -13,7 +14,7 @@ module.exports = {
 
   //cache
   DDF_REDIS_CACHE_LIFETIME: -1,
-  DDF_REDIS_CACHE_NAME_TRANSLATIONS: 'translations',
+  DDF_REDIS_CACHE_NAME_TRANSLATIONS: TRANSLATIONS,
   DDF_REDIS_CACHE_NAME_ENTITIES: ENTITIES,
   DDF_REDIS_CACHE_NAME_CONCEPTS: CONCEPTS,
   DDF_REDIS_CACHE_NAME_DATAPOINTS: DATAPOINTS,
@@ -22,6 +23,7 @@ module.exports = {
   CONCEPTS,
   ENTITIES,
   DATAPOINTS,
+  TRANSLATIONS,
   SCHEMA: 'schema',
 
   ASC_SORTING_DIRECTION: 'asc',
@@ -34,10 +36,6 @@ module.exports = {
   CONCEPT_TYPE_MEASURE: 'measure',
   CONCEPT_TYPE_ENTITY_DOMAIN: 'entity_domain',
   CONCEPT_TYPE_ENTITY_SET: 'entity_set',
-
-  TRANSLATION_SEPARATOR: ' ~ ',
-  TRANSLATION_CHUNK_LIMIT: 2000,
-  TRANSLATION_LANGUAGES: ['ru', 'uk', 'sv'],
 
   EXCLUDED_QUERY_PARAMS: ['dataset', 'version', 'v', 'format', 'no-compression', 'key', 'geo.cat', 'force'],
 

@@ -12,7 +12,7 @@ let Schema = mongoose.Schema;
  * @property {String} path - path (url or local) to Data Set (if exists)
  * @property {String} commit - hash of commit on remote repo (if exists)
  *
- * @property {Object} defaultLanguage - for Translation collection
+ * @property {Object} defaultLanguage - when we don't have translation for certain language, will use this language by default
  * @property {Object} metadata - any metadata related to Data Set
  *
  * @property {Array<Number>} metadata - any metadata related to Data Set

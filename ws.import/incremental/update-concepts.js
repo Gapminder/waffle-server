@@ -19,13 +19,14 @@ module.exports = (pipe, done) => {
   const create = conceptChanges.body.create;
   const change = conceptChanges.body.change;
   const update = conceptChanges.body.update;
+  const translate = conceptChanges.body.translate;
   const removedProperties = conceptChanges.header.remove;
 
   return async.waterfall([
     async.constant({external: pipe, internal: {}}),
     processRemovedConcepts(remove),
     processCreatedConcepts(create),
-    processUpdatedConcepts(mergeConceptModifications(change, update), removedProperties)
+    processUpdatedConcepts(mergeConceptModifications(change, update, translate), removedProperties)
   ], error => {
     return done(error, pipe);
   });

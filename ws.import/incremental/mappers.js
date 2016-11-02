@@ -14,7 +14,7 @@ module.exports = {
 };
 
 function mapDdfDataPointToWsModel(context) {
-  return function (entry) {
+  return function (entry, options) {
     let isValidEntry = _.chain(entry)
       .values()
       .every((value, key) => !_.isNil(value) || key !== 'originId')
@@ -47,7 +47,10 @@ function mapDdfDataPointToWsModel(context) {
           value: _.isNaN(datapointValueAsNumber) ? datapointValue : datapointValueAsNumber,
           measure: context.measures[measureGid].originId,
           dimensions: dimensions,
-          originId: entry.originId,
+
+          properties: entry,
+          originId: _.get(options, 'originId', null),
+          languages: _.get(options, 'languages', null),
 
           isNumeric: _.isNumber(entry[measureGid]),
           from: context.transaction.createdAt,
@@ -79,7 +82,7 @@ function mapDdfInDatapointsFoundEntityToWsModel(datapoint, concept, domain, cont
 }
 
 function mapDdfConceptsToWsModel(version, datasetId, transactionId) {
-  return entry => {
+  return (entry, options) => {
     let transformedEntry = transformPropsToJsonWherePossible(entry);
 
     return {
@@ -94,7 +97,9 @@ function mapDdfConceptsToWsModel(version, datasetId, transactionId) {
       color: transformedEntry.color,
       unit: transformedEntry.unit,
       scales: transformedEntry.scales,
+
       properties: transformedEntry,
+      languages: options.languages,
 
       domain: null,
       subsetOf: [],

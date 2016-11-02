@@ -14,11 +14,11 @@ const constants = require('../../ws.utils/constants');
 const ddfImportUtils = require('../import-ddf.utils');
 
 const createDatasetIndex = require('./../import-dataset-index.service');
-const translationsService = require('./../import-translations.service');
 const entitiesRepositoryFactory = require('../../ws.repository/ddf/entities/entities.repository');
 const conceptsRepositoryFactory = require('../../ws.repository/ddf/concepts/concepts.repository');
 const updateConcepts = require('./update-concepts');
 const updateDatapoints = require('./update-datapoints');
+const updateTranslations = require('./update-translations');
 
 const LIMIT_NUMBER_PROCESS = 10;
 
@@ -60,7 +60,7 @@ module.exports = function (options, done) {
     getAllPreviousConcepts,
     processEntitiesChanges,
     updateDatapoints,
-    // translationsService.processTranslations,
+    // updateTranslations,
     createDatasetIndex,
     common.closeTransaction
   ], (updateError, pipe) => {
@@ -190,7 +190,8 @@ function __closeRemovedAndUpdatedEntities(pipe, cb) {
   return async.parallel([
     ___updateRemovedEntities(pipe.fileChanges.remove, pipe),
     ___updateRemovedEntities(pipe.fileChanges.update, pipe),
-    ___updateRemovedEntities(pipe.fileChanges.change, pipe)
+    ___updateRemovedEntities(pipe.fileChanges.change, pipe),
+    ___updateRemovedEntities(pipe.fileChanges.translate, pipe)
   ], (err) => {
     return cb(err, pipe);
   });
@@ -321,7 +322,7 @@ function ___fakeLoadRawEntities(pipe, done) {
   let _changedClosedEntities = _.omit(closedEntities, removedEntitiesGids);
   let changedClosedEntities = _.mapValues(_changedClosedEntities, (entity) => _.omit(entity, pipe.removedColumns));
 
-  let _mergedChangedEntities = mergeUpdatedAndChangedEntities(pipe.fileChanges.update, pipe.fileChanges.change);
+  let _mergedChangedEntities = mergeUpdatedAndChangedEntities(pipe.fileChanges.update, pipe.fileChanges.change, pipe.fileChanges.translate);
   let mergedChangedEntities = _.merge(changedClosedEntities, _mergedChangedEntities);
 
   let updatedEntities = _.map(mergedChangedEntities, ____formRawEntities(pipe));
@@ -351,12 +352,13 @@ function ___fakeLoadRawEntities(pipe, done) {
 
 function ____formRawEntities(pipe) {
   let mapper = pipe.common.mapDdfEntityToWsModel(pipe);
-  return (entity, entityGid) => {
-    let closedEntity = pipe.closedEntities[entityGid];
-    let originId = closedEntity ? closedEntity.originId : null;
-    let result = _.assign(entity, {originId});
+  return (properties, entityGid) => {
+    const closedEntity = pipe.closedEntities[entityGid];
+    const originId = closedEntity ? closedEntity.originId : null;
+    const languages = closedEntity.languages || null;
+    const context = {originId, languages};
 
-    return mapper(result);
+    return mapper(properties, context);
   };
 }
 

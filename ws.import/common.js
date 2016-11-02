@@ -512,7 +512,7 @@ function mapDdfConceptsToWsModel(pipe) {
 }
 
 function mapDdfEntityToWsModel(pipe) {
-  return (entry) => {
+  return (entry, context) => {
     let gid = getGid(pipe, entry);
     let resolvedColumns = mapResolvedColumns(entry);
     let resolvedSets = mapResolvedSets(pipe, resolvedColumns);
@@ -541,7 +541,9 @@ function mapDdfEntityToWsModel(pipe) {
       properties: _entry,
       parsedProperties: ddfImportUtils.parseProperties(pipe.entityDomain, gid, _entry, pipe.timeConcepts),
 
-      originId: _entry.originId,
+      originId: _.get(context, 'originId', null),
+      languages: _.get(context, 'languages', null),
+
       domain: domainOriginId,
       sets: resolvedSets,
 

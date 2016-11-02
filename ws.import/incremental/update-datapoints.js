@@ -20,7 +20,6 @@ function startDatapointsCreation(externalContext, done) {
 
   const externalContextFrozen = Object.freeze(_.pick(externalContext, [
     'allChanges',
-    'concepts',
     'previousConcepts',
     'concepts',
     'timeConcepts',
@@ -92,7 +91,8 @@ function createDatapoints(externalContextFrozen) {
       const toRawDatapoint = _.curry(formRawDataPoint)(context);
       const updatedDataPoints = _.map(context.fileChanges.update, toRawDatapoint);
       const changedDataPoints = _.map(context.fileChanges.change, toRawDatapoint);
-      return hi(_.concat(context.fileChanges.create, updatedDataPoints, changedDataPoints))
+      const translatedDataPoints = _.map(context.fileChanges.translate, toRawDatapoint);
+      return hi(_.concat(context.fileChanges.create, updatedDataPoints, changedDataPoints, translatedDataPoints))
         .map(datapoint => {
           const entitiesFoundInDatapoint = datapointsUtils.findEntitiesInDatapoint(datapoint, context, externalContextFrozen);
           return {datapoint, entitiesFoundInDatapoint, context};
@@ -110,7 +110,8 @@ function __closeRemovedAndUpdatedDataPoints(pipe, done) {
   return async.parallel([
     ___updateRemovedDataPoints(pipe.fileChanges.remove, pipe),
     ___updateChangedDataPoints(pipe.fileChanges.update, pipe),
-    ___updateChangedDataPoints(pipe.fileChanges.change, pipe)
+    ___updateChangedDataPoints(pipe.fileChanges.change, pipe),
+    ___updateChangedDataPoints(pipe.fileChanges.translate, pipe)
   ], (err) => {
     return done(err, pipe);
   });
@@ -176,7 +177,8 @@ function _____updateDataPoint(pipe, entities, datapoint) {
       measureOriginId: measure.originId,
       dimensionsSize: _.size(pipe.dimensions),
       dimensionsEntityOriginIds: _.map(entities, 'originId'),
-      datapointValue: datapoint[measure.gid]
+      datapointValue: datapoint[measure.gid],
+      languages: _.get(datapoint, 'languages', null)
     };
 
     return datapointsRepositoryFactory.latestExceptCurrentVersion(pipe.dataset._id, pipe.transaction.createdAt)

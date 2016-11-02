@@ -18,7 +18,6 @@ const MODELS_TO_CLEAN = [
   'Datasets',
   'DatasetTransactions',
   'Entities',
-  'Translations',
   'DatasetIndex'
 ];
 
