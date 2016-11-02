@@ -175,7 +175,7 @@ function _createConcepts(pipe, done) {
   );
 
   function __createConcepts(chunk, cb) {
-    return conceptsRepositoryFactory.versionAgnostic(pipe.dataset._id).create(chunk, cb);
+    return conceptsRepositoryFactory.versionAgnostic().create(chunk, cb);
   }
 }
 
@@ -314,7 +314,7 @@ function __storeEntitiesToDb(pipe, done) {
 
   logger.info(`**** store entities from file '${pipe.filename}' to db`);
 
-  const entitiesRepository = entitiesRepositoryFactory.versionAgnostic(pipe.dataset._id);
+  const entitiesRepository = entitiesRepositoryFactory.versionAgnostic();
 
   return async.eachLimit(
     _.chunk(pipe.entities, DEFAULT_CHUNK_SIZE),

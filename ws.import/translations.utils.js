@@ -2,7 +2,6 @@
 
 const fs = require('fs');
 const _ = require('lodash');
-const mongoose = require('mongoose');
 
 const common = require('./common');
 const logger = require('../ws.config/log');
@@ -12,6 +11,7 @@ const datapointsUtils = require('./datapoints.utils');
 const datapointsRepository = require('../ws.repository/ddf/data-points/data-points.repository');
 const entitiesRepository = require('../ws.repository/ddf/entities/entities.repository');
 const conceptsRepository = require('../ws.repository/ddf/concepts/concepts.repository');
+const transactionsRepository = require('../ws.repository/ddf/dataset-transactions/dataset-transactions.repository');
 
 const translationsPattern = /^ddf--translation--(([a-z]{2}-[a-z]{2,})|([a-z]{2,}))--/;
 const repositories = {
@@ -56,28 +56,6 @@ function parseFilename(filename, languages, externalContext) {
 }
 
 function createFoundTranslation(properties, context, externalContext) {
-  if (context.translatedModel === constants.DATAPOINTS) {
-    return datapointsRepository
-      .currentVersion(externalContext.dataset._id, externalContext.transaction.createdAt)
-      .addTranslationsForGivenProperties(properties, context);
-  }
-
-  if (context.translatedModel === constants.ENTITIES) {
-    return entitiesRepository
-      .currentVersion(externalContext.dataset._id, externalContext.transaction.createdAt)
-      .addTranslationsForGivenProperties(properties, context);
-  }
-
-  if (context.translatedModel === constants.CONCEPTS) {
-    return conceptsRepository
-      .currentVersion(externalContext.dataset._id, externalContext.transaction.createdAt)
-      .addTranslationsForGivenProperties(properties, context);
-  }
-
-  return;
-}
-
-function createFoundTranslation(properties, context, externalContext) {
   const repository = repositories[context.translatedModel];
   if (!repository) return;
 
@@ -90,16 +68,11 @@ function createFoundTranslationFor(repository, {properties, context, externalCon
     .addTranslationsForGivenProperties(properties, context);
 }
 
-function updateTransactionLanguages(parsedLanguages, externalContext, done) {
-  let languages = [];
+function updateTransactionLanguages(parsedLanguagesSet, externalContext, done) {
+  const options = {
+    transactionId: externalContext.transaction._id,
+    languages: Array.from(parsedLanguagesSet.values())
+  };
 
-  parsedLanguages.forEach(lang =>{
-    languages.push(lang);
-  });
-
-  return mongoose.model('DatasetTransactions').update({_id: externalContext.transaction._id}, {
-    $set: {
-      languages
-    }
-  }).exec(done);
+  return transactionsRepository.setLanguages(options, done);
 }

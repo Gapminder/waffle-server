@@ -105,7 +105,7 @@ function createConcepts(conceptChanges) {
 
     const chunkSize = 100;
 
-    const conceptsRepository = conceptsRepositoryFactory.versionAgnostic(pipe.external.dataset._id);
+    const conceptsRepository = conceptsRepositoryFactory.versionAgnostic();
 
     return async.eachLimit(_.chunk(concepts, chunkSize), constants.LIMIT_NUMBER_PROCESS,
       (chunk, onConceptsChunkCreated) => {

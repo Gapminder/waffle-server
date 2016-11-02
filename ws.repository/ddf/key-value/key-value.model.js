@@ -8,4 +8,4 @@ const KeyValueSchema = new Schema({
   value: {type: Schema.Types.Mixed}
 });
 
-module.exports = mongoose.model('keyValueRepository', KeyValueSchema);
+module.exports = mongoose.model('KeyValue', KeyValueSchema);

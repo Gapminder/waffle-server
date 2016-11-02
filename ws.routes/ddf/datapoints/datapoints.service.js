@@ -132,7 +132,7 @@ function normalizeQueriesToDatapointsByDdfql(pipe, cb) {
 function queryDatapointsByDdfql(pipe, subDatapointQuery, cb) {
   return datapointsRepositoryFactory
     .currentVersion(pipe.dataset._id, pipe.version)
-    .findForGivenMeasuresAndDimensions(subDatapointQuery, (error, datapoints) => {
+    .findByQuery(subDatapointQuery, (error, datapoints) => {
       if (error) {
         return cb(error);
       }
@@ -248,7 +248,7 @@ function getDataPoints(pipe, cb) {
 
   return datapointsRepositoryFactory
     .currentVersion(pipe.dataset._id, pipe.version)
-    .findForGivenMeasuresAndDimensions(subDatapointQuery, (error, datapoints) => {
+    .findByQuery(subDatapointQuery, (error, datapoints) => {
       console.timeEnd('get datapoints');
       if (error) {
         return cb(error);

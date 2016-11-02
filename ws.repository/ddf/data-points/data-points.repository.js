@@ -36,7 +36,8 @@ DataPointsRepository.prototype.rollback = function (versionToRollback, onRolledb
   ], constants.LIMIT_NUMBER_PROCESS, onRolledback);
 };
 
-DataPointsRepository.prototype.findForGivenMeasuresAndDimensions = function(subDatapointQuery, onDatapointsFound) {
+//FIXME: This should be used only for queries that came from normalizer!!!
+DataPointsRepository.prototype.findByQuery = function(subDatapointQuery, onDatapointsFound) {
   const query = this._composeQuery(subDatapointQuery);
 
   return DataPoints.find(query).lean().exec(onDatapointsFound);

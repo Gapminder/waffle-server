@@ -3,7 +3,7 @@
 const _ = require('lodash');
 
 const mongoose = require('mongoose');
-const KeyValue = mongoose.model('keyValueRepository');
+const KeyValue = mongoose.model('KeyValue');
 
 function KeyValueRepository() {
 }

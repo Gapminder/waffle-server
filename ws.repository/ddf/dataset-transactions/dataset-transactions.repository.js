@@ -73,6 +73,10 @@ DatasetTransactionsRepository.prototype.closeTransaction = function ({transactio
   return DatasetTransactions.findOneAndUpdate({_id: transactionId}, {$set: properties}, onClosed);
 };
 
+DatasetTransactionsRepository.prototype.setLanguages = function ({transactionId, languages}, onLanguagesSet) {
+  return DatasetTransactions.update({_id: transactionId}, {$set: {languages}}).exec(onLanguagesSet);
+};
+
 DatasetTransactionsRepository.prototype.establishForDataset = function ({transactionId, datasetId}, onEstablished) {
   if (!transactionId) {
     return onEstablished('TransactionId is required');
