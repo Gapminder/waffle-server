@@ -9,6 +9,10 @@ DatasetIndexRepository.prototype.findByDdfql = function (query, onFound) {
   return DatasetIndex.find(query.where, query.select).lean().exec(onFound);
 };
 
+DatasetIndexRepository.prototype.create = function (indexOrBatchIndexes, onCreated) {
+  return DatasetIndex.create(indexOrBatchIndexes, onCreated);
+};
+
 module.exports = new DatasetIndexRepository();
 
 

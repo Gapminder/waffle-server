@@ -3,9 +3,9 @@
 const _ = require('lodash');
 const fs = require('fs');
 const async = require('async');
-const mongoose = require('mongoose');
 const entitiesRepositoryFactory = require('../ws.repository/ddf/entities/entities.repository.js');
 const datapointsRepositoryFactory = require('../ws.repository/ddf/data-points/data-points.repository.js');
+const indexRepository = require('../ws.repository/ddf/dataset-index/dataset-index.repository');
 
 const datapointUtils = require('./datapoints.utils');
 const common = require('./common');
@@ -228,12 +228,9 @@ function _createDatasetIndex(pipe, done) {
   return async.eachLimit(
     _.chunk(pipe.datasetIndexes, 100),
     constants.LIMIT_NUMBER_PROCESS,
-    __createDatasetIndex,
-    (err) => done(err, pipe));
-
-  function __createDatasetIndex(chunk, cb) {
-    return mongoose.model('DatasetIndex').create(chunk, cb);
-  }
+    indexRepository.create.bind(indexRepository),
+    (err) => done(err, pipe)
+  );
 }
 
 function findEntityOriginIds(pipe, done) {

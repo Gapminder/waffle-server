@@ -2,11 +2,11 @@
 
 const _ = require('lodash');
 const hi = require('highland');
-const mongoose = require('mongoose');
 
 const logger = require('../ws.config/log');
 const mappers = require('./incremental/mappers');
 const entitiesRepositoryFactory = require('../ws.repository/ddf/entities/entities.repository');
+const datapointsRepositoryFactory = require('../ws.repository/ddf/data-points/data-points.repository');
 
 const DEFAULT_CHUNK_SIZE = 1500;
 
@@ -154,7 +154,9 @@ function storeEntitiesToDb(entities) {
   }
 
   logger.info(`** create entities based on data points`);
-  return mongoose.model('Entities').create(entities);
+  return entitiesRepositoryFactory
+    .versionAgnostic()
+    .create(entities);
 }
 
 function saveDatapoints(datapointsByFilename, externalContextFrozen) {
@@ -184,7 +186,7 @@ function mapAndStoreDatapointsToDb(datapointsFromSameFile, externalContext) {
     return toWsDatapoint(datapointWithContext.datapoint);
   });
 
-  return mongoose.model('DataPoints').create(wsDatapoints);
+  return datapointsRepositoryFactory.versionAgnostic().create(wsDatapoints);
 }
 
 function getMeasureDimensionFromFilename(filename) {

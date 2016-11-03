@@ -32,6 +32,17 @@ VersionedModelRepositoryFactory.prototype.latestVersion = function (datasetId, v
   return new this.Repository(versionQueryFragment, datasetId, version);
 };
 
+VersionedModelRepositoryFactory.prototype.allOpenedInGivenVersion = function (datasetId, version) {
+  checkPreconditions(datasetId, version);
+
+  const versionQueryFragment = {
+    dataset: datasetId,
+    from: version,
+  };
+
+  return new this.Repository(versionQueryFragment, datasetId, version);
+};
+
 VersionedModelRepositoryFactory.prototype.latestExceptCurrentVersion = function (datasetId, version) {
   checkPreconditions(datasetId, version);
 
@@ -54,6 +65,18 @@ VersionedModelRepositoryFactory.prototype.previousVersion = function (datasetId,
   };
 
   return new this.Repository(versionQueryFragment, datasetId, version);
+};
+
+VersionedModelRepositoryFactory.prototype.closedOrOpenedInGivenVersion = function (datasetId, version) {
+  checkPreconditions(datasetId, version);
+
+  const versionQueryFragment = {$or: [{from: version}, {to: version}], dataset: datasetId};
+
+  return new this.Repository(versionQueryFragment, datasetId, version);
+};
+
+VersionedModelRepositoryFactory.prototype.versionAgnostic = function () {
+  return new this.Repository({});
 };
 
 function checkPreconditions(datasetId, version) {

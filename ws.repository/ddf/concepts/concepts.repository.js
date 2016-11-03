@@ -2,6 +2,7 @@
 
 const _ = require('lodash');
 const util = require('util');
+const async = require('async');
 const mongoose = require('mongoose');
 const Concepts = mongoose.model('Concepts');
 
@@ -22,6 +23,10 @@ ConceptsRepository.prototype.findConceptsByQuery = function (conceptsQuery, onPr
   return Concepts.find(composedQuery).lean().exec(onPropertiesFound);
 };
 
+ConceptsRepository.prototype.create = function (conceptOrConceptsChunk, onCreated) {
+  return Concepts.create(conceptOrConceptsChunk, onCreated);
+};
+
 ConceptsRepository.prototype.findConceptProperties = function (select, where, onPropertiesFound) {
   const projection = makePositiveProjectionFor(select);
   if (!_.isEmpty(projection)) {
@@ -36,10 +41,53 @@ ConceptsRepository.prototype.findConceptProperties = function (select, where, on
   return Concepts.find(conceptQuery, projection).lean().exec(onPropertiesFound);
 };
 
-ConceptsRepository.prototype.countBy = function (where, onCounted) {
-  const countQuery = this._composeQuery(where);
+ConceptsRepository.prototype.addDimensionsForMeasure = function ({measureOriginId, dimensions}, done) {
+  const query = this._composeQuery({originId: measureOriginId});
+  return Concepts.update(query, {$addToSet: {dimensions: {$each: dimensions}}}, done);
+};
+
+ConceptsRepository.prototype.addSubsetOfByGid = function ({gid, parentConceptId}, done) {
+  const query = this._composeQuery({'properties.drill_up': gid});
+  return Concepts.update(query, {$addToSet: {'subsetOf': parentConceptId}}, {multi: true}, done);
+};
+
+ConceptsRepository.prototype.setDomainByGid = function ({gid, domainConceptId}, done) {
+  const query = this._composeQuery({'properties.domain': gid});
+  return Concepts.update(query,  {$set: {'domain': domainConceptId}}, {multi: true}, done);
+};
+
+ConceptsRepository.prototype.findDistinctDrillups = function (done) {
+  const query = this._composeQuery();
+  return Concepts.distinct('properties.drill_up', query).lean().exec(done);
+};
+
+ConceptsRepository.prototype.findDistinctDomains = function (done) {
+  const query = this._composeQuery();
+  return Concepts.distinct('properties.domain', query).lean().exec(done);
+};
+
+ConceptsRepository.prototype.closeByGid = function (gid, onClosed) {
+  const query = this._composeQuery({gid});
+  return Concepts.findOneAndUpdate(query, {$set: {to: this.version}}, {new: false}).lean().exec(onClosed);
+};
+
+ConceptsRepository.prototype.closeById = function (conceptId, onClosed) {
+  const query = this._composeQuery({_id: conceptId});
+  return Concepts.findOneAndUpdate(query, {$set: {to: this.version}}, {new: false}).lean().exec(onClosed);
+};
+
+ConceptsRepository.prototype.count = function (onCounted) {
+  const countQuery = this._composeQuery();
   return Concepts.count(countQuery, onCounted);
 };
+
+ConceptsRepository.prototype.rollback = function (versionToRollback, onRolledback) {
+  return async.parallelLimit([
+    done => Concepts.update({to: versionToRollback}, {$set: {to: constants.MAX_VERSION}}, {multi: true}).lean().exec(done),
+    done => Concepts.remove({from: versionToRollback}, done)
+  ], constants.LIMIT_NUMBER_PROCESS, onRolledback);
+};
+
 
 ConceptsRepository.prototype.findAllPopulated = function (done) {
   const composedQuery = this._composeQuery();
@@ -57,7 +105,6 @@ ConceptsRepository.prototype.findAllPopulated = function (done) {
     }
   })
     .populate('dataset')
-    .populate('transaction')
     .lean()
     .exec(done);
 };

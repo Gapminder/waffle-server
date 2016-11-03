@@ -55,8 +55,7 @@ function mapDdfDataPointToWsModel(context) {
           isNumeric: _.isNumber(entry[measureGid]),
           from: context.transaction.createdAt,
           dataset: context.dataset._id,
-          sources: [context.filename],
-          transaction: context.transactionId || context.transaction._id
+          sources: [context.filename]
         };
       })
       .value();
@@ -76,12 +75,11 @@ function mapDdfInDatapointsFoundEntityToWsModel(datapoint, concept, domain, cont
     drillups: [],
 
     from: externalContext.transaction.createdAt,
-    dataset: externalContext.dataset._id,
-    transaction: externalContext.transactionId || externalContext.transaction._id
+    dataset: externalContext.dataset._id
   };
 }
 
-function mapDdfConceptsToWsModel(version, datasetId, transactionId) {
+function mapDdfConceptsToWsModel(version, datasetId) {
   return (entry, options) => {
     let transformedEntry = transformPropsToJsonWherePossible(entry);
 
@@ -90,13 +88,6 @@ function mapDdfConceptsToWsModel(version, datasetId, transactionId) {
 
       title: transformedEntry.name || transformedEntry.title,
       type: transformedEntry.concept_type === 'time' ? 'entity_domain' : transformedEntry.concept_type,
-
-      tags: transformedEntry.tags,
-      tooltip: transformedEntry.tooltip,
-      indicatorUrl: transformedEntry.indicator_url,
-      color: transformedEntry.color,
-      unit: transformedEntry.unit,
-      scales: transformedEntry.scales,
 
       properties: transformedEntry,
       languages: options.languages,
@@ -107,8 +98,7 @@ function mapDdfConceptsToWsModel(version, datasetId, transactionId) {
 
       from: version,
       to: constants.MAX_VERSION,
-      dataset: datasetId,
-      transaction: transactionId
+      dataset: datasetId
     };
   };
 }

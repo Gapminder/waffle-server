@@ -1,4 +1,3 @@
-/*eslint camelcase: 0*/
 'use strict';
 
 const _ = require('lodash');
@@ -7,13 +6,15 @@ const path = require('path');
 const async = require('async');
 const Converter = require('csvtojson').Converter;
 
-const mongoose = require('mongoose');
 const constants = require('../ws.utils/constants');
 const reposService = require('../ws.services/repos.service');
 
 const defaultEntityGroupTypes = ['entity_domain', 'entity_set', 'time'];
 const entitiesRepositoryFactory = require('../ws.repository/ddf/entities/entities.repository');
 const conceptsRepositoryFactory = require('../ws.repository/ddf/concepts/concepts.repository');
+const datapointsRepositoryFactory = require('../ws.repository/ddf/data-points/data-points.repository');
+const transactionsRepository = require('../ws.repository/ddf/dataset-transactions/dataset-transactions.repository');
+const datasetsRepository = require('../ws.repository/ddf/datasets/datasets.repository');
 
 const logger = require('../ws.config/log');
 const config = require('../ws.config/config');
@@ -47,7 +48,7 @@ module.exports = {
   //Transaction
   createTransaction,
   closeTransaction,
-  updateTransaction
+  establishTransactionForDataset
 };
 
 function resolvePathToDdfFolder(pipe, done) {
@@ -67,13 +68,14 @@ function resolvePathToDdfFolder(pipe, done) {
 function createTransaction(pipe, done) {
   logger.info('create transaction');
 
-  mongoose.model('DatasetTransactions').create({
-    name: Math.random().toString(),
-    createdAt: (new Date()).valueOf(),
+  const transaction = {
+    createdAt: Date.now(),
     createdBy: pipe.user._id,
     commit: pipe.commit
-  }, (err, res) => {
-    pipe.transaction = res.toObject();
+  };
+
+  transactionsRepository.create(transaction, (err, createdTransaction) => {
+    pipe.transaction = createdTransaction;
     return done(err, pipe);
   });
 }
@@ -81,14 +83,12 @@ function createTransaction(pipe, done) {
 function closeTransaction(pipe, done) {
   logger.info('close transaction');
 
-  mongoose.model('DatasetTransactions').findOneAndUpdate({
-    _id: pipe.transaction._id
-  }, {
-    $set: {
-      isClosed: true,
-      timeSpentInMillis: Date.now() - pipe.transaction.createdAt
-    }
-  }, (err) => {
+  const options = {
+    transactionId: pipe.transaction._id,
+    transactionStartTime: pipe.transaction.createdAt
+  };
+
+  transactionsRepository.closeTransaction(options, err => {
     return done(err, pipe);
   });
 }
@@ -96,31 +96,28 @@ function closeTransaction(pipe, done) {
 function createDataset(pipe, done) {
   logger.info('create data set');
 
-  mongoose.model('Datasets').create({
+  const dataset = {
     name: pipe.datasetName,
-    type: 'local',
     path: pipe.github,
-    defaultLanguage: 'en',
-    versions: [pipe.transaction.createdAt],
-    dataProvider: 'semio',
     createdAt: pipe.transaction.createdAt,
     createdBy: pipe.user._id
-  }, (err, res) => {
-    pipe.dataset = res.toObject();
+  };
+
+  datasetsRepository.create(dataset ,(err, createdDataset) => {
+    pipe.dataset = createdDataset;
     return done(err, pipe);
   });
 }
 
-function updateTransaction(pipe, done) {
+function establishTransactionForDataset(pipe, done) {
   logger.info('update transaction');
 
-  mongoose.model('DatasetTransactions').update({_id: pipe.transactionId || pipe.transaction._id}, {
-    $set: {
-      dataset: pipe.dataset._id
-    }
-  }, (err) => {
-    return done(err, pipe);
-  });
+  const options = {
+    transactionId: pipe.transaction._id,
+    datasetId: pipe.dataset._id
+  };
+
+  transactionsRepository.establishForDataset(options, err => done(err, pipe));
 }
 
 function createConcepts(pipe, done) {
@@ -178,7 +175,7 @@ function _createConcepts(pipe, done) {
   );
 
   function __createConcepts(chunk, cb) {
-    return mongoose.model('Concepts').create(chunk, cb);
+    return conceptsRepositoryFactory.versionAgnostic().create(chunk, cb);
   }
 }
 
@@ -208,16 +205,9 @@ function _addConceptSubsetOf(pipe, done) {
       return async.setImmediate(escb);
     }
 
-    mongoose.model('Concepts').update(
-      {
-        dataset: pipe.datasetId || pipe.dataset._id,
-        transaction: pipe.transactionId || pipe.transaction._id,
-        'properties.drill_up': gid
-      },
-      {$addToSet: {'subsetOf': concept._id}},
-      {multi: true},
-      escb
-    );
+    return conceptsRepositoryFactory
+      .allOpenedInGivenVersion(pipe.dataset._id, pipe.transaction.createdAt)
+      .addSubsetOfByGid({gid, parentConceptId: concept._id}, escb);
   }
 }
 
@@ -236,16 +226,9 @@ function _addConceptDomains(pipe, done) {
       return async.setImmediate(escb);
     }
 
-    mongoose.model('Concepts').update(
-      {
-        dataset: pipe.datasetId || pipe.dataset._id,
-        transaction: pipe.transactionId || pipe.transaction._id,
-        'properties.domain': gid
-      },
-      {$set: {'domain': concept._id}},
-      {multi: true},
-      escb
-    );
+    return conceptsRepositoryFactory
+      .allOpenedInGivenVersion(pipe.dataset._id, pipe.transaction.createdAt)
+      .setDomainByGid({gid, domainConceptId: concept._id}, escb);
   }
 }
 
@@ -331,12 +314,12 @@ function __storeEntitiesToDb(pipe, done) {
 
   logger.info(`**** store entities from file '${pipe.filename}' to db`);
 
+  const entitiesRepository = entitiesRepositoryFactory.versionAgnostic();
+
   return async.eachLimit(
     _.chunk(pipe.entities, DEFAULT_CHUNK_SIZE),
     MONGODB_DOC_CREATION_THREADS_AMOUNT,
-    (chunk, cb) => mongoose.model('Entities').create(chunk, (err) => {
-      return cb(err);
-    }),
+    (chunk, cb) => entitiesRepository.create(chunk, cb),
     (err) => {
       return done(err, pipe);
     }
@@ -353,21 +336,15 @@ function _findAllEntities(pipe, done) {
 
 function _addEntityDrillups(pipe, done) {
   logger.info('** add entity drillups');
-  let relations = flatEntityRelations(pipe);
+  const relations = flatEntityRelations(pipe);
 
-  // TODO: fix drillup for merged entities
-  // (for hkg created only main_religion_2008 `eastern_religions`, but not country `hkg`)
+  const entitiesRepository = entitiesRepositoryFactory.versionAgnostic();
   async.forEachOfLimit(relations, constants.LIMIT_NUMBER_PROCESS, (drillups, _id, escb) => {
     if (!drillups.length) {
       return escb();
     }
 
-    mongoose.model('Entities').update(
-      {_id: _id},
-      {$addToSet: {'drillups': {$each: drillups}}},
-      {multi: true},
-      escb
-    );
+    return entitiesRepository.addDrillupsByEntityId({entitiyId: _id, drillups}, escb);
   }, (err) => {
     return done(err, pipe);
   });
@@ -407,48 +384,30 @@ function __updateConceptDimension(pipe) {
 }
 
 function ___getAllEntitiesByMeasure(pipe, cb) {
-  return mongoose.model('DataPoints').distinct(
-    'dimensions',
-    {
-      dataset: pipe.dataset._id,
-      transaction: pipe.transactionId || pipe.transaction._id,
-      measure: pipe.measure.originId,
-    },
-    (err, res) => {
+  return datapointsRepositoryFactory
+    .allOpenedInGivenVersion(pipe.dataset._id, pipe.transaction.createdAt)
+    .findDistinctDimensionsByMeasure(pipe.measure.originId, (err, res) => {
       pipe.originIdsOfEntities = res;
       return cb(err, pipe);
-    }
-  );
+    });
 }
 
 function ___getAllSetsBySelectedEntities(pipe, cb) {
-  return mongoose.model('Entities').distinct(
-    'sets',
-    {
-      dataset: pipe.dataset._id,
-      transaction: pipe.transactionId || pipe.transaction._id,
-      originId: {$in: pipe.originIdsOfEntities},
-    },
-    (err, res) => {
+  return entitiesRepositoryFactory
+    .allOpenedInGivenVersion(pipe.dataset._id, pipe.transaction.createdAt)
+    .findDistinctSets(pipe.originIdsOfEntities, (err, res) => {
       pipe.originIdsOfEntitySets = res;
       return cb(err, pipe);
-    }
-  );
+    });
 }
 
 function ___getAllDimensionsBySelectedEntities(pipe, cb) {
-  return mongoose.model('Entities').distinct(
-    'domain',
-    {
-      dataset: pipe.dataset._id,
-      transaction: pipe.transactionId || pipe.transaction._id,
-      originId: {$in: pipe.originIdsOfEntities},
-    },
-    (err, res) => {
+  return entitiesRepositoryFactory
+    .allOpenedInGivenVersion(pipe.dataset._id, pipe.transaction.createdAt)
+    .findDistinctDomains(pipe.originIdsOfEntities, (err, res) => {
       pipe.originIdsOfEntityDomains = res;
       return cb(err, pipe);
-    }
-  );
+    });
 }
 
 function ___updateDimensionByMeasure(pipe, cb) {
@@ -457,26 +416,17 @@ function ___updateDimensionByMeasure(pipe, cb) {
     return cb(null, pipe);
   }
 
-  return mongoose.model('Concepts').update(
-    {
-      dataset: pipe.datasetId || pipe.dataset._id,
-      transaction: pipe.transactionId || pipe.transaction._id,
-      originId: pipe.measure.originId,
-    },
-    {$addToSet: {dimensions: {$each: dimensions}}},
-    (err) => {
+  return conceptsRepositoryFactory.allOpenedInGivenVersion(pipe.dataset._id, pipe.transaction.createdAt)
+    .addDimensionsForMeasure({measureOriginId: pipe.measure.originId, dimensions}, err => {
       return cb(err, pipe);
     });
 }
 
 function findDataset(pipe, done) {
-  let query = pipe.datasetId ? {_id: pipe.datasetId} : {name: pipe.datasetName || process.env.DATASET_NAME};
-  mongoose.model('Datasets').findOne(query)
-    .lean()
-    .exec((err, res) => {
-      pipe.dataset = res;
-      return done(err, pipe);
-    });
+  return datasetsRepository.findByName(pipe.datasetName, (err, dataset) => {
+    pipe.dataset = dataset;
+    return done(err, pipe);
+  });
 }
 
 //*** Mappers ***
@@ -490,12 +440,6 @@ function mapDdfConceptsToWsModel(pipe) {
       title: _entry.name || _entry.title,
       type: (_entry.concept_type === 'time') ? 'entity_domain' : _entry.concept_type,
 
-      tags: _entry.tags,
-      tooltip: _entry.tooltip,
-      indicatorUrl: _entry.indicator_url,
-      color: _entry.color,
-      unit: _entry.unit,
-      scales: _entry.scales,
       properties: _entry,
 
       domain: null,
@@ -505,8 +449,7 @@ function mapDdfConceptsToWsModel(pipe) {
       sources: [pipe.filename],
       from: pipe.transaction.createdAt,
       to: constants.MAX_VERSION,
-      dataset: pipe.dataset._id,
-      transaction: pipe.transactionId || pipe.transaction._id
+      dataset: pipe.dataset._id
     };
   };
 }
@@ -548,8 +491,7 @@ function mapDdfEntityToWsModel(pipe) {
       sets: resolvedSets,
 
       from: pipe.transaction.createdAt,
-      dataset: pipe.dataset._id,
-      transaction: pipe.transactionId || pipe.transaction._id
+      dataset: pipe.dataset._id
     };
   };
 }

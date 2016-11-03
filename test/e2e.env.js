@@ -1,6 +1,10 @@
+'use strict';
+
+const constants = require('../ws.utils/constants');
+
 module.exports = {
   pass: '123',
-  login: 'dev@gapminder.org',
+  login: constants.DEFAULT_USER_EMAIL,
   mongodb: 'ws_ddf_test',
   nodeEnv: 'local',
   wsPort: '8081',

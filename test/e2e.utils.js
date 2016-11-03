@@ -4,8 +4,8 @@ const shell = require('shelljs');
 const e2eEnv = require('./e2e.env');
 const wsApi = require('supertest')(e2eEnv.wsUrl);
 
-const START_WAFFLE_SERVER = (process.env.START_WAFFLE_SERVER === 'false') ? false : true;
-const DROP_MONGO_DATABASE = (process.env.DROP_MONGO_DATABASE === 'false') ? false : true;
+const START_WAFFLE_SERVER = (process.env.START_WAFFLE_SERVER !== 'false');
+const DROP_MONGO_DATABASE = (process.env.DROP_MONGO_DATABASE !== 'false');
 
 module.exports = {
   dropMongoDb,
