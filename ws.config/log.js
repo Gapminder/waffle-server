@@ -7,7 +7,7 @@ const config = require('./config');
 const PrettyStream = require('bunyan-prettystream');
 
 module.exports = bunyan.createLogger({
-  name: 'WAFFLE_SERVER',
+  name: `WS_${config.LOG_MARKER}`,
   serializers: _.extend({obj: objSerializer}, bunyan.stdSerializers),
   streams: getBunyanStreams(config.NODE_ENV)
 });

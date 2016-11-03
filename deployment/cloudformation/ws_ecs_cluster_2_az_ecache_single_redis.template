@@ -692,6 +692,11 @@
       "Description": "Maximum number of EC2 instances for Node",
       "Default": "10"
     },
+    "MinClusterInstances": {
+      "Type": "Number",
+      "Description": "Minimum number of EC2 instances for Node",
+      "Default": "2"
+    },
     "MongoDBUrl": {
       "Type": "String",
       "Description": "MongoDB URL (connection string) for Node workers"
@@ -699,6 +704,10 @@
     "NewRelicKey": {
       "Type": "String",
       "Description": "NewRelic license key"
+    },
+    "NodeEnv": {
+      "Type": "String",
+      "Description": "Current application environment"
     },
     "DdfRepoPath": {
       "Type": "String",
@@ -962,6 +971,12 @@
                 "Name": "NEW_RELIC_LICENSE_KEY",
                 "Value": {
                   "Ref": "NewRelicKey"
+                }
+              },
+              {
+                "Name": "NODE_ENV",
+                "Value": {
+                  "Ref": "NodeEnv"
                 }
               },
               {
@@ -1261,7 +1276,9 @@
           "Ref": "wsLbLaunchConfig"
         },
         "MaxSize": "1",
+
         "MinSize": "1",
+
         "VPCZoneIdentifier": [
           {
             "Ref": "wsSubnet1"
@@ -1493,14 +1510,18 @@
     "wsNodeEc2AutoScalingGroup": {
       "Type": "AWS::AutoScaling::AutoScalingGroup",
       "Properties": {
-        "DesiredCapacity": 2,
+        "DesiredCapacity": {
+          "Ref": "MinClusterInstances"
+        },
         "LaunchConfigurationName": {
           "Ref": "wsNodeLaunchConfig"
         },
         "MaxSize": {
           "Ref": "MaxClusterInstances"
         },
-        "MinSize": "2",
+        "MinSize": {
+          "Ref": "MinClusterInstances"
+        },
         "MetricsCollection": [{"Granularity": "1Minute", "Metrics": []}],
         "VPCZoneIdentifier": [
           {
@@ -1675,7 +1696,9 @@
         "MaxCapacity": {
           "Ref": "MaxClusterInstances"
         },
-        "MinCapacity": "1",
+        "MinCapacity": {
+          "Ref": "MinClusterInstances"
+        }, 
         "ResourceId": {
           "Fn::Join": [
             "",
