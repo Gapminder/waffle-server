@@ -1,15 +1,17 @@
 'use strict';
 
+const _ = require('lodash');
 const shell = require('shelljs');
 const e2eEnv = require('./e2e.env');
 const wsApi = require('supertest')(e2eEnv.wsUrl);
+const expect = require('chai').expect;
 
 module.exports = {
   dropMongoDb,
   stopWaffleServer,
   startWaffleServer,
   setUpEnvironmentVariables,
-  sendDdfqlRequest
+  sendDdfqlRequestAndVerifyResponse
 };
 
 function sendDdfqlRequest(ddfql, onResponseReceived) {
@@ -40,4 +42,16 @@ function setUpEnvironmentVariables() {
   shell.env['NODE_ENV'] = e2eEnv.nodeEnv;
   shell.env['DEFAULT_USER_PASSWORD'] = e2eEnv.pass;
   shell.env['INNER_PORT'] = e2eEnv.wsPort;
+}
+
+function sendDdfqlRequestAndVerifyResponse(ddfql, expectedResponse, done) {
+  sendDdfqlRequest(ddfql, (error, response) => {
+    const actualRows = _.sortBy(response.body.rows);
+    const expectedRows = _.sortBy(expectedResponse.rows);
+
+    expect(actualRows).to.deep.equal(expectedRows);
+    expect(response.body.headers).to.deep.equal(expectedResponse.headers);
+
+    done();
+  });
 }
