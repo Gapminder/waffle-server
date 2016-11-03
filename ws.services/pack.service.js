@@ -72,7 +72,10 @@ function packToWsJson(data, format, onSendResponse) {
 
 function _fromRawDdfToWsJson(data, next) {
   const rawDdf = _.get(data, 'rawDdf', {});
+  rawDdf.datasetName = _.get(data, 'rawDdf.dataset.name');
+
   const ddfDataType = _.get(data, 'type');
+
   let json = {};
 
   if (ddfDataType === constants.DATAPOINTS) {

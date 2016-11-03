@@ -21,7 +21,7 @@ function mapSchemaToWsJson(data) {
   }, []));
 
   const headers = _.map(data.headers, header => data.aliases[header] ? data.aliases[header] : header);
-  return {headers, rows: sortRows(rows, data.query, headers)};
+  return { name: data.datasetName, version: data.version, headers, rows: sortRows(rows, data.query, headers)};
 }
 
 function mapConceptToWsJson(data) {
@@ -36,7 +36,7 @@ function mapConceptToWsJson(data) {
     return _mapConceptPropertiesToWsJson(select, concept);
   });
 
-  return { headers: select, rows: sortRows(rows, data.query, data.headers) };
+  return { name: data.datasetName, version: data.version, headers: select, rows: sortRows(rows, data.query, data.headers) };
 }
 
 function _mapConceptPropertiesToWsJson(select, concept) {
@@ -57,7 +57,7 @@ function mapEntitiesToWsJson(data) {
     return _mapEntitiesPropertiesToWsJson(data.domainGid, select, entity);
   });
 
-  return { headers: select, rows: sortRows(rows, data.query, data.headers) };
+  return { name: data.datasetName, version: data.version, headers: select, rows: sortRows(rows, data.query, data.headers) };
 }
 
 function _mapEntitiesPropertiesToWsJson(entityDomainGid, select, entity) {
@@ -118,6 +118,8 @@ function mapDatapointsToWsJson(data) {
     .value();
 
   return {
+    name: data.datasetName,
+    version: data.version,
     headers: data.headers,
     rows: sortRows(rows, data.query, data.headers)
   };
