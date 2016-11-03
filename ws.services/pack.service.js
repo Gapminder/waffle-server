@@ -73,6 +73,7 @@ function packToWsJson(data, format, onSendResponse) {
 function _fromRawDdfToWsJson(data, next) {
   const rawDdf = _.get(data, 'rawDdf', {});
   rawDdf.datasetName = _.get(data, 'rawDdf.dataset.name');
+  rawDdf.datasetVersionCommit = _.get(data, 'rawDdf.transaction.commit');
 
   const ddfDataType = _.get(data, 'type');
 
