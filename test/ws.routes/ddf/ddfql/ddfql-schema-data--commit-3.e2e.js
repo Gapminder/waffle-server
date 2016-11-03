@@ -46,83 +46,58 @@ describe("State Version 2 (3rd commit)", function() {
     it('should return correct schema of concepts', done => {
       const ddfql = {
         "select": {
-          "key": ["key","value"]
+          "key": ["key", "value"]
         },
         "from": "concepts.schema"
       };
 
-      e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
-        response.body.rows.sort();
-        fixtureSchemaConcepts.rows.sort();
-        expect(response.body).to.deep.equal(fixtureSchemaConcepts);
-        done();
-      });
+      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureSchemaConcepts, done);
     });
 
     it('should return correct schema of entities', done => {
       const ddfql = {
         "select": {
-          "key": ["key","value"]
+          "key": ["key", "value"]
         },
         "from": "entities.schema"
       };
 
-      e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
-        response.body.rows.sort();
-        fixtureSchemaEntities.rows.sort();
-        expect(response.body).to.deep.equal(fixtureSchemaEntities);
-        done();
-      });
+      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureSchemaEntities, done);
     });
 
     it('should return correct schema of datapoints', done => {
       const ddfql = {
         "select": {
-          "key": ["key","value"]
+          "key": ["key", "value"]
         },
         "from": "datapoints.schema"
       };
 
-      e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
-        response.body.rows.sort();
-        fixtureSchemaDatapoints.rows.sort();
-        expect(response.body).to.deep.equal(fixtureSchemaDatapoints);
-        done();
-      });
+      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureSchemaDatapoints, done);
     });
 
     it('should return correct Min/Max values for datapoints schema', done => {
       const ddfql = {
         "select": {
-          "key": ["key","value"],
-          "value": ["min(value)","max(value)"]
+          "key": ["key", "value"],
+          "value": ["min(value)", "max(value)"]
         },
         "from": "datapoints.schema"
       };
 
-      e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
-        response.body.rows.sort();
-        fixtureSchemaDatapointsMinMax.rows.sort();
-        expect(response.body).to.deep.equal(fixtureSchemaDatapointsMinMax);
-        done();
-      });
+      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureSchemaDatapointsMinMax, done);
     });
 
     it('should return correct Avg values for datapoints schema', done => {
       const ddfql = {
         "select": {
-          "key": ["key","value"],
+          "key": ["key", "value"],
           "value": ["avg(value)"]
         },
         "from": "datapoints.schema"
       };
 
-      e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
-        response.body.rows.sort();
-        fixtureSchemaDatapointsAvg.rows.sort();
-        expect(response.body).to.deep.equal(fixtureSchemaDatapointsAvg);
-        done();
-      });
+      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureSchemaDatapointsAvg, done);
     });
 
   });
@@ -147,12 +122,7 @@ describe("State Version 2 (3rd commit)", function() {
         }
       };
 
-      e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
-        response.body.rows.sort();
-        fixtureDataConceptsEntitySet.rows.sort();
-        expect(response.body).to.deep.equal(fixtureDataConceptsEntitySet);
-        done();
-      });
+      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDataConceptsEntitySet, done);
     });
 
     it('should return list of concepts with type measure', done => {
@@ -173,12 +143,7 @@ describe("State Version 2 (3rd commit)", function() {
         }
       };
 
-      e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
-        response.body.rows.sort();
-        fixtureDataConceptsMeasure.rows.sort();
-        expect(response.body).to.deep.equal(fixtureDataConceptsMeasure);
-        done();
-      });
+      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDataConceptsMeasure, done);
     });
 
     it('should return list of concepts with type string', done => {
@@ -199,12 +164,7 @@ describe("State Version 2 (3rd commit)", function() {
         }
       };
 
-      e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
-        response.body.rows.sort();
-        fixtureDataConceptsString.rows.sort();
-        expect(response.body).to.deep.equal(fixtureDataConceptsString);
-        done();
-      });
+      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDataConceptsString, done);
     });
 
   });
@@ -219,12 +179,7 @@ describe("State Version 2 (3rd commit)", function() {
         "from": "concepts"
       };
 
-      e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
-        response.body.rows.sort();
-        fixtureDataConcepts.rows.sort();
-        expect(response.body).to.deep.equal(fixtureDataConcepts);
-        done();
-      });
+      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDataConcepts, done);
     });
 
     it('should return list of all entities', done => {
@@ -235,12 +190,7 @@ describe("State Version 2 (3rd commit)", function() {
         "from": "entities"
       };
 
-      e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
-        response.body.rows.sort();
-        fixtureDataEntities.rows.sort();
-        expect(response.body).to.deep.equal(fixtureDataEntities);
-        done();
-      });
+      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDataEntities, done);
     });
 
     it('should return list of entities that are part of english_speaking entityset', done => {
@@ -259,12 +209,7 @@ describe("State Version 2 (3rd commit)", function() {
         }
       };
 
-      e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
-        response.body.rows.sort();
-        fixtureDataEntitiesSpeakingEnglish.rows.sort();
-        expect(response.body).to.deep.equal(fixtureDataEntitiesSpeakingEnglish);
-        done();
-      });
+      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDataEntitiesSpeakingEnglish, done);
     });
 
     it('should return list of entities that are part of foundation etitiyset', done => {
@@ -283,12 +228,7 @@ describe("State Version 2 (3rd commit)", function() {
         }
       };
 
-      e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
-        response.body.rows.sort();
-        fixtureDataEntitiesFoundation.rows.sort();
-        expect(response.body).to.deep.equal(fixtureDataEntitiesFoundation);
-        done();
-      });
+      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDataEntitiesFoundation, done);
     });
 
     it('should return list of entities that are part of company_size entityset', done => {
@@ -307,12 +247,7 @@ describe("State Version 2 (3rd commit)", function() {
         }
       };
 
-      e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
-        response.body.rows.sort();
-        fixtureDataEntitiesCompanySize.rows.sort();
-        expect(response.body).to.deep.equal(fixtureDataEntitiesCompanySize);
-        done();
-      });
+      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDataEntitiesCompanySize, done);
     });
 
   });
@@ -329,16 +264,10 @@ describe("State Version 2 (3rd commit)", function() {
           ]
         },
         "from": "datapoints",
-        "where": {
-        }
+        "where": {}
       };
 
-      e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
-        response.body.rows.sort();
-        fixtureDatapointsCompanySizeByCompanyAnno.rows.sort();
-        expect(response.body).to.deep.equal(fixtureDatapointsCompanySizeByCompanyAnno);
-        done();
-      });
+      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDatapointsCompanySizeByCompanyAnno, done);
 
     });
 
@@ -352,16 +281,10 @@ describe("State Version 2 (3rd commit)", function() {
           ]
         },
         "from": "datapoints",
-        "where": {
-        }
+        "where": {}
       };
 
-      e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
-        response.body.rows.sort();
-        fixtureDatapointsLinesOfCodeByCompanyAnno.rows.sort();
-        expect(response.body).to.deep.equal(fixtureDatapointsLinesOfCodeByCompanyAnno);
-        done();
-      });
+      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDatapointsLinesOfCodeByCompanyAnno, done);
 
     });
 
@@ -373,16 +296,10 @@ describe("State Version 2 (3rd commit)", function() {
           "value": ["lines_of_code"]
         },
         "from": "datapoints",
-        "where": {
-        }
+        "where": {}
       };
 
-      e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
-        response.body.rows.sort();
-        fixtureDatapointsLinesOfCodeByCompanyProject.rows.sort();
-        expect(response.body).to.deep.equal(fixtureDatapointsLinesOfCodeByCompanyProject);
-        done();
-      });
+      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDatapointsLinesOfCodeByCompanyProject, done);
 
     });
 
@@ -394,16 +311,10 @@ describe("State Version 2 (3rd commit)", function() {
           "value": ["lines_of_code"]
         },
         "from": "datapoints",
-        "where": {
-        }
+        "where": {}
       };
 
-      e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
-        response.body.rows.sort();
-        fixtureDatapointsLinesOfCodeByCompanyProjectAnno.rows.sort();
-        expect(response.body).to.deep.equal(fixtureDatapointsLinesOfCodeByCompanyProjectAnno);
-        done();
-      });
+      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDatapointsLinesOfCodeByCompanyProjectAnno, done);
 
     });
 
@@ -415,16 +326,10 @@ describe("State Version 2 (3rd commit)", function() {
           "value": ["num_users"]
         },
         "from": "datapoints",
-        "where": {
-        }
+        "where": {}
       };
 
-      e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
-        response.body.rows.sort();
-        fixtureDatapointsNumUsersByCompanyProject.rows.sort();
-        expect(response.body).to.deep.equal(fixtureDatapointsNumUsersByCompanyProject);
-        done();
-      });
+      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDatapointsNumUsersByCompanyProject, done);
 
     });
 
@@ -450,12 +355,7 @@ describe("State Version 2 (3rd commit)", function() {
         }
       };
 
-      e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
-        response.body.rows.sort();
-        fixtureQueryOperatorsCompanySizeByCompanyAnnoWithCondition.rows.sort();
-        expect(response.body).to.deep.equal(fixtureQueryOperatorsCompanySizeByCompanyAnnoWithCondition);
-        done();
-      });
+      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureQueryOperatorsCompanySizeByCompanyAnnoWithCondition, done);
 
     });
 
@@ -477,12 +377,7 @@ describe("State Version 2 (3rd commit)", function() {
         }
       };
 
-      e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
-        response.body.rows.sort();
-        fixtureQueryOperatorsLinesOfCodeByCompanyAnnoWithCondition.rows.sort();
-        expect(response.body).to.deep.equal(fixtureQueryOperatorsLinesOfCodeByCompanyAnnoWithCondition);
-        done();
-      });
+      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureQueryOperatorsLinesOfCodeByCompanyAnnoWithCondition, done);
 
     });
 
@@ -496,17 +391,12 @@ describe("State Version 2 (3rd commit)", function() {
         "from": "datapoints",
         "where": {
           "$and": [
-            {"project": {"$ne": "xbox", "$nin": ["office"], "$in": ["vizabi","ws","mcrsft"]}}
+            {"project": {"$ne": "xbox", "$nin": ["office"], "$in": ["vizabi", "ws", "mcrsft"]}}
           ]
         }
       };
 
-      e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
-        response.body.rows.sort();
-        fixtureQueryOperatorsLinesOfCodeByCompanyProjectWithCondition.rows.sort();
-        expect(response.body).to.deep.equal(fixtureQueryOperatorsLinesOfCodeByCompanyProjectWithCondition);
-        done();
-      });
+      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureQueryOperatorsLinesOfCodeByCompanyProjectWithCondition, done);
 
     });
 
@@ -527,12 +417,7 @@ describe("State Version 2 (3rd commit)", function() {
         }
       };
 
-      e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
-        response.body.rows.sort();
-        fixtureQueryOperatorsLinesOfCodeByCompanyProjectAnnoWithCondition.rows.sort();
-        expect(response.body).to.deep.equal(fixtureQueryOperatorsLinesOfCodeByCompanyProjectAnnoWithCondition);
-        done();
-      });
+      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureQueryOperatorsLinesOfCodeByCompanyProjectAnnoWithCondition, done);
 
     });
 
@@ -553,12 +438,7 @@ describe("State Version 2 (3rd commit)", function() {
         }
       };
 
-      e2eUtils.sendDdfqlRequest(ddfql, (error, response) => {
-        response.body.rows.sort();
-        fixtureQueryOperatorsNumUsersByCompanyProjectWithCondition.rows.sort();
-        expect(response.body).to.deep.equal(fixtureQueryOperatorsNumUsersByCompanyProjectWithCondition);
-        done();
-      });
+      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureQueryOperatorsNumUsersByCompanyProjectWithCondition, done);
 
     });
 
