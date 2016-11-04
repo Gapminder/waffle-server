@@ -5,7 +5,6 @@ const cors = require('cors');
 const async = require('async');
 const json2csv = require('json2csv');
 const express = require('express');
-const mongoose = require('mongoose');
 const compression = require('compression');
 
 const u = require('../utils');
@@ -13,7 +12,7 @@ const cache = require('../../ws.utils/redis-cache');
 const config = require('../../ws.config/config');
 const constants = require('../../ws.utils/constants');
 
-const KeyValue = require('mongoose').model('KeyValue');
+const keyValueRepository = require('../../ws.repository/ddf/key-value/key-value.repository');
 
 module.exports = function (serviceLocator) {
   const app = serviceLocator.getApplication();
@@ -57,15 +56,13 @@ module.exports = function (serviceLocator) {
 
   function getTranslations(req, res) {
     const lang = (req.params && req.params.lang) || 'en';
-    return KeyValue.findOne({key: lang}).lean().exec((error, keyValue) => {
-      return res.json(_.get(keyValue, 'value', enStrings));
-    });
+    return keyValueRepository.get(lang, enStrings, (error, value) => res.json(value));
   }
 
   function updateTranslations(req, res) {
     const lang = (req.params && req.params.lang) || 'en';
 
-    return KeyValue.update({key: lang}, {$set: {value: req.body}}, {upsert: true}, error => {
+    return keyValueRepository.set(lang, req.body, error => {
       if (error) {
         return res.json({success: !error, error});
       }

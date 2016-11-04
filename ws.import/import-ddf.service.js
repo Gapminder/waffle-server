@@ -2,13 +2,14 @@
 
 const async = require('async');
 
-const ddfImportProcess = require('../ws.utils/ddf-import-process');
+const ddfImportUtils = require('./import-ddf.utils');
 const createDatasetIndex = require('./import-dataset-index.service');
-const translationsService = require('./import-translations.service');
+const importTranslations = require('./import-ddf-translations.service');
 
 const defaultEntityGroupTypes = ['entity_domain', 'entity_set', 'time', 'age'];
 const defaultMeasureTypes = ['measure'];
 const common = require('./common');
+const importDatapoints = require('./import-ddf-datapoints.service');
 const config = require('../ws.config/config');
 
 module.exports = function (options, done) {
@@ -31,13 +32,13 @@ module.exports = function (options, done) {
     common.resolvePathToDdfFolder,
     common.createTransaction,
     common.createDataset,
-    ddfImportProcess.activateLifecycleHook('onDatasetCreated'),
-    common.updateTransaction,
+    ddfImportUtils.activateLifecycleHook('onDatasetCreated'),
+    common.establishTransactionForDataset,
     common.createConcepts,
     common.createEntities,
-    common.createDataPoints,
+    importDatapoints,
     common.updateConceptsDimensions,
-    // translationsService.processTranslations,
+    importTranslations,
     createDatasetIndex,
     common.closeTransaction
   ], (importError, pipe) => {

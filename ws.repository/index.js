@@ -14,8 +14,6 @@ module.exports = (function () {
     'datasets',
     'dataset-index',
     'entities',
-    'original-entities',
-    'translations',
     'key-value'
   ];
 

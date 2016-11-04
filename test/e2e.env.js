@@ -1,6 +1,10 @@
+'use strict';
+
+const constants = require('../ws.utils/constants');
+
 module.exports = {
   pass: '123',
-  login: 'dev@gapminder.org',
+  login: constants.DEFAULT_USER_EMAIL,
   mongodb: 'ws_ddf_test',
   nodeEnv: 'local',
   wsPort: '8081',
@@ -12,9 +16,9 @@ module.exports = {
   wsLogLevel: 'debug',
   repo: 'git@github.com:VS-work/ddf--ws-testing.git',
   repoCommits: {
-    init: 'dd40f5b',
-    version_1: '8bdd93f',
-    version_2: 'ee66b74',
-    version_3: '6c213cd'
+    init: 'acd712c',
+    version_1: '4e3a3fe',
+    version_2: '4265f17',
+    version_3: '193ae23'
   }
 };

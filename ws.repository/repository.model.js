@@ -4,8 +4,10 @@ const constants = require('../ws.utils/constants');
 
 module.exports = VersionedModelRepository;
 
-function VersionedModelRepository(versionQueryFragment) {
+function VersionedModelRepository(versionQueryFragment, datasetId, version) {
   this.versionQueryFragment = versionQueryFragment;
+  this.datasetId = datasetId;
+  this.version = version;
 }
 
 VersionedModelRepository.prototype._composeQuery = function () {

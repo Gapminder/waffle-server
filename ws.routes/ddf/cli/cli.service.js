@@ -6,19 +6,17 @@ const async = require('async');
 const ddfValidation = require('ddf-validation');
 const SimpleDdfValidator = ddfValidation.SimpleValidator;
 
-const mongoose = require('mongoose');
-const Datasets = mongoose.model('Datasets');
-const Concepts = mongoose.model('Concepts');
-const Transactions = mongoose.model('DatasetTransactions');
-
 const cache = require('../../../ws.utils/redis-cache');
 const config = require('../../../ws.config/config');
 const constants = require('../../../ws.utils/constants');
 const authService = require('../../../ws.services/auth.service');
 const reposService = require('../../../ws.services/repos.service');
 const datasetsService = require('../../../ws.services/datasets.service');
+const usersRepository = require('../../../ws.repository/ddf/users/users.repository');
 const importDdfService = require('../../../ws.import/import-ddf.service');
+const datasetsRepository = require('../../../ws.repository/ddf/datasets/datasets.repository');
 const transactionsService = require('../../../ws.services/dataset-transactions.service');
+const transactionsRepository = require('../../../ws.repository/ddf/dataset-transactions/dataset-transactions.repository');
 const incrementalUpdateService = require('../../../ws.import/incremental/update-ddf');
 
 const ddfValidationConfig = {
@@ -32,7 +30,7 @@ module.exports = {
   getGitCommitsList,
   importDataset,
   updateIncrementally,
-  getPrestoredQueries,
+  getAvailableDatasetsAndVersions,
   getCommitOfLatestDatasetVersion,
   authenticate,
   findDatasetsWithVersions,
@@ -67,15 +65,13 @@ function _getPathToRepo(pipe, done) {
 }
 
 function _findCurrentUser(pipe, done) {
-  mongoose.model('Users').findOne({email: 'dev@gapminder.org'})
-    .lean()
-    .exec((error, user) => {
-      if (error || !user) {
-        return done(error || 'User that tries to initiate import was not found');
-      }
-      pipe.user = user;
-      return done(error, pipe);
-    });
+  usersRepository.findUserByEmail(constants.DEFAULT_USER_EMAIL, (error, user) => {
+    if (error || !user) {
+      return done(error || 'User that tries to initiate import was not found');
+    }
+    pipe.user = user;
+    return done(error, pipe);
+  });
 }
 
 function importDataset(params, onDatasetImported) {
@@ -113,9 +109,8 @@ function _validateDdfRepo(pipe, onDdfRepoValidated) {
 }
 
 function _findDataset(pipe, done) {
-  return Datasets.findOne({path: pipe.github}).lean().exec((error, dataset) => {
+  return datasetsRepository.findByGithubUrl(pipe.github, (error, dataset) => {
     pipe.dataset = dataset;
-
     return done(error, pipe);
   });
 }
@@ -141,16 +136,13 @@ function _importDdfService(pipe, onDatasetImported) {
 }
 
 function _unlockDataset(pipe, done) {
-  return Datasets
-    .findOneAndUpdate({name: pipe.datasetName, isLocked: true}, {isLocked: false}, {new: 1})
-    .lean()
-    .exec((err, dataset) => {
-      if (!dataset) {
-        return done(`Version of dataset "${pipe.datasetName}" wasn't locked`);
-      }
+  return datasetsRepository.unlock(pipe.datasetName, (err, dataset) => {
+    if (!dataset) {
+      return done(`Version of dataset "${pipe.datasetName}" wasn't locked`);
+    }
 
-      return done(err, pipe);
-    });
+    return done(err, pipe);
+  });
 }
 
 function updateIncrementally(params, onDatasetUpdated) {
@@ -177,25 +169,22 @@ function updateIncrementally(params, onDatasetUpdated) {
 }
 
 function _lockDataset(pipe, done) {
-  return Datasets
-    .findOneAndUpdate({name: pipe.datasetName, isLocked: false}, {isLocked: true}, {new: 1})
-    .lean()
-    .exec((err, dataset) => {
-      if (!dataset) {
-        return done(`Version of dataset "${pipe.datasetName}" was already locked or dataset is absent`);
-      }
+  return datasetsRepository.lock(pipe.datasetName, (err, dataset) => {
+    if (err) {
+      return done(err);
+    }
 
-      pipe.dataset = dataset;
+    if (!dataset) {
+      return done(`Version of dataset "${pipe.datasetName}" was already locked or dataset is absent`);
+    }
 
-      return done(err, pipe);
-    });
+    pipe.dataset = dataset;
+    return done(null, pipe);
+  });
 }
 
 function _checkTransaction(pipe, done) {
-  return Transactions.findOne({
-    dataset: pipe.dataset._id,
-    commit: pipe.commit
-  }).lean().exec((error, transaction) => {
+  return transactionsRepository.findByDatasetAndCommit(pipe.dataset._id, pipe.commit, (error, transaction) => {
     if (transaction) {
       return done(`Version of dataset "${pipe.github}" with commit: "${transaction.commit}" was already applied`);
     }
@@ -217,26 +206,16 @@ function _runIncrementalUpdate(pipe, onDatasetUpdated) {
   return incrementalUpdateService(options, onDatasetUpdated);
 }
 
-function getPrestoredQueries(userId, onQueriesGot) {
+function getAvailableDatasetsAndVersions(userId, onQueriesGot) {
   return datasetsService.findDatasetsWithVersions(userId, (error, datasetsWithVersions) => {
-    return async.mapLimit(datasetsWithVersions, 3, (dataset, onUrlsCreated) => {
+    return async.mapLimit(datasetsWithVersions, 3, (dataset, onDatasetsAndVersionsFound) => {
       return async.mapLimit(dataset.versions, 3, (version, cb) => {
-        const query = {
-          dataset: dataset.id,
-          type: 'measure',
-          from: {$lte: version.createdAt.getTime()},
-          to: {$gt: version.createdAt.getTime()}
-        };
-
-        return Concepts.find(query).lean().exec((error, measures) => {
-          return cb(null, _makePrestoredQuery({
-            createdAt: version.createdAt,
-            datasetName: dataset.name,
-            version: version.commit,
-            measures
-          }));
+        return cb(null, {
+          createdAt: version.createdAt,
+          datasetName: dataset.name,
+          version: version.commit,
         });
-      }, onUrlsCreated);
+      }, onDatasetsAndVersionsFound);
     }, (error, result) => {
       if (error) {
         return onQueriesGot(error);
@@ -244,22 +223,6 @@ function getPrestoredQueries(userId, onQueriesGot) {
       return onQueriesGot(null, _.flattenDeep(result));
     });
   });
-}
-
-function _makePrestoredQuery(query) {
-  const filteredMeasures = _.chain(query.measures)
-    .map(constants.GID)
-    .filter((measure) => !_.includes(['age', 'longitude', 'latitude'], measure))
-    .take(3)
-    .join(',')
-    .value();
-
-  return {
-    url: `${config.HOST_URL}:${config.PORT}/api/ddf/datapoints?dataset=${query.datasetName}&version=${query.version}&select=geo,time,${filteredMeasures}&key=geo,time`,
-    datasetName: query.datasetName,
-    version: query.version,
-    createdAt: query.createdAt
-  };
 }
 
 function getCommitOfLatestDatasetVersion(github, cb) {
@@ -292,16 +255,10 @@ function _handleAsynchronously(error, result, done) {
 }
 
 function _findTransaction(pipe, done) {
-  return Transactions
-    .find({dataset: pipe.dataset._id})
-    .sort({createdAt: -1})
-    .limit(1)
-    .lean()
-    .exec((error, transaction) => {
-      pipe.transaction = _.first(transaction);
-
-      return done(error, pipe);
-    });
+  return transactionsRepository.findLatestByDataset(pipe.dataset._id, (error, transaction) => {
+    pipe.transaction = transaction;
+    return done(error, pipe);
+  });
 }
 
 function authenticate(credentials, onAuthenticated) {
