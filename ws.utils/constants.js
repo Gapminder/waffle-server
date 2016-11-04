@@ -40,6 +40,7 @@ module.exports = {
   DEFAULT_USER_EMAIL: 'dev@gapminder.org',
 
   EXCLUDED_QUERY_PARAMS: ['dataset', 'version', 'v', 'format', 'no-compression', 'key', 'geo.cat', 'force'],
+  DEFAULT_ENTITY_GROUP_TYPES: ['entity_domain', 'entity_set', 'time'],
 
   VALID_TOKEN_PERIOD_IN_MILLIS: 60 * 60 * 1000 // one hour
 };

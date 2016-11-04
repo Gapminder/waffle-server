@@ -6,10 +6,11 @@ const path = require('path');
 const async = require('async');
 const Converter = require('csvtojson').Converter;
 
+const ddfMappers = require('./ddf-mappers');
+
 const constants = require('../ws.utils/constants');
 const reposService = require('../ws.services/repos.service');
 
-const defaultEntityGroupTypes = ['entity_domain', 'entity_set', 'time'];
 const entitiesRepositoryFactory = require('../ws.repository/ddf/entities/entities.repository');
 const conceptsRepositoryFactory = require('../ws.repository/ddf/concepts/concepts.repository');
 const datapointsRepositoryFactory = require('../ws.repository/ddf/data-points/data-points.repository');
@@ -18,7 +19,6 @@ const datasetsRepository = require('../ws.repository/ddf/datasets/datasets.repos
 
 const logger = require('../ws.config/log');
 const config = require('../ws.config/config');
-const ddfImportUtils = require('./import-ddf.utils');
 
 const DEFAULT_CHUNK_SIZE = 2000;
 const MONGODB_DOC_CREATION_THREADS_AMOUNT = 3;
@@ -39,7 +39,6 @@ module.exports = {
   findAllEntities: _findAllEntities,
   storeEntitiesToDb: __storeEntitiesToDb,
   addEntityDrillups: _addEntityDrillups,
-  mapDdfEntityToWsModel,
 
   //Dataset
   createDataset,
@@ -144,9 +143,15 @@ function createConcepts(pipe, done) {
 function _loadConcepts(pipe, done) {
   logger.info('** load concepts');
 
-  return readCsvFile(pipe.resolvePath(pipe.filename), {}, (err, res) => {
-    let concepts = _.map(res, mapDdfConceptsToWsModel(pipe));
-    let uniqConcepts = _.uniqBy(concepts, 'gid');
+  return readCsvFile(pipe.resolvePath(pipe.filename), {}, (err, csvConcepts) => {
+
+    const {dataset: {_id: datasetId}, transaction: {createdAt: version}, filename} = pipe;
+
+    const concepts = _.map(csvConcepts, csvConcept => {
+      return ddfMappers.mapDdfConceptsToWsModel(csvConcept, {datasetId, version, filename});
+    });
+
+    const uniqConcepts = _.uniqBy(concepts, 'gid');
 
     if (uniqConcepts.length !== concepts.length) {
       return done('All concept gid\'s should be unique within the dataset!');
@@ -258,7 +263,7 @@ function createEntities(pipe, done) {
 function _processEntities(pipe, done) {
   logger.info('** process entities');
 
-  let entitySets = _.filter(pipe.concepts, concept => defaultEntityGroupTypes.indexOf(concept.type) > -1);
+  let entitySets = _.filter(pipe.concepts, concept => _.includes(constants.DEFAULT_ENTITY_GROUP_TYPES, concept.type));
 
   async.eachLimit(
     entitySets,
@@ -292,8 +297,27 @@ function __loadEntities(_pipe, cb) {
 
   logger.info(`**** load entities from file ${_pipe.filename}`);
 
-  readCsvFile(_pipe.resolvePath(_pipe.filename), {}, (err, res) => {
-    let entities = _.map(res, mapDdfEntityToWsModel(_pipe));
+  readCsvFile(_pipe.resolvePath(_pipe.filename), {}, (err, csvEntities) => {
+    let entities = _.map(csvEntities, csvEntity => {
+
+      const {
+        entitySet,
+        concepts,
+        entityDomain,
+        filename,
+        timeConcepts,
+        transaction: {
+          createdAt: version
+        },
+        dataset: {
+          _id: datasetId
+        }
+      } = _pipe;
+
+      const context = {entitySet, concepts, entityDomain, filename, timeConcepts, version, datasetId};
+
+      return ddfMappers.mapDdfEntityToWsModel(csvEntity, context);
+    });
     let uniqEntities = _.uniqBy(entities, 'gid');
 
     if (uniqEntities.length !== entities.length) {
@@ -429,114 +453,6 @@ function findDataset(pipe, done) {
   });
 }
 
-//*** Mappers ***
-function mapDdfConceptsToWsModel(pipe) {
-  return function (entry, rowNumber) {
-    let _entry = validateConcept(entry, rowNumber);
-
-    return {
-      gid: _entry.concept,
-
-      title: _entry.name || _entry.title,
-      type: (_entry.concept_type === 'time') ? 'entity_domain' : _entry.concept_type,
-
-      properties: _entry,
-
-      domain: null,
-      subsetOf: [],
-      dimensions: [],
-
-      sources: [pipe.filename],
-      from: pipe.transaction.createdAt,
-      to: constants.MAX_VERSION,
-      dataset: pipe.dataset._id
-    };
-  };
-}
-
-function mapDdfEntityToWsModel(pipe) {
-  return (entry, context) => {
-    let gid = getGid(pipe, entry);
-    let resolvedColumns = mapResolvedColumns(entry);
-    let resolvedSets = mapResolvedSets(pipe, resolvedColumns);
-    let _entry = _.mapValues(entry, property => {
-      let numericValue = property && _.toNumber(property);
-      if (property === 'TRUE' || property === 'FALSE' || _.isBoolean(property)) {
-        if (property === 'FALSE') {
-          return false;
-        }
-        if (property === 'TRUE') {
-          return true;
-        }
-        return property;
-      }
-      if (!_.isNaN(numericValue) && _.isNumber(numericValue)) {
-        return numericValue;
-      }
-      return property;
-    });
-
-    const domainOriginId = _.get(pipe, 'entityDomain.originId', pipe.entityDomain);
-
-    return {
-      gid: gid,
-      sources: [pipe.filename],
-      properties: _entry,
-      parsedProperties: ddfImportUtils.parseProperties(pipe.entityDomain, gid, _entry, pipe.timeConcepts),
-
-      originId: _.get(context, 'originId', null),
-      languages: _.get(context, 'languages', null),
-
-      domain: domainOriginId,
-      sets: resolvedSets,
-
-      from: pipe.transaction.createdAt,
-      dataset: pipe.dataset._id
-    };
-  };
-}
-
-function mapResolvedSets(pipe, resolvedGids) {
-  return _.chain(pipe.concepts)
-    .filter(concept => defaultEntityGroupTypes.indexOf(concept.type) > -1 && resolvedGids.indexOf(`is--${concept.gid}`) > -1)
-    .filter(concept => concept.type !== 'entity_domain')
-    .map('originId')
-    .uniq()
-    .value();
-}
-
-function mapResolvedColumns(entry) {
-  return _.chain(entry)
-    .keys()
-    .filter(name => name.indexOf('is--') > -1 && entry[name])
-    .uniq()
-    .value();
-}
-
-//*** Validators ***
-function validateConcept(entry, rowNumber) {
-  let resolvedJSONColumns = ['color', 'scales', 'drill_up'];
-  let _entry = _.mapValues(entry, (value, columnName) => {
-    if (!value) {
-      return null;
-    }
-
-    let isResolvedJSONColumn = resolvedJSONColumns.indexOf(columnName) > -1;
-    let _value;
-
-    try {
-      _value = value && isResolvedJSONColumn && typeof value !== 'object' ? JSON.parse(value) : value;
-    } catch (e) {
-      logger.error(`[${rowNumber}, ${columnName}] Validation error: The cell value isn't valid JSON, fix it please!\nError message : ${e}\nGiven value: ${value}`);
-      return null;
-    }
-
-    return _value;
-  });
-
-  return _entry;
-}
-
 //*** Utils ***
 function reduceUniqueNestedValues(data, propertyName) {
   return _.chain(data)
@@ -544,16 +460,6 @@ function reduceUniqueNestedValues(data, propertyName) {
     .uniq()
     .compact()
     .value();
-}
-
-function getGid(pipe, entry) {
-  let _value = entry[pipe.entitySet.gid] || (pipe.entitySet.domain && entry[pipe.entitySet.domain.gid]);
-
-  if (!_value) {
-    logger.warn(`Either '${pipe.entitySet.gid}' or '${pipe.entitySet.domain && pipe.entitySet.domain.gid}' columns weren't found in file '${pipe.filename}'`);
-  }
-
-  return _value;
 }
 
 function flatEntityRelations(pipe) {
@@ -594,11 +500,13 @@ function readCsvFile(file, options, cb) {
   }, options));
 
   converter.fromFile(file, (err, data) => {
-    if (err && err.toString().indexOf("cannot be found.") > -1) {
-      logger.warn(err);
-    }
-    if (err && err.toString().indexOf("cannot be found.") === -1) {
-      logger.error(err);
+    if (err) {
+      const isCannotFoundError = _.includes(err.toString(), "cannot be found.");
+      if (isCannotFoundError) {
+        logger.warn(err);
+      } else {
+        logger.error(err);
+      }
     }
 
     return cb(null, data);

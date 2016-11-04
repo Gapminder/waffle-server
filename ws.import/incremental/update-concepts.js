@@ -6,7 +6,7 @@ const async = require('async');
 const conceptsRepositoryFactory = require('../../ws.repository/ddf/concepts/concepts.repository');
 const ddfImportUtils = require('../import-ddf.utils');
 const constants = require('../../ws.utils/constants');
-const mappers = require('./mappers');
+const ddfMappers = require('./../ddf-mappers');
 
 module.exports = (pipe, done) => {
   if (!pipe.allChanges['ddf--concepts.csv']) {
@@ -92,12 +92,14 @@ function processUpdatedConcepts(updatedConcepts, removedProperties) {
 
 function createConcepts(conceptChanges) {
   return (pipe, done) => {
-    let concepts = _.map(conceptChanges, mappers.mapDdfConceptsToWsModel(
-      pipe.external.transaction.createdAt,
-      pipe.external.dataset._id
-    ));
 
-    let uniqConcepts = _.uniqBy(concepts, 'gid');
+    const {external: {dataset: {_id: datasetId}, transaction: {createdAt: version}}} = pipe;
+
+    const concepts = _.map(conceptChanges, conceptChange => {
+      return ddfMappers.mapDdfConceptsToWsModel(conceptChange, {datasetId, version});
+    });
+
+    const uniqConcepts = _.uniqBy(concepts, 'gid');
 
     if (uniqConcepts.length !== concepts.length) {
       return done('All concept gid\'s should be unique within the dataset!');

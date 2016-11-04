@@ -4,7 +4,7 @@ const _ = require('lodash');
 const hi = require('highland');
 
 const logger = require('../ws.config/log');
-const mappers = require('./incremental/mappers');
+const ddfMappers = require('./ddf-mappers');
 const entitiesRepositoryFactory = require('../ws.repository/ddf/entities/entities.repository');
 const datapointsRepositoryFactory = require('../ws.repository/ddf/data-points/data-points.repository');
 
@@ -85,6 +85,8 @@ function segregateEntities(entities) {
 function findEntitiesInDatapoint(datapoint, context, externalContext) {
   const alreadyFoundEntitiyGids = new Set();
 
+  const {transaction: {createdAt: version}, dataset: {_id: datasetId}, timeConcepts} = externalContext;
+
   return _.reduce(context.dimensions, (entitiesFoundInDatapoint, concept) => {
     const domain = concept.domain || concept;
     const entityGid = datapoint[concept.gid];
@@ -92,13 +94,15 @@ function findEntitiesInDatapoint(datapoint, context, externalContext) {
     const alreadyFoundEntity = alreadyFoundEntitiyGids.has(entityGid);
 
     if (!existedEntity && !alreadyFoundEntity) {
-      const entityFoundInDatapoint = mappers.mapDdfInDatapointsFoundEntityToWsModel(
-        datapoint,
-        concept,
+
+      const entityFoundInDatapoint = ddfMappers.mapDdfEntityFoundInDatapointToWsModel(datapoint, {
+        version,
+        datasetId,
+        timeConcepts,
         domain,
-        context,
-        externalContext
-      );
+        concept,
+        filename: context.filename
+      });
 
       alreadyFoundEntitiyGids.add(entityGid);
       entitiesFoundInDatapoint.push(entityFoundInDatapoint);
@@ -173,17 +177,20 @@ function mapAndStoreDatapointsToDb(datapointsFromSameFile, externalContext) {
 
   const {measures, filename, dimensions, context: {segregatedEntities: entities}} = datapointsFromSameFile;
 
-  const mappingContext = _.extend({
+  const {dataset: {_id: datasetId}, transaction: {createdAt: version}, concepts} = externalContext;
+
+  const mappingContext = {
     measures,
     filename,
     dimensions,
-    entities
-  }, externalContext);
-
-  const toWsDatapoint = mappers.mapDdfDataPointToWsModel(mappingContext);
+    entities,
+    datasetId,
+    version,
+    concepts
+  };
 
   const wsDatapoints = _.flatMap(datapointsFromSameFile.datapoints, datapointWithContext => {
-    return toWsDatapoint(datapointWithContext.datapoint);
+    return ddfMappers.mapDdfDataPointToWsModel(datapointWithContext.datapoint, mappingContext);
   });
 
   return datapointsRepositoryFactory.versionAgnostic().create(wsDatapoints);
