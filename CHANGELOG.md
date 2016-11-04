@@ -1,3 +1,27 @@
+<a name="1.2.0"></a>
+# [1.2.0](https://github.com/Gapminder/waffle-server/compare/v1.1.2...v1.2.0) (2016-11-04)
+
+
+### Bug Fixes
+
+* **ddfql:** add trasaction.commit to rawDdf in pack.service ([ca4098b](https://github.com/Gapminder/waffle-server/commit/ca4098b))
+* **ddfql:** change version to have value transaction.commit ([367b89f](https://github.com/Gapminder/waffle-server/commit/367b89f))
+* **deployment:** escape mongo url ([0611aff](https://github.com/Gapminder/waffle-server/commit/0611aff))
+* **e2e:** make e2e tests verify only rows and headers ([1112a5a](https://github.com/Gapminder/waffle-server/commit/1112a5a))
+* **wsJson:** return dataset name under 'dataset' property rather than 'name' ([749405a](https://github.com/Gapminder/waffle-server/commit/749405a))
+
+
+### Features
+
+* **ddf importing:** import ddf datapoints via streams ([3528899](https://github.com/Gapminder/waffle-server/commit/3528899))
+* **ddf-import:** remove original entities ([ebfd58d](https://github.com/Gapminder/waffle-server/commit/ebfd58d))
+* **ddfql:** add dataset name and version to response in  wsJson format ([1a65e3d](https://github.com/Gapminder/waffle-server/commit/1a65e3d))
+* **inc-update:** handle translations in incremental update process ([5544cfd](https://github.com/Gapminder/waffle-server/commit/5544cfd))
+* **mongoose-models:** add required fields to mongoose models for support ddf translations ([e63580a](https://github.com/Gapminder/waffle-server/commit/e63580a))
+* **translations:** add translations processing to import frlow ([ebb3fad](https://github.com/Gapminder/waffle-server/commit/ebb3fad))
+
+
+
 <a name="1.1.2"></a>
 ## [1.1.2](https://github.com/Gapminder/waffle-server/compare/v1.1.1...v1.1.2) (2016-10-31)
 
