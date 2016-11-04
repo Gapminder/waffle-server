@@ -29,7 +29,7 @@ module.exports = serviceLocator => {
 
   router.use(routeUtils.ensureAuthenticatedViaToken);
 
-  router.get('/api/ddf/cli/prestored-queries', _getPrestoredQueries);
+  router.get('/api/ddf/cli/prestored-queries', _getAvailableDatasetsAndVersions);
 
   router.post('/api/ddf/cli/update-incremental', _updateIncrementally);
 
@@ -152,20 +152,20 @@ module.exports = serviceLocator => {
     });
   }
 
-  function _getPrestoredQueries(req, res) {
+  function _getAvailableDatasetsAndVersions(req, res) {
     if (!req.user) {
       return res.json({success: false, error: 'There is no authenticated user to get its datasets'});
     }
 
-    cliService.getPrestoredQueries (req.user._id, (error, queries) => {
+    cliService.getAvailableDatasetsAndVersions (req.user._id, (error, datasetsAndVersions) => {
       if (error) {
         logger.error(error);
         return res.json({success: !error, error});
       }
 
-      logger.info(`finished getting prestored queries`);
+      logger.info(`finished getting available datasets and versions`);
 
-      return res.json({success: !error, data: queries});
+      return res.json({success: !error, data: datasetsAndVersions});
     });
   }
 

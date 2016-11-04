@@ -6,6 +6,9 @@ const e2eEnv = require('./e2e.env');
 const wsApi = require('supertest')(e2eEnv.wsUrl);
 const expect = require('chai').expect;
 
+const START_WAFFLE_SERVER = (process.env.START_WAFFLE_SERVER !== 'false');
+const DROP_MONGO_DATABASE = (process.env.DROP_MONGO_DATABASE !== 'false');
+
 module.exports = {
   dropMongoDb,
   stopWaffleServer,
@@ -25,15 +28,21 @@ function sendDdfqlRequest(ddfql, onResponseReceived) {
 
 function startWaffleServer() {
   setUpEnvironmentVariables();
-  shell.exec(`./node_modules/.bin/forever start -t -o /dev/null -l /dev/null -a --uid "${e2eEnv.wsUid}" server.js`);
+  if (START_WAFFLE_SERVER) {
+    shell.exec(`./node_modules/.bin/forever start -t -o /dev/null -l /dev/null -a --uid "${e2eEnv.wsUid}" server.js`);
+  }
 }
 
 function stopWaffleServer() {
-  shell.exec(`./node_modules/.bin/forever stop "${e2eEnv.wsUid}"`);
+  if (START_WAFFLE_SERVER) {
+    shell.exec(`./node_modules/.bin/forever stop "${e2eEnv.wsUid}"`);
+  }
 }
 
 function dropMongoDb() {
-  shell.exec(`mongo ${e2eEnv.mongodb} --eval "db.dropDatabase()"`);
+  if (DROP_MONGO_DATABASE) {
+    shell.exec(`mongo ${e2eEnv.mongodb} --eval "db.dropDatabase()"`);
+  }
 }
 
 function setUpEnvironmentVariables() {

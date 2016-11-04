@@ -32,12 +32,7 @@ DatasetTransactionsRepository.prototype.findLatestFailedByDataset = function (da
 };
 
 DatasetTransactionsRepository.prototype.findByDatasetAndCommit = function (datasetId, commit, done) {
-  return DatasetTransactions
-    .findOne({dataset: datasetId, commit})
-    .lean()
-    .exec((error, transaction) => {
-      return done(error, transaction);
-    });
+  return DatasetTransactions.findOne({dataset: datasetId, commit}).lean().exec(done);
 };
 
 DatasetTransactionsRepository.prototype.removeById = function (transactionId, done) {
@@ -50,6 +45,48 @@ DatasetTransactionsRepository.prototype.findAllCompletedByDataset = function (da
 
 DatasetTransactionsRepository.prototype.setLastError = function (transactionId, lastErrorMessage, done) {
   return DatasetTransactions.findOneAndUpdate({_id: transactionId}, {$set: {lastError: lastErrorMessage}}, {new: 1}, done);
+};
+
+DatasetTransactionsRepository.prototype.create = function (transaction, onCreated) {
+  return DatasetTransactions.create(transaction, (error, model) => {
+    if (error) {
+      return onCreated(error);
+    }
+    return onCreated(null, model.toObject());
+  });
+};
+
+DatasetTransactionsRepository.prototype.countByDataset = function (datasetId, onCounted) {
+  return DatasetTransactions.count({dataset: datasetId}, onCounted);
+};
+
+DatasetTransactionsRepository.prototype.closeTransaction = function ({transactionId, transactionStartTime}, onClosed) {
+  if (!transactionId) {
+    return onClosed('TransactionId is required');
+  }
+
+  const properties = {isClosed: true};
+  if (transactionStartTime) {
+    properties.timeSpentInMillis = Date.now() - transactionStartTime;
+  }
+
+  return DatasetTransactions.findOneAndUpdate({_id: transactionId}, {$set: properties}, onClosed);
+};
+
+DatasetTransactionsRepository.prototype.setLanguages = function ({transactionId, languages}, onLanguagesSet) {
+  return DatasetTransactions.update({_id: transactionId}, {$set: {languages}}).exec(onLanguagesSet);
+};
+
+DatasetTransactionsRepository.prototype.establishForDataset = function ({transactionId, datasetId}, onEstablished) {
+  if (!transactionId) {
+    return onEstablished('TransactionId is required');
+  }
+
+  if (!datasetId) {
+    return onEstablished('DatasetId is required');
+  }
+
+  return DatasetTransactions.findOneAndUpdate({_id: transactionId}, {$set: {dataset: datasetId}}, onEstablished);
 };
 
 DatasetTransactionsRepository.prototype.findDefault = function (options, onDefaultFound) {
