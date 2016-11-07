@@ -188,4 +188,19 @@ describe('ddf query validator', () => {
     expect(message[1].toString()).to.contain(expectedMessage2);
   });
 
+  it('should return error message: Invalid DDFQL-query. Validation by Operators, not acceptable: $sq', () => {
+    const query = {
+        "$and": [
+          {"geo.is--country": {"$sq": true}},
+          {"geo.world_4region": {"$sq": "africa"}}
+        ]
+      };
+
+    const message = ddfQueryValidator.validateMongoQuery(query).messages;
+    const expectedMessage = 'Invalid DDFQL-query. Validation by Operators, not acceptable: $sq';
+
+    expect(message.toString()).to.contain(expectedMessage);
+
+  });
+
 });
