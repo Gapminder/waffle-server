@@ -6,6 +6,7 @@ const path = require('path');
 const async = require('async');
 
 const common = require('./../common');
+const ddfMappers = require('./../ddf-mappers');
 const logger = require('../../ws.config/log');
 const config = require('../../ws.config/config');
 const constants = require('../../ws.utils/constants');
@@ -282,7 +283,26 @@ function ___fakeLoadRawEntities(pipe, done) {
   let mergedChangedEntities = _.merge(changedClosedEntities, _mergedChangedEntities);
 
   let updatedEntities = _.map(mergedChangedEntities, ____formRawEntities(pipe));
-  let createdEntities = _.map(pipe.fileChanges.create, common.mapDdfEntityToWsModel(pipe));
+
+  const {
+    entitySet,
+    concepts,
+    entityDomain,
+    filename,
+    timeConcepts,
+    transaction: {
+      createdAt: version
+    },
+    dataset: {
+      _id: datasetId
+    }
+  } = pipe;
+
+  const context = {entitySet, concepts, entityDomain, filename, timeConcepts, version, datasetId};
+
+  let createdEntities = _.map(pipe.fileChanges.create, createdEntity => {
+    return ddfMappers.mapDdfEntityToWsModel(createdEntity, context);
+  });
 
   let fakeLoadedEntities = _.concat([], createdEntities, updatedEntities);
   let uniqEntities = _.uniqBy(fakeLoadedEntities, 'gid');
@@ -307,14 +327,40 @@ function ___fakeLoadRawEntities(pipe, done) {
 }
 
 function ____formRawEntities(pipe) {
-  let mapper = common.mapDdfEntityToWsModel(pipe);
   return (properties, entityGid) => {
     const closedEntity = pipe.closedEntities[entityGid];
     const originId = closedEntity ? closedEntity.originId : null;
     const languages = closedEntity.languages || null;
-    const context = {originId, languages};
+    const sources = closedEntity.sources;
 
-    return mapper(properties, context);
+    const {
+      entitySet,
+      concepts,
+      entityDomain,
+      filename,
+      timeConcepts,
+      transaction: {
+        createdAt: version
+      },
+      dataset: {
+        _id: datasetId
+      }
+    } = pipe;
+
+    const context = {
+      entitySet,
+      concepts,
+      sources,
+      entityDomain,
+      filename,
+      timeConcepts,
+      version,
+      datasetId,
+      originId,
+      languages
+    };
+
+    return ddfMappers.mapDdfEntityToWsModel(properties, context);
   };
 }
 
