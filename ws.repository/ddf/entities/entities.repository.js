@@ -113,7 +113,7 @@ EntitiesRepository.prototype.findDistinctDomains = function (entitiesOriginIds, 
 EntitiesRepository.prototype.findEntityProperties = function(entityDomainGid, select, where, onPropertiesFound) {
   const conceptQuery = this._composeQuery({
     gid: entityDomainGid,
-    'properties.concept_type': {$in: ['time',  'entity_domain']}
+    'properties.concept_type': {$in: constants.DEFAULT_ENTITY_GROUP_TYPES}
   });
 
   return Concepts.findOne(conceptQuery).lean().exec((error, concept) => {
@@ -141,7 +141,7 @@ EntitiesRepository.prototype.findEntityProperties = function(entityDomainGid, se
     });
     const whereWithPrefixedProperties = toPropertiesDotNotation(whereClauseWithSubstitutedGid);
 
-    const entitiesQuery = this._composeQuery({domain: concept.originId}, whereWithPrefixedProperties);
+    const entitiesQuery = this._composeQuery({$or: [{domain: concept.originId}, {sets: concept.originId}]}, whereWithPrefixedProperties);
 
     return Entities.find(entitiesQuery, projection).lean().exec(onPropertiesFound);
   });

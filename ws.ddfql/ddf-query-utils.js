@@ -186,7 +186,7 @@ function getConceptGids(concepts) {
 function getDomainGids(concepts) {
   return _.chain(concepts)
     .filter(concept => {
-      return _.includes(['entity_domain', 'entity_set', 'time'], _.get(concept, 'properties.concept_type', null));
+      return _.includes(constants.DEFAULT_ENTITY_GROUP_TYPES, _.get(concept, 'properties.concept_type', null));
     })
     .map(constants.GID)
     .value();

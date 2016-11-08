@@ -4,8 +4,10 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const originId = require('../origin-id.plugin');
 
+const constants = require('../../../ws.utils/constants');
+
 const Concepts = new Schema({
-  gid: {type: String, match: /^[a-z0-9_]*$/, index: true, required: true},
+  gid: {type: String, match: constants.GID_REGEXP, index: true, required: true},
   originId: {type: Schema.Types.ObjectId},
 
   type: {type: String, enum: ['entity_set', 'entity_domain', 'time', 'string', 'measure'], 'default': 'string', required: true},
