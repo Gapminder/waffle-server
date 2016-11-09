@@ -185,7 +185,7 @@ function transformPropsToJsonWherePossible(object) {
   return _.transform(object, (result, value, key) => {
     if (_.isNil(value) || value === '') {
       result[key] = null;
-    } else if (isJsonColumn(key)) {
+    } else if (isJsonColumn(key) && _.isString(value)) {
       result[key] = ddfImportUtils.isJson(value) ? JSON.parse(value) : null;
     } else {
       result[key] = value;

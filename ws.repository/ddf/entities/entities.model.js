@@ -4,8 +4,10 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const originId = require('../origin-id.plugin');
 
+const constants = require('../../../ws.utils/constants');
+
 const Entities = new Schema({
-  gid: {type: Schema.Types.Mixed, match: /^[a-zA-Z0-9\/\._-]*$/, index: true, required: true},
+  gid: {type: Schema.Types.Mixed, match: constants.GID_REGEXP, index: true, required: true},
   originId: {type: Schema.Types.ObjectId},
 
   title: String,
