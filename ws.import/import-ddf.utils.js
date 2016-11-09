@@ -2,12 +2,16 @@
 
 const _ = require('lodash');
 const fs = require('fs');
+const path = require('path');
 const hi = require('highland');
 const async = require('async');
 const validator = require('validator');
 const ddfTimeUtils = require('ddf-time-utils');
 
 const Converter = require('csvtojson').Converter;
+const constants = require('../ws.utils/constants');
+
+const reposService = require('../ws.services/repos.service');
 
 const RESERVED_PROPERTIES = ['properties', 'dimensions', 'subsetOf', 'from', 'to', 'originId', 'gid', 'domain', 'type', 'languages'];
 
@@ -16,7 +20,8 @@ module.exports = {
   isJson,
   isPropertyReserved,
   parseProperties,
-  readCsvFile
+  readCsvFile,
+  resolvePathToDdfFolder
 };
 
 function activateLifecycleHook(hookName) {
@@ -71,4 +76,47 @@ function toInternalTimeForm(value) {
 function readCsvFile(filepath) {
   return hi(fs.createReadStream(filepath, 'utf-8')
     .pipe(new Converter({constructResult: false}, {objectMode: true})));
+}
+
+function groupFilePaths(datapackage, pathToDdfFolder) {
+  const resources = _.get(datapackage, `resources`, []);
+
+  return _.chain(resources)
+    .map(_.partial(prefixResourcePath, pathToDdfFolder))
+    .groupBy(groupResourcesByModel)
+    .value();
+}
+
+function prefixResourcePath (pathToDdfFolder, resource) {
+  let primaryKey = _.get(resource, 'schema.primaryKey');
+
+  return _.defaultsDeep({
+    path: path.resolve(pathToDdfFolder, resource.path),
+    schema: {
+      primaryKey: _.isString(primaryKey) ? [primaryKey] : primaryKey
+    }
+  }, resource);
+}
+
+function groupResourcesByModel (resource) {
+  let primaryKey = _.get(resource, 'schema.primaryKey');
+
+  if (primaryKey.length > 1)
+    return constants.DATAPOINTS;
+
+  if (_.includes(constants.CONCEPTS, _.first(primaryKey)))
+    return constants.CONCEPTS;
+
+  return constants.ENTITIES;
+}
+
+function resolvePathToDdfFolder(pipe, done) {
+  pipe.pathToDdfFolder = reposService.getPathToRepo(pipe.datasetName);
+  // pipe.resolvePath = (filename) => path.resolve(pipe.pathToDdfFolder, filename);
+  pipe.datapackage = require(path.resolve(pipe.pathToDdfFolder, 'datapackage.json'));
+  pipe.filePaths = groupFilePaths(pipe.datapackage, pipe.pathToDdfFolder);
+
+  return async.setImmediate(() => {
+    return done(null, pipe);
+  });
 }

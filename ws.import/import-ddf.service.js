@@ -9,6 +9,7 @@ const importTranslations = require('./import-ddf-translations.service');
 const defaultEntityGroupTypes = ['entity_domain', 'entity_set', 'time', 'age'];
 const defaultMeasureTypes = ['measure'];
 const common = require('./common');
+const importUtils = require('./import-ddf.utils');
 const importDatapoints = require('./import-ddf-datapoints.service');
 const config = require('../ws.config/config');
 
@@ -29,7 +30,7 @@ module.exports = function (options, done) {
   console.time('done');
   async.waterfall([
     async.constant(pipe),
-    common.resolvePathToDdfFolder,
+    importUtils.resolvePathToDdfFolder,
     common.createTransaction,
     common.createDataset,
     ddfImportUtils.activateLifecycleHook('onDatasetCreated'),

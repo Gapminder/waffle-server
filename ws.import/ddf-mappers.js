@@ -15,44 +15,45 @@ module.exports = {
 };
 
 function mapDdfEntityToWsModel(entry, context) {
-    const gid = getGid(context.entitySet, entry);
-    const resolvedColumns = mapResolvedColumns(entry);
-    const resolvedSets = mapResolvedSets(context.concepts, resolvedColumns);
-    const _entry = _.mapValues(entry, value => {
+  const gid = _.get(entry, _.first(context.primaryKey), null);
 
-      const ddfBool = toBoolean(value);
-      if (!_.isNil(ddfBool)) {
-        return ddfBool;
-      }
+  if (!gid) {
+    return null;
+  }
 
-      const ddfNumeric = toNumeric(value);
-      if (!_.isNil(ddfNumeric)) {
-        return ddfNumeric;
-      }
+  const _entry = _.mapValues(entry, value => {
 
-      return value;
-    });
+    const ddfBool = toBoolean(value);
+    if (!_.isNil(ddfBool)) {
+      return ddfBool;
+    }
 
-    const domainOriginId = _.get(context, 'entityDomain.originId', context.entityDomain);
+    const ddfNumeric = toNumeric(value);
+    if (!_.isNil(ddfNumeric)) {
+      return ddfNumeric;
+    }
 
-    const newSource = context.filename ? [context.filename] : [];
-    const combinedSources = _.union(context.sources, newSource);
+    return value;
+  });
 
-    return {
-      gid: gid,
-      sources: combinedSources,
-      properties: _entry,
-      parsedProperties: ddfImportUtils.parseProperties(context.entityDomain, gid, _entry, context.timeConcepts),
+  const newSource = context.filename ? [context.filename] : [];
+  const combinedSources = _.union(context.sources, newSource);
 
-      originId: _.get(context, 'originId', null),
-      languages: _.get(context, 'languages', null),
+  return {
+    gid: gid,
+    sources: combinedSources,
+    properties: _entry,
+    parsedProperties: ddfImportUtils.parseProperties(context.entityDomain, gid, _entry, context.timeConcepts),
 
-      domain: domainOriginId,
-      sets: resolvedSets,
+    originId: _.get(context, constants.ORIGIN_ID, null),
+    languages: _.get(context, 'languages', null),
 
-      from: context.version,
-      dataset: context.datasetId
-    };
+    domain: _.get(context, `entityDomain.${constants.ORIGIN_ID}`, null),
+    sets: _.map(context.entitySets, constants.ORIGIN_ID),
+
+    from: context.version,
+    dataset: context.datasetId
+  };
 }
 
 function mapDdfDataPointToWsModel(entry, context) {
@@ -161,7 +162,7 @@ function toBoolean(value) {
 }
 
 function getGid(entitySet, entry) {
-  return entry[entitySet.gid] || (entitySet.domain && entry[entitySet.domain.gid]);
+  return _.find(entry, [entitySet.gid]) || (entitySet.domain && entry[entitySet.domain.gid]);
 }
 
 function mapResolvedSets(concepts, resolvedGids) {

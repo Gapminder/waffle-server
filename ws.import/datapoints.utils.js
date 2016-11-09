@@ -5,6 +5,7 @@ const hi = require('highland');
 
 const logger = require('../ws.config/log');
 const ddfMappers = require('./ddf-mappers');
+const constants = require('../ws.utils/constants');
 const entitiesRepositoryFactory = require('../ws.repository/ddf/entities/entities.repository');
 const datapointsRepositoryFactory = require('../ws.repository/ddf/data-points/data-points.repository');
 
@@ -12,11 +13,13 @@ const DEFAULT_CHUNK_SIZE = 1500;
 
 module.exports = {
   parseFilename,
+  parseDatapackageSchema,
   segregateEntities,
   findEntitiesInDatapoint,
   findAllEntities,
   createEntitiesFoundInDatapointsSaverWithCache,
   getMeasureDimensionFromFilename,
+  getMeasuresDimensionsFromFileSchema,
   saveDatapointsAndEntitiesFoundInThem
 };
 
@@ -38,6 +41,38 @@ function findAllEntities(externalContext) {
   return entitiesRepositoryFactory.latestVersion(externalContext.dataset._id, externalContext.transaction.createdAt)
     .findAll()
     .then(segregateEntities);
+}
+
+function getMeasuresDimensionsFromFileSchema(datapointsFile) {
+  const dimensionGids = datapointsFile.schema.primaryKey;
+  const measureGids = _.reduce(datapointsFile.schema.fields, (result, field) => {
+    if (!_.includes(dimensionGids, field.name)) {
+      result.push(field.name);
+    }
+    return result;
+  }, []);
+
+  return {measureGids, dimensionGids};
+}
+
+function parseDatapackageSchema(datapointsFile, externalContext) {
+  logger.info(`** parse filename '${datapointsFile.name}'`);
+
+  const {measureGids, dimensionGids} = getMeasuresDimensionsFromFileSchema(datapointsFile);
+  const measures = _.merge(_.pick(externalContext.previousConcepts, measureGids), _.pick(externalContext.concepts, measureGids));
+  const dimensions = _.merge(_.pick(externalContext.previousConcepts, dimensionGids), _.pick(externalContext.concepts, dimensionGids));
+
+  if (_.isEmpty(measures)) {
+    throw Error(`file '${datapointsFile.name}' doesn't have any measure.`);
+  }
+
+  if (_.isEmpty(dimensions)) {
+    throw Error(`file '${datapointsFile.name}' doesn't have any dimensions.`);
+  }
+
+  logger.info(`** parsed measures: ${_.keys(measures)}\n** parsed dimensions: ${_.keys(dimensions)}`);
+
+  return {measures, dimensions};
 }
 
 function parseFilename(filename, externalContext) {
@@ -101,7 +136,7 @@ function findEntitiesInDatapoint(datapoint, context, externalContext) {
         timeConcepts,
         domain,
         concept,
-        filename: context.filename
+        filename: context.datapointFile.name
       });
 
       alreadyFoundEntitiyGids.add(entityGid);
@@ -186,7 +221,8 @@ function mapAndStoreDatapointsToDb(datapointsFromSameFile, externalContext) {
     entities,
     datasetId,
     version,
-    concepts
+    concepts,
+
   };
 
   const wsDatapoints = _.flatMap(datapointsFromSameFile.datapoints, datapointWithContext => {
@@ -197,7 +233,7 @@ function mapAndStoreDatapointsToDb(datapointsFromSameFile, externalContext) {
 }
 
 function getMeasureDimensionFromFilename(filename) {
-  const parsedFileName = _.replace(filename, /^ddf--(\w*)--|\.csv$/g, '');
+  const parsedFileName = _.replace(filename, /^ddf--(\w*)--/g, '');
   const parsedEntries = _.split(parsedFileName, '--by--');
   const measures = _.chain(parsedEntries).first().split('--').value();
 

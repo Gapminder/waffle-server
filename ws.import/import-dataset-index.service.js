@@ -26,7 +26,9 @@ function createDatasetIndex(pipe, done) {
     _convertDatasetIndexToModel,
     _populateDatasetIndexWithOriginIds,
     _createDatasetIndex
-  ], (err) => done(err, pipe));
+  ], (err) => {
+    return done(err, pipe);
+  });
 }
 
 function _loadDatasetFiles(pipe, done) {
@@ -74,10 +76,10 @@ function _generateDatasetIndex(pipe, done) {
 
 function _generateDatasetIndexFromConcepts(pipe, done) {
   return async.mapLimit(
-    pipe.datasetFilesByType.concepts,
+    pipe.filePaths[constants.CONCEPTS],
     constants.LIMIT_NUMBER_PROCESS,
-    (item, completeSearchForConcepts) => {
-      common.readCsvFile(pipe.resolvePath(item), {}, (err, res) => {
+    (file, completeSearchForConcepts) => {
+      common.readCsvFile(file.path, {}, (err, res) => {
 
         if (err) {
           return completeSearchForConcepts(err);
@@ -88,7 +90,7 @@ function _generateDatasetIndexFromConcepts(pipe, done) {
           result.push({
             key: conceptKey,
             value: row[conceptKey],
-            file: [item],
+            file: [file.name],
             type: 'concepts'
           });
           return result;
@@ -107,17 +109,17 @@ function _generateDatasetIndexFromConcepts(pipe, done) {
 
 function _generateDatasetIndexFromEntities(pipe, done) {
   return async.mapLimit(
-    pipe.datasetFilesByType.entities,
+    pipe.filePaths[constants.ENTITIES],
     constants.LIMIT_NUMBER_PROCESS,
-    (item, completeSearchForEntities) => {
-      common.readCsvFile(pipe.resolvePath(item), {}, (err, rows) => {
+    (file, completeSearchForEntities) => {
+      common.readCsvFile(file.path, {}, (err, rows) => {
 
         if (err) {
           return completeSearchForEntities(err);
         }
 
         const entityFileHeader = _.first(rows);
-        const entityName = getEntityName(item);
+        const entityName = _.first(file.schema.primaryKey);
 
         const datasetEntitiesIndexes = _.chain(entityFileHeader)
           .keys()
@@ -126,7 +128,7 @@ function _generateDatasetIndexFromEntities(pipe, done) {
               result.push({
                 key: entityName,
                 value: column,
-                file: [item],
+                file: [file.name],
                 type: 'entities'
               });
             }
@@ -142,30 +144,25 @@ function _generateDatasetIndexFromEntities(pipe, done) {
       return done(err, pipe);
     }
   );
-
-  function getEntityName(item) {
-    const entityNameRegExp = /--.*--(.*).csv$/;
-    const entityNameMatch = entityNameRegExp.exec(item);
-    return _.get(entityNameMatch, '1');
-  }
 }
+
 function _generateDatasetIndexFromDatapoints(pipe, done) {
   return async.forEachOfLimit(
-    pipe.datasetFilesByType.datapoints,
+    pipe.filePaths[constants.DATAPOINTS],
     constants.LIMIT_NUMBER_PROCESS,
-    function (item, key, completeSearchForDatapoints) {
+    function (file, key, completeSearchForDatapoints) {
 
-      const keyValuePair = getKeyValuePair(item);
+      const keyValuePair = getKeyValuePair(file);
       const existedItem = pipe.datasetIndex.find(arrayItem => arrayItem.key == keyValuePair.key && arrayItem.value == keyValuePair.value);
 
-      // check that item not exists
+      // check that file not exists
       if (existedItem) {
-        existedItem.file.push(item);
+        existedItem.file.push(file.name);
       } else {
         pipe.datasetIndex.push({
           key: keyValuePair.key,
           value: keyValuePair.value,
-          file: [item],
+          file: [file.name],
           type: 'datapoints'
         });
       }
@@ -177,13 +174,13 @@ function _generateDatasetIndexFromDatapoints(pipe, done) {
     }
   );
 
-  function getKeyValuePair(item) {
-    const parsedFilename = datapointUtils.getMeasureDimensionFromFilename(item);
+  function getKeyValuePair(file) {
+    const {dimensionGids, measureGids} = datapointUtils.getMeasuresDimensionsFromFileSchema(file);
 
     // FIXME: value should be array because we have multiple measures per file
     return {
-      key: parsedFilename.dimensions.join(','),
-      value: _.first(parsedFilename.measures)
+      key: dimensionGids.join(','),
+      value: _.first(measureGids)
     };
   }
 }

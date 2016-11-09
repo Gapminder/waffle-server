@@ -9,7 +9,7 @@ const Converter = require('csvtojson').Converter;
 const ddfMappers = require('./ddf-mappers');
 
 const constants = require('../ws.utils/constants');
-const reposService = require('../ws.services/repos.service');
+const entitiesUtils = require('./entities.utils');
 
 const entitiesRepositoryFactory = require('../ws.repository/ddf/entities/entities.repository');
 const conceptsRepositoryFactory = require('../ws.repository/ddf/concepts/concepts.repository');
@@ -26,7 +26,6 @@ const MONGODB_DOC_CREATION_THREADS_AMOUNT = 3;
 module.exports = {
   // File utils
   readCsvFile,
-  resolvePathToDdfFolder,
 
   // Concepts
   getAllConcepts: _getAllConcepts,
@@ -49,20 +48,6 @@ module.exports = {
   closeTransaction,
   establishTransactionForDataset
 };
-
-function resolvePathToDdfFolder(pipe, done) {
-  pipe.pathToDdfFolder = reposService.getPathToRepo(pipe.datasetName);
-  pipe.resolvePath = (filename) => path.resolve(pipe.pathToDdfFolder, filename);
-  pipe.fileTemplates = {
-    getFilenameOfEntityDomainEntities: _.template('ddf--entities--${ gid }.csv'),
-    getFilenameOfEntitySetEntities: _.template('ddf--entities--${ domain.gid }--${ gid }.csv'),
-    getFilenameOfConcepts: _.template(pipe.resolvePath('ddf--concepts.csv'))
-  };
-
-  return async.setImmediate(() => {
-    return done(null, pipe);
-  });
-}
 
 function createTransaction(pipe, done) {
   logger.info('create transaction');
@@ -120,13 +105,12 @@ function establishTransactionForDataset(pipe, done) {
 }
 
 function createConcepts(pipe, done) {
-
   logger.info('start process creating concepts');
 
-  const filename = 'ddf--concepts.csv';
-  const options = {transaction: pipe.transaction, dataset: pipe.dataset, resolvePath: pipe.resolvePath, filename};
+  const conceptsFile = _.get(pipe.filePaths, `${constants.CONCEPTS}.0`, '');
+  const context = {transaction: pipe.transaction, dataset: pipe.dataset, conceptsFile};
   return async.waterfall([
-    async.constant(options),
+    async.constant(context),
     _loadConcepts,
     _createConcepts,
     _getAllConcepts,
@@ -143,9 +127,9 @@ function createConcepts(pipe, done) {
 function _loadConcepts(pipe, done) {
   logger.info('** load concepts');
 
-  return readCsvFile(pipe.resolvePath(pipe.filename), {}, (err, csvConcepts) => {
+  return readCsvFile(pipe.conceptsFile.path, {}, (err, csvConcepts) => {
 
-    const {dataset: {_id: datasetId}, transaction: {createdAt: version}, filename} = pipe;
+    const {dataset: {_id: datasetId}, transaction: {createdAt: version}, conceptsFile: {name: filename}} = pipe;
 
     const concepts = _.map(csvConcepts, csvConcept => {
       return ddfMappers.mapDdfConceptsToWsModel(csvConcept, {datasetId, version, filename});
@@ -239,13 +223,13 @@ function _addConceptDomains(pipe, done) {
 
 function createEntities(pipe, done) {
   logger.info('start process creating entities');
+
   let _pipe = {
     transaction: pipe.transaction,
     concepts: pipe.concepts,
     timeConcepts: pipe.timeConcepts,
     dataset: pipe.dataset,
-    fileTemplates: pipe.fileTemplates,
-    resolvePath: pipe.resolvePath
+    entitiesFiles: pipe.filePaths[constants.ENTITIES]
   };
 
   async.waterfall([
@@ -263,48 +247,53 @@ function createEntities(pipe, done) {
 function _processEntities(pipe, done) {
   logger.info('** process entities');
 
-  let entitySets = _.filter(pipe.concepts, concept => _.includes(constants.DEFAULT_ENTITY_GROUP_TYPES, concept.type));
-
-  async.eachLimit(
-    entitySets,
+  return async.eachLimit(
+    pipe.entitiesFiles,
     constants.LIMIT_NUMBER_PROCESS,
-    __processEntitiesPerConcept(pipe),
+    async.apply(__processEntitiesPerConcept, pipe),
     err => done(err, pipe)
   );
-
-  function __processEntitiesPerConcept(pipe) {
-    return (entitySet, cb) => async.waterfall([
-      async.constant({
-        entitySet: entitySet,
-        entityDomain: entitySet.type === 'entity_domain' ? entitySet : _.get(entitySet, 'domain', null),
-        concepts: pipe.concepts,
-        timeConcepts: pipe.timeConcepts,
-        transaction: pipe.transaction,
-        dataset: pipe.dataset,
-        resolvePath: pipe.resolvePath,
-        fileTemplates: pipe.fileTemplates
-      }),
-      __loadEntities,
-      __storeEntitiesToDb
-    ], cb);
-  }
 }
 
-function __loadEntities(_pipe, cb) {
-  _pipe.filename = _pipe.entitySet.domain
-    ? _pipe.fileTemplates.getFilenameOfEntitySetEntities(_pipe.entitySet)
-    : _pipe.fileTemplates.getFilenameOfEntityDomainEntities(_pipe.entitySet);
+function __processEntitiesPerConcept(pipe, entitiesFile, cb) {
+  return async.waterfall([
+    async.constant({
+      concepts: pipe.concepts,
+      timeConcepts: pipe.timeConcepts,
+      transaction: pipe.transaction,
+      dataset: pipe.dataset,
+      entitiesFile
+    }),
+    __parseEntitiesFileSchema,
+    __loadEntities,
+    __storeEntitiesToDb
+  ], cb);
+}
 
-  logger.info(`**** load entities from file ${_pipe.filename}`);
+function __parseEntitiesFileSchema(pipe, cb) {
+  const {domain: entityDomain, sets: entitySets} = entitiesUtils.parseDatapackageSchema(pipe.entitiesFile, pipe);
 
-  readCsvFile(_pipe.resolvePath(_pipe.filename), {}, (err, csvEntities) => {
+  return async.setImmediate(() => {
+    return cb(null, _.defaults(pipe, {entityDomain, entitySets}));
+  });
+}
+
+function __loadEntities(pipe, cb) {
+  logger.info(`**** load entities from file ${pipe.entitiesFile.name}`);
+
+  readCsvFile(pipe.entitiesFile.path, {}, (err, csvEntities) => {
     let entities = _.map(csvEntities, csvEntity => {
 
       const {
-        entitySet,
+        entitySets,
         concepts,
         entityDomain,
-        filename,
+        entitiesFile: {
+          name: filename,
+          schema: {
+            primaryKey: primaryKey
+          }
+        },
         timeConcepts,
         transaction: {
           createdAt: version
@@ -312,9 +301,9 @@ function __loadEntities(_pipe, cb) {
         dataset: {
           _id: datasetId
         }
-      } = _pipe;
+      } = pipe;
 
-      const context = {entitySet, concepts, entityDomain, filename, timeConcepts, version, datasetId};
+      const context = {entitySets, concepts, entityDomain, filename, timeConcepts, version, datasetId, primaryKey};
 
       return ddfMappers.mapDdfEntityToWsModel(csvEntity, context);
     });
@@ -324,19 +313,19 @@ function __loadEntities(_pipe, cb) {
       return cb('All entity gid\'s should be unique within the Entity Set or Entity Domain!');
     }
 
-    _pipe.entities = entities;
-    return cb(err, _pipe);
+    pipe.entities = entities;
+    return cb(err, pipe);
   });
 }
 
 function __storeEntitiesToDb(pipe, done) {
   if (_.isEmpty(pipe.entities)) {
-    logger.warn(`file '${pipe.filename}' is empty or doesn't exist.`);
+    logger.warn(`file '${pipe.entitiesFile.name}' is empty or doesn't exist.`);
 
     return async.setImmediate(() => done(null, pipe));
   }
 
-  logger.info(`**** store entities from file '${pipe.filename}' to db`);
+  logger.info(`**** store entities from file '${pipe.entitiesFile.name}' to db`);
 
   const entitiesRepository = entitiesRepositoryFactory.versionAgnostic();
 
