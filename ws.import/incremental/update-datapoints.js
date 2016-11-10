@@ -91,7 +91,7 @@ function createDatapoints(externalContextFrozen) {
       const toRawDatapoint = _.curry(formRawDataPoint)(context);
       const updatedDataPoints = _.map(context.fileChanges.update, toRawDatapoint);
       const changedDataPoints = _.map(context.fileChanges.change, toRawDatapoint);
-      const translatedDataPoints = _.map(context.fileChanges.translate, toRawDatapoint);
+      const translatedDataPoints = []; // _.map(context.fileChanges.translate, toRawDatapoint);
       return hi(_.concat(context.fileChanges.create, updatedDataPoints, changedDataPoints, translatedDataPoints))
         .map(datapoint => {
           const entitiesFoundInDatapoint = datapointsUtils.findEntitiesInDatapoint(datapoint, context, externalContextFrozen);
@@ -111,7 +111,7 @@ function __closeRemovedAndUpdatedDataPoints(pipe, done) {
     ___updateRemovedDataPoints(pipe.fileChanges.remove, pipe),
     ___updateChangedDataPoints(pipe.fileChanges.update, pipe),
     ___updateChangedDataPoints(pipe.fileChanges.change, pipe),
-    ___updateChangedDataPoints(pipe.fileChanges.translate, pipe)
+    // ___updateChangedDataPoints(pipe.fileChanges.translate, pipe)
   ], (err) => {
     return done(err, pipe);
   });
