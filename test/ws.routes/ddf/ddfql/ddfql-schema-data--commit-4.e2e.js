@@ -38,7 +38,10 @@ const fixtureQueryOperatorsNumUsersByCompanyProjectWithCondition = require('./fi
 describe("State Version 3 (4th commit)", function() {
 
   before(done => {
-    cliUtils.getCommitByGithubUrl(e2eEnv.repo, 3, (error, commit) => {
+
+    const fourthIndexOfCommits = 3;
+
+    cliUtils.getCommitByGithubUrl(e2eEnv.repo, fourthIndexOfCommits, (error, commit) => {
       if (error) return done(error);
 
       cliUtils.setDefaultCommit(commit, done);
