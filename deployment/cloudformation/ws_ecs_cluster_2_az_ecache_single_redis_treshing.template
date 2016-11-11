@@ -1059,8 +1059,8 @@
             "Memory": "950",
             "PortMappings": [
               {
-                "ContainerPort": "3000",
-                "HostPort": "3000"
+                "ContainerPort": "80",
+                "HostPort": "80"
               }
             ],
             "Ulimits": [
