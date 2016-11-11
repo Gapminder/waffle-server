@@ -32,6 +32,8 @@ function help {
       NODE_ECR_LABEL        -> latest
       ECS_INSTANCE_TYPE     -> t2.micro
       REDIS_INSTANCE_TYPE   -> cache.t2.micro
+      ECS_INSTANCE_TYPE_TM  -> m4.xlarge
+      ECS_INSTANCE_TYPE_LB  -> t2.medium
       REDIS_PORT            -> 6379
       MAX_CLUSTER_INSTANCES -> 10
       MIN_CLUSTER_INSTANCES -> 2
@@ -51,9 +53,12 @@ if [ "${SETTINGS}x" != "x" ]; then
   source ${SETTINGS}
 fi
 
+THRASHING_MACHINE=${THRASHING_MACHINE:-"THRASHING_MACHINE"}
 HAPROXY_ECR_LABEL=${HAPROXY_ECR_LABEL:-"latest"}
 NODE_ECR_LABEL=${NODE_ECR_LABEL:-"latest"}
+ECS_INSTANCE_TYPE_LB=${ECS_INSTANCE_TYPE_LB:-"t2.medium"}
 ECS_INSTANCE_TYPE=${ECS_INSTANCE_TYPE:-"t2.micro"}
+ECS_INSTANCE_TYPE_TM=${ECS_INSTANCE_TYPE_TM:-"m4.xlarge"}
 REDIS_INSTANCE_TYPE=${REDIS_INSTANCE_TYPE:-"cache.t2.micro"}
 REDIS_PORT=${REDIS_PORT:-"6379"}
 MAX_CLUSTER_INSTANCES=${MAX_CLUSTER_INSTANCES:-"10"}
@@ -61,7 +66,9 @@ MIN_CLUSTER_INSTANCES=${MIN_CLUSTER_INSTANCES:-"2"}
 DDF_REPO_PATH=${DDF_REPO_PATH:-"/home/waffle-server/ddf"}
 DEFAULT_USER_PASSWORD=${DEFAULT_USER_PASSWORD:-"123"}
 
-CF_TMPLATE_PATH=${CF_TEMPLATE:-"$(dirname $0)/../cloudformation/ws_ecs_cluster_2_az_ecache_single_redis.template"}
+
+
+CF_TMPLATE_PATH=${CF_TEMPLATE:-"$(dirname $0)/../cloudformation/ws_ecs_cluster_2_az_ecache_single_redis_treshing.template"}
 AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-"us-east-1"}
 
 S3_BUCKET_NAME="${STACK_NAME}-cf-bucket"
@@ -126,6 +133,8 @@ ParameterKey=DockerNodeECRname,ParameterValue=${NODE_ECR_NAME} \
 ParameterKey=DockerNodeECRlabel,ParameterValue=${NODE_ECR_LABEL} \
 ParameterKey=SshKeyName,ParameterValue=${AWS_SSH_KEY_NAME} \
 ParameterKey=InstanceType,ParameterValue=${ECS_INSTANCE_TYPE} \
+ParameterKey=InstanceTypeLb,ParameterValue=${ECS_INSTANCE_TYPE_LB} \
+ParameterKey=InstanceTypeThreshingMachine,ParameterValue=${ECS_INSTANCE_TYPE_TM} \
 ParameterKey=InstanceTypeECacheRedis,ParameterValue=${REDIS_INSTANCE_TYPE} \
 ParameterKey=RedisPort,ParameterValue=${REDIS_PORT} \
 ParameterKey=MaxClusterInstances,ParameterValue=${MAX_CLUSTER_INSTANCES} \
@@ -134,7 +143,8 @@ ParameterKey=MongoDBUrl,ParameterValue=\"${MONGODB_URL}\" \
 ParameterKey=NewRelicKey,ParameterValue=${NEWRELIC_KEY} \
 ParameterKey=NodeEnv,ParameterValue=${NODE_ENV} \
 ParameterKey=DdfRepoPath,ParameterValue=${DDF_REPO_PATH} \
-ParameterKey=DefaultUserPassword,ParameterValue=${DEFAULT_USER_PASSWORD}"
+ParameterKey=DefaultUserPassword,ParameterValue=${DEFAULT_USER_PASSWORD} \
+ParameterKey=ThrashingMachine,ParameterValue=${THRASHING_MACHINE}"
 
   $AWS --region ${AWS_DEFAULT_REGION} cloudformation create-stack --stack-name ${STACK_NAME} --template-url https://s3.amazonaws.com/${S3_BUCKET_NAME}/$(basename ${CF_TMPLATE_PATH}) --parameters ${STACK_PARAMS_STR} --disable-rollback --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
 
