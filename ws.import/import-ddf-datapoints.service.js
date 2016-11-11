@@ -17,12 +17,11 @@ function startDatapointsCreation(externalContext, done) {
   logger.info('start process creating data points');
 
   const externalContextFrozen = Object.freeze(_.pick(externalContext, [
-    'pathToDdfFolder',
     'concepts',
     'timeConcepts',
     'transaction',
     'dataset',
-    'filePaths'
+    'files'
   ]));
 
   const errors = [];
@@ -48,14 +47,14 @@ function createDatapoints(externalContextFrozen) {
     externalContextFrozen
   );
 
-  const datapointsAndFoundEntitiesStream = hi(externalContextFrozen.filePaths[constants.DATAPOINTS])
-    .flatMap(datapointFile => {
-      const {measures, dimensions} = datapointsUtils.parseDatapackageSchema(datapointFile, externalContextFrozen);
+  const datapointsAndFoundEntitiesStream = hi(externalContextFrozen.files.byModels[constants.DATAPOINTS])
+    .flatMap(datapointsFile => {
+      const {measures, dimensions} = datapointsUtils.parseDatapackageSchema(datapointsFile, externalContextFrozen);
       return hi(findAllEntitiesMemoized(externalContextFrozen))
-        .map(segregatedEntities => ({datapointFile, measures, dimensions, segregatedEntities}));
+        .map(segregatedEntities => ({datapointsFile, measures, dimensions, segregatedEntities}));
     })
     .map(context => {
-      return ddfUtils.readCsvFile(context.datapointFile.path, {})
+      return ddfUtils.readCsvFile(context.datapointsFile.absolutePath, {})
         .map(datapoint => ({datapoint, context}));
     })
     .parallel(MONGODB_DOC_CREATION_THREADS_AMOUNT)

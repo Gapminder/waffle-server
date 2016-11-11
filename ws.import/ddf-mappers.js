@@ -15,11 +15,7 @@ module.exports = {
 };
 
 function mapDdfEntityToWsModel(entry, context) {
-  const gid = _.get(entry, _.first(context.primaryKey), null);
-
-  if (!gid) {
-    return null;
-  }
+  const gid = _.get(entry, _.first(context.primaryKey));
 
   const _entry = _.mapValues(entry, value => {
 
@@ -38,18 +34,19 @@ function mapDdfEntityToWsModel(entry, context) {
 
   const newSource = context.filename ? [context.filename] : [];
   const combinedSources = _.union(context.sources, newSource);
+  const entityDomain = _.find(context.concepts, {originId: context.domainOriginId});
 
   return {
     gid: gid,
     sources: combinedSources,
     properties: _entry,
-    parsedProperties: ddfImportUtils.parseProperties(context.entityDomain, gid, _entry, context.timeConcepts),
+    parsedProperties: ddfImportUtils.parseProperties(entityDomain, gid, _entry, context.timeConcepts),
 
     originId: _.get(context, constants.ORIGIN_ID, null),
     languages: _.get(context, 'languages', null),
 
-    domain: _.get(context, `entityDomain.${constants.ORIGIN_ID}`, null),
-    sets: _.map(context.entitySets, constants.ORIGIN_ID),
+    domain: context.domainOriginId,
+    sets: context.setOriginIds,
 
     from: context.version,
     dataset: context.datasetId

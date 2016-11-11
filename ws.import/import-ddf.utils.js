@@ -21,7 +21,7 @@ module.exports = {
   isPropertyReserved,
   parseProperties,
   readCsvFile,
-  resolvePathToDdfFolder
+  resolveFilePathsToDdfFolder
 };
 
 function activateLifecycleHook(hookName) {
@@ -73,17 +73,18 @@ function toInternalTimeForm(value) {
   };
 }
 
-function readCsvFile(filepath) {
-  return hi(fs.createReadStream(filepath, 'utf-8')
+function readCsvFile(absoluteFilepath) {
+  return hi(fs.createReadStream(absoluteFilepath, 'utf-8')
     .pipe(new Converter({constructResult: false}, {objectMode: true})));
 }
 
-function groupFilePaths(datapackage, pathToDdfFolder) {
+function groupFiles(datapackage, pathToDdfFolder) {
   const resources = _.get(datapackage, `resources`, []);
 
   return _.chain(resources)
     .map(_.partial(prefixResourcePath, pathToDdfFolder))
     .groupBy(groupResourcesByModel)
+    .mapValues(resources => _.uniqBy(resources, 'path'))
     .value();
 }
 
@@ -91,7 +92,7 @@ function prefixResourcePath (pathToDdfFolder, resource) {
   let primaryKey = _.get(resource, 'schema.primaryKey');
 
   return _.defaultsDeep({
-    path: path.resolve(pathToDdfFolder, resource.path),
+    absolutePath: path.resolve(pathToDdfFolder, resource.path),
     schema: {
       primaryKey: _.isString(primaryKey) ? [primaryKey] : primaryKey
     }
@@ -110,13 +111,20 @@ function groupResourcesByModel (resource) {
   return constants.ENTITIES;
 }
 
-function resolvePathToDdfFolder(pipe, done) {
-  pipe.pathToDdfFolder = reposService.getPathToRepo(pipe.datasetName);
-  // pipe.resolvePath = (filename) => path.resolve(pipe.pathToDdfFolder, filename);
-  pipe.datapackage = require(path.resolve(pipe.pathToDdfFolder, 'datapackage.json'));
-  pipe.filePaths = groupFilePaths(pipe.datapackage, pipe.pathToDdfFolder);
+function resolveFilePathsToDdfFolder(pipe, done) {
+  const pathToDdfFolder = reposService.getPathToRepo(pipe.datasetName);
 
-  return async.setImmediate(() => {
+  fs.readFile(path.resolve(pathToDdfFolder, 'datapackage.json'), 'utf-8', (err, datapackageString) => {
+    const datapackage = JSON.parse(datapackageString);
+
+    pipe.pathToDdfFolder = pathToDdfFolder;
+    pipe.datapackage = datapackage;
+    pipe.changedFilenames = _.keys(pipe.allChanges);
+    pipe.files = Object.freeze({
+      byModels: groupFiles(datapackage, pathToDdfFolder),
+      byPaths: _.chain(datapackage.resources).keyBy('path').mapValues(_.partial(prefixResourcePath, pathToDdfFolder)).value()
+    });
+
     return done(null, pipe);
   });
 }

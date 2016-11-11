@@ -107,7 +107,7 @@ function establishTransactionForDataset(pipe, done) {
 function createConcepts(pipe, done) {
   logger.info('start process creating concepts');
 
-  const conceptsFile = _.get(pipe.filePaths, `${constants.CONCEPTS}.0`, '');
+  const conceptsFile = _.get(pipe.files.byModels, `${constants.CONCEPTS}.0`, '');
   const context = {transaction: pipe.transaction, dataset: pipe.dataset, conceptsFile};
   return async.waterfall([
     async.constant(context),
@@ -127,7 +127,7 @@ function createConcepts(pipe, done) {
 function _loadConcepts(pipe, done) {
   logger.info('** load concepts');
 
-  return readCsvFile(pipe.conceptsFile.path, {}, (err, csvConcepts) => {
+  return readCsvFile(pipe.conceptsFile.absolutePath, {}, (err, csvConcepts) => {
 
     const {dataset: {_id: datasetId}, transaction: {createdAt: version}, conceptsFile: {name: filename}} = pipe;
 
@@ -229,7 +229,7 @@ function createEntities(pipe, done) {
     concepts: pipe.concepts,
     timeConcepts: pipe.timeConcepts,
     dataset: pipe.dataset,
-    entitiesFiles: pipe.filePaths[constants.ENTITIES]
+    entitiesFiles: pipe.files.byModels[constants.ENTITIES]
   };
 
   async.waterfall([
@@ -248,7 +248,7 @@ function _processEntities(pipe, done) {
   logger.info('** process entities');
 
   return async.eachLimit(
-    pipe.entitiesFiles,
+    _.difference(pipe.entitiesFiles, []),
     constants.LIMIT_NUMBER_PROCESS,
     async.apply(__processEntitiesPerConcept, pipe),
     err => done(err, pipe)
@@ -271,27 +271,27 @@ function __processEntitiesPerConcept(pipe, entitiesFile, cb) {
 }
 
 function __parseEntitiesFileSchema(pipe, cb) {
-  const {domain: entityDomain, sets: entitySets} = entitiesUtils.parseDatapackageSchema(pipe.entitiesFile, pipe);
+  const {domainOriginId, setOriginIds} = entitiesUtils.parseDatapackageSchema(pipe);
 
   return async.setImmediate(() => {
-    return cb(null, _.defaults(pipe, {entityDomain, entitySets}));
+    return cb(null, _.defaults(pipe, {domainOriginId, setOriginIds}));
   });
 }
 
 function __loadEntities(pipe, cb) {
-  logger.info(`**** load entities from file ${pipe.entitiesFile.name}`);
+  logger.info(`**** load entities from file ${pipe.entitiesFile.path}`);
 
-  readCsvFile(pipe.entitiesFile.path, {}, (err, csvEntities) => {
+  readCsvFile(pipe.entitiesFile.absolutePath, {}, (err, csvEntities) => {
     let entities = _.map(csvEntities, csvEntity => {
 
       const {
-        entitySets,
+        setOriginIds,
         concepts,
-        entityDomain,
+        domainOriginId,
         entitiesFile: {
-          name: filename,
+          path: filename,
           schema: {
-            primaryKey: primaryKey
+            primaryKey
           }
         },
         timeConcepts,
@@ -303,7 +303,7 @@ function __loadEntities(pipe, cb) {
         }
       } = pipe;
 
-      const context = {entitySets, concepts, entityDomain, filename, timeConcepts, version, datasetId, primaryKey};
+      const context = {domainOriginId, setOriginIds, concepts, timeConcepts, version, datasetId, filename, primaryKey};
 
       return ddfMappers.mapDdfEntityToWsModel(csvEntity, context);
     });
@@ -320,12 +320,12 @@ function __loadEntities(pipe, cb) {
 
 function __storeEntitiesToDb(pipe, done) {
   if (_.isEmpty(pipe.entities)) {
-    logger.warn(`file '${pipe.entitiesFile.name}' is empty or doesn't exist.`);
+    logger.warn(`file '${pipe.entitiesFile.path}' is empty or doesn't exist.`);
 
     return async.setImmediate(() => done(null, pipe));
   }
 
-  logger.info(`**** store entities from file '${pipe.entitiesFile.name}' to db`);
+  logger.info(`**** store entities from file '${pipe.entitiesFile.path}' to db`);
 
   const entitiesRepository = entitiesRepositoryFactory.versionAgnostic();
 

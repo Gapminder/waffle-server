@@ -11,6 +11,7 @@ const logger = require('../../ws.config/log');
 const config = require('../../ws.config/config');
 const constants = require('../../ws.utils/constants');
 const ddfImportUtils = require('../import-ddf.utils');
+const entitiesUtils = require('../entities.utils');
 
 const createDatasetIndex = require('./../import-dataset-index.service');
 const entitiesRepositoryFactory = require('../../ws.repository/ddf/entities/entities.repository');
@@ -46,7 +47,7 @@ module.exports = function (options, done) {
   console.time('done');
   async.waterfall([
     async.constant(pipe),
-    common.resolvePathToDdfFolder,
+    ddfImportUtils.resolveFilePathsToDdfFolder,
     common.createTransaction,
     ddfImportUtils.activateLifecycleHook('onTransactionCreated'),
     common.findDataset,
@@ -93,10 +94,8 @@ function getAllPreviousConcepts(pipe, done) {
 function processEntitiesChanges(pipe, done) {
   logger.info('process entities changes');
 
-  pipe.entitiesFiles = _.pickBy(pipe.allChanges, (ch, filename) => filename.match(/ddf--entities--/g));
-
-  return async.forEachOfSeries(
-    pipe.entitiesFiles,
+  return async.eachSeries(
+    pipe.files.byModels[constants.ENTITIES],
     _processEntititesFile(pipe),
     err => {
       return done(err, pipe);
@@ -107,9 +106,16 @@ function processEntitiesChanges(pipe, done) {
 function _processEntititesFile(pipe) {
   let key = 1;
 
-  return (fileChanges, filename, cb) => {
+  return (entitiesFile, cb) => {
+    const filename = entitiesFile.path;
+    const fileChanges = pipe.allChanges[filename];
+
+    if (_.isEmpty(fileChanges)) {
+      return cb();
+    }
+
     let _pipe = {
-      filename: filename,
+      entitiesFile,
       fileChanges: fileChanges.body,
       removedColumns: fileChanges.header.remove,
       previousConcepts: pipe.previousConcepts,
@@ -120,30 +126,24 @@ function _processEntititesFile(pipe) {
 
     return async.waterfall([
       async.constant(_pipe),
-      __parseEntityFilename,
+      __parseEntitiesFileSchema,
       __closeRemovedAndUpdatedEntities,
       __createAndUpdateEntities
     ], err => {
-      logger.info(`** Processed ${key++} of ${_.keys(pipe.entitiesFiles).length} files`);
+      logger.info(`** Processed ${key++} of ${pipe.files.byModels[constants.ENTITIES].length} files`);
 
       return cb(err);
     });
   };
 }
 
-function __parseEntityFilename(pipe, cb) {
-  logger.info(`**** load entities from file ${pipe.filename}`);
+function __parseEntitiesFileSchema(pipe, cb) {
+  logger.info(`**** load entities from file ${pipe.entitiesFile.path}`);
 
-  let parsedFilename = pipe.filename
-    .replace('ddf--entities--', '')
-    .replace('.csv', '')
-    .split('--');
+  const {domainOriginId, setOriginIds} = entitiesUtils.parseDatapackageSchema(pipe);
 
-  let entityDomainGid = _.first(parsedFilename);
-  let entitySetGid = _.last(parsedFilename);
-
-  pipe.entitySet = pipe.concepts[entitySetGid] || pipe.previousConcepts[entitySetGid];
-  pipe.entityDomain = pipe.concepts[entityDomainGid] || pipe.previousConcepts[entityDomainGid];
+  pipe.setOriginIds = setOriginIds;
+  pipe.domainOriginId = domainOriginId;
 
   return async.setImmediate(() => cb(null, pipe));
 }
@@ -169,9 +169,9 @@ function __closeRemovedAndUpdatedEntities(pipe, cb) {
 
 function ___processChangedColumnsBySource(pipe, cb) {
   let _pipe = {
-    source: pipe.filename,
-    entityDomain: pipe.entityDomain,
-    entitySet: pipe.entitySet,
+    source: pipe.entitiesFile.path,
+    domainOriginId: pipe.domainOriginId,
+    setOriginIds: pipe.setOriginIds,
     transaction: pipe.transaction,
     dataset: pipe.dataset
   };
@@ -189,8 +189,8 @@ function ___processChangedColumnsBySource(pipe, cb) {
 
 function ___closeAllEntitiesBySource(pipe, cb) {
   const query = {
-    domain: pipe.entityDomain.originId,
-    sets: getQuerySetsClause(pipe.entityDomain, pipe.entitySet)
+    domain: pipe.domainOriginId,
+    sets: pipe.setOriginIds
   };
 
   return entitiesRepositoryFactory
@@ -200,8 +200,8 @@ function ___closeAllEntitiesBySource(pipe, cb) {
 
 function ___getAllEntitiesBySource(pipe, cb) {
   const query = {
-    domain: pipe.entityDomain.originId,
-    sets: getQuerySetsClause(pipe.entityDomain, pipe.entitySet)
+    domain: pipe.domainOriginId,
+    sets: pipe.setOriginIds
   };
 
   return entitiesRepositoryFactory
@@ -229,8 +229,11 @@ function ____closeEntity(pipe) {
 
   return (entity, ecb) => {
     const query = _.assign({
-      domain: pipe.entityDomain.originId,
-      sets: getQuerySetsClause(pipe.entityDomain, pipe.entitySet)
+      domain: pipe.domainOriginId,
+      $and: [
+        {sets: pipe.setOriginIds},
+        {sets: {$size: pipe.setOriginIds.length}}
+      ]
     }, {[`properties.${entity.gid}`]: entity[entity.gid]});
 
     return entitiesRepository.closeOneByQuery(query, (err, doc) => {
@@ -238,8 +241,10 @@ function ____closeEntity(pipe) {
         return ecb(err);
       }
 
-      if (doc) {
-        pipe.closedEntities[doc.gid] = doc;
+      const closedEntity = doc.toObject();
+
+      if (closedEntity) {
+        pipe.closedEntities[closedEntity[constants.GID]] = closedEntity;
       }
 
       return ecb(null, pipe);
@@ -249,9 +254,9 @@ function ____closeEntity(pipe) {
 
 function __createAndUpdateEntities(pipe, cb) {
   let _pipe = {
-    filename: pipe.filename,
-    entitySet: pipe.entitySet,
-    entityDomain: pipe.entityDomain,
+    entitiesFile: pipe.entitiesFile,
+    setOriginIds: pipe.setOriginIds,
+    domainOriginId: pipe.domainOriginId,
     fileChanges: pipe.fileChanges,
     removedColumns: pipe.removedColumns,
     closedEntities: pipe.closedEntities,
@@ -275,20 +280,26 @@ function ___fakeLoadRawEntities(pipe, done) {
     .keyBy(getGid)
     .keys()
     .value();
-  let closedEntities = _.mapValues(pipe.closedEntities, 'properties');
-  let _changedClosedEntities = _.omit(closedEntities, removedEntitiesGids);
-  let changedClosedEntities = _.mapValues(_changedClosedEntities, (entity) => _.omit(entity, pipe.removedColumns));
 
-  let _mergedChangedEntities = mergeUpdatedAndChangedEntities(pipe.fileChanges.update, pipe.fileChanges.change, pipe.fileChanges.translate);
-  let mergedChangedEntities = _.merge(changedClosedEntities, _mergedChangedEntities);
+  let closedEntitiesByGids = _.mapValues(pipe.closedEntities, 'properties');
+  let changedEntitiesByGids = _.omit(closedEntitiesByGids, removedEntitiesGids);
+  let cleanedEntitiesByGids = _.mapValues(changedEntitiesByGids, (entity) => _.omit(entity, pipe.removedColumns));
 
-  let updatedEntities = _.map(mergedChangedEntities, ____formRawEntities(pipe));
+  let mergedUpdatesChangesTranslations = mergeUpdatedAndChangedEntities(pipe.fileChanges.update, pipe.fileChanges.change, pipe.fileChanges.translate);
+  let mergedRawEntities = _.merge(cleanedEntitiesByGids, mergedUpdatesChangesTranslations);
+
+  let updatedEntities = _.map(mergedRawEntities, ____formRawEntities(pipe));
 
   const {
-    entitySet,
+    domainOriginId,
+    setOriginIds,
     concepts,
-    entityDomain,
-    filename,
+    entitiesFile: {
+      path: filename,
+      schema: {
+        primaryKey
+      }
+    },
     timeConcepts,
     transaction: {
       createdAt: version
@@ -298,7 +309,7 @@ function ___fakeLoadRawEntities(pipe, done) {
     }
   } = pipe;
 
-  const context = {entitySet, concepts, entityDomain, filename, timeConcepts, version, datasetId};
+  const context = {domainOriginId, setOriginIds, concepts, timeConcepts, version, datasetId, filename, primaryKey};
 
   let createdEntities = _.map(pipe.fileChanges.create, createdEntity => {
     return ddfMappers.mapDdfEntityToWsModel(createdEntity, context);
@@ -334,10 +345,15 @@ function ____formRawEntities(pipe) {
     const sources = closedEntity.sources;
 
     const {
-      entitySet,
+      domainOriginId,
+      setOriginIds,
       concepts,
-      entityDomain,
-      filename,
+      entitiesFile: {
+        path: filename,
+        schema: {
+          primaryKey
+        }
+      },
       timeConcepts,
       transaction: {
         createdAt: version
@@ -348,11 +364,12 @@ function ____formRawEntities(pipe) {
     } = pipe;
 
     const context = {
-      entitySet,
+      domainOriginId,
+      setOriginIds,
       concepts,
       sources,
-      entityDomain,
       filename,
+      primaryKey,
       timeConcepts,
       version,
       datasetId,
@@ -371,8 +388,4 @@ function __getAllEntities(pipe, done) {
       pipe.entities = res;
       return done(err, pipe);
     });
-}
-
-function getQuerySetsClause(entityDomain, entitySet) {
-  return entitySet && entityDomain.originId !== entitySet.originId ? entitySet.originId : {$size: 0};
 }

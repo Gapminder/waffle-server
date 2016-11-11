@@ -11,40 +11,59 @@ module.exports = {
 };
 
 function cutReservedPrefix(field) {
-  return field.name.replace(/^is--\./, '');
+  return field.name.replace(/^is--/, '');
 }
 
-function getFieldsFromSchema(entitiesFile) {
-  return _.chain(entitiesFile)
-    .get('schema.fields')
+function getFieldsFromSchema(fields) {
+  return _.chain(fields)
     .map(cutReservedPrefix)
-    .compact()
+    .uniq()
     .value();
 }
 
-function getEntitySetsFromSchema(entitiesFile, concepts) {
-  const fields = getFieldsFromSchema(entitiesFile);
+function getEntitySetsFromSchema({fields, concepts}) {
+  return _.reduce(fields, (result, field) => {
+    const concept = _.get(concepts, field);
+    const conceptType = _.get(concept, 'type');
 
-  return _.chain(concepts)
-    .pick(fields)
-    .filter(concept => _.includes(constants.CONCEPT_TYPE_ENTITY_SET, concept.type))
-    .value();
+    if (_.includes(constants.CONCEPT_TYPE_ENTITY_SET, conceptType)) {
+      result.push(concept);
+    }
+
+    return result;
+  }, []);
 }
 
-function parseDatapackageSchema(entitiesFile, externalContext) {
-  logger.info(`** parse schema file '${entitiesFile.name}'`);
-  const primaryKey = _.get(entitiesFile, 'schema.primaryKey.0');
-  const concept = _.get(externalContext, `concepts.${primaryKey}`);
+function parseDatapackageSchema(externalContext) {
+  const {
+    concepts,
+    entitiesFile: {
+      path: filename,
+      schema: {
+        fields,
+        primaryKey
+      }
+    }
+  } = externalContext;
+
+  logger.info(`** parse schema file '${filename}'`);
+
+  const conceptGid = _.first(primaryKey);
+  const concept = _.get(concepts, conceptGid);
   const domain = _.get(concept, 'domain', concept);
-  const sets = getEntitySetsFromSchema(entitiesFile, externalContext.concepts);
+  const context = {
+    fields: getFieldsFromSchema(fields),
+    concepts
+  };
+  const sets = getEntitySetsFromSchema(context);
 
   if (_.isEmpty(domain)) {
-    throw Error(`file '${entitiesFile.name}' doesn't have any domain.`);
+    return null;
   }
 
   logger.info(`** parsed domain: ${domain.gid}\n** parsed sets: ${_.map(sets, constants.GID)}`);
 
-  return {domain, sets};
+  return {domainOriginId: domain[constants.ORIGIN_ID], setOriginIds: _.map(sets, constants.ORIGIN_ID)};
 }
 
 function parseFilename(filename, externalContext) {

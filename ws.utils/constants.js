@@ -37,6 +37,8 @@ module.exports = {
   CONCEPT_TYPE_ENTITY_DOMAIN: 'entity_domain',
   CONCEPT_TYPE_ENTITY_SET: 'entity_set',
 
+  TRANSLATIONS_DIR_NAME: 'lang',
+
   DEFAULT_USER_EMAIL: 'dev@gapminder.org',
 
   EXCLUDED_QUERY_PARAMS: ['dataset', 'version', 'v', 'format', 'no-compression', 'key', 'geo.cat', 'force'],

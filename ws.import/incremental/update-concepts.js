@@ -9,11 +9,13 @@ const constants = require('../../ws.utils/constants');
 const ddfMappers = require('./../ddf-mappers');
 
 module.exports = (pipe, done) => {
-  if (!pipe.allChanges['ddf--concepts.csv']) {
+  const conceptsFilePath = _.get(pipe.files, `byModels.${constants.CONCEPTS}.0.path`);
+
+  if (!_.includes(pipe.changedFilenames, conceptsFilePath)) {
     return done(null, pipe);
   }
 
-  const conceptChanges = pipe.allChanges['ddf--concepts.csv'];
+  const conceptChanges = pipe.allChanges[conceptsFilePath];
   const remove = conceptChanges.body.remove;
   const create = conceptChanges.body.create;
   const change = conceptChanges.body.change;

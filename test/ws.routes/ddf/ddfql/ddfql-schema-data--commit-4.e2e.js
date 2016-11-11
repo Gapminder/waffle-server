@@ -189,7 +189,7 @@ describe("State Version 3 (4th commit)", function() {
       e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDataConcepts, done);
     });
 
-    it('should return list of all entities', done => {
+    it.only('should return list of all entities', done => {
       const ddfql = {
         "select": {
           "key": ["company"]

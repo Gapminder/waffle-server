@@ -56,18 +56,18 @@ function getMeasuresDimensionsFromFileSchema(datapointsFile) {
 }
 
 function parseDatapackageSchema(datapointsFile, externalContext) {
-  logger.info(`** parse filename '${datapointsFile.name}'`);
+  logger.info(`** parse filename '${datapointsFile.path}'`);
 
   const {measureGids, dimensionGids} = getMeasuresDimensionsFromFileSchema(datapointsFile);
   const measures = _.merge(_.pick(externalContext.previousConcepts, measureGids), _.pick(externalContext.concepts, measureGids));
   const dimensions = _.merge(_.pick(externalContext.previousConcepts, dimensionGids), _.pick(externalContext.concepts, dimensionGids));
 
   if (_.isEmpty(measures)) {
-    throw Error(`file '${datapointsFile.name}' doesn't have any measure.`);
+    throw Error(`file '${datapointsFile.path}' doesn't have any measure.`);
   }
 
   if (_.isEmpty(dimensions)) {
-    throw Error(`file '${datapointsFile.name}' doesn't have any dimensions.`);
+    throw Error(`file '${datapointsFile.path}' doesn't have any dimensions.`);
   }
 
   logger.info(`** parsed measures: ${_.keys(measures)}\n** parsed dimensions: ${_.keys(dimensions)}`);
@@ -136,7 +136,7 @@ function findEntitiesInDatapoint(datapoint, context, externalContext) {
         timeConcepts,
         domain,
         concept,
-        filename: context.datapointFile.name
+        filename: context.datapointsFile.path
       });
 
       alreadyFoundEntitiyGids.add(entityGid);

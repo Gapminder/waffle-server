@@ -21,43 +21,12 @@ function createDatasetIndex(pipe, done) {
 
   return async.waterfall([
     async.constant(pipe),
-    _loadDatasetFiles,
     _generateDatasetIndex,
     _convertDatasetIndexToModel,
     _populateDatasetIndexWithOriginIds,
     _createDatasetIndex
   ], (err) => {
     return done(err, pipe);
-  });
-}
-
-function _loadDatasetFiles(pipe, done) {
-  logger.info('** load Dataset files');
-
-  fs.readdir(pipe.pathToDdfFolder, (err, _filenames) => {
-
-    if (err) {
-      return done(err);
-    }
-
-    pipe.datasetFilesByType = _.reduce(_filenames, (result, _filename) => {
-      if (/^ddf--datapoints--/.test(_filename)) {
-        result.datapoints.push(_filename);
-      }
-      if (/^ddf--entities--/.test(_filename)) {
-        result.entities.push(_filename);
-      }
-      if (/^ddf--concepts/.test(_filename)) {
-        result.concepts.push(_filename);
-      }
-      return result;
-    }, {
-      entities: [],
-      concepts: [],
-      datapoints: []
-    });
-
-    return done(null, pipe);
   });
 }
 
@@ -76,10 +45,10 @@ function _generateDatasetIndex(pipe, done) {
 
 function _generateDatasetIndexFromConcepts(pipe, done) {
   return async.mapLimit(
-    pipe.filePaths[constants.CONCEPTS],
+    pipe.files.byModels[constants.CONCEPTS],
     constants.LIMIT_NUMBER_PROCESS,
     (file, completeSearchForConcepts) => {
-      common.readCsvFile(file.path, {}, (err, res) => {
+      common.readCsvFile(file.absolutePath, {}, (err, res) => {
 
         if (err) {
           return completeSearchForConcepts(err);
@@ -90,7 +59,7 @@ function _generateDatasetIndexFromConcepts(pipe, done) {
           result.push({
             key: conceptKey,
             value: row[conceptKey],
-            file: [file.name],
+            file: [file.path],
             type: 'concepts'
           });
           return result;
@@ -109,10 +78,10 @@ function _generateDatasetIndexFromConcepts(pipe, done) {
 
 function _generateDatasetIndexFromEntities(pipe, done) {
   return async.mapLimit(
-    pipe.filePaths[constants.ENTITIES],
+    pipe.files.byModels[constants.ENTITIES],
     constants.LIMIT_NUMBER_PROCESS,
     (file, completeSearchForEntities) => {
-      common.readCsvFile(file.path, {}, (err, rows) => {
+      common.readCsvFile(file.absolutePath, {}, (err, rows) => {
 
         if (err) {
           return completeSearchForEntities(err);
@@ -128,7 +97,7 @@ function _generateDatasetIndexFromEntities(pipe, done) {
               result.push({
                 key: entityName,
                 value: column,
-                file: [file.name],
+                file: [file.path],
                 type: 'entities'
               });
             }
@@ -148,7 +117,7 @@ function _generateDatasetIndexFromEntities(pipe, done) {
 
 function _generateDatasetIndexFromDatapoints(pipe, done) {
   return async.forEachOfLimit(
-    pipe.filePaths[constants.DATAPOINTS],
+    pipe.files.byModels[constants.DATAPOINTS],
     constants.LIMIT_NUMBER_PROCESS,
     function (file, key, completeSearchForDatapoints) {
 
@@ -157,19 +126,19 @@ function _generateDatasetIndexFromDatapoints(pipe, done) {
 
       // check that file not exists
       if (existedItem) {
-        existedItem.file.push(file.name);
+        existedItem.file.push(file.path);
       } else {
         pipe.datasetIndex.push({
           key: keyValuePair.key,
           value: keyValuePair.value,
-          file: [file.name],
+          file: [file.path],
           type: 'datapoints'
         });
       }
       return completeSearchForDatapoints();
     },
     err => {
-      logger.info('** load Dataset files Datapoints: ' + pipe.datasetFilesByType.datapoints.length);
+      logger.info('** load Dataset files Datapoints: ' + pipe.files.byModels[constants.DATAPOINTS].length);
       return done(err, pipe);
     }
   );

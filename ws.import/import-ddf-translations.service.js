@@ -2,10 +2,12 @@
 
 const fs = require('fs');
 const _ = require('lodash');
+const path = require('path');
 const hi = require('highland');
 
 const logger = require('../ws.config/log');
 const ddfUtils = require('./import-ddf.utils');
+const constants = require('../ws.utils/constants');
 const translationsUtils = require('./translations.utils');
 
 module.exports = importTranslations;
@@ -19,24 +21,25 @@ function importTranslations(externalContext, done) {
     'entities',
     'transaction',
     'dataset',
-    'resolvePath'
+    'datapackage',
+    'files'
   ]));
   const parsedLanguages = new Set();
 
   const readdir = hi.wrapCallback(fs.readdir);
 
-  return readdir(externalContextFrozen.pathToDdfFolder)
-    .flatMap(filenames => {
-      return hi(filenames);
+  return hi(externalContextFrozen.datapackage.translations)
+    .flatMap(languageMeta => {
+      const resolvedPath = path.resolve(externalContextFrozen.pathToDdfFolder, constants.TRANSLATIONS_DIR_NAME, languageMeta.id);
+      return readdir(resolvedPath).map(filepaths => {
+        return _.map(filepaths, filepath => ({translationsFile: externalContextFrozen.files.byPaths[filepath], languageMeta: languageMeta}));
+      });
     })
-    .filter(filename => {
-      return translationsUtils.translationsPattern.test(filename)
-    })
-    .map(filename => {
-      return translationsUtils.parseFilename(filename, parsedLanguages, externalContextFrozen);
+    .flatMap((test)=> {
+      return translationsUtils.parseFilename(translationsFile, languageMeta, externalContextFrozen);
     })
     .flatMap((context) => {
-      return ddfUtils.readCsvFile(externalContextFrozen.resolvePath(context.filename), {})
+      return ddfUtils.readCsvFile(context.translationsFile.absolutePath, {})
         .map(row => ({row, context}));
     })
     .map(({row, context}) => {
