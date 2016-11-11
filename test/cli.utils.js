@@ -32,7 +32,8 @@ module.exports = {
   setDefaultCommit,
   cleanImportDataset,
   cleanImportAndSetDefaultCommit,
-  runDatasetImport
+  runDatasetImport,
+  getCommitByGithubUrl
 };
 
 function cleanImportAndSetDefaultCommit(commit, done) {
@@ -93,4 +94,15 @@ function setDefaultCommit(commit, options, done) {
     console.log(`Default commit is set: ${commit}`);
     return done();
   });
+}
+
+function getCommitByGithubUrl(githubUrl, index, done) {
+  wsCli.getCommitListByGithubUrl(githubUrl, (error, commits) => {
+
+    if (error) {
+      return done(error);
+    }
+
+      done(null, commits[index]);
+  })
 }
