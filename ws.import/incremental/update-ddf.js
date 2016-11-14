@@ -28,13 +28,9 @@ module.exports = function (options, done) {
     datapoints: 'DataPoints',
     entities: 'Entities'
   };
-  const RESOLVED_PATH_TO_DIFF_DDF_RESULT_FILE = process.env.PATH_TO_DIFF_DDF_RESULT_FILE ? path.resolve(process.env.PATH_TO_DIFF_DDF_RESULT_FILE) : '';
-  let diffFile = options.diff || require(RESOLVED_PATH_TO_DIFF_DDF_RESULT_FILE);
-  let changedFiles = diffFile.files;
-  let allChanges = diffFile.changes;
   let pipe = {
-    changedFiles,
-    allChanges,
+    pathToLangDiff: options.pathToLangDiff,
+    pathToDatasetDiff: options.pathToDatasetDiff,
     mapFilenameToCollectionName,
     commit: options.commit,
     datasetName: options.datasetName,
@@ -51,10 +47,10 @@ module.exports = function (options, done) {
     ddfImportUtils.activateLifecycleHook('onTransactionCreated'),
     common.findDataset,
     common.establishTransactionForDataset,
-    updateConcepts,
+    // updateConcepts,
     getAllConcepts,
     getAllPreviousConcepts,
-    processEntitiesChanges,
+    // processEntitiesChanges,
     updateDatapoints,
     // updateTranslations,
     createDatasetIndex,

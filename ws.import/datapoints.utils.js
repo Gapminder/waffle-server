@@ -11,6 +11,7 @@ const datapointsRepositoryFactory = require('../ws.repository/ddf/data-points/da
 const DEFAULT_CHUNK_SIZE = 1500;
 
 module.exports = {
+  DEFAULT_CHUNK_SIZE,
   parseFilename,
   segregateEntities,
   findEntitiesInDatapoint,
@@ -22,6 +23,7 @@ module.exports = {
 
 function saveDatapointsAndEntitiesFoundInThem(saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) {
   return datapointsFoundEntitiesStream
+    .compact()
     .batch(DEFAULT_CHUNK_SIZE)
     .flatMap(datapointsBatch => {
       const datapointsByFilename = groupDatapointsByFilename(datapointsBatch);

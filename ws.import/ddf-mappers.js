@@ -20,12 +20,12 @@ function mapDdfEntityToWsModel(entry, context) {
     const resolvedSets = mapResolvedSets(context.concepts, resolvedColumns);
     const _entry = _.mapValues(entry, value => {
 
-      const ddfBool = toBoolean(value);
+      const ddfBool = ddfImportUtils.toBoolean(value);
       if (!_.isNil(ddfBool)) {
         return ddfBool;
       }
 
-      const ddfNumeric = toNumeric(value);
+      const ddfNumeric = ddfImportUtils.toNumeric(value);
       if (!_.isNil(ddfNumeric)) {
         return ddfNumeric;
       }
@@ -74,7 +74,7 @@ function mapDdfDataPointToWsModel(entry, context) {
     return _.chain(entry)
       .pick(_.keys(context.measures))
       .map((datapointValue, measureGid) => {
-        const datapointValueAsNumber = toNumeric(datapointValue);
+        const datapointValueAsNumber = ddfImportUtils.toNumeric(datapointValue);
         return {
           value: _.isNil(datapointValueAsNumber) ? datapointValue : datapointValueAsNumber,
           measure: context.measures[measureGid].originId,
@@ -140,24 +140,6 @@ function mapDdfConceptsToWsModel(entry, context) {
   }
 
   return concept;
-}
-
-
-function toNumeric(value) {
-  const numericValue = value && _.toNumber(value);
-  return !_.isNaN(numericValue) && _.isNumber(numericValue) ? numericValue : null;
-}
-
-function toBoolean(value) {
-  if (value === 'TRUE' || value === 'FALSE') {
-    return value === 'TRUE';
-  }
-
-  if (_.isBoolean(value)) {
-    return Boolean(value);
-  }
-
-  return null;
 }
 
 function getGid(entitySet, entry) {
