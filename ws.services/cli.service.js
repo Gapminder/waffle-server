@@ -3,6 +3,7 @@
 const _ = require('lodash');
 const git = require('simple-git');
 const async = require('async');
+const wsCli = require('waffle-server-import-cli');
 const ddfValidation = require('ddf-validation');
 const SimpleDdfValidator = ddfValidation.SimpleValidator;
 
@@ -150,6 +151,7 @@ function updateIncrementally(params, onDatasetUpdated) {
     async.constant(params),
     _findCurrentUser,
     _lockDataset,
+    _generateDiffForDatasetUpdate,
     _checkTransaction,
     _cloneDdfRepo,
     _validateDdfRepo,
@@ -165,6 +167,18 @@ function updateIncrementally(params, onDatasetUpdated) {
     }
 
     return onDatasetUpdated(importError, pipe);
+  });
+}
+
+function _generateDiffForDatasetUpdate(context, done) {
+  const {hashFrom, hashTo, github} = context;
+  return wsCli.generateDiff({hashFrom, hashTo, github, resultPath: config.PATH_TO_DIFF_DDF_RESULT_FILE}, (error, diffPaths) => {
+    if (error) {
+      return done(error);
+    }
+
+    const {diff: pathToDatasetDiff, lang: pathToLangDiff} = diffPaths;
+    return done(null, _.extend(context, {pathToDatasetDiff, pathToLangDiff}));
   });
 }
 
@@ -200,7 +214,9 @@ function _runIncrementalUpdate(pipe, onDatasetUpdated) {
     commit: pipe.commit,
     github: pipe.github,
     lifecycleHooks: pipe.lifecycleHooks,
-    user: pipe.user
+    user: pipe.user,
+    pathToDatasetDiff: pipe.pathToDatasetDiff,
+    pathToLangDiff: pipe.pathToLangDiff
   };
 
   return incrementalUpdateService(options, onDatasetUpdated);

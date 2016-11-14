@@ -169,59 +169,47 @@ module.exports = serviceLocator => {
   }
 
   function _updateIncrementally(req, res) {
-    bodyFromStream(req, (error, body) => {
-      if (error) {
-        logger.error(error);
-        return res.json({success: !error, error});
-      }
+    const {hashFrom, hashTo, github} = req.body;
 
-      body.lifecycleHooks = {
+    if (!hashFrom) {
+      return res.json({success: false, message: 'Start commit for update was not given'});
+    }
+
+    if (!hashTo) {
+      return res.json({success: false, message: 'End commit for update was not given'});
+    }
+
+    if (!github) {
+      return res.json({success: false, message: 'Repository github url was not given'});
+    }
+
+    const options = {
+      github,
+      hashTo,
+      commit: hashTo,
+      hashFrom,
+      datasetName: reposService.getRepoNameForDataset(github),
+      lifecycleHooks: {
         onTransactionCreated: () => {
           if (!res.headersSent) {
             return res.json({success: true, message: 'Dataset updating is in progress ...'});
           }
         }
-      };
+      }
+    };
 
-      cliService.updateIncrementally(body, updateError => {
-        if (updateError && !res.headersSent) {
-          logger.error(updateError);
-          return res.json({success: !updateError, error: updateError});
-        }
+    cliService.updateIncrementally(options, updateError => {
+      if (updateError && !res.headersSent) {
+        logger.error(updateError);
+        return res.json({success: !updateError, error: updateError});
+      }
 
-        if (updateError) {
-          return logger.error(updateError);
-        }
+      if (updateError) {
+        return logger.error(updateError);
+      }
 
-        logger.info(`finished import for dataset '${body.github}' and commit '${body.commit}'`);
-      });
+      logger.info(`finished import for dataset '${body.github}' and commit '${body.commit}'`);
     });
-
-    function bodyFromStream(req, onBodyTransformed) {
-      let result = {};
-      req.pipe(JSONStream.parse('$*'))
-        .on('data', entry => {
-          const data = entry.value;
-
-          const repoName = reposService.getRepoNameForDataset(data.github);
-          if (data.github && !repoName) {
-            req.destroy();
-            return onBodyTransformed(`Incorrect github url was given: ${data.github}`);
-          }
-
-          result.datasetName = repoName;
-          result = _.merge(result, data);
-        })
-        .on('end', () => {
-          if (_.isEmpty(result)) {
-            return onBodyTransformed('No data (github, commit, etc.) was given for performing incremental update');
-          }
-          return onBodyTransformed(null, result);
-        })
-        .on('error', error => {
-          return onBodyTransformed(error);
-        });
-    }
   }
 
   function _importDataset(req, res) {

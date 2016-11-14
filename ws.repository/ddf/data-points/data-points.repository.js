@@ -8,6 +8,7 @@ const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
 const DataPoints = mongoose.model('DataPoints');
 
+const ddfImportUtils = require('../../../ws.import/import-ddf.utils');
 const RepositoryFactory = require('../../repository.factory');
 const repositoryModel = require('../../repository.model');
 const constants = require('../../../ws.utils/constants');
@@ -51,13 +52,14 @@ DataPointsRepository.prototype.findDistinctDimensionsByMeasure = function(measur
 DataPointsRepository.prototype.closeDatapointByMeasureAndDimensionsAndValue = function (options, onDatapointClosed) {
   const {measureOriginId, dimensionsSize, dimensionsEntityOriginIds, datapointValue} = options;
 
+  const numericDatapointValue = ddfImportUtils.toNumeric(datapointValue);
   const query = this._composeQuery({
     measure: measureOriginId,
     dimensions: {
       $size: dimensionsSize,
       $not: {$elemMatch: {$nin: dimensionsEntityOriginIds}}
     },
-    value: _.toNumber(datapointValue)
+    value: _.isNil(numericDatapointValue) ? datapointValue : numericDatapointValue
   });
 
   return DataPoints.findOneAndUpdate(query, {$set: {to: this.version}}, {new: true})

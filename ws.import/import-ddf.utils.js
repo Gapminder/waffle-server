@@ -16,7 +16,9 @@ module.exports = {
   isJson,
   isPropertyReserved,
   parseProperties,
-  readCsvFile
+  readCsvFile,
+  toNumeric,
+  toBoolean
 };
 
 function activateLifecycleHook(hookName) {
@@ -66,6 +68,23 @@ function toInternalTimeForm(value) {
     millis: _.get(timeDescriptor, 'time'),
     timeType: _.get(timeDescriptor, 'type')
   };
+}
+
+function toNumeric(value) {
+  const numericValue = value && _.toNumber(value);
+  return !_.isNaN(numericValue) && _.isNumber(numericValue) ? numericValue : null;
+}
+
+function toBoolean(value) {
+  if (value === 'TRUE' || value === 'FALSE') {
+    return value === 'TRUE';
+  }
+
+  if (_.isBoolean(value)) {
+    return Boolean(value);
+  }
+
+  return null;
 }
 
 function readCsvFile(filepath) {
