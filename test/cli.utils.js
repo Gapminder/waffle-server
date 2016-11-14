@@ -12,6 +12,8 @@ require('../ws.config/db.config.js');
 require('./../ws.repository/index.js');
 const mongoose = require('mongoose');
 
+const CACHED_COMMITS = new WeakMap();
+
 const MODELS_TO_CLEAN = [
   'Concepts',
   'DataPoints',
@@ -32,7 +34,8 @@ module.exports = {
   setDefaultCommit,
   cleanImportDataset,
   cleanImportAndSetDefaultCommit,
-  runDatasetImport
+  runDatasetImport,
+  getCommitByGithubUrl
 };
 
 function cleanImportAndSetDefaultCommit(commit, done) {
@@ -93,4 +96,23 @@ function setDefaultCommit(commit, options, done) {
     console.log(`Default commit is set: ${commit}`);
     return done();
   });
+}
+
+function getCommitByGithubUrl(githubUrl, index, done) {
+
+  let githubUrlObj = {githubUrl: githubUrl};
+
+  if (CACHED_COMMITS.has(githubUrl)) {
+    return done(null, CACHED_COMMITS.get(githubUrlObj)[index]);
+  }
+
+  wsCli.getCommitListByGithubUrl(githubUrl, (error, commits) => {
+
+    if (error) {
+      return done(error);
+    }
+
+    CACHED_COMMITS.set(githubUrlObj, commits);
+    return done(null, CACHED_COMMITS.get(githubUrlObj)[index]);
+  })
 }

@@ -38,7 +38,14 @@ const fixtureQueryOperatorsNumUsersByCompanyProjectWithCondition = require('./fi
 describe("Initial State (1st commit)", function() {
 
   before(done => {
-    cliUtils.setDefaultCommit(e2eEnv.repoCommits.init, done);
+
+    const INDEX_OF_INITIAL_COMMIT = 0;
+
+    cliUtils.getCommitByGithubUrl(e2eEnv.repo, INDEX_OF_INITIAL_COMMIT, (error, commit) => {
+      if (error) return done(error);
+
+      cliUtils.setDefaultCommit(commit, done);
+    });
   });
 
   describe("Schema", function() {
