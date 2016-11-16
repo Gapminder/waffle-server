@@ -1,6 +1,6 @@
 'use strict';
 
-const cliUtils = require('./../../../cli.utils.js');
+const cliUtils = require('./../../../cli.utils');
 const e2eUtils = require('./../../../e2e.utils');
 const e2eEnv = require('./../../../e2e.env');
 

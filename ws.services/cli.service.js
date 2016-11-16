@@ -6,18 +6,18 @@ const async = require('async');
 const ddfValidation = require('ddf-validation');
 const SimpleDdfValidator = ddfValidation.SimpleValidator;
 
-const cache = require('../../../ws.utils/redis-cache');
-const config = require('../../../ws.config/config');
-const constants = require('../../../ws.utils/constants');
-const authService = require('../../../ws.services/auth.service');
-const reposService = require('../../../ws.services/repos.service');
-const datasetsService = require('../../../ws.services/datasets.service');
-const usersRepository = require('../../../ws.repository/ddf/users/users.repository');
-const importDdfService = require('../../../ws.import/import-ddf.service');
-const datasetsRepository = require('../../../ws.repository/ddf/datasets/datasets.repository');
-const transactionsService = require('../../../ws.services/dataset-transactions.service');
-const transactionsRepository = require('../../../ws.repository/ddf/dataset-transactions/dataset-transactions.repository');
-const incrementalUpdateService = require('../../../ws.import/incremental/update-ddf');
+const cache = require('../ws.utils/redis-cache');
+const config = require('../ws.config/config');
+const constants = require('../ws.utils/constants');
+const authService = require('./auth.service');
+const reposService = require('./repos.service');
+const datasetsService = require('./datasets.service');
+const usersRepository = require('../ws.repository/ddf/users/users.repository');
+const importDdfService = require('../ws.import/import-ddf.service');
+const datasetsRepository = require('../ws.repository/ddf/datasets/datasets.repository');
+const transactionsService = require('./dataset-transactions.service');
+const transactionsRepository = require('../ws.repository/ddf/dataset-transactions/dataset-transactions.repository');
+const incrementalUpdateService = require('../ws.import/incremental/update-ddf');
 
 const ddfValidationConfig = {
   datapointlessMode: true,

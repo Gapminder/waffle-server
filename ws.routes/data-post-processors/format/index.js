@@ -2,14 +2,11 @@
 const _ = require('lodash');
 const logger = require('../../../ws.config/log');
 
-const pack = require('./pack.processor');
+const format = require('./format.processor');
 
-const DEFAULT_MIME_TYPE = 'application/x-ddf+json';
+const DEFAULT_MIME_TYPE = 'application/x-ws+json';
 const MIME_TYPE_MAPPINGS = {
-  csv: 'text/csv',
-  json: 'application/json',
   wsJson: 'application/x-ws+json',
-  ddfJson: DEFAULT_MIME_TYPE
 };
 
 module.exports = (req, res) => {
@@ -17,7 +14,7 @@ module.exports = (req, res) => {
   const data = req.rawData;
   data.type = req.ddfDataType;
 
-  return pack(data, formatType, (err, packedData) => {
+  return format(data, formatType, (err, packedData) => {
     if (err) {
       logger.error(err);
       res.use_express_redis_cache = false;

@@ -3,16 +3,14 @@
 const _ = require('lodash');
 const async = require('async');
 
-const ddfql = require('../../../ws.ddfql/ddf-concepts-query-normalizer');
-const commonService = require('../../../ws.services/common.service');
-const ddfQueryValidator = require('../../../ws.ddfql/ddf-query-validator');
-const conceptsRepositoryFactory = require('../../../ws.repository/ddf/concepts/concepts.repository');
+const ddfql = require('../ws.ddfql/ddf-concepts-query-normalizer');
+const commonService = require('./common.service');
+const ddfQueryValidator = require('../ws.ddfql/ddf-query-validator');
+const conceptsRepositoryFactory = require('../ws.repository/ddf/concepts/concepts.repository');
 
 module.exports = {
   getConcepts,
-  collectConcepts,
   collectConceptsByDdfql,
-  getConceptsByDdfql
 };
 
 function collectConceptsByDdfql(options, cb) {
@@ -66,21 +64,6 @@ function getConceptsByDdfql(pipe, cb) {
 
       return commonService.translate('concepts', pipe, cb);
     });
-}
-
-function collectConcepts(options, cb) {
-  console.time('finish Concepts stats');
-  const pipe = _.extend(options, {domainGid: _.first(options.domainGids)});
-
-  return async.waterfall([
-    async.constant(pipe),
-    commonService.findDefaultDatasetAndTransaction,
-    getConcepts
-  ], (error, result) => {
-    console.timeEnd('finish Concepts stats');
-
-    return cb(error, result);
-  });
 }
 
 function getConcepts(pipe, cb) {

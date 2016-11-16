@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 
 const constants = require('../ws.utils/constants');
-const usersRepository = require('../ws.repository/ddf/users/users.repository.js');
+const usersRepository = require('../ws.repository/ddf/users/users.repository');
 
 module.exports = {
   authenticate

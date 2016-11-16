@@ -5,7 +5,7 @@ const path = require('path');
 const chai = require('chai');
 const proxyquire = require('proxyquire');
 const config = require('../../ws.config/config');
-const reposService = require('../../ws.services/repos.service.js');
+const reposService = require('../../ws.services/repos.service');
 
 const expect = chai.expect;
 
