@@ -6,7 +6,10 @@ const hi = require('highland');
 const logger = require('../ws.config/log');
 const ddfMappers = require('./ddf-mappers');
 const entitiesRepositoryFactory = require('../ws.repository/ddf/entities/entities.repository');
+const versionAgnosticEntitiesRepository = entitiesRepositoryFactory.versionAgnostic();
+
 const datapointsRepositoryFactory = require('../ws.repository/ddf/data-points/data-points.repository');
+const versionAgnosticDatapointsRepository = datapointsRepositoryFactory.versionAgnostic();
 
 const DEFAULT_CHUNK_SIZE = 1500;
 
@@ -159,10 +162,8 @@ function storeEntitiesToDb(entities) {
     return Promise.resolve([]);
   }
 
-  logger.info(`** create entities based on data points`);
-  return entitiesRepositoryFactory
-    .versionAgnostic()
-    .create(entities);
+  logger.debug(`Store entities found in datapoints to database. Amount: `, _.size(entities));
+  return versionAgnosticEntitiesRepository.create(entities);
 }
 
 function saveDatapoints(datapointsByFilename, externalContextFrozen) {
@@ -175,8 +176,6 @@ function saveDatapoints(datapointsByFilename, externalContextFrozen) {
 }
 
 function mapAndStoreDatapointsToDb(datapointsFromSameFile, externalContext) {
-  logger.info(`** create data points`);
-
   const {measures, filename, dimensions, context: {segregatedEntities: entities}} = datapointsFromSameFile;
 
   const {dataset: {_id: datasetId}, transaction: {createdAt: version}, concepts} = externalContext;
@@ -195,7 +194,8 @@ function mapAndStoreDatapointsToDb(datapointsFromSameFile, externalContext) {
     return ddfMappers.mapDdfDataPointToWsModel(datapointWithContext.datapoint, mappingContext);
   });
 
-  return datapointsRepositoryFactory.versionAgnostic().create(wsDatapoints);
+  logger.debug('Store datapoints to database. Amount: ', _.size(wsDatapoints));
+  return versionAgnosticDatapointsRepository.create(wsDatapoints);
 }
 
 function getMeasureDimensionFromFilename(filename) {

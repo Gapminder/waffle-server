@@ -208,7 +208,7 @@ module.exports = serviceLocator => {
         return logger.error(updateError);
       }
 
-      logger.info(`finished import for dataset '${body.github}' and commit '${body.commit}'`);
+      logger.info(`finished import for dataset '${github}' and commit '${hashTo}'`);
     });
   }
 

@@ -20,7 +20,7 @@ const UPDATE_ACTIONS = new Set(['change', 'update']);
 module.exports = startDatapointsCreation;
 
 function startDatapointsCreation(externalContext, done) {
-  logger.info('start process of updating data points');
+  logger.info('Start process of datapoints update');
 
   const externalContextFrozen = Object.freeze(_.pick(externalContext, [
     'pathToDatasetDiff',
@@ -80,9 +80,9 @@ function createDatapoints(externalContextFrozen) {
     });
 
   const datapointsWithFoundEntitiesStream = hi([
-    toDatapointsClosingStream(datapointsChangesWithContextStream),
-    toDatapointsCreationStream(datapointsChangesWithContextStream),
-    toDatapointsUpdatingStream(datapointsChangesWithContextStream)
+    toRemovedDatapointsStream(datapointsChangesWithContextStream),
+    toCreatedDatapointsStream(datapointsChangesWithContextStream),
+    toUpdatedDatapointsStream(datapointsChangesWithContextStream)
   ]).parallel(3);
 
   return saveDatapointsAndEntitiesFoundInThem(datapointsWithFoundEntitiesStream);
@@ -111,9 +111,9 @@ function enrichDatapointChangesWithContextStream(datapointChanges, allEntitiesPr
   });
 }
 
-function toDatapointsClosingStream(datapointsChangesWithContextStream) {
+function toRemovedDatapointsStream(datapointsChangesWithContextStream) {
   return datapointsChangesWithContextStream.fork()
-    .filter(({datapointChanges}) => getAction(datapointChanges) === 'remove')
+    .filter(({datapointChanges}) => getAction(datapointChanges.metadata) === 'remove')
     .map(({datapointChanges, context}) => {
       const {measures, dimensions} = parseFilename(datapointChanges.metadata.file.old, context);
 
@@ -125,9 +125,9 @@ function toDatapointsClosingStream(datapointsChangesWithContextStream) {
     });
 }
 
-function toDatapointsCreationStream(datapointsChangesWithContextStream) {
+function toCreatedDatapointsStream(datapointsChangesWithContextStream) {
   return datapointsChangesWithContextStream.fork()
-    .filter(({datapointChanges}) => getAction(datapointChanges) === 'create')
+    .filter(({datapointChanges}) => getAction(datapointChanges.metadata) === 'create')
     .map(({datapointChanges, context}) => {
       const {measures, dimensions} = parseFilename(datapointChanges.metadata.file.new, context);
 
@@ -140,9 +140,9 @@ function toDatapointsCreationStream(datapointsChangesWithContextStream) {
     });
 }
 
-function toDatapointsUpdatingStream(datapointsChangesWithContextStream) {
+function toUpdatedDatapointsStream(datapointsChangesWithContextStream) {
   return datapointsChangesWithContextStream.fork()
-    .filter(({datapointChanges}) => UPDATE_ACTIONS.has(getAction(datapointChanges)))
+    .filter(({datapointChanges}) => UPDATE_ACTIONS.has(getAction(datapointChanges.metadata)))
     .map(({datapointChanges, context}) => {
       const {measures, dimensions} = parseFilename(datapointChanges.metadata.file.new, context);
       const {measures: measuresOld, dimensions: dimensionsOld} = parseFilename(datapointChanges.metadata.file.old, context);
@@ -171,7 +171,7 @@ function parseFilename(file, externalContext) {
     }
   } = file;
 
-  logger.info(`Processing resource with name: ${resourceName}`);
+  logger.debug('Processing resource with name: ', resourceName);
 
   const measureGids = _.map(_.filter(resourceFields, field => !_.includes(resourcePrimaryKey, field.name)), 'name');
   const dimensionGids = resourcePrimaryKey;
@@ -187,12 +187,14 @@ function parseFilename(file, externalContext) {
     throw Error(`Resource '${resourceName}' doesn't have any dimensions.`);
   }
 
-  logger.info(`** parsed measures: ${_.keys(measures)}`, `** parsed dimensions: ${_.keys(dimensions)}`);
+  logger.debug(`** parsed measures: ${_.keys(measures)}`, `** parsed dimensions: ${_.keys(dimensions)}`);
 
   return {measures, dimensions};
 }
 
 function closeRemovedDatapoints(removedDataPoints, onAllRemovedDatapointsClosed) {
+  logger.info('Closing removed datapoints');
+
   return async.eachLimit(removedDataPoints, constants.LIMIT_NUMBER_PROCESS,
     ({datapointChanges, context: externalContext}, onDatapointsForGivenMeasuresClosed) => {
       const originalRawDatapoint = datapointChanges.object;
@@ -211,11 +213,14 @@ function closeRemovedDatapoints(removedDataPoints, onAllRemovedDatapointsClosed)
 }
 
 function closeDatapointsOfPreviousVersion(changedDataPoints, onDatapointsOfPreviousVersionClosed) {
+  logger.info('Closing updated datapoints');
   return async.mapLimit(changedDataPoints, constants.LIMIT_NUMBER_PROCESS,
     ({datapointChanges, entitiesFoundInDatapoint, context: externalContext}, onDatapointsForGivenMeasuresClosed) => {
       const originalRawDatapoint = _.get(datapointChanges.object, 'data-origin');
 
       const makeDatapointBasedOnItsClosedVersion = closedDatapoint => {
+        logger.debug('Create new datapoint based on closed one. OriginId: ', closedDatapoint.originId);
+
         const newRawDatapoint = _.get(datapointChanges.object, 'data-update');
         const datapointToCreate = _.defaults({originId: closedDatapoint.originId}, newRawDatapoint, originalRawDatapoint);
         return {datapoint: datapointToCreate, entitiesFoundInDatapoint, context: externalContext};
@@ -228,7 +233,7 @@ function closeDatapointsOfPreviousVersion(changedDataPoints, onDatapointsOfPrevi
         measures: externalContext.measuresOld,
         datasetId: externalContext.dataset._id,
         version: externalContext.transaction.createdAt,
-        makeDatapointBasedOnItsClosedVersion
+        handleClosedDatapoint: makeDatapointBasedOnItsClosedVersion
       };
 
       return closeDatapointsPerMeasure(originalRawDatapoint, context, onDatapointsForGivenMeasuresClosed);
@@ -245,6 +250,8 @@ function closeDatapointsPerMeasure(rawDatapoint, externalContext, onDatapointsFo
   });
 
   return async.mapLimit(externalContext.measures, constants.LIMIT_NUMBER_PROCESS, (measure, onDatapointClosed) => {
+      logger.debug('Closing datapoint for measure', measure.gid, measure.originId);
+
       const options = {
         measureOriginId: measure.originId,
         dimensionsSize: _.size(externalContext.dimensions),
@@ -252,13 +259,19 @@ function closeDatapointsPerMeasure(rawDatapoint, externalContext, onDatapointsFo
         datapointValue: rawDatapoint[measure.gid]
       };
 
-      return datapointsRepositoryFactory
-        .latestExceptCurrentVersion(externalContext.datasetId, externalContext.version)
+      return datapointsRepositoryFactory.latestExceptCurrentVersion(externalContext.datasetId, externalContext.version)
         .closeDatapointByMeasureAndDimensionsAndValue(options, (error, closedDatapoint) => {
+          if (error) {
+            return onDatapointClosed(error);
+          }
 
-          const {makeDatapointBasedOnItsClosedVersion = _.noop} = externalContext;
+          if (!closedDatapoint) {
+            logger.error('Datapoint that should be closed was not found by given params: ', options);
+          }
 
-          return onDatapointClosed(error, makeDatapointBasedOnItsClosedVersion(closedDatapoint));
+          const {handleClosedDatapoint = _.noop} = externalContext;
+
+          return onDatapointClosed(error, handleClosedDatapoint(closedDatapoint));
         });
   }, (error, datapointsToCreate) => {
     return onDatapointsForGivenMeasuresClosed(error, _.values(datapointsToCreate));
@@ -278,6 +291,6 @@ function getDimensionsAsEntityOriginIds(datapoint, externalContext) {
   });
 }
 
-function getAction(datapointChanges) {
-  return _.get(datapointChanges, 'metadata.action');
+function getAction(metadata) {
+  return _.get(metadata, 'action');
 }
