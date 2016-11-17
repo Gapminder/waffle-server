@@ -151,10 +151,10 @@ function updateIncrementally(params, onDatasetUpdated) {
     async.constant(params),
     _findCurrentUser,
     _lockDataset,
-    _generateDiffForDatasetUpdate,
     _checkTransaction,
     _cloneDdfRepo,
     _validateDdfRepo,
+    _generateDiffForDatasetUpdate,
     _runIncrementalUpdate,
     _unlockDataset
   ], (importError, pipe) => {

@@ -42,7 +42,6 @@ module.exports = {
 
   //Dataset
   createDataset,
-  findDataset,
 
   //Transaction
   createTransaction,
@@ -444,13 +443,6 @@ function ___updateDimensionByMeasure(pipe, cb) {
     .addDimensionsForMeasure({measureOriginId: pipe.measure.originId, dimensions}, err => {
       return cb(err, pipe);
     });
-}
-
-function findDataset(pipe, done) {
-  return datasetsRepository.findByName(pipe.datasetName, (err, dataset) => {
-    pipe.dataset = dataset;
-    return done(err, pipe);
-  });
 }
 
 //*** Utils ***
