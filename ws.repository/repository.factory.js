@@ -1,8 +1,35 @@
 'use strict';
 const _ = require('lodash');
 const constants = require('../ws.utils/constants');
+const NodeCache = require('node-cache');
+
+const FOREVER = 0;
+const HOUR = 60 * 60;
+const FIVE_HOURS = 5 * HOUR;
+
+const repositoriesCache = new NodeCache({ checkperiod: HOUR });
 
 module.exports = VersionedModelRepositoryFactory;
+
+VersionedModelRepositoryFactory.prototype.makeRepository = function (factoryName, versionQueryFragment, datasetId, version) {
+  const key = `${this.Repository.name}:${factoryName}:${datasetId}:${version}`;
+
+  let repository = repositoriesCache.get(key);
+  if (!repository) {
+    let ttl = FIVE_HOURS;
+
+    if(_.isEmpty(versionQueryFragment)) {
+      ttl = FOREVER;
+      repository = new this.Repository({});
+    } else {
+      repository = new this.Repository(versionQueryFragment, datasetId, version);
+    }
+
+    repositoriesCache.set(key, repository, ttl);
+  }
+
+  return repository;
+};
 
 function VersionedModelRepositoryFactory(Repository) {
   this.Repository = Repository;
@@ -17,7 +44,7 @@ VersionedModelRepositoryFactory.prototype.currentVersion = function (datasetId, 
     to: {$gt: version}
   };
 
-  return new this.Repository(versionQueryFragment, datasetId, version);
+  return this.makeRepository('currentVersion', versionQueryFragment, datasetId, version);
 };
 
 VersionedModelRepositoryFactory.prototype.latestVersion = function (datasetId, version) {
@@ -29,7 +56,7 @@ VersionedModelRepositoryFactory.prototype.latestVersion = function (datasetId, v
     to: constants.MAX_VERSION
   };
 
-  return new this.Repository(versionQueryFragment, datasetId, version);
+  return this.makeRepository('latestVersion', versionQueryFragment, datasetId, version);
 };
 
 VersionedModelRepositoryFactory.prototype.allOpenedInGivenVersion = function (datasetId, version) {
@@ -40,7 +67,7 @@ VersionedModelRepositoryFactory.prototype.allOpenedInGivenVersion = function (da
     from: version,
   };
 
-  return new this.Repository(versionQueryFragment, datasetId, version);
+  return this.makeRepository('allOpenedInGivenVersion', versionQueryFragment, datasetId, version);
 };
 
 VersionedModelRepositoryFactory.prototype.latestExceptCurrentVersion = function (datasetId, version) {
@@ -52,7 +79,7 @@ VersionedModelRepositoryFactory.prototype.latestExceptCurrentVersion = function 
     to: constants.MAX_VERSION
   };
 
-  return new this.Repository(versionQueryFragment, datasetId, version);
+  return this.makeRepository('latestExceptCurrentVersion', versionQueryFragment, datasetId, version);
 };
 
 VersionedModelRepositoryFactory.prototype.previousVersion = function (datasetId, version) {
@@ -64,7 +91,7 @@ VersionedModelRepositoryFactory.prototype.previousVersion = function (datasetId,
     to: version
   };
 
-  return new this.Repository(versionQueryFragment, datasetId, version);
+  return this.makeRepository('previousVersion', versionQueryFragment, datasetId, version);
 };
 
 VersionedModelRepositoryFactory.prototype.closedOrOpenedInGivenVersion = function (datasetId, version) {
@@ -72,11 +99,11 @@ VersionedModelRepositoryFactory.prototype.closedOrOpenedInGivenVersion = functio
 
   const versionQueryFragment = {$or: [{from: version}, {to: version}], dataset: datasetId};
 
-  return new this.Repository(versionQueryFragment, datasetId, version);
+  return this.makeRepository('closedOrOpenedInGivenVersion', versionQueryFragment, datasetId, version);
 };
 
 VersionedModelRepositoryFactory.prototype.versionAgnostic = function () {
-  return new this.Repository({});
+  return this.makeRepository('versionAgnostic', {});
 };
 
 function checkPreconditions(datasetId, version) {
