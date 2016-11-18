@@ -3,6 +3,7 @@
 const _ = require('lodash');
 const util = require('util');
 const async = require('async');
+const logger = require('../../../ws.config/log');
 
 const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
@@ -62,6 +63,7 @@ DataPointsRepository.prototype.closeDatapointByMeasureAndDimensionsAndValue = fu
     value: _.isNil(numericDatapointValue) ? datapointValue : numericDatapointValue
   });
 
+  logger.debug({obj: query});
   return DataPoints.findOneAndUpdate(query, {$set: {to: this.version}}, {new: true})
     .lean()
     .exec(onDatapointClosed);

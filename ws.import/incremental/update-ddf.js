@@ -44,7 +44,7 @@ module.exports = function (options, done) {
     findDataset,
     common.establishTransactionForDataset,
     ddfImportUtils.activateLifecycleHook('onTransactionCreated'),
-    // updateConcepts,
+    updateConcepts,
     getAllConcepts,
     getAllPreviousConcepts,
     updateEntities,
