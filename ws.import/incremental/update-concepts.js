@@ -8,9 +8,9 @@ const JSONStream = require('JSONStream');
 const hi = require('highland');
 
 const conceptsRepositoryFactory = require('../../ws.repository/ddf/concepts/concepts.repository');
-const ddfImportUtils = require('../import-ddf.utils');
+const ddfImportUtils = require('../utils/import-ddf.utils');
 const constants = require('../../ws.utils/constants');
-const ddfMappers = require('./../ddf-mappers');
+const ddfMappers = require('../utils/ddf-mappers');
 const logger = require('../../ws.config/log');
 
 module.exports = startConceptsCreation;
@@ -58,6 +58,10 @@ function updateConcepts(externalContext, done) {
       return done(error);
     })
     .toCallback((err, allChanges) => {
+      if (err) {
+        return done(err);
+      }
+
       const remove = _.map(allChanges.remove, 'object');
       const create = _.map(allChanges.create, 'object');
       const change = _.map(allChanges.change, 'object');
@@ -68,34 +72,9 @@ function updateConcepts(externalContext, done) {
         processRemovedConcepts(remove),
         processCreatedConcepts(create),
         processUpdatedConcepts(mergeConceptModifications(change, update), removedProperties)
-      ], done);
+      ], err => done(err, externalContext));
     });
 }
-//
-// module.exports = (pipe, done) => {
-//   if (!pipe.allChanges['ddf--concepts.csv']) {
-//     return done(null, pipe);
-//   }
-//
-//   const conceptChanges = pipe.allChanges['ddf--concepts.csv'];
-//
-//
-//   const remove = conceptChanges.body.remove;
-//   const create = conceptChanges.body.create;
-//   const change = conceptChanges.body.change;
-//   const update = conceptChanges.body.update;
-//   const translate = conceptChanges.body.translate;
-//   const removedProperties = conceptChanges.header.remove;
-//
-//   return async.waterfall([
-//     async.constant({external: pipe, internal: {}}),
-//     processRemovedConcepts(remove),
-//     processCreatedConcepts(create),
-//     processUpdatedConcepts(mergeConceptModifications(change, update, translate), removedProperties)
-//   ], error => {
-//     return done(error, pipe);
-//   });
-// };
 
 function processRemovedConcepts(removedConcepts) {
   return (pipe, done) => {

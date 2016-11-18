@@ -7,8 +7,7 @@ const entitiesRepositoryFactory = require('../ws.repository/ddf/entities/entitie
 const datapointsRepositoryFactory = require('../ws.repository/ddf/data-points/data-points.repository');
 const indexRepository = require('../ws.repository/ddf/dataset-index/dataset-index.repository');
 
-const datapointUtils = require('./datapoints.utils');
-const common = require('./common');
+const ddfImportUtils = require('./utils/import-ddf.utils');
 const logger = require('../ws.config/log');
 const constants = require('../ws.utils/constants');
 
@@ -21,42 +20,11 @@ function createDatasetIndex(pipe, done) {
 
   return async.waterfall([
     async.constant(pipe),
-    _loadDatasetFiles,
     _generateDatasetIndex,
     _convertDatasetIndexToModel,
     _populateDatasetIndexWithOriginIds,
     _createDatasetIndex
   ], (err) => done(err, pipe));
-}
-
-function _loadDatasetFiles(pipe, done) {
-  logger.info('** load Dataset files');
-
-  fs.readdir(pipe.pathToDdfFolder, (err, _filenames) => {
-
-    if (err) {
-      return done(err);
-    }
-
-    pipe.datasetFilesByType = _.reduce(_filenames, (result, _filename) => {
-      if (/^ddf--datapoints--/.test(_filename)) {
-        result.datapoints.push(_filename);
-      }
-      if (/^ddf--entities--/.test(_filename)) {
-        result.entities.push(_filename);
-      }
-      if (/^ddf--concepts/.test(_filename)) {
-        result.concepts.push(_filename);
-      }
-      return result;
-    }, {
-      entities: [],
-      concepts: [],
-      datapoints: []
-    });
-
-    return done(null, pipe);
-  });
 }
 
 function _generateDatasetIndex(pipe, done) {
@@ -73,23 +41,22 @@ function _generateDatasetIndex(pipe, done) {
 }
 
 function _generateDatasetIndexFromConcepts(pipe, done) {
-  return async.mapLimit(
-    pipe.datasetFilesByType.concepts,
-    constants.LIMIT_NUMBER_PROCESS,
-    (item, completeSearchForConcepts) => {
-      common.readCsvFile(pipe.resolvePath(item), {}, (err, res) => {
+  const conceptResources = _.filter(pipe.datapackage.resources, resource => resource.type === constants.CONCEPTS);
+
+  return async.mapLimit(conceptResources, constants.LIMIT_NUMBER_PROCESS, (conceptResource, completeSearchForConcepts) => {
+      ddfImportUtils.readCsvFile(pipe.resolvePath(conceptResource.path), {}, (err, res) => {
 
         if (err) {
           return completeSearchForConcepts(err);
         }
 
-        const conceptKey = 'concept';
+        const conceptKey = conceptResource.primaryKey;
         const datasetConceptsIndexes = _.reduce(res, (result, row) => {
           result.push({
             key: conceptKey,
             value: row[conceptKey],
-            file: [item],
-            type: 'concepts'
+            file: [conceptResource.path],
+            type: constants.CONCEPTS
           });
           return result;
         }, []);
@@ -106,86 +73,62 @@ function _generateDatasetIndexFromConcepts(pipe, done) {
 }
 
 function _generateDatasetIndexFromEntities(pipe, done) {
-  return async.mapLimit(
-    pipe.datasetFilesByType.entities,
-    constants.LIMIT_NUMBER_PROCESS,
-    (item, completeSearchForEntities) => {
-      common.readCsvFile(pipe.resolvePath(item), {}, (err, rows) => {
+  const entityResources = _.filter(pipe.datapackage.resources, resource => resource.type === constants.ENTITIES);
 
-        if (err) {
-          return completeSearchForEntities(err);
-        }
+  return async.mapLimit(entityResources, constants.LIMIT_NUMBER_PROCESS, (entityResource, completeSearchForEntities) => {
+      const entityName = entityResource.concept;
 
-        const entityFileHeader = _.first(rows);
-        const entityName = getEntityName(item);
+      const datasetEntitiesIndexes =
+        _.chain(entityResource.fields)
+        .reduce((result, column) => {
+          if (column === entityName) return result;
 
-        const datasetEntitiesIndexes = _.chain(entityFileHeader)
-          .keys()
-          .reduce((result, column) => {
-            if (column !== entityName) {
-              result.push({
-                key: entityName,
-                value: column,
-                file: [item],
-                type: 'entities'
-              });
-            }
-            return result;
-          }, []).value();
+          result.push({
+            key: entityName,
+            value: column,
+            file: [entityResource.path],
+            type: constants.ENTITIES
+          });
+          return result;
+        }, [])
+        .value();
 
-        pipe.datasetIndex = _.concat(pipe.datasetIndex, datasetEntitiesIndexes);
-        return completeSearchForEntities(null, _.size(datasetEntitiesIndexes));
-      });
+      pipe.datasetIndex = _.concat(pipe.datasetIndex, datasetEntitiesIndexes);
+      return completeSearchForEntities(null, _.size(datasetEntitiesIndexes));
     },
     (err, entityIndexAmounts) => {
       logger.info('** load Dataset files Entities: ' + _.sum(entityIndexAmounts));
       return done(err, pipe);
     }
   );
-
-  function getEntityName(item) {
-    const entityNameRegExp = /--.*--(.*).csv$/;
-    const entityNameMatch = entityNameRegExp.exec(item);
-    return _.get(entityNameMatch, '1');
-  }
 }
-function _generateDatasetIndexFromDatapoints(pipe, done) {
-  return async.forEachOfLimit(
-    pipe.datasetFilesByType.datapoints,
-    constants.LIMIT_NUMBER_PROCESS,
-    function (item, key, completeSearchForDatapoints) {
 
-      const keyValuePair = getKeyValuePair(item);
-      const existedItem = pipe.datasetIndex.find(arrayItem => arrayItem.key == keyValuePair.key && arrayItem.value == keyValuePair.value);
+function _generateDatasetIndexFromDatapoints(pipe, done) {
+  const datapointResources = _.filter(pipe.datapackage.resources, resource => resource.type === constants.DATAPOINTS);
+
+  return async.eachLimit(datapointResources, constants.LIMIT_NUMBER_PROCESS,
+    function (datapointResource, completeSearchForDatapoints) {
+
+
+      const existedItem = pipe.datasetIndex.find(arrayItem => _.isEqual(_.sortBy(arrayItem.key), _.sortBy(datapointResource.dimensions)) && _.isEqual(_.sortBy(arrayItem.value), _.sortBy(datapointResource.indicators)));
 
       // check that item not exists
       if (existedItem) {
-        existedItem.file.push(item);
+        existedItem.file.push(datapointResource.path);
       } else {
         pipe.datasetIndex.push({
-          key: keyValuePair.key,
-          value: keyValuePair.value,
-          file: [item],
-          type: 'datapoints'
+          key: datapointResource.dimensions,
+          value: datapointResource.indicators,
+          file: [datapointResource.path],
+          type: constants.DATAPOINTS
         });
       }
       return completeSearchForDatapoints();
     },
     err => {
-      logger.info('** load Dataset files Datapoints: ' + pipe.datasetFilesByType.datapoints.length);
       return done(err, pipe);
     }
   );
-
-  function getKeyValuePair(item) {
-    const parsedFilename = datapointUtils.getMeasureDimensionFromFilename(item);
-
-    // FIXME: value should be array because we have multiple measures per file
-    return {
-      key: parsedFilename.dimensions.join(','),
-      value: _.first(parsedFilename.measures)
-    };
-  }
 }
 
 function _convertDatasetIndexToModel(pipe, done) {
@@ -198,7 +141,7 @@ function _convertDatasetIndexToModel(pipe, done) {
 function _populateDatasetIndexWithOriginIds(pipe, done) {
   return async.mapLimit(pipe.datasetIndexes, constants.LIMIT_NUMBER_PROCESS, (index, onIndexPopulated) => {
     index.keyOriginIds = _.chain(index.key).map(getOriginId).compact().value();
-    index.valueOriginId = getOriginId(index.value);
+    index.valueOriginId = getOriginId(getLast(index.value));
 
     return async.waterfall([
       async.constant({dataset: pipe.dataset, transacton: pipe.transaction, version: pipe.transaction.createdAt, index}),
@@ -276,8 +219,8 @@ function findDatapointsStatsForMeasure(pipe, done) {
 function mapDdfIndexToWsModel(pipe) {
   return function (item) {
     return {
-      key: item.key.split(','),
-      value: item.value || '',
+      key: item.key,
+      value: getLast(item.value),
       source: item.file || [],
       type: item.type,
 
@@ -285,4 +228,10 @@ function mapDdfIndexToWsModel(pipe) {
       transaction: pipe.transaction._id
     };
   };
+}
+
+//FIXME: This is workaround to an issue when we have multiple indicators in datapoint file
+// We cannot build MIN, MAX, AVG for files which contain datapoints with multiple indicators
+function getLast(value) {
+  return Array.isArray(value) ? _.last(value) : value;
 }

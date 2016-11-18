@@ -9,7 +9,7 @@ const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
 const DataPoints = mongoose.model('DataPoints');
 
-const ddfImportUtils = require('../../../ws.import/import-ddf.utils');
+const ddfImportUtils = require('../../../ws.import/utils/import-ddf.utils');
 const RepositoryFactory = require('../../repository.factory');
 const repositoryModel = require('../../repository.model');
 const constants = require('../../../ws.utils/constants');

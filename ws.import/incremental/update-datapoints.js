@@ -11,7 +11,8 @@ const JSONStream = require('JSONStream');
 const logger = require('../../ws.config/log');
 const config = require('../../ws.config/config');
 const constants = require('../../ws.utils/constants');
-const datapointsUtils = require('../datapoints.utils');
+const datapointsUtils = require('../utils/datapoints.utils');
+const datapackageParser = require('../utils/datapackage.parser');
 const entitiesRepositoryFactory = require('../../ws.repository/ddf/entities/entities.repository');
 const datapointsRepositoryFactory = require('../../ws.repository/ddf/data-points/data-points.repository');
 
@@ -115,7 +116,8 @@ function toRemovedDatapointsStream(datapointsChangesWithContextStream) {
   return datapointsChangesWithContextStream.fork()
     .filter(({datapointChanges}) => getAction(datapointChanges.metadata) === 'remove')
     .map(({datapointChanges, context}) => {
-      const {measures, dimensions} = parseFilename(datapointChanges.metadata.file.old, context);
+      const resource = _.get(datapointChanges, 'metadata.file.old');
+      const {measures, dimensions} = getDimensionsAndMeasures(resource, context);
 
       return {datapointChanges, context: _.extend({}, context, {measures, dimensions})};
     })
@@ -129,7 +131,8 @@ function toCreatedDatapointsStream(datapointsChangesWithContextStream) {
   return datapointsChangesWithContextStream.fork()
     .filter(({datapointChanges}) => getAction(datapointChanges.metadata) === 'create')
     .map(({datapointChanges, context}) => {
-      const {measures, dimensions} = parseFilename(datapointChanges.metadata.file.new, context);
+      const resource = _.get(datapointChanges, 'metadata.file.new');
+      const {measures, dimensions} = getDimensionsAndMeasures(resource, context);
 
       return {datapointChanges, context: _.extend({}, context, {measures, dimensions})};
     })
@@ -144,8 +147,11 @@ function toUpdatedDatapointsStream(datapointsChangesWithContextStream) {
   return datapointsChangesWithContextStream.fork()
     .filter(({datapointChanges}) => UPDATE_ACTIONS.has(getAction(datapointChanges.metadata)))
     .map(({datapointChanges, context}) => {
-      const {measures, dimensions} = parseFilename(datapointChanges.metadata.file.new, context);
-      const {measures: measuresOld, dimensions: dimensionsOld} = parseFilename(datapointChanges.metadata.file.old, context);
+      const resource = _.get(datapointChanges, 'metadata.file.new');
+      const {measures, dimensions} = getDimensionsAndMeasures(resource, context);
+
+      const resourceOld = _.get(datapointChanges, 'metadata.file.old');
+      const {measures: measuresOld, dimensions: dimensionsOld} = getDimensionsAndMeasures(resourceOld, context);
 
       return {datapointChanges, context: _.extend({}, context, {measures, measuresOld, dimensions, dimensionsOld})};
     })
@@ -159,37 +165,6 @@ function toUpdatedDatapointsStream(datapointsChangesWithContextStream) {
       return hi.wrapCallback(closeDatapointsOfPreviousVersion)(datapointsEntitiesAndContext);
     })
     .flatMap(datapointsAndFoundEntitiesAndContext => hi(datapointsAndFoundEntitiesAndContext));
-}
-
-//FIXME: should be the same for datapoints importing once it's done via datapackage.json
-function parseFilename(file, externalContext) {
-  const {
-    name: resourceName,
-    schema: {
-      fields: resourceFields,
-      primaryKey: resourcePrimaryKey
-    }
-  } = file;
-
-  logger.debug('Processing resource with name: ', resourceName);
-
-  const measureGids = _.map(_.filter(resourceFields, field => !_.includes(resourcePrimaryKey, field.name)), 'name');
-  const dimensionGids = resourcePrimaryKey;
-
-  const measures = _.merge(_.pick(externalContext.previousConcepts, measureGids), _.pick(externalContext.concepts, measureGids));
-  const dimensions = _.merge(_.pick(externalContext.previousConcepts, dimensionGids), _.pick(externalContext.concepts, dimensionGids));
-
-  if (_.isEmpty(measures)) {
-    throw Error(`Resource '${resourceName}' doesn't have any measure.`);
-  }
-
-  if (_.isEmpty(dimensions)) {
-    throw Error(`Resource '${resourceName}' doesn't have any dimensions.`);
-  }
-
-  logger.debug(`** parsed measures: ${_.keys(measures)}`, `** parsed dimensions: ${_.keys(dimensions)}`);
-
-  return {measures, dimensions};
 }
 
 function closeRemovedDatapoints(removedDataPoints, onAllRemovedDatapointsClosed) {
@@ -218,11 +193,16 @@ function closeDatapointsOfPreviousVersion(changedDataPoints, onDatapointsOfPrevi
     ({datapointChanges, entitiesFoundInDatapoint, context: externalContext}, onDatapointsForGivenMeasuresClosed) => {
       const originalRawDatapoint = _.get(datapointChanges.object, 'data-origin');
 
-      const makeDatapointBasedOnItsClosedVersion = closedDatapoint => {
+      const makeDatapointBasedOnItsClosedVersion = (closedDatapoint, closingMeasure) => {
         logger.debug('Create new datapoint based on closed one. OriginId: ', closedDatapoint.originId);
 
-        const newRawDatapoint = _.get(datapointChanges.object, 'data-update');
-        const datapointToCreate = _.defaults({originId: closedDatapoint.originId}, newRawDatapoint, originalRawDatapoint);
+        const newRawDatapoint = omitNotClosingMeasures({
+          rawDatapoint: _.get(datapointChanges.object, 'data-update'),
+          measuresToOmit: externalContext.measures,
+          measureToPreserve: closingMeasure
+        });
+
+        const datapointToCreate = _.defaults({originId: closedDatapoint.originId}, newRawDatapoint);
         return {datapoint: datapointToCreate, entitiesFoundInDatapoint, context: externalContext};
       };
 
@@ -271,7 +251,7 @@ function closeDatapointsPerMeasure(rawDatapoint, externalContext, onDatapointsFo
 
           const {handleClosedDatapoint = _.noop} = externalContext;
 
-          return onDatapointClosed(error, handleClosedDatapoint(closedDatapoint));
+          return onDatapointClosed(error, handleClosedDatapoint(closedDatapoint, measure));
         });
   }, (error, datapointsToCreate) => {
     return onDatapointsForGivenMeasuresClosed(error, _.values(datapointsToCreate));
@@ -293,4 +273,20 @@ function getDimensionsAsEntityOriginIds(datapoint, externalContext) {
 
 function getAction(metadata) {
   return _.get(metadata, 'action');
+}
+
+function omitNotClosingMeasures(options) {
+  const notClosingMeasureGids = _.reduce(options.measuresToOmit, (result, measure) => {
+    if (measure.gid !== options.measureToPreserve.gid) {
+      result.push(measure.gid);
+    }
+    return result;
+  }, []);
+
+  return _.omit(options.rawDatapoint, notClosingMeasureGids)
+}
+
+function getDimensionsAndMeasures(resource, externalContext) {
+  const parsedResource = datapackageParser.parseDatapointsResource(resource);
+  return datapointsUtils.getDimensionsAndMeasures(parsedResource, externalContext);
 }

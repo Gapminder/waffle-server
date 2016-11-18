@@ -5,11 +5,10 @@ const fs = require('fs');
 const path = require('path');
 const async = require('async');
 
-const common = require('./../common');
 const config = require('../../ws.config/config');
-const ddfImportUtils = require('../import-ddf.utils');
+const ddfImportUtils = require('../utils/import-ddf.utils');
 
-const createDatasetIndex = require('./../import-dataset-index.service');
+const createDatasetIndex = require('../import-dataset-index');
 const datasetsRepository = require('../../ws.repository/ddf/datasets/datasets.repository');
 const conceptsRepositoryFactory = require('../../ws.repository/ddf/concepts/concepts.repository');
 const updateConcepts = require('./update-concepts');
@@ -39,10 +38,11 @@ module.exports = function (options, done) {
   console.time(INCREMENTAL_UPDATE_LABEL);
   async.waterfall([
     async.constant(pipe),
-    common.resolvePathToDdfFolder,
-    common.createTransaction,
+    ddfImportUtils.resolvePathToDdfFolder,
+    ddfImportUtils.getDatapackage,
+    ddfImportUtils.createTransaction,
     findDataset,
-    common.establishTransactionForDataset,
+    ddfImportUtils.establishTransactionForDataset,
     ddfImportUtils.activateLifecycleHook('onTransactionCreated'),
     updateConcepts,
     getAllConcepts,
@@ -51,7 +51,7 @@ module.exports = function (options, done) {
     updateDatapoints,
     // updateTranslations,
     createDatasetIndex,
-    common.closeTransaction
+    ddfImportUtils.closeTransaction
   ], (updateError, pipe) => {
     console.timeEnd(INCREMENTAL_UPDATE_LABEL);
 

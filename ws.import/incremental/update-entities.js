@@ -8,14 +8,14 @@ const async = require('async');
 const byline = require('byline');
 const JSONStream = require('JSONStream');
 
-const common = require('./../common');
-const ddfMappers = require('./../ddf-mappers');
+const ddfMappers = require('../utils/ddf-mappers');
+const datapackageParser = require('../utils/datapackage.parser');
+const entitiesUtils = require('../utils/entities.utils');
 const logger = require('../../ws.config/log');
 const config = require('../../ws.config/config');
 const constants = require('../../ws.utils/constants');
 
 const entitiesRepositoryFactory = require('../../ws.repository/ddf/entities/entities.repository');
-const versionAgnosticEntitiesRepository = entitiesRepositoryFactory.versionAgnostic();
 
 const DEFAULT_CHUNK_SIZE = 2000;
 const UPDATE_ACTION = new Set(['change', 'update']);
@@ -74,12 +74,10 @@ function toCreatedEntitiesStream(entityChangesStream) {
   return entityChangesStream.fork()
     .filter(({entityChanges}) => getAction(entityChanges.metadata) === 'create')
     .map(({entityChanges, context}) => {
-      const newFile = _.get(entityChanges.metadata, 'file.new');
-      const filename = _.get(entityChanges.metadata, 'file.new.path');
+      const resource = _.get(entityChanges, 'metadata.file.new');
+      const setsAndDomain = getSetsAndDomain(resource, context);
 
-      const setsAndDomain = getDomainsAndSets(newFile, context);
-
-      return ddfMappers.mapDdfEntityToWsModel(entityChanges.object, _.extend({filename}, setsAndDomain, context));
+      return ddfMappers.mapDdfEntityToWsModel(entityChanges.object, _.extend({filename: resource.path}, setsAndDomain, context));
     })
     .batch(DEFAULT_CHUNK_SIZE)
     .flatMap(entitiesBatch => {
@@ -93,17 +91,17 @@ function toUpdatedEntitiesStream(entityChangesStream, externalContextFrozen) {
   return entityChangesStream.fork()
     .filter(({entityChanges}) => UPDATE_ACTION.has(getAction(entityChanges.metadata)))
     .map(({entityChanges, context}) => {
-      const newFile = _.get(entityChanges.metadata, 'file.new');
-      const oldFile = _.get(entityChanges.metadata, 'file.old');
-      const filename = _.get(entityChanges.metadata, 'file.new.path');
+      const resource = _.get(entityChanges, 'metadata.file.new');
+      const resourceOld = _.get(entityChanges, 'metadata.file.old');
+      const filename = _.get(resource, 'path');
 
-      const setsAndDomain = getDomainsAndSets(newFile, externalContextFrozen);
+      const setsAndDomain = getSetsAndDomain(resource, externalContextFrozen);
 
       const {
         entitySet: oldEntitySet,
         entityDomain: oldEntityDomain,
         entitySetsOriginIds: oldEntitySetsOriginIds
-      } = getDomainsAndSets(oldFile, externalContextFrozen);
+      } = getSetsAndDomain(resourceOld, externalContextFrozen);
 
       const oldSetsAndDomain = {oldEntitySet, oldEntityDomain, oldEntitySetsOriginIds};
 
@@ -125,12 +123,13 @@ function toRemovedEntitiesStream(entityChangesStream, externalContextFrozen) {
   return entityChangesStream.fork()
     .filter(({entityChanges}) => getAction(entityChanges.metadata) === 'remove')
     .map(({entityChanges, context}) => {
+      const resourceOld = _.get(entityChanges, 'metadata.file.old');
 
       const {
         entitySet: oldEntitySet,
         entityDomain: oldEntityDomain,
         entitySetsOriginIds: oldEntitySetsOriginIds
-      } = getDomainsAndSets(entityChanges.metadata.file.old, externalContextFrozen);
+      } = getSetsAndDomain(resourceOld, externalContextFrozen);
 
       const oldSetsAndDomain = {oldEntitySet, oldEntityDomain, oldEntitySetsOriginIds};
 
@@ -147,29 +146,7 @@ function toRemovedEntitiesStream(entityChangesStream, externalContextFrozen) {
 }
 
 function storeEntitiesToDb(createdEntities, onEntitiesCreated) {
-  return versionAgnosticEntitiesRepository.create(createdEntities, onEntitiesCreated);
-}
-
-function getDomainsAndSets(file, context) {
-  const primaryKey = getPrimaryKey(file.schema);
-  const entitySet = context.concepts[primaryKey] || context.previousConcepts[primaryKey];
-
-  const entityDomainGid = _.get(entitySet, 'domain.gid');
-  const entityDomain = context.concepts[entityDomainGid] || context.previousConcepts[entityDomainGid] || entitySet;
-
-  const entitySetsOriginIds = _.reduce(file.schema.fields, (result, field) => {
-    let conceptGid = field.name;
-
-    if (_.startsWith(conceptGid, 'is--')) {
-      conceptGid = toConceptGid(field.name);
-      const concept = context.concepts[conceptGid] || context.previousConcepts[conceptGid];
-      result.push(concept.originId);
-    }
-
-    return result;
-  }, []);
-
-  return {entitySet, entityDomain, entitySetsOriginIds};
+  return entitiesRepositoryFactory.versionAgnostic().create(createdEntities, onEntitiesCreated);
 }
 
 function closeEntities({entityChangesBatch, externalContext, handleClosedEntity}, onAllEntitiesClosed) {
@@ -190,6 +167,7 @@ function closeEntities({entityChangesBatch, externalContext, handleClosedEntity}
       }
 
       if (!handleClosedEntity) {
+        logger.error('Entity was not closed, though it should be');
         return onEntityClosed(null);
       }
 
@@ -245,11 +223,7 @@ function getAction(metadata) {
   return _.get(metadata, 'action');
 }
 
-function getPrimaryKey(schema) {
-  const rawPrimaryKey = _.get(schema, 'primaryKey');
-  return _.isArray(rawPrimaryKey) ? _.first(rawPrimaryKey) : rawPrimaryKey;
-}
-
-function toConceptGid(fieldName) {
-  return _.last(_.split(fieldName, 'is--'));
+function getSetsAndDomain(resource, externalContext) {
+  const parsedResource = datapackageParser.parseEntitiesResource(resource);
+  return entitiesUtils.getSetsAndDomain(parsedResource, externalContext);
 }

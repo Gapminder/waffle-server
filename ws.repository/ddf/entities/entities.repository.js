@@ -79,9 +79,6 @@ EntitiesRepository.prototype.findAllPopulated = function (done) {
       },
       sets: {
         $find: composedQuery
-      },
-      drillups: {
-        $find: composedQuery
       }
     }
   })
