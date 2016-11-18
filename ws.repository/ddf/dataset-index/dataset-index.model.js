@@ -21,7 +21,7 @@ const originId = require('../origin-id.plugin');
  */
 let DatasetIndex = new Schema({
   key: [{type: String, required: true}],
-  value: {type: String, required: true},
+  value: {type: Schema.Types.Mixed, required: true},
   source: [{type: String, required: true}],
   keyOriginIds: [{type: String}],
   valueOriginId: {type: String},

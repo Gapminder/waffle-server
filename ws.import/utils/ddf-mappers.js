@@ -2,8 +2,8 @@
 
 const _ = require('lodash');
 
-const constants = require('../ws.utils/constants');
-const ddfImportUtils = require('../ws.import/import-ddf.utils');
+const constants = require('../../ws.utils/constants');
+const ddfImportUtils = require('./import-ddf.utils');
 
 const JSON_COLUMNS = ['color', 'scales', 'drill_up'];
 
@@ -81,10 +81,10 @@ function mapDdfDataPointToWsModel(entry, context) {
           dimensions: dimensions,
 
           properties: entry,
-          originId: _.get(context, 'originId', null),
+          originId: entry.originId,
           languages: _.get(context, 'languages', null),
 
-          isNumeric: _.isNumber(entry[measureGid]),
+          isNumeric: !_.isNil(datapointValueAsNumber),
           from: context.version,
           dataset: context.datasetId,
           sources: [context.filename]

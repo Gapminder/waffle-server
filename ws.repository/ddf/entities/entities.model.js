@@ -12,14 +12,12 @@ const Entities = new Schema({
 
   title: String,
   sources: [{type: String, required: true}],
-  isOwnParent: Boolean,
   properties: {},
   languages: {},
 
   // should be required
   domain: {type: Schema.Types.ObjectId, required: true},
   sets: [{type: Schema.Types.ObjectId}],
-  drillups: [{type: Schema.Types.ObjectId}],
 
   from: {type: Number, required: true},
   to: {type: Number, required: true, default: Number.MAX_SAFE_INTEGER},
@@ -31,7 +29,6 @@ Entities.plugin(originId, {
   modelName: 'Entities',
   domain: 'Concepts',
   sets: 'Concepts',
-  drillups: 'Entities',
   originId: 'Entities'
 });
 

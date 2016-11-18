@@ -3,19 +3,17 @@
 const _ = require('lodash');
 const hi = require('highland');
 
-const logger = require('../ws.config/log');
+const logger = require('../../ws.config/log');
 const ddfMappers = require('./ddf-mappers');
-const entitiesRepositoryFactory = require('../ws.repository/ddf/entities/entities.repository');
-const versionAgnosticEntitiesRepository = entitiesRepositoryFactory.versionAgnostic();
+const entitiesRepositoryFactory = require('../../ws.repository/ddf/entities/entities.repository');
 
-const datapointsRepositoryFactory = require('../ws.repository/ddf/data-points/data-points.repository');
-const versionAgnosticDatapointsRepository = datapointsRepositoryFactory.versionAgnostic();
+const datapointsRepositoryFactory = require('../../ws.repository/ddf/data-points/data-points.repository');
 
 const DEFAULT_CHUNK_SIZE = 1500;
 
 module.exports = {
   DEFAULT_CHUNK_SIZE,
-  parseFilename,
+  getDimensionsAndMeasures,
   segregateEntities,
   findEntitiesInDatapoint,
   findAllEntities,
@@ -45,27 +43,27 @@ function findAllEntities(externalContext) {
     .then(segregateEntities);
 }
 
-function parseFilename(filename, externalContext) {
-  logger.info(`** parse filename '${filename}'`);
+function getDimensionsAndMeasures(resource, externalContext) {
+  logger.debug('Processing resource with path: ', resource.path);
+  const measures = _.merge(
+    _.pick(externalContext.previousConcepts, resource.indicators),
+    _.pick(externalContext.concepts, resource.indicators)
+  );
 
-  const parseFilename = getMeasureDimensionFromFilename(filename);
-  const measureGids = parseFilename.measures;
-  const dimensionGids = parseFilename.dimensions;
-
-  const measures = _.merge(_.pick(externalContext.previousConcepts, measureGids), _.pick(externalContext.concepts, measureGids));
-  const dimensions = _.merge(_.pick(externalContext.previousConcepts, dimensionGids), _.pick(externalContext.concepts, dimensionGids));
+  const dimensions = _.merge(
+    _.pick(externalContext.previousConcepts, resource.dimensions),
+    _.pick(externalContext.concepts, resource.dimensions)
+  );
 
   if (_.isEmpty(measures)) {
-    throw Error(`file '${filename}' doesn't have any measure.`);
+    throw Error(`Resource '${resource.path}' doesn't have any measures`);
   }
 
   if (_.isEmpty(dimensions)) {
-    throw Error(`file '${filename}' doesn't have any dimensions.`);
+    throw Error(`Resource '${resource.path}' doesn't have any dimensions`);
   }
 
-  logger.info(`** parsed measures: ${_.keys(measures)}`, `** parsed dimensions: ${_.keys(dimensions)}`);
-
-  return {measures, dimensions};
+  return { measures, dimensions };
 }
 
 function segregateEntities(entities) {
@@ -163,7 +161,7 @@ function storeEntitiesToDb(entities) {
   }
 
   logger.debug(`Store entities found in datapoints to database. Amount: `, _.size(entities));
-  return versionAgnosticEntitiesRepository.create(entities);
+  return entitiesRepositoryFactory.versionAgnostic().create(entities);
 }
 
 function saveDatapoints(datapointsByFilename, externalContextFrozen) {
@@ -195,7 +193,7 @@ function mapAndStoreDatapointsToDb(datapointsFromSameFile, externalContext) {
   });
 
   logger.debug('Store datapoints to database. Amount: ', _.size(wsDatapoints));
-  return versionAgnosticDatapointsRepository.create(wsDatapoints);
+  return datapointsRepositoryFactory.versionAgnostic().create(wsDatapoints);
 }
 
 function getMeasureDimensionFromFilename(filename) {

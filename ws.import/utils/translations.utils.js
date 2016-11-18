@@ -3,15 +3,14 @@
 const fs = require('fs');
 const _ = require('lodash');
 
-const common = require('./common');
-const logger = require('../ws.config/log');
-const constants = require('../ws.utils/constants');
+const logger = require('../../ws.config/log');
+const constants = require('../../ws.utils/constants');
 const entitiesUtils = require('./entities.utils');
 const datapointsUtils = require('./datapoints.utils');
-const datapointsRepository = require('../ws.repository/ddf/data-points/data-points.repository');
-const entitiesRepository = require('../ws.repository/ddf/entities/entities.repository');
-const conceptsRepository = require('../ws.repository/ddf/concepts/concepts.repository');
-const transactionsRepository = require('../ws.repository/ddf/dataset-transactions/dataset-transactions.repository');
+const datapointsRepository = require('../../ws.repository/ddf/data-points/data-points.repository');
+const entitiesRepository = require('../../ws.repository/ddf/entities/entities.repository');
+const conceptsRepository = require('../../ws.repository/ddf/concepts/concepts.repository');
+const transactionsRepository = require('../../ws.repository/ddf/dataset-transactions/dataset-transactions.repository');
 
 const translationsPattern = /^ddf--translation--(([a-z]{2}-[a-z]{2,})|([a-z]{2,}))--/;
 const repositories = {
@@ -45,7 +44,7 @@ function parseFilename(filename, languages, externalContext) {
   let parsedConcepts;
 
   if (translatedModel === constants.DATAPOINTS) {
-    parsedConcepts = datapointsUtils.parseFilename(dataFilename, externalContext);
+    parsedConcepts = datapointsUtils.getDimensionsAndMeasures(dataFilename, externalContext);
   }
 
   if (translatedModel === constants.ENTITIES) {
