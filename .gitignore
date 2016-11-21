@@ -30,6 +30,7 @@ dumps
 
 # Directory for GitHub repositories
 /ws.import/repos
+/ws.import/diffs
 
 settings_gapminder*.txt
 settings_valor.txt

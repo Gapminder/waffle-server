@@ -5,9 +5,9 @@ const hi = require('highland');
 const fs = require('fs');
 
 const logger = require('../ws.config/log');
-const ddfUtils = require('./import-ddf.utils');
+const ddfUtils = require('./utils/import-ddf.utils');
 const constants = require('../ws.utils/constants');
-const datapointsUtils = require('./datapoints.utils');
+const datapointsUtils = require('./utils/datapoints.utils');
 
 const MONGODB_DOC_CREATION_THREADS_AMOUNT = 3;
 
@@ -18,6 +18,7 @@ function startDatapointsCreation(externalContext, done) {
 
   const externalContextFrozen = Object.freeze(_.pick(externalContext, [
     'pathToDdfFolder',
+    'datapackage',
     'concepts',
     'timeConcepts',
     'transaction',
@@ -48,16 +49,15 @@ function createDatapoints(externalContextFrozen) {
     externalContextFrozen
   );
 
-  const datapointsAndFoundEntitiesStream = hi.wrapCallback(fs.readdir)(externalContextFrozen.pathToDdfFolder)
-    .flatMap(filenames => hi(filenames))
-    .filter(filename => /^ddf--datapoints--/.test(filename))
-    .flatMap(filename => {
-      const {measures, dimensions} = datapointsUtils.parseFilename(filename, externalContextFrozen);
+  const datapointsAndFoundEntitiesStream = hi(externalContextFrozen.datapackage.resources)
+    .filter(resource => resource.type === 'datapoints')
+    .flatMap(resource => {
+      const {measures, dimensions} = datapointsUtils.getDimensionsAndMeasures(resource, externalContextFrozen);
       return hi(findAllEntitiesMemoized(externalContextFrozen))
-        .map(segregatedEntities => ({filename, measures, dimensions, segregatedEntities}));
+        .map(segregatedEntities => ({filename: resource.path, measures, dimensions, segregatedEntities}));
     })
     .map(context => {
-      return ddfUtils.readCsvFile(externalContextFrozen.resolvePath(context.filename), {})
+      return ddfUtils.readCsvFileAsStream(externalContextFrozen.resolvePath(context.filename), {})
         .map(datapoint => ({datapoint, context}));
     })
     .parallel(MONGODB_DOC_CREATION_THREADS_AMOUNT)

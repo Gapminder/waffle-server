@@ -46,8 +46,8 @@ EntitiesRepository.prototype.closeOneByQuery = function (closeQuery, done) {
   return Entities.findOneAndUpdate(query, {$set: {to: this.version}}, {new: true}, done);
 };
 
-EntitiesRepository.prototype.create = function (entityOrBatchOfEntities, onCounted) {
-  return Entities.create(entityOrBatchOfEntities, onCounted);
+EntitiesRepository.prototype.create = function (entityOrBatchOfEntities, onCreated) {
+  return Entities.create(entityOrBatchOfEntities, onCreated);
 };
 
 EntitiesRepository.prototype.findAllHavingGivenDomainsOrSets = function (domainsIds, setsIds, onFound) {
@@ -78,9 +78,6 @@ EntitiesRepository.prototype.findAllPopulated = function (done) {
         $find: composedQuery
       },
       sets: {
-        $find: composedQuery
-      },
-      drillups: {
         $find: composedQuery
       }
     }

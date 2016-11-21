@@ -3,6 +3,7 @@
 const _ = require('lodash');
 const git = require('simple-git');
 const async = require('async');
+const wsCli = require('waffle-server-import-cli');
 const ddfValidation = require('ddf-validation');
 const SimpleDdfValidator = ddfValidation.SimpleValidator;
 
@@ -13,7 +14,7 @@ const authService = require('./auth.service');
 const reposService = require('./repos.service');
 const datasetsService = require('./datasets.service');
 const usersRepository = require('../ws.repository/ddf/users/users.repository');
-const importDdfService = require('../ws.import/import-ddf.service');
+const importDdfService = require('../ws.import/import-ddf');
 const datasetsRepository = require('../ws.repository/ddf/datasets/datasets.repository');
 const transactionsService = require('./dataset-transactions.service');
 const transactionsRepository = require('../ws.repository/ddf/dataset-transactions/dataset-transactions.repository');
@@ -153,6 +154,7 @@ function updateIncrementally(params, onDatasetUpdated) {
     _checkTransaction,
     _cloneDdfRepo,
     _validateDdfRepo,
+    _generateDiffForDatasetUpdate,
     _runIncrementalUpdate,
     _unlockDataset
   ], (importError, pipe) => {
@@ -165,6 +167,18 @@ function updateIncrementally(params, onDatasetUpdated) {
     }
 
     return onDatasetUpdated(importError, pipe);
+  });
+}
+
+function _generateDiffForDatasetUpdate(context, done) {
+  const {hashFrom, hashTo, github} = context;
+  return wsCli.generateDiff({hashFrom, hashTo, github, resultPath: config.PATH_TO_DIFF_DDF_RESULT_FILE}, (error, diffPaths) => {
+    if (error) {
+      return done(error);
+    }
+
+    const {diff: pathToDatasetDiff, lang: pathToLangDiff} = diffPaths;
+    return done(null, _.extend(context, {pathToDatasetDiff, pathToLangDiff}));
   });
 }
 
@@ -200,7 +214,9 @@ function _runIncrementalUpdate(pipe, onDatasetUpdated) {
     commit: pipe.commit,
     github: pipe.github,
     lifecycleHooks: pipe.lifecycleHooks,
-    user: pipe.user
+    user: pipe.user,
+    pathToDatasetDiff: pipe.pathToDatasetDiff,
+    pathToLangDiff: pipe.pathToLangDiff
   };
 
   return incrementalUpdateService(options, onDatasetUpdated);

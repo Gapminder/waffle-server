@@ -1,7 +1,7 @@
-/**
- * Created by korel on 02.02.16.
- */
 'use strict';
+
+const path = require('path');
+
 const DEFAULT_NODE_ENV = 'local';
 const NODE_ENV = process.env.NODE_ENV || DEFAULT_NODE_ENV;
 
@@ -52,9 +52,8 @@ module.exports = Object.freeze({
   MONGOOSE_DEBUG: false,
   CLEAR_MONGO_DB_COLLECTIONS: false,
 
-  PATH_TO_DDF_FOLDER: '../open-numbers/ddf--gapminder_world',
   PATH_TO_DDF_REPOSITORIES: './ws.import/repos',
-  PATH_TO_DIFF_DDF_RESULT_FILE: '../waffle-server-import-cli/requests/operation-result.json',
+  PATH_TO_DIFF_DDF_RESULT_FILE: path.join(__dirname, '../ws.import/diffs'),
 
   CLEAN_EXPORT: false
 });
