@@ -86,7 +86,7 @@ DatasetTransactionsRepository.prototype.establishForDataset = function ({transac
     return onEstablished('DatasetId is required');
   }
 
-  return DatasetTransactions.findOneAndUpdate({_id: transactionId}, {$set: {dataset: datasetId}}, onEstablished);
+  return DatasetTransactions.findOneAndUpdate({_id: transactionId}, {$set: {dataset: datasetId}}, {new: true}, onEstablished);
 };
 
 DatasetTransactionsRepository.prototype.findDefault = function (options, onDefaultFound) {

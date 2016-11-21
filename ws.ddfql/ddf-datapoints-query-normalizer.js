@@ -177,8 +177,9 @@ function __normalizeJoin(query, options) {
     }
 
     if (this.key === 'key') {
+      const domainOrSetOriginId = _.get(options, `conceptsByGids.${filterValue}.originId`);
       normalizedFilter = {
-        domain: filterValue
+        $or: [{domain: domainOrSetOriginId}, {sets: domainOrSetOriginId}]
       };
     }
 

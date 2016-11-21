@@ -1,25 +1,30 @@
 'use strict';
 
 const _ = require('lodash');
+const hi = require('highland');
+const fs = require('fs');
+const path = require('path');
 const async = require('async');
+const byline = require('byline');
+const JSONStream = require('JSONStream');
 
 const logger = require('../../ws.config/log');
 const config = require('../../ws.config/config');
 const constants = require('../../ws.utils/constants');
-
+const datapointsUtils = require('../utils/datapoints.utils');
+const datapackageParser = require('../utils/datapackage.parser');
 const entitiesRepositoryFactory = require('../../ws.repository/ddf/entities/entities.repository');
 const datapointsRepositoryFactory = require('../../ws.repository/ddf/data-points/data-points.repository');
-const datapointsUtils = require('../datapoints.utils');
 
-const hi = require('highland');
+const UPDATE_ACTIONS = new Set(['change', 'update']);
 
 module.exports = startDatapointsCreation;
 
 function startDatapointsCreation(externalContext, done) {
-  logger.info('start process of updating data points');
+  logger.info('Start process of datapoints update');
 
   const externalContextFrozen = Object.freeze(_.pick(externalContext, [
-    'allChanges',
+    'pathToDatasetDiff',
     'previousConcepts',
     'concepts',
     'timeConcepts',
@@ -41,16 +46,15 @@ function startDatapointsCreation(externalContext, done) {
 }
 
 function findAllPreviousEntities(externalContext) {
-  return entitiesRepositoryFactory.previousVersion(externalContext.dataset._id, externalContext.transaction.createdAt)
+  return entitiesRepositoryFactory
+    .previousVersion(externalContext.dataset._id, externalContext.transaction.createdAt)
     .findAll()
     .then(datapointsUtils.segregateEntities);
 }
 
 function createDatapoints(externalContextFrozen) {
   const findAllEntitiesMemoized = _.memoize(datapointsUtils.findAllEntities);
-
   const findAllPreviousEntitiesMemoized = _.memoize(findAllPreviousEntities);
-
   const saveEntitiesFoundInDatapoints = datapointsUtils.createEntitiesFoundInDatapointsSaverWithCache();
 
   const saveDatapointsAndEntitiesFoundInThem = _.curry(datapointsUtils.saveDatapointsAndEntitiesFoundInThem)(
@@ -58,147 +62,231 @@ function createDatapoints(externalContextFrozen) {
     externalContextFrozen
   );
 
-  const datapointsWithFoundEntitiesStream = hi(_.keys(externalContextFrozen.allChanges))
-    .filter(filename => {
-      return filename.match(/ddf--datapoints--/g);
-    })
-    .map(filename => {
-      return {filename, fileChanges: externalContextFrozen.allChanges[filename].body};
-    })
-    .flatMap(({filename, fileChanges}) => {
-      const {measures, dimensions} = datapointsUtils.parseFilename(filename, externalContextFrozen);
+  const fileWithChangesStream = fs.createReadStream(externalContextFrozen.pathToDatasetDiff, {encoding: 'utf8'});
 
-      const segregatedEntitiesStream = hi(findAllEntitiesMemoized(externalContextFrozen))
-        .map(segregatedEntities => ({segregatedEntities}));
+  const changesByLine = byline(fileWithChangesStream).pipe(JSONStream.parse());
 
-      const segregatedPreviousEntitiesStream = hi(findAllPreviousEntitiesMemoized(externalContextFrozen))
-        .map(segregatedPreviousEntities => ({segregatedPreviousEntities}));
+  const datapointsChangesWithContextStream = hi(changesByLine)
+    .filter(change => _.get(change, 'metadata.type') === constants.DATAPOINTS)
+    .flatMap(datapointChanges => {
+      const allEntitiesPromise = findAllEntitiesMemoized(externalContextFrozen);
+      const allPreviousEntitiesPromise = findAllPreviousEntitiesMemoized(externalContextFrozen);
 
-      return hi([segregatedEntitiesStream, segregatedPreviousEntitiesStream])
-        .sequence()
-        .reduce([], (result, segregatedEntities) => {
-          result.push(segregatedEntities);
-          return result;
-        })
-        .map(previousAndCurrentSegregatedEntities => {
-          return _.extend({filename, measures, dimensions, fileChanges}, ... [externalContextFrozen, ...previousAndCurrentSegregatedEntities]);
-        });
-    })
-    .flatMap(context => {
-      return hi.wrapCallback(__closeRemovedAndUpdatedDataPoints)(context);
-    })
-    .flatMap(context => {
-      const toRawDatapoint = _.curry(formRawDataPoint)(context);
-      const updatedDataPoints = _.map(context.fileChanges.update, toRawDatapoint);
-      const changedDataPoints = _.map(context.fileChanges.change, toRawDatapoint);
-      const translatedDataPoints = _.map(context.fileChanges.translate, toRawDatapoint);
-      return hi(_.concat(context.fileChanges.create, updatedDataPoints, changedDataPoints, translatedDataPoints))
-        .map(datapoint => {
-          const entitiesFoundInDatapoint = datapointsUtils.findEntitiesInDatapoint(datapoint, context, externalContextFrozen);
-          return {datapoint, entitiesFoundInDatapoint, context};
-        });
+      return enrichDatapointChangesWithContextStream(
+        datapointChanges,
+        allEntitiesPromise,
+        allPreviousEntitiesPromise,
+        externalContextFrozen
+      );
     });
+
+  const datapointsWithFoundEntitiesStream = hi([
+    toRemovedDatapointsStream(datapointsChangesWithContextStream),
+    toCreatedDatapointsStream(datapointsChangesWithContextStream),
+    toUpdatedDatapointsStream(datapointsChangesWithContextStream)
+  ]).parallel(3);
 
   return saveDatapointsAndEntitiesFoundInThem(datapointsWithFoundEntitiesStream);
 }
 
-function __closeRemovedAndUpdatedDataPoints(pipe, done) {
-  logger.info(`** close data points`);
+function enrichDatapointChangesWithContextStream(datapointChanges, allEntitiesPromise, allPreviousEntitiesPromise, externalContext) {
+  const segregatedEntitiesPromise = allEntitiesPromise
+    .then(segregatedEntities => ({segregatedEntities}));
 
-  pipe.closedDataPoints = {};
+  const segregatedPreviousEntitiesPromise = allPreviousEntitiesPromise
+    .then(segregatedPreviousEntities => ({segregatedPreviousEntities}));
 
-  return async.parallel([
-    ___updateRemovedDataPoints(pipe.fileChanges.remove, pipe),
-    ___updateChangedDataPoints(pipe.fileChanges.update, pipe),
-    ___updateChangedDataPoints(pipe.fileChanges.change, pipe),
-    ___updateChangedDataPoints(pipe.fileChanges.translate, pipe)
-  ], (err) => {
-    return done(err, pipe);
+  const previousAndCurrentSegregatedEntitiesPromise =
+    Promise.all([segregatedEntitiesPromise, segregatedPreviousEntitiesPromise])
+    .then(result => _.extend({}, _.first(result), _.last(result)));
+
+  return hi(previousAndCurrentSegregatedEntitiesPromise)
+    .map(previousAndCurrentSegregatedEntities => {
+    const context = _.extend(
+      {filename: _.get(datapointChanges, 'metadata.file.new.path')},
+      externalContext,
+      previousAndCurrentSegregatedEntities
+    );
+
+    return { datapointChanges, context };
   });
 }
 
-function formRawDataPoint(pipe, datapoint) {
-  const complexKey = getComplexKey(datapoint['data-origin']);
-  const closedOriginDatapoint = pipe.closedDataPoints[complexKey];
-  const originId = closedOriginDatapoint ? closedOriginDatapoint.originId : null;
-  return _.defaults({originId}, datapoint['data-update'], datapoint['data-origin']);
-}
+function toRemovedDatapointsStream(datapointsChangesWithContextStream) {
+  return datapointsChangesWithContextStream.fork()
+    .filter(({datapointChanges}) => getAction(datapointChanges.metadata) === 'remove')
+    .map(({datapointChanges, context}) => {
+      const resource = _.get(datapointChanges, 'metadata.file.old');
+      const {measures, dimensions} = getDimensionsAndMeasures(resource, context);
 
-function ___updateRemovedDataPoints(removedDataPoints, pipe) {
-  return (cb) => {
-    return async.eachLimit(
-      removedDataPoints,
-      constants.LIMIT_NUMBER_PROCESS,
-      ____closeDataPoint(pipe),
-      (err) => {
-        return cb(err);
-      });
-  };
-}
-
-function ___updateChangedDataPoints(changedDataPoints, pipe) {
-  return (cb) => {
-    return async.mapLimit(
-      _.map(changedDataPoints, 'data-origin'),
-      constants.LIMIT_NUMBER_PROCESS,
-      ____closeDataPoint(pipe),
-      cb
-    );
-  };
-}
-
-function ____closeDataPoint(pipe) {
-  return (datapoint, ecb) => {
-    let entityGids = _.chain(datapoint)
-      .pick(_.keys(pipe.dimensions))
-      .values()
-      .compact()
-      .value();
-
-    let entities = _.flatMap(entityGids, (gid) => {
-      return pipe.segregatedEntities.groupedByGid[gid] || pipe.segregatedPreviousEntities.groupedByGid[gid];
+      return {datapointChanges, context: _.extend({}, context, {measures, dimensions})};
+    })
+    .batch(datapointsUtils.DEFAULT_CHUNK_SIZE)
+    .flatMap(context => {
+      return hi.wrapCallback(closeRemovedDatapoints)(context);
     });
-
-    return async.eachLimit(
-      pipe.measures,
-      constants.LIMIT_NUMBER_PROCESS,
-      _____updateDataPoint(pipe, entities, datapoint),
-      (err) => {
-        return ecb(err);
-      }
-    );
-  };
 }
 
-function _____updateDataPoint(pipe, entities, datapoint) {
-  return (measure, ecb) => {
+function toCreatedDatapointsStream(datapointsChangesWithContextStream) {
+  return datapointsChangesWithContextStream.fork()
+    .filter(({datapointChanges}) => getAction(datapointChanges.metadata) === 'create')
+    .map(({datapointChanges, context}) => {
+      const resource = _.get(datapointChanges, 'metadata.file.new');
+      const {measures, dimensions} = getDimensionsAndMeasures(resource, context);
 
-    const options = {
-      measureOriginId: measure.originId,
-      dimensionsSize: _.size(pipe.dimensions),
-      dimensionsEntityOriginIds: _.map(entities, 'originId'),
-      datapointValue: datapoint[measure.gid],
-      languages: _.get(datapoint, 'languages', null)
-    };
+      return {datapointChanges, context: _.extend({}, context, {measures, dimensions})};
+    })
+    .map(({datapointChanges, context}) => {
+      const entitiesFoundInDatapoint = datapointsUtils.findEntitiesInDatapoint(datapointChanges.object, context, context);
 
-    return datapointsRepositoryFactory.latestExceptCurrentVersion(pipe.dataset._id, pipe.transaction.createdAt)
-      .closeDatapointByMeasureAndDimensionsAndValue(options, (err, doc) => {
-        if (doc) {
-          let complexKey = getComplexKey(datapoint);
-
-          pipe.closedDataPoints[complexKey] = doc;
-        }
-
-        return ecb(err, pipe);
-      });
-  };
+      return {datapoint: datapointChanges.object, entitiesFoundInDatapoint, context};
+    });
 }
 
-function getComplexKey(obj) {
-  return _.chain(obj)
-    .keys()
-    .sort()
-    .map(key => `${key}:${obj[key]}`)
-    .join('--')
+function toUpdatedDatapointsStream(datapointsChangesWithContextStream) {
+  return datapointsChangesWithContextStream.fork()
+    .filter(({datapointChanges}) => UPDATE_ACTIONS.has(getAction(datapointChanges.metadata)))
+    .map(({datapointChanges, context}) => {
+      const resource = _.get(datapointChanges, 'metadata.file.new');
+      const {measures, dimensions} = getDimensionsAndMeasures(resource, context);
+
+      const resourceOld = _.get(datapointChanges, 'metadata.file.old');
+      const {measures: measuresOld, dimensions: dimensionsOld} = getDimensionsAndMeasures(resourceOld, context);
+
+      return {datapointChanges, context: _.extend({}, context, {measures, measuresOld, dimensions, dimensionsOld})};
+    })
+    .map(({datapointChanges, context}) => {
+      const entitiesFoundInDatapoint = datapointsUtils.findEntitiesInDatapoint(datapointChanges.object['data-update'], context, context);
+
+      return {datapointChanges, entitiesFoundInDatapoint, context};
+    })
+    .batch(datapointsUtils.DEFAULT_CHUNK_SIZE)
+    .flatMap(datapointsEntitiesAndContext => {
+      return hi.wrapCallback(closeDatapointsOfPreviousVersion)(datapointsEntitiesAndContext);
+    })
+    .flatMap(datapointsAndFoundEntitiesAndContext => hi(datapointsAndFoundEntitiesAndContext));
+}
+
+function closeRemovedDatapoints(removedDataPoints, onAllRemovedDatapointsClosed) {
+  logger.info('Closing removed datapoints');
+
+  return async.eachLimit(removedDataPoints, constants.LIMIT_NUMBER_PROCESS,
+    ({datapointChanges, context: externalContext}, onDatapointsForGivenMeasuresClosed) => {
+      const originalRawDatapoint = datapointChanges.object;
+
+      const context = {
+        dimensions: externalContext.dimensions,
+        segregatedEntities: externalContext.segregatedEntities,
+        segregatedPreviousEntities: externalContext.segregatedPreviousEntities,
+        measures: externalContext.measures,
+        datasetId: externalContext.dataset._id,
+        version: externalContext.transaction.createdAt
+      };
+
+      return closeDatapointsPerMeasure(originalRawDatapoint, context, onDatapointsForGivenMeasuresClosed);
+  }, onAllRemovedDatapointsClosed);
+}
+
+function closeDatapointsOfPreviousVersion(changedDataPoints, onDatapointsOfPreviousVersionClosed) {
+  logger.info('Closing updated datapoints');
+  return async.mapLimit(changedDataPoints, constants.LIMIT_NUMBER_PROCESS,
+    ({datapointChanges, entitiesFoundInDatapoint, context: externalContext}, onDatapointsForGivenMeasuresClosed) => {
+      const originalRawDatapoint = _.get(datapointChanges.object, 'data-origin');
+
+      const makeDatapointBasedOnItsClosedVersion = (closedDatapoint, closingMeasure) => {
+        logger.debug('Create new datapoint based on closed one. OriginId: ', closedDatapoint.originId);
+
+        const newRawDatapoint = omitNotClosingMeasures({
+          rawDatapoint: _.get(datapointChanges.object, 'data-update'),
+          measuresToOmit: externalContext.measures,
+          measureToPreserve: closingMeasure
+        });
+
+        const datapointToCreate = _.defaults({originId: closedDatapoint.originId}, newRawDatapoint);
+        return {datapoint: datapointToCreate, entitiesFoundInDatapoint, context: externalContext};
+      };
+
+      const context = {
+        dimensions: externalContext.dimensionsOld,
+        segregatedEntities: externalContext.segregatedEntities,
+        segregatedPreviousEntities: externalContext.segregatedPreviousEntities,
+        measures: externalContext.measuresOld,
+        datasetId: externalContext.dataset._id,
+        version: externalContext.transaction.createdAt,
+        handleClosedDatapoint: makeDatapointBasedOnItsClosedVersion
+      };
+
+      return closeDatapointsPerMeasure(originalRawDatapoint, context, onDatapointsForGivenMeasuresClosed);
+  }, (error, datapointsToCreate) => {
+    return onDatapointsOfPreviousVersionClosed(error, _.flatten(datapointsToCreate));
+  });
+}
+
+function closeDatapointsPerMeasure(rawDatapoint, externalContext, onDatapointsForGivenMeasuresClosed) {
+  const dimensionsEntityOriginIds = getDimensionsAsEntityOriginIds(rawDatapoint, {
+    dimensions: externalContext.dimensions,
+    segregatedEntities: externalContext.segregatedEntities,
+    segregatedPreviousEntities: externalContext.segregatedPreviousEntities,
+  });
+
+  return async.mapLimit(externalContext.measures, constants.LIMIT_NUMBER_PROCESS, (measure, onDatapointClosed) => {
+      logger.debug('Closing datapoint for measure', measure.gid, measure.originId);
+
+      const options = {
+        measureOriginId: measure.originId,
+        dimensionsSize: _.size(externalContext.dimensions),
+        dimensionsEntityOriginIds,
+        datapointValue: rawDatapoint[measure.gid]
+      };
+
+      return datapointsRepositoryFactory.latestExceptCurrentVersion(externalContext.datasetId, externalContext.version)
+        .closeDatapointByMeasureAndDimensionsAndValue(options, (error, closedDatapoint) => {
+          if (error) {
+            return onDatapointClosed(error);
+          }
+
+          if (!closedDatapoint) {
+            logger.error('Datapoint that should be closed was not found by given params: ', options);
+          }
+
+          const {handleClosedDatapoint = _.noop} = externalContext;
+
+          return onDatapointClosed(error, handleClosedDatapoint(closedDatapoint, measure));
+        });
+  }, (error, datapointsToCreate) => {
+    return onDatapointsForGivenMeasuresClosed(error, _.values(datapointsToCreate));
+  });
+}
+
+function getDimensionsAsEntityOriginIds(datapoint, externalContext) {
+  const entityGids = _.chain(datapoint)
+    .pick(_.keys(externalContext.dimensions))
+    .values()
+    .compact()
     .value();
+
+  return _.flatMap(entityGids, (gid) => {
+    const entities = externalContext.segregatedEntities.groupedByGid[gid] || externalContext.segregatedPreviousEntities.groupedByGid[gid];
+    return _.map(entities, 'originId');
+  });
+}
+
+function getAction(metadata) {
+  return _.get(metadata, 'action');
+}
+
+function omitNotClosingMeasures(options) {
+  const notClosingMeasureGids = _.reduce(options.measuresToOmit, (result, measure) => {
+    if (measure.gid !== options.measureToPreserve.gid) {
+      result.push(measure.gid);
+    }
+    return result;
+  }, []);
+
+  return _.omit(options.rawDatapoint, notClosingMeasureGids)
+}
+
+function getDimensionsAndMeasures(resource, externalContext) {
+  const parsedResource = datapackageParser.parseDatapointsResource(resource);
+  return datapointsUtils.getDimensionsAndMeasures(parsedResource, externalContext);
 }

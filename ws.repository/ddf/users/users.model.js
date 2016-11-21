@@ -6,15 +6,7 @@ const Schema = mongoose.Schema;
 const bcrypt = require('bcryptjs');
 const SALT_WORK_FACTOR = 10;
 
-/**
- * @typedef {Object} Users
- * @memberof Models
- *
- * @property {String} name - users full name
- * @property {String} password - @private, users password
- * @property {String} salt - @private, users salt
- */
-let Users = new Schema({
+const Users = new Schema({
   name: {type: String},
   email: {type: String, index: true, unique: true, required: true},
   username: {type: String, index: true, unique: true, required: true},

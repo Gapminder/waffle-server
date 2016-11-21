@@ -4,7 +4,7 @@ const fs = require('fs');
 const _ = require('lodash');
 const hi = require('highland');
 const logger = require('../../ws.config/log');
-const translationsUtils = require('../translations.utils');
+const translationsUtils = require('../utils/translations.utils');
 
 module.exports = importTranslations_Hi;
 
