@@ -9,8 +9,6 @@ const ddfUtils = require('./utils/import-ddf.utils');
 const constants = require('../ws.utils/constants');
 const datapointsUtils = require('./utils/datapoints.utils');
 
-const MONGODB_DOC_CREATION_THREADS_AMOUNT = 3;
-
 module.exports = startDatapointsCreation;
 
 function startDatapointsCreation(externalContext, done) {
@@ -50,7 +48,7 @@ function createDatapoints(externalContextFrozen) {
   );
 
   const datapointsAndFoundEntitiesStream = hi(externalContextFrozen.datapackage.resources)
-    .filter(resource => resource.type === 'datapoints')
+    .filter(resource => resource.type === constants.DATAPOINTS)
     .flatMap(resource => {
       const {measures, dimensions} = datapointsUtils.getDimensionsAndMeasures(resource, externalContextFrozen);
       return hi(findAllEntitiesMemoized(externalContextFrozen))
@@ -60,7 +58,7 @@ function createDatapoints(externalContextFrozen) {
       return ddfUtils.readCsvFileAsStream(externalContextFrozen.resolvePath(context.filename), {})
         .map(datapoint => ({datapoint, context}));
     })
-    .parallel(MONGODB_DOC_CREATION_THREADS_AMOUNT)
+    .parallel(ddfUtils.MONGODB_DOC_CREATION_THREADS_AMOUNT)
     .map(({datapoint, context}) => {
       const entitiesFoundInDatapoint = datapointsUtils.findEntitiesInDatapoint(datapoint, context, externalContextFrozen);
       return {datapoint, entitiesFoundInDatapoint, context};

@@ -21,6 +21,9 @@ const transactionsRepository = require('../../ws.repository/ddf/dataset-transact
 
 const Converter = require('csvtojson').Converter;
 
+const UPDATE_ACTIONS = new Set(['change', 'update']);
+const DEFAULT_CHUNK_SIZE = 2000;
+const MONGODB_DOC_CREATION_THREADS_AMOUNT = 3;
 const RESERVED_PROPERTIES = ['properties', 'dimensions', 'subsetOf', 'from', 'to', 'originId', 'gid', 'domain', 'type', 'languages'];
 
 const ddfValidationConfig = {
@@ -31,6 +34,9 @@ const ddfValidationConfig = {
 };
 
 module.exports = {
+  UPDATE_ACTIONS,
+  DEFAULT_CHUNK_SIZE,
+  MONGODB_DOC_CREATION_THREADS_AMOUNT,
   activateLifecycleHook,
   isJson,
   isPropertyReserved,

@@ -2,7 +2,7 @@
 
 const _ = require('lodash');
 const chai = require('chai');
-const interpolate = require('./../../../../ws.routes/data-post-processors/gapfilling/interpolation.processor');
+const interpolate = require('../../../../ws.routes/data-post-processors/gapfilling/interpolation.processor');
 
 const expect = chai.expect;
 

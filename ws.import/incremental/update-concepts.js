@@ -43,7 +43,7 @@ function updateConcepts(externalContext, done) {
 
   return  hi(changesByLine)
     .filter((row) => {
-      return row.metadata.type === 'concepts';
+      return row.metadata.type === constants.CONCEPTS;
     })
     .map(row => {
       if (!removedProperties) {

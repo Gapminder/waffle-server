@@ -198,7 +198,7 @@ function findEntityOriginIds(pipe, done) {
 }
 
 function findDatapointsStatsForMeasure(pipe, done) {
-  if (pipe.index.type !== 'datapoints') {
+  if (pipe.index.type !== constants.DATAPOINTS) {
     return async.setImmediate(() => done(null, pipe.index));
   }
 

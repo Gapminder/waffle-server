@@ -2,7 +2,7 @@
 
 const _ = require('lodash');
 const chai = require('chai');
-const toPrecision = require('./../../../../ws.routes/data-post-processors/precision/toPrecision.processor');
+const toPrecision = require('../../../../ws.routes/data-post-processors/precision/toPrecision.processor');
 
 const expect = chai.expect;
 

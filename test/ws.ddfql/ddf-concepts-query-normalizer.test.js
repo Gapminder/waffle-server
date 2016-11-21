@@ -1,7 +1,7 @@
 'use strict';
 
 const chai = require('chai');
-const ddfQueryNormalizer = require('./../../ws.ddfql/ddf-concepts-query-normalizer');
+const ddfQueryNormalizer = require('../../ws.ddfql/ddf-concepts-query-normalizer');
 
 const expect = chai.expect;
 const concepts = [

@@ -1,7 +1,7 @@
 'use strict';
 
 const chai = require('chai');
-const ddfQueryValidator = require('./../../ws.ddfql/ddf-query-validator');
+const ddfQueryValidator = require('../../ws.ddfql/ddf-query-validator');
 const expect = chai.expect;
 const concepts = [
   {gid: 'time', properties: {concept_type: 'time'}},

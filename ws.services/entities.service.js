@@ -4,6 +4,7 @@ const _ = require('lodash');
 const async = require('async');
 
 const ddfql = require('../ws.ddfql/ddf-entities-query-normalizer');
+const constants = require('../ws.utils/constants');
 const commonService = require('./common.service');
 const conceptsService = require('./concepts.service');
 const ddfQueryValidator = require('../ws.ddfql/ddf-query-validator');
@@ -62,7 +63,7 @@ function normalizeQueriesToEntitiesByDdfql(pipe, cb) {
 
         pipe.entities = entities;
 
-        return commonService.translate('entities', pipe, cb);
+        return commonService.translate(constants.ENTITIES, pipe, cb);
       });
   });
 }

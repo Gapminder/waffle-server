@@ -3,7 +3,7 @@
 const chai = require('chai');
 const sinon = require('sinon');
 const ddfQueryUtils = require('../../ws.ddfql/ddf-query-utils');
-const ddfQueryNormalizer = require('./../../ws.ddfql/ddf-datapoints-query-normalizer');
+const ddfQueryNormalizer = require('../../ws.ddfql/ddf-datapoints-query-normalizer');
 
 const expect = chai.expect;
 const concepts = Object.freeze([

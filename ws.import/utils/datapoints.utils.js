@@ -5,27 +5,24 @@ const hi = require('highland');
 
 const logger = require('../../ws.config/log');
 const ddfMappers = require('./ddf-mappers');
+const ddfImportUtils = require('./import-ddf.utils');
 const entitiesRepositoryFactory = require('../../ws.repository/ddf/entities/entities.repository');
 
 const datapointsRepositoryFactory = require('../../ws.repository/ddf/data-points/data-points.repository');
 
-const DEFAULT_CHUNK_SIZE = 1500;
-
 module.exports = {
-  DEFAULT_CHUNK_SIZE,
   getDimensionsAndMeasures,
   segregateEntities,
   findEntitiesInDatapoint,
   findAllEntities,
   createEntitiesFoundInDatapointsSaverWithCache,
-  getMeasureDimensionFromFilename,
   saveDatapointsAndEntitiesFoundInThem
 };
 
 function saveDatapointsAndEntitiesFoundInThem(saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) {
   return datapointsFoundEntitiesStream
     .compact()
-    .batch(DEFAULT_CHUNK_SIZE)
+    .batch(ddfImportUtils.DEFAULT_CHUNK_SIZE)
     .flatMap(datapointsBatch => {
       const datapointsByFilename = groupDatapointsByFilename(datapointsBatch);
       const entitiesFoundInDatapoints = _.flatten(_.map(datapointsBatch, 'entitiesFoundInDatapoint'));
@@ -194,21 +191,4 @@ function mapAndStoreDatapointsToDb(datapointsFromSameFile, externalContext) {
 
   logger.debug('Store datapoints to database. Amount: ', _.size(wsDatapoints));
   return datapointsRepositoryFactory.versionAgnostic().create(wsDatapoints);
-}
-
-function getMeasureDimensionFromFilename(filename) {
-  const parsedFileName = _.replace(filename, /^ddf--(\w*)--|\.csv$/g, '');
-  const parsedEntries = _.split(parsedFileName, '--by--');
-  const measures = _.chain(parsedEntries).first().split('--').value();
-
-  const dimensions = _.chain(parsedEntries)
-    .last()
-    .split('--')
-    .map(dimension => _.chain(dimension).split('-').first().value())
-    .value();
-
-  return {
-    measures,
-    dimensions
-  };
 }

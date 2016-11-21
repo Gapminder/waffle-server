@@ -11,12 +11,11 @@ const JSONStream = require('JSONStream');
 const logger = require('../../ws.config/log');
 const config = require('../../ws.config/config');
 const constants = require('../../ws.utils/constants');
+const ddfImportUtils = require('../utils/import-ddf.utils');
 const datapointsUtils = require('../utils/datapoints.utils');
 const datapackageParser = require('../utils/datapackage.parser');
 const entitiesRepositoryFactory = require('../../ws.repository/ddf/entities/entities.repository');
 const datapointsRepositoryFactory = require('../../ws.repository/ddf/data-points/data-points.repository');
-
-const UPDATE_ACTIONS = new Set(['change', 'update']);
 
 module.exports = startDatapointsCreation;
 
@@ -121,7 +120,7 @@ function toRemovedDatapointsStream(datapointsChangesWithContextStream) {
 
       return {datapointChanges, context: _.extend({}, context, {measures, dimensions})};
     })
-    .batch(datapointsUtils.DEFAULT_CHUNK_SIZE)
+    .batch(ddfImportUtils.DEFAULT_CHUNK_SIZE)
     .flatMap(context => {
       return hi.wrapCallback(closeRemovedDatapoints)(context);
     });
@@ -145,7 +144,7 @@ function toCreatedDatapointsStream(datapointsChangesWithContextStream) {
 
 function toUpdatedDatapointsStream(datapointsChangesWithContextStream) {
   return datapointsChangesWithContextStream.fork()
-    .filter(({datapointChanges}) => UPDATE_ACTIONS.has(getAction(datapointChanges.metadata)))
+    .filter(({datapointChanges}) => ddfImportUtils.UPDATE_ACTIONS.has(getAction(datapointChanges.metadata)))
     .map(({datapointChanges, context}) => {
       const resource = _.get(datapointChanges, 'metadata.file.new');
       const {measures, dimensions} = getDimensionsAndMeasures(resource, context);
@@ -160,7 +159,7 @@ function toUpdatedDatapointsStream(datapointsChangesWithContextStream) {
 
       return {datapointChanges, entitiesFoundInDatapoint, context};
     })
-    .batch(datapointsUtils.DEFAULT_CHUNK_SIZE)
+    .batch(ddfImportUtils.DEFAULT_CHUNK_SIZE)
     .flatMap(datapointsEntitiesAndContext => {
       return hi.wrapCallback(closeDatapointsOfPreviousVersion)(datapointsEntitiesAndContext);
     })

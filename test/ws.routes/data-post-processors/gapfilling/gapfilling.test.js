@@ -3,9 +3,9 @@
 const _ = require('lodash');
 const chai = require('chai');
 
-const interpolate = require('./../../../../ws.routes/data-post-processors/gapfilling/interpolation.processor');
-const extrapolate = require('./../../../../ws.routes/data-post-processors/gapfilling/extrapolation.processor');
-const expandYears = require('./../../../../ws.routes/data-post-processors/gapfilling/yearsExpander.processor');
+const interpolate = require('../../../../ws.routes/data-post-processors/gapfilling/interpolation.processor');
+const extrapolate = require('../../../../ws.routes/data-post-processors/gapfilling/extrapolation.processor');
+const expandYears = require('../../../../ws.routes/data-post-processors/gapfilling/yearsExpander.processor');
 
 const expect = chai.expect;
 
