@@ -23,11 +23,6 @@ module.exports = function (options, done) {
   const pipe = {
     pathToLangDiff: options.pathToLangDiff,
     pathToDatasetDiff: options.pathToDatasetDiff,
-    mapFilenameToCollectionName: {
-      concepts: 'Concepts',
-      datapoints: 'DataPoints',
-      entities: 'Entities'
-    },
     commit: options.commit,
     datasetName: options.datasetName,
     config,

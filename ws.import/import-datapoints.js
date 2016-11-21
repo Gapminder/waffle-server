@@ -68,12 +68,3 @@ function createDatapoints(externalContextFrozen) {
 
   return saveDatapointsAndEntitiesFoundInThem(datapointsAndFoundEntitiesStream);
 }
-
-function isDatapointsResource(resource) {
-  return _.size(getPrimaryKey(resource)) >= 2;
-}
-
-function getPrimaryKey(resource) {
-  const rawPrimaryKey = _.get(resource, 'schema.primaryKey');
-  return _.isArray(rawPrimaryKey) ? rawPrimaryKey : [rawPrimaryKey];
-}

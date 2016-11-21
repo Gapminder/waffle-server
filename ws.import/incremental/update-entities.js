@@ -166,12 +166,17 @@ function closeEntities({entityChangesBatch, externalContext, handleClosedEntity}
         return onEntityClosed(error);
       }
 
-      if (!handleClosedEntity) {
+      if (!closedEntity) {
         logger.error('Entity was not closed, though it should be');
         return onEntityClosed(null);
       }
 
       logger.debug('Entity was closed. OriginId: ', closedEntity.originId);
+
+      if (!handleClosedEntity) {
+        return onEntityClosed(null);
+      }
+
       return handleClosedEntity({entityChanges, context}, closedEntity.toObject(), onEntityClosed);
     });
   }, onAllEntitiesClosed);
