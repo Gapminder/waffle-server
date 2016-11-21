@@ -3,15 +3,13 @@
 const _ = require('lodash');
 const git = require('simple-git');
 const async = require('async');
-const wsCli = require('waffle-server-import-cli');
-const ddfValidation = require('ddf-validation');
-const SimpleDdfValidator = ddfValidation.SimpleValidator;
 
 const cache = require('../ws.utils/redis-cache');
 const config = require('../ws.config/config');
 const constants = require('../ws.utils/constants');
 const authService = require('./auth.service');
 const reposService = require('./repos.service');
+const ddfImportUtils = require('../ws.import/utils/import-ddf.utils');
 const datasetsService = require('./datasets.service');
 const usersRepository = require('../ws.repository/ddf/users/users.repository');
 const importDdfService = require('../ws.import/import-ddf');
@@ -19,13 +17,6 @@ const datasetsRepository = require('../ws.repository/ddf/datasets/datasets.repos
 const transactionsService = require('./dataset-transactions.service');
 const transactionsRepository = require('../ws.repository/ddf/dataset-transactions/dataset-transactions.repository');
 const incrementalUpdateService = require('../ws.import/incremental/update-ddf');
-
-const ddfValidationConfig = {
-  datapointlessMode: true,
-  includeTags: 'WAFFLE_SERVER',
-  excludeRules: 'FILENAME_DOES_NOT_MATCH_HEADER',
-  indexlessMode: true
-};
 
 module.exports = {
   getGitCommitsList,
@@ -46,16 +37,9 @@ function getGitCommitsList(github, cb) {
 
   return async.waterfall([
     async.constant({github}),
-    _cloneDdfRepo,
+    ddfImportUtils.cloneDdfRepo,
     _getPathToRepo
   ], cb);
-}
-
-function _cloneDdfRepo(pipe, done) {
-  return reposService.cloneRepo(pipe.github, pipe.commit || null, (error, repoInfo) => {
-    pipe.repoInfo = repoInfo;
-    return done(error, pipe);
-  });
 }
 
 function _getPathToRepo(pipe, done) {
@@ -81,8 +65,6 @@ function importDataset(params, onDatasetImported) {
     _findCurrentUser,
     _findDataset,
     _validateDatasetBeforeImport,
-    _cloneDdfRepo,
-    _validateDdfRepo,
     _importDdfService,
     _unlockDataset
   ], (importError, pipe) => {
@@ -91,22 +73,6 @@ function importDataset(params, onDatasetImported) {
     }
     return onDatasetImported(importError, pipe);
   });
-}
-
-function _validateDdfRepo(pipe, onDdfRepoValidated) {
-  const simpleDdfValidator = new SimpleDdfValidator(pipe.repoInfo.pathToRepo, ddfValidationConfig);
-  simpleDdfValidator.on('finish', (error, isDatasetCorrect) => {
-    if (error) {
-      return onDdfRepoValidated(error);
-    }
-
-    if (!isDatasetCorrect) {
-      return onDdfRepoValidated(`Ddf validation failed for dataset "${pipe.github}" and version "${pipe.commit}"`);
-    }
-
-    return onDdfRepoValidated(null, pipe);
-  });
-  return ddfValidation.validate(simpleDdfValidator);
 }
 
 function _findDataset(pipe, done) {
@@ -125,7 +91,7 @@ function _validateDatasetBeforeImport(pipe, done) {
 }
 
 function _importDdfService(pipe, onDatasetImported) {
-  let options = {
+  const options = {
     datasetName: reposService.getRepoNameForDataset(pipe.github),
     commit: pipe.commit,
     github: pipe.github,
@@ -152,9 +118,6 @@ function updateIncrementally(params, onDatasetUpdated) {
     _findCurrentUser,
     _lockDataset,
     _checkTransaction,
-    _cloneDdfRepo,
-    _validateDdfRepo,
-    _generateDiffForDatasetUpdate,
     _runIncrementalUpdate,
     _unlockDataset
   ], (importError, pipe) => {
@@ -167,18 +130,6 @@ function updateIncrementally(params, onDatasetUpdated) {
     }
 
     return onDatasetUpdated(importError, pipe);
-  });
-}
-
-function _generateDiffForDatasetUpdate(context, done) {
-  const {hashFrom, hashTo, github} = context;
-  return wsCli.generateDiff({hashFrom, hashTo, github, resultPath: config.PATH_TO_DIFF_DDF_RESULT_FILE}, (error, diffPaths) => {
-    if (error) {
-      return done(error);
-    }
-
-    const {diff: pathToDatasetDiff, lang: pathToLangDiff} = diffPaths;
-    return done(null, _.extend(context, {pathToDatasetDiff, pathToLangDiff}));
   });
 }
 
@@ -208,15 +159,14 @@ function _checkTransaction(pipe, done) {
 }
 
 function _runIncrementalUpdate(pipe, onDatasetUpdated) {
-  let options = {
-    diff: pipe.diff,
+  const options = {
     datasetName: pipe.datasetName,
     commit: pipe.commit,
     github: pipe.github,
     lifecycleHooks: pipe.lifecycleHooks,
     user: pipe.user,
-    pathToDatasetDiff: pipe.pathToDatasetDiff,
-    pathToLangDiff: pipe.pathToLangDiff
+    hashFrom: pipe.hashFrom,
+    hashTo: pipe.hashTo
   };
 
   return incrementalUpdateService(options, onDatasetUpdated);

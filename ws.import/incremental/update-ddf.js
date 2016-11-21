@@ -7,38 +7,39 @@ const async = require('async');
 
 const config = require('../../ws.config/config');
 const ddfImportUtils = require('../utils/import-ddf.utils');
-
-const createDatasetIndex = require('../import-dataset-index');
-const datasetsRepository = require('../../ws.repository/ddf/datasets/datasets.repository');
-const conceptsRepositoryFactory = require('../../ws.repository/ddf/concepts/concepts.repository');
 const updateConcepts = require('./update-concepts');
 const updateEntities = require('./update-entities');
 const updateDatapoints = require('./update-datapoints');
+const createDatasetIndex = require('../import-dataset-index');
 const updateTranslations = require('./update-translations');
+const datasetsRepository = require('../../ws.repository/ddf/datasets/datasets.repository');
+const conceptsRepositoryFactory = require('../../ws.repository/ddf/concepts/concepts.repository');
 
-const INCREMENTAL_UPDATE_LABEL = 'Dataset incremental update';
+const DATASET_INCREMENTAL_UPDATE_LABEL = 'Dataset incremental update';
 
-module.exports = function (options, done) {
+module.exports = (options, done) => {
+  const pipe = _.pick(options, [
+    'user',
+    'github',
+    'commit',
+    'hashFrom',
+    'hashTo',
+    'datasetName',
+    'lifecycleHooks'
+  ]);
 
-  const pipe = {
-    pathToLangDiff: options.pathToLangDiff,
-    pathToDatasetDiff: options.pathToDatasetDiff,
-    commit: options.commit,
-    datasetName: options.datasetName,
-    config,
-    lifecycleHooks: options.lifecycleHooks,
-    user: options.user
-  };
-
-  console.time(INCREMENTAL_UPDATE_LABEL);
+  console.time(DATASET_INCREMENTAL_UPDATE_LABEL);
   async.waterfall([
     async.constant(pipe),
     ddfImportUtils.resolvePathToDdfFolder,
-    ddfImportUtils.getDatapackage,
     ddfImportUtils.createTransaction,
     findDataset,
     ddfImportUtils.establishTransactionForDataset,
     ddfImportUtils.activateLifecycleHook('onTransactionCreated'),
+    ddfImportUtils.cloneDdfRepo,
+    ddfImportUtils.validateDdfRepo,
+    ddfImportUtils.getDatapackage,
+    ddfImportUtils.generateDiffForDatasetUpdate,
     updateConcepts,
     getAllConcepts,
     getAllPreviousConcepts,
@@ -48,7 +49,7 @@ module.exports = function (options, done) {
     createDatasetIndex,
     ddfImportUtils.closeTransaction
   ], (updateError, pipe) => {
-    console.timeEnd(INCREMENTAL_UPDATE_LABEL);
+    console.timeEnd(DATASET_INCREMENTAL_UPDATE_LABEL);
 
     if (updateError && pipe.transaction) {
       return done(updateError, {transactionId: pipe.transaction._id});

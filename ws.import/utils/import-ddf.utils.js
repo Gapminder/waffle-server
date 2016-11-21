@@ -4,9 +4,12 @@ const _ = require('lodash');
 const hi = require('highland');
 const fs = require('fs');
 const path = require('path');
+const wsCli = require('waffle-server-import-cli');
 const async = require('async');
 const validator = require('validator');
 const ddfTimeUtils = require('ddf-time-utils');
+const ddfValidation = require('ddf-validation');
+const SimpleDdfValidator = ddfValidation.SimpleValidator;
 
 const logger = require('../../ws.config/log');
 const config = require('../../ws.config/config');
@@ -19,6 +22,13 @@ const transactionsRepository = require('../../ws.repository/ddf/dataset-transact
 const Converter = require('csvtojson').Converter;
 
 const RESERVED_PROPERTIES = ['properties', 'dimensions', 'subsetOf', 'from', 'to', 'originId', 'gid', 'domain', 'type', 'languages'];
+
+const ddfValidationConfig = {
+  datapointlessMode: true,
+  includeTags: 'WAFFLE_SERVER',
+  excludeRules: 'FILENAME_DOES_NOT_MATCH_HEADER',
+  indexlessMode: true
+};
 
 module.exports = {
   activateLifecycleHook,
@@ -34,16 +44,19 @@ module.exports = {
   establishTransactionForDataset,
   createDataset,
   createTransaction,
-  getDatapackage
+  getDatapackage,
+  validateDdfRepo,
+  cloneDdfRepo,
+  generateDiffForDatasetUpdate
 };
 
 function activateLifecycleHook(hookName) {
   const actualParameters = [].slice.call(arguments, 1);
   return (pipe, done) => {
-    if (pipe.lifecycleHooks && pipe.lifecycleHooks[hookName]) {
-      pipe.lifecycleHooks[hookName](actualParameters);
-    }
     return async.setImmediate(() => {
+      if (pipe.lifecycleHooks && pipe.lifecycleHooks[hookName]) {
+        pipe.lifecycleHooks[hookName](actualParameters);
+      }
       return done(null, pipe);
     });
   };
@@ -128,18 +141,46 @@ function readCsvFile(file, options, cb) {
   });
 }
 
-function resolvePathToDdfFolder(pipe, done) {
-  pipe.pathToDdfFolder = reposService.getPathToRepo(pipe.datasetName);
-  pipe.resolvePath = (filename) => path.resolve(pipe.pathToDdfFolder, filename);
-  pipe.fileTemplates = {
-    getFilenameOfEntityDomainEntities: _.template('ddf--entities--${ gid }.csv'),
-    getFilenameOfEntitySetEntities: _.template('ddf--entities--${ domain.gid }--${ gid }.csv'),
-    getFilenameOfConcepts: _.template(pipe.resolvePath('ddf--concepts.csv'))
-  };
-
-  return async.setImmediate(() => {
-    return done(null, pipe);
+function cloneDdfRepo(pipe, done) {
+  return reposService.cloneRepo(pipe.github, pipe.commit, (error, repoInfo) => {
+    pipe.repoInfo = repoInfo;
+    return done(error, pipe);
   });
+}
+
+function validateDdfRepo(pipe, onDdfRepoValidated) {
+  const simpleDdfValidator = new SimpleDdfValidator(pipe.repoInfo.pathToRepo, ddfValidationConfig);
+  simpleDdfValidator.on('finish', (error, isDatasetCorrect) => {
+    if (error) {
+      return onDdfRepoValidated(error);
+    }
+
+    if (!isDatasetCorrect) {
+      return onDdfRepoValidated(`Ddf validation failed for dataset "${pipe.github}" and version "${pipe.commit}"`);
+    }
+
+    return onDdfRepoValidated(null, pipe);
+  });
+  return ddfValidation.validate(simpleDdfValidator);
+}
+
+function generateDiffForDatasetUpdate(context, done) {
+  const {hashFrom, hashTo, github} = context;
+  return wsCli.generateDiff({hashFrom, hashTo, github, resultPath: config.PATH_TO_DIFF_DDF_RESULT_FILE}, (error, diffPaths) => {
+    if (error) {
+      return done(error);
+    }
+
+    const {diff: pathToDatasetDiff, lang: pathToLangDiff} = diffPaths;
+    return done(null, _.extend(context, {pathToDatasetDiff, pathToLangDiff}));
+  });
+}
+
+function resolvePathToDdfFolder(pipe, done) {
+  const pathToDdfFolder = reposService.getPathToRepo(pipe.datasetName);
+  pipe.resolvePath = (filename) => path.resolve(pathToDdfFolder, filename);
+
+  return async.setImmediate(() => done(null, pipe));
 }
 
 function getDatapackage(context, done) {
@@ -147,7 +188,7 @@ function getDatapackage(context, done) {
   return datapackageParser.loadDatapackage({folder: pathToDdfRepo}, (error, datapackage) => {
     context.datapackage = datapackage;
     return done(error, context);
-  })
+  });
 }
 
 function createTransaction(pipe, done) {

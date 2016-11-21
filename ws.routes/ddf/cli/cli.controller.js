@@ -216,7 +216,7 @@ module.exports = serviceLocator => {
     const params = req.body;
 
     params.lifecycleHooks = {
-      onDatasetCreated: () => {
+      onTransactionCreated: () => {
         if (!res.headersSent) {
           res.json({success: true, message: 'Dataset importing is in progress ...'});
         }
