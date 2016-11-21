@@ -3,19 +3,15 @@
 const _ = require('lodash');
 const async = require('async');
 
-const utils = require('../../utils');
-const ddfql = require('../../../ws.ddfql/ddf-entities-query-normalizer');
-const commonService = require('../../../ws.services/common.service');
-const conceptsService = require('../concepts/concepts.service');
-const ddfQueryValidator = require('../../../ws.ddfql/ddf-query-validator');
-const entitiesRepositoryFactory = require('../../../ws.repository/ddf/entities/entities.repository');
+const ddfql = require('../ws.ddfql/ddf-entities-query-normalizer');
+const commonService = require('./common.service');
+const conceptsService = require('./concepts.service');
+const ddfQueryValidator = require('../ws.ddfql/ddf-query-validator');
+const entitiesRepositoryFactory = require('../ws.repository/ddf/entities/entities.repository');
 
 module.exports = {
   getEntities,
-  getConcepts,
-  collectEntities,
   collectEntitiesByDdfql,
-  normalizeQueriesToEntitiesByDdfql
 };
 
 function collectEntitiesByDdfql(options, cb) {
@@ -98,21 +94,5 @@ function getConcepts(pipe, cb) {
     pipe.concepts = result.concepts;
 
     return cb(err, pipe);
-  });
-}
-
-function collectEntities(options, cb) {
-  console.time('finish Entities stats');
-  const pipe = options;
-
-  async.waterfall([
-    async.constant(pipe),
-    commonService.findDefaultDatasetAndTransaction,
-    getConcepts,
-    getEntities
-  ],  (error, result) => {
-    console.timeEnd('finish Entities stats');
-
-    return cb(error, result);
   });
 }

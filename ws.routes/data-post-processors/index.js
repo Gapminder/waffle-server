@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = {
-  pack: require('./pack'),
+  pack: require('./format'),
   toPrecision: require('./precision'),
   gapfilling: require('./gapfilling')
 };

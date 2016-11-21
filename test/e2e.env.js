@@ -16,9 +16,9 @@ module.exports = {
   wsLogLevel: 'debug',
   repo: 'git@github.com:VS-work/ddf--ws-testing.git',
   repoCommits: {
-    init: '419e227',
-    version_1: 'd9f2082',
-    version_2: 'e5e2a64',
-    version_3: '75bc44b'
+    init: '66a50bb',
+    version_1: 'c662237',
+    version_2: 'adc7feb',
+    version_3: '163bd00'
   }
 };

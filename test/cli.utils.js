@@ -8,8 +8,8 @@ const e2eEnv = require('./e2e.env');
 const e2eUtils = require('./e2e.utils');
 e2eUtils.setUpEnvironmentVariables();
 
-require('../ws.config/db.config.js');
-require('./../ws.repository/index.js');
+require('../ws.config/db.config');
+require('./../ws.repository');
 const mongoose = require('mongoose');
 
 const CACHED_COMMITS = new WeakMap();

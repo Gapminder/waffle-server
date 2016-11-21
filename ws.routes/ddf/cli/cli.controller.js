@@ -9,7 +9,7 @@ const compression = require('compression');
 
 const routeUtils = require('../../utils');
 
-const cliService = require('./cli.service');
+const cliService = require('./../../../ws.services/cli.service');
 const reposService = require('../../../ws.services/repos.service');
 const transactionsService = require('../../../ws.services/dataset-transactions.service');
 
@@ -21,7 +21,6 @@ module.exports = serviceLocator => {
 
   router.use(cors());
   router.use(compression());
-  router.use(routeUtils.decodeQuery);
 
   // authentication route should be defined before router.use(passport.authenticate('token'));
   // cause it is entry point for acquiring token and requesting other resources

@@ -3,8 +3,8 @@
 const _ = require('lodash');
 const fs = require('fs');
 const async = require('async');
-const entitiesRepositoryFactory = require('../ws.repository/ddf/entities/entities.repository.js');
-const datapointsRepositoryFactory = require('../ws.repository/ddf/data-points/data-points.repository.js');
+const entitiesRepositoryFactory = require('../ws.repository/ddf/entities/entities.repository');
+const datapointsRepositoryFactory = require('../ws.repository/ddf/data-points/data-points.repository');
 const indexRepository = require('../ws.repository/ddf/dataset-index/dataset-index.repository');
 
 const datapointUtils = require('./datapoints.utils');

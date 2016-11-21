@@ -6,7 +6,6 @@ const ddfQueryUtils = require('../../../ws.ddfql/ddf-query-utils');
 
 const DATAPOINT_KEY_SEPARATOR = ':';
 
-// FIXME: wsJson, csv, json pack processors
 module.exports = {
   mapConcepts: mapConceptToWsJson,
   mapEntities: mapEntitiesToWsJson,
