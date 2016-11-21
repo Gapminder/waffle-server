@@ -1,8 +1,8 @@
 'use strict';
 
-const cliUtils = require('./../../../cli.utils');
-const e2eUtils = require('./../../../e2e.utils');
-const e2eEnv = require('./../../../e2e.env');
+const cliUtils = require('../../../cli.utils');
+const e2eUtils = require('../../../e2e.utils');
+const e2eEnv = require('../../../e2e.env');
 
 const fs = require('fs');
 const expect = require('chai').expect;

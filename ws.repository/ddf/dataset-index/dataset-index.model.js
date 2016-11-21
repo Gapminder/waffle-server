@@ -3,13 +3,15 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
+const constants = require('../../../ws.utils/constants');
+
 const DatasetIndex = new Schema({
   key: [{type: String, required: true}],
   value: {type: Schema.Types.Mixed, required: true},
   source: [{type: String, required: true}],
   keyOriginIds: [{type: String}],
   valueOriginId: {type: String},
-  type: {type: String, enum: ['concepts','entities','datapoints']},
+  type: {type: String, enum: [constants.CONCEPTS, constants.ENTITIES, constants.DATAPOINTS]},
 
   dataset: {type: Schema.Types.ObjectId, ref: 'Datasets', required: true},
   transaction: {type: Schema.Types.ObjectId, ref: 'DatasetIndex', required: true}

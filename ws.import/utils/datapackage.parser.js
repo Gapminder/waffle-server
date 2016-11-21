@@ -4,6 +4,8 @@ const _ = require('lodash');
 const fs = require('fs');
 const path = require('path');
 
+const constants = require('../../ws.utils/constants');
+
 module.exports = {
   loadDatapackage,
   parseEntitiesResource,
@@ -70,7 +72,7 @@ function parseEntitiesResource(resource, primaryKey = getPrimaryKey(resource.sch
   }, {entitySets: [], fields: []});
 
   return {
-    type: 'entities',
+    type: constants.ENTITIES,
     primaryKey,
     path: resource.path,
     fields,
@@ -88,7 +90,7 @@ function parseDatapointsResource(resource, primaryKey = getPrimaryKey(resource.s
   }, []);
 
   return {
-    type: 'datapoints',
+    type: constants.DATAPOINTS,
     primaryKey,
     path: resource.path,
     dimensions: primaryKey,
@@ -98,7 +100,7 @@ function parseDatapointsResource(resource, primaryKey = getPrimaryKey(resource.s
 
 function parseConceptsResource(resource, primaryKey = getPrimaryKey(resource.schema)) {
   return {
-    type: 'concepts',
+    type: constants.CONCEPTS,
     primaryKey,
     path: resource.path
   };

@@ -4,6 +4,7 @@ const _ = require('lodash');
 const async = require('async');
 
 const ddfql = require('../ws.ddfql/ddf-concepts-query-normalizer');
+const constants = require('../ws.utils/constants');
 const commonService = require('./common.service');
 const ddfQueryValidator = require('../ws.ddfql/ddf-query-validator');
 const conceptsRepositoryFactory = require('../ws.repository/ddf/concepts/concepts.repository');
@@ -62,7 +63,7 @@ function getConceptsByDdfql(pipe, cb) {
 
       pipe.concepts = concepts;
 
-      return commonService.translate('concepts', pipe, cb);
+      return commonService.translate(constants.CONCEPTS, pipe, cb);
     });
 }
 

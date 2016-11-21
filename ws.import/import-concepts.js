@@ -12,9 +12,6 @@ const constants = require('../ws.utils/constants');
 const ddfMappers = require('./utils/ddf-mappers');
 const conceptsRepositoryFactory = require('../ws.repository/ddf/concepts/concepts.repository');
 
-const DEFAULT_CHUNK_SIZE = 2000;
-const MONGODB_DOC_CREATION_THREADS_AMOUNT = 3;
-
 module.exports = createConcepts;
 
 function createConcepts(pipe, done) {
@@ -77,8 +74,8 @@ function _createConcepts(pipe, done) {
   logger.info('** create concepts documents');
 
   async.eachLimit(
-    _.chunk(pipe.raw.concepts, DEFAULT_CHUNK_SIZE),
-    MONGODB_DOC_CREATION_THREADS_AMOUNT,
+    _.chunk(pipe.raw.concepts, ddfImportUtils.DEFAULT_CHUNK_SIZE),
+    ddfImportUtils.MONGODB_DOC_CREATION_THREADS_AMOUNT,
     __createConcepts,
     (err) => {
       return done(err, pipe);

@@ -8,17 +8,14 @@ const async = require('async');
 const byline = require('byline');
 const JSONStream = require('JSONStream');
 
-const ddfMappers = require('../utils/ddf-mappers');
-const datapackageParser = require('../utils/datapackage.parser');
-const entitiesUtils = require('../utils/entities.utils');
 const logger = require('../../ws.config/log');
 const config = require('../../ws.config/config');
 const constants = require('../../ws.utils/constants');
-
+const ddfMappers = require('../utils/ddf-mappers');
+const entitiesUtils = require('../utils/entities.utils');
+const ddfImportUtils = require('../utils/import-ddf.utils');
+const datapackageParser = require('../utils/datapackage.parser');
 const entitiesRepositoryFactory = require('../../ws.repository/ddf/entities/entities.repository');
-
-const DEFAULT_CHUNK_SIZE = 2000;
-const UPDATE_ACTION = new Set(['change', 'update']);
 
 module.exports = startEntitiesUpdate;
 
@@ -79,7 +76,7 @@ function toCreatedEntitiesStream(entityChangesStream) {
 
       return ddfMappers.mapDdfEntityToWsModel(entityChanges.object, _.extend({filename: resource.path}, setsAndDomain, context));
     })
-    .batch(DEFAULT_CHUNK_SIZE)
+    .batch(ddfImportUtils.DEFAULT_CHUNK_SIZE)
     .flatMap(entitiesBatch => {
       logger.debug('Saving batch of created entities. Amount: ', _.size(entitiesBatch));
       return hi.wrapCallback(storeEntitiesToDb)(entitiesBatch);
@@ -89,7 +86,7 @@ function toCreatedEntitiesStream(entityChangesStream) {
 function toUpdatedEntitiesStream(entityChangesStream, externalContextFrozen) {
   logger.info('Start updating entities');
   return entityChangesStream.fork()
-    .filter(({entityChanges}) => UPDATE_ACTION.has(getAction(entityChanges.metadata)))
+    .filter(({entityChanges}) => ddfImportUtils.UPDATE_ACTIONS.has(getAction(entityChanges.metadata)))
     .map(({entityChanges, context}) => {
       const resource = _.get(entityChanges, 'metadata.file.new');
       const resourceOld = _.get(entityChanges, 'metadata.file.old');
@@ -107,7 +104,7 @@ function toUpdatedEntitiesStream(entityChangesStream, externalContextFrozen) {
 
       return {entityChanges, context: _.extend({filename}, setsAndDomain, oldSetsAndDomain, context)};
     })
-    .batch(DEFAULT_CHUNK_SIZE)
+    .batch(ddfImportUtils.DEFAULT_CHUNK_SIZE)
     .flatMap(updatedEntitiesBatch => {
       logger.debug('Updating batch of entities. Amount: ', _.size(updatedEntitiesBatch));
       return hi.wrapCallback(closeEntities)({
@@ -135,7 +132,7 @@ function toRemovedEntitiesStream(entityChangesStream, externalContextFrozen) {
 
       return {entityChanges, context: _.extend(oldSetsAndDomain, context)};
     })
-    .batch(DEFAULT_CHUNK_SIZE)
+    .batch(ddfImportUtils.DEFAULT_CHUNK_SIZE)
     .flatMap((removedEntitiesBatch) => {
       logger.debug('Removing batch of entities. Amount: ', _.size(removedEntitiesBatch));
       return hi.wrapCallback(closeEntities)({
