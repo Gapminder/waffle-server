@@ -49,6 +49,7 @@
     "morgan": "1.7.0",
     "newrelic": "1.30.3",
     "nightmare": "2.7.0",
+    "node-cache": "4.1.0",
     "passport": "0.3.2",
     "passport-local": "1.0.0",
     "passport-unique-token": "0.1.4",
