@@ -10,7 +10,7 @@ const Concepts = new Schema({
   gid: {type: String, match: constants.GID_REGEXP, index: true, required: true},
   originId: {type: Schema.Types.ObjectId},
 
-  type: {type: String, enum: ['entity_set', 'entity_domain', 'time', 'string', 'measure'], 'default': 'string', required: true},
+  type: {type: String, enum: [... constants.DEFAULT_ENTITY_GROUP_TYPES, 'string', 'measure'], 'default': 'string', required: true},
   sources: [{type: String, required: true}],
 
   properties: {},

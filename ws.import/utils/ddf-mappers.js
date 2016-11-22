@@ -4,6 +4,7 @@ const _ = require('lodash');
 
 const constants = require('../../ws.utils/constants');
 const ddfImportUtils = require('./import-ddf.utils');
+const conceptsUtils = require('./concepts.utils');
 
 const JSON_COLUMNS = ['color', 'scales', 'drill_up'];
 
@@ -96,7 +97,7 @@ function mapDdfDataPointToWsModel(entry, context) {
 function mapDdfEntityFoundInDatapointToWsModel(datapoint, context) {
   const gid = datapoint[context.concept.gid];
   return {
-    gid: gid,
+    gid: String(gid),
     sources: [context.filename],
     properties: datapoint,
     parsedProperties: ddfImportUtils.parseProperties(context.concept, gid, datapoint, context.timeConcepts),
@@ -117,7 +118,7 @@ function mapDdfConceptsToWsModel(entry, context) {
     gid: transformedEntry.concept,
 
     title: transformedEntry.name || transformedEntry.title,
-    type: transformedEntry.concept_type === 'time' ? 'entity_domain' : transformedEntry.concept_type,
+    type: conceptsUtils.isTimeConceptType(transformedEntry.concept_type) ? 'entity_domain' : transformedEntry.concept_type,
 
     properties: transformedEntry,
 

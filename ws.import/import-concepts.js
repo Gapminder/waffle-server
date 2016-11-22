@@ -29,10 +29,10 @@ function createConcepts(pipe, done) {
     async.constant(options),
     _loadConcepts,
     _createConcepts,
-    _getAllConcepts,
+    ddfImportUtils.getAllConcepts,
     _addConceptSubsetOf,
     _addConceptDomains,
-    _getAllConcepts
+    ddfImportUtils.getAllConcepts
   ], (err, res) => {
     pipe.concepts = res.concepts;
     pipe.timeConcepts = res.timeConcepts;
@@ -85,17 +85,6 @@ function _createConcepts(pipe, done) {
   function __createConcepts(chunk, cb) {
     return conceptsRepositoryFactory.versionAgnostic().create(chunk, cb);
   }
-}
-
-function _getAllConcepts(pipe, done) {
-  return conceptsRepositoryFactory.latestVersion(pipe.dataset._id, pipe.transaction.createdAt)
-    .findAllPopulated((err, res) => {
-      pipe.concepts = _.keyBy(res, 'gid');
-      pipe.timeConcepts = _.pickBy(pipe.concepts, (value, conceptGid) => {
-        return _.get(pipe.concepts[conceptGid], 'properties.concept_type') === 'time';
-      });
-      return done(err, pipe);
-    });
 }
 
 function _addConceptSubsetOf(pipe, done) {
