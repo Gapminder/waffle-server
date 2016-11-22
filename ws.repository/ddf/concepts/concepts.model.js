@@ -4,11 +4,13 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const originId = require('../origin-id.plugin');
 
+const constants = require('../../../ws.utils/constants');
+
 const Concepts = new Schema({
-  gid: {type: String, match: /^[a-z0-9_]*$/, index: true, required: true},
+  gid: {type: String, match: constants.GID_REGEXP, index: true, required: true},
   originId: {type: Schema.Types.ObjectId},
 
-  type: {type: String, enum: ['entity_set', 'entity_domain', 'time', 'string', 'measure'], 'default': 'string', required: true},
+  type: {type: String, enum: [... constants.DEFAULT_ENTITY_GROUP_TYPES, 'string', 'measure'], 'default': 'string', required: true},
   sources: [{type: String, required: true}],
 
   properties: {},
@@ -17,7 +19,6 @@ const Concepts = new Schema({
   isNumeric: {type: Boolean, index: true, sparse: true},
   domain: {type: Schema.Types.ObjectId, sparse: true},
   subsetOf: [{type: Schema.Types.ObjectId}],
-  dimensions: [{type: Schema.Types.ObjectId}],
 
   from: {type: Number, required: true},
   to: {type: Number, required: true, default: Number.MAX_SAFE_INTEGER},

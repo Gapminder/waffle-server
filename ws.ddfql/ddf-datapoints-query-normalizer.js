@@ -3,6 +3,7 @@
 const _ = require('lodash');
 const traverse = require('traverse');
 const ddfQueryUtils = require('./ddf-query-utils');
+const conceptUtils = require('../ws.import/utils/concepts.utils');
 const constants = require('../ws.utils/constants');
 
 module.exports = {
@@ -34,7 +35,7 @@ function normalizeDatapoints(query, concepts) {
     conceptOriginIdsByGids: ddfQueryUtils.getConceptOriginIdsByGids(safeConcepts),
     conceptGids: ddfQueryUtils.getConceptGids(safeConcepts),
     domainGids: ddfQueryUtils.getDomainGids(safeConcepts),
-    timeConcepts: ddfQueryUtils.getTimeConcepts(safeConcepts),
+    timeConceptsGids: conceptUtils.getTimeConceptGids(safeConcepts),
     conceptsByGids: ddfQueryUtils.getConceptsByGids(safeConcepts),
     conceptsByOriginIds: ddfQueryUtils.getConceptsByOriginIds(safeConcepts),
   });
@@ -154,7 +155,7 @@ function __normalizeJoin(query, options) {
     let normalizedFilter = null;
 
     const isWhereClause = _.includes(this.path, 'where');
-    const isTimePropertyFilter = isEntityFilter(this.key, query) && ddfQueryUtils.isTimePropertyFilter(this.key, options);
+    const isTimePropertyFilter = isEntityFilter(this.key, query) && ddfQueryUtils.isTimePropertyFilter(this.key, options.timeConceptsGids);
 
     if (isWhereClause && isTimePropertyFilter) {
       normalizedFilter = ddfQueryUtils.normalizeTimePropertyFilter(this.key, filterValue, this.path, query.join);
@@ -177,8 +178,9 @@ function __normalizeJoin(query, options) {
     }
 
     if (this.key === 'key') {
+      const domainOrSetOriginId = _.get(options, `conceptsByGids.${filterValue}.originId`);
       normalizedFilter = {
-        domain: filterValue
+        $or: [{domain: domainOrSetOriginId}, {sets: domainOrSetOriginId}]
       };
     }
 

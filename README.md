@@ -39,28 +39,20 @@ Before this script use please, read carefully the next comments:
 ## Specification of query accepted by WS API
 please read [query specification accepted by WS Public API](ws-public-api.md)
 
-## Starting auto-generating documentation:
- - to view the local versions of the documentation, you need run ` ./swagger.sh `, also can specify the HOST using param ` WS_URL `, default ` localhost:3000 `
- - to view for documentation through [editor swagger] (http://editor.swagger.io/#/) need to go the route `/swagger-docs.json`
- - to view swagger.json take the route `/api-docs.json'`
-
 ## Supported gulp tasks:
 
 ```
 ├── lint
 ├── test
-├── test:e2e
-├── swagger
+├── e2e
 └─ default
  ├── lint
  ├── test
- └── swagger
 ```
 
 1. `gulp lint` - checks codebase using `eslint`
-2. `gulp swagger` - generates swagger.json based on the swagger-jsdoc comments in the code
-3. `gulp test` - runs all the unit tests
-4. `gulp test:e2e` - runs all the end to end tests
+2. `gulp test` - runs all the unit tests
+3. `gulp e2e` - runs all the end to end tests
 
 
 ## Release

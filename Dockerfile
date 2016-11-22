@@ -35,7 +35,6 @@ VOLUME /home/waffle-server/ddf
 COPY ./ ./
 
 RUN npm i
-RUN npm run swagger
 EXPOSE 3000
 EXPOSE 80
 

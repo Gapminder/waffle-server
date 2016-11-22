@@ -1,2 +1,4 @@
 settings_gapminder*.txt
 settings_valor.txt
+logs/*
+ws.import/repos

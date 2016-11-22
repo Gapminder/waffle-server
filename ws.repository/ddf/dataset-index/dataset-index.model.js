@@ -1,31 +1,17 @@
 'use strict';
 
-let mongoose = require('mongoose');
-let Schema = mongoose.Schema;
-const originId = require('../origin-id.plugin');
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-/**
- * @typedef {Object} DatasetIndex
- * @memberof Models
- *
- * @property {Array<String>} key - type
- * @property {String} value - type value
- * @property {Array<String>} source - filename
- * @property {Array<String>} keyOriginIds - type
- * @property {String} valueOriginId - type value
- * @property {String} type - element type ['concepts','entities','datapoints']
- *
- *
- * @property {Models.Datasets} dataset - reference
- * @property {Models.DatasetIndex} transaction - reference
- */
-let DatasetIndex = new Schema({
+const constants = require('../../../ws.utils/constants');
+
+const DatasetIndex = new Schema({
   key: [{type: String, required: true}],
-  value: {type: String, required: true},
+  value: {type: Schema.Types.Mixed, required: true},
   source: [{type: String, required: true}],
   keyOriginIds: [{type: String}],
   valueOriginId: {type: String},
-  type: {type: String, enum: ['concepts','entities','datapoints']},
+  type: {type: String, enum: [constants.CONCEPTS, constants.ENTITIES, constants.DATAPOINTS]},
 
   dataset: {type: Schema.Types.ObjectId, ref: 'Datasets', required: true},
   transaction: {type: Schema.Types.ObjectId, ref: 'DatasetIndex', required: true}

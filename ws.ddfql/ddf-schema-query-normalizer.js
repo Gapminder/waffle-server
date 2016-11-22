@@ -2,6 +2,7 @@
 
 const _ = require('lodash');
 const ddfQueryUtils = require('./ddf-query-utils');
+const constants = require('../ws.utils/constants');
 
 const FUNCTION_OPERATORS = ['min', 'max', 'avg'];
 
@@ -83,11 +84,11 @@ function normalizeSelect(query) {
 function toSchemaType(from) {
   switch(from) {
     case 'concepts.schema':
-      return 'concepts';
+      return constants.CONCEPTS;
     case 'entities.schema':
-      return 'entities';
+      return constants.ENTITIES;
     case 'datapoints.schema':
-      return 'datapoints';
+      return constants.DATAPOINTS;
     default:
       console.error(`Cannot detect schema type based on given "from": ${from}`);
       return from;
