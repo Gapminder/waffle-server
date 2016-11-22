@@ -57,7 +57,7 @@
     "request-proxy": "0.2.4",
     "require-dir": "0.3.0",
     "shelljs": "0.7.4",
-    "simple-git": "1.51.0",
+    "simple-git": "1.62.0",
     "static-favicon": "1.0.2",
     "striptags": "2.1.1",
     "through2": "2.0.1",

@@ -29,8 +29,12 @@ describe('repos service', () => {
             ]);
             return this;
           },
+          clean: function (mode) {
+            expect(mode).to.equal('f');
+            return this;
+          },
           checkout: function (commit, done) {
-            expect(commit).to.equal(ddfRepoCommitHash);
+            expect(commit).to.deep.equal([ddfRepoCommitHash]);
             done(null);
           }
         };
@@ -171,6 +175,10 @@ describe('repos service', () => {
             expect(branch).to.equal('master');
             return this;
           },
+          clean: function (mode) {
+            expect(mode).to.equal('f');
+            return this;
+          },
           reset: function (options) {
             expect(options).to.deep.equal([
               '--hard',
@@ -179,7 +187,7 @@ describe('repos service', () => {
             return this;
           },
           checkout: function (commit, done) {
-            expect(commit).to.equal('HEAD');
+            expect(commit).to.deep.equal(['HEAD']);
             done(null);
           },
           silent: function () {

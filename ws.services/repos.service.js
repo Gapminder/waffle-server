@@ -2,6 +2,7 @@
 
 const _ = require('lodash');
 const fs = require('fs');
+const async = require('async');
 const path = require('path');
 const mkdirp = require('mkdirp');
 const express = require('express');
@@ -64,7 +65,8 @@ function checkoutRepo({branch}, pathToRepo, commit, onCheckedOut) {
   git(pathToRepo)
     .fetch('origin', branch)
     .reset(['--hard', `origin/${branch}`])
-    .checkout(commit || 'HEAD', function (err) {
+    .clean('f')
+    .checkout([commit || 'HEAD'], function (err) {
       return onCheckedOut(err, {pathToRepo});
     });
 }
