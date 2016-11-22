@@ -5,6 +5,9 @@ const ENTITIES = 'entities';
 const DATAPOINTS = 'datapoints';
 const TRANSLATIONS = 'translations';
 
+const TIME_CONCEPT_TYPES = ['time', 'year', 'week', 'month', 'day', 'quarter'];
+const DEFAULT_ENTITY_GROUP_TYPES = ['entity_domain', 'entity_set', ... TIME_CONCEPT_TYPES];
+
 module.exports = {
   //versioning
   MAX_VERSION: Number.MAX_SAFE_INTEGER,
@@ -40,7 +43,8 @@ module.exports = {
   DEFAULT_USER_EMAIL: 'dev@gapminder.org',
 
   EXCLUDED_QUERY_PARAMS: ['dataset', 'version', 'v', 'format', 'no-compression', 'key', 'geo.cat', 'force'],
-  DEFAULT_ENTITY_GROUP_TYPES: ['entity_domain', 'entity_set', 'time'],
+  DEFAULT_ENTITY_GROUP_TYPES,
+  TIME_CONCEPT_TYPES,
   GID_REGEXP: /^[a-z0-9_]*$/,
 
   VALID_TOKEN_PERIOD_IN_MILLIS: 60 * 60 * 1000 // one hour

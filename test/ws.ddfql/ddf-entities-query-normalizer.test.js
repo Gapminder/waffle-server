@@ -6,7 +6,7 @@ const ddfQueryNormalizer = require('../../ws.ddfql/ddf-entities-query-normalizer
 const expect = chai.expect;
 const concepts = [
   {gid: 'time', properties: {concept_type: 'time'}},
-  {gid: 'quarter', properties: {concept_type: 'time'}},
+  {gid: 'quarter', properties: {concept_type: 'quarter'}},
   {gid: 'geo', originId: "17a3470d3a8c9b37009b9bf9", properties: {concept_type: 'entity_domain'}},
   {gid: 'country', originId: "77a3470d3a8c9b37009b9bf9", properties: {concept_type: 'entity_set'}},
   {gid: 'company', originId: "87a3470d3a8c9b37009b9bf9", properties: {concept_type: 'entity_set'}},

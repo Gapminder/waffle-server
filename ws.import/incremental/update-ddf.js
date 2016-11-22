@@ -12,8 +12,6 @@ const updateEntities = require('./update-entities');
 const updateDatapoints = require('./update-datapoints');
 const createDatasetIndex = require('../import-dataset-index');
 const updateTranslations = require('./update-translations');
-const datasetsRepository = require('../../ws.repository/ddf/datasets/datasets.repository');
-const conceptsRepositoryFactory = require('../../ws.repository/ddf/concepts/concepts.repository');
 
 const DATASET_INCREMENTAL_UPDATE_LABEL = 'Dataset incremental update';
 
@@ -33,7 +31,7 @@ module.exports = (options, done) => {
     async.constant(pipe),
     ddfImportUtils.resolvePathToDdfFolder,
     ddfImportUtils.createTransaction,
-    findDataset,
+    ddfImportUtils.findDataset,
     ddfImportUtils.establishTransactionForDataset,
     ddfImportUtils.activateLifecycleHook('onTransactionCreated'),
     ddfImportUtils.cloneDdfRepo,
@@ -41,8 +39,8 @@ module.exports = (options, done) => {
     ddfImportUtils.getDatapackage,
     ddfImportUtils.generateDiffForDatasetUpdate,
     updateConcepts,
-    getAllConcepts,
-    getAllPreviousConcepts,
+    ddfImportUtils.getAllConcepts,
+    ddfImportUtils.getAllPreviousConcepts,
     updateEntities,
     updateDatapoints,
     // updateTranslations,
@@ -62,26 +60,3 @@ module.exports = (options, done) => {
     });
   });
 };
-
-function findDataset(pipe, done) {
-  return datasetsRepository.findByName(pipe.datasetName, (err, dataset) => {
-    pipe.dataset = dataset;
-    return done(err, pipe);
-  });
-}
-
-function getAllConcepts(pipe, done) {
-  return conceptsRepositoryFactory.latestVersion(pipe.dataset._id, pipe.transaction.createdAt)
-    .findAllPopulated((err, res) => {
-      pipe.concepts = _.keyBy(res, 'gid');
-      return done(err, pipe);
-    });
-}
-
-function getAllPreviousConcepts(pipe, done) {
-  return conceptsRepositoryFactory.previousVersion(pipe.dataset._id, pipe.transaction.createdAt)
-    .findAllPopulated((err, res) => {
-      pipe.previousConcepts = _.keyBy(res, 'gid');
-      return done(err, pipe);
-    });
-}

@@ -23,7 +23,6 @@ module.exports = {
   normalizeKey,
   getConceptGids,
   getDomainGids,
-  getTimeConcepts,
   getConceptOriginIdsByGids,
   getConceptsByGids,
   getConceptsByOriginIds
@@ -114,8 +113,8 @@ function normalizeTimePropertyFilter(key, filterValue, path, query) {
   return normalizedFilter;
 }
 
-function isTimePropertyFilter(key, options) {
-  return _.includes(options.timeConcepts, key);
+function isTimePropertyFilter(key, timeConceptsGids) {
+  return _.includes(timeConceptsGids, key);
 }
 
 function isDomainPropertyFilter(key, options) {
@@ -188,13 +187,6 @@ function getDomainGids(concepts) {
     .filter(concept => {
       return _.includes(constants.DEFAULT_ENTITY_GROUP_TYPES, _.get(concept, 'properties.concept_type', null));
     })
-    .map(constants.GID)
-    .value();
-}
-
-function getTimeConcepts(concepts) {
-  return _.chain(concepts)
-    .filter(_.iteratee(['properties.concept_type', 'time']))
     .map(constants.GID)
     .value();
 }

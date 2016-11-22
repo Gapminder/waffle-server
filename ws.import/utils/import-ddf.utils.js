@@ -15,9 +15,11 @@ const logger = require('../../ws.config/log');
 const config = require('../../ws.config/config');
 const constants = require('../../ws.utils/constants');
 const reposService = require('../../ws.services/repos.service');
+const conceptsUtils = require('./concepts.utils');
 const datasetsRepository = require('../../ws.repository/ddf/datasets/datasets.repository');
 const datapackageParser = require('./datapackage.parser');
 const transactionsRepository = require('../../ws.repository/ddf/dataset-transactions/dataset-transactions.repository');
+const conceptsRepositoryFactory = require('../../ws.repository/ddf/concepts/concepts.repository');
 
 const Converter = require('csvtojson').Converter;
 
@@ -37,6 +39,8 @@ module.exports = {
   UPDATE_ACTIONS,
   DEFAULT_CHUNK_SIZE,
   MONGODB_DOC_CREATION_THREADS_AMOUNT,
+  getAllConcepts,
+  getAllPreviousConcepts,
   activateLifecycleHook,
   isJson,
   isPropertyReserved,
@@ -49,12 +53,30 @@ module.exports = {
   closeTransaction,
   establishTransactionForDataset,
   createDataset,
+  findDataset,
   createTransaction,
   getDatapackage,
   validateDdfRepo,
   cloneDdfRepo,
   generateDiffForDatasetUpdate
 };
+
+function getAllConcepts(externalContext, done) {
+  return conceptsRepositoryFactory.latestVersion(externalContext.dataset._id, externalContext.transaction.createdAt)
+    .findAllPopulated((err, concepts) => {
+      externalContext.timeConcepts = _.keyBy(conceptsUtils.getTimeConcepts(concepts), 'gid');
+      externalContext.concepts = _.keyBy(concepts, 'gid');
+      return done(err, externalContext);
+    });
+}
+
+function getAllPreviousConcepts(externalContext, done) {
+  return conceptsRepositoryFactory.previousVersion(externalContext.dataset._id, externalContext.transaction.createdAt)
+    .findAllPopulated((err, concepts) => {
+      externalContext.previousConcepts = _.keyBy(concepts, 'gid');
+      return done(err, externalContext);
+    });
+}
 
 function activateLifecycleHook(hookName) {
   const actualParameters = [].slice.call(arguments, 1);
@@ -237,6 +259,13 @@ function createDataset(pipe, done) {
 
   datasetsRepository.create(dataset ,(err, createdDataset) => {
     pipe.dataset = createdDataset;
+    return done(err, pipe);
+  });
+}
+
+function findDataset(pipe, done) {
+  return datasetsRepository.findByName(pipe.datasetName, (err, dataset) => {
+    pipe.dataset = dataset;
     return done(err, pipe);
   });
 }

@@ -9,6 +9,7 @@ const hi = require('highland');
 
 const conceptsRepositoryFactory = require('../../ws.repository/ddf/concepts/concepts.repository');
 const ddfImportUtils = require('../utils/import-ddf.utils');
+const conceptsUtils = require('../utils/concepts.utils');
 const constants = require('../../ws.utils/constants');
 const ddfMappers = require('../utils/ddf-mappers');
 const logger = require('../../ws.config/log');
@@ -21,10 +22,6 @@ function startConceptsCreation(externalContext, done) {
 
   const externalContextFrozen = Object.freeze(_.pick(externalContext, [
     'pathToDatasetDiff',
-    'allChanges',
-    'previousConcepts',
-    'concepts',
-    'timeConcepts',
     'transaction',
     'dataset'
   ]));
@@ -306,7 +303,7 @@ function mergeConcepts(originalConcept, changesToConcept, currentTransaction) {
     }
 
     if (property === 'concept_type') {
-      originalConcept.type = changedValue === 'time' ? 'entity_domain' : changedValue;
+      originalConcept.type = conceptsUtils.isTimeConceptType(changedValue) ? 'entity_domain' : changedValue;
     }
 
     if (ddfImportUtils.isJson(changedValue)) {

@@ -3,12 +3,13 @@
 const chai = require('chai');
 const sinon = require('sinon');
 const ddfQueryUtils = require('../../ws.ddfql/ddf-query-utils');
+const conceptUtils = require('../../ws.import/utils/concepts.utils');
 const ddfQueryNormalizer = require('../../ws.ddfql/ddf-datapoints-query-normalizer');
 
 const expect = chai.expect;
 const concepts = Object.freeze([
   {gid: 'time', originId: "27a3470d3a8c9b37009b9bf9", properties: {concept_type: 'time'}},
-  {gid: 'quarter', originId: "77a3471d3a8c9b37009b9bf0", properties: {concept_type: 'time'}},
+  {gid: 'quarter', originId: "77a3471d3a8c9b37009b9bf0", properties: {concept_type: 'quarter'}},
   {gid: 'geo', originId: "17a3470d3a8c9b37009b9bf9", properties: {concept_type: 'entity_domain'}},
   {gid: 'country', properties: {concept_type: 'entity_set'}},
   {gid: 'latitude', properties: {concept_type: 'measure'}},
@@ -25,7 +26,7 @@ const options = Object.freeze({
   conceptOriginIdsByGids: ddfQueryUtils.getConceptOriginIdsByGids(concepts),
   conceptGids: ddfQueryUtils.getConceptGids(concepts),
   domainGids: ddfQueryUtils.getDomainGids(concepts),
-  timeConcepts: ddfQueryUtils.getTimeConcepts(concepts),
+  timeConceptsGids: conceptUtils.getTimeConceptGids(concepts),
   conceptsByGids: ddfQueryUtils.getConceptsByGids(concepts),
   conceptsByOriginIds: ddfQueryUtils.getConceptsByOriginIds(concepts),
 });
