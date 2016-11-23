@@ -4,9 +4,11 @@ const _ = require('lodash');
 const hi = require('highland');
 const fs = require('fs');
 const path = require('path');
+const byline = require('byline');
 const wsCli = require('waffle-server-import-cli');
 const async = require('async');
 const validator = require('validator');
+const JSONStream = require('JSONStream');
 const ddfTimeUtils = require('ddf-time-utils');
 const ddfValidation = require('ddf-validation');
 const SimpleDdfValidator = ddfValidation.SimpleValidator;
@@ -58,7 +60,9 @@ module.exports = {
   getDatapackage,
   validateDdfRepo,
   cloneDdfRepo,
-  generateDiffForDatasetUpdate
+  generateDiffForDatasetUpdate,
+  startStreamProcessing,
+  readTextFileByLineAsJsonStream
 };
 
 function getAllConcepts(externalContext, done) {
@@ -279,4 +283,25 @@ function establishTransactionForDataset(pipe, done) {
   };
 
   transactionsRepository.establishForDataset(options, err => done(err, pipe));
+}
+
+function readTextFileByLineAsJsonStream(pathToFile) {
+  const fileWithChangesStream = fs.createReadStream(pathToFile, {encoding: 'utf8'});
+  const jsonByLine = byline(fileWithChangesStream).pipe(JSONStream.parse());
+  return hi(jsonByLine);
+}
+
+function startStreamProcessing(stream, externalContext, done) {
+  logger.info('Start process of datapoints update');
+
+  const errors = [];
+  return stream.stopOnError(error => {
+      errors.push(error);
+    })
+    .done(() => {
+      if (!_.isEmpty(errors)) {
+        return done(errors, externalContext);
+      }
+      return done(null, externalContext);
+    });
 }
