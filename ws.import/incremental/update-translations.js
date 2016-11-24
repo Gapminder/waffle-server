@@ -7,6 +7,7 @@ const async = require('async');
 const logger = require('../../ws.config/log');
 const constants = require('../../ws.utils/constants');
 const translationsUtils = require('../utils/translations.utils');
+const entitiesUtils = require('../utils/entities.utils');
 const datapackageParser = require('../utils/datapackage.parser');
 const ddfMappers = require('../utils/ddf-mappers');
 const ddfImportUtils = require('../utils/import-ddf.utils');
@@ -17,16 +18,22 @@ module.exports = startTranslationsUpdate;
 function startTranslationsUpdate(externalContext, done) {
   logger.info('Start translations updating process');
 
-  const externalContextFrozen = Object.freeze(_.pick(externalContext, [
+  const externalContextSubset = _.pick(externalContext, [
     'pathToLangDiff',
-    'transaction',
-    'dataset',
-  ]));
+    'concepts',
+    'previousConcepts',
+  ]);
+
+  const externalContextFrozen = Object.freeze(_.extend({
+    datasetId: externalContext.dataset._id,
+    version: externalContext.transaction.createdAt
+  }, externalContextSubset));
 
   const translationsDiffStream = ddfImportUtils
     .readTextFileByLineAsJsonStream(externalContextFrozen.pathToLangDiff)
     .map(changes => new ChangesDescriptor(changes))
-    .filter(changesDescriptor => changesDescriptor.describes(constants.ENTITIES));
+    .filter(changesDescriptor => changesDescriptor.describes(constants.ENTITIES))
+    .map(changesDescriptor => ({context: externalContextFrozen, changesDescriptor}));
 
   const translationsDiffProcessingStream = hi([
     toCreatedTranslationsStream(translationsDiffStream, externalContextFrozen),
@@ -39,95 +46,180 @@ function startTranslationsUpdate(externalContext, done) {
 
 function toUpdatedTranslationsStream(translationsDiffStream, externalContext) {
   return translationsDiffStream.fork()
-    .filter(changesDescriptor => changesDescriptor.isUpdateAction());
+    .filter(({changesDescriptor}) => {
+      return changesDescriptor.isUpdateAction();
+    })
+    .map(({changesDescriptor, context}) => {
+      const setsAndDomain = entitiesUtils.getSetsAndDomain(changesDescriptor.currentResource, context);
+      return hi.wrapCallback(removeTranslation)({
+        changesDescriptor,
+        context: _.extend(setsAndDomain, context),
+        translationChangeHandler: updateTranslationInEntity
+      });
+    })
+    .parallel(constants.LIMIT_NUMBER_PROCESS);
 }
 
 function toCreatedTranslationsStream(translationsDiffStream, externalContext) {
   return translationsDiffStream.fork()
-    .filter(changesDescriptor => changesDescriptor.isCreateAction());
+    .filter(({changesDescriptor}) => {
+      return changesDescriptor.isCreateAction();
+    })
+    .map(({changesDescriptor, context}) => {
+        const setsAndDomain = entitiesUtils.getSetsAndDomain(changesDescriptor.currentResource, context);
+        return hi.wrapCallback(removeTranslation)({
+          changesDescriptor,
+          context: _.extend(setsAndDomain, context),
+          translationChangeHandler: addTranslationToEntity
+        });
+    })
+    .parallel(constants.LIMIT_NUMBER_PROCESS);
 }
 
 function toRemovedTranslationsStream(translationsDiffStream, externalContext) {
   return translationsDiffStream.fork()
-    .filter(changesDescriptor => changesDescriptor.isRemoveAction())
-    .batch(ddfImportUtils.DEFAULT_CHUNK_SIZE)
-    .flatMap(changesDescriptors => {
-      return hi.wrapCallback(closeEntities)({
-        changesDescriptors,
-        externalContext: externalContext,
-        handleClosedEntity: updateEntityTranslation
+    .filter(({changesDescriptor}) => {
+      return changesDescriptor.isRemoveAction();
+    })
+    .map(({changesDescriptor, context}) => {
+      const setsAndDomain = entitiesUtils.getSetsAndDomain(changesDescriptor.oldResource, context);
+      return hi.wrapCallback(removeTranslation)({
+        changesDescriptor,
+        context: _.extend(setsAndDomain, context),
+        translationChangeHandler: removeTranslationFromEntity
       });
-    });
+    })
+    .parallel(constants.LIMIT_NUMBER_PROCESS);
 }
 
-function updateEntityTranslation({changesDescriptor, context}, foundEntity, closingQuery, onEntityClosed) {
-  const entityRepository = entitiesRepositoryFactory
-    .latestVersion(context.dataset._id, context.transaction.createdAt);
+function removeTranslation({changesDescriptor, context, translationChangeHandler}, onTranslationRemoved) {
+  const closingQuery = {
+    domain: context.entityDomain.originId,
+    sets: context.entitySetsOriginIds,
+    [`properties.${changesDescriptor.concept}`]: changesDescriptor.gid
+  };
 
-  if (foundEntity.from === context.transaction.createdAt) {
-    // JUST DO AN UPDATE
-    entityRepository.removeTranslation({
-      entityId: foundEntity._id,
-      language: changesDescriptor.language
-    });
-  } else {
-    // CLOSE FOUND
-    // CREATE A NEW ENTITY BASED ON FOUND ONE
-    entityRepository.closeOneByQuery(closingQuery, (error, closedEntity) => {
-      // const _.omit(closedEntity.languages, );
-    });
-  }
+  logger.warn('ACTION: ', translationChangeHandler.name);
+  logger.warn({obj: closingQuery});
 
-  // entitiesRepositoryFactory
-  //   .latestVersion(externalContext.dataset._id, externalContext.transaction.createdAt)
-  //   .updateTranslation(, changesDescriptor.getLanguage, onEntityClosed);
-}
-
-function closeEntities({changesDescriptors, externalContext, handleClosedEntity}, onAllEntitiesClosed) {
-  const entitiesRepository = entitiesRepositoryFactory
-    .latestVersion(externalContext.dataset._id, externalContext.transaction.createdAt);
-
-  return async.eachLimit(changesDescriptors, constants.LIMIT_NUMBER_PROCESS, ({changesDescriptor, context}, onEntityClosed) => {
-    const closingQuery = {
-      domain: context.oldEntityDomain.originId,
-      sets: context.oldEntitySetsOriginIds,
-      [`properties.${changesDescriptor.concept}`]: changesDescriptor.gid
-    };
-
-    logger.debug('Closing entity by query: ', closingQuery);
-    return entitiesRepository.findOneByDomainAndSetsAndProps(closingQuery, (error, foundEntity) => {
+  return entitiesRepositoryFactory.latestVersion(context.datasetId, context.version)
+    .findOneByDomainAndSetsAndProperties(closingQuery, (error, foundEntity) => {
       if (error) {
-        return onEntityClosed(error);
+        return onTranslationRemoved(error);
       }
 
       if (!foundEntity) {
-        logger.error('Entity was not closed, though it should be');
-        return onEntityClosed(null);
+        logger.warn('Entity was closed, so there is no need to update translations');
+        return onTranslationRemoved(null);
       }
 
       logger.debug('Entity was closed. OriginId: ', foundEntity.originId);
 
-      if (!handleClosedEntity) {
-        return onEntityClosed(null);
+      if (!translationChangeHandler) {
+        return onTranslationRemoved(null);
       }
 
-      return handleClosedEntity({changesDescriptor, context}, foundEntity, closingQuery, onEntityClosed);
+      return translationChangeHandler({changesDescriptor, context}, foundEntity, closingQuery, onTranslationRemoved);
     });
-  }, onAllEntitiesClosed);
 }
 
+function removeTranslationFromEntity({changesDescriptor, context}, foundEntity, closingQuery, onTranslationRemoved) {
+  const entityRepository = entitiesRepositoryFactory.latestVersion(context.datasetId, context.version);
+
+  if (foundEntity.from === context.version) {
+    return entityRepository.removeTranslation({
+      entityId: foundEntity._id,
+      language: changesDescriptor.language
+    }, onTranslationRemoved);
+  }
+
+  return entityRepository.closeOneByQuery(closingQuery, (error, closedEntity) => {
+    closedEntity.languages = _.omit(closedEntity.languages, changesDescriptor.language);
+    const newEntity = makeEntityBasedOnItsClosedVersion(closedEntity.properties, closedEntity, context);
+    entityRepository.create(newEntity, onTranslationRemoved);
+  });
+}
+
+function addTranslationToEntity({changesDescriptor, context}, foundEntity, closingQuery, onTranslationAdded) {
+  const entityRepository = entitiesRepositoryFactory.latestVersion(context.datasetId, context.version);
+
+  if (foundEntity.from === context.version) {
+    return entityRepository.addTranslation({
+      entityId: foundEntity._id,
+      language: changesDescriptor.language,
+      translation: changesDescriptor.changes
+    }, onTranslationAdded);
+  }
+
+  return entityRepository.closeOneByQuery(closingQuery, (error, closedEntity) => {
+    closedEntity.languages = _.extend(closedEntity.languages, {[changesDescriptor.language]: changesDescriptor.changes});
+    const newEntity = makeEntityBasedOnItsClosedVersion(closedEntity.properties, closedEntity, context);
+    entityRepository.create(newEntity, onTranslationAdded);
+  });
+}
+
+function updateTranslationInEntity({changesDescriptor, context}, foundEntity, closingQuery, onTranslationAdded) {
+  const entityRepository = entitiesRepositoryFactory.latestVersion(context.datasetId, context.version);
+
+  const updatedTranslation = _.omit(_.extend(_.get(foundEntity.languages, changesDescriptor.language), changesDescriptor.changes), changesDescriptor.removedColumns);
+  if (foundEntity.from === context.version) {
+    return entityRepository.addTranslation({
+      entityId: foundEntity._id,
+      language: changesDescriptor.language,
+      translation: updatedTranslation
+    }, onTranslationAdded);
+  }
+
+  return entityRepository.closeOneByQuery(closingQuery, (error, closedEntity) => {
+    _.extend(closedEntity.languages, {[changesDescriptor.language]: updatedTranslation});
+    const newEntity = makeEntityBasedOnItsClosedVersion(closedEntity.properties, closedEntity, context);
+    entityRepository.create(newEntity, onTranslationAdded);
+  });
+}
+
+function makeEntityBasedOnItsClosedVersion(properties, closedEntity, externalContext) {
+  const {
+    entitySet,
+    concepts,
+    entityDomain,
+    filename,
+    timeConcepts,
+    version,
+    datasetId
+  } = externalContext;
+
+  const context = {
+    entitySet,
+    concepts,
+    entityDomain,
+    filename,
+    timeConcepts,
+    version,
+    datasetId,
+    originId: closedEntity.originId,
+    sources: closedEntity.sources,
+    languages: closedEntity.languages
+  };
+
+  return ddfMappers.mapDdfEntityToWsModel(properties, context);
+}
 
 class ChangesDescriptor {
   constructor(rawChangesDescriptor) {
     this.object = _.get(rawChangesDescriptor, 'object', {});
     this.metadata = _.get(rawChangesDescriptor, 'metadata', {});
+    this._cachedOldResource = null;
+    this._cachedCurrentResource = null;
   }
 
   get gid() {
-    return this.original[this.original.gid];
+    return this.original[this.concept];
   }
 
   get concept() {
+    if (this.isCreateAction()) {
+      return _.head(_.get(this.currentResource, 'primaryKey'));
+    }
     return this.original.gid;
   }
 
@@ -139,7 +231,7 @@ class ChangesDescriptor {
   }
 
   get original() {
-    if (this.isUpdateAction()) {
+    if (this.isUpdateAction() && this.object['data-origin']) {
       return this.object['data-origin'];
     }
     return this.object;
@@ -150,13 +242,19 @@ class ChangesDescriptor {
   }
 
   get oldResource() {
-    const oldResource = _.get(this.metadata.file, 'old');
-    return this._parseResource(oldResource);
+    if (!this._cachedOldResource) {
+      const oldResource = _.get(this.metadata.file, 'old');
+      this._cachedOldResource = this._parseResource(oldResource);
+    }
+    return this._cachedOldResource;
   }
 
   get currentResource() {
-    const currentResource = _.get(this.metadata.file, 'new');
-    return this._parseResource(currentResource);
+    if (!this._cachedCurrentResource) {
+      const currentResource = _.get(this.metadata.file, 'new');
+      this._cachedCurrentResource = this._parseResource(currentResource);
+    }
+    return this._cachedCurrentResource;
   }
 
   get removedColumns() {

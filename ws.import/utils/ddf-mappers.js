@@ -46,7 +46,7 @@ function mapDdfEntityToWsModel(entry, context) {
       parsedProperties: ddfImportUtils.parseProperties(context.entityDomain, gid, _entry, context.timeConcepts),
 
       originId: _.get(context, 'originId', null),
-      languages: _.get(context, 'languages', null),
+      languages: _.get(context, 'languages', {}),
 
       domain: domainOriginId,
       sets: resolvedSets,
@@ -83,7 +83,7 @@ function mapDdfDataPointToWsModel(entry, context) {
 
           properties: entry,
           originId: entry.originId,
-          languages: _.get(context, 'languages', null),
+          languages: _.get(context, 'languages', {}),
 
           isNumeric: !_.isNil(datapointValueAsNumber),
           from: context.version,
@@ -131,7 +131,7 @@ function mapDdfConceptsToWsModel(entry, context) {
     dataset: context.datasetId
   };
 
-  const languages = _.get(context, 'languages');
+  const languages = _.get(context, 'languages', {});
   if (languages) {
     concept.languages = languages;
   }

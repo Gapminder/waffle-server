@@ -43,7 +43,7 @@ module.exports = (options, done) => {
     ddfImportUtils.getAllPreviousConcepts,
     updateEntities,
     updateDatapoints,
-    // updateTranslations,
+    updateTranslations,
     createDatasetIndex,
     ddfImportUtils.closeTransaction
   ], (updateError, pipe) => {

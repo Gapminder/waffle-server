@@ -44,7 +44,7 @@ function createEntities(externalContext) {
     .batch(1500)
     .flatMap(entitiesBatch => {
       return hi(storeEntitesToDb(entitiesBatch));
-    })
+    });
 }
 
 function loadEntitiesFromCsv(resource, externalContext) {
@@ -52,7 +52,7 @@ function loadEntitiesFromCsv(resource, externalContext) {
     .map(rawEntity => {
       const setsAndDomain = entitiesUtils.getSetsAndDomain(resource, externalContext);
       const context = _.extend({filename: resource.path}, setsAndDomain, externalContext);
-      return toEntity(rawEntity, context)
+      return toEntity(rawEntity, context);
     });
 }
 

@@ -292,8 +292,6 @@ function readTextFileByLineAsJsonStream(pathToFile) {
 }
 
 function startStreamProcessing(stream, externalContext, done) {
-  logger.info('Start process of datapoints update');
-
   const errors = [];
   return stream.stopOnError(error => {
       errors.push(error);

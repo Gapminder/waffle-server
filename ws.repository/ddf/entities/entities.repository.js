@@ -46,16 +46,25 @@ EntitiesRepository.prototype.closeOneByQuery = function (closeQuery, done) {
   return Entities.findOneAndUpdate(query, {$set: {to: this.version}}, {new: true}, done);
 };
 
-EntitiesRepository.prototype.findOneByDomainAndSetsAndProps = function (params, done) {
+EntitiesRepository.prototype.findOneByDomainAndSetsAndProperties = function (params, done) {
   const {domain, sets} = params;
-  const props = _.omit(params, ['domain', 'sets']);
+  const properties = _.reduce(params, (result, value, key) => {
+    if (_.startsWith(key, 'properties.')) {
+      result[key] = value;
+    }
+    return result;
+  }, {});
 
-  const query = this._composeQuery({domain, sets}, props);
+  const query = this._composeQuery({domain, sets}, properties);
   return Entities.findOne(query).lean().exec(done);
 };
 
 EntitiesRepository.prototype.removeTranslation = function ({entityId, language}, done) {
-  return Entities.findOneAndUpdate({_id: entityId}, {$unset: `properties.${language}`}, {new: true}, done);
+  return Entities.findOneAndUpdate({_id: entityId}, {$unset: `languages.${language}`}, {new: true}, done);
+};
+
+EntitiesRepository.prototype.addTranslation = function ({entityId, language, translation}, done) {
+  return Entities.findOneAndUpdate({_id: entityId}, {$set: {[`languages.${language}`]: translation}}, {new: true}, done);
 };
 
 EntitiesRepository.prototype.create = function (entityOrBatchOfEntities, onCreated) {
