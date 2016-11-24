@@ -8,6 +8,7 @@ const ddfImportUtils = require('./utils/import-ddf.utils.js');
 const importEntities = require('./import-entities');
 const importConcepts = require('./import-concepts');
 const importDatapoints = require('./import-datapoints');
+const importTranslations = require('./import-translations');
 const createDatasetIndex = require('./import-dataset-index');
 
 const DATASET_IMPORT_LABEL = 'Dataset import';
@@ -35,6 +36,7 @@ module.exports = (options, done) => {
     importConcepts,
     importEntities,
     importDatapoints,
+    importTranslations,
     createDatasetIndex,
     ddfImportUtils.closeTransaction
   ], (importError, pipe) => {

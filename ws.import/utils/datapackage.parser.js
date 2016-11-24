@@ -10,7 +10,10 @@ module.exports = {
   loadDatapackage,
   parseEntitiesResource,
   parseDatapointsResource,
-  parseConceptsResource
+  parseConceptsResource,
+  isConceptsResource,
+  isDatapointsResource,
+  isEntitiesResource
 };
 
 function loadDatapackage({folder, file = 'datapackage.json'}, done) {

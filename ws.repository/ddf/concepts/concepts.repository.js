@@ -111,7 +111,7 @@ ConceptsRepository.prototype.findAll = function (onFound) {
   return Concepts.find(countQuery).lean().exec(onFound);
 };
 
-ConceptsRepository.prototype.addTranslationsForGivenProperties = function (properties, context, done) {
+ConceptsRepository.prototype.addTranslationsForGivenProperties = function (properties, language, done) {
   const subEntityQuery = {
     gid: properties.concept
   };
@@ -120,7 +120,7 @@ ConceptsRepository.prototype.addTranslationsForGivenProperties = function (prope
   const updateQuery = {
     $set: {
       languages: {
-        [context.language]: properties
+        [language.id]: properties
       }
     }
   };

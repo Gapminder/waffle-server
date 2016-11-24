@@ -41,10 +41,11 @@ function _generateDatasetIndex(pipe, done) {
 }
 
 function _generateDatasetIndexFromConcepts(pipe, done) {
-  const conceptResources = _.filter(pipe.datapackage.resources, resource => resource.type === constants.CONCEPTS);
+  const {pathToDdfFolder, datapackage: {resources}, datasetIndex} = pipe;
+  const conceptResources = _.filter(resources, resource => resource.type === constants.CONCEPTS);
 
   return async.mapLimit(conceptResources, constants.LIMIT_NUMBER_PROCESS, (conceptResource, completeSearchForConcepts) => {
-      ddfImportUtils.readCsvFile(pipe.resolvePath(conceptResource.path), {}, (err, res) => {
+      ddfImportUtils.readCsvFile(pathToDdfFolder, conceptResource.path, {}, (err, res) => {
 
         if (err) {
           return completeSearchForConcepts(err);
@@ -61,7 +62,7 @@ function _generateDatasetIndexFromConcepts(pipe, done) {
           return result;
         }, []);
 
-        pipe.datasetIndex = _.concat(pipe.datasetIndex, datasetConceptsIndexes);
+        pipe.datasetIndex = _.concat(datasetIndex, datasetConceptsIndexes);
         return completeSearchForConcepts(null, _.size(datasetConceptsIndexes));
       });
     },

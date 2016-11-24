@@ -20,8 +20,7 @@ module.exports = (externalContext, done) => {
     'concepts',
     'timeConcepts',
     'transaction',
-    'dataset',
-    'resolvePath'
+    'dataset'
   ]));
 
   const errors = [];
@@ -48,7 +47,9 @@ function createEntities(externalContext) {
 }
 
 function loadEntitiesFromCsv(resource, externalContext) {
-  return ddfUtils.readCsvFileAsStream(externalContext.resolvePath(resource.path))
+  const {pathToDdfFolder} = externalContext;
+
+  return ddfUtils.readCsvFileAsStream(pathToDdfFolder, resource.path)
     .map(rawEntity => {
       const setsAndDomain = entitiesUtils.getSetsAndDomain(resource, externalContext);
       const context = _.extend({filename: resource.path}, setsAndDomain, externalContext);

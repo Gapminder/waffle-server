@@ -144,36 +144,21 @@ EntitiesRepository.prototype.findEntityProperties = function(entityDomainGid, se
   });
 };
 
-EntitiesRepository.prototype.addTranslationsForGivenProperties = function (properties, context) {
-  const setsOriginIds = _.map(context.sets, constants.ORIGIN_ID);
+EntitiesRepository.prototype.addTranslationsForGivenProperties = function (properties, externalContext, done) {
+  const {source, language, resolvedProperties} = externalContext;
 
-  const domainOriginId = _.chain(context.domains)
-    .values()
-    .first()
-    .get(`${constants.ORIGIN_ID}`, null)
-    .value();
-
-  // It's only one column, where entity could have a gid
-  const entityGid = _.chain({})
-    .assign(context.sets, context.domains)
-    .map(concept => _.get(properties, `${concept.gid}`, null))
-    .compact()
-    .first()
-    .value();
-
-  const subEntityQuery = getSubQueryFromDomainAndSets(setsOriginIds, domainOriginId, entityGid);
-
+  const subEntityQuery =_.extend({sources: source}, resolvedProperties);
   const query = this._composeQuery(subEntityQuery);
 
   const updateQuery = {
     $set: {
       languages: {
-        [context.language]: properties
+        [language.id]: properties
       }
     }
   };
 
-  return Entities.update(query, updateQuery).exec();
+  return Entities.update(query, updateQuery).exec(done);
 };
 
 function makePositiveProjectionFor(properties) {
@@ -183,13 +168,5 @@ function makePositiveProjectionFor(properties) {
 
 function toPropertiesDotNotation(object) {
   return _.mapKeys(object, (value, property) => property === 'gid' ? property : `properties.${property}`);
-}
-
-function getSubQueryFromDomainAndSets(setsOriginIds, domain, gid) {
-  return {
-    gid,
-    domain,
-    sets: {$not: {$elemMatch: {$nin : setsOriginIds}}}
-  };
 }
 
