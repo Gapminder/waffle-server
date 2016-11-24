@@ -63,7 +63,7 @@ function getConceptsByDdfql(pipe, cb) {
 
       pipe.concepts = concepts;
 
-      return commonService.translate(constants.CONCEPTS, pipe, cb);
+      return cb(null, pipe);;
     });
 }
 

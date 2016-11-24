@@ -27,6 +27,7 @@ function collectDatapointsByDdfql(options, onMatchedDatapoints) {
     sort: options.sort,
     groupBy: options.groupBy,
     datasetName: options.datasetName,
+    language: options.language,
     version: options.version
   };
 

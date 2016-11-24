@@ -33,6 +33,7 @@ module.exports = (options, done) => {
     ddfImportUtils.cloneDdfRepo,
     ddfImportUtils.validateDdfRepo,
     ddfImportUtils.getDatapackage,
+    ddfImportUtils.updateTransactionLanguages,
     importConcepts,
     importEntities,
     importDatapoints,

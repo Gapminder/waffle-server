@@ -52,6 +52,7 @@ module.exports = {
   resolvePathToDdfFolder,
   closeTransaction,
   establishTransactionForDataset,
+  updateTransactionLanguages,
   createDataset,
   findDataset,
   createTransaction,
@@ -283,4 +284,15 @@ function establishTransactionForDataset(pipe, done) {
   };
 
   transactionsRepository.establishForDataset(options, err => done(err, pipe));
+}
+
+function updateTransactionLanguages(pipe, done) {
+  logger.info('update transaction languages');
+
+  const options = {
+    transactionId: pipe.transaction._id,
+    languages: _.map(pipe.datapackage.translations, 'id')
+  };
+
+  transactionsRepository.updateLanguages(options, err => done(err, pipe));
 }
