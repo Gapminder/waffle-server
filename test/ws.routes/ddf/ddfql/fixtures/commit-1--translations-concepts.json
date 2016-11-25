@@ -1,0 +1,20 @@
+{
+  "headers": ["concept", "additional_column"],
+  "rows": [
+    ["company", null],
+    ["english_speaking", null],
+    ["foundation", null],
+    ["company_size", null],
+    ["name", null],
+    ["anno", null],
+    ["lines_of_code", null],
+    ["region", null],
+    ["country", null],
+    ["num_users", null],
+    ["latitude", null],
+    ["longitude", null],
+    ["full_name", null],
+    ["project", null],
+    ["domain", null]
+  ]
+}

@@ -38,6 +38,7 @@ const fixtureDatapointTranslationsCompanySize = require('./fixtures/commit-1--tr
 const fixtureEntityTranslationsCompanySize = require('./fixtures/commit-1--translations-entities-company_size.json');
 const fixtureEntityTranslationsRegion = require('./fixtures/commit-1--translations-entities-region.json');
 const fixtureEntityTranslationsCompany = require('./fixtures/commit-1--translations-entities-company.json');
+const fixtureConceptsTranslations = require('./fixtures/commit-1--translations-concepts.json');
 
 describe("Initial State (1st commit)", function() {
 
@@ -456,6 +457,19 @@ describe("Initial State (1st commit)", function() {
 
   describe('Translations', () => {
 
+    it('should return list of all concepts for language `nl-nl`', done => {
+      const ddfql = {
+        "language": "nl-nl",
+        "select": {
+          "key": ["concept"],
+          "value": ["additional_column"]
+        },
+        "from": "concepts"
+      };
+
+      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureConceptsTranslations, done);
+    });
+
     it('should return list of all entities of company entity_domain for language `nl-nl` where it\'s possible', done => {
       const ddfql = {
         "language": "nl-nl",
@@ -516,6 +530,7 @@ describe("Initial State (1st commit)", function() {
 
       e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDatapointTranslationsCompanySize, done);
     });
+
   });
 
 });
