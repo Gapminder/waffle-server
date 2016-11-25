@@ -1,9 +1,9 @@
 'use strict';
 
-const _ = require('lodash');
 const fs = require('fs');
-const hi = require('highland');
+const _ = require('lodash');
 const async = require('async');
+const hi = require('highland');
 
 const ddfImportUtils = require('./utils/import-ddf.utils');
 const logger = require('../ws.config/log');
@@ -19,9 +19,9 @@ function createConcepts(pipe, done) {
   logger.info('start process creating concepts');
 
   const options = _.pick(pipe, [
+    'pathToDdfFolder',
     'transaction',
     'dataset',
-    'resolvePath',
     'datapackage'
   ]);
 
@@ -43,21 +43,25 @@ function createConcepts(pipe, done) {
 function _loadConcepts(pipe, done) {
   logger.info('** load concepts');
 
-  let filename = null;
-  hi(pipe.datapackage.resources)
+  const {
+    pathToDdfFolder,
+    datapackage: {resources},
+    dataset: {_id: datasetId},
+    transaction: {createdAt: version}
+  } = pipe;
+
+  hi(resources)
     .filter(resource => resource.type === constants.CONCEPTS)
     .head()
     .flatMap(resource => {
-      filename = resource.path;
-      return ddfImportUtils.readCsvFileAsStream(pipe.resolvePath(resource.path))
+      return ddfImportUtils.readCsvFileAsStream(pathToDdfFolder, resource.path)
+        .map(rawConcept => ({filename: resource.path, object: rawConcept}))
     })
     .collect()
     .toCallback((error, rawConcepts) => {
-
-      const {dataset: {_id: datasetId}, transaction: {createdAt: version}} = pipe;
-
       const concepts = _.map(rawConcepts, rawConcept => {
-        return ddfMappers.mapDdfConceptsToWsModel(rawConcept, {datasetId, version, filename});
+        const context = {datasetId, version, filename: rawConcept.filename};
+        return ddfMappers.mapDdfConceptsToWsModel(rawConcept.object, context);
       });
 
       pipe.raw = {

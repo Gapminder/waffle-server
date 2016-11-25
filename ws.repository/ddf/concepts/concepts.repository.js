@@ -143,7 +143,7 @@ ConceptsRepository.prototype.addTranslationsForGivenProperties = function (prope
   const updateQuery = {
     $set: {
       languages: {
-        [context.language]: properties
+        [language.id]: properties
       }
     }
   };

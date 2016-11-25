@@ -54,6 +54,7 @@ module.exports = {
   resolvePathToDdfFolder,
   closeTransaction,
   establishTransactionForDataset,
+  updateTransactionLanguages,
   createDataset,
   findDataset,
   createTransaction,
@@ -148,18 +149,22 @@ function toBoolean(value) {
   return null;
 }
 
-function readCsvFileAsStream(filepath) {
-  return hi(fs.createReadStream(filepath, 'utf-8')
+function readCsvFileAsStream(pathToDdfFolder, filepath) {
+  const resolvedFilepath = path.resolve(pathToDdfFolder, filepath);
+
+  return hi(fs.createReadStream(resolvedFilepath, 'utf-8')
     .pipe(new Converter({constructResult: false}, {objectMode: true})));
 }
 
-function readCsvFile(file, options, cb) {
+function readCsvFile(pathToDdfFolder, filepath, options, cb) {
+  const resolvedFilepath = path.resolve(pathToDdfFolder, filepath);
+
   const converter = new Converter(Object.assign({}, {
     workerNum: 1,
     flatKeys: true
   }, options));
 
-  converter.fromFile(file, (err, data) => {
+  converter.fromFile(resolvedFilepath, (err, data) => {
     if (err) {
       const isCannotFoundError = _.includes(err.toString(), "cannot be found.");
       if (isCannotFoundError) {
@@ -210,7 +215,7 @@ function generateDiffForDatasetUpdate(context, done) {
 
 function resolvePathToDdfFolder(pipe, done) {
   const pathToDdfFolder = reposService.getPathToRepo(pipe.datasetName);
-  pipe.resolvePath = (filename) => path.resolve(pathToDdfFolder, filename);
+  pipe.pathToDdfFolder = pathToDdfFolder;
 
   return async.setImmediate(() => done(null, pipe));
 }
@@ -283,6 +288,17 @@ function establishTransactionForDataset(pipe, done) {
   };
 
   transactionsRepository.establishForDataset(options, err => done(err, pipe));
+}
+
+function updateTransactionLanguages(pipe, done) {
+  logger.info('update transaction languages');
+
+  const options = {
+    transactionId: pipe.transaction._id,
+    languages: _.map(pipe.datapackage.translations, 'id')
+  };
+
+  transactionsRepository.updateLanguages(options, err => done(err, pipe));
 }
 
 function readTextFileByLineAsJsonStream(pathToFile) {

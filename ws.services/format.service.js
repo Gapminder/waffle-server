@@ -3,8 +3,8 @@
 const _ = require('lodash');
 const async = require('async');
 
-const wsJsonPack = require('./../ws.routes/data-post-processors/format/format-ws.processor.js');
-const constants = require('./../ws.utils/constants');
+const wsJsonPack = require('../ws.routes/data-post-processors/format/format-ws.processor');
+const constants = require('../ws.utils/constants');
 
 module.exports = {
   wsJson: packToWsJson,

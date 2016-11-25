@@ -1,0 +1,16 @@
+{
+  "headers": ["company", "name", "country", "full_name_changed", "additional_column"],
+  "rows": [
+    ["mcrsft", "Microsoft", "de Verenigde Staten van Amerika", null, null],
+    ["xsoft", "XSoft", "Turkije", null, null],
+    ["gap", "Gapminder", "Zweden", null, null],
+    ["valor", "Valor Software", "Oekra?ne", null, null],
+    ["gap", null, null, null, null],
+    ["xsoft", null, null, null, null],
+    ["mcrsft", "Microsoft", null, null, "any text 1"],
+    ["gap", "Gapminder", null, null, null, "any text 2"],
+    ["small", null, null, "Niet heel groot", null],
+    ["large", null, null, "HEEL GROOT!!!$(#(*#*($", null],
+    ["medium", null, null, "middenweg", null]
+  ]
+}

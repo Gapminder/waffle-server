@@ -63,7 +63,7 @@ function normalizeQueriesToEntitiesByDdfql(pipe, cb) {
 
         pipe.entities = entities;
 
-        return commonService.translate(constants.ENTITIES, pipe, cb);
+        return cb(null, pipe);
       });
   });
 }
