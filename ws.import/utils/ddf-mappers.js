@@ -122,19 +122,14 @@ function mapDdfConceptsToWsModel(entry, context) {
 
     properties: transformedEntry,
 
-    domain: null,
+    domain: _.get(context, 'domain', null),
+    languages: _.get(context, 'languages', {}),
     subsetOf: [],
-    dimensions: [],
 
     from: context.version,
     to: constants.MAX_VERSION,
     dataset: context.datasetId
   };
-
-  const languages = _.get(context, 'languages', {});
-  if (languages) {
-    concept.languages = languages;
-  }
 
   if (context.filename) {
     concept.sources = [context.filename];

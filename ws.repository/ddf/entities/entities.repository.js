@@ -19,6 +19,11 @@ function EntitiesRepository() {
 
 module.exports = new RepositoryFactory(EntitiesRepository);
 
+EntitiesRepository.prototype.findByOriginId = function (originId, done) {
+  const query = this._composeQuery({originId: originId});
+  return Entities.findOne(query).lean().exec(done);
+};
+
 EntitiesRepository.prototype.addDrillupsByEntityId = function ({entitiyId, drillups}, done) {
   const query = this._composeQuery({_id: entitiyId});
   return Entities.update(query, {$addToSet: {'drillups': {$each: drillups}}}, {multi: true}, done);
@@ -46,21 +51,14 @@ EntitiesRepository.prototype.closeOneByQuery = function (closeQuery, done) {
   return Entities.findOneAndUpdate(query, {$set: {to: this.version}}, {new: true}, done);
 };
 
-EntitiesRepository.prototype.findOneByDomainAndSetsAndProperties = function (params, done) {
-  const {domain, sets} = params;
-  const properties = _.reduce(params, (result, value, key) => {
-    if (_.startsWith(key, 'properties.')) {
-      result[key] = value;
-    }
-    return result;
-  }, {});
-
-  const query = this._composeQuery({domain, sets}, properties);
+EntitiesRepository.prototype.findOneByDomainAndSetsAndGid = function (params, done) {
+  const {domain, sets, gid} = params;
+  const query = this._composeQuery({domain, sets, gid});
   return Entities.findOne(query).lean().exec(done);
 };
 
-EntitiesRepository.prototype.removeTranslation = function ({entityId, language}, done) {
-  return Entities.findOneAndUpdate({_id: entityId}, {$unset: `languages.${language}`}, {new: true}, done);
+EntitiesRepository.prototype.removeTranslation = function ({entityOriginId, language}, done) {
+  return Entities.findOneAndUpdate({originId: entityOriginId}, {$unset: {[`languages.${language}`]: 1}}, {new: true}, done);
 };
 
 EntitiesRepository.prototype.addTranslation = function ({entityId, language, translation}, done) {

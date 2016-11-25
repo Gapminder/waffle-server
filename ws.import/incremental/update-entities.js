@@ -189,36 +189,9 @@ function createUpdatedEntity({entityChanges, context}, closedEntity, done) {
 
   const updatedEntityProperties = _.extend(entityPropertiesWithoutRemovedColumns, updatedProperties);
 
-  const newEntity = makeEntityBasedOnItsClosedVersion(updatedEntityProperties, closedEntity, context);
+  const newEntity = entitiesUtils.makeEntityBasedOnItsClosedVersion(updatedEntityProperties, closedEntity, context);
 
   return storeEntitiesToDb(newEntity, done);
-}
-
-function makeEntityBasedOnItsClosedVersion(properties, closedEntity, externalContext) {
-  const {
-    entitySet,
-    concepts,
-    entityDomain,
-    filename,
-    timeConcepts,
-    version,
-    datasetId
-  } = externalContext;
-
-  const context = {
-    entitySet,
-    concepts,
-    entityDomain,
-    filename,
-    timeConcepts,
-    version,
-    datasetId,
-    originId: closedEntity.originId,
-    sources: closedEntity.sources,
-    languages: closedEntity.languages
-  };
-
-  return ddfMappers.mapDdfEntityToWsModel(properties, context);
 }
 
 function getAction(metadata) {

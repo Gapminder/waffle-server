@@ -11,7 +11,8 @@ const updateConcepts = require('./update-concepts');
 const updateEntities = require('./update-entities');
 const updateDatapoints = require('./update-datapoints');
 const createDatasetIndex = require('../import-dataset-index');
-const updateTranslations = require('./update-translations');
+const updateConceptTranslations = require('./update-concept-translations');
+const updateEntityTranslations = require('./update-entity-translations');
 
 const DATASET_INCREMENTAL_UPDATE_LABEL = 'Dataset incremental update';
 
@@ -43,7 +44,8 @@ module.exports = (options, done) => {
     ddfImportUtils.getAllPreviousConcepts,
     updateEntities,
     updateDatapoints,
-    updateTranslations,
+    updateConceptTranslations,
+    updateEntityTranslations,
     createDatasetIndex,
     ddfImportUtils.closeTransaction
   ], (updateError, pipe) => {
