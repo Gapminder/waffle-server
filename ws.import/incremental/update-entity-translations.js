@@ -70,7 +70,7 @@ function toRemovedTranslationsStream(translationsDiffStream, externalContext) {
     isApplicable: changesDescriptor => changesDescriptor.isRemoveAction(),
     getResource: changesDescriptor => changesDescriptor.oldResource,
     translationChangeHandler: removeTranslationFromEntity,
-    repository: entitiesRepositoryFactory.previousVersion(externalContext.datasetId, externalContext.version)
+    repository: entitiesRepositoryFactory.currentVersion(externalContext.datasetId, externalContext.version)
   });
 }
 
