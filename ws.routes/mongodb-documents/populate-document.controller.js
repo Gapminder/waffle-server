@@ -26,15 +26,16 @@ module.exports = serviceLocator => {
       datasetName,
       commit,
       collection,
-      queryToCollections,
+      queryToCollections
     };
 
-      return propertiesByQueryService.getPopulateDocumentByQuery(externalContext, (error, document) => {
-        if (error) {
-         return logger.error(error);
-        }
+    return propertiesByQueryService.getPopulateDocumentByQuery(externalContext, (error, document) => {
+      if (error || document.length === 0) {
+        logger.error('Bad Request');
+        return res.status(400).send('Bad Request');
+      }
 
-        return res.json(document);
-      })
-    }
+      return res.json(document);
+    })
+  }
 };
