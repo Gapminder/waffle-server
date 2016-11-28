@@ -33,6 +33,8 @@ function importTranslations(externalContext, done) {
       errors.push(error);
     })
     .done(() => {
+      logger.info('finished process creating translations');
+
       if (!_.isEmpty(errors)) {
         return done(errors, externalContext);
       }
@@ -162,49 +164,5 @@ function loadTranslationsFromCsv(resource, externalContext) {
   return ddfUtils.readCsvFileAsStream(pathToDdfFolder, resource.pathToTranslationFile)
     .map(rawTranslation => {
       return {object: rawTranslation, resource};
-    });
-}
-
-function storeTranslationsToDb() {
-
-}
-
-function $(externalContext) {
-  const {pathToDdfFolder} = externalContext;
-  const parsedLanguages = new Set();
-
-  const readdir = hi.wrapCallback(fs.readdir);
-
-  return readdir(externalContextFrozen.pathToDdfFolder)
-    .flatMap(filenames => {
-      return hi(filenames);
-    })
-    .filter(filename => {
-      return translationsUtils.translationsPattern.test(filename)
-    })
-    .map(filename => {
-      return translationsUtils.parseFilename(filename, parsedLanguages, externalContextFrozen);
-    })
-    .flatMap((context) => {
-      return ddfUtils.readCsvFileAsStream(pathToDdfFolder,context.filename)
-        .map(row => ({row, context}));
-    })
-    .map(({row, context}) => {
-      return hi(translationsUtils.createFoundTranslation(row, context, externalContextFrozen));
-    })
-    .errors(error => {
-      logger.error(error);
-      return done(error);
-    })
-    .done(() => {
-      return translationsUtils.updateTransactionLanguages(parsedLanguages, externalContextFrozen, (error) => {
-        if (error) {
-          return done(error);
-        }
-
-        logger.info('finished process creating translations');
-
-        return done(null, externalContext);
-      });
     });
 }

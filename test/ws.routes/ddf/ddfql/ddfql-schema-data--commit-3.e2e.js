@@ -518,7 +518,7 @@ describe("State Version 2 (3rd commit)", function() {
       e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureEntityTranslationsCompanySize, done);
     });
 
-    it('should return all datapoints of company_size indicator for language `nl-nl`', done => {
+    xit('should return all datapoints of company_size indicator for language `nl-nl`', done => {
       const ddfql = {
         "language": "nl-nl",
         "select": {

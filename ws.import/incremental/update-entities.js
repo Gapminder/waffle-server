@@ -174,7 +174,7 @@ function closeEntities({entityChangesBatch, externalContext, handleClosedEntity}
         return onEntityClosed(null);
       }
 
-      return handleClosedEntity({entityChanges, context}, closedEntity.toObject(), onEntityClosed);
+      return handleClosedEntity({entityChanges, context}, closedEntity, onEntityClosed);
     });
   }, onAllEntitiesClosed);
 }

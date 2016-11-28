@@ -2,8 +2,7 @@
   "headers": ["company", "name", "country", "full_name_changed", "additional_column"],
   "rows": [
     ["mic", "Microsoft", "Amerikas forente stater van Amerika", null, null],
-    ["gap", "Gapminder", "Sweden", null, null],
-    ["valor", "Valor Sotware", "Ukraina", null, null],
+
     ["gap", null, null, null, null],
     ["mic", "Microsoft", null, null, "any text 1"],
     ["gap", "Gapminder", null, null, "any text 2"],

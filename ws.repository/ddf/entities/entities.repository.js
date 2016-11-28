@@ -48,7 +48,7 @@ EntitiesRepository.prototype.closeByDomainAndSets = function ({domain, sets}, do
 
 EntitiesRepository.prototype.closeOneByQuery = function (closeQuery, done) {
   const query = this._composeQuery(closeQuery);
-  return Entities.findOneAndUpdate(query, {$set: {to: this.version}}, {new: true}, done);
+  return Entities.findOneAndUpdate(query, {$set: {to: this.version}}, {new: true}).lean().exec(done);
 };
 
 EntitiesRepository.prototype.findOneByDomainAndSetsAndGid = function (params, done) {

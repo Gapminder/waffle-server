@@ -476,7 +476,7 @@ describe("State Version 1 (2nd commit)", function() {
         "language": "nl-nl",
         "select": {
           "key": ["company"],
-          "value": ["name", "country", "full_name_changed"]
+          "value": ["name", "country", "full_name_changed", "additional_column"]
         },
         "from": "entities"
       };
@@ -518,7 +518,7 @@ describe("State Version 1 (2nd commit)", function() {
       e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureEntityTranslationsCompanySize, done);
     });
 
-    it('should return all datapoints of company_size indicator for language `nl-nl`', done => {
+    xit('should return all datapoints of company_size indicator for language `nl-nl`', done => {
       const ddfql = {
         "language": "nl-nl",
         "select": {

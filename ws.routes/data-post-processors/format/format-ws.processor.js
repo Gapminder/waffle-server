@@ -86,7 +86,8 @@ function mapEntitiesToWsJson(data) {
 
 function _mapEntitiesPropertiesToWsJson(entityDomainGid, select, entity, language) {
   const translatedEntityProperties = commonService.translateDocument(entity, language);
-  const flattenedEntity = _.merge(__mapGidToEntityDomainGid(entityDomainGid, _.omit(entity, ['properties', 'languages'])), translatedEntityProperties);
+  const entityWithGidNamedAfterDomain = __mapGidToEntityDomainGid(entityDomainGid, entity);
+  const flattenedEntity = _.extend(entityWithGidNamedAfterDomain, translatedEntityProperties);
 
   return _.map(select, property => {
     return flattenedEntity[property];
@@ -132,7 +133,7 @@ function mapDatapointsToWsJson(data) {
       const datapointKey = datapointKeyParts.join(DATAPOINT_KEY_SEPARATOR);
       const measureGid = conceptsByOriginId[datapoint.measure][constants.GID];
       const datapointValue = _.get(translatedDatapointProperties, measureGid);
-      partialRow[measureGid] = ddfImportUtils.toNumeric(datapointValue) || datapointValue;
+      partialRow[measureGid] = ddfImportUtils.toNumeric(datapointValue) || ddfImportUtils.toBoolean(datapointValue) || datapointValue;
 
       if (!result[datapointKey]) {
         result[datapointKey] = partialRow;

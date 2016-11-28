@@ -37,7 +37,7 @@ function findDefaultDatasetAndTransaction(pipe, done) {
 
 function translateDocument(target, language) {
   if (language) {
-    return _.extend(target.properties, _.get(target.languages, language));
+    return _.extend({}, target.properties, _.get(target.languages, language, {}));
   }
 
   return target.properties;
