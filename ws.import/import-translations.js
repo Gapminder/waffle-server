@@ -115,9 +115,7 @@ function createTranslations(externalContext) {
     storeDatapointsTranslationsStream
   ];
 
-  return hi(translationTasks).parallel(translationTasks.length).tap(() => {
-    console.log(arguments);
-  });
+  return hi(translationTasks).parallel(translationTasks.length);
 }
 
 function storeConceptsTranslationsToDb({properties, language, datasetId, version}) {
