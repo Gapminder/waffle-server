@@ -160,12 +160,12 @@ function updateTranslation(options, makeTranslation, onTranslationAdded) {
 
   const conceptsRepository = conceptsRepositoryFactory.latestVersion(context.datasetId, context.version);
 
-  const newTranslation = makeTranslation(changesDescriptor, foundTranslationTarget);
+  const newTranslation = ddfMappers.transformConceptTranslation(makeTranslation(changesDescriptor, foundTranslationTarget));
   if (foundTranslationTarget.from === context.version) {
     return conceptsRepository.addTranslation({
       id: foundTranslationTarget._id,
       language: changesDescriptor.language,
-      translation: newTranslation
+      translation: newTranslation,
     }, onTranslationAdded);
   }
 

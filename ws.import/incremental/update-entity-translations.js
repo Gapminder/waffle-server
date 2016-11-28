@@ -9,6 +9,7 @@ const constants = require('../../ws.utils/constants');
 const ChangesDescriptor = require('../utils/changes-descriptor').ChangesDescriptor;
 const entitiesUtils = require('../utils/entities.utils');
 const ddfImportUtils = require('../utils/import-ddf.utils');
+const ddfMappers = require('../utils/ddf-mappers');
 const entitiesRepositoryFactory = require('../../ws.repository/ddf/entities/entities.repository');
 
 module.exports = startTranslationsUpdate;
@@ -163,7 +164,7 @@ function updateTranslation(options, makeTranslation, onTranslationAdded) {
 
   const entityRepository = entitiesRepositoryFactory.latestVersion(context.datasetId, context.version);
 
-  const newTranslation = makeTranslation(changesDescriptor, foundEntity);
+  const newTranslation = ddfMappers.transformEntityTranslation(makeTranslation(changesDescriptor, foundEntity));
   if (foundEntity.from === context.version) {
     return entityRepository.addTranslation({
       entityId: foundEntity._id,

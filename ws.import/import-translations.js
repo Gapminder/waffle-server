@@ -8,6 +8,7 @@ const hi = require('highland');
 const logger = require('../ws.config/log');
 const constants = require('../ws.utils/constants');
 const ddfUtils = require('./utils/import-ddf.utils');
+const ddfMappers = require('./utils/ddf-mappers');
 const translationsUtils = require('./utils/translations.utils');
 const datapackageParser = require('./utils/datapackage.parser');
 const conceptsRepositoryFactory = require('../ws.repository/ddf/concepts/concepts.repository');
@@ -52,7 +53,7 @@ function createTranslations(externalContext) {
 
   const loadTranslationsStream = hi(resources)
     .flatMap(resource => {
-      return extendTranslationsToResourceStream(translations, resource)
+      return extendTranslationsToResourceStream(translations, resource);
     })
     .flatMap(resource => {
       const resolvedFilepath = path.resolve(pathToDdfFolder, resource.pathToTranslationFile);
@@ -119,16 +120,20 @@ function createTranslations(externalContext) {
 }
 
 function storeConceptsTranslationsToDb({properties, language, datasetId, version}) {
+  const translation = ddfMappers.transformConceptTranslation(properties);
+
   return conceptsRepositoryFactory
     .allOpenedInGivenVersion(datasetId, version)
-    .addTranslationsForGivenProperties(properties, language);
+    .addTranslationsForGivenProperties(translation, language);
 }
 
 function storeEntitiesTranslationsToDb(externalContext) {
   const {source, properties, language, resolvedProperties, datasetId, version} = externalContext;
+  const translation = ddfMappers.transformEntityTranslation(properties);
+
   return entitiesRepositoryFactory
     .allOpenedInGivenVersion(datasetId, version)
-    .addTranslationsForGivenProperties(properties, {language, source, resolvedProperties});
+    .addTranslationsForGivenProperties(translation, {language, source, resolvedProperties});
 }
 
 function storeDatapointsTranslationsToDb(externalContext) {
