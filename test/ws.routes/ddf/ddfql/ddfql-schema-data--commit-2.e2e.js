@@ -1,8 +1,8 @@
 'use strict';
 
-const cliUtils = require('./../../../cli.utils.js');
-const e2eUtils = require('./../../../e2e.utils');
-const e2eEnv = require('./../../../e2e.env');
+const cliUtils = require('../../../cli.utils');
+const e2eUtils = require('../../../e2e.utils');
+const e2eEnv = require('../../../e2e.env');
 
 const fs = require('fs');
 const expect = require('chai').expect;
@@ -38,7 +38,14 @@ const fixtureQueryOperatorsNumUsersByCompanyProjectWithCondition = require('./fi
 describe("State Version 1 (2nd commit)", function() {
 
   before(done => {
-    cliUtils.setDefaultCommit(e2eEnv.repoCommits.version_1, done);
+
+    const INDEX_OF_SECOND_COMMIT = 1;
+
+    cliUtils.getCommitByGithubUrl(e2eEnv.repo, INDEX_OF_SECOND_COMMIT, (error, commit) => {
+      if (error) return done(error);
+
+      cliUtils.setDefaultCommit(commit, done);
+    });
   });
 
   describe("Schema", function() {

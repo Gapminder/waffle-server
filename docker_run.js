@@ -9,15 +9,22 @@ const REDIS_PORT = process.env.REDIS_PORT || 6379;
 const HA_REG_EXPIRE = process.env.HA_REG_EXPIRE || 60;
 const NODE_PORT = process.env.NODE_PORT || 3000;
 const SERVICE_NAME = process.env.SERVICE_NAME || "default";
-
-shell.exec('service rsyslog restart');
-shell.exec('/usr/bin/forever start -c \"/usr/bin/node --stack_trace_limit=0\" -m 10 --minUptime 500 --spinSleepTime 600 server.js',  {silent:true});
+const THRASHING_MACHINE = process.env.THRASHING_MACHINE;
 
 if (!REDIS_HOST){
   console.log("-- ERROR: REDIS_HOST is not set. Exit.");
   process.exit(1);
 }
 console.log(`++ Redis address: ${REDIS_HOST}`);
+
+shell.exec('service rsyslog restart');
+
+if (THRASHING_MACHINE) {
+  shell.exec('INNER_PORT=80 /usr/bin/node server.js')
+} else {
+  shell.exec('/usr/bin/forever start -c \"/usr/bin/node --stack_trace_limit=0\" -m 10 --minUptime 500 --spinSleepTime 600 server.js',  {silent:true});
+  register_us();
+}
 
 function register_us(){
   while (1){
@@ -41,4 +48,3 @@ function register_us(){
   }
 }
 
-register_us();

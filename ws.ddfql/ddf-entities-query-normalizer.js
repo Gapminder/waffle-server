@@ -5,6 +5,7 @@ const traverse = require('traverse');
 
 const constants = require('../ws.utils/constants');
 const ddfQueryUtils = require("./ddf-query-utils");
+const conceptUtils = require('../ws.import/utils/concepts.utils');
 
 module.exports = {
   normalizeEntities,
@@ -27,7 +28,7 @@ function normalizeEntities(query, concepts) {
     conceptOriginIdsByGids: ddfQueryUtils.getConceptOriginIdsByGids(safeConcepts),
     conceptGids: ddfQueryUtils.getConceptGids(safeConcepts),
     domainGids: ddfQueryUtils.getDomainGids(safeConcepts),
-    timeConcepts: ddfQueryUtils.getTimeConcepts(safeConcepts),
+    timeConceptsGids: conceptUtils.getTimeConceptGids(safeConcepts),
     conceptsByGids,
     conceptsByOriginIds: ddfQueryUtils.getConceptsByOriginIds(safeConcepts),
   });
@@ -86,7 +87,7 @@ function normalizeWhere(query, options) {
     const selectKey = _.first(query.select.key);
 
     if (ddfQueryUtils.isEntityPropertyFilter(this.key, options)) {
-      if (ddfQueryUtils.isTimePropertyFilter(this.key, options)) {
+      if (ddfQueryUtils.isTimePropertyFilter(this.key, options.timeConceptsGids)) {
         normalizedFilter = ddfQueryUtils.normalizeTimePropertyFilter(this.key, filterValue, this.path, query.where);
       } else {
         normalizedFilter = {
@@ -135,7 +136,7 @@ function normalizeJoin(query, options) {
     let normalizedFilter = null;
 
     if (ddfQueryUtils.isEntityPropertyFilter(this.key, options) && _.includes(this.path, 'where')) {
-      if (ddfQueryUtils.isTimePropertyFilter(this.key, options)) {
+      if (ddfQueryUtils.isTimePropertyFilter(this.key, options.timeConceptsGids)) {
         normalizedFilter = ddfQueryUtils.normalizeTimePropertyFilter(this.key, filterValue, this.path, query.join);
       } else {
         normalizedFilter = {

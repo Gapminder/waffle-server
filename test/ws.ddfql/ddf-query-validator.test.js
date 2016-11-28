@@ -1,11 +1,11 @@
 'use strict';
 
 const chai = require('chai');
-const ddfQueryValidator = require('./../../ws.ddfql/ddf-query-validator');
+const ddfQueryValidator = require('../../ws.ddfql/ddf-query-validator');
 const expect = chai.expect;
 const concepts = [
   {gid: 'time', properties: {concept_type: 'time'}},
-  {gid: 'quarter', properties: {concept_type: 'time'}},
+  {gid: 'quarter', properties: {concept_type: 'quarter'}},
   {gid: 'geo', originId: "17a3470d3a8c9b37009b9bf9", properties: {concept_type: 'entity_domain'}},
   {gid: 'country', originId: "77a3470d3a8c9b37009b9bf9", properties: {concept_type: 'entity_set'}},
   {gid: 'company', originId: "87a3470d3a8c9b37009b9bf9", properties: {concept_type: 'entity_set'}},
@@ -186,6 +186,21 @@ describe('ddf query validator', () => {
 
     expect(message[0].toString()).to.contain(expectedMessage1);
     expect(message[1].toString()).to.contain(expectedMessage2);
+  });
+
+  it('should return error message: Invalid DDFQL-query. Validation by Operators, not acceptable: $sq', () => {
+    const query = {
+        "$and": [
+          {"geo.is--country": {"$sq": true}},
+          {"geo.world_4region": {"$sq": "africa"}}
+        ]
+      };
+
+    const message = ddfQueryValidator.validateMongoQuery(query).messages;
+    const expectedMessage = 'Invalid DDFQL-query. Validation by Operators, not acceptable: $sq';
+
+    expect(message.toString()).to.contain(expectedMessage);
+
   });
 
 });

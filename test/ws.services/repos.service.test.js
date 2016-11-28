@@ -5,7 +5,7 @@ const path = require('path');
 const chai = require('chai');
 const proxyquire = require('proxyquire');
 const config = require('../../ws.config/config');
-const reposService = require('../../ws.services/repos.service.js');
+const reposService = require('../../ws.services/repos.service');
 
 const expect = chai.expect;
 
@@ -29,8 +29,12 @@ describe('repos service', () => {
             ]);
             return this;
           },
+          clean: function (mode) {
+            expect(mode).to.equal('f');
+            return this;
+          },
           checkout: function (commit, done) {
-            expect(commit).to.equal(ddfRepoCommitHash);
+            expect(commit).to.deep.equal([ddfRepoCommitHash]);
             done(null);
           }
         };
@@ -45,7 +49,7 @@ describe('repos service', () => {
 
     const accountName = 'open-numbers';
     const githubUrl = `git@github.com:${accountName}/${ddfRepoName}.git`;
-    const expectedPathToRepo = path.resolve(process.cwd(), config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName);
+    const expectedPathToRepo = path.resolve(process.cwd(), config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName, 'master');
 
     stubbedReposService.cloneRepo(githubUrl, ddfRepoCommitHash, (error, cloneResult) => {
       expect(cloneResult.pathToRepo).to.equal(expectedPathToRepo);
@@ -59,10 +63,6 @@ describe('repos service', () => {
         exists: (pathTeRepo, done) => {
           const wasClonedBefore = false;
           done(wasClonedBefore);
-        },
-        mkdir: (pathTeRepo, done) => {
-          const createReposDirError = null;
-          done(createReposDirError);
         }
       },
       '../ws.config/log': {
@@ -76,7 +76,37 @@ describe('repos service', () => {
     });
 
     stubbedReposService.cloneRepo('fake repo', 'any commit', error => {
-      expect(error).to.equal('Cannot clone repo from fake repo');
+      expect(error).to.equal('Incorrect github url was given');
+      done();
+    });
+  });
+
+  it('should respond with an error if it was impossible to create a path for repo to clone ', done => {
+    const ddfRepoName = 'ddf--gapminder--systema_globalis';
+    const expectedGithubUrl = `git@github.com:open-numbers/${ddfRepoName}.git`;
+    const accountName = 'open-numbers';
+    const expectedPathToRepo = path.resolve(process.cwd(), config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName, 'master');
+
+    const stubbedReposService = proxyquire('../../ws.services/repos.service', {
+      'fs': {
+        exists: (pathTeRepo, done) => {
+          const wasClonedBefore = false;
+          done(wasClonedBefore);
+        }
+      },
+      mkdirp: (pathTeRepo, done) => {
+        expect(pathTeRepo).to.equal(expectedPathToRepo);
+        done('mkdirp was not able to create a folder <---- test error');
+      },
+      '../ws.config/log': {
+        error: (error) => {
+          expect(error).exist;
+        }
+      }
+    });
+
+    stubbedReposService.cloneRepo(expectedGithubUrl, 'any commit', error => {
+      expect(error).to.equal(`Cannot clone repo from ${expectedGithubUrl}`);
       done();
     });
   });
@@ -85,14 +115,15 @@ describe('repos service', () => {
     const ddfRepoName = 'ddf--gapminder--systema_globalis';
     const expectedGithubUrl = `git@github.com:open-numbers/${ddfRepoName}.git`;
     const accountName = 'open-numbers';
-    const expectedPathToRepo = path.resolve(process.cwd(), config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName);
+    const expectedPathToRepo = path.resolve(process.cwd(), config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName, 'master');
 
     const stubbedReposService = proxyquire('../../ws.services/repos.service', {
       'simple-git': function () {
         return {
-          clone: function (actualGithubUrl, pathToRepo, done) {
+          clone: function (actualGithubUrl, pathToRepo, options, done) {
             expect(actualGithubUrl).to.equal(expectedGithubUrl);
             expect(pathToRepo).to.equal(expectedPathToRepo);
+            expect(options).to.deep.equal(['-b', 'master']);
             done('some error');
             return this;
           },
@@ -105,10 +136,6 @@ describe('repos service', () => {
         exists: (pathTeRepo, done) => {
           const wasClonedBefore = false;
           done(wasClonedBefore);
-        },
-        mkdir: (pathTeRepo, done) => {
-          const createReposDirError = null;
-          done(createReposDirError);
         }
       },
       '../ws.config/log': {
@@ -131,20 +158,25 @@ describe('repos service', () => {
     const accountName = 'open-numbers';
     const expectedDdfRepoName = 'ddf--gapminder--systema_globalis';
     const expectedGithubUrl = `git@github.com:${accountName}/${expectedDdfRepoName}.git`;
-    const expectedPathToRepo = path.resolve(process.cwd(), config.PATH_TO_DDF_REPOSITORIES, accountName, expectedDdfRepoName);
+    const expectedPathToRepo = path.resolve(process.cwd(), config.PATH_TO_DDF_REPOSITORIES, accountName, expectedDdfRepoName, 'master');
 
     const stubbedReposService = proxyquire('../../ws.services/repos.service', {
       'simple-git': function () {
         return {
-          clone: function (actualGithubUrl, pathToRepo, done) {
+          clone: function (actualGithubUrl, pathToRepo, options, done) {
             expect(actualGithubUrl).to.equal(expectedGithubUrl);
             expect(pathToRepo).to.equal(expectedPathToRepo);
+            expect(options).to.deep.equal(['-b', 'master']);
             done(null);
             return this;
           },
           fetch: function (remote, branch) {
             expect(remote).to.equal('origin');
             expect(branch).to.equal('master');
+            return this;
+          },
+          clean: function (mode) {
+            expect(mode).to.equal('f');
             return this;
           },
           reset: function (options) {
@@ -155,7 +187,7 @@ describe('repos service', () => {
             return this;
           },
           checkout: function (commit, done) {
-            expect(commit).to.equal('HEAD');
+            expect(commit).to.deep.equal(['HEAD']);
             done(null);
           },
           silent: function () {
@@ -167,10 +199,6 @@ describe('repos service', () => {
         exists: (pathTeRepo, done) => {
           const wasClonedBefore = false;
           done(wasClonedBefore);
-        },
-        mkdir: (pathTeRepo, done) => {
-          const createReposDirError = null;
-          done(createReposDirError);
         }
       }
     });
@@ -202,6 +230,40 @@ describe('repos service', () => {
     expect(actualRepoName).to.equal(expectedDdfRepoName);
   });
 
+  it('should properly extract repo name from github url with branch included', () => {
+    const expectedDdfRepoName = 'open-numbers/ddf--gapminder--systema_globalis#development';
+
+    const actualRepoName = reposService.getRepoNameForDataset(`git@github.com:open-numbers/ddf--gapminder--systema_globalis.git#development`);
+
+    expect(actualRepoName).to.equal(expectedDdfRepoName);
+  });
+
+  it('should build repo name without branch name included if this branch is master', () => {
+    const expectedDdfRepoName = 'open-numbers/ddf--gapminder--systema_globalis';
+
+    const actualRepoName = reposService.getRepoNameForDataset(`git@github.com:open-numbers/ddf--gapminder--systema_globalis.git#master`);
+
+    expect(actualRepoName).to.equal(expectedDdfRepoName);
+  });
+
+  it('should build repo name without branch name included if only "#" branch separator is given', () => {
+    const expectedDdfRepoName = 'open-numbers/ddf--gapminder--systema_globalis';
+
+    const actualRepoName = reposService.getRepoNameForDataset(`git@github.com:open-numbers/ddf--gapminder--systema_globalis.git#master`);
+
+    expect(actualRepoName).to.equal(expectedDdfRepoName);
+  });
+
+  it('should return null when no account can be inferred from given url', () => {
+    const actualRepoName = reposService.getRepoNameForDataset(`git@github.com:/ddf--gapminder--systema_globalis.git`);
+    expect(actualRepoName).to.be.null;
+  });
+
+  it('should return null when no repo name can be inferred from given url', () => {
+    const actualRepoName = reposService.getRepoNameForDataset(`git@github.com:open-numbers/`);
+    expect(actualRepoName).to.be.null;
+  });
+
   it('should throw away part .git from repo name', () => {
     const expectedDdfRepoName = 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git';
 
@@ -214,7 +276,7 @@ describe('repos service', () => {
     const ddfRepoName = 'ddf--gapminder--systema_globalis';
     const accountName = 'open-numbers';
 
-    const expectedPathToRepo = path.resolve(process.cwd(), config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName);
+    const expectedPathToRepo = path.resolve(process.cwd(), config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName, 'master');
     const actualPathToRepo = reposService.getPathToRepo(`git@github.com:${accountName}/${ddfRepoName}`);
 
     expect(actualPathToRepo).to.equal(expectedPathToRepo);

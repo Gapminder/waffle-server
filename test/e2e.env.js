@@ -15,10 +15,4 @@ module.exports = {
   wsUid: 'ws-e2e',
   wsLogLevel: 'debug',
   repo: 'git@github.com:VS-work/ddf--ws-testing.git',
-  repoCommits: {
-    init: 'acd712c',
-    version_1: '4e3a3fe',
-    version_2: '4265f17',
-    version_3: '193ae23'
-  }
 };

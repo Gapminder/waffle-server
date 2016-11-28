@@ -98,9 +98,6 @@ ConceptsRepository.prototype.findAllPopulated = function (done) {
       },
       subsetOf: {
         $find: composedQuery
-      },
-      dimensions: {
-        $find: composedQuery
       }
     }
   })

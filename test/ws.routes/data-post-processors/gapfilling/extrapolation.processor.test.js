@@ -3,7 +3,7 @@
 const _ = require('lodash');
 const chai = require('chai');
 
-const extrapolate = require('./../../../../ws.routes/data-post-processors/gapfilling/extrapolation.processor.js');
+const extrapolate = require('../../../../ws.routes/data-post-processors/gapfilling/extrapolation.processor');
 
 const expect = chai.expect;
 

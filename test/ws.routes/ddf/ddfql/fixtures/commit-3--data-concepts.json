@@ -27,13 +27,13 @@
     [
       "full_name_changed",
       "string",
-      "",
+      null,
       "new value and change concept"
     ],
     [
       "additional_column",
       "string",
-      "",
+      null,
       "new row and column"
     ],
     [

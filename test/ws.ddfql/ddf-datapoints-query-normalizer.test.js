@@ -3,12 +3,13 @@
 const chai = require('chai');
 const sinon = require('sinon');
 const ddfQueryUtils = require('../../ws.ddfql/ddf-query-utils');
-const ddfQueryNormalizer = require('./../../ws.ddfql/ddf-datapoints-query-normalizer');
+const conceptUtils = require('../../ws.import/utils/concepts.utils');
+const ddfQueryNormalizer = require('../../ws.ddfql/ddf-datapoints-query-normalizer');
 
 const expect = chai.expect;
 const concepts = Object.freeze([
   {gid: 'time', originId: "27a3470d3a8c9b37009b9bf9", properties: {concept_type: 'time'}},
-  {gid: 'quarter', properties: {concept_type: 'time'}},
+  {gid: 'quarter', originId: "77a3471d3a8c9b37009b9bf0", properties: {concept_type: 'quarter'}},
   {gid: 'geo', originId: "17a3470d3a8c9b37009b9bf9", properties: {concept_type: 'entity_domain'}},
   {gid: 'country', properties: {concept_type: 'entity_set'}},
   {gid: 'latitude', properties: {concept_type: 'measure'}},
@@ -16,16 +17,16 @@ const concepts = Object.freeze([
   {gid: "life_expectancy", originId: "47a3470d3a8c9b37009b9bf9", properties: {concept_type: 'measure'}},
   {gid: "gdp_per_cap", originId: "57a3470d3a8c9b37009b9bf9", properties: {concept_type: 'measure'}},
   {gid: "gov_type", originId: "67a3470d3a8c9b37009b9bf9", properties: {concept_type: 'measure'}},
-  {gid: 'company', originId: '17a3470d3a8c9b37009b9bf9', properties: {concept_type: 'entity_domain'}},
-  {gid: 'project', originId: '27a3470d3a8c9b37009b9bf9', properties: {concept_type: 'entity_domain'}},
-  {gid: 'lines_of_code', originId: '37a3470d3a8c9b37009b9bf9', properties: {concept_type: 'measure'}}
+  {gid: 'company', originId: '17a3470d3a8c9b37429b9bf9', properties: {concept_type: 'entity_domain'}},
+  {gid: 'project', originId: '27a3470d3a8c9b37429b9bf9', properties: {concept_type: 'entity_domain'}},
+  {gid: 'lines_of_code', originId: '37a3470d3a8c9b37429b9bf9', properties: {concept_type: 'measure'}}
 ]);
 const options = Object.freeze({
   concepts,
   conceptOriginIdsByGids: ddfQueryUtils.getConceptOriginIdsByGids(concepts),
   conceptGids: ddfQueryUtils.getConceptGids(concepts),
   domainGids: ddfQueryUtils.getDomainGids(concepts),
-  timeConcepts: ddfQueryUtils.getTimeConcepts(concepts),
+  timeConceptsGids: conceptUtils.getTimeConceptGids(concepts),
   conceptsByGids: ddfQueryUtils.getConceptsByGids(concepts),
   conceptsByOriginIds: ddfQueryUtils.getConceptsByOriginIds(concepts),
 });
@@ -81,82 +82,165 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     };
 
     const normalizedDdfql = {
+      "from": "datapoints",
+      "join": {
+        "$geo": {
+          "$and": [
+            {
+              "properties.is--country": true
+            },
+            {
+              "properties.latitude": {
+                "$lte": 0
+              }
+            }
+          ],
+          "$or": [
+            {
+              "domain": "17a3470d3a8c9b37009b9bf9"
+            },
+            {
+              "sets": "17a3470d3a8c9b37009b9bf9"
+            }
+          ]
+        },
+        "$parsed_domain_geo_1": {
+          "$or": [
+            {
+              "domain": "17a3470d3a8c9b37009b9bf9"
+            },
+            {
+              "sets": "17a3470d3a8c9b37009b9bf9"
+            }
+          ]
+        },
+        "$parsed_domain_time_1": {
+          "$or": [
+            {
+              "domain": "27a3470d3a8c9b37009b9bf9"
+            },
+            {
+              "sets": "27a3470d3a8c9b37009b9bf9"
+            }
+          ]
+        },
+        "$time": {
+          "$or": [
+            {
+              "domain": "27a3470d3a8c9b37009b9bf9"
+            },
+            {
+              "sets": "27a3470d3a8c9b37009b9bf9"
+            }
+          ],
+          "parsedProperties.time.millis": {
+            "$lt": 1420070400000
+          },
+          "parsedProperties.time.timeType": "YEAR_TYPE"
+        },
+        "$time2": {
+          "$or": [
+            {
+              "domain": "27a3470d3a8c9b37009b9bf9"
+            },
+            {
+              "sets": "27a3470d3a8c9b37009b9bf9"
+            }
+          ],
+          "parsedProperties.time.millis": {
+            "$eq": -1640995200000
+          },
+          "parsedProperties.time.timeType": "YEAR_TYPE"
+        }
+      },
+      "order_by": [
+        {
+          "geo": "asc"
+        },
+        {
+          "time": "asc"
+        }
+      ],
       "select": {
-        "key": ["geo", "time"],
+        "key": [
+          "geo",
+          "time"
+        ],
         "value": [
-          "population", "life_expectancy", "gdp_per_cap", "gov_type"
+          "population",
+          "life_expectancy",
+          "gdp_per_cap",
+          "gov_type"
         ]
       },
-      "from": "datapoints",
       "where": {
         "$and": [
-          {"dimensions": {
-            "$size": 2,
-            "$all": [
-              {"$elemMatch": "$parsed_domain_geo_1"},
-              {"$elemMatch": "$parsed_domain_time_1"}
-            ]
-          }},
-          {"measure": {"$in": ["population", "life_expectancy", "gdp_per_cap", "gov_type"]}},
+          {
+            "dimensions": {
+              "$all": [
+                {
+                  "$elemMatch": "$parsed_domain_geo_1"
+                },
+                {
+                  "$elemMatch": "$parsed_domain_time_1"
+                }
+              ],
+              "$size": 2
+            }
+          },
+          {
+            "measure": {
+              "$in": [
+                "population",
+                "life_expectancy",
+                "gdp_per_cap",
+                "gov_type"
+              ]
+            }
+          },
           {
             "$and": [
-              {"dimensions": "$geo"},
-              {"dimensions": "$time"},
+              {
+                "dimensions": "$geo"
+              },
+              {
+                "dimensions": "$time"
+              },
               {
                 "$or": [
                   {
+                    "dimensions": "$time2",
                     "measure": "population",
-                    "value": {"$gt": 100000},
-                    "dimensions": "$time2"
+                    "value": {
+                      "$gt": 100000
+                    }
                   },
                   {
                     "measure": "life_expectancy",
-                    "value": {"$gt": 30, "$lt": 70}
+                    "value": {
+                      "$gt": 30,
+                      "$lt": 70
+                    }
                   },
                   {
                     "measure": "gdp_per_cap",
-                    "value": {"$gt": 600, "$lt": 500}
+                    "value": {
+                      "$gt": 600,
+                      "$lt": 500
+                    }
                   },
                   {
                     "measure": "gdp_per_cap",
-                    "value": {"$gt": 1000}
+                    "value": {
+                      "$gt": 1000
+                    }
                   }
                 ]
               }
             ]
           }
         ]
-      },
-      "join": {
-        "$geo": {
-          "domain": "geo",
-          "$and": [
-            {"properties.is--country": true},
-            {"properties.latitude": {"$lte": 0}}
-          ]
-        },
-        "$time": {
-          "domain": "time",
-          "parsedProperties.time.timeType": "YEAR_TYPE",
-          "parsedProperties.time.millis": {
-            "$lt": 1420070400000
-          }
-        },
-        "$time2": {
-          "domain": "time",
-          "parsedProperties.time.timeType": "YEAR_TYPE",
-          "parsedProperties.time.millis": {
-            "$eq": -1640995200000
-          }
-        },
-        "$parsed_domain_geo_1": {
-          "domain": "geo",
-        },
-        "$parsed_domain_time_1": {
-          "domain": "time"
-        }
-      },
-      "order_by": [{"geo": "asc"}, {"time": "asc"}]
+      }
     };
 
     const mock = sinon.mock(Math);
@@ -192,57 +276,113 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     };
 
     const normalizedDdfql = {
+      "from": "datapoints",
+      "join": {
+        "$parsed_domain_geo_4": {
+          "$or": [
+            {
+              "domain": "17a3470d3a8c9b37009b9bf9"
+            },
+            {
+              "sets": "17a3470d3a8c9b37009b9bf9"
+            }
+          ]
+        },
+        "$parsed_domain_quarter_5": {
+          "$or": [
+            {
+              "domain": "77a3471d3a8c9b37009b9bf0"
+            },
+            {
+              "sets": "77a3471d3a8c9b37009b9bf0"
+            }
+          ]
+        },
+        "$parsed_geo_3": {
+          "$or": [
+            {
+              "domain": "17a3470d3a8c9b37009b9bf9"
+            },
+            {
+              "sets": "17a3470d3a8c9b37009b9bf9"
+            }
+          ],
+          "gid": "dza"
+        },
+        "$parsed_quarter_1": {
+          "$or": [
+            {
+              "domain": "77a3471d3a8c9b37009b9bf0"
+            },
+            {
+              "sets": "77a3471d3a8c9b37009b9bf0"
+            }
+          ],
+          "parsedProperties.quarter.millis": 1349049600000,
+          "parsedProperties.quarter.timeType": "QUARTER_TYPE"
+        },
+        "$parsed_quarter_2": {
+          "$or": [
+            {
+              "domain": "77a3471d3a8c9b37009b9bf0"
+            },
+            {
+              "sets": "77a3471d3a8c9b37009b9bf0"
+            }
+          ],
+          "parsedProperties.quarter.millis": 1435708800000,
+          "parsedProperties.quarter.timeType": "QUARTER_TYPE"
+        }
+      },
       "select": {
-        "key": ["geo", "quarter"],
+        "key": [
+          "geo",
+          "quarter"
+        ],
         "value": [
           "sg_population"
         ]
       },
-      "from": "datapoints",
       "where": {
         "$and": [
-          {"dimensions": {
-            "$size": 2,
-            "$all": [
-              {"$elemMatch": "$parsed_domain_geo_4"},
-              {"$elemMatch": "$parsed_domain_quarter_5"}
-            ]
-          }},
-          {"measure": {"$in": ["sg_population"]}},
+          {
+            "dimensions": {
+              "$all": [
+                {
+                  "$elemMatch": "$parsed_domain_geo_4"
+                },
+                {
+                  "$elemMatch": "$parsed_domain_quarter_5"
+                }
+              ],
+              "$size": 2
+            }
+          },
+          {
+            "measure": {
+              "$in": [
+                "sg_population"
+              ]
+            }
+          },
           {
             "$and": [
               {
                 "$or": [
-                  {"dimensions": "$parsed_quarter_1"},
-                  {"dimensions": "$parsed_quarter_2"}
+                  {
+                    "dimensions": "$parsed_quarter_1"
+                  },
+                  {
+                    "dimensions": "$parsed_quarter_2"
+                  }
                 ]
               },
-              {"dimensions": "$parsed_geo_3"}
+              {
+                "dimensions": "$parsed_geo_3"
+              }
             ]
           }
         ]
-      },
-      "join": {
-        "$parsed_quarter_1": {
-          "domain": "quarter",
-          "parsedProperties.quarter.timeType": "QUARTER_TYPE",
-          "parsedProperties.quarter.millis": 1349049600000
-        },
-        "$parsed_quarter_2": {
-          "domain": "quarter",
-          "parsedProperties.quarter.timeType": "QUARTER_TYPE",
-          "parsedProperties.quarter.millis": 1435708800000
-        },
-        "$parsed_geo_3": {
-          "domain": "geo",
-          "gid": "dza",
-        },
-        "$parsed_domain_geo_4": {
-          "domain": "geo",
-        },
-        "$parsed_domain_quarter_5": {
-          "domain": "quarter"
-        }
       }
     };
 
@@ -292,10 +432,24 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       },
       "join": {
         "$parsed_domain_geo_1": {
-          "domain": "geo",
+          "$or": [
+            {
+              "domain": "17a3470d3a8c9b37009b9bf9"
+            },
+            {
+              "sets": "17a3470d3a8c9b37009b9bf9"
+            }
+          ]
         },
         "$parsed_domain_time_2": {
-          "domain": "time"
+          "$or": [
+            {
+              "domain": "27a3470d3a8c9b37009b9bf9"
+            },
+            {
+              "sets": "27a3470d3a8c9b37009b9bf9"
+            }
+          ]
         }
       }
     };
@@ -335,43 +489,97 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     };
 
     const normalizedDdfql = {
-      "select": {
-        "key": ["geo", "time"],
-        "value": ["sg_population"]
-      },
       "from": "datapoints",
-      "where": {
-        "$and": [
-          {"dimensions": {
-            "$size": 2,
-            "$all": [
-              {"$elemMatch": "$parsed_domain_geo_2"},
-              {"$elemMatch": "$parsed_domain_time_3"}
-            ]
-          }},
-          {"measure": {"$in": ["sg_population"]}},
-          {"$and": [
-            {"dimensions": "$geo"},
-            {"dimensions": "$parsed_time_1"}
-          ]}
-        ],
-      },
       "join": {
         "$geo": {
-          "domain": "geo",
+          "$or": [
+            {
+              "domain": "17a3470d3a8c9b37009b9bf9"
+            },
+            {
+              "sets": "17a3470d3a8c9b37009b9bf9"
+            }
+          ],
           "properties.is--country": true
         },
-        "$parsed_time_1": {
-          "domain": "time",
-          "parsedProperties.time.timeType": "YEAR_TYPE",
-          "parsedProperties.time.millis": {"$lte": 1420070400000, "$gte": -5364662400000}
-        },
         "$parsed_domain_geo_2": {
-          "domain": "geo",
+          "$or": [
+            {
+              "domain": "17a3470d3a8c9b37009b9bf9"
+            },
+            {
+              "sets": "17a3470d3a8c9b37009b9bf9"
+            }
+          ]
         },
         "$parsed_domain_time_3": {
-          "domain": "time"
+          "$or": [
+            {
+              "domain": "27a3470d3a8c9b37009b9bf9"
+            },
+            {
+              "sets": "27a3470d3a8c9b37009b9bf9"
+            }
+          ]
+        },
+        "$parsed_time_1": {
+          "$or": [
+            {
+              "domain": "27a3470d3a8c9b37009b9bf9"
+            },
+            {
+              "sets": "27a3470d3a8c9b37009b9bf9"
+            }
+          ],
+          "parsedProperties.time.millis": {
+            "$gte": -5364662400000,
+            "$lte": 1420070400000
+          },
+          "parsedProperties.time.timeType": "YEAR_TYPE"
         }
+      },
+      "select": {
+        "key": [
+          "geo",
+          "time"
+        ],
+        "value": [
+          "sg_population"
+        ]
+      },
+      "where": {
+        "$and": [
+          {
+            "dimensions": {
+              "$all": [
+                {
+                  "$elemMatch": "$parsed_domain_geo_2"
+                },
+                {
+                  "$elemMatch": "$parsed_domain_time_3"
+                }
+              ],
+              "$size": 2
+            }
+          },
+          {
+            "measure": {
+              "$in": [
+                "sg_population"
+              ]
+            }
+          },
+          {
+            "$and": [
+              {
+                "dimensions": "$geo"
+              },
+              {
+                "dimensions": "$parsed_time_1"
+              }
+            ]
+          }
+        ]
       }
     };
 
@@ -410,43 +618,97 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     };
 
     const normalizedDdfql = {
-      "select": {
-        "key": ["geo", "time"],
-        "value": ["sg_population"]
-      },
       "from": "datapoints",
-      "where": {
-        "$and": [
-          {"dimensions": {
-            "$size": 2,
-            "$all": [
-              {"$elemMatch": "$parsed_domain_geo_2"},
-              {"$elemMatch": "$parsed_domain_time_3"}
-            ]
-          }},
-          {"measure": {"$in": ["sg_population"]}},
-          {"$and": [
-            {"dimensions": "$geo"},
-            {"dimensions": "$parsed_time_1"}
-          ]}
-        ],
-      },
       "join": {
         "$geo": {
-          "domain": "geo",
+          "$or": [
+            {
+              "domain": "17a3470d3a8c9b37009b9bf9"
+            },
+            {
+              "sets": "17a3470d3a8c9b37009b9bf9"
+            }
+          ],
           "properties.is--country": true
         },
-        "$parsed_time_1": {
-          "domain": "time",
-          "parsedProperties.time.timeType": "YEAR_TYPE",
-          "parsedProperties.time.millis": {"$lte": 1420070400000, "$gte": -5364662400000}
-        },
         "$parsed_domain_geo_2": {
-          "domain": "geo",
+          "$or": [
+            {
+              "domain": "17a3470d3a8c9b37009b9bf9"
+            },
+            {
+              "sets": "17a3470d3a8c9b37009b9bf9"
+            }
+          ]
         },
         "$parsed_domain_time_3": {
-          "domain": "time"
+          "$or": [
+            {
+              "domain": "27a3470d3a8c9b37009b9bf9"
+            },
+            {
+              "sets": "27a3470d3a8c9b37009b9bf9"
+            }
+          ]
+        },
+        "$parsed_time_1": {
+          "$or": [
+            {
+              "domain": "27a3470d3a8c9b37009b9bf9"
+            },
+            {
+              "sets": "27a3470d3a8c9b37009b9bf9"
+            }
+          ],
+          "parsedProperties.time.millis": {
+            "$gte": -5364662400000,
+            "$lte": 1420070400000
+          },
+          "parsedProperties.time.timeType": "YEAR_TYPE"
         }
+      },
+      "select": {
+        "key": [
+          "geo",
+          "time"
+        ],
+        "value": [
+          "sg_population"
+        ]
+      },
+      "where": {
+        "$and": [
+          {
+            "dimensions": {
+              "$all": [
+                {
+                  "$elemMatch": "$parsed_domain_geo_2"
+                },
+                {
+                  "$elemMatch": "$parsed_domain_time_3"
+                }
+              ],
+              "$size": 2
+            }
+          },
+          {
+            "measure": {
+              "$in": [
+                "sg_population"
+              ]
+            }
+          },
+          {
+            "$and": [
+              {
+                "dimensions": "$geo"
+              },
+              {
+                "dimensions": "$parsed_time_1"
+              }
+            ]
+          }
+        ]
       }
     };
 
@@ -482,39 +744,85 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     };
 
     const normalizedDdfql = {
-      "select": {
-        "key": ["geo", "time"],
-        "value": ["sg_population"]
-      },
       "from": "datapoints",
+      "join": {
+        "$parsed_domain_geo_2": {
+          "$or": [
+            {
+              "domain": "17a3470d3a8c9b37009b9bf9"
+            },
+            {
+              "sets": "17a3470d3a8c9b37009b9bf9"
+            }
+          ]
+        },
+        "$parsed_domain_time_3": {
+          "$or": [
+            {
+              "domain": "27a3470d3a8c9b37009b9bf9"
+            },
+            {
+              "sets": "27a3470d3a8c9b37009b9bf9"
+            }
+          ]
+        },
+        "$parsed_geo_1": {
+          "$or": [
+            {
+              "domain": "17a3470d3a8c9b37009b9bf9"
+            },
+            {
+              "sets": "17a3470d3a8c9b37009b9bf9"
+            }
+          ],
+          "gid": {
+            "$in": [
+              "dza",
+              "usa",
+              "ukr"
+            ]
+          }
+        }
+      },
+      "select": {
+        "key": [
+          "geo",
+          "time"
+        ],
+        "value": [
+          "sg_population"
+        ]
+      },
       "where": {
         "$and": [
-          {"dimensions": {
-            "$size": 2,
-            "$all": [
-              {"$elemMatch": "$parsed_domain_geo_2"},
-              {"$elemMatch": "$parsed_domain_time_3"}
-            ]
-          }},
-          {"measure": {"$in": ["sg_population"]}},
           {
-            "$and":[
-              {"dimensions": "$parsed_geo_1"}
+            "dimensions": {
+              "$all": [
+                {
+                  "$elemMatch": "$parsed_domain_geo_2"
+                },
+                {
+                  "$elemMatch": "$parsed_domain_time_3"
+                }
+              ],
+              "$size": 2
+            }
+          },
+          {
+            "measure": {
+              "$in": [
+                "sg_population"
+              ]
+            }
+          },
+          {
+            "$and": [
+              {
+                "dimensions": "$parsed_geo_1"
+              }
             ]
           }
         ]
-      },
-      "join": {
-        "$parsed_geo_1": {
-          "domain": "geo",
-          "gid": {"$in": ["dza", "usa", "ukr"]}
-        },
-        "$parsed_domain_time_3": {
-          "domain": "time"
-        },
-        "$parsed_domain_geo_2": {
-          "domain": "geo",
-        }
       }
     };
 
@@ -545,39 +853,89 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     };
 
     const normalizedDdfql = {
-      "select": {
-        "key": ["company", "project"],
-        "value": ["lines_of_code"]
-      },
       "from": "datapoints",
+      "join": {
+        "$parsed_domain_company_2": {
+          "$or": [
+            {
+              "domain": "17a3470d3a8c9b37429b9bf9"
+            },
+            {
+              "sets": "17a3470d3a8c9b37429b9bf9"
+            }
+          ]
+        },
+        "$parsed_domain_project_3": {
+          "$or": [
+            {
+              "domain": "27a3470d3a8c9b37429b9bf9"
+            },
+            {
+              "sets": "27a3470d3a8c9b37429b9bf9"
+            }
+          ]
+        },
+        "$parsed_project_1": {
+          "$or": [
+            {
+              "domain": "27a3470d3a8c9b37429b9bf9"
+            },
+            {
+              "sets": "27a3470d3a8c9b37429b9bf9"
+            }
+          ],
+          "gid": {
+            "$in": [
+              "vizabi",
+              "ws",
+              "mic"
+            ],
+            "$ne": "xbox",
+            "$nin": [
+              "office"
+            ]
+          }
+        }
+      },
+      "select": {
+        "key": [
+          "company",
+          "project"
+        ],
+        "value": [
+          "lines_of_code"
+        ]
+      },
       "where": {
         "$and": [
-          {"dimensions": {
-            "$size": 2,
-            "$all": [
-              {"$elemMatch": "$parsed_domain_company_2"},
-              {"$elemMatch": "$parsed_domain_project_3"}
-            ]
-          }},
-          {"measure": {"$in": ["lines_of_code"]}},
           {
-            "$and":[
-              {"dimensions": "$parsed_project_1"},
+            "dimensions": {
+              "$all": [
+                {
+                  "$elemMatch": "$parsed_domain_company_2"
+                },
+                {
+                  "$elemMatch": "$parsed_domain_project_3"
+                }
+              ],
+              "$size": 2
+            }
+          },
+          {
+            "measure": {
+              "$in": [
+                "lines_of_code"
+              ]
+            }
+          },
+          {
+            "$and": [
+              {
+                "dimensions": "$parsed_project_1"
+              }
             ]
           }
         ]
-      },
-      "join": {
-        "$parsed_project_1": {
-          "domain": "project",
-          "gid": {"$ne": "xbox", "$nin": ["office"], "$in": ["vizabi","ws","mic"]}
-        },
-        "$parsed_domain_company_2": {
-          "domain": "company"
-        },
-        "$parsed_domain_project_3": {
-          "domain": "project"
-        }
       }
     };
 
@@ -619,42 +977,88 @@ describe('ddf datapoints query normalizer - different time types', () => {
     };
 
     const normalizedDdfql = {
+      "from": "datapoints",
+      "join": {
+        "$parsed_domain_geo_1": {
+          "$or": [
+            {
+              "domain": "17a3470d3a8c9b37009b9bf9"
+            },
+            {
+              "sets": "17a3470d3a8c9b37009b9bf9"
+            }
+          ]
+        },
+        "$parsed_domain_time_1": {
+          "$or": [
+            {
+              "domain": "27a3470d3a8c9b37009b9bf9"
+            },
+            {
+              "sets": "27a3470d3a8c9b37009b9bf9"
+            }
+          ]
+        },
+        "$time": {
+          "$or": [
+            {
+              "domain": "27a3470d3a8c9b37009b9bf9"
+            },
+            {
+              "sets": "27a3470d3a8c9b37009b9bf9"
+            }
+          ],
+          "parsedProperties.time.millis": {
+            "$lt": 1435708800000
+          },
+          "parsedProperties.time.timeType": "QUARTER_TYPE"
+        }
+      },
       "select": {
-        "key": ["geo", "time"],
+        "key": [
+          "geo",
+          "time"
+        ],
         "value": [
-          "population", "life_expectancy", "gdp_per_cap", "gov_type"
+          "population",
+          "life_expectancy",
+          "gdp_per_cap",
+          "gov_type"
         ]
       },
-      "from": "datapoints",
       "where": {
         "$and": [
-          {"dimensions": {
-            "$size": 2,
-            "$all": [
-              {"$elemMatch": "$parsed_domain_geo_1"},
-              {"$elemMatch": "$parsed_domain_time_1"}
-            ]
-          }},
-          {"measure": {"$in": ["population", "life_expectancy", "gdp_per_cap", "gov_type"]}},
+          {
+            "dimensions": {
+              "$all": [
+                {
+                  "$elemMatch": "$parsed_domain_geo_1"
+                },
+                {
+                  "$elemMatch": "$parsed_domain_time_1"
+                }
+              ],
+              "$size": 2
+            }
+          },
+          {
+            "measure": {
+              "$in": [
+                "population",
+                "life_expectancy",
+                "gdp_per_cap",
+                "gov_type"
+              ]
+            }
+          },
           {
             "$and": [
-              {"dimensions": "$time"},
+              {
+                "dimensions": "$time"
+              }
             ]
           }
         ]
-      },
-      "join": {
-        "$time": {
-          "domain": "time",
-          "parsedProperties.time.timeType": "QUARTER_TYPE",
-          "parsedProperties.time.millis": {"$lt": 1435708800000}
-        },
-        "$parsed_domain_geo_1": {
-          "domain": "geo",
-        },
-        "$parsed_domain_time_1": {
-          "domain": "time"
-        }
       }
     };
 
@@ -692,42 +1096,88 @@ describe('ddf datapoints query normalizer - different time types', () => {
     };
 
     const normalizedDdfql = {
+      "from": "datapoints",
+      "join": {
+        "$parsed_domain_geo_1": {
+          "$or": [
+            {
+              "domain": "17a3470d3a8c9b37009b9bf9"
+            },
+            {
+              "sets": "17a3470d3a8c9b37009b9bf9"
+            }
+          ]
+        },
+        "$parsed_domain_time_1": {
+          "$or": [
+            {
+              "domain": "27a3470d3a8c9b37009b9bf9"
+            },
+            {
+              "sets": "27a3470d3a8c9b37009b9bf9"
+            }
+          ]
+        },
+        "$time": {
+          "$or": [
+            {
+              "domain": "27a3470d3a8c9b37009b9bf9"
+            },
+            {
+              "sets": "27a3470d3a8c9b37009b9bf9"
+            }
+          ],
+          "parsedProperties.time.millis": {
+            "$lt": 1420070400000
+          },
+          "parsedProperties.time.timeType": "YEAR_TYPE"
+        }
+      },
       "select": {
-        "key": ["geo", "time"],
+        "key": [
+          "geo",
+          "time"
+        ],
         "value": [
-          "population", "life_expectancy", "gdp_per_cap", "gov_type"
+          "population",
+          "life_expectancy",
+          "gdp_per_cap",
+          "gov_type"
         ]
       },
-      "from": "datapoints",
       "where": {
         "$and": [
-          {"dimensions": {
-            "$size": 2,
-            "$all": [
-              {"$elemMatch": "$parsed_domain_geo_1"},
-              {"$elemMatch": "$parsed_domain_time_1"}
-            ]
-          }},
-          {"measure": {"$in": ["population", "life_expectancy", "gdp_per_cap", "gov_type"]}},
+          {
+            "dimensions": {
+              "$all": [
+                {
+                  "$elemMatch": "$parsed_domain_geo_1"
+                },
+                {
+                  "$elemMatch": "$parsed_domain_time_1"
+                }
+              ],
+              "$size": 2
+            }
+          },
+          {
+            "measure": {
+              "$in": [
+                "population",
+                "life_expectancy",
+                "gdp_per_cap",
+                "gov_type"
+              ]
+            }
+          },
           {
             "$and": [
-              {"dimensions": "$time"}
+              {
+                "dimensions": "$time"
+              }
             ]
           }
         ]
-      },
-      "join": {
-        "$time": {
-          "domain": "time",
-          "parsedProperties.time.timeType": "YEAR_TYPE",
-          "parsedProperties.time.millis": {"$lt": 1420070400000}
-        },
-        "$parsed_domain_geo_1": {
-          "domain": "geo",
-        },
-        "$parsed_domain_time_1": {
-          "domain": "time"
-        }
       }
     };
 
@@ -765,54 +1215,98 @@ describe('ddf datapoints query normalizer - different time types', () => {
     };
 
     const normalizedDdfql = {
-      "select": {
-        "key": ["geo", "time"],
-        "value": [
-          "population", "life_expectancy", "gdp_per_cap", "gov_type"
-        ]
-      },
       "from": "datapoints",
-      "where": {
-        "$and": [
-          {"dimensions": {
-            "$size": 2,
-            "$all": [
-              {"$elemMatch": "$parsed_domain_geo_1"},
-              {"$elemMatch": "$parsed_domain_time_1"}
-            ]
-          }},
-          {"measure": {"$in": ["population", "life_expectancy", "gdp_per_cap", "gov_type"]}},
-          {
-            "$and": [
-              {"dimensions": "$time"}
-            ]
-          }
-        ]
-      },
       "join": {
-        "$time": {
-          "domain": "time",
-          "$and": [
+        "$parsed_domain_geo_1": {
+          "$or": [
             {
-              "parsedProperties.time.timeType": "WEEK_TYPE",
-              "parsedProperties.time.millis": {
-                "$lt": 1422230400000
-              }
+              "domain": "17a3470d3a8c9b37009b9bf9"
             },
             {
-              "parsedProperties.time.timeType": "WEEK_TYPE",
-              "parsedProperties.time.millis": {
-                "$gt": 1420416000000
-              }
+              "sets": "17a3470d3a8c9b37009b9bf9"
             }
           ]
         },
-        "$parsed_domain_geo_1": {
-          "domain": "geo",
-        },
         "$parsed_domain_time_1": {
-          "domain": "time"
+          "$or": [
+            {
+              "domain": "27a3470d3a8c9b37009b9bf9"
+            },
+            {
+              "sets": "27a3470d3a8c9b37009b9bf9"
+            }
+          ]
+        },
+        "$time": {
+          "$and": [
+            {
+              "parsedProperties.time.millis": {
+                "$lt": 1422230400000
+              },
+              "parsedProperties.time.timeType": "WEEK_TYPE"
+            },
+            {
+              "parsedProperties.time.millis": {
+                "$gt": 1420416000000
+              },
+              "parsedProperties.time.timeType": "WEEK_TYPE"
+            }
+          ],
+          "$or": [
+            {
+              "domain": "27a3470d3a8c9b37009b9bf9"
+            },
+            {
+              "sets": "27a3470d3a8c9b37009b9bf9"
+            }
+          ]
         }
+      },
+      "select": {
+        "key": [
+          "geo",
+          "time"
+        ],
+        "value": [
+          "population",
+          "life_expectancy",
+          "gdp_per_cap",
+          "gov_type"
+        ]
+      },
+      "where": {
+        "$and": [
+          {
+            "dimensions": {
+              "$all": [
+                {
+                  "$elemMatch": "$parsed_domain_geo_1"
+                },
+                {
+                  "$elemMatch": "$parsed_domain_time_1"
+                }
+              ],
+              "$size": 2
+            }
+          },
+          {
+            "measure": {
+              "$in": [
+                "population",
+                "life_expectancy",
+                "gdp_per_cap",
+                "gov_type"
+              ]
+            }
+          },
+          {
+            "$and": [
+              {
+                "dimensions": "$time"
+              }
+            ]
+          }
+        ]
       }
     };
 
@@ -853,54 +1347,98 @@ describe('ddf datapoints query normalizer - different time types', () => {
     };
 
     const normalizedDdfql = {
-      "select": {
-        "key": ["geo", "time"],
-        "value": [
-          "population", "life_expectancy", "gdp_per_cap", "gov_type"
-        ]
-      },
       "from": "datapoints",
-      "where": {
-        "$and": [
-          {"dimensions": {
-            "$size": 2,
-            "$all": [
-              {"$elemMatch": "$parsed_domain_geo_1"},
-              {"$elemMatch": "$parsed_domain_time_1"}
-            ]
-          }},
-          {"measure": {"$in": ["population", "life_expectancy", "gdp_per_cap", "gov_type"]}},
-          {
-            "$and": [
-              {"dimensions": "$time"}
-            ]
-          }
-        ]
-      },
       "join": {
+        "$parsed_domain_geo_1": {
+          "$or": [
+            {
+              "domain": "17a3470d3a8c9b37009b9bf9"
+            },
+            {
+              "sets": "17a3470d3a8c9b37009b9bf9"
+            }
+          ]
+        },
+        "$parsed_domain_time_1": {
+          "$or": [
+            {
+              "domain": "27a3470d3a8c9b37009b9bf9"
+            },
+            {
+              "sets": "27a3470d3a8c9b37009b9bf9"
+            }
+          ]
+        },
         "$time": {
           "$and": [
             {
-              "parsedProperties.time.timeType": "DATE_TYPE",
               "parsedProperties.time.millis": {
                 "$lt": 1448928000000
-              }
+              },
+              "parsedProperties.time.timeType": "DATE_TYPE"
             },
             {
-              "parsedProperties.time.timeType": "DATE_TYPE",
               "parsedProperties.time.millis": {
                 "$gt": 1377993600000
-              }
+              },
+              "parsedProperties.time.timeType": "DATE_TYPE"
             }
           ],
-          "domain": "time"
-        },
-        "$parsed_domain_geo_1": {
-          "domain": "geo",
-        },
-        "$parsed_domain_time_1": {
-          "domain": "time"
+          "$or": [
+            {
+              "domain": "27a3470d3a8c9b37009b9bf9"
+            },
+            {
+              "sets": "27a3470d3a8c9b37009b9bf9"
+            }
+          ]
         }
+      },
+      "select": {
+        "key": [
+          "geo",
+          "time"
+        ],
+        "value": [
+          "population",
+          "life_expectancy",
+          "gdp_per_cap",
+          "gov_type"
+        ]
+      },
+      "where": {
+        "$and": [
+          {
+            "dimensions": {
+              "$all": [
+                {
+                  "$elemMatch": "$parsed_domain_geo_1"
+                },
+                {
+                  "$elemMatch": "$parsed_domain_time_1"
+                }
+              ],
+              "$size": 2
+            }
+          },
+          {
+            "measure": {
+              "$in": [
+                "population",
+                "life_expectancy",
+                "gdp_per_cap",
+                "gov_type"
+              ]
+            }
+          },
+          {
+            "$and": [
+              {
+                "dimensions": "$time"
+              }
+            ]
+          }
+        ]
       }
     };
 
