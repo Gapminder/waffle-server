@@ -13,7 +13,7 @@
     ["num_users", "num gebruikers"],
     ["latitude", "breedtegraad"],
     ["longitude", "Lengtegraad"],
-    ["full_name", "FULL_NAME veranderd"],
+    ["full_name_changed", "FULL_NAME veranderd"],
     ["project", "project"],
     ["domain", "domein"],
     ["additional_column", "extra kolom"]

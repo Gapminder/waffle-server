@@ -8,7 +8,7 @@
     ["gap", null, null, null, null],
     ["xsoft", null, null, null, null],
     ["mcrsft", "Microsoft", null, null, "any text 1"],
-    ["gap", "Gapminder", null, null, null, "any text 2"],
+    ["gap", "Gapminder", null, null, "any text 2"],
     ["small", null, null, "Niet heel groot", null],
     ["large", null, null, "HEEL GROOT!!!$(#(*#*($", null],
     ["medium", null, null, "middenweg", null]

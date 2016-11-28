@@ -476,7 +476,7 @@ describe("State Version 2 (3rd commit)", function() {
         "language": "nl-nl",
         "select": {
           "key": ["company"],
-          "value": ["name", "country", "full_name_changed"]
+          "value": ["name", "country", "full_name_changed", "additional_column"]
         },
         "from": "entities"
       };
