@@ -26,12 +26,12 @@ module.exports = serviceLocator => {
       datasetName,
       commit,
       collection,
-      queryToCollections,
+      queryToCollections
     };
 
       return propertiesByQueryService.getPopulateDocumentByQuery(externalContext, (error, document) => {
         if (error) {
-         return logger.error(error);
+         return logger.error('Wrong query!');
         }
 
         return res.json(document);

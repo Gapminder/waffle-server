@@ -2,11 +2,7 @@
 
 const mongoose = require('mongoose');
 const async = require('async');
-const _ = require('lodash');
-
-const Concepts = mongoose.model('Concepts');
-const DataPoints = mongoose.model('DataPoints');
-const Entities = mongoose.model('Entities');
+const logger = require('../../ws.config/log');
 
 const conceptsRepositoryFactory = require('../../ws.repository/ddf/concepts/concepts.repository');
 const datapointsRepositoryFactory = require('../../ws.repository/ddf/data-points/data-points.repository');
@@ -16,21 +12,26 @@ const datasetTransactionService = require('../../ws.services/dataset-transaction
 module.exports = {
   getPopulateDocumentByQuery
 };
-
-const objectIdsProperties = [
-  ['domain', 'Concepts'],
-  ['sets', 'Concepts'],
-  ['measure', 'Concepts'],
-  ['dimensionsConcepts', 'Concepts'],
-  ['dimensions', 'Entities']
-];
+const objectIdsProperties = {
+  concepts: [
+    ['domain', 'Concepts']
+  ],
+  entities: [
+    ['domain', 'Concepts'],
+    ['sets', 'Concepts']
+  ],
+  datapoints: [
+    ['measure', 'Concepts'],
+    ['dimensionsConcepts', 'Concepts'],
+    ['dimensions', 'Entities']
+  ]
+};
 
 function getPopulateDocumentByQuery(externalContext, onFound) {
 
   const {collection} = externalContext;
 
-
-  if (collection === 'Concepts') {
+  if (collection === 'concepts') {
     async.waterfall([
       async.constant(externalContext),
       findDatasetAndTransaction,
@@ -45,7 +46,8 @@ function getPopulateDocumentByQuery(externalContext, onFound) {
     })
   }
 
-  if (collection === 'Datapoints') {
+  if (collection === 'datapoints') {
+
     async.waterfall([
       async.constant(externalContext),
       findDatasetAndTransaction,
@@ -60,8 +62,7 @@ function getPopulateDocumentByQuery(externalContext, onFound) {
     })
   }
 
-
-  if (collection === 'Entities') {
+  if (collection === 'entities') {
     async.waterfall([
       async.constant(externalContext),
       findDatasetAndTransaction,
@@ -83,17 +84,17 @@ function findDatasetAndTransaction(externalContext, onFound) {
 
   return datasetTransactionService
     .findDefaultDatasetAndTransaction(datasetName, commit, (error, datasetAndTransaction) => {
-    if (error || !datasetAndTransaction) {
-      return onFound(error || `Dataset was not found: ${datasetName}`);
-    }
+      if (error || !datasetAndTransaction) {
+        return onFound(error || `Dataset was not found: ${datasetName}`);
+      }
 
-    const {dataset: {_id: datasetId}, transaction: {createdAt: version}} = datasetAndTransaction;
+      const {dataset: {_id: datasetId}, transaction: {createdAt: version}} = datasetAndTransaction;
 
-    externalContext.datasetId = datasetId;
-    externalContext.version = version;
+      externalContext.datasetId = datasetId;
+      externalContext.version = version;
 
-    return onFound(null, externalContext);
-  })
+      return onFound(null, externalContext);
+    })
 }
 
 function getConceptsDocuments(externalContext, onFound) {
@@ -102,9 +103,8 @@ function getConceptsDocuments(externalContext, onFound) {
   return conceptsRepositoryFactory
     .currentVersion(datasetId, version)
     .findConceptsByQuery(queryToCollections, (error, conceptsDocuments) => {
-
       if (error) {
-        return onFound(error);
+        return onFound(error || `Documents was not found`);
       }
 
       externalContext.documents = conceptsDocuments;
@@ -119,9 +119,8 @@ function getDataPointsDocuments(externalContext, onFound) {
   return datapointsRepositoryFactory
     .currentVersion(datasetId, version)
     .findByQuery(queryToCollections, (error, dataPointsDocuments) => {
-
       if (error) {
-        return onFound(error);
+        return onFound(error || `Documents was not found`);
       }
 
       externalContext.documents = dataPointsDocuments;
@@ -138,11 +137,10 @@ function getEntitiesDocuments(externalContext, onFound) {
     .findEntityPropertiesByQuery(queryToCollections, (error, entitiesDocuments) => {
 
       if (error) {
-        return onFound(error);
+        return onFound(error || `Documents was not found`);
       }
 
       externalContext.documents = entitiesDocuments;
-
       return onFound(null, externalContext);
     });
 }
@@ -151,48 +149,57 @@ function mapDocuments(externalContext, onFound) {
   let {documents} = externalContext;
 
   async.map(documents, (document, done) => {
-
     externalContext.document = document;
 
     return getAllPopulatedDocuments(externalContext, done);
-
   }, (error, populatedDocuments) => {
     if (error) {
-      return error;
+      return onFound(error || `Documents was not found`);
     }
 
     return onFound(null, populatedDocuments);
   });
 }
 
-function getAllPopulatedDocuments(externalContext, done) {
-  let {key, value, document} = externalContext;
+function getAllPopulatedDocuments(externalContext, onFound) {
+  let {document, collection} = externalContext;
 
-  async.reduce(document, {}, (key, document, callback) => {
-    return getDocumentProperties(key, externalContext, done)
+  async.reduce(objectIdsProperties[collection], document, (originalDocument, propertyContext, callback) => {
+    const key = propertyContext[0];
+    const subCollection = propertyContext[1];
+
+    return getDocumentProperties(originalDocument[key], subCollection, externalContext, (error, properties) => {
+      properties = Array.isArray(properties) ? properties : [properties];
+      originalDocument[key] = properties;
+      return callback(null, originalDocument);
+    });
+
+  }, (error, populatedDocument) => {
+    if (error) {
+      return logger.error('Wrong query!');
+    }
+    return onFound(null, populatedDocument);
   })
 }
 
-function getDocumentProperties(key, externalContext, done) {
-  let {datasetId, version, objectIds} = externalContext;
+function getDocumentProperties(objectIds, subCollection, externalContext, done) {
+  let {datasetId, version} = externalContext;
 
-
-  if (objectIdsProperties[value] === 'Concepts') {
+  if (subCollection === 'Concepts') {
     conceptsRepositoryFactory
       .currentVersion(datasetId, version)
       .findConceptsByQuery({'originId': {$in: objectIds}}, (error, documentFromConceptsCollection) => {
-
         return done(null, documentFromConceptsCollection);
       })
   }
 
-  if (objectIdsProperties[value] === 'Entities') {
+  if (subCollection === 'Entities') {
     entitiesRepositoryFactory
       .currentVersion(datasetId, version)
       .findEntityPropertiesByQuery({'originId': {$in: objectIds}}, (error, documentFromEntitiesCollection) => {
-
         return done(null, documentFromEntitiesCollection);
       })
   }
-
 }
+
+
