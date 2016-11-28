@@ -138,10 +138,10 @@ function removeTranslationFromConcept(options, onTranslationRemoved) {
     logger.debug('Translated concept was closed - new one with translation updated will be created. OriginId:', foundTranslationTarget.originId);
     closedTarget.languages = _.omit(closedTarget.languages, changesDescriptor.language);
 
-    const newConcept = ddfMappers.mapDdfConceptsToWsModel(closedTarget.properties, _.extend(context, {
+    const newConcept = ddfMappers.mapDdfConceptsToWsModel(closedTarget.properties, _.extend({
       domain: closedTarget.domain,
       languages: closedTarget.languages
-    }));
+    }, context));
 
     conceptsRepository.create(newConcept, onTranslationRemoved);
   });
@@ -170,16 +170,17 @@ function updateTranslation(options, makeTranslation, onTranslationAdded) {
   }
 
   return conceptsRepository.closeOneByQuery(fetchTranslationTargetQuery, (error, closedTarget) => {
+    logger.debug('Closing concept in order to create new one. Query: ', fetchTranslationTargetQuery);
     if (!closedTarget) {
       return onTranslationAdded(error);
     }
 
     closedTarget.languages = _.extend(closedTarget.languages, {[changesDescriptor.language]: newTranslation});
 
-    const newConcept = ddfMappers.mapDdfConceptsToWsModel(closedTarget.properties, _.extend(context, {
+    const newConcept = ddfMappers.mapDdfConceptsToWsModel(closedTarget.properties, _.extend({
       languages: closedTarget.languages,
       domain: closedTarget.domain
-    }));
+    }, context));
 
     conceptsRepository.create(newConcept, onTranslationAdded);
   });
