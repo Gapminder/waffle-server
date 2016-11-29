@@ -12,8 +12,8 @@ const updateConcepts = require('./update-concepts');
 const updateEntities = require('./update-entities');
 const updateDatapoints = require('./update-datapoints');
 const createDatasetIndex = require('../import-dataset-index');
-const updateConceptTranslations = require('./update-concept-translations');
-const updateEntityTranslations = require('./update-entity-translations');
+const updateEntityTranslations = require('./translations/update-entity-translations');
+const updateConceptTranslations = require('./translations/update-concept-translations');
 
 const DATASET_INCREMENTAL_UPDATE_LABEL = 'Dataset incremental update';
 
