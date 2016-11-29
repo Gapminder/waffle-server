@@ -57,12 +57,18 @@ EntitiesRepository.prototype.findOneByDomainAndSetsAndGid = function (params, do
   return Entities.findOne(query).lean().exec(done);
 };
 
+EntitiesRepository.prototype.findTargetForTranslation = function (params, done) {
+  return this.findOneByDomainAndSetsAndGid(params, done);
+};
+
 EntitiesRepository.prototype.removeTranslation = function ({entityOriginId, language}, done) {
   return Entities.findOneAndUpdate({originId: entityOriginId}, {$unset: {[`languages.${language}`]: 1}}, {new: true}, done);
 };
 
-EntitiesRepository.prototype.addTranslation = function ({entityId, language, translation}, done) {
-  return Entities.findOneAndUpdate({_id: entityId}, {$set: {[`languages.${language}`]: translation}}, {new: true}, done);
+EntitiesRepository.prototype.addTranslation = function (options, done) {
+  const {id, language, translation} = options;
+
+  return Entities.findOneAndUpdate({_id: id || options.entityId}, {$set: {[`languages.${language}`]: translation}}, {new: true}, done);
 };
 
 EntitiesRepository.prototype.create = function (entityOrBatchOfEntities, onCreated) {

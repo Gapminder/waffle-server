@@ -119,7 +119,8 @@ function mapDdfConceptsToWsModel(entry, context) {
 
     from: context.version,
     to: constants.MAX_VERSION,
-    dataset: context.datasetId
+    dataset: context.datasetId,
+    originId: _.get(context, 'originId', null)
   };
 
   if (context.filename) {

@@ -126,6 +126,10 @@ ConceptsRepository.prototype.findByGid = function (gid, onFound) {
   return Concepts.findOne(query).lean().exec(onFound);
 };
 
+ConceptsRepository.prototype.findTargetForTranslation = function (params, done) {
+  return this.findByGid(params.gid, done);
+};
+
 ConceptsRepository.prototype.removeTranslation = function ({originId, language}, done) {
   return Concepts.findOneAndUpdate({originId}, {$unset: {[`languages.${language}`]: 1}}, {new: true}, done);
 };

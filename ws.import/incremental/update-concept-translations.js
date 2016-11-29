@@ -140,7 +140,8 @@ function removeTranslationFromConcept(options, onTranslationRemoved) {
 
     const newConcept = ddfMappers.mapDdfConceptsToWsModel(closedTarget.properties, _.extend({
       domain: closedTarget.domain,
-      languages: closedTarget.languages
+      languages: closedTarget.languages,
+      originId: closedTarget.originId
     }, context));
 
     conceptsRepository.create(newConcept, onTranslationRemoved);
@@ -179,7 +180,8 @@ function updateTranslation(options, makeTranslation, onTranslationAdded) {
 
     const newConcept = ddfMappers.mapDdfConceptsToWsModel(closedTarget.properties, _.extend({
       languages: closedTarget.languages,
-      domain: closedTarget.domain
+      domain: closedTarget.domain,
+      originId: closedTarget.originId
     }, context));
 
     conceptsRepository.create(newConcept, onTranslationAdded);

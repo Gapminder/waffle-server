@@ -31,10 +31,8 @@ const MONGODB_DOC_CREATION_THREADS_AMOUNT = 3;
 const RESERVED_PROPERTIES = ['properties', 'dimensions', 'subsetOf', 'from', 'to', 'originId', 'gid', 'domain', 'type', 'languages'];
 
 const ddfValidationConfig = {
-  datapointlessMode: true,
   includeTags: 'WAFFLE_SERVER',
-  excludeRules: 'FILENAME_DOES_NOT_MATCH_HEADER',
-  indexlessMode: true
+  datapointlessMode: true
 };
 
 module.exports = {
