@@ -31,7 +31,6 @@ const MONGODB_DOC_CREATION_THREADS_AMOUNT = 3;
 const RESERVED_PROPERTIES = ['properties', 'dimensions', 'subsetOf', 'from', 'to', 'originId', 'gid', 'domain', 'type', 'languages'];
 
 const ddfValidationConfig = {
-  includeTags: 'WAFFLE_SERVER',
   datapointlessMode: true
 };
 
