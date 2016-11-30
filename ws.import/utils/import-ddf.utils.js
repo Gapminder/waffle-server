@@ -81,6 +81,7 @@ function getAllPreviousConcepts(externalContext, done) {
 }
 
 function activateLifecycleHook(hookName) {
+  logger.info('Trying to activate lifecycle hook: ', hookName);
   const actualParameters = [].slice.call(arguments, 1);
   return (pipe, done) => {
     return async.setImmediate(() => {
@@ -176,6 +177,7 @@ function readCsvFile(pathToDdfFolder, filepath, options, cb) {
 }
 
 function cloneDdfRepo(pipe, done) {
+  logger.info('Clone ddf repo: ', pipe.github, pipe.commit);
   return reposService.cloneRepo(pipe.github, pipe.commit, (error, repoInfo) => {
     pipe.repoInfo = repoInfo;
     return done(error, pipe);
@@ -183,6 +185,7 @@ function cloneDdfRepo(pipe, done) {
 }
 
 function validateDdfRepo(pipe, onDdfRepoValidated) {
+  logger.info('Start ddf dataset validation process: ', _.get(pipe.repoInfo, 'pathToRepo'));
   const simpleDdfValidator = new SimpleDdfValidator(pipe.repoInfo.pathToRepo, ddfValidationConfig);
   simpleDdfValidator.on('finish', (error, isDatasetCorrect) => {
     if (error) {
@@ -199,11 +202,15 @@ function validateDdfRepo(pipe, onDdfRepoValidated) {
 }
 
 function generateDiffForDatasetUpdate(context, done) {
+  logger.info('Generating diff for dataset update');
   const {hashFrom, hashTo, github} = context;
   return wsCli.generateDiff({hashFrom, hashTo, github, resultPath: config.PATH_TO_DIFF_DDF_RESULT_FILE}, (error, diffPaths) => {
     if (error) {
       return done(error);
     }
+
+    logger.info('Generated diff is:');
+    logger.info({obj: diffPaths});
 
     const {diff: pathToDatasetDiff, lang: pathToLangDiff} = diffPaths;
     return done(null, _.extend(context, {pathToDatasetDiff, pathToLangDiff}));
@@ -218,8 +225,15 @@ function resolvePathToDdfFolder(pipe, done) {
 }
 
 function getDatapackage(context, done) {
+  logger.info('Loading datapackage.json');
+
   const pathToDdfRepo = reposService.getPathToRepo(context.datasetName);
   return datapackageParser.loadDatapackage({folder: pathToDdfRepo}, (error, datapackage) => {
+    if (error) {
+      logger.error('Datapackage was not loaded');
+      return done(error);
+    }
+
     context.datapackage = datapackage;
     return done(error, context);
   });
@@ -270,14 +284,26 @@ function createDataset(pipe, done) {
 }
 
 function findDataset(pipe, done) {
+  logger.info('Searching for existing dataset: ', pipe.datasetName);
+
   return datasetsRepository.findByName(pipe.datasetName, (err, dataset) => {
+    if (err) {
+      return done(err);
+    }
+
+    if (!dataset) {
+      return done('Dataset was not found, hence update is impossible');
+    }
+
+    logger.info('Existing dataset was found: ', dataset.name);
+
     pipe.dataset = dataset;
     return done(err, pipe);
   });
 }
 
 function establishTransactionForDataset(pipe, done) {
-  logger.info('update transaction');
+  logger.info('Establishing current transaction for dataset');
 
   const options = {
     transactionId: pipe.transaction._id,
