@@ -142,7 +142,7 @@ function removeTranslationFromTarget(translationsApi, options, onTranslationRemo
   if (foundTarget.to === context.version) {
     logger.debug('Translation target was updated in current transaction');
     return translationsApi.removeTranslation({
-      entityOriginId: foundTarget.originId,
+      originId: foundTarget.originId,
       language: changesDescriptor.language
     }, onTranslationRemoved);
   }
@@ -191,9 +191,9 @@ function updateTranslation(translationsApi, options, onTranslationAdded) {
     }
 
     closedTarget.languages = _.extend(closedTarget.languages, {[changesDescriptor.language]: processedTranslation});
-    const newEntity = translationsApi.makeTranslationTargetBasedOnItsClosedVersion(closedTarget, context);
+    const newTarget = translationsApi.makeTranslationTargetBasedOnItsClosedVersion(closedTarget, context);
 
-    translationsApi.create(newEntity, onTranslationAdded);
+    translationsApi.create(newTarget, onTranslationAdded);
   });
 }
 
