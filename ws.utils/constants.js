@@ -44,6 +44,7 @@ module.exports = {
 
   EXCLUDED_QUERY_PARAMS: ['dataset', 'version', 'v', 'format', 'no-compression', 'key', 'geo.cat', 'force'],
   DEFAULT_ENTITY_GROUP_TYPES,
+  DEFAULT_DDF_LANGUAGE_FOLDER: 'lang',
   TIME_CONCEPT_TYPES,
   GID_REGEXP: /^[a-z0-9_]*$/,
 

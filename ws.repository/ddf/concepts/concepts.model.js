@@ -13,8 +13,8 @@ const Concepts = new Schema({
   type: {type: String, enum: [... constants.DEFAULT_ENTITY_GROUP_TYPES, 'string', 'measure'], 'default': 'string', required: true},
   sources: [{type: String, required: true}],
 
-  properties: {},
-  languages: {},
+  properties: {type: Schema.Types.Mixed, default: {}},
+  languages: {type: Schema.Types.Mixed, default: {}},
 
   isNumeric: {type: Boolean, index: true, sparse: true},
   domain: {type: Schema.Types.ObjectId, sparse: true},
@@ -23,7 +23,7 @@ const Concepts = new Schema({
   from: {type: Number, required: true},
   to: {type: Number, required: true, default: Number.MAX_SAFE_INTEGER},
   dataset: {type: Schema.Types.ObjectId, ref: 'Datasets', required: true},
-}, { strict: false });
+}, { strict: false, minimize: false });
 
 Concepts.post('save', function (doc, next) {
   if (!doc.originId) {

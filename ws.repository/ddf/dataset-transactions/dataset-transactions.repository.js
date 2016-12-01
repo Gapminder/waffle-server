@@ -89,6 +89,14 @@ DatasetTransactionsRepository.prototype.establishForDataset = function ({transac
   return DatasetTransactions.findOneAndUpdate({_id: transactionId}, {$set: {dataset: datasetId}}, {new: true}, onEstablished);
 };
 
+DatasetTransactionsRepository.prototype.updateLanguages = function ({languages, transactionId}, onLanguagesUpdated) {
+  if (!transactionId) {
+    return onLanguagesUpdated('TransactionId is required');
+  }
+
+  return DatasetTransactions.findOneAndUpdate({_id: transactionId}, {$set: {languages: languages}}, {new: true}, onLanguagesUpdated);
+};
+
 DatasetTransactionsRepository.prototype.findDefault = function (options, onDefaultFound) {
   const queryParams = {};
   if (options.datasetId) {

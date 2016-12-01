@@ -1,9 +1,11 @@
 'use strict';
 
 const _ = require('lodash');
+const ddfMappers = require('./ddf-mappers');
 
 module.exports = {
-  getSetsAndDomain
+  getSetsAndDomain,
+  makeEntityBasedOnItsClosedVersion
 };
 
 function getSetsAndDomain(resource, context) {
@@ -16,4 +18,31 @@ function getSetsAndDomain(resource, context) {
   });
 
   return {entitySet, entityDomain, entitySetsOriginIds};
+}
+
+function makeEntityBasedOnItsClosedVersion(properties, closedEntity, externalContext) {
+  const {
+    entitySet,
+    concepts,
+    entityDomain,
+    filename,
+    timeConcepts,
+    version,
+    datasetId
+  } = externalContext;
+
+  const context = {
+    entitySet,
+    concepts,
+    entityDomain,
+    filename,
+    timeConcepts,
+    version,
+    datasetId,
+    originId: closedEntity.originId,
+    sources: closedEntity.sources,
+    languages: closedEntity.languages
+  };
+
+  return ddfMappers.mapDdfEntityToWsModel(properties, context);
 }

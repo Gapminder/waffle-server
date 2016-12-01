@@ -8,7 +8,8 @@ const constants = require('../ws.utils/constants');
 module.exports = {
   findDefaultDatasetAndTransaction,
   shouldCompress,
-  translate
+  translate,
+  translateDocument
 };
 
 function shouldCompress(req, res) {
@@ -34,15 +35,21 @@ function findDefaultDatasetAndTransaction(pipe, done) {
   });
 }
 
+function translateDocument(target, language) {
+  if (language) {
+    return _.extend({}, target.properties, _.get(target.languages, language, {}));
+  }
+
+  return target.properties;
+}
+
 function translate(translationTargetName, pipe, done) {
   if (!_.includes(pipe.transaction.languages, pipe.language)) {
     return done(null, pipe);
   }
 
   pipe[translationTargetName] = _.map(pipe[translationTargetName], target => {
-    target.properties = _.mapValues(target.properties, (value, key) => {
-      return target.languages[pipe.language][key] || value;
-    });
+    target.properties = _.extend(target.properties, _.get(target.languages, `${pipe.language}`));
     return target;
   });
 

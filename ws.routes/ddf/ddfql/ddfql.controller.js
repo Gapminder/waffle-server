@@ -58,8 +58,8 @@ module.exports = serviceLocator => {
     const headers = _.union(domainGids, select);
     const sort = _.get(req, 'body.order_by', []);
     const groupBy = _.get(req, 'body.group_by', {});
-    const datasetName = _.chain(req).get('body.dataset', []).first().value();
-    const version = _.chain(req).get('body.version', []).first().value();
+    const datasetName = _.get(req, 'body.dataset', null);
+    const version = _.get(req, 'body.version', null);
 
     const options = {
       from,

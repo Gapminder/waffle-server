@@ -12,27 +12,16 @@ module.exports = {
   mapDdfEntityToWsModel,
   mapDdfConceptsToWsModel,
   mapDdfEntityFoundInDatapointToWsModel,
-  mapDdfDataPointToWsModel
+  mapDdfDataPointToWsModel,
+  transformEntityTranslation,
+  transformConceptTranslation
 };
 
 function mapDdfEntityToWsModel(entry, context) {
     const gid = getGid(context.entitySet, entry);
     const resolvedColumns = mapResolvedColumns(entry);
     const resolvedSets = mapResolvedSets(context.concepts, resolvedColumns);
-    const _entry = _.mapValues(entry, value => {
-
-      const ddfBool = ddfImportUtils.toBoolean(value);
-      if (!_.isNil(ddfBool)) {
-        return ddfBool;
-      }
-
-      const ddfNumeric = ddfImportUtils.toNumeric(value);
-      if (!_.isNil(ddfNumeric)) {
-        return ddfNumeric;
-      }
-
-      return value;
-    });
+    const transformedEntry = transformEntityProperties(entry);
 
     const domainOriginId = _.get(context, 'entityDomain.originId', context.entityDomain);
 
@@ -42,11 +31,11 @@ function mapDdfEntityToWsModel(entry, context) {
     return {
       gid: gid,
       sources: combinedSources,
-      properties: _entry,
-      parsedProperties: ddfImportUtils.parseProperties(context.entityDomain, gid, _entry, context.timeConcepts),
+      properties: transformedEntry,
+      parsedProperties: ddfImportUtils.parseProperties(context.entityDomain, gid, transformedEntry, context.timeConcepts),
 
       originId: _.get(context, 'originId', null),
-      languages: _.get(context, 'languages', null),
+      languages: transformTranslations(context.languages, transformEntityTranslation),
 
       domain: domainOriginId,
       sets: resolvedSets,
@@ -83,7 +72,7 @@ function mapDdfDataPointToWsModel(entry, context) {
 
           properties: entry,
           originId: entry.originId,
-          languages: _.get(context, 'languages', null),
+          languages: _.get(context, 'languages', {}),
 
           isNumeric: !_.isNil(datapointValueAsNumber),
           from: context.version,
@@ -112,7 +101,7 @@ function mapDdfEntityFoundInDatapointToWsModel(datapoint, context) {
 }
 
 function mapDdfConceptsToWsModel(entry, context) {
-  const transformedEntry = transformPropsToJsonWherePossible(entry);
+  const transformedEntry = transformConceptProperties(entry);
 
   const concept = {
     gid: transformedEntry.concept,
@@ -122,19 +111,17 @@ function mapDdfConceptsToWsModel(entry, context) {
 
     properties: transformedEntry,
 
-    domain: null,
+    domain: _.get(context, 'domain', null),
+
+    languages: transformTranslations(context.languages, transformConceptTranslation),
+
     subsetOf: [],
-    dimensions: [],
 
     from: context.version,
     to: constants.MAX_VERSION,
-    dataset: context.datasetId
+    dataset: context.datasetId,
+    originId: _.get(context, 'originId', null)
   };
-
-  const languages = _.get(context, 'languages');
-  if (languages) {
-    concept.languages = languages;
-  }
 
   if (context.filename) {
     concept.sources = [context.filename];
@@ -164,7 +151,40 @@ function mapResolvedColumns(entry) {
     .value();
 }
 
-function transformPropsToJsonWherePossible(object) {
+function transformEntityTranslation(translation) {
+  return transformEntityProperties(translation);
+}
+
+function transformConceptTranslation(translation) {
+  return transformConceptProperties(translation);
+}
+
+function transformTranslations(translationsByLang, transform) {
+  return _.reduce(translationsByLang, (result, translation, lang) => {
+    result[lang] = transform(translation);
+    return result;
+  }, {});
+}
+
+function transformEntityProperties(object) {
+  return _.transform(object, (result, value, key) => {
+    const ddfBool = ddfImportUtils.toBoolean(value);
+    if (!_.isNil(ddfBool)) {
+      result[key] = ddfBool;
+      return;
+    }
+
+    const ddfNumeric = ddfImportUtils.toNumeric(value);
+    if (!_.isNil(ddfNumeric)) {
+      result[key] = ddfNumeric;
+      return;
+    }
+
+    result[key] = value;
+  }, {});
+}
+
+function transformConceptProperties(object) {
   return _.transform(object, (result, value, key) => {
     if (_.isNil(value) || value === '') {
       result[key] = null;

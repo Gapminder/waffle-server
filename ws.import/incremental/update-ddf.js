@@ -6,12 +6,14 @@ const path = require('path');
 const async = require('async');
 
 const config = require('../../ws.config/config');
+const logger = require('../../ws.config/log');
 const ddfImportUtils = require('../utils/import-ddf.utils');
 const updateConcepts = require('./update-concepts');
 const updateEntities = require('./update-entities');
 const updateDatapoints = require('./update-datapoints');
 const createDatasetIndex = require('../import-dataset-index');
-const updateTranslations = require('./update-translations');
+const updateEntityTranslations = require('./translations/update-entity-translations');
+const updateConceptTranslations = require('./translations/update-concept-translations');
 
 const DATASET_INCREMENTAL_UPDATE_LABEL = 'Dataset incremental update';
 
@@ -43,7 +45,8 @@ module.exports = (options, done) => {
     ddfImportUtils.getAllPreviousConcepts,
     updateEntities,
     updateDatapoints,
-    // updateTranslations,
+    updateConceptTranslations,
+    updateEntityTranslations,
     createDatasetIndex,
     ddfImportUtils.closeTransaction
   ], (updateError, pipe) => {
@@ -53,10 +56,15 @@ module.exports = (options, done) => {
       return done(updateError, {transactionId: pipe.transaction._id});
     }
 
+    if (updateError) {
+      logger.error(updateError);
+      return done(updateError);
+    }
+
     return done(updateError, {
-      datasetName: pipe.dataset.name,
-      version: pipe.transaction.createdAt,
-      transactionId: pipe.transaction._id
+      datasetName: _.get(pipe.dataset, 'name'),
+      version: _.get(pipe.transaction, 'createdAt'),
+      transactionId: _.get(pipe.transaction, '_id')
     });
   });
 };
