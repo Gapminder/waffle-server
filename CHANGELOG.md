@@ -1,3 +1,27 @@
+<a name="2.1.0"></a>
+# [2.1.0](https://github.com/Gapminder/waffle-server/compare/v2.0.0...v2.1.0) (2016-12-01)
+
+
+### Bug Fixes
+
+* **translations:**  preserve originId for concepts that were translated ([c0c16cc](https://github.com/Gapminder/waffle-server/commit/c0c16cc))
+* **translations:** extend context not from its frozen version as first param ([868a023](https://github.com/Gapminder/waffle-server/commit/868a023))
+* **translations:** remove translations from entities and concepts properly during incremental update ([058bc4c](https://github.com/Gapminder/waffle-server/commit/058bc4c))
+
+
+### Features
+
+* **import:** add translations into import process ([89fe373](https://github.com/Gapminder/waffle-server/commit/89fe373))
+* **import:** add unit tests for translations import process ([1e24d88](https://github.com/Gapminder/waffle-server/commit/1e24d88))
+* **incremental-update:** add e2e tests for translations incremental update process ([b740856](https://github.com/Gapminder/waffle-server/commit/b740856))
+* **translations:** transform translations in the same way as properties ([07f8cc2](https://github.com/Gapminder/waffle-server/commit/07f8cc2))
+* **translations update:** WIP ([7ce1a31](https://github.com/Gapminder/waffle-server/commit/7ce1a31))
+* **translations update:** WIP ([3ea2eb9](https://github.com/Gapminder/waffle-server/commit/3ea2eb9))
+* **translations update:** WIP ([25e3e0e](https://github.com/Gapminder/waffle-server/commit/25e3e0e))
+* **unit-tests:** create unit tests for datapoints import process ([18a38b7](https://github.com/Gapminder/waffle-server/commit/18a38b7))
+
+
+
 <a name="2.0.0"></a>
 # [2.0.0](https://github.com/Gapminder/waffle-server/compare/v1.2.0...v2.0.0) (2016-11-28)
 
