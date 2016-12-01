@@ -55,6 +55,7 @@ module.exports = {
   createDataset,
   findDataset,
   createTransaction,
+  findPreviousTransaction,
   getDatapackage,
   validateDdfRepo,
   cloneDdfRepo,
@@ -73,7 +74,7 @@ function getAllConcepts(externalContext, done) {
 }
 
 function getAllPreviousConcepts(externalContext, done) {
-  return conceptsRepositoryFactory.previousVersion(externalContext.dataset._id, externalContext.transaction.createdAt)
+  return conceptsRepositoryFactory.currentVersion(externalContext.dataset._id, externalContext.previousTransaction.createdAt)
     .findAllPopulated((err, concepts) => {
       externalContext.previousConcepts = _.keyBy(concepts, 'gid');
       return done(err, externalContext);
@@ -236,6 +237,19 @@ function getDatapackage(context, done) {
 
     context.datapackage = datapackage;
     return done(error, context);
+  });
+}
+
+function findPreviousTransaction(pipe, done) {
+  logger.info('Find latest successful transaction');
+
+  transactionsRepository.findLatestCompletedByDataset(pipe.dataset._id, (err, latestTransaction) => {
+    if (err) {
+      return done(err);
+    }
+
+    pipe.previousTransaction = latestTransaction;
+    return done(err, pipe);
   });
 }
 

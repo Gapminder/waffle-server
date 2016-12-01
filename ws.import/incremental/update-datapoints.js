@@ -28,6 +28,7 @@ function startDatapointsCreation(externalContext, done) {
     'concepts',
     'timeConcepts',
     'transaction',
+    'previousTransaction',
     'dataset',
   ]));
 
@@ -46,7 +47,7 @@ function startDatapointsCreation(externalContext, done) {
 
 function findAllPreviousEntities(externalContext) {
   return entitiesRepositoryFactory
-    .previousVersion(externalContext.dataset._id, externalContext.transaction.createdAt)
+    .currentVersion(externalContext.dataset._id, externalContext.previousTransaction.createdAt)
     .findAll()
     .then(datapointsUtils.segregateEntities);
 }

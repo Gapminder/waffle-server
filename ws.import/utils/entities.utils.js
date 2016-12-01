@@ -39,6 +39,7 @@ function makeEntityBasedOnItsClosedVersion(properties, closedEntity, externalCon
     timeConcepts,
     version,
     datasetId,
+    entitySetsOriginIds: externalContext.entitySetsOriginIds,
     originId: closedEntity.originId,
     sources: closedEntity.sources,
     languages: closedEntity.languages

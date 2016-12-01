@@ -64,6 +64,7 @@ function storeEntitesToDb(entities) {
 function toEntity(rawEntity, externalContext) {
   const {
     entitySet,
+    entitySetsOriginIds,
     concepts,
     entityDomain,
     filename,
@@ -76,7 +77,7 @@ function toEntity(rawEntity, externalContext) {
     }
   } = externalContext;
 
-  const context = {entitySet, concepts, entityDomain, filename, timeConcepts, version, datasetId};
+  const context = {entitySet, concepts, entityDomain, filename, timeConcepts, version, datasetId, entitySetsOriginIds};
 
   return ddfMappers.mapDdfEntityToWsModel(rawEntity, context);
 }

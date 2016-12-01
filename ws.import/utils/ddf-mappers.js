@@ -18,9 +18,7 @@ module.exports = {
 };
 
 function mapDdfEntityToWsModel(entry, context) {
-    const gid = getGid(context.entitySet, entry);
-    const resolvedColumns = mapResolvedColumns(entry);
-    const resolvedSets = mapResolvedSets(context.concepts, resolvedColumns);
+    const gid = entry[context.entitySet.gid];
     const transformedEntry = transformEntityProperties(entry);
 
     const domainOriginId = _.get(context, 'entityDomain.originId', context.entityDomain);
@@ -38,7 +36,7 @@ function mapDdfEntityToWsModel(entry, context) {
       languages: transformTranslations(context.languages, transformEntityTranslation),
 
       domain: domainOriginId,
-      sets: resolvedSets,
+      sets: context.entitySetsOriginIds,
 
       from: context.version,
       dataset: context.datasetId
@@ -128,27 +126,6 @@ function mapDdfConceptsToWsModel(entry, context) {
   }
 
   return concept;
-}
-
-function getGid(entitySet, entry) {
-  return entry[entitySet.gid] || (entitySet.domain && entry[entitySet.domain.gid]);
-}
-
-function mapResolvedSets(concepts, resolvedGids) {
-  return _.chain(concepts)
-    .filter(concept => _.includes(constants.DEFAULT_ENTITY_GROUP_TYPES, concept.type) && _.includes(resolvedGids, `is--${concept.gid}`))
-    .filter(concept => concept.type !== 'entity_domain')
-    .map('originId')
-    .uniq()
-    .value();
-}
-
-function mapResolvedColumns(entry) {
-  return _.chain(entry)
-    .keys()
-    .filter(name => _.includes(name, 'is--') && entry[name])
-    .uniq()
-    .value();
 }
 
 function transformEntityTranslation(translation) {
