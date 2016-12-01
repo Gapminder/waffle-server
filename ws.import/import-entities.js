@@ -9,7 +9,7 @@ const ddfUtils = require('./utils/import-ddf.utils');
 const constants = require('../ws.utils/constants');
 const entitiesUtils = require('./utils/entities.utils');
 const ddfMappers = require('./utils/ddf-mappers');
-const entitiesRepositoryFactory = require('./../ws.repository/ddf/entities/entities.repository');
+const entitiesRepositoryFactory = require('../ws.repository/ddf/entities/entities.repository');
 
 module.exports = (externalContext, done) => {
   logger.info('Start process of entities creation');
@@ -40,7 +40,7 @@ function createEntities(externalContext) {
   return hi(externalContext.datapackage.resources)
     .filter(resource => resource.type === constants.ENTITIES)
     .flatMap(resource => loadEntitiesFromCsv(resource, externalContext))
-    .batch(1500)
+    .batch(ddfUtils.DEFAULT_CHUNK_SIZE)
     .flatMap(entitiesBatch => {
       return hi(storeEntitesToDb(entitiesBatch));
     });
@@ -62,6 +62,7 @@ function storeEntitesToDb(entities) {
 }
 
 function toEntity(rawEntity, externalContext) {
+  //entitySetsOriginIds is unnecessary for import process
   const {
     entitySet,
     concepts,
