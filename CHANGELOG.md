@@ -1,3 +1,53 @@
+<a name="2.1.0"></a>
+# [2.1.0](https://github.com/Gapminder/waffle-server/compare/v2.0.0...v2.1.0) (2016-12-01)
+
+
+### Bug Fixes
+
+* **translations:**  preserve originId for concepts that were translated ([c0c16cc](https://github.com/Gapminder/waffle-server/commit/c0c16cc))
+* **translations:** extend context not from its frozen version as first param ([868a023](https://github.com/Gapminder/waffle-server/commit/868a023))
+* **translations:** remove translations from entities and concepts properly during incremental update ([058bc4c](https://github.com/Gapminder/waffle-server/commit/058bc4c))
+
+
+### Features
+
+* **import:** add translations into import process ([89fe373](https://github.com/Gapminder/waffle-server/commit/89fe373))
+* **import:** add unit tests for translations import process ([1e24d88](https://github.com/Gapminder/waffle-server/commit/1e24d88))
+* **incremental-update:** add e2e tests for translations incremental update process ([b740856](https://github.com/Gapminder/waffle-server/commit/b740856))
+* **translations:** transform translations in the same way as properties ([07f8cc2](https://github.com/Gapminder/waffle-server/commit/07f8cc2))
+* **translations update:** WIP ([7ce1a31](https://github.com/Gapminder/waffle-server/commit/7ce1a31))
+* **translations update:** WIP ([3ea2eb9](https://github.com/Gapminder/waffle-server/commit/3ea2eb9))
+* **translations update:** WIP ([25e3e0e](https://github.com/Gapminder/waffle-server/commit/25e3e0e))
+* **unit-tests:** create unit tests for datapoints import process ([18a38b7](https://github.com/Gapminder/waffle-server/commit/18a38b7))
+
+
+
+<a name="2.0.0"></a>
+# [2.0.0](https://github.com/Gapminder/waffle-server/compare/v1.2.0...v2.0.0) (2016-11-28)
+
+
+### Bug Fixes
+
+* **deploy:** expose port 80 for WS thrashing machine ([7bf06c6](https://github.com/Gapminder/waffle-server/commit/7bf06c6))
+* **repos.service:** do branch hard reset each time checkout is invoked ([d9e3af2](https://github.com/Gapminder/waffle-server/commit/d9e3af2))
+
+
+### Features
+
+* move concepts and entities to their separate importing modules, import datapoints, entities, concepts, indexes using datapackage.json, import entites using streams ([bb724cb](https://github.com/Gapminder/waffle-server/commit/bb724cb))
+* **datapoints:** apply incremental updates to datapoints via stream ([9665787](https://github.com/Gapminder/waffle-server/commit/9665787))
+* **datapoints:** apply incremental updates to entities via stream ([68dd560](https://github.com/Gapminder/waffle-server/commit/68dd560))
+* **ddf-import:** import datasets from github branches ([89dc473](https://github.com/Gapminder/waffle-server/commit/89dc473))
+* **ddf-mappers:** use same mappers for both importing and inc update ([96cde77](https://github.com/Gapminder/waffle-server/commit/96cde77))
+* **ddfql:** support "by sets" queries to datapoints ([fcbb9ff](https://github.com/Gapminder/waffle-server/commit/fcbb9ff))
+* **deploy:** add new deployment topology for WS - with machine dedicated to ddf importing ([4f123e9](https://github.com/Gapminder/waffle-server/commit/4f123e9))
+* **inc-update:** add striming for concepts updating ([319c7d8](https://github.com/Gapminder/waffle-server/commit/319c7d8))
+* **repository factory:** cache repositories ([18baba5](https://github.com/Gapminder/waffle-server/commit/18baba5))
+* **time:** turn quarter, month, day, year, week into entity_domain's ([cd085ee](https://github.com/Gapminder/waffle-server/commit/cd085ee))
+* **ws-tests:** added a cache for requested commits ([caa0cda](https://github.com/Gapminder/waffle-server/commit/caa0cda))
+
+
+
 <a name="1.2.0"></a>
 # [1.2.0](https://github.com/Gapminder/waffle-server/compare/v1.1.2...v1.2.0) (2016-11-04)
 
