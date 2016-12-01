@@ -80,7 +80,7 @@ describe('auth service testing', () => {
     })
   });
 
-  it('should pass without errors', (done) => {
+  it.only('should return token', (done) => {
 
     const validUser = {
       comparePassword: (pass, onCompared) => {
@@ -102,7 +102,9 @@ describe('auth service testing', () => {
       }
     });
 
-    auth.authenticate({email: 'user@mail.com', password: 'bla'}, (error) => {
+    auth.authenticate({email: 'user@mail.com', password: 'bla'}, (error, uniqueToken) => {
+      expect(uniqueToken).to.contain('token');
+      expect(error).to.be.null;
       done();
     });
   });
@@ -129,7 +131,6 @@ describe('auth service testing', () => {
     });
 
     auth.authenticate({email: 'user@mail.com', password: 'bla'}, (error) => {
-      console.log(error);
       expect(error).to.contain('Couldn\'t set up Waffle Server token');
       done();
     });
