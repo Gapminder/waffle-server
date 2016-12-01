@@ -69,19 +69,16 @@ DataPointsRepository.prototype.closeDatapointByMeasureAndDimensionsAndValue = fu
     .exec(onDatapointClosed);
 };
 
-DataPointsRepository.prototype.addTranslationsForGivenProperties = function (properties, context, done) {
-  const dimensionProperties = _.pick(properties, _.keys(context.dimensions));
-  const measureProperties = _.pick(properties, _.keys(context.measures));
+DataPointsRepository.prototype.addTranslationsForGivenProperties = function (properties, externalContext, done) {
+  const {source, language, resolvedProperties} = externalContext;
 
-  const subDatapointQuery = {
-    $or: getSubQueryFromMeasuresAndDimensions(measureProperties, dimensionProperties)
-  };
+  const subDatapointQuery =_.extend({sources: source}, resolvedProperties);
 
   const query = this._composeQuery(subDatapointQuery);
   const updateQuery = {
     $set: {
       languages: {
-        [context.language]: properties
+        [language.id]: properties
       }
     }
   };
@@ -125,21 +122,3 @@ DataPointsRepository.prototype.findStats = function (params, onDatapointsFound) 
       return onDatapointsFound(null, _.head(stats));
     });
 };
-
-function prefixWithProperties(object) {
-  return _.mapKeys(object, (value, property) => `properties.${property}`);
-}
-
-function getSubQueryFromMeasuresAndDimensions(measures, dimensions) {
-  return _.map(measures, (measureValue, measureGid) => {
-    const dimensionProperties = prefixWithProperties(dimensions);
-    const measureSubQuery = getMeasureSubQueryFromMeasures(measures, measureGid);
-    const measureProperties = prefixWithProperties(measureSubQuery);
-
-    return _.assign({}, dimensionProperties, measureProperties);
-  })
-}
-
-function getMeasureSubQueryFromMeasures(measures) {
-  return _.mapValues(measures, () => ({$exists: true}))
-}

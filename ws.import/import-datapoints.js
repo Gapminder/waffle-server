@@ -1,8 +1,9 @@
 'use strict';
 
-const _ = require('lodash');
-const hi = require('highland');
 const fs = require('fs');
+const _ = require('lodash');
+const path = require('path');
+const hi = require('highland');
 
 const logger = require('../ws.config/log');
 const ddfUtils = require('./utils/import-ddf.utils');
@@ -20,8 +21,7 @@ function startDatapointsCreation(externalContext, done) {
     'concepts',
     'timeConcepts',
     'transaction',
-    'dataset',
-    'resolvePath'
+    'dataset'
   ]));
 
   const errors = [];
@@ -38,6 +38,7 @@ function startDatapointsCreation(externalContext, done) {
 }
 
 function createDatapoints(externalContextFrozen) {
+  const {pathToDdfFolder, datapackage: {resources}} = externalContextFrozen;
   const findAllEntitiesMemoized = _.memoize(datapointsUtils.findAllEntities);
 
   const saveEntitiesFoundInDatapoints = datapointsUtils.createEntitiesFoundInDatapointsSaverWithCache();
@@ -47,7 +48,7 @@ function createDatapoints(externalContextFrozen) {
     externalContextFrozen
   );
 
-  const datapointsAndFoundEntitiesStream = hi(externalContextFrozen.datapackage.resources)
+  const datapointsAndFoundEntitiesStream = hi(resources)
     .filter(resource => resource.type === constants.DATAPOINTS)
     .flatMap(resource => {
       const {measures, dimensions} = datapointsUtils.getDimensionsAndMeasures(resource, externalContextFrozen);
@@ -55,7 +56,7 @@ function createDatapoints(externalContextFrozen) {
         .map(segregatedEntities => ({filename: resource.path, measures, dimensions, segregatedEntities}));
     })
     .map(context => {
-      return ddfUtils.readCsvFileAsStream(externalContextFrozen.resolvePath(context.filename), {})
+      return ddfUtils.readCsvFileAsStream(pathToDdfFolder, context.filename)
         .map(datapoint => ({datapoint, context}));
     })
     .parallel(ddfUtils.MONGODB_DOC_CREATION_THREADS_AMOUNT)

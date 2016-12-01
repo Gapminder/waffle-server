@@ -12,8 +12,8 @@ const Entities = new Schema({
 
   title: String,
   sources: [{type: String, required: true}],
-  properties: {},
-  languages: {},
+  properties: {type: Schema.Types.Mixed, default: {}},
+  languages: {type: Schema.Types.Mixed, default: {}},
 
   // should be required
   domain: {type: Schema.Types.ObjectId, required: true},
@@ -22,7 +22,7 @@ const Entities = new Schema({
   from: {type: Number, required: true},
   to: {type: Number, required: true, default: Number.MAX_SAFE_INTEGER},
   dataset: {type: Schema.Types.ObjectId, ref: 'Datasets', required: true},
-}, { strict: false });
+}, { strict: false, minimize: false });
 
 
 Entities.plugin(originId, {

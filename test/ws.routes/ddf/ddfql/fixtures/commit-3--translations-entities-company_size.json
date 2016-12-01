@@ -1,0 +1,8 @@
+{
+  "headers": ["company_size", "full_name_changed", "is--company_size"],
+  "rows": [
+    ["small", "Niet heel groot", true],
+    ["large", "HEEL GROOT!!!$(#(*#*($", true],
+    ["medium", "middenweg", true]
+  ]
+}

@@ -3,6 +3,8 @@
 const _ = require('lodash');
 const constants = require('../../../ws.utils/constants');
 const ddfQueryUtils = require('../../../ws.ddfql/ddf-query-utils');
+const commonService = require('../../../ws.services/common.service');
+const ddfImportUtils = require('../../../ws.import/utils/import-ddf.utils');
 
 const DATAPOINT_KEY_SEPARATOR = ':';
 
@@ -32,15 +34,27 @@ function mapConceptToWsJson(data) {
   const select = _.isEmpty(data.headers) ? uniqConceptProperties : data.headers;
 
   const rows = _.map(data.concepts, concept => {
-    return _mapConceptPropertiesToWsJson(select, concept);
+    return _mapConceptPropertiesToWsJson(select, concept, data.language);
   });
 
-  return { dataset: data.datasetName, version: data.datasetVersionCommit, headers: select, rows: sortRows(rows, data.query, data.headers) };
+  const result = {
+    dataset: data.datasetName,
+    version: data.datasetVersionCommit,
+    headers: select,
+    rows: sortRows(rows, data.query, data.headers)
+  };
+
+  if (data.language) {
+    return _.extend(result, {language: data.language});
+  }
+
+  return result;
 }
 
-function _mapConceptPropertiesToWsJson(select, concept) {
+function _mapConceptPropertiesToWsJson(select, concept, language) {
+  const translatedConceptProperties = commonService.translateDocument(concept, language);
   return _.map(select, property => {
-    return concept.properties[property];
+    return translatedConceptProperties[property];
   });
 }
 
@@ -53,14 +67,27 @@ function mapEntitiesToWsJson(data) {
   const select = _.isEmpty(data.headers) ? uniqEntityProperties : data.headers;
 
   const rows = _.map(data.entities, (entity) => {
-    return _mapEntitiesPropertiesToWsJson(data.domainGid, select, entity);
+    return _mapEntitiesPropertiesToWsJson(data.domainGid, select, entity, data.language);
   });
 
-  return { dataset: data.datasetName, version: data.datasetVersionCommit, headers: select, rows: sortRows(rows, data.query, data.headers) };
+  const result = {
+    dataset: data.datasetName,
+    version: data.datasetVersionCommit,
+    headers: select,
+    rows: sortRows(rows, data.query, data.headers)
+  };
+
+  if (data.language) {
+    return _.extend(result, {language: data.language});
+  }
+
+  return result;
 }
 
-function _mapEntitiesPropertiesToWsJson(entityDomainGid, select, entity) {
-  const flattenedEntity = _.merge(__mapGidToEntityDomainGid(entityDomainGid, _.omit(entity, 'properties')), entity.properties);
+function _mapEntitiesPropertiesToWsJson(entityDomainGid, select, entity, language) {
+  const translatedEntityProperties = commonService.translateDocument(entity, language);
+  const entityWithGidNamedAfterDomain = __mapGidToEntityDomainGid(entityDomainGid, entity);
+  const flattenedEntity = _.extend(entityWithGidNamedAfterDomain, translatedEntityProperties);
 
   return _.map(select, property => {
     return flattenedEntity[property];
@@ -93,6 +120,7 @@ function mapDatapointsToWsJson(data) {
     .reduce((result, datapoint) => {
       const partialRow = {};
       const datapointKeyParts = [];
+      const translatedDatapointProperties = commonService.translateDocument(datapoint, data.language);
 
       _.each(datapoint.dimensions, (dimension) => {
         const originEntity = entitiesByOriginId[dimension];
@@ -104,7 +132,8 @@ function mapDatapointsToWsJson(data) {
 
       const datapointKey = datapointKeyParts.join(DATAPOINT_KEY_SEPARATOR);
       const measureGid = conceptsByOriginId[datapoint.measure][constants.GID];
-      partialRow[measureGid] = datapoint.value;
+      const datapointValue = _.get(translatedDatapointProperties, measureGid);
+      partialRow[measureGid] = ddfImportUtils.toNumeric(datapointValue) || ddfImportUtils.toBoolean(datapointValue) || datapointValue;
 
       if (!result[datapointKey]) {
         result[datapointKey] = partialRow;
@@ -116,12 +145,18 @@ function mapDatapointsToWsJson(data) {
     .map(row => _.map(data.headers, column => coerceValue(row[column])))
     .value();
 
-  return {
+  const result = {
     dataset: data.datasetName,
     version: data.datasetVersionCommit,
     headers: data.headers,
     rows: sortRows(rows, data.query, data.headers)
   };
+
+  if (data.language) {
+    return _.extend(result, {language: data.language});
+  }
+
+  return result;
 }
 
 function _getGidOfSelectedConceptByEntity(selectedConceptsByOriginId, selectedConceptsOriginIds, entity) {

@@ -4,9 +4,11 @@ const _ = require('lodash');
 const hi = require('highland');
 const fs = require('fs');
 const path = require('path');
+const byline = require('byline');
 const wsCli = require('waffle-server-import-cli');
 const async = require('async');
 const validator = require('validator');
+const JSONStream = require('JSONStream');
 const ddfTimeUtils = require('ddf-time-utils');
 const ddfValidation = require('ddf-validation');
 const SimpleDdfValidator = ddfValidation.SimpleValidator;
@@ -29,10 +31,7 @@ const MONGODB_DOC_CREATION_THREADS_AMOUNT = 3;
 const RESERVED_PROPERTIES = ['properties', 'dimensions', 'subsetOf', 'from', 'to', 'originId', 'gid', 'domain', 'type', 'languages'];
 
 const ddfValidationConfig = {
-  datapointlessMode: true,
-  includeTags: 'WAFFLE_SERVER',
-  excludeRules: 'FILENAME_DOES_NOT_MATCH_HEADER',
-  indexlessMode: true
+  datapointlessMode: true
 };
 
 module.exports = {
@@ -52,13 +51,16 @@ module.exports = {
   resolvePathToDdfFolder,
   closeTransaction,
   establishTransactionForDataset,
+  updateTransactionLanguages,
   createDataset,
   findDataset,
   createTransaction,
   getDatapackage,
   validateDdfRepo,
   cloneDdfRepo,
-  generateDiffForDatasetUpdate
+  generateDiffForDatasetUpdate,
+  startStreamProcessing,
+  readTextFileByLineAsJsonStream
 };
 
 function getAllConcepts(externalContext, done) {
@@ -79,6 +81,7 @@ function getAllPreviousConcepts(externalContext, done) {
 }
 
 function activateLifecycleHook(hookName) {
+  logger.info('Trying to activate lifecycle hook: ', hookName);
   const actualParameters = [].slice.call(arguments, 1);
   return (pipe, done) => {
     return async.setImmediate(() => {
@@ -144,18 +147,22 @@ function toBoolean(value) {
   return null;
 }
 
-function readCsvFileAsStream(filepath) {
-  return hi(fs.createReadStream(filepath, 'utf-8')
+function readCsvFileAsStream(pathToDdfFolder, filepath) {
+  const resolvedFilepath = path.resolve(pathToDdfFolder, filepath);
+
+  return hi(fs.createReadStream(resolvedFilepath, 'utf-8')
     .pipe(new Converter({constructResult: false}, {objectMode: true})));
 }
 
-function readCsvFile(file, options, cb) {
+function readCsvFile(pathToDdfFolder, filepath, options, cb) {
+  const resolvedFilepath = path.resolve(pathToDdfFolder, filepath);
+
   const converter = new Converter(Object.assign({}, {
     workerNum: 1,
     flatKeys: true
   }, options));
 
-  converter.fromFile(file, (err, data) => {
+  converter.fromFile(resolvedFilepath, (err, data) => {
     if (err) {
       const isCannotFoundError = _.includes(err.toString(), "cannot be found.");
       if (isCannotFoundError) {
@@ -170,6 +177,7 @@ function readCsvFile(file, options, cb) {
 }
 
 function cloneDdfRepo(pipe, done) {
+  logger.info('Clone ddf repo: ', pipe.github, pipe.commit);
   return reposService.cloneRepo(pipe.github, pipe.commit, (error, repoInfo) => {
     pipe.repoInfo = repoInfo;
     return done(error, pipe);
@@ -177,6 +185,7 @@ function cloneDdfRepo(pipe, done) {
 }
 
 function validateDdfRepo(pipe, onDdfRepoValidated) {
+  logger.info('Start ddf dataset validation process: ', _.get(pipe.repoInfo, 'pathToRepo'));
   const simpleDdfValidator = new SimpleDdfValidator(pipe.repoInfo.pathToRepo, ddfValidationConfig);
   simpleDdfValidator.on('finish', (error, isDatasetCorrect) => {
     if (error) {
@@ -193,11 +202,15 @@ function validateDdfRepo(pipe, onDdfRepoValidated) {
 }
 
 function generateDiffForDatasetUpdate(context, done) {
+  logger.info('Generating diff for dataset update');
   const {hashFrom, hashTo, github} = context;
   return wsCli.generateDiff({hashFrom, hashTo, github, resultPath: config.PATH_TO_DIFF_DDF_RESULT_FILE}, (error, diffPaths) => {
     if (error) {
       return done(error);
     }
+
+    logger.info('Generated diff is:');
+    logger.info({obj: diffPaths});
 
     const {diff: pathToDatasetDiff, lang: pathToLangDiff} = diffPaths;
     return done(null, _.extend(context, {pathToDatasetDiff, pathToLangDiff}));
@@ -206,14 +219,21 @@ function generateDiffForDatasetUpdate(context, done) {
 
 function resolvePathToDdfFolder(pipe, done) {
   const pathToDdfFolder = reposService.getPathToRepo(pipe.datasetName);
-  pipe.resolvePath = (filename) => path.resolve(pathToDdfFolder, filename);
+  pipe.pathToDdfFolder = pathToDdfFolder;
 
   return async.setImmediate(() => done(null, pipe));
 }
 
 function getDatapackage(context, done) {
+  logger.info('Loading datapackage.json');
+
   const pathToDdfRepo = reposService.getPathToRepo(context.datasetName);
   return datapackageParser.loadDatapackage({folder: pathToDdfRepo}, (error, datapackage) => {
+    if (error) {
+      logger.error('Datapackage was not loaded');
+      return done(error);
+    }
+
     context.datapackage = datapackage;
     return done(error, context);
   });
@@ -264,14 +284,26 @@ function createDataset(pipe, done) {
 }
 
 function findDataset(pipe, done) {
+  logger.info('Searching for existing dataset: ', pipe.datasetName);
+
   return datasetsRepository.findByName(pipe.datasetName, (err, dataset) => {
+    if (err) {
+      return done(err);
+    }
+
+    if (!dataset) {
+      return done('Dataset was not found, hence update is impossible');
+    }
+
+    logger.info('Existing dataset was found: ', dataset.name);
+
     pipe.dataset = dataset;
     return done(err, pipe);
   });
 }
 
 function establishTransactionForDataset(pipe, done) {
-  logger.info('update transaction');
+  logger.info('Establishing current transaction for dataset');
 
   const options = {
     transactionId: pipe.transaction._id,
@@ -279,4 +311,34 @@ function establishTransactionForDataset(pipe, done) {
   };
 
   transactionsRepository.establishForDataset(options, err => done(err, pipe));
+}
+
+function updateTransactionLanguages(pipe, done) {
+  logger.info('update transaction languages');
+
+  const options = {
+    transactionId: pipe.transaction._id,
+    languages: _.map(pipe.datapackage.translations, 'id')
+  };
+
+  transactionsRepository.updateLanguages(options, err => done(err, pipe));
+}
+
+function readTextFileByLineAsJsonStream(pathToFile) {
+  const fileWithChangesStream = fs.createReadStream(pathToFile, {encoding: 'utf8'});
+  const jsonByLine = byline(fileWithChangesStream).pipe(JSONStream.parse());
+  return hi(jsonByLine);
+}
+
+function startStreamProcessing(stream, externalContext, done) {
+  const errors = [];
+  return stream.stopOnError(error => {
+      errors.push(error);
+    })
+    .done(() => {
+      if (!_.isEmpty(errors)) {
+        return done(errors, externalContext);
+      }
+      return done(null, externalContext);
+    });
 }

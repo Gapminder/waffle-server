@@ -19,6 +19,11 @@ function EntitiesRepository() {
 
 module.exports = new RepositoryFactory(EntitiesRepository);
 
+EntitiesRepository.prototype.findByOriginId = function (originId, done) {
+  const query = this._composeQuery({originId: originId});
+  return Entities.findOne(query).lean().exec(done);
+};
+
 EntitiesRepository.prototype.addDrillupsByEntityId = function ({entitiyId, drillups}, done) {
   const query = this._composeQuery({_id: entitiyId});
   return Entities.update(query, {$addToSet: {'drillups': {$each: drillups}}}, {multi: true}, done);
@@ -43,7 +48,25 @@ EntitiesRepository.prototype.closeByDomainAndSets = function ({domain, sets}, do
 
 EntitiesRepository.prototype.closeOneByQuery = function (closeQuery, done) {
   const query = this._composeQuery(closeQuery);
-  return Entities.findOneAndUpdate(query, {$set: {to: this.version}}, {new: true}, done);
+  return Entities.findOneAndUpdate(query, {$set: {to: this.version}}, {new: true}).lean().exec(done);
+};
+
+EntitiesRepository.prototype.findOneByDomainAndSetsAndGid = function (params, done) {
+  const {domain, sets, gid} = params;
+  const query = this._composeQuery({domain, sets, gid});
+  return Entities.findOne(query).lean().exec(done);
+};
+
+EntitiesRepository.prototype.findTargetForTranslation = function (params, done) {
+  return this.findOneByDomainAndSetsAndGid(params, done);
+};
+
+EntitiesRepository.prototype.removeTranslation = function ({originId, language}, done) {
+  return Entities.findOneAndUpdate({originId}, {$unset: {[`languages.${language}`]: 1}}, {new: true}, done);
+};
+
+EntitiesRepository.prototype.addTranslation = function ({id, language, translation}, done) {
+  return Entities.findOneAndUpdate({_id: id}, {$set: {[`languages.${language}`]: translation}}, {new: true}, done);
 };
 
 EntitiesRepository.prototype.create = function (entityOrBatchOfEntities, onCreated) {
@@ -144,36 +167,21 @@ EntitiesRepository.prototype.findEntityProperties = function(entityDomainGid, se
   });
 };
 
-EntitiesRepository.prototype.addTranslationsForGivenProperties = function (properties, context) {
-  const setsOriginIds = _.map(context.sets, constants.ORIGIN_ID);
+EntitiesRepository.prototype.addTranslationsForGivenProperties = function (properties, externalContext, done) {
+  const {source, language, resolvedProperties} = externalContext;
 
-  const domainOriginId = _.chain(context.domains)
-    .values()
-    .first()
-    .get(`${constants.ORIGIN_ID}`, null)
-    .value();
-
-  // It's only one column, where entity could have a gid
-  const entityGid = _.chain({})
-    .assign(context.sets, context.domains)
-    .map(concept => _.get(properties, `${concept.gid}`, null))
-    .compact()
-    .first()
-    .value();
-
-  const subEntityQuery = getSubQueryFromDomainAndSets(setsOriginIds, domainOriginId, entityGid);
-
+  const subEntityQuery =_.extend({sources: source}, resolvedProperties);
   const query = this._composeQuery(subEntityQuery);
 
   const updateQuery = {
     $set: {
       languages: {
-        [context.language]: properties
+        [language.id]: properties
       }
     }
   };
 
-  return Entities.update(query, updateQuery).exec();
+  return Entities.update(query, updateQuery).exec(done);
 };
 
 function makePositiveProjectionFor(properties) {
@@ -183,13 +191,5 @@ function makePositiveProjectionFor(properties) {
 
 function toPropertiesDotNotation(object) {
   return _.mapKeys(object, (value, property) => property === 'gid' ? property : `properties.${property}`);
-}
-
-function getSubQueryFromDomainAndSets(setsOriginIds, domain, gid) {
-  return {
-    gid,
-    domain,
-    sets: {$not: {$elemMatch: {$nin : setsOriginIds}}}
-  };
 }
 

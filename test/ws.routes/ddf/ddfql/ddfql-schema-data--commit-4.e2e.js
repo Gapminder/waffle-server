@@ -34,6 +34,11 @@ const fixtureQueryOperatorsLinesOfCodeByCompanyProjectWithCondition = require('.
 const fixtureQueryOperatorsLinesOfCodeByCompanyProjectAnnoWithCondition = require('./fixtures/commit-4--operators-linesofcode_by_company_project_anno.json');
 const fixtureQueryOperatorsNumUsersByCompanyProjectWithCondition = require('./fixtures/commit-4--operators-numusers_by_company_project.json');
 
+const fixtureDatapointTranslationsCompanySize = require('./fixtures/commit-4--translations-datapoints-company_scale.json');
+const fixtureEntityTranslationsCompanySize = require('./fixtures/commit-4--translations-entities-company_scale.json');
+const fixtureEntityTranslationsRegion = require('./fixtures/commit-4--translations-entities-region.json');
+const fixtureEntityTranslationsCompany = require('./fixtures/commit-4--translations-entities-company.json');
+const fixtureConceptsTranslations = require('./fixtures/commit-4--translations-concepts.json');
 
 describe("State Version 3 (4th commit)", function() {
 
@@ -446,6 +451,84 @@ describe("State Version 3 (4th commit)", function() {
       };
 
       e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureQueryOperatorsNumUsersByCompanyProjectWithCondition, done);
+    });
+
+  });
+
+  describe('Translations', () => {
+
+    it('should return list of all concepts for language `nl-nl`', done => {
+      const ddfql = {
+        "language": "nl-nl",
+        "select": {
+          "key": ["concept"],
+          "value": ["additional_column"]
+        },
+        "from": "concepts"
+      };
+
+      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureConceptsTranslations, done);
+    });
+
+    it('should return list of all entities of company entity_domain for language `nl-nl` where it\'s possible', done => {
+      const ddfql = {
+        "language": "nl-nl",
+        "select": {
+          "key": ["company"],
+          "value": ["name", "country", "full_name_changed", "additional_column"]
+        },
+        "from": "entities"
+      };
+
+      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureEntityTranslationsCompany, done);
+    });
+
+    it('should return list of all entities of region entity_domain for language `nl-nl` where it\'s possible', done => {
+      const ddfql = {
+        "language": "nl-nl",
+        "select": {
+          "key": ["region"],
+          "value": ["full_name_changed"]
+        },
+        "from": "entities",
+        "where": {}
+      };
+
+      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureEntityTranslationsRegion, done);
+    });
+
+    it('should return list of entities that are part of company_scale entity_set', done => {
+      const ddfql = {
+        "language": "nl-nl",
+        "select": {
+          "key": ["company_scale"],
+          "value": ["full_name_changed", "is--company_scale"]
+        },
+        "from": "entities",
+        "where": {
+          "$and": [
+            {
+              "is--company_scale": true
+            }
+          ]
+        }
+      };
+
+      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureEntityTranslationsCompanySize, done);
+    });
+
+    xit('should return all datapoints of company_scale indicator for language `nl-nl`', done => {
+      const ddfql = {
+        "language": "nl-nl",
+        "select": {
+          "key": ["company", "anno"],
+          "value": ["company_scale"]
+        },
+        "from": "datapoints",
+        "where": {}
+      };
+
+      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDatapointTranslationsCompanySize, done);
     });
 
   });

@@ -71,8 +71,18 @@ ConceptsRepository.prototype.closeByGid = function (gid, onClosed) {
   return Concepts.findOneAndUpdate(query, {$set: {to: this.version}}, {new: false}).lean().exec(onClosed);
 };
 
+ConceptsRepository.prototype.closeOneByQuery = function (closingQuery, onClosed) {
+  const query = this._composeQuery(closingQuery);
+  return Concepts.findOneAndUpdate(query, {$set: {to: this.version}}, {new: false}).lean().exec(onClosed);
+};
+
 ConceptsRepository.prototype.closeById = function (conceptId, onClosed) {
   const query = this._composeQuery({_id: conceptId});
+  return Concepts.findOneAndUpdate(query, {$set: {to: this.version}}, {new: false}).lean().exec(onClosed);
+};
+
+ConceptsRepository.prototype.closeByOriginId = function (originId, onClosed) {
+  const query = this._composeQuery({originId});
   return Concepts.findOneAndUpdate(query, {$set: {to: this.version}}, {new: false}).lean().exec(onClosed);
 };
 
@@ -111,6 +121,23 @@ ConceptsRepository.prototype.findAll = function (onFound) {
   return Concepts.find(countQuery).lean().exec(onFound);
 };
 
+ConceptsRepository.prototype.findByGid = function (gid, onFound) {
+  const query = this._composeQuery({gid});
+  return Concepts.findOne(query).lean().exec(onFound);
+};
+
+ConceptsRepository.prototype.findTargetForTranslation = function (params, done) {
+  return this.findByGid(params.gid, done);
+};
+
+ConceptsRepository.prototype.removeTranslation = function ({originId, language}, done) {
+  return Concepts.findOneAndUpdate({originId}, {$unset: {[`languages.${language}`]: 1}}, {new: true}, done);
+};
+
+ConceptsRepository.prototype.addTranslation = function ({id, language, translation}, done) {
+  return Concepts.findOneAndUpdate({_id: id}, {$set: {[`languages.${language}`]: translation}}, {new: true}, done);
+};
+
 ConceptsRepository.prototype.addTranslationsForGivenProperties = function (properties, context, done) {
   const subEntityQuery = {
     gid: properties.concept
@@ -120,7 +147,7 @@ ConceptsRepository.prototype.addTranslationsForGivenProperties = function (prope
   const updateQuery = {
     $set: {
       languages: {
-        [context.language]: properties
+        [language.id]: properties
       }
     }
   };

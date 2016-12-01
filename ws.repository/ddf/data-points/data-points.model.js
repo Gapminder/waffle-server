@@ -11,13 +11,13 @@ const DataPoints = new Schema({
   isNumeric: {type: Boolean, required: true},
   measure: {type: Schema.Types.ObjectId, required: true},
   dimensions: [{type: Schema.Types.ObjectId}],
-  properties: {},
-  languages: {},
+  properties: {type: Schema.Types.Mixed, default: {}},
+  languages: {type: Schema.Types.Mixed, default: {}},
 
   from: {type: Number, required: true},
   to: {type: Number, required: true, default: Number.MAX_SAFE_INTEGER},
   dataset: {type: Schema.Types.ObjectId, ref: 'Datasets', required: true},
-}, { strict: false });
+}, { strict: false, minimize: false });
 
 DataPoints.plugin(originId, {
   modelName: 'DataPoints',
