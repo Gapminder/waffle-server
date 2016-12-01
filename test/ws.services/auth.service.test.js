@@ -80,7 +80,11 @@ describe('auth service testing', () => {
     })
   });
 
+<<<<<<< HEAD
   it('should return token', (done) => {
+=======
+  it.only('should return token', (done) => {
+>>>>>>> 1f71f5984a66de50d428b3e5d7a456d3bfe12d6b
 
     const validUser = {
       comparePassword: (pass, onCompared) => {
