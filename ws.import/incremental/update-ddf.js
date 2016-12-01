@@ -35,6 +35,7 @@ module.exports = (options, done) => {
     ddfImportUtils.createTransaction,
     ddfImportUtils.findDataset,
     ddfImportUtils.establishTransactionForDataset,
+    ddfImportUtils.findPreviousTransaction,
     ddfImportUtils.activateLifecycleHook('onTransactionCreated'),
     ddfImportUtils.cloneDdfRepo,
     ddfImportUtils.validateDdfRepo,

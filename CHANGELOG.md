@@ -1,3 +1,13 @@
+<a name="2.1.2"></a>
+## [2.1.2](https://github.com/Gapminder/waffle-server/compare/v2.1.1...v2.1.2) (2016-12-01)
+
+
+### Bug Fixes
+
+* **ddf import,update:** search previous version of entities, datapoints, and concepts via previous transaction ([31882ab](https://github.com/Gapminder/waffle-server/commit/31882ab))
+
+
+
 <a name="2.1.1"></a>
 ## [2.1.1](https://github.com/Gapminder/waffle-server/compare/v2.1.0...v2.1.1) (2016-12-01)
 

@@ -82,18 +82,6 @@ VersionedModelRepositoryFactory.prototype.latestExceptCurrentVersion = function 
   return this.makeRepository('latestExceptCurrentVersion', versionQueryFragment, datasetId, version);
 };
 
-VersionedModelRepositoryFactory.prototype.previousVersion = function (datasetId, version) {
-  checkPreconditions(datasetId, version);
-
-  const versionQueryFragment = {
-    dataset: datasetId,
-    from: {$lt: version},
-    to: {$lte: version}
-  };
-
-  return this.makeRepository('previousVersion', versionQueryFragment, datasetId, version);
-};
-
 VersionedModelRepositoryFactory.prototype.closedOrOpenedInGivenVersion = function (datasetId, version) {
   checkPreconditions(datasetId, version);
 
