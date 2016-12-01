@@ -138,7 +138,9 @@ ConceptsRepository.prototype.addTranslation = function ({id, language, translati
   return Concepts.findOneAndUpdate({_id: id}, {$set: {[`languages.${language}`]: translation}}, {new: true}, done);
 };
 
-ConceptsRepository.prototype.addTranslationsForGivenProperties = function (properties, context, done) {
+ConceptsRepository.prototype.addTranslationsForGivenProperties = function (properties, externalContext, done) {
+  const {language} = externalContext;
+
   const subEntityQuery = {
     gid: properties.concept
   };
