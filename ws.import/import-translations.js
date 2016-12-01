@@ -124,7 +124,7 @@ function storeConceptsTranslationsToDb({properties, language, datasetId, version
 
   return conceptsRepositoryFactory
     .allOpenedInGivenVersion(datasetId, version)
-    .addTranslationsForGivenProperties(translation, language);
+    .addTranslationsForGivenProperties(translation, {language});
 }
 
 function storeEntitiesTranslationsToDb(externalContext) {
