@@ -10,7 +10,7 @@ describe('auth service testing', () => {
 
   it('should return an error: Error was happened during credentials verification', (done) => {
     const auth = proxyquire('../../ws.services/auth.service', {
-      '../ws.repository/ddf/users/users.repository.js': {
+      '../ws.repository/ddf/users/users.repository': {
         findUserByEmail: (email, done) => {
           done('Boom!');
         }
@@ -25,7 +25,7 @@ describe('auth service testing', () => {
 
   it('should return an error: User with an email: \'user@mail.com\' was not found', (done) => {
     const auth = proxyquire('../../ws.services/auth.service', {
-      '../ws.repository/ddf/users/users.repository.js': {
+      '../ws.repository/ddf/users/users.repository': {
         findUserByEmail: (email, done) => {
           done();
         }
@@ -46,7 +46,7 @@ describe('auth service testing', () => {
       }
     };
     const auth = proxyquire('../../ws.services/auth.service', {
-      '../ws.repository/ddf/users/users.repository.js': {
+      '../ws.repository/ddf/users/users.repository': {
         findUserByEmail: (email, done) => {
           done(null, validUser);
         }
@@ -67,7 +67,7 @@ describe('auth service testing', () => {
       }
     };
     const auth = proxyquire('../../ws.services/auth.service', {
-      '../ws.repository/ddf/users/users.repository.js': {
+      '../ws.repository/ddf/users/users.repository': {
         findUserByEmail: (email, done) => {
           done(null, validUser);
         }
@@ -92,7 +92,7 @@ describe('auth service testing', () => {
     };
 
     const auth = proxyquire('../../ws.services/auth.service', {
-      '../ws.repository/ddf/users/users.repository.js': {
+      '../ws.repository/ddf/users/users.repository': {
         findUserByEmail: (email, done) => {
           done(null, validUser);
         },
@@ -120,7 +120,7 @@ describe('auth service testing', () => {
       uniqueToken: 'token'
     };
     const auth = proxyquire('../../ws.services/auth.service', {
-      '../ws.repository/ddf/users/users.repository.js': {
+      '../ws.repository/ddf/users/users.repository': {
         findUserByEmail: (email, done) => {
           done(null, validUser);
         },

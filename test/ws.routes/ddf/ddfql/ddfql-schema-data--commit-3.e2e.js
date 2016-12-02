@@ -5,7 +5,7 @@ const e2eUtils = require('../../../e2e.utils');
 const e2eEnv = require('../../../e2e.env');
 
 const fs = require('fs');
-const expect = require('chai').expect;
+const _ = require('lodash');
 
 const fixtureSchemaConcepts = require('./fixtures/commit-3--schema-concepts');
 const fixtureSchemaEntities = require('./fixtures/commit-3--schema-entities');
@@ -40,12 +40,15 @@ const fixtureEntityTranslationsRegion = require('./fixtures/commit-3--translatio
 const fixtureEntityTranslationsCompany = require('./fixtures/commit-3--translations-entities-company.json');
 const fixtureConceptsTranslations = require('./fixtures/commit-3--translations-concepts.json');
 
+const INDEX_OF_THIRD_COMMIT = 2;
+const NUMBER_COMMITS_TO_DROP = process.env.NUMBER_COMMITS_TO_DROP || 0;
+if (NUMBER_COMMITS_TO_DROP > INDEX_OF_THIRD_COMMIT) {
+  return;
+}
+
 describe("State Version 2 (3rd commit)", function() {
 
   before(done => {
-
-    const INDEX_OF_THIRD_COMMIT = 2;
-
     cliUtils.getCommitByGithubUrl(e2eEnv.repo, INDEX_OF_THIRD_COMMIT, (error, commit) => {
       if (error) return done(error);
 

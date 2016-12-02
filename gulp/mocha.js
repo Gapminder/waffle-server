@@ -1,10 +1,9 @@
 'use strict';
 
-const NODE_ENV = process.env.NODE_ENV || 'test';
 const gulp = require('gulp');
 const mocha = require('gulp-spawn-mocha');
 
-gulp.task('test', () => {
+gulp.task('unittest', () => {
   return runMochaOn(['test/**/*.test.js']);
 });
 

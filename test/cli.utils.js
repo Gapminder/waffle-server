@@ -1,7 +1,6 @@
 'use strict';
 
 const _ = require('lodash');
-const async = require('async');
 const wsCli = require('waffle-server-import-cli');
 
 const e2eEnv = require('./e2e.env');
@@ -10,18 +9,8 @@ e2eUtils.setUpEnvironmentVariables();
 
 require('../ws.config/db.config');
 require('../ws.repository');
-const mongoose = require('mongoose');
 
 const CACHED_COMMITS = new WeakMap();
-
-const MODELS_TO_CLEAN = [
-  'Concepts',
-  'DataPoints',
-  'Datasets',
-  'DatasetTransactions',
-  'Entities',
-  'DatasetIndex'
-];
 
 const DEFAULT_WS_CLI_OPTIONS = {
   ws_port: e2eEnv.wsPort,
@@ -32,54 +21,26 @@ const DEFAULT_WS_CLI_OPTIONS = {
 
 module.exports = {
   setDefaultCommit,
-  cleanImportDataset,
-  cleanImportAndSetDefaultCommit,
   runDatasetImport,
   getCommitByGithubUrl
 };
 
-function cleanImportAndSetDefaultCommit(commit, done) {
-  cleanImportDataset(error => {
+function runDatasetImport(numberCommitsToDrop = 0, onIncrementalUpdateDone) {
+  return getCommitsByGithubUrl(DEFAULT_WS_CLI_OPTIONS.repo, (error, commits) => {
     if (error) {
       return done(error);
     }
 
-    return setDefaultCommit(commit, done);
-  });
-}
+    const allowedCommits = _.drop(commits, numberCommitsToDrop);
+    const cliOptions = _.extend({from: _.first(allowedCommits), to: _.last(allowedCommits)}, DEFAULT_WS_CLI_OPTIONS);
 
-function cleanImportDataset(done) {
-  return cleanDatabase((error) => {
-    if (error) {
-      return done(error);
-    }
-
-    return runDatasetImport(done);
-  });
-}
-
-function runDatasetImport(onIncrementalUpdateDone) {
-  wsCli.importUpdate(DEFAULT_WS_CLI_OPTIONS, error => {
-    if (error) {
-      return onIncrementalUpdateDone(error);
-    }
-    return onIncrementalUpdateDone();
-  });
-}
-
-function cleanDatabase(onDatabaseCleaned) {
-  return async.forEachLimit(MODELS_TO_CLEAN, 10, (modelName, onCollectionDropped) => {
-    return mongoose.model(modelName).collection.drop(error => {
-      if (error && error.message != 'ns not found') {
-        console.error(error);
-        return onCollectionDropped(error);
+    wsCli.importUpdate(cliOptions, error => {
+      if (error) {
+        return onIncrementalUpdateDone(error);
       }
-
-      console.log(`Collection ${modelName} was dropped`);
-
-      return onCollectionDropped();
+      return onIncrementalUpdateDone();
     });
-  }, onDatabaseCleaned);
+  });
 }
 
 function setDefaultCommit(commit, options, done) {
@@ -99,20 +60,28 @@ function setDefaultCommit(commit, options, done) {
 }
 
 function getCommitByGithubUrl(githubUrl, index, done) {
+  return getCommitsByGithubUrl(githubUrl, (error, commits) => {
+    if (error) {
+      return done(error);
+    }
 
+    return done(error, commits[index]);
+  });
+}
+
+function getCommitsByGithubUrl(githubUrl, done) {
   let githubUrlObj = {githubUrl: githubUrl};
 
   if (CACHED_COMMITS.has(githubUrl)) {
-    return done(null, CACHED_COMMITS.get(githubUrlObj)[index]);
+    return done(null, CACHED_COMMITS.get(githubUrlObj));
   }
 
   wsCli.getCommitListByGithubUrl(githubUrl, (error, commits) => {
-
     if (error) {
       return done(error);
     }
 
     CACHED_COMMITS.set(githubUrlObj, commits);
-    return done(null, CACHED_COMMITS.get(githubUrlObj)[index]);
+    return done(null, CACHED_COMMITS.get(githubUrlObj));
   })
 }

@@ -4,10 +4,25 @@
   "description": "Waffle server",
   "main": "app.js",
   "scripts": {
-    "test": "gulp test && npm run e2e",
-    "pree2e": "node ./test/pre-e2e.js",
-    "e2e": "gulp e2e",
-    "poste2e": "node ./test/post-e2e.js",
+    "test": "gulp unittest && npm run e2e",
+    "e2e": "npm run e2e:import && npm run e2e:import:2commit && npm run e2e:import:3commit && npm run e2e:import:4commit",
+
+    "pree2e:import": "node ./test/pre-e2e.js",
+    "e2e:import": "gulp e2e",
+    "poste2e:import": "node ./test/post-e2e.js",
+
+    "pree2e:import:2commit": "NUMBER_COMMITS_TO_DROP=1 node ./test/pre-e2e.js",
+    "e2e:import:2commit": "NUMBER_COMMITS_TO_DROP=1 gulp e2e",
+    "poste2e:import:2commit": "node ./test/post-e2e.js",
+
+    "pree2e:import:3commit": "NUMBER_COMMITS_TO_DROP=2 node ./test/pre-e2e.js",
+    "e2e:import:3commit": "NUMBER_COMMITS_TO_DROP=2 gulp e2e",
+    "poste2e:import:3commit": "node ./test/post-e2e.js",
+
+    "pree2e:import:4commit": "NUMBER_COMMITS_TO_DROP=3 node ./test/pre-e2e.js",
+    "e2e:import:4commit": "NUMBER_COMMITS_TO_DROP=3 gulp e2e",
+    "poste2e:import:4commit": "node ./test/post-e2e.js",
+
     "test:coverage": "istanbul --include-all-sources cover _mocha -- -R spec 'test/**/*.test.js'",
     "dev": "NODE_ENV=development npm run start",
     "start": "forever stopall && forever start --logFile forever.log --outFile logs/out.log --errFile logs/err.log -a -p logs --minUptime 1000 --spinSleepTime 1000000 server.js",

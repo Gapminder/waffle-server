@@ -5,7 +5,7 @@ const e2eUtils = require('../../../e2e.utils');
 const e2eEnv = require('../../../e2e.env');
 
 const fs = require('fs');
-const expect = require('chai').expect;
+const _ = require('lodash');
 
 const fixtureSchemaConcepts = require('./fixtures/commit-1--schema-concepts');
 const fixtureSchemaEntities = require('./fixtures/commit-1--schema-entities');
@@ -40,12 +40,15 @@ const fixtureEntityTranslationsRegion = require('./fixtures/commit-1--translatio
 const fixtureEntityTranslationsCompany = require('./fixtures/commit-1--translations-entities-company.json');
 const fixtureConceptsTranslations = require('./fixtures/commit-1--translations-concepts.json');
 
+const INDEX_OF_INITIAL_COMMIT = 0;
+const NUMBER_COMMITS_TO_DROP = process.env.NUMBER_COMMITS_TO_DROP || 0;
+if (NUMBER_COMMITS_TO_DROP > INDEX_OF_INITIAL_COMMIT) {
+  return;
+}
+
 describe("Initial State (1st commit)", function() {
 
   before(done => {
-
-    const INDEX_OF_INITIAL_COMMIT = 0;
-
     cliUtils.getCommitByGithubUrl(e2eEnv.repo, INDEX_OF_INITIAL_COMMIT, (error, commit) => {
       if (error) return done(error);
 

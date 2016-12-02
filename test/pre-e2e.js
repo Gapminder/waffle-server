@@ -4,6 +4,8 @@ console.log('==========================================');
 console.log('Starting e2e tests');
 console.log('==========================================\n');
 
+const NUMBER_COMMITS_TO_DROP = process.env.NUMBER_COMMITS_TO_DROP || 0;
+
 const e2eUtils = require('./e2e.utils');
 e2eUtils.setUpEnvironmentVariables();
 
@@ -23,7 +25,7 @@ process.on('SIGINT', () => {
   process.exit(0);
 });
 
-sync(cliUtils.runDatasetImport.bind(cliUtils))(error => {
+sync(cliUtils.runDatasetImport.bind(cliUtils))(NUMBER_COMMITS_TO_DROP, error => {
   if (error) {
     e2eUtils.stopWaffleServer();
     process.exit(1);
