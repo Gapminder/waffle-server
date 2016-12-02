@@ -51,22 +51,30 @@ DataPointsRepository.prototype.findDistinctDimensionsByMeasure = function(measur
 };
 
 DataPointsRepository.prototype.closeDatapointByMeasureAndDimensionsAndValue = function (options, onDatapointClosed) {
-  const {measureOriginId, dimensionsSize, dimensionsEntityOriginIds, datapointValue} = options;
-
-  const numericDatapointValue = ddfImportUtils.toNumeric(datapointValue);
-  const query = this._composeQuery({
-    measure: measureOriginId,
-    dimensions: {
-      $size: dimensionsSize,
-      $not: {$elemMatch: {$nin: dimensionsEntityOriginIds}}
-    },
-    value: _.isNil(numericDatapointValue) ? datapointValue : numericDatapointValue
+  const numericDatapointValue = ddfImportUtils.toNumeric(options.datapointValue);
+  const byDimensionsAndMeasureAndValueQuery = _.extend(toByDimensionsAndMeasureQuery(options), {
+    value: _.isNil(numericDatapointValue) ? options.datapointValue : numericDatapointValue
   });
 
-  logger.debug({obj: query});
-  return DataPoints.findOneAndUpdate(query, {$set: {to: this.version}}, {new: true})
-    .lean()
-    .exec(onDatapointClosed);
+  return this._closeOneByQuery(byDimensionsAndMeasureAndValueQuery, onDatapointClosed);
+};
+
+DataPointsRepository.prototype.closeOneByQuery = function (options, done) {
+  const closingQuery = 'dimensionsEntityOriginIds' in options ? toByDimensionsAndMeasureQuery(options) : options;
+  return this._closeOneByQuery(closingQuery, done);
+};
+
+DataPointsRepository.prototype.findTargetForTranslation = function (options, done) {
+  const query = this._composeQuery(toByDimensionsAndMeasureQuery(options));
+  return DataPoints.findOne(query).lean().exec(done);
+};
+
+DataPointsRepository.prototype.removeTranslation = function ({originId, language}, done) {
+  return DataPoints.findOneAndUpdate({originId}, {$unset: {[`languages.${language}`]: 1}}, {new: true}, done);
+};
+
+DataPointsRepository.prototype.addTranslation = function ({id, language, translation}, done) {
+  return DataPoints.findOneAndUpdate({_id: id}, {$set: {[`languages.${language}`]: translation}}, {new: true}, done);
 };
 
 DataPointsRepository.prototype.addTranslationsForGivenProperties = function (properties, externalContext, done) {
@@ -122,3 +130,22 @@ DataPointsRepository.prototype.findStats = function (params, onDatapointsFound) 
       return onDatapointsFound(null, _.head(stats));
     });
 };
+
+DataPointsRepository.prototype._closeOneByQuery = function (closingQuery, done) {
+  const query = this._composeQuery(closingQuery);
+  return DataPoints
+    .findOneAndUpdate(query, {$set: {to: this.version}}, {new: true})
+    .lean()
+    .exec(done);
+};
+
+function toByDimensionsAndMeasureQuery(options) {
+  const {measureOriginId, dimensionsSize, dimensionsEntityOriginIds} = options;
+  return {
+    measure: measureOriginId,
+    dimensions: {
+      $size: dimensionsSize,
+      $not: {$elemMatch: {$nin: dimensionsEntityOriginIds}}
+    }
+  };
+}

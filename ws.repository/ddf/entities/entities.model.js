@@ -20,7 +20,7 @@ const Entities = new Schema({
   sets: [{type: Schema.Types.ObjectId}],
 
   from: {type: Number, required: true},
-  to: {type: Number, required: true, default: Number.MAX_SAFE_INTEGER},
+  to: {type: Number, required: true, default: constants.MAX_VERSION},
   dataset: {type: Schema.Types.ObjectId, ref: 'Datasets', required: true},
 }, { strict: false, minimize: false });
 

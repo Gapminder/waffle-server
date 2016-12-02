@@ -3,6 +3,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const originId = require('../origin-id.plugin');
+const constants = require('../../../ws.utils/constants');
 
 const DataPoints = new Schema({
   value: {type: Schema.Types.Mixed, required: true},
@@ -15,7 +16,7 @@ const DataPoints = new Schema({
   languages: {type: Schema.Types.Mixed, default: {}},
 
   from: {type: Number, required: true},
-  to: {type: Number, required: true, default: Number.MAX_SAFE_INTEGER},
+  to: {type: Number, required: true, default: constants.MAX_VERSION},
   dataset: {type: Schema.Types.ObjectId, ref: 'Datasets', required: true},
 }, { strict: false, minimize: false });
 

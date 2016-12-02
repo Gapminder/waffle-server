@@ -2,6 +2,7 @@
 
 const chai = require('chai');
 const expect = chai.expect;
+require('../../ws.config/db.config');
 require('../../ws.repository');
 const proxyquire = require('proxyquire');
 
@@ -20,7 +21,7 @@ describe('auth service testing', () => {
     auth.authenticate({email: 'bla', password: 'bla'}, (error) => {
       expect(error).to.equal('Error was happened during credentials verification');
       done();
-    })
+    });
   });
 
   it('should return an error: User with an email: \'user@mail.com\' was not found', (done) => {
@@ -35,7 +36,7 @@ describe('auth service testing', () => {
     auth.authenticate({email: 'user@mail.com', password: 'bla'}, (error) => {
       expect(error).to.contain('User with an email: \'user@mail.com\' was not found');
       done();
-    })
+    });
   });
 
   it('should return an error: Provided password didn\'t match', (done) => {
@@ -56,7 +57,7 @@ describe('auth service testing', () => {
     auth.authenticate({email: 'user@mail.com', password: 'bla'}, (error) => {
       expect(error).to.contain('Provided password didn\'t match');
       done();
-    })
+    });
   });
 
   it('should return an error: Error was happened during credentials verification', (done) => {
@@ -77,7 +78,7 @@ describe('auth service testing', () => {
     auth.authenticate({email: 'user@mail.com', password: 'bla'}, (error) => {
       expect(error).to.contain('Error was happened during credentials verification');
       done();
-    })
+    });
   });
 
   it('should return token', (done) => {
@@ -135,4 +136,4 @@ describe('auth service testing', () => {
       done();
     });
   });
-})
+});
