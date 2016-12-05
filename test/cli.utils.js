@@ -25,14 +25,15 @@ module.exports = {
   getCommitByGithubUrl
 };
 
-function runDatasetImport(numberCommitsToDrop = 0, onIncrementalUpdateDone) {
+function runDatasetImport(commitIndexToStartImport = 0, onIncrementalUpdateDone) {
   return getCommitsByGithubUrl(DEFAULT_WS_CLI_OPTIONS.repo, (error, commits) => {
     if (error) {
       return done(error);
     }
 
-    const allowedCommits = _.drop(commits, numberCommitsToDrop);
-    const cliOptions = _.extend({from: _.first(allowedCommits), to: _.last(allowedCommits)}, DEFAULT_WS_CLI_OPTIONS);
+    const allowedCommits = _.drop(commits, commitIndexToStartImport);
+    const finishCommitIndex = commitIndexToStartImport ? 4 - commitIndexToStartImport : _.size(allowedCommits);
+    const cliOptions = _.extend({from: _.first(allowedCommits), to: _.nth(allowedCommits, finishCommitIndex)}, DEFAULT_WS_CLI_OPTIONS);
 
     wsCli.importUpdate(cliOptions, error => {
       if (error) {

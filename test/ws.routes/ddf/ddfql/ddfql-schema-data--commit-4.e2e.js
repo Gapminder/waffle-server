@@ -41,8 +41,8 @@ const fixtureEntityTranslationsCompany = require('./fixtures/commit-4--translati
 const fixtureConceptsTranslations = require('./fixtures/commit-4--translations-concepts.json');
 
 const INDEX_OF_FOURTH_COMMIT = 3;
-const NUMBER_COMMITS_TO_DROP = process.env.NUMBER_COMMITS_TO_DROP || 0;
-if (NUMBER_COMMITS_TO_DROP > INDEX_OF_FOURTH_COMMIT) {
+const COMMIT_INDEX_TO_IMPORT = process.env.COMMIT_INDEX_TO_IMPORT || 0;
+if (COMMIT_INDEX_TO_IMPORT > INDEX_OF_FOURTH_COMMIT) {
   return;
 }
 
