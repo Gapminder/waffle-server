@@ -5,7 +5,7 @@ const e2eUtils = require('../../../e2e.utils');
 const e2eEnv = require('../../../e2e.env');
 
 const fs = require('fs');
-const expect = require('chai').expect;
+const _ = require('lodash');
 
 const fixtureSchemaConcepts = require('./fixtures/commit-2--schema-concepts');
 const fixtureSchemaEntities = require('./fixtures/commit-2--schema-entities');
@@ -40,12 +40,15 @@ const fixtureEntityTranslationsRegion = require('./fixtures/commit-2--translatio
 const fixtureEntityTranslationsCompany = require('./fixtures/commit-2--translations-entities-company.json');
 const fixtureConceptsTranslations = require('./fixtures/commit-2--translations-concepts.json');
 
+const INDEX_OF_SECOND_COMMIT = 1;
+const COMMIT_INDEX_TO_IMPORT = process.env.COMMIT_INDEX_TO_IMPORT || 0;
+if (COMMIT_INDEX_TO_IMPORT > INDEX_OF_SECOND_COMMIT) {
+  return;
+}
+
 describe("State Version 1 (2nd commit)", function() {
 
   before(done => {
-
-    const INDEX_OF_SECOND_COMMIT = 1;
-
     cliUtils.getCommitByGithubUrl(e2eEnv.repo, INDEX_OF_SECOND_COMMIT, (error, commit) => {
       if (error) return done(error);
 

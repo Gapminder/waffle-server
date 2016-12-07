@@ -4,6 +4,8 @@ console.log('==========================================');
 console.log('Starting e2e tests');
 console.log('==========================================\n');
 
+const COMMIT_INDEX_TO_IMPORT = process.env.COMMIT_INDEX_TO_IMPORT || 0;
+
 const e2eUtils = require('./e2e.utils');
 e2eUtils.setUpEnvironmentVariables();
 
@@ -23,7 +25,7 @@ process.on('SIGINT', () => {
   process.exit(0);
 });
 
-sync(cliUtils.runDatasetImport.bind(cliUtils))(error => {
+sync(cliUtils.runDatasetImport.bind(cliUtils))(COMMIT_INDEX_TO_IMPORT, error => {
   if (error) {
     e2eUtils.stopWaffleServer();
     process.exit(1);
