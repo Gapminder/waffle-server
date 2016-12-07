@@ -5,7 +5,7 @@ const e2eUtils = require('../../../e2e.utils');
 const e2eEnv = require('../../../e2e.env');
 
 const fs = require('fs');
-const expect = require('chai').expect;
+const _ = require('lodash');
 
 const fixtureSchemaConcepts = require('./fixtures/commit-4--schema-concepts');
 const fixtureSchemaEntities = require('./fixtures/commit-4--schema-entities');
@@ -40,12 +40,15 @@ const fixtureEntityTranslationsRegion = require('./fixtures/commit-4--translatio
 const fixtureEntityTranslationsCompany = require('./fixtures/commit-4--translations-entities-company.json');
 const fixtureConceptsTranslations = require('./fixtures/commit-4--translations-concepts.json');
 
-describe("State Version 3 (4th commit)", function() {
+const INDEX_OF_FOURTH_COMMIT = 3;
+const COMMIT_INDEX_TO_IMPORT = process.env.COMMIT_INDEX_TO_IMPORT || 0;
+if (COMMIT_INDEX_TO_IMPORT > INDEX_OF_FOURTH_COMMIT) {
+  return;
+}
+
+describe("State Version 4 (4th commit)", function() {
 
   before(done => {
-
-    const INDEX_OF_FOURTH_COMMIT = 3;
-
     cliUtils.getCommitByGithubUrl(e2eEnv.repo, INDEX_OF_FOURTH_COMMIT, (error, commit) => {
       if (error) return done(error);
 
@@ -517,7 +520,7 @@ describe("State Version 3 (4th commit)", function() {
       e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureEntityTranslationsCompanySize, done);
     });
 
-    xit('should return all datapoints of company_scale indicator for language `nl-nl`', done => {
+    it('should return all datapoints of company_scale indicator for language `nl-nl`', done => {
       const ddfql = {
         "language": "nl-nl",
         "select": {

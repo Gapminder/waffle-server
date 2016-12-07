@@ -32,6 +32,8 @@ module.exports = {
   ASC_SORTING_DIRECTION: 'asc',
   DESC_SORTING_DIRECTION: 'desc',
 
+  MONGO_SPECIAL_FIELDS: ['_id', '_v'],
+
   GID: 'gid',
   ORIGIN_ID: 'originId',
   IS_OPERATOR: '.is--',

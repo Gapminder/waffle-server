@@ -18,7 +18,7 @@ module.exports = {
 };
 
 function sendDdfqlRequest(ddfql, onResponseReceived) {
-  return wsApi.post(`/api/ddf/ql`)
+  return wsApi.post(`/api/ddf/ql?force=true`)
     .send(ddfql)
     .set('Accept', 'application/x-ws+json')
     .expect(200)

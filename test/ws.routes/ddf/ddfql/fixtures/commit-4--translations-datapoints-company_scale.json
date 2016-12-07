@@ -1,10 +1,12 @@
 {
-  "headers": ["company", "anno", "company_size"],
+  "headers": ["company", "anno", "company_scale"],
   "rows": [
     ["mcrsft", "1975", "klein"],
-    ["mcrsft", "2015", "groot"],
     ["mcrsft", "2016", "groot"],
-    ["gap", "2015", "klein"],
-    ["gap", "2016", "klein"]
+    ["gap", "2014", "klein"],
+    ["gap", "2015", "middelgroot"],
+    ["gap", "2016", "klein"],
+    ["zsoft", "2015", "klein"],
+    ["zsoft", "2016", "klein"]
   ]
 }
