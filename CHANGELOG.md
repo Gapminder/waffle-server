@@ -1,3 +1,16 @@
+<a name="2.2.0"></a>
+# [2.2.0](https://github.com/Gapminder/waffle-server/compare/v2.1.2...v2.2.0) (2016-12-07)
+
+
+### Features
+
+* **e2e-tests:** add e2e tests for translations ([73f69b1](https://github.com/Gapminder/waffle-server/commit/73f69b1))
+* **e2e-tests:** make different types of import ([7cd01f6](https://github.com/Gapminder/waffle-server/commit/7cd01f6))
+* **translations:** add datapoints translations incremental update ([7ff648a](https://github.com/Gapminder/waffle-server/commit/7ff648a))
+* **unit-test:** add unit test for entities import ([2e48759](https://github.com/Gapminder/waffle-server/commit/2e48759))
+
+
+
 <a name="2.1.2"></a>
 ## [2.1.2](https://github.com/Gapminder/waffle-server/compare/v2.1.1...v2.1.2) (2016-12-01)
 

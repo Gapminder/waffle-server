@@ -1,29 +1,24 @@
 {
   "name": "waffle-implementation",
-  "version": "2.1.2",
+  "version": "2.2.0",
   "description": "Waffle server",
   "main": "app.js",
   "scripts": {
     "test": "npm run spec && npm run e2e",
     "e2e": "npm run e2e:allCommits && npm run e2e:2commit && npm run e2e:3commit && npm run e2e:4commit",
     "spec": "gulp spec",
-
     "pree2e:allCommits": "node ./test/pre-e2e.js",
     "e2e:allCommits": "gulp e2e",
     "poste2e:allCommits": "node ./test/post-e2e.js",
-
     "pree2e:2commit": "COMMIT_INDEX_TO_IMPORT=1 node ./test/pre-e2e.js",
     "e2e:2commit": "COMMIT_INDEX_TO_IMPORT=1 gulp e2e",
     "poste2e:2commit": "node ./test/post-e2e.js",
-
     "pree2e:3commit": "COMMIT_INDEX_TO_IMPORT=2 node ./test/pre-e2e.js",
     "e2e:3commit": "COMMIT_INDEX_TO_IMPORT=2 gulp e2e",
     "poste2e:3commit": "node ./test/post-e2e.js",
-
     "pree2e:4commit": "COMMIT_INDEX_TO_IMPORT=3 node ./test/pre-e2e.js",
     "e2e:4commit": "COMMIT_INDEX_TO_IMPORT=3 gulp e2e",
     "poste2e:4commit": "node ./test/post-e2e.js",
-
     "spec:coverage": "istanbul --include-all-sources cover _mocha -- -R spec 'test/**/*.spec.js'",
     "dev": "NODE_ENV=development npm run start",
     "start": "forever stopall && forever start --logFile forever.log --outFile logs/out.log --errFile logs/err.log -a -p logs --minUptime 1000 --spinSleepTime 1000000 server.js",
