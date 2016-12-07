@@ -315,11 +315,7 @@ function mergeConcepts(originalConcept, changesToConcept, currentTransaction) {
     }
   });
 
-  _.mergeWith(updatedConcept.properties, changesToConcept, (originalValue, changedValue) => {
-    if (ddfImportUtils.isJson(changedValue)) {
-      return JSON.parse(changedValue);
-    }
-  });
+  _.merge(updatedConcept.properties, ddfMappers.transformConceptProperties(changesToConcept));
 
   updatedConcept = _.omit(updatedConcept, ['concept', 'drill_up', '_id', 'subsetOf', 'domain']);
   updatedConcept.from = currentTransaction.createdAt;

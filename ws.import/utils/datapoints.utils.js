@@ -15,8 +15,10 @@ module.exports = {
   segregateEntities,
   findEntitiesInDatapoint,
   findAllEntities,
+  findAllPreviousEntities,
   createEntitiesFoundInDatapointsSaverWithCache,
-  saveDatapointsAndEntitiesFoundInThem
+  saveDatapointsAndEntitiesFoundInThem,
+  getDimensionsAsEntityOriginIds
 };
 
 function saveDatapointsAndEntitiesFoundInThem(saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) {
@@ -35,7 +37,19 @@ function saveDatapointsAndEntitiesFoundInThem(saveEntitiesFoundInDatapoints, ext
 }
 
 function findAllEntities(externalContext) {
-  return entitiesRepositoryFactory.latestVersion(externalContext.dataset._id, externalContext.transaction.createdAt)
+  const {dataset: {_id: datasetId}, transaction: {createdAt: version}} = externalContext;
+
+  return entitiesRepositoryFactory
+    .latestVersion(datasetId, version)
+    .findAll()
+    .then(segregateEntities);
+}
+
+function findAllPreviousEntities(externalContext) {
+  const {dataset: {_id: datasetId}, previousTransaction: {createdAt: version}} = externalContext;
+
+  return entitiesRepositoryFactory
+    .currentVersion(datasetId, version)
     .findAll()
     .then(segregateEntities);
 }
@@ -61,6 +75,19 @@ function getDimensionsAndMeasures(resource, externalContext) {
   }
 
   return { measures, dimensions };
+}
+
+function getDimensionsAsEntityOriginIds(datapoint, externalContext) {
+  const entityGids = _.chain(datapoint)
+    .pick(_.keys(externalContext.dimensions))
+    .values()
+    .compact()
+    .value();
+
+  return _.flatMap(entityGids, (gid) => {
+    const entities = externalContext.segregatedEntities.groupedByGid[gid] || externalContext.segregatedPreviousEntities.groupedByGid[gid];
+    return _.map(entities, 'originId');
+  });
 }
 
 function segregateEntities(entities) {

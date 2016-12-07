@@ -14,7 +14,8 @@ module.exports = {
   mapDdfEntityFoundInDatapointToWsModel,
   mapDdfDataPointToWsModel,
   transformEntityTranslation,
-  transformConceptTranslation
+  transformConceptTranslation,
+  transformConceptProperties
 };
 
 function mapDdfEntityToWsModel(entry, context) {

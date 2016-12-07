@@ -28,67 +28,67 @@
       "company",
       "entity_domain",
       null,
-      ""
+      null
     ],
     [
       "english_speaking",
       "entity_set",
       "company",
-      ""
+      null
     ],
     [
       "name",
       "string",
       null,
-      ""
+      null
     ],
     [
       "anno",
       "time",
       null,
-      ""
+      null
     ],
     [
       "lines_of_code",
       "measure",
       null,
-      ""
+      null
     ],
     [
       "region",
       "entity_domain",
       null,
-      ""
+      null
     ],
     [
       "country",
       "string",
       null,
-      ""
+      null
     ],
     [
       "latitude",
       "measure",
       null,
-      ""
+      null
     ],
     [
       "longitude",
       "measure",
       null,
-      ""
+      null
     ],
     [
       "project",
       "entity_domain",
       null,
-      ""
+      null
     ],
     [
       "domain",
       "string",
       null,
-      ""
+      null
     ]
   ]
 }
