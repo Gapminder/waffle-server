@@ -7,49 +7,49 @@ const e2eEnv = require('../../../e2e.env');
 const fs = require('fs');
 const _ = require('lodash');
 
-const fixtureSchemaConcepts = require('./fixtures/commit-4--schema-concepts');
-const fixtureSchemaEntities = require('./fixtures/commit-4--schema-entities');
-const fixtureSchemaDatapoints = require('./fixtures/commit-4--schema-datapoints');
-const fixtureSchemaDatapointsMinMax = require('./fixtures/commit-4--schema-datapoints--min-max.json');
-const fixtureSchemaDatapointsAvg = require('./fixtures/commit-4--schema-datapoints--avg.json');
+const fixtureSchemaConcepts = require('./fixtures/commit-3--schema-concepts');
+const fixtureSchemaEntities = require('./fixtures/commit-3--schema-entities');
+const fixtureSchemaDatapoints = require('./fixtures/commit-3--schema-datapoints');
+const fixtureSchemaDatapointsMinMax = require('./fixtures/commit-3--schema-datapoints--min-max.json');
+const fixtureSchemaDatapointsAvg = require('./fixtures/commit-3--schema-datapoints--avg.json');
 
-const fixtureDataConcepts = require('./fixtures/commit-4--data-concepts.json');
-const fixtureDataEntities = require('./fixtures/commit-4--data-entities.json');
-const fixtureDataEntitiesSpeakingEnglish = require('./fixtures/commit-4--data-entities-speakingenglish.json');
-const fixtureDataEntitiesFoundation = require('./fixtures/commit-4--data-entities-foundation.json');
-const fixtureDataEntitiesCompanySize = require('./fixtures/commit-4--data-entities-companysize.json');
-const fixtureDataConceptsEntitySet = require('./fixtures/commit-4--data-concepts-etityset.json');
-const fixtureDataConceptsMeasure = require('./fixtures/commit-4--data-concepts-measure.json');
-const fixtureDataConceptsString = require('./fixtures/commit-4--data-concepts-string.json');
+const fixtureDataConcepts = require('./fixtures/commit-3--data-concepts.json');
+const fixtureDataEntities = require('./fixtures/commit-3--data-entities.json');
+const fixtureDataEntitiesSpeakingEnglish = require('./fixtures/commit-3--data-entities-speakingenglish.json');
+const fixtureDataEntitiesFoundation = require('./fixtures/commit-3--data-entities-foundation.json');
+const fixtureDataEntitiesCompanySize = require('./fixtures/commit-3--data-entities-companysize.json');
+const fixtureDataConceptsEntitySet = require('./fixtures/commit-3--data-concepts-etityset.json');
+const fixtureDataConceptsMeasure = require('./fixtures/commit-3--data-concepts-measure.json');
+const fixtureDataConceptsString = require('./fixtures/commit-3--data-concepts-string.json');
 
-const fixtureDatapointsLinesOfCodeByCompanyAnno = require('./fixtures/commit-4--datapoints-linesofcode_by_company_anno.json');
-const fixtureDatapointsCompanySizeByCompanyAnno = require('./fixtures/commit-4--datapoints-companysize_by_company_anno.json');
-const fixtureDatapointsLinesOfCodeByCompanyProject = require('./fixtures/commit-4--datapoints-linesofcode_by_company_project.json');
-const fixtureDatapointsLinesOfCodeByCompanyProjectAnno = require('./fixtures/commit-4--datapoints-linesofcode_by_company_project_anno.json');
-const fixtureDatapointsNumUsersByCompanyProject = require('./fixtures/commit-4--datapoints-numusers_by_company_project.json');
+const fixtureDatapointsLinesOfCodeByCompanyAnno = require('./fixtures/commit-3--datapoints-linesofcode_by_company_anno.json');
+const fixtureDatapointsCompanySizeByCompanyAnno = require('./fixtures/commit-3--datapoints-companysize_by_company_anno.json');
+const fixtureDatapointsLinesOfCodeByCompanyProject = require('./fixtures/commit-3--datapoints-linesofcode_by_company_project.json');
+const fixtureDatapointsLinesOfCodeByCompanyProjectAnno = require('./fixtures/commit-3--datapoints-linesofcode_by_company_project_anno.json');
+const fixtureDatapointsNumUsersByCompanyProject = require('./fixtures/commit-3--datapoints-numusers_by_company_project.json');
 
-const fixtureQueryOperatorsLinesOfCodeByCompanyAnnoWithCondition = require('./fixtures/commit-4--operators-linesofcode_by_company_anno.json');
-const fixtureQueryOperatorsCompanySizeByCompanyAnnoWithCondition = require('./fixtures/commit-4--operators-companysize_by_company_anno.json');
-const fixtureQueryOperatorsLinesOfCodeByCompanyProjectWithCondition = require('./fixtures/commit-4--operators-linesofcode_by_company_project.json');
-const fixtureQueryOperatorsLinesOfCodeByCompanyProjectAnnoWithCondition = require('./fixtures/commit-4--operators-linesofcode_by_company_project_anno.json');
-const fixtureQueryOperatorsNumUsersByCompanyProjectWithCondition = require('./fixtures/commit-4--operators-numusers_by_company_project.json');
+const fixtureQueryOperatorsLinesOfCodeByCompanyAnnoWithCondition = require('./fixtures/commit-3--operators-linesofcode_by_company_anno.json');
+const fixtureQueryOperatorsCompanySizeByCompanyAnnoWithCondition = require('./fixtures/commit-3--operators-companysize_by_company_anno.json');
+const fixtureQueryOperatorsLinesOfCodeByCompanyProjectWithCondition = require('./fixtures/commit-3--operators-linesofcode_by_company_project.json');
+const fixtureQueryOperatorsLinesOfCodeByCompanyProjectAnnoWithCondition = require('./fixtures/commit-3--operators-linesofcode_by_company_project_anno.json');
+const fixtureQueryOperatorsNumUsersByCompanyProjectWithCondition = require('./fixtures/commit-3--operators-numusers_by_company_project.json');
 
-const fixtureDatapointTranslationsCompanySize = require('./fixtures/commit-4--translations-datapoints-company_scale.json');
-const fixtureEntityTranslationsCompanySize = require('./fixtures/commit-4--translations-entities-company_scale.json');
-const fixtureEntityTranslationsRegion = require('./fixtures/commit-4--translations-entities-region.json');
-const fixtureEntityTranslationsCompany = require('./fixtures/commit-4--translations-entities-company.json');
-const fixtureConceptsTranslations = require('./fixtures/commit-4--translations-concepts.json');
+const fixtureDatapointTranslationsCompanySize = require('./fixtures/commit-3--translations-datapoints-company_size.json');
+const fixtureEntityTranslationsCompanySize = require('./fixtures/commit-3--translations-entities-company_size.json');
+const fixtureEntityTranslationsRegion = require('./fixtures/commit-3--translations-entities-region.json');
+const fixtureEntityTranslationsCompany = require('./fixtures/commit-3--translations-entities-company.json');
+const fixtureConceptsTranslations = require('./fixtures/commit-3--translations-concepts.json');
 
-const INDEX_OF_FOURTH_COMMIT = 3;
+const INDEX_OF_THIRD_COMMIT = 2;
 const COMMIT_INDEX_TO_IMPORT = process.env.COMMIT_INDEX_TO_IMPORT || 0;
-if (COMMIT_INDEX_TO_IMPORT > INDEX_OF_FOURTH_COMMIT) {
+if (COMMIT_INDEX_TO_IMPORT > INDEX_OF_THIRD_COMMIT) {
   return;
 }
 
-describe("State Version 3 (4th commit)", function() {
+describe("State Version 3 (3rd commit)", function() {
 
   before(done => {
-    cliUtils.getCommitByGithubUrl(e2eEnv.repo, INDEX_OF_FOURTH_COMMIT, (error, commit) => {
+    cliUtils.getCommitByGithubUrl(e2eEnv.repo, INDEX_OF_THIRD_COMMIT, (error, commit) => {
       if (error) return done(error);
 
       cliUtils.setDefaultCommit(commit, done);
@@ -249,14 +249,14 @@ describe("State Version 3 (4th commit)", function() {
     it('should return list of entities that are part of company_size entityset', done => {
       const ddfql = {
         "select": {
-          "key": ["company_scale"],
-          "value": ["company_scale", "full_name_changed", "is--company_scale", "full_name", "company_size"]
+          "key": ["company_size"],
+          "value": ["company_size", "full_name_changed", "is--company_size", "full_name"]
         },
         "from": "entities",
         "where": {
           "$and": [
             {
-              "is--company_scale": true
+              "is--company_size": true
             }
           ]
         }
@@ -275,7 +275,7 @@ describe("State Version 3 (4th commit)", function() {
         "select": {
           "key": ["company", "anno"],
           "value": [
-            "company_scale"
+            "company_size"
           ]
         },
         "from": "datapoints",
@@ -341,11 +341,11 @@ describe("State Version 3 (4th commit)", function() {
           "value": ["num_users"]
         },
         "from": "datapoints",
-        "where": {
-        }
+        "where": {}
       };
 
       e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDatapointsNumUsersByCompanyProject, done);
+
     });
 
   });
@@ -358,13 +358,13 @@ describe("State Version 3 (4th commit)", function() {
         "select": {
           "key": ["company", "anno"],
           "value": [
-            "company_scale"
+            "company_size"
           ]
         },
         "from": "datapoints",
         "where": {
           "$and": [
-            {"company_scale": {"$eq": "small"}},
+            {"company_size": {"$eq": "small"}},
             {"anno": {"$lt": 2016}}
           ]
         }
@@ -454,6 +454,7 @@ describe("State Version 3 (4th commit)", function() {
       };
 
       e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureQueryOperatorsNumUsersByCompanyProjectWithCondition, done);
+
     });
 
   });
@@ -500,18 +501,18 @@ describe("State Version 3 (4th commit)", function() {
       e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureEntityTranslationsRegion, done);
     });
 
-    it('should return list of entities that are part of company_scale entity_set', done => {
+    it('should return list of entities that are part of company_size entity_set', done => {
       const ddfql = {
         "language": "nl-nl",
         "select": {
-          "key": ["company_scale"],
-          "value": ["full_name_changed", "is--company_scale"]
+          "key": ["company_size"],
+          "value": ["full_name_changed", "is--company_size"]
         },
         "from": "entities",
         "where": {
           "$and": [
             {
-              "is--company_scale": true
+              "is--company_size": true
             }
           ]
         }
@@ -520,12 +521,12 @@ describe("State Version 3 (4th commit)", function() {
       e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureEntityTranslationsCompanySize, done);
     });
 
-    it('should return all datapoints of company_scale indicator for language `nl-nl`', done => {
+    it('should return all datapoints of company_size indicator for language `nl-nl`', done => {
       const ddfql = {
         "language": "nl-nl",
         "select": {
           "key": ["company", "anno"],
-          "value": ["company_scale"]
+          "value": ["company_size"]
         },
         "from": "datapoints",
         "where": {}
