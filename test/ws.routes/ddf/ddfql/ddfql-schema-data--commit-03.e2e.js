@@ -7,49 +7,49 @@ const e2eEnv = require('../../../e2e.env');
 const fs = require('fs');
 const _ = require('lodash');
 
-const fixtureSchemaConcepts = require('./fixtures/commit-2--schema-concepts');
-const fixtureSchemaEntities = require('./fixtures/commit-2--schema-entities');
-const fixtureSchemaDatapoints = require('./fixtures/commit-2--schema-datapoints');
-const fixtureSchemaDatapointsMinMax = require('./fixtures/commit-2--schema-datapoints--min-max.json');
-const fixtureSchemaDatapointsAvg = require('./fixtures/commit-2--schema-datapoints--avg.json');
+const fixtureSchemaConcepts = require('./fixtures/commit-3--schema-concepts');
+const fixtureSchemaEntities = require('./fixtures/commit-3--schema-entities');
+const fixtureSchemaDatapoints = require('./fixtures/commit-3--schema-datapoints');
+const fixtureSchemaDatapointsMinMax = require('./fixtures/commit-3--schema-datapoints--min-max.json');
+const fixtureSchemaDatapointsAvg = require('./fixtures/commit-3--schema-datapoints--avg.json');
 
-const fixtureDataConcepts = require('./fixtures/commit-2--data-concepts.json');
-const fixtureDataEntities = require('./fixtures/commit-2--data-entities.json');
-const fixtureDataEntitiesSpeakingEnglish = require('./fixtures/commit-2--data-entities-speakingenglish.json');
-const fixtureDataEntitiesFoundation = require('./fixtures/commit-2--data-entities-foundation.json');
-const fixtureDataEntitiesCompanySize = require('./fixtures/commit-2--data-entities-companysize.json');
-const fixtureDataConceptsEntitySet = require('./fixtures/commit-2--data-concepts-etityset.json');
-const fixtureDataConceptsMeasure = require('./fixtures/commit-2--data-concepts-measure.json');
-const fixtureDataConceptsString = require('./fixtures/commit-2--data-concepts-string.json');
+const fixtureDataConcepts = require('./fixtures/commit-3--data-concepts.json');
+const fixtureDataEntities = require('./fixtures/commit-3--data-entities.json');
+const fixtureDataEntitiesSpeakingEnglish = require('./fixtures/commit-3--data-entities-speakingenglish.json');
+const fixtureDataEntitiesFoundation = require('./fixtures/commit-3--data-entities-foundation.json');
+const fixtureDataEntitiesCompanySize = require('./fixtures/commit-3--data-entities-companysize.json');
+const fixtureDataConceptsEntitySet = require('./fixtures/commit-3--data-concepts-etityset.json');
+const fixtureDataConceptsMeasure = require('./fixtures/commit-3--data-concepts-measure.json');
+const fixtureDataConceptsString = require('./fixtures/commit-3--data-concepts-string.json');
 
-const fixtureDatapointsLinesOfCodeByCompanyAnno = require('./fixtures/commit-2--datapoints-linesofcode_by_company_anno.json');
-const fixtureDatapointsCompanySizeByCompanyAnno = require('./fixtures/commit-2--datapoints-companysize_by_company_anno.json');
-const fixtureDatapointsLinesOfCodeByCompanyProject = require('./fixtures/commit-2--datapoints-linesofcode_by_company_project.json');
-const fixtureDatapointsLinesOfCodeByCompanyProjectAnno = require('./fixtures/commit-2--datapoints-linesofcode_by_company_project_anno.json');
-const fixtureDatapointsNumUsersByCompanyProject = require('./fixtures/commit-2--datapoints-numusers_by_company_project.json');
+const fixtureDatapointsLinesOfCodeByCompanyAnno = require('./fixtures/commit-3--datapoints-linesofcode_by_company_anno.json');
+const fixtureDatapointsCompanySizeByCompanyAnno = require('./fixtures/commit-3--datapoints-companysize_by_company_anno.json');
+const fixtureDatapointsLinesOfCodeByCompanyProject = require('./fixtures/commit-3--datapoints-linesofcode_by_company_project.json');
+const fixtureDatapointsLinesOfCodeByCompanyProjectAnno = require('./fixtures/commit-3--datapoints-linesofcode_by_company_project_anno.json');
+const fixtureDatapointsNumUsersByCompanyProject = require('./fixtures/commit-3--datapoints-numusers_by_company_project.json');
 
-const fixtureQueryOperatorsLinesOfCodeByCompanyAnnoWithCondition = require('./fixtures/commit-2--operators-linesofcode_by_company_anno.json');
-const fixtureQueryOperatorsCompanySizeByCompanyAnnoWithCondition = require('./fixtures/commit-2--operators-companysize_by_company_anno.json');
-const fixtureQueryOperatorsLinesOfCodeByCompanyProjectWithCondition = require('./fixtures/commit-2--operators-linesofcode_by_company_project.json');
-const fixtureQueryOperatorsLinesOfCodeByCompanyProjectAnnoWithCondition = require('./fixtures/commit-2--operators-linesofcode_by_company_project_anno.json');
-const fixtureQueryOperatorsNumUsersByCompanyProjectWithCondition = require('./fixtures/commit-2--operators-numusers_by_company_project.json');
+const fixtureQueryOperatorsLinesOfCodeByCompanyAnnoWithCondition = require('./fixtures/commit-3--operators-linesofcode_by_company_anno.json');
+const fixtureQueryOperatorsCompanySizeByCompanyAnnoWithCondition = require('./fixtures/commit-3--operators-companysize_by_company_anno.json');
+const fixtureQueryOperatorsLinesOfCodeByCompanyProjectWithCondition = require('./fixtures/commit-3--operators-linesofcode_by_company_project.json');
+const fixtureQueryOperatorsLinesOfCodeByCompanyProjectAnnoWithCondition = require('./fixtures/commit-3--operators-linesofcode_by_company_project_anno.json');
+const fixtureQueryOperatorsNumUsersByCompanyProjectWithCondition = require('./fixtures/commit-3--operators-numusers_by_company_project.json');
 
-const fixtureDatapointTranslationsCompanySize = require('./fixtures/commit-2--translations-datapoints-company_size.json');
-const fixtureEntityTranslationsCompanySize = require('./fixtures/commit-2--translations-entities-company_size.json');
-const fixtureEntityTranslationsRegion = require('./fixtures/commit-2--translations-entities-region.json');
-const fixtureEntityTranslationsCompany = require('./fixtures/commit-2--translations-entities-company.json');
-const fixtureConceptsTranslations = require('./fixtures/commit-2--translations-concepts.json');
+const fixtureDatapointTranslationsCompanySize = require('./fixtures/commit-3--translations-datapoints-company_size.json');
+const fixtureEntityTranslationsCompanySize = require('./fixtures/commit-3--translations-entities-company_size.json');
+const fixtureEntityTranslationsRegion = require('./fixtures/commit-3--translations-entities-region.json');
+const fixtureEntityTranslationsCompany = require('./fixtures/commit-3--translations-entities-company.json');
+const fixtureConceptsTranslations = require('./fixtures/commit-3--translations-concepts.json');
 
-const INDEX_OF_SECOND_COMMIT = 1;
+const INDEX_OF_THIRD_COMMIT = 2;
 const COMMIT_INDEX_TO_IMPORT = process.env.COMMIT_INDEX_TO_IMPORT || 0;
-if (COMMIT_INDEX_TO_IMPORT > INDEX_OF_SECOND_COMMIT) {
+if (COMMIT_INDEX_TO_IMPORT > INDEX_OF_THIRD_COMMIT) {
   return;
 }
 
-describe("State Version 1 (2nd commit)", function() {
+describe("State Version 3 (3rd commit)", function() {
 
   before(done => {
-    cliUtils.getCommitByGithubUrl(e2eEnv.repo, INDEX_OF_SECOND_COMMIT, (error, commit) => {
+    cliUtils.getCommitByGithubUrl(e2eEnv.repo, INDEX_OF_THIRD_COMMIT, (error, commit) => {
       if (error) return done(error);
 
       cliUtils.setDefaultCommit(commit, done);
@@ -406,7 +406,7 @@ describe("State Version 1 (2nd commit)", function() {
         "from": "datapoints",
         "where": {
           "$and": [
-            {"project": {"$ne": "xbox", "$nin": ["office"], "$in": ["vizabi", "ws", "mic"]}}
+            {"project": {"$ne": "xbox", "$nin": ["office"], "$in": ["vizabi", "ws", "mcrsft"]}}
           ]
         }
       };
@@ -426,7 +426,7 @@ describe("State Version 1 (2nd commit)", function() {
         "where": {
           "$and": [
             {"project": {"$ne": "ws"}},
-            {"company": {"$nin": ["mic"]}},
+            {"company": {"$nin": ["mcrsft"]}},
             {"lines_of_code": {"$gt": 450000}}
           ]
         }
@@ -521,7 +521,7 @@ describe("State Version 1 (2nd commit)", function() {
       e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureEntityTranslationsCompanySize, done);
     });
 
-    xit('should return all datapoints of company_size indicator for language `nl-nl`', done => {
+    it('should return all datapoints of company_size indicator for language `nl-nl`', done => {
       const ddfql = {
         "language": "nl-nl",
         "select": {

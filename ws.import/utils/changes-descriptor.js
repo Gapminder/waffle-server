@@ -5,6 +5,8 @@ const datapackageParser = require('./datapackage.parser');
 const ddfImportUtils = require('./import-ddf.utils');
 const constants = require('../../ws.utils/constants');
 
+const REMOVE_ACTION_NAME = 'remove';
+
 class ChangesDescriptor {
   constructor(rawChangesDescriptor) {
     this.object = _.get(rawChangesDescriptor, 'object', {});
@@ -44,22 +46,32 @@ class ChangesDescriptor {
 
   get oldResource() {
     if (!this._cachedOldResource) {
-      const oldResource = _.get(this.metadata.file, 'old');
-      this._cachedOldResource = this._parseResource(oldResource);
+      this._cachedOldResource = this._parseResource(this.oldResourceRaw);
     }
     return this._cachedOldResource;
   }
 
+  get oldResourceRaw() {
+    return _.get(this.metadata.file, 'old');
+  }
+
   get currentResource() {
     if (!this._cachedCurrentResource) {
-      const currentResource = _.get(this.metadata.file, 'new');
-      this._cachedCurrentResource = this._parseResource(currentResource);
+      this._cachedCurrentResource = this._parseResource(this.currentResourceRaw);
     }
     return this._cachedCurrentResource;
   }
 
+  get currentResourceRaw() {
+    return _.get(this.metadata.file, 'new');
+  }
+
   get removedColumns() {
     return this.metadata.removedColumns || [];
+  }
+
+  get onlyColumnsRemoved() {
+    return this.metadata.onlyColumnsRemoved;
   }
 
   describes(dataType) {
@@ -71,7 +83,7 @@ class ChangesDescriptor {
   }
 
   isRemoveAction() {
-    return this.metadata.action === 'remove';
+    return this.metadata.action === REMOVE_ACTION_NAME;
   }
 
   isUpdateAction() {
@@ -90,6 +102,8 @@ class ChangesDescriptor {
     return datapackageParser.parseDatapointsResource(resource);
   }
 }
+
+ChangesDescriptor.REMOVE_ACTION_NAME = REMOVE_ACTION_NAME;
 
 module.exports = {
   ChangesDescriptor

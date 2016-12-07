@@ -14,7 +14,6 @@ const constants = require('../../ws.utils/constants');
 const ddfImportUtils = require('../utils/import-ddf.utils');
 const datapointsUtils = require('../utils/datapoints.utils');
 const datapackageParser = require('../utils/datapackage.parser');
-const entitiesRepositoryFactory = require('../../ws.repository/ddf/entities/entities.repository');
 const datapointsRepositoryFactory = require('../../ws.repository/ddf/data-points/data-points.repository');
 
 module.exports = startDatapointsCreation;
@@ -45,16 +44,9 @@ function startDatapointsCreation(externalContext, done) {
     });
 }
 
-function findAllPreviousEntities(externalContext) {
-  return entitiesRepositoryFactory
-    .currentVersion(externalContext.dataset._id, externalContext.previousTransaction.createdAt)
-    .findAll()
-    .then(datapointsUtils.segregateEntities);
-}
-
 function createDatapoints(externalContextFrozen) {
   const findAllEntitiesMemoized = _.memoize(datapointsUtils.findAllEntities);
-  const findAllPreviousEntitiesMemoized = _.memoize(findAllPreviousEntities);
+  const findAllPreviousEntitiesMemoized = _.memoize(datapointsUtils.findAllPreviousEntities);
   const saveEntitiesFoundInDatapoints = datapointsUtils.createEntitiesFoundInDatapointsSaverWithCache();
 
   const saveDatapointsAndEntitiesFoundInThem = _.curry(datapointsUtils.saveDatapointsAndEntitiesFoundInThem)(
@@ -223,7 +215,7 @@ function closeDatapointsOfPreviousVersion(changedDataPoints, onDatapointsOfPrevi
 }
 
 function closeDatapointsPerMeasure(rawDatapoint, externalContext, onDatapointsForGivenMeasuresClosed) {
-  const dimensionsEntityOriginIds = getDimensionsAsEntityOriginIds(rawDatapoint, {
+  const dimensionsEntityOriginIds = datapointsUtils.getDimensionsAsEntityOriginIds(rawDatapoint, {
     dimensions: externalContext.dimensions,
     segregatedEntities: externalContext.segregatedEntities,
     segregatedPreviousEntities: externalContext.segregatedPreviousEntities,
@@ -258,19 +250,6 @@ function closeDatapointsPerMeasure(rawDatapoint, externalContext, onDatapointsFo
   });
 }
 
-function getDimensionsAsEntityOriginIds(datapoint, externalContext) {
-  const entityGids = _.chain(datapoint)
-    .pick(_.keys(externalContext.dimensions))
-    .values()
-    .compact()
-    .value();
-
-  return _.flatMap(entityGids, (gid) => {
-    const entities = externalContext.segregatedEntities.groupedByGid[gid] || externalContext.segregatedPreviousEntities.groupedByGid[gid];
-    return _.map(entities, 'originId');
-  });
-}
-
 function getAction(metadata) {
   return _.get(metadata, 'action');
 }
@@ -283,7 +262,7 @@ function omitNotClosingMeasures(options) {
     return result;
   }, []);
 
-  return _.omit(options.rawDatapoint, notClosingMeasureGids)
+  return _.omit(options.rawDatapoint, notClosingMeasureGids);
 }
 
 function getDimensionsAndMeasures(resource, externalContext) {

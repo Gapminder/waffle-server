@@ -14,10 +14,10 @@ module.exports = createTranslationsUpdater;
 function createTranslationsUpdater(plugin, externalContext, done) {
   logger.info('Start translations updating process for:', plugin.dataType);
 
-  const translationsDiffStream = createTranslationsDiffStream(plugin.dataType, externalContext);
+  const translationsDiffStream = createTranslationsDiffStream(plugin, externalContext);
 
   //This stream should be duplicated YES! Don't be smart and don't try to substitute with the definition above
-  const translationsDiffStreamForRemovals = createTranslationsDiffStream(plugin.dataType, externalContext);
+  const translationsDiffStreamForRemovals = createTranslationsDiffStream(plugin, externalContext);
 
   //Streams order is IMPORTANT HERE - DO NOT TOUCH!
   const translationsDiffProcessingStream = hi([
@@ -31,11 +31,12 @@ function createTranslationsUpdater(plugin, externalContext, done) {
   return ddfImportUtils.startStreamProcessing(translationsDiffProcessingStream, externalContext, done);
 }
 
-function createTranslationsDiffStream(dataType, externalContext) {
+function createTranslationsDiffStream(plugin, externalContext) {
   return ddfImportUtils
     .readTextFileByLineAsJsonStream(externalContext.pathToLangDiff)
     .map(changes => new ChangesDescriptor(changes))
-    .filter(changesDescriptor => changesDescriptor.describes(dataType))
+    .filter(changesDescriptor => changesDescriptor.describes(plugin.dataType))
+    .through(_.bind(plugin.transformStreamBeforeActionSegregation || _.identity, plugin))
     .map(changesDescriptor => ({context: externalContext, changesDescriptor}));
 }
 
@@ -101,6 +102,7 @@ function toApplyTranslationChangesStream(translationsDiffStream, translationsApi
       const enrichedContext = _.extend(additionsToContext, context);
       return {changesDescriptor, context: enrichedContext};
     })
+    .through(translationsApi.transformStreamBeforeChangesApplied)
     .map(changesAndContext => {
       return hi.wrapCallback(applyTranslationChanges)(changesAndContext, translationsApi);
     })
@@ -119,7 +121,7 @@ function applyTranslationChanges({changesDescriptor, context}, translationsApi, 
     }
 
     if (!foundTarget) {
-      logger.debug('Translation target was not found, so there is no need to update translations');
+      logger.debug('Translation target was not found (probably target was closed in this update), hence no updates to translations');
       return onChangesApplied(null);
     }
 
@@ -170,7 +172,7 @@ function updateTranslation(translationsApi, options, onTranslationAdded) {
   const {changesDescriptor, context, foundTarget, fetchTranslationTargetQuery} = options;
 
   const newTranslation = translationsApi.makeTranslation(changesDescriptor, foundTarget);
-  const processedTranslation = translationsApi.processTranslationBeforeUpdate(newTranslation);
+  const processedTranslation = translationsApi.processTranslationBeforeUpdate(newTranslation, context);
 
   if (foundTarget.from === context.version) {
     return translationsApi.addTranslation({
@@ -204,8 +206,8 @@ function makeTranslationForCreateAction(changesDescriptor) {
 function makeTranslationForUpdateAction(changesDescriptor, foundTarget) {
   return _.chain(foundTarget.languages)
     .get(changesDescriptor.language)
-    .extend(changesDescriptor.changes)
     .omit(changesDescriptor.removedColumns)
+    .extend(changesDescriptor.changes)
     .value();
 }
 
@@ -221,8 +223,9 @@ function getTranslationApiFromRepository(fetchingRepository, updatingRepository 
 
 function getTranslationApiFromPlugin(plugin) {
   return {
-    enrichContext: _.bind((plugin.enrichContext || _.noop), plugin),
-    processTranslationBeforeUpdate: _.bind((plugin.processTranslationBeforeUpdate || _.identity), plugin),
+    transformStreamBeforeChangesApplied: _.bind(plugin.transformStreamBeforeChangesApplied || _.identity, plugin),
+    enrichContext: _.bind(plugin.enrichContext || _.noop, plugin),
+    processTranslationBeforeUpdate: _.bind(plugin.processTranslationBeforeUpdate || _.identity, plugin),
     makeQueryToFetchTranslationTarget: _.bind(plugin.makeQueryToFetchTranslationTarget, plugin),
     makeTranslationTargetBasedOnItsClosedVersion: _.bind(plugin.makeTranslationTargetBasedOnItsClosedVersion, plugin)
   };

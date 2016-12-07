@@ -13,7 +13,7 @@ module.exports = {
 
 function getCacheConfig(prefix) {
   return function (req, res, next) {
-    if (req.query.force === 'true' || req.body.force === true) {
+    if (String(req.query.force) === 'true') {
       res.use_express_redis_cache = false;
       return next();
     }
