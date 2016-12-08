@@ -54,8 +54,9 @@ function _loadConcepts(pipe, done) {
     .filter(resource => resource.type === constants.CONCEPTS)
     .head()
     .flatMap(resource => {
-      return ddfImportUtils.readCsvFileAsStream(pathToDdfFolder, resource.path)
-        .map(rawConcept => ({filename: resource.path, object: rawConcept}))
+      return ddfImportUtils
+        .readCsvFileAsStream(pathToDdfFolder, resource.path)
+        .map(rawConcept => ({filename: resource.path, object: rawConcept}));
     })
     .collect()
     .toCallback((error, rawConcepts) => {
