@@ -4,6 +4,7 @@ const _ = require('lodash');
 const async = require('async');
 
 const config = require('../ws.config/config');
+const logger = require('../ws.config/log');
 const ddfImportUtils = require('./utils/import-ddf.utils.js');
 const importEntities = require('./import-entities');
 const importConcepts = require('./import-concepts');
@@ -43,7 +44,7 @@ module.exports = (options, done) => {
   ], (importError, pipe) => {
     console.timeEnd(DATASET_IMPORT_LABEL);
 
-    if (importError && pipe.transaction) {
+    if (importError && _.get(pipe, 'transaction')) {
       return done(importError, {transactionId: pipe.transaction._id});
     }
 

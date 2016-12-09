@@ -91,13 +91,16 @@ ConceptsRepository.prototype.count = function (onCounted) {
   return Concepts.count(countQuery, onCounted);
 };
 
-ConceptsRepository.prototype.rollback = function (versionToRollback, onRolledback) {
+ConceptsRepository.prototype.rollback = function ({createdAt: versionToRollback}, onRolledback) {
   return async.parallelLimit([
     done => Concepts.update({to: versionToRollback}, {$set: {to: constants.MAX_VERSION}}, {multi: true}).lean().exec(done),
     done => Concepts.remove({from: versionToRollback}, done)
   ], constants.LIMIT_NUMBER_PROCESS, onRolledback);
 };
 
+ConceptsRepository.prototype.removeByDataset = function (datasetId, onRemove) {
+  return Concepts.remove({dataset: datasetId}, onRemove)
+};
 
 ConceptsRepository.prototype.findAllPopulated = function (done) {
   const composedQuery = this._composeQuery();

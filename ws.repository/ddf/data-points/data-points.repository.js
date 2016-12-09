@@ -31,11 +31,15 @@ DataPointsRepository.prototype.count = function (onCounted) {
   return DataPoints.count(countQuery, onCounted);
 };
 
-DataPointsRepository.prototype.rollback = function (versionToRollback, onRolledback) {
+DataPointsRepository.prototype.rollback = function ({createdAt: versionToRollback}, onRolledback) {
   return async.parallelLimit([
     done => DataPoints.update({to: versionToRollback}, {$set: {to: constants.MAX_VERSION}}, {multi: true}).lean().exec(done),
     done => DataPoints.remove({from: versionToRollback}, done)
   ], constants.LIMIT_NUMBER_PROCESS, onRolledback);
+};
+
+DataPointsRepository.prototype.removeByDataset = function (datasetId, onRemove) {
+  return DataPoints.remove({dataset: datasetId}, onRemove)
 };
 
 //FIXME: This should be used only for queries that came from normalizer!!!

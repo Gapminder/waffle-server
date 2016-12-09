@@ -34,11 +34,15 @@ EntitiesRepository.prototype.count = function (onCounted) {
   return Entities.count(countQuery, onCounted);
 };
 
-EntitiesRepository.prototype.rollback = function (versionToRollback, onRolledback) {
+EntitiesRepository.prototype.rollback = function ({createdAt: versionToRollback}, onRolledback) {
   return async.parallelLimit([
     done => Entities.update({to: versionToRollback}, {$set: {to: constants.MAX_VERSION}}, {multi: true}).lean().exec(done),
     done => Entities.remove({from: versionToRollback}, done)
   ], constants.LIMIT_NUMBER_PROCESS, onRolledback);
+};
+
+EntitiesRepository.prototype.removeByDataset = function (datasetId, onRemove) {
+  return Entities.remove({dataset: datasetId}, onRemove);
 };
 
 EntitiesRepository.prototype.closeByDomainAndSets = function ({domain, sets}, done) {

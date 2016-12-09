@@ -30,7 +30,7 @@ module.exports = {
   cleanDdfRedisCache
 };
 
-function getGitCommitsList(github, cb) {
+function getGitCommitsList(github, onCommitsRecieved) {
   if (!github) {
     return cb('Url to dataset\'s github repository was not provided');
   }
@@ -39,7 +39,7 @@ function getGitCommitsList(github, cb) {
     async.constant({github}),
     ddfImportUtils.cloneDdfRepo,
     _getPathToRepo
-  ], cb);
+  ], onCommitsRecieved);
 }
 
 function _getPathToRepo(pipe, done) {

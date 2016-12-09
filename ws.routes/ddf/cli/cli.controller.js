@@ -12,6 +12,7 @@ const routeUtils = require('../../utils');
 const cliService = require('./../../../ws.services/cli.service');
 const reposService = require('../../../ws.services/repos.service');
 const transactionsService = require('../../../ws.services/dataset-transactions.service');
+const datasetsService = require('../../../ws.services/datasets.service');
 
 const cache = require('../../../ws.utils/redis-cache');
 const logger = require('../../../ws.config/log');
@@ -33,6 +34,8 @@ module.exports = serviceLocator => {
   router.post('/api/ddf/cli/update-incremental', _updateIncrementally);
 
   router.post('/api/ddf/cli/import-dataset', _importDataset);
+
+  router.post('/api/ddf/cli/remove-dataset', _removeDataset);
 
   router.get('/api/ddf/cli/git-commits-list', _getGitCommitsList);
 
@@ -148,6 +151,29 @@ module.exports = serviceLocator => {
       }
 
       return res.json({success: !rollbackError, message: 'Rollback completed successfully'});
+    });
+  }
+
+  function _removeDataset(req, res) {
+    if (!req.user) {
+      return res.json({success: false, error: 'There is no authenticated user to remove dataset'});
+    }
+
+    const datasetName = req.body.datasetName;
+
+    if (!datasetName) {
+      return res.json({success: false, error: 'No dataset name was given'});
+    }
+
+    const userId = req.user._id;
+
+    return datasetsService.removeDatasetData(datasetName, userId, removeError => {
+      if (removeError) {
+        logger.error(removeError);
+        return res.json({success: !removeError, error: removeError});
+      }
+
+      return res.json({success: !removeError, message: 'Removing dataset was completed successfully'});
     });
   }
 

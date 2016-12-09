@@ -11,6 +11,8 @@ const transactionsRepository = require('../ws.repository/ddf/dataset-transaction
 const conceptsRepositoryFactory = require('../ws.repository/ddf/concepts/concepts.repository');
 const entitiesRepositoryFactory = require('../ws.repository/ddf/entities/entities.repository');
 const datapointsRepositoryFactory = require('../ws.repository/ddf/data-points/data-points.repository');
+const datasetIndexRepository = require('../ws.repository/ddf/dataset-index/dataset-index.repository');
+const VersionedModelRepositoryFactory = require('../ws.repository/repository.factory');
 
 module.exports = {
   setLastError,
@@ -85,11 +87,9 @@ function rollbackFailedTransactionFor(datasetName, onRollbackCompleted) {
       return onRollbackCompleted('There is nothing to rollback - all transactions are completed successfully');
     }
 
-    const failedVersion = failedTransaction.createdAt;
-
     const rollbackTasks =
-      _.chain([conceptsRepositoryFactory, entitiesRepositoryFactory, datapointsRepositoryFactory])
-        .map(repositoryFactory => toRollbackFunction(repositoryFactory, failedVersion))
+      _.chain([conceptsRepositoryFactory, entitiesRepositoryFactory, datapointsRepositoryFactory, datasetIndexRepository])
+        .map(repositoryFactory => toRollbackFunction(repositoryFactory, failedTransaction))
         .flatten()
         .map(rollbackTask => (done => async.retry(retryConfig, rollbackTask, done)))
         .value();
@@ -106,7 +106,7 @@ function rollbackFailedTransactionFor(datasetName, onRollbackCompleted) {
 }
 
 function toRollbackFunction(repositoryFactory, versionToRollback) {
-  const repository = repositoryFactory.versionAgnostic();
+  const repository = repositoryFactory instanceof VersionedModelRepositoryFactory ? repositoryFactory.versionAgnostic() : repositoryFactory;
   return repository.rollback.bind(repository, versionToRollback);
 }
 

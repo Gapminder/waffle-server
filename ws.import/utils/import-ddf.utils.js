@@ -180,8 +180,13 @@ function readCsvFile(pathToDdfFolder, filepath, options, cb) {
 function cloneDdfRepo(pipe, done) {
   logger.info('Clone ddf repo: ', pipe.github, pipe.commit);
   return reposService.cloneRepo(pipe.github, pipe.commit, (error, repoInfo) => {
+    if (error) {
+      return done(error, pipe);
+    }
+
     pipe.repoInfo = repoInfo;
-    return done(error, pipe);
+
+    return done(null, pipe);
   });
 }
 

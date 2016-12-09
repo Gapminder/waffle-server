@@ -55,13 +55,8 @@ module.exports = (options, done) => {
   ], (updateError, pipe) => {
     console.timeEnd(DATASET_INCREMENTAL_UPDATE_LABEL);
 
-    if (updateError && pipe.transaction) {
+    if (updateError && _.get(pipe, 'transaction')) {
       return done(updateError, {transactionId: pipe.transaction._id});
-    }
-
-    if (updateError) {
-      logger.error(updateError);
-      return done(updateError);
     }
 
     return done(updateError, {

@@ -61,13 +61,33 @@ function _cloneRepo(githubUrlDescriptor, pathToRepo, commit, onCloned) {
   });
 }
 
-function checkoutRepo({branch}, pathToRepo, commit, onCheckedOut) {
+function checkoutRepo({branch, url: githubUrl}, pathToRepo, commit, onCheckedOut) {
   git(pathToRepo)
-    .fetch('origin', branch)
-    .reset(['--hard', `origin/${branch}`])
-    .clean('f')
-    .checkout([commit || 'HEAD'], function (err) {
-      return onCheckedOut(err, {pathToRepo});
+    .fetch('origin', branch, (fetchError) => {
+      if (fetchError) {
+        logger.error(fetchError);
+        return onCheckedOut(`Cannot fetch branch '${branch}' from repo ${githubUrl}`);
+      }
+    })
+    .reset(['--hard', `origin/${branch}`], (resetError) => {
+      if (resetError) {
+        logger.error(resetError);
+        return onCheckedOut(`Cannot reset repo from ${githubUrl}`);
+      }
+    })
+    .clean('f', (cleanError) => {
+      if (cleanError) {
+        logger.error(cleanError);
+        return onCheckedOut(`Cannot clean repo from ${githubUrl}`);
+      }
+    })
+    .checkout([commit || 'HEAD'], function (checkoutError) {
+      if (checkoutError) {
+        logger.error(checkoutError);
+        return onCheckedOut(`Cannot checkout to branch '${branch}' in repo from ${githubUrl}`);
+      }
+
+      return onCheckedOut(null, {pathToRepo});
     });
 }
 

@@ -39,8 +39,16 @@ DatasetTransactionsRepository.prototype.removeById = function (transactionId, do
   return DatasetTransactions.findOneAndRemove({_id: transactionId}, done);
 };
 
+DatasetTransactionsRepository.prototype.removeAllByDataset = function (datasetId, done) {
+  return DatasetTransactions.remove({dataset: datasetId}, done);
+};
+
 DatasetTransactionsRepository.prototype.findAllCompletedByDataset = function (datasetId, done) {
   return DatasetTransactions.find({dataset: datasetId, isClosed: true}).sort({createdAt: -1}).lean().exec(done);
+};
+
+DatasetTransactionsRepository.prototype.findAllByDataset = function (datasetId, done) {
+  return DatasetTransactions.find({dataset: datasetId}).lean().exec(done);
 };
 
 DatasetTransactionsRepository.prototype.setLastError = function (transactionId, lastErrorMessage, done) {
