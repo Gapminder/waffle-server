@@ -49,8 +49,8 @@ module.exports = (options, done) => {
 
     return done(importError, {
       datasetName: pipe.datasetName,
-      version: pipe.transaction.createdAt,
-      transactionId: pipe.transaction._id
+      version: _.get(pipe.transaction, 'createdAt'),
+      transactionId: _.get(pipe.transaction, '_id')
     });
   });
 };

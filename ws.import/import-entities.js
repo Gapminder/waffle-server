@@ -5,7 +5,7 @@ const fs = require('fs');
 const hi = require('highland');
 
 const logger = require('../ws.config/log');
-const ddfUtils = require('./utils/import-ddf.utils');
+const ddfImportUtils = require('./utils/import-ddf.utils');
 const constants = require('../ws.utils/constants');
 const entitiesUtils = require('./utils/entities.utils');
 const ddfMappers = require('./utils/ddf-mappers');
@@ -23,24 +23,15 @@ module.exports = (externalContext, done) => {
     'dataset'
   ]));
 
-  const errors = [];
-  createEntities(externalContextFrozen)
-    .stopOnError(error => {
-      errors.push(error);
-    })
-    .done(() => {
-      if (!_.isEmpty(errors)) {
-        return done(errors, externalContext);
-      }
-      return done(null, externalContext);
-    });
+  const entitiesCreateStream = createEntities(externalContextFrozen);
+  ddfImportUtils.startStreamProcessing(entitiesCreateStream, externalContext, done);
 };
 
 function createEntities(externalContext) {
   return hi(externalContext.datapackage.resources)
     .filter(resource => resource.type === constants.ENTITIES)
     .flatMap(resource => loadEntitiesFromCsv(resource, externalContext))
-    .batch(ddfUtils.DEFAULT_CHUNK_SIZE)
+    .batch(ddfImportUtils.DEFAULT_CHUNK_SIZE)
     .flatMap(entitiesBatch => {
       return hi(storeEntitesToDb(entitiesBatch));
     });
@@ -49,7 +40,7 @@ function createEntities(externalContext) {
 function loadEntitiesFromCsv(resource, externalContext) {
   const {pathToDdfFolder} = externalContext;
 
-  return ddfUtils.readCsvFileAsStream(pathToDdfFolder, resource.path)
+  return ddfImportUtils.readCsvFileAsStream(pathToDdfFolder, resource.path)
     .map(rawEntity => {
       const setsAndDomain = entitiesUtils.getSetsAndDomain(resource, externalContext);
       const context = _.extend({filename: resource.path}, setsAndDomain, externalContext);

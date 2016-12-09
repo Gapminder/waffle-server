@@ -4,7 +4,6 @@ const _ = require('lodash');
 const cors = require('cors');
 const express = require('express');
 const passport = require('passport');
-const JSONStream = require('JSONStream');
 const compression = require('compression');
 
 const routeUtils = require('../../utils');

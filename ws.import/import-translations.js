@@ -1,15 +1,14 @@
 'use strict';
 
-const fs = require('fs');
 const _ = require('lodash');
-const path = require('path');
+const fs = require('fs');
 const hi = require('highland');
+const path = require('path');
 
 const logger = require('../ws.config/log');
 const constants = require('../ws.utils/constants');
-const ddfUtils = require('./utils/import-ddf.utils');
+const ddfImportUtils = require('./utils/import-ddf.utils');
 const ddfMappers = require('./utils/ddf-mappers');
-const translationsUtils = require('./utils/translations.utils');
 const datapackageParser = require('./utils/datapackage.parser');
 const conceptsRepositoryFactory = require('../ws.repository/ddf/concepts/concepts.repository');
 const entitiesRepositoryFactory = require('../ws.repository/ddf/entities/entities.repository');
@@ -28,19 +27,8 @@ function importTranslations(externalContext, done) {
     'dataset'
   ]));
 
-  const errors = [];
-  createTranslations(externalContextFrozen)
-    .stopOnError(error => {
-      errors.push(error);
-    })
-    .done(() => {
-      logger.info('finished process creating translations');
-
-      if (!_.isEmpty(errors)) {
-        return done(errors, externalContext);
-      }
-      return done(null, externalContext);
-    });
+  const translationsCreateStream = createTranslations(externalContextFrozen);
+  ddfImportUtils.startStreamProcessing(translationsCreateStream, externalContext, done);
 }
 
 function createTranslations(externalContext) {
@@ -164,7 +152,7 @@ function extendTranslationsToResourceStream(translations, resource) {
 function loadTranslationsFromCsv(resource, externalContext) {
   const {pathToDdfFolder} = externalContext;
 
-  return ddfUtils.readCsvFileAsStream(pathToDdfFolder, resource.pathToTranslationFile)
+  return ddfImportUtils.readCsvFileAsStream(pathToDdfFolder, resource.pathToTranslationFile)
     .map(rawTranslation => {
       return {object: rawTranslation, resource};
     });
