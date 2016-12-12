@@ -36,11 +36,19 @@ function findDefaultDatasetAndTransaction(pipe, done) {
 }
 
 function translateDocument(target, language) {
-  if (language) {
-    return _.extend({}, target.properties, _.get(target.languages, language, {}));
+  if (!language) {
+    return target.properties;
   }
 
-  return target.properties;
+  const translatedProperties = _.get(target.languages, language, {});
+  if (_.isEmpty(translatedProperties)) {
+    return target.properties;
+  }
+
+  return _.reduce(target.properties, (result, value, prop) => {
+    result[prop] = translatedProperties[prop] || value;
+    return result;
+  }, {});
 }
 
 function translate(translationTargetName, pipe, done) {
