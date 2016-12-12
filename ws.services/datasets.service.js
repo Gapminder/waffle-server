@@ -86,7 +86,7 @@ function _removeAllDataByDataset(pipe, onDataRemoved) {
     }
 
     return onDataRemoved(null, pipe);
-  })
+  });
 }
 
 function _toRemoveFunction(repositoryFactory, datasetId) {
@@ -114,7 +114,7 @@ function _findDatasetsByUser(pipe, done) {
 }
 
 function _collectVersionsForEachDataset(pipe, done) {
-  return async.mapLimit(pipe.datasets, constants.LIMIT_NUMBER_PROCESS, _findAllComplitedVersionsByDataset, (collectingVersionsError, datasetsWithVersions) => {
+  return async.mapLimit(pipe.datasets, constants.LIMIT_NUMBER_PROCESS, _findAllCompletedVersionsByDataset, (collectingVersionsError, datasetsWithVersions) => {
     if (collectingVersionsError) {
       return done(collectingVersionsError);
     }
@@ -123,7 +123,7 @@ function _collectVersionsForEachDataset(pipe, done) {
   });
 }
 
-function _findAllComplitedVersionsByDataset(dataset, onTransactionsFound) {
+function _findAllCompletedVersionsByDataset(dataset, onTransactionsFound) {
   return transactionsRepository.findAllCompletedByDataset(dataset._id, (transactionSearchError, transactions) => {
     if (transactionSearchError) {
       return onTransactionsFound(transactionSearchError);

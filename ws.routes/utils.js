@@ -1,14 +1,18 @@
 'use strict';
 
+const _ = require('lodash');
 const md5 = require('md5');
 const passport = require('passport');
 const config = require('../ws.config/config');
 const logger = require('../ws.config/log');
 
+const datasetsRepository = require('../ws.repository/ddf/datasets/datasets.repository');
+
 module.exports = {
   getCacheConfig,
   ensureAuthenticatedViaToken,
-  respondWithRawDdf
+  respondWithRawDdf,
+  checkDatasetAccessibility
 };
 
 function getCacheConfig(prefix) {
@@ -49,4 +53,37 @@ function respondWithRawDdf(req, res, next) {
   };
 }
 
+function checkDatasetAccessibility(req, res, next) {
+  const datasetName = _.get(req, 'body.dataset', null);
+  if (!datasetName) {
+    return next();
+  }
 
+  return datasetsRepository.findByName(datasetName, (error, dataset) => {
+    if (error) {
+      logger.error(error);
+      return res.json({success: false, error});
+    }
+
+    if (!dataset) {
+      return res.json({success: false, message: `Dataset with given name ${datasetName} was not found`});
+    }
+
+    if (!dataset.private) {
+      return next();
+    }
+
+    const providedAccessToken = _.get(req, 'body.dataset_access_token', null);
+    if (_validateDatasetAccessToken(dataset.accessToken, providedAccessToken)) {
+      return next();
+    }
+
+    return res.json({success: false, error: 'You are not allowed to access data according to given query'});
+  });
+}
+
+function _validateDatasetAccessToken(datasetAccessToken, providedAccessToken) {
+  const tokensAreEqual = datasetAccessToken === providedAccessToken;
+  const tokensAreNotEmpty = !_.isEmpty(datasetAccessToken) && !_.isEmpty(providedAccessToken);
+  return tokensAreNotEmpty && tokensAreEqual;
+}

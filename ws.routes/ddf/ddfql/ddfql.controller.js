@@ -28,6 +28,7 @@ module.exports = serviceLocator => {
   router.use(cors());
 
   router.post('/api/ddf/ql',
+    routeUtils.checkDatasetAccessibility,
     compression({filter: commonService.shouldCompress}),
     routeUtils.getCacheConfig(constants.DDF_REDIS_CACHE_NAME_DDFQL),
     cache.route({expire: constants.DDF_REDIS_CACHE_LIFETIME}),
@@ -62,6 +63,7 @@ module.exports = serviceLocator => {
     const version = _.get(req, 'body.version', null);
 
     const options = {
+      user: req.user,
       from,
       select,
       headers,
@@ -75,20 +77,17 @@ module.exports = serviceLocator => {
       language
     };
 
+    req.ddfDataType = from;
     if (from === constants.DATAPOINTS) {
-      req.ddfDataType = from;
       return datapointsService.collectDatapointsByDdfql(options, onEntriesCollected);
     } else if (from === constants.ENTITIES) {
-      req.ddfDataType = from;
       return entitiesService.collectEntitiesByDdfql(options, onEntriesCollected);
     } else if (from === constants.CONCEPTS) {
-      req.ddfDataType = from;
       return conceptsService.collectConceptsByDdfql(options, onEntriesCollected);
     } else if (queryToSchema(from)) {
       req.ddfDataType = constants.SCHEMA;
-      req.query.format = 'wsJson';
       const onSchemaEntriesFound = routeUtils.respondWithRawDdf(req, res, next);
-      return schemaService.findSchemaByDdfql(options.query, onSchemaEntriesFound);
+      return schemaService.findSchemaByDdfql(options, onSchemaEntriesFound);
     } else {
       return onEntriesCollected(`Value '${from}' in the 'from' field isn't supported yet.`);
     }
