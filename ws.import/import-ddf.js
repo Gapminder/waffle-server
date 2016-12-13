@@ -16,6 +16,7 @@ const DATASET_IMPORT_LABEL = 'Dataset import';
 
 module.exports = (options, done) => {
   const pipe = _.extend(_.pick(options, [
+    'isDatasetPrivate',
     'github',
     'datasetName',
     'commit',

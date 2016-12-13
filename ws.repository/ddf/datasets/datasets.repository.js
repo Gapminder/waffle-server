@@ -16,8 +16,8 @@ DatasetsRepository.prototype.create = (dataset, done) => {
   });
 };
 
-DatasetsRepository.prototype.findByName = (datasetName, done) => {
-  return Datasets.findOne({name: datasetName}).lean().exec(done);
+DatasetsRepository.prototype.findByName = function (name, done) {
+  return Datasets.findOne({name}).lean().exec(done);
 };
 
 DatasetsRepository.prototype.findByUser = (userId, done) => {
@@ -50,6 +50,10 @@ DatasetsRepository.prototype.lock = (datasetName, done) => {
 
 DatasetsRepository.prototype.removeById = (datasetId, done) => {
   return Datasets.findOneAndRemove({_id: datasetId}, done);
+};
+
+DatasetsRepository.prototype.setAccessTokenForPrivateDataset = ({datasetName, userId, accessToken}, done) => {
+  return Datasets.findOneAndUpdate({name: datasetName, createdBy: userId, private: true}, {accessToken}, {new: 1}, done);
 };
 
 module.exports = new DatasetsRepository();

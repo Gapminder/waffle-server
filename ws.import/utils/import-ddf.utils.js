@@ -293,10 +293,19 @@ function createDataset(pipe, done) {
     name: pipe.datasetName,
     path: pipe.github,
     createdAt: pipe.transaction.createdAt,
-    createdBy: pipe.user._id
+    createdBy: pipe.user._id,
+    private: pipe.isDatasetPrivate
   };
 
   datasetsRepository.create(dataset ,(err, createdDataset) => {
+    if (err) {
+      return done(err);
+    }
+
+    if (!createdDataset) {
+      return done('Dataset was not created due to some issues');
+    }
+
     pipe.dataset = createdDataset;
     return done(err, pipe);
   });

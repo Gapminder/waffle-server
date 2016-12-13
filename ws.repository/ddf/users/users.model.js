@@ -10,7 +10,7 @@ const Users = new Schema({
   name: {type: String},
   email: {type: String, index: true, unique: true, required: true},
   username: {type: String, index: true, unique: true, required: true},
-  password: {type: String, required: true, 'private': true},
+  password: {type: String, required: true, private: true},
   image: String,
 
   uniqueToken: {type: String},

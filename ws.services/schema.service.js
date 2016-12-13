@@ -12,9 +12,9 @@ module.exports = {
   findSchemaByDdfql
 };
 
-function findSchemaByDdfql(query, onFound) {
+function findSchemaByDdfql(options, onFound) {
   return async.waterfall([
-    async.constant({query}),
+    async.constant(options),
     ddfQueryValidator.validateDdfQueryAsync,
     commonService.findDefaultDatasetAndTransaction,
     _findSchemaByDdfql

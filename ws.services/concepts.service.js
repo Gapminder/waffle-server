@@ -11,7 +11,7 @@ const conceptsRepositoryFactory = require('../ws.repository/ddf/concepts/concept
 
 module.exports = {
   getConcepts,
-  collectConceptsByDdfql,
+  collectConceptsByDdfql
 };
 
 function collectConceptsByDdfql(options, cb) {
@@ -63,7 +63,7 @@ function getConceptsByDdfql(pipe, cb) {
 
       pipe.concepts = concepts;
 
-      return cb(null, pipe);;
+      return cb(null, pipe);
     });
 }
 

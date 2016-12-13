@@ -2,19 +2,19 @@
 
 const _ = require('lodash');
 const compression = require('compression');
+
+const config = require('../ws.config/config');
 const transactionsService = require('./dataset-transactions.service');
-const constants = require('../ws.utils/constants');
 
 module.exports = {
   findDefaultDatasetAndTransaction,
   shouldCompress,
-  translate,
   translateDocument
 };
 
 function shouldCompress(req, res) {
-  if (req.query['no-compression'] && !_.includes(['production', 'stage'], process.env.NODE_ENV)) {
-    // don't compress responses with this request header
+  if (req.query['no-compression'] && !config.IS_PRODUCTION) {
+    // don't compress responses with this request header on production environments
     return false;
   }
 
@@ -23,14 +23,15 @@ function shouldCompress(req, res) {
 }
 
 function findDefaultDatasetAndTransaction(pipe, done) {
-  return transactionsService.findDefaultDatasetAndTransaction(pipe.datasetName, pipe.version, (error, datasetAndTransaction) => {
+  return transactionsService.findDefaultDatasetAndTransaction(pipe.datasetName, pipe.version, (error, {dataset, transaction} = {}) => {
     if (error) {
       return done(error);
     }
 
-    pipe.dataset = datasetAndTransaction.dataset;
-    pipe.transaction = datasetAndTransaction.transaction;
-    pipe.version = datasetAndTransaction.transaction.createdAt;
+    pipe.dataset = dataset;
+    pipe.transaction = transaction;
+    pipe.version = transaction.createdAt;
+
     return done(null, pipe);
   });
 }
@@ -49,17 +50,4 @@ function translateDocument(target, language) {
     result[prop] = translatedProperties[prop] || value;
     return result;
   }, {});
-}
-
-function translate(translationTargetName, pipe, done) {
-  if (!_.includes(pipe.transaction.languages, pipe.language)) {
-    return done(null, pipe);
-  }
-
-  pipe[translationTargetName] = _.map(pipe[translationTargetName], target => {
-    target.properties = _.extend(target.properties, _.get(target.languages, `${pipe.language}`));
-    return target;
-  });
-
-  return done(null, pipe);
 }

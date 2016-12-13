@@ -48,6 +48,8 @@ module.exports = serviceLocator => {
 
   router.post('/api/ddf/cli/datasets/default', _setDefaultDataset);
 
+  router.post('/api/ddf/cli/datasets/accessToken', _generateDatasetAccessToken);
+
   const app = serviceLocator.getApplication();
   return app.use(router);
 
@@ -122,12 +124,16 @@ module.exports = serviceLocator => {
   }
 
   function _getStateOfLatestTransaction(req, res) {
+    if (!req.user) {
+      return res.json({success: false, error: 'Unauthenticated user cannot perform CLI operations'});
+    }
+
     const datasetName = req.query.datasetName;
     if (!datasetName) {
       return res.json({success: false, error: 'No dataset name was given'});
     }
 
-    return transactionsService.getStatusOfLatestTransactionByDatasetName(datasetName, (statusError, status) => {
+    return transactionsService.getStatusOfLatestTransactionByDatasetName(datasetName, req.user, (statusError, status) => {
       if (statusError) {
         logger.error(statusError);
         return res.json({success: !statusError, error: statusError});
@@ -138,12 +144,16 @@ module.exports = serviceLocator => {
   }
 
   function _activateRollback(req, res) {
+    if (!req.user) {
+      return res.json({success: false, error: 'Unauthenticated user cannot perform CLI operations'});
+    }
+
     const datasetName = req.body.datasetName;
     if (!datasetName) {
       return res.json({success: false, error: 'No dataset name was given'});
     }
 
-    return transactionsService.rollbackFailedTransactionFor(datasetName, rollbackError => {
+    return transactionsService.rollbackFailedTransactionFor(datasetName, req.user, rollbackError => {
       if (rollbackError) {
         logger.error(rollbackError);
         return res.json({success: !rollbackError, error: rollbackError});
@@ -283,9 +293,13 @@ module.exports = serviceLocator => {
   }
 
   function _getCommitOfLatestDatasetVersion(req, res) {
+    if (!req.user) {
+      return res.json({success: false, error: 'Unauthenticated user cannot perform CLI operations'});
+    }
+
     const github = req.query.github;
 
-    cliService.getCommitOfLatestDatasetVersion(github, (error, result) => {
+    cliService.getCommitOfLatestDatasetVersion(github, req.user, (error, result) => {
       if (error) {
         logger.error(error);
         return res.json({success: !error, error});
@@ -301,6 +315,31 @@ module.exports = serviceLocator => {
           commit: result.transaction.commit
         }
       });
+    });
+  }
+
+  function _generateDatasetAccessToken(req, res) {
+    if (!req.user) {
+      return res.json({success: false, error: 'Unauthenticated user cannot perform CLI operations'});
+    }
+
+    const datasetName = req.body.datasetName;
+    if (!datasetName) {
+      return res.json({success: false, error: 'No dataset name was given'});
+    }
+
+    return cliService.setAccessTokenForDataset(datasetName, req.user._id, (error, dataset) => {
+      if (error) {
+        logger.error(error);
+        return res.json({success: false, error});
+      }
+
+      if (!dataset) {
+        logger.warn(`User was trying to generate an accessToken for not existing dataset: ${datasetName} or dataset that is not owned by him (Id: ${req.user._id}).`);
+        return res.json({success: false, error: 'Cannot generate access token for given dataset'});
+      }
+
+      return res.json({success: true, data: {accessToken: dataset.accessToken}});
     });
   }
 };

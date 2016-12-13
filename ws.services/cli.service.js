@@ -3,12 +3,14 @@
 const _ = require('lodash');
 const git = require('simple-git');
 const async = require('async');
+const crypto = require('crypto');
 
 const cache = require('../ws.utils/redis-cache');
 const config = require('../ws.config/config');
 const constants = require('../ws.utils/constants');
 const authService = require('./auth.service');
 const reposService = require('./repos.service');
+const securityUtils = require('../ws.utils/security');
 const ddfImportUtils = require('../ws.import/utils/import-ddf.utils');
 const datasetsService = require('./datasets.service');
 const usersRepository = require('../ws.repository/ddf/users/users.repository');
@@ -27,7 +29,8 @@ module.exports = {
   authenticate,
   findDatasetsWithVersions,
   setTransactionAsDefault,
-  cleanDdfRedisCache
+  cleanDdfRedisCache,
+  setAccessTokenForDataset
 };
 
 function getGitCommitsList(github, onCommitsRecieved) {
@@ -77,6 +80,10 @@ function importDataset(params, onDatasetImported) {
 
 function _findDataset(pipe, done) {
   return datasetsRepository.findByGithubUrl(pipe.github, (error, dataset) => {
+    if (error) {
+      return done(error);
+    }
+
     pipe.dataset = dataset;
     return done(error, pipe);
   });
@@ -92,6 +99,7 @@ function _validateDatasetBeforeImport(pipe, done) {
 
 function _importDdfService(pipe, onDatasetImported) {
   const options = {
+    isDatasetPrivate: pipe.repoType === 'private',
     datasetName: reposService.getRepoNameForDataset(pipe.github),
     commit: pipe.commit,
     github: pipe.github,
@@ -116,6 +124,8 @@ function updateIncrementally(params, onDatasetUpdated) {
   return async.waterfall([
     async.constant(params),
     _findCurrentUser,
+    _findDataset,
+    securityUtils.validateDatasetOwner,
     _lockDataset,
     _checkTransaction,
     _runIncrementalUpdate,
@@ -134,16 +144,15 @@ function updateIncrementally(params, onDatasetUpdated) {
 }
 
 function _lockDataset(pipe, done) {
-  return datasetsRepository.lock(pipe.datasetName, (err, dataset) => {
+  return datasetsRepository.lock(pipe.dataset.name, (err, dataset) => {
     if (err) {
       return done(err);
     }
 
     if (!dataset) {
-      return done(`Version of dataset "${pipe.datasetName}" was already locked or dataset is absent`);
+      return done(`Version of dataset "${pipe.dataset.name}" was already locked or dataset is absent`);
     }
 
-    pipe.dataset = dataset;
     return done(null, pipe);
   });
 }
@@ -191,12 +200,11 @@ function getAvailableDatasetsAndVersions(userId, onQueriesGot) {
   });
 }
 
-function getCommitOfLatestDatasetVersion(github, cb) {
-  let pipe = {github};
-
+function getCommitOfLatestDatasetVersion(github, user, cb) {
   return async.waterfall([
-    async.constant(pipe),
+    async.constant({github, user}),
     _findDataset,
+    securityUtils.validateDatasetOwner,
     _validateDatasetBeforeIncrementalUpdate,
     _findTransaction
   ], cb);
@@ -248,4 +256,20 @@ function cleanDdfRedisCache(onCacheCleaned) {
   ];
 
   return async.parallelLimit(cacheCleaningTasks, constants.LIMIT_NUMBER_PROCESS, onCacheCleaned);
+}
+
+function setAccessTokenForDataset(datasetName, userId, onAccessTokenSet) {
+  crypto.randomBytes(24, (randomBytesError, buf) => {
+    if (randomBytesError) {
+      return onAccessTokenSet(randomBytesError);
+    }
+
+    const options = {
+      userId,
+      datasetName,
+      accessToken: buf.toString('hex')
+    };
+
+    return datasetsRepository.setAccessTokenForPrivateDataset(options, onAccessTokenSet);
+  });
 }
