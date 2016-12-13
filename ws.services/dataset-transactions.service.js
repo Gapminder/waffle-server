@@ -5,7 +5,7 @@ const async = require('async');
 const mongoose = require('mongoose');
 
 const constants = require('../ws.utils/constants');
-const securityUtils = require('../ws.utils/security');
+const datasetService = require('./datasets.service');
 
 const datasetsRepository = require('../ws.repository/ddf/datasets/datasets.repository');
 const transactionsRepository = require('../ws.repository/ddf/dataset-transactions/dataset-transactions.repository');
@@ -121,7 +121,7 @@ function _removeDatasetWithoutTransactions(datasetId, done) {
 }
 
 function _findLatestFailedTransactionByDatasetName(datasetName, user, done) {
-  return _findDatasetByNameAndValidateOwnership({datasetName, user}, (error, {dataset}) => {
+  return datasetService.findDatasetByNameAndValidateOwnership({datasetName, user}, (error, {dataset}) => {
     if (error) {
       return done(error);
     }
@@ -130,25 +130,8 @@ function _findLatestFailedTransactionByDatasetName(datasetName, user, done) {
   });
 }
 
-function _findDatasetByNameAndValidateOwnership(externalContext, done) {
-  return datasetsRepository.findByName(externalContext.datasetName, (error, dataset) => {
-    if (error || !dataset) {
-      return done(error || `Dataset was not found for the given name: ${externalContext.datasetName}`);
-    }
-
-    return securityUtils.validateDatasetOwner({dataset, user: externalContext.user}, error => {
-      if (error) {
-        return done(error);
-      }
-
-      externalContext.dataset = dataset;
-      return done(null, externalContext);
-    });
-  });
-}
-
 function getStatusOfLatestTransactionByDatasetName(datasetName, user, done) {
-  return _findDatasetByNameAndValidateOwnership({datasetName, user}, (error, {dataset})=> {
+  return datasetService.findDatasetByNameAndValidateOwnership({datasetName, user}, (error, {dataset})=> {
     if (error) {
       return done(error);
     }

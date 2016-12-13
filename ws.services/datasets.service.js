@@ -2,6 +2,7 @@
 
 const _ = require('lodash');
 const async = require('async');
+const securityUtils = require('../ws.utils/security');
 
 const datasetsRepository = require('../ws.repository/ddf/datasets/datasets.repository');
 const conceptsRepositoryFactory = require('../ws.repository/ddf/concepts/concepts.repository');
@@ -9,13 +10,13 @@ const entitiesRepositoryFactory = require('../ws.repository/ddf/entities/entitie
 const datapointsRepositoryFactory = require('../ws.repository/ddf/data-points/data-points.repository');
 const datasetIndexRepository = require('../ws.repository/ddf/dataset-index/dataset-index.repository');
 const transactionsRepository = require('../ws.repository/ddf/dataset-transactions/dataset-transactions.repository');
-const VersionedModelRepositoryFactory = require('../ws.repository/repository.factory');
 
 const constants = require('../ws.utils/constants');
 
 module.exports = {
   findDatasetsWithVersions,
-  removeDatasetData
+  removeDatasetData,
+  findDatasetByNameAndValidateOwnership
 };
 
 function findDatasetsWithVersions(userId, onFound) {
@@ -28,10 +29,11 @@ function findDatasetsWithVersions(userId, onFound) {
   });
 }
 
-function removeDatasetData(datasetName, userId, onRemovedDataset) {
+function removeDatasetData(datasetName, user, onRemovedDataset) {
   return async.waterfall([
-    async.constant({datasetName, userId}),
-    _findDatasetByName,
+    async.constant({datasetName, user}),
+    findDatasetByNameAndValidateOwnership,
+    _lockDataset,
     _checkDefaultTransactionInDataset,
     _removeAllDataByDataset,
     _removeAllTransactions,
@@ -41,57 +43,75 @@ function removeDatasetData(datasetName, userId, onRemovedDataset) {
   });
 }
 
-function _findDatasetByName(pipe, onDatasetFound) {
-  return datasetsRepository.findByNameAndUser(pipe.datasetName, pipe.userId, (datasetSearchError, dataset) => {
+function findDatasetByNameAndValidateOwnership(externalContext, onDatasetValidated) {
+  return datasetsRepository.findByName(externalContext.datasetName, (datasetSearchError, dataset) => {
     if (datasetSearchError || !dataset) {
-      return onDatasetFound(datasetSearchError || 'Dataset was not found');
+      return onDatasetValidated(datasetSearchError || `Dataset was not found for the given name: ${externalContext.datasetName}`);
     }
 
-    if (dataset.isLocked) {
-      return onDatasetFound('Dataset was locked');
-    }
+    return securityUtils.validateDatasetOwner({dataset, user: externalContext.user}, datasetValidationError => {
+      if (datasetValidationError) {
+        return onDatasetValidated(datasetValidationError);
+      }
 
-    pipe.datasetId = dataset._id;
-    return onDatasetFound(null, pipe);
+      externalContext.datasetId = dataset._id;
+      return onDatasetValidated(null, externalContext);
+    });
   });
 }
 
-function _checkDefaultTransactionInDataset(pipe, onTransactionsFound) {
-  return transactionsRepository.findDefault({datasetId: pipe.datasetId}, (transactionsSearchError, defaultTransaction) => {
+function _lockDataset(externalContext, onDatasetLocked) {
+  return datasetsRepository.lock(externalContext.datasetName, (datasetLockError, dataset) => {
+    if (datasetLockError) {
+      return onDatasetLocked(datasetLockError);
+    }
+
+    if (!dataset) {
+      return onDatasetLocked(`Version of dataset "${externalContext.datasetName}" was already locked`);
+    }
+
+    return onDatasetLocked(null, externalContext);
+  });
+}
+
+function _checkDefaultTransactionInDataset(externalContext, onTransactionsFound) {
+  return transactionsRepository.findDefault({datasetId: externalContext.datasetId}, (transactionsSearchError, defaultTransaction) => {
     if (transactionsSearchError) {
       return onTransactionsFound(transactionsSearchError);
     }
 
     if (defaultTransaction) {
-      return onTransactionsFound('Default dataset couldn\'t be removed');
+      return datasetsRepository.unlock(externalContext.datasetName, (datasetUnlockError) => {
+        if (datasetUnlockError) {
+          return onTransactionsFound(datasetUnlockError);
+        }
+
+        return onTransactionsFound('Default dataset couldn\'t be removed');
+      });
     }
 
-    return onTransactionsFound(null, pipe);
+    return onTransactionsFound(null, externalContext);
   });
 }
 
-function _removeAllDataByDataset(pipe, onDataRemoved) {
+function _removeAllDataByDataset(externalContext, onDataRemoved) {
   const retryConfig = {times: 3, interval: 3000};
+  const conceptsRepository = conceptsRepositoryFactory.versionAgnostic();
+  const entitiesRepository = entitiesRepositoryFactory.versionAgnostic();
+  const datapointsRepository = datapointsRepositoryFactory.versionAgnostic();
 
-  const tasksToRemove =
-    _.chain([conceptsRepositoryFactory, entitiesRepositoryFactory, datapointsRepositoryFactory, datasetIndexRepository])
-      .map(repositoryFactory => _toRemoveFunction(repositoryFactory, pipe.datasetId))
-      .flatten()
-      .map(rollbackTask => (done => async.retry(retryConfig, rollbackTask, done)))
-      .value();
-
-  return async.parallel(tasksToRemove, (removingDataError) => {
+  return async.parallel([
+    async.retry(retryConfig, async.apply(conceptsRepository.removeByDataset, externalContext.datasetId)),
+    async.retry(retryConfig, async.apply(entitiesRepository.removeByDataset, externalContext.datasetId)),
+    async.retry(retryConfig, async.apply(datapointsRepository.removeByDataset, externalContext.datasetId)),
+    async.retry(retryConfig, async.apply(datasetIndexRepository.removeByDataset, externalContext.datasetId))
+  ], (removingDataError) => {
     if (removingDataError) {
       return onDataRemoved(removingDataError);
     }
 
-    return onDataRemoved(null, pipe);
+    return onDataRemoved(null, externalContext);
   });
-}
-
-function _toRemoveFunction(repositoryFactory, datasetId) {
-  const repository = repositoryFactory instanceof VersionedModelRepositoryFactory ? repositoryFactory.versionAgnostic() : repositoryFactory;
-  return repository.removeByDataset.bind(repository, datasetId);
 }
 
 function _removeAllTransactions(pipe, onTransactionsRemoved) {
