@@ -1,26 +1,14 @@
 'use strict';
 
 const _ = require('lodash');
-const compression = require('compression');
 
 const config = require('../ws.config/config');
 const transactionsService = require('./dataset-transactions.service');
 
 module.exports = {
   findDefaultDatasetAndTransaction,
-  shouldCompress,
   translateDocument
 };
-
-function shouldCompress(req, res) {
-  if (req.query['no-compression'] && !config.IS_PRODUCTION) {
-    // don't compress responses with this request header on production environments
-    return false;
-  }
-
-  // fallback to standard filter function
-  return compression.filter(req, res);
-}
 
 function findDefaultDatasetAndTransaction(pipe, done) {
   return transactionsService.findDefaultDatasetAndTransaction(pipe.datasetName, pipe.version, (error, {dataset, transaction} = {}) => {
