@@ -16,7 +16,8 @@ defaults
   timeout queue 5s
   timeout server 30s
 
-listen stats :8080
+listen stats
+  bind :8080
   mode http
   stats enable
   stats hide-version
