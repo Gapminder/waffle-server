@@ -55,6 +55,7 @@ function findDatasetByNameAndValidateOwnership(externalContext, onDatasetValidat
       }
 
       externalContext.datasetId = dataset._id;
+      externalContext.dataset = dataset;
       return onDatasetValidated(null, externalContext);
     });
   });
