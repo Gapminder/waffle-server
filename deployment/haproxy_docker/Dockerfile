@@ -1,7 +1,11 @@
 FROM ubuntu:14.04
 
 RUN apt-get update
-RUN apt-get install -y wget curl haproxy libnl-utils
+RUN apt-get install -y wget curl  libnl-utils
+RUN apt-get install -y software-properties-common
+RUN add-apt-repository ppa:vbernat/haproxy-1.7 
+RUN apt-get update
+RUN apt-get install -y haproxy
 
 WORKDIR /home
 
