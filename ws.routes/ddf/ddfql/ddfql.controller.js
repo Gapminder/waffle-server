@@ -27,11 +27,23 @@ module.exports = serviceLocator => {
 
   router.use(cors());
 
-  router.post('/api/ddf/ql',
-    routeUtils.checkDatasetAccessibility,
+  router.get('/api/ddf/ql',
     compression({filter: commonService.shouldCompress}),
     routeUtils.getCacheConfig(constants.DDF_REDIS_CACHE_NAME_DDFQL),
     cache.route({expire: constants.DDF_REDIS_CACHE_LIFETIME}),
+    queryParserMiddleware,
+    routeUtils.checkDatasetAccessibility,
+    getDdfStats,
+    dataPostProcessors.gapfilling,
+    dataPostProcessors.toPrecision,
+    dataPostProcessors.pack
+  );
+
+  router.post('/api/ddf/ql',
+    compression({filter: commonService.shouldCompress}),
+    routeUtils.getCacheConfig(constants.DDF_REDIS_CACHE_NAME_DDFQL),
+    cache.route({expire: constants.DDF_REDIS_CACHE_LIFETIME}),
+    routeUtils.checkDatasetAccessibility,
     getDdfStats,
     dataPostProcessors.gapfilling,
     dataPostProcessors.toPrecision,
@@ -39,6 +51,20 @@ module.exports = serviceLocator => {
   );
 
   return app.use(router);
+
+  function queryParserMiddleware(req, res, next) {
+    // FIXME: hotfix for supporting get requests to WS
+    logger.debug({obj: req.query}, 'DDFQL URL: METHOD GET');
+
+    try {
+      const query = _.get(req.query, 'query', null);
+      req.body = JSON.parse(decodeURIComponent(query));
+    } catch (error) {
+      return res.json({success: false, error: error.message});
+    }
+
+    return next();
+  }
 
   function getDdfStats(req, res, next) {
     logger.info({req}, 'DDFQL URL');
