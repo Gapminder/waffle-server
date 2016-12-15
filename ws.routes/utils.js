@@ -30,7 +30,7 @@ function getCacheConfig(prefix) {
       return res.json({success: false, error: error});
     }
 
-    res.express_redis_cache_name = `${prefix || 'PREFIX_NOT_SET'}-${req.method}-${req.url}-${md5(reqBody)}`;
+    res.express_redis_cache_name = md5(`${prefix || 'PREFIX_NOT_SET'}-${req.method}-${req.url}-${reqBody}`);
     next();
   };
 }

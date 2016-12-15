@@ -28,9 +28,9 @@ module.exports = serviceLocator => {
   router.use(cors());
 
   router.get('/api/ddf/ql',
-    compression({filter: commonService.shouldCompress}),
     routeUtils.getCacheConfig(constants.DDF_REDIS_CACHE_NAME_DDFQL),
-    cache.route({expire: constants.DDF_REDIS_CACHE_LIFETIME}),
+    cache.route(),
+    compression(),
     queryParserMiddleware,
     routeUtils.checkDatasetAccessibility,
     getDdfStats,
@@ -40,9 +40,9 @@ module.exports = serviceLocator => {
   );
 
   router.post('/api/ddf/ql',
-    compression({filter: commonService.shouldCompress}),
     routeUtils.getCacheConfig(constants.DDF_REDIS_CACHE_NAME_DDFQL),
-    cache.route({expire: constants.DDF_REDIS_CACHE_LIFETIME}),
+    cache.route(),
+    compression(),
     routeUtils.checkDatasetAccessibility,
     getDdfStats,
     dataPostProcessors.gapfilling,
