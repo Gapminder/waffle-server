@@ -1,19 +1,43 @@
 'use strict';
 
 const _ = require('lodash');
+const async = require('async');
 const md5 = require('md5');
+const url = require('url');
 const passport = require('passport');
+const URLON = require('URLON');
 const config = require('../ws.config/config');
 const logger = require('../ws.config/log');
 
 const datasetsRepository = require('../ws.repository/ddf/datasets/datasets.repository');
 
+const parseUrlonAsync = async.asyncify(query => URLON.parse(query));
+const parseJsonAsync = async.asyncify(query => JSON.parse(decodeURIComponent(query)));
+
 module.exports = {
   getCacheConfig,
   ensureAuthenticatedViaToken,
   respondWithRawDdf,
-  checkDatasetAccessibility
+  checkDatasetAccessibility,
+  bodyFromUrlQuery
 };
+
+function bodyFromUrlQuery(req, res, next) {
+  const query = _.get(req.query, 'query', null);
+  const parser = query
+    ? {parse: parseJsonAsync, query}
+    : {parse: parseUrlonAsync, query: url.parse(req.url).query};
+
+  parser.parse(parser.query, (error, parsedQuery) => {
+    logger.debug({obj: parsedQuery}, 'DDFQL: ddfql parsed from url query');
+
+    if (error) {
+      return res.json({success: false, error: 'Query was sent in incorrect format'});
+    }
+    req.body = parsedQuery;
+    next();
+  });
+}
 
 function getCacheConfig(prefix) {
   return function (req, res, next) {
@@ -22,15 +46,10 @@ function getCacheConfig(prefix) {
       return next();
     }
 
-    let reqBody;
+    const reqBody = JSON.stringify(req.body);
+    const parsedUrl = url.parse(req.url);
 
-    try {
-      reqBody = JSON.stringify(req.body);
-    } catch (error) {
-      return res.json({success: false, error: error});
-    }
-
-    res.express_redis_cache_name = md5(`${prefix || 'PREFIX_NOT_SET'}-${req.method}-${req.url}-${reqBody}`);
+    res.express_redis_cache_name = `${prefix || 'PREFIX_NOT_SET'}-${req.method}-${parsedUrl.pathname}-${md5(parsedUrl.query + reqBody)}`;
     next();
   };
 }

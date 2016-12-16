@@ -2,6 +2,7 @@
 
 const _ = require('lodash');
 const shell = require('shelljs');
+const URLON = require('URLON');
 const e2eEnv = require('./e2e.env');
 const wsApi = require('supertest')(e2eEnv.wsUrl);
 const expect = require('chai').expect;
@@ -18,8 +19,8 @@ module.exports = {
 };
 
 function sendDdfqlRequest(ddfql, onResponseReceived) {
-  return wsApi.post(`/api/ddf/ql?force=true`)
-    .send(ddfql)
+  ddfql.force = true;
+  return wsApi.get(`/api/ddf/ql?${URLON.stringify(ddfql)}`)
     .set('Accept', 'application/x-ws+json')
     .expect(200)
     .expect('Content-Type', /application\/json/)

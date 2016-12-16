@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "JSONStream": "1.2.1",
+    "URLON": "2.0.1",
     "async": "1.5.2",
     "bcryptjs": "2.3.0",
     "body-parser": "1.15.2",

@@ -8,7 +8,6 @@ const compression = require('compression');
 
 const constants = require('../../../ws.utils/constants');
 const schemaService = require('../../../ws.services/schema.service');
-const commonService = require('../../../ws.services/common.service');
 const entitiesService = require('../../../ws.services/entities.service');
 const conceptsService = require('../../../ws.services/concepts.service');
 const datapointsService = require('../../../ws.services/datapoints.service');
@@ -31,7 +30,7 @@ module.exports = serviceLocator => {
     routeUtils.getCacheConfig(constants.DDF_REDIS_CACHE_NAME_DDFQL),
     cache.route(),
     compression(),
-    queryParserMiddleware,
+    routeUtils.bodyFromUrlQuery,
     routeUtils.checkDatasetAccessibility,
     getDdfStats,
     dataPostProcessors.gapfilling,
@@ -51,20 +50,6 @@ module.exports = serviceLocator => {
   );
 
   return app.use(router);
-
-  function queryParserMiddleware(req, res, next) {
-    // FIXME: hotfix for supporting get requests to WS
-    logger.debug({obj: req.query}, 'DDFQL URL: METHOD GET');
-
-    try {
-      const query = _.get(req.query, 'query', null);
-      req.body = JSON.parse(decodeURIComponent(query));
-    } catch (error) {
-      return res.json({success: false, error: error.message});
-    }
-
-    return next();
-  }
 
   function getDdfStats(req, res, next) {
     logger.info({req}, 'DDFQL URL');

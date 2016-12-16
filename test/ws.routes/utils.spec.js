@@ -2,6 +2,9 @@
 
 require('../../ws.config/db.config');
 require('../../ws.repository');
+const md5 = require('md5');
+const url = require('url');
+const URLON = require('URLON');
 const proxyquire = require('proxyquire');
 const sinon = require('sinon');
 const expect = require('chai').expect;
@@ -248,6 +251,188 @@ describe('Routes utils', () => {
       };
 
       routeUtils.checkDatasetAccessibility(req, res, next);
+    });
+  });
+
+  describe('Cache config', () => {
+    it('should generate correct cache key', done => {
+      const routeUtils = proxyquire('../../ws.routes/utils.js', {});
+
+      const expectedCachePrefix = 'MyPrefix';
+      const expectedMethod = 'GET';
+
+      const req = {
+        query: {},
+        body: {bla: 42},
+        method: expectedMethod,
+        url: '/status?name=ryan'
+      };
+
+      const parsedUrl = url.parse(req.url);
+      const md5Payload = md5(parsedUrl.query + JSON.stringify(req.body));
+      const expectedCacheKey = `${expectedCachePrefix}-${req.method}-${parsedUrl.pathname}-${md5Payload}`;
+
+      const res = {
+        express_redis_cache_name: null
+      };
+
+      const next = () => {
+        expect(res.express_redis_cache_name).to.equal(expectedCacheKey);
+        done();
+      };
+
+      routeUtils.getCacheConfig(expectedCachePrefix)(req, res, next);
+    });
+
+    it('should use default cache key prefix if it was not provided', done => {
+      const routeUtils = proxyquire('../../ws.routes/utils.js', {});
+
+      const expectedCachePrefix = 'PREFIX_NOT_SET';
+      const expectedMethod = 'GET';
+
+      const req = {
+        query: {},
+        body: {bla: 42},
+        method: expectedMethod,
+        url: '/status?name=ryan'
+      };
+
+      const parsedUrl = url.parse(req.url);
+      const md5Payload = md5(parsedUrl.query + JSON.stringify(req.body));
+      const expectedCacheKey = `${expectedCachePrefix}-${req.method}-${parsedUrl.pathname}-${md5Payload}`;
+
+      const res = {
+        express_redis_cache_name: null
+      };
+
+      const next = () => {
+        expect(res.express_redis_cache_name).to.equal(expectedCacheKey);
+        done();
+      };
+
+      routeUtils.getCacheConfig()(req, res, next);
+    });
+
+    it('should invalidate redis cache if force option is provided', done => {
+      const routeUtils = proxyquire('../../ws.routes/utils.js', {});
+
+      const req = {
+        query: {force: 'true'},
+      };
+
+      const res = {
+        use_express_redis_cache: null
+      };
+
+      const next = () => {
+        expect(res.use_express_redis_cache).to.be.false;
+        done();
+      };
+
+      routeUtils.getCacheConfig()(req, res, next);
+    });
+  });
+
+  describe('Parse query from url and populate request body with a result', () => {
+    it('should parse query as json if "query" param given in url', done => {
+      const routeUtils = proxyquire('../../ws.routes/utils.js', {});
+
+      const ddfql = {
+        "from": "entities",
+        "select": {
+          "key": ["company"]
+        }
+      };
+
+      const req = {
+        query: {
+          query: encodeURIComponent(JSON.stringify(ddfql))
+        },
+      };
+
+      const res = {
+
+      };
+
+      const next = () => {
+        expect(req.body).to.deep.equal(ddfql);
+        done();
+      };
+
+      routeUtils.bodyFromUrlQuery(req, res, next);
+    });
+
+    it('should respond with an error when it is impossible to parse json', done => {
+      const routeUtils = proxyquire('../../ws.routes/utils.js', {});
+
+      const req = {
+        query: {
+          query: "bla"
+        },
+      };
+
+      const res = {
+        json: response => {
+          expect(response.success).to.be.false;
+          expect(response.error).to.equal('Query was sent in incorrect format');
+          done();
+        }
+      };
+
+      const next = () => {
+        expect.fail(null, null, 'Should not call next middleware');
+      };
+
+      routeUtils.bodyFromUrlQuery(req, res, next);
+    });
+
+    it('should parse query as urlon if "query" param is not given in url', done => {
+      const routeUtils = proxyquire('../../ws.routes/utils.js', {});
+
+      const ddfql = {
+        "from": "entities",
+        "select": {
+          "key": ["company"]
+        }
+      };
+
+      const req = {
+        query: {},
+        url: `/api/ddf/ql/?${URLON.stringify(ddfql)}`
+      };
+
+      const res = {
+      };
+
+      const next = () => {
+        expect(req.body).to.deep.equal(ddfql);
+        done();
+      };
+
+      routeUtils.bodyFromUrlQuery(req, res, next);
+    });
+
+    it('should respond with an error when it is impossible to parse urlon', done => {
+      const routeUtils = proxyquire('../../ws.routes/utils.js', {});
+
+      const req = {
+        query: {},
+        url: '/api/ddf/ql/?%20%'
+      };
+
+      const res = {
+        json: response => {
+          expect(response.success).to.be.false;
+          expect(response.error).to.equal('Query was sent in incorrect format');
+          done();
+        }
+      };
+
+      const next = () => {
+        expect.fail(null, null, 'Should not call next middleware');
+      };
+
+      routeUtils.bodyFromUrlQuery(req, res, next);
     });
   });
 });
