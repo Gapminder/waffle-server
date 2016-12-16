@@ -8,7 +8,6 @@ const compression = require('compression');
 
 const constants = require('../../../ws.utils/constants');
 const schemaService = require('../../../ws.services/schema.service');
-const commonService = require('../../../ws.services/common.service');
 const entitiesService = require('../../../ws.services/entities.service');
 const conceptsService = require('../../../ws.services/concepts.service');
 const datapointsService = require('../../../ws.services/datapoints.service');

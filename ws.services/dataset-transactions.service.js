@@ -13,7 +13,6 @@ const conceptsRepositoryFactory = require('../ws.repository/ddf/concepts/concept
 const entitiesRepositoryFactory = require('../ws.repository/ddf/entities/entities.repository');
 const datapointsRepositoryFactory = require('../ws.repository/ddf/data-points/data-points.repository');
 const datasetIndexRepository = require('../ws.repository/ddf/dataset-index/dataset-index.repository');
-const VersionedModelRepositoryFactory = require('../ws.repository/repository.factory');
 
 module.exports = {
   setLastError,
@@ -77,81 +76,121 @@ function _findTransactionByDatasetAndCommit(pipe, done) {
 }
 
 function rollbackFailedTransactionFor(datasetName, user, onRollbackCompleted) {
-  const retryConfig = {times: 3, interval: 3000};
+  return async.waterfall([
+    async.constant({datasetName, user}),
+    datasetService.findDatasetByNameAndValidateOwnership,
+    _findLatestFailedTransactionByDataset,
+    _forceDatasetLock,
+    _rollbackDatasetData,
+    _removeFailedTransaction,
+    _forceDatasetUnlock,
+    _removeDatasetWithoutTransactions
+  ], onRollbackCompleted);
+}
 
-  return _findLatestFailedTransactionByDatasetName(datasetName, user, (error, failedTransaction) => {
+function _findLatestFailedTransactionByDataset(externalContext, onFailedTransactionFound) {
+  return transactionsRepository.findLatestFailedByDataset(externalContext.datasetId, (error, failedTransaction) => {
     if (error) {
-      return onRollbackCompleted(error);
+      return onFailedTransactionFound(error);
     }
 
     if (!failedTransaction) {
-      return onRollbackCompleted('There is nothing to rollback - all transactions are completed successfully');
+      return onFailedTransactionFound('There is nothing to rollback - all transactions are completed successfully');
     }
 
-    const rollbackTasks =
-      _.chain([conceptsRepositoryFactory, entitiesRepositoryFactory, datapointsRepositoryFactory, datasetIndexRepository])
-        .map(repositoryFactory => toRollbackFunction(repositoryFactory, failedTransaction))
-        .flatten()
-        .map(rollbackTask => (done => async.retry(retryConfig, rollbackTask, done)))
-        .value();
+    externalContext.failedTransaction = failedTransaction;
 
-    async.series([
-      done => datasetsRepository.forceLock(datasetName, done),
-      done => async.parallelLimit(rollbackTasks, constants.LIMIT_NUMBER_PROCESS, done),
-      done => transactionsRepository.removeById(failedTransaction._id, done),
-      done => datasetsRepository.forceUnlock(datasetName, done),
-      done => _removeDatasetWithoutTransactions(failedTransaction.dataset, done)
-    ],
-    onRollbackCompleted);
+    return onFailedTransactionFound(null, externalContext);
   });
 }
 
-function toRollbackFunction(repositoryFactory, versionToRollback) {
-  const repository = repositoryFactory instanceof VersionedModelRepositoryFactory ? repositoryFactory.versionAgnostic() : repositoryFactory;
-  return repository.rollback.bind(repository, versionToRollback);
+function _forceDatasetLock(externalContext, onDatasetLocked) {
+  return datasetsRepository.forceLock(externalContext.datasetName, (forceLockError) => {
+    if (forceLockError) {
+      return onDatasetLocked(forceLockError);
+    }
+
+    return onDatasetLocked(null, externalContext);
+  });
 }
 
-function _removeDatasetWithoutTransactions(datasetId, done) {
-  return transactionsRepository.countByDataset(datasetId, (error, amount) => {
+function _rollbackDatasetData(externalContext, onRollbackDataFinished) {
+  const retryConfig = {times: 3, interval: 3000};
+
+  const conceptsRepository = conceptsRepositoryFactory.versionAgnostic();
+  const entitiesRepository = entitiesRepositoryFactory.versionAgnostic();
+  const datapointsRepository = datapointsRepositoryFactory.versionAgnostic();
+
+  return async.parallel([
+    async.retry(retryConfig, async.apply(conceptsRepository.rollback, externalContext.failedTransaction)),
+    async.retry(retryConfig, async.apply(entitiesRepository.rollback, externalContext.failedTransaction)),
+    async.retry(retryConfig, async.apply(datapointsRepository.rollback, externalContext.failedTransaction)),
+    async.retry(retryConfig, async.apply(datasetIndexRepository.rollback, externalContext.failedTransaction))
+  ], (rollbackDataError) => {
+    if (rollbackDataError) {
+      return onRollbackDataFinished(rollbackDataError);
+    }
+
+    return onRollbackDataFinished(null, externalContext);
+  });
+}
+
+function _removeFailedTransaction(externalContext, onTransactionRemoved) {
+  return transactionsRepository.removeById(externalContext.failedTransaction._id, (removeTransactionError) => {
+    if (removeTransactionError) {
+      return onTransactionRemoved(removeTransactionError);
+    }
+
+    return onTransactionRemoved(null, externalContext);
+  });
+}
+
+function _forceDatasetUnlock(externalContext, onDatasetUnlocked) {
+  return datasetsRepository.forceUnlock(externalContext.datasetName, (forceUnlockError) => {
+    if (forceUnlockError) {
+      return onDatasetUnlocked(forceUnlockError);
+    }
+
+    return onDatasetUnlocked(null, externalContext);
+  });
+}
+
+function _removeDatasetWithoutTransactions(externalContext, onDatasetRemoved) {
+  return transactionsRepository.countByDataset(externalContext.datasetId, (countTransactionError, amount) => {
+    if (countTransactionError) {
+      return onDatasetRemoved(countTransactionError);
+    }
+
     if (amount > 0) {
-      return done();
-    }
-    return datasetsRepository.removeById(datasetId, done);
-  });
-}
-
-function _findLatestFailedTransactionByDatasetName(datasetName, user, done) {
-  return datasetService.findDatasetByNameAndValidateOwnership({datasetName, user}, (error, {dataset}) => {
-    if (error) {
-      return done(error);
+      return onDatasetRemoved();
     }
 
-    return transactionsRepository.findLatestFailedByDataset(dataset._id, done);
+    return datasetsRepository.removeById(externalContext.datasetId, onDatasetRemoved);
   });
 }
 
 function getStatusOfLatestTransactionByDatasetName(datasetName, user, done) {
-  return datasetService.findDatasetByNameAndValidateOwnership({datasetName, user}, (error, {dataset})=> {
+  return datasetService.findDatasetByNameAndValidateOwnership({datasetName, user}, (error, externalContext)=> {
     if (error) {
       return done(error);
     }
 
-    return _findObjectsModifiedDuringLastTransaction({dataset}, done);
+    return _findObjectsModifiedDuringLastTransaction(externalContext, done);
   });
 }
 
-function _findObjectsModifiedDuringLastTransaction({dataset}, done) {
-  return transactionsRepository.findLatestByDataset(dataset._id, (error, latestTransaction) => {
+function _findObjectsModifiedDuringLastTransaction(externalContext, done) {
+  return transactionsRepository.findLatestByDataset(externalContext.datasetId, (error, latestTransaction) => {
     if (error) {
       return done(error);
     }
 
     if (!latestTransaction) {
-      return done(`Transaction is absent for dataset: ${dataset.name}`);
+      return done(`Transaction is absent for dataset: ${externalContext.datasetName}`);
     }
 
     const modifiedObjectsTasks =
-      _createTasksForCountingObjectsModifiedInGivenVersion(dataset._id, latestTransaction.createdAt);
+      _createTasksForCountingObjectsModifiedInGivenVersion(externalContext.datasetId, latestTransaction.createdAt);
 
     return async.parallelLimit(modifiedObjectsTasks, constants.LIMIT_NUMBER_PROCESS, (error, stats) => {
       if (error) {
@@ -159,7 +198,7 @@ function _findObjectsModifiedDuringLastTransaction({dataset}, done) {
       }
 
       const result = {
-        datasetName: dataset.name,
+        datasetName: externalContext.datasetName,
         transaction: {
           languages: latestTransaction.languages,
           lastError: latestTransaction.lastError,
@@ -212,14 +251,14 @@ function _findDefaultDatasetAndTransactionByDatasetNameAndCommit(datasetName, tr
   ], onFound);
 }
 
-function _findDatasetByName(pipe, done) {
-  return datasetsRepository.findByName(pipe.datasetName, (error, dataset) => {
+function _findDatasetByName(externalContext, done) {
+  return datasetsRepository.findByName(externalContext.datasetName, (error, dataset) => {
     if (error || !dataset) {
-      return done(error || `Dataset was not found: ${pipe.datasetName}`);
+      return done(error || `Dataset was not found: ${externalContext.datasetName}`);
     }
 
-    pipe.dataset = dataset;
-    return done(null, pipe);
+    externalContext.dataset = dataset;
+    return done(null, externalContext);
   });
 }
 
@@ -230,29 +269,29 @@ function _findDefaultDatasetAndTransactionByDatasetName(datasetName, onFound) {
     _findLatestCompletedByDatasetId
   ], onFound);
 
-  function _findDefaultByDatasetId(pipe, done) {
-    return transactionsRepository.findDefault({datasetId: pipe.dataset._id}, (error, transaction) => {
+  function _findDefaultByDatasetId(externalContext, done) {
+    return transactionsRepository.findDefault({datasetId: externalContext.dataset._id}, (error, transaction) => {
       if (error) {
         return done(error);
       }
 
-      pipe.transaction = transaction;
-      return done(null, pipe);
+      externalContext.transaction = transaction;
+      return done(null, externalContext);
     });
   }
 
-  function _findLatestCompletedByDatasetId(pipe, done) {
-    if (pipe.transaction) {
-      return async.setImmediate(() => done(null, pipe));
+  function _findLatestCompletedByDatasetId(externalContext, done) {
+    if (externalContext.transaction) {
+      return async.setImmediate(() => done(null, externalContext));
     }
 
-    return transactionsRepository.findLatestCompletedByDataset(pipe.dataset._id, (error, transaction) => {
+    return transactionsRepository.findLatestCompletedByDataset(externalContext.dataset._id, (error, transaction) => {
       if (error || !_isTransactionValid(transaction)) {
         return done(error || 'No versions were found for the given dataset');
       }
 
-      pipe.transaction = transaction;
-      return done(null, pipe);
+      externalContext.transaction = transaction;
+      return done(null, externalContext);
     });
   }
 }

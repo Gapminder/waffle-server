@@ -1,10 +1,19 @@
 'use strict';
+require('../../ws.config/db.config');
+require('../../ws.repository/index');
 
+const _ = require('lodash');
 const proxyquire = require('proxyquire');
-require('../../ws.repository');
 const expect = require('chai').expect;
 
+const datasetTransactionsServicePath = '../../ws.services/dataset-transactions.service.js';
+const datasetServicePath = './datasets.service';
+const datasetRepositoryPath = '../ws.repository/ddf/datasets/datasets.repository';
+const transactionsRepositoryPath = '../ws.repository/ddf/dataset-transactions/dataset-transactions.repository';
+const datasetIndexRepositoryPath = '../ws.repository/ddf/dataset-index/dataset-index.repository';
+
 describe('Dataset Transactions Service', () => {
+
   describe('Getting default dataset and transaction - Dataset name and transaction commit are given', () => {
     it('should treat given dataset as default when it was provided along with commit', done => {
       const expectedCommit = 'ab76c6a';
@@ -508,5 +517,283 @@ describe('Dataset Transactions Service', () => {
         done();
       });
     });
+  });
+
+  describe('Rollback failed transaction', () => {
+    const shouldNotCall = () => expect.fail(null, null, 'This function should not be called');
+    const expectedError = 'Something went wrong';
+    const expectedDatasetId = 'expectedDatasetId';
+    const expectedDatasetName = 'expectedDatasetName';
+    const expectedTransactionId = 'expectedTransactionId';
+    const expectedTransaction = {_id: expectedTransactionId, createdAt: Date.now()};
+    const expectedUser = {_id: 'expectedUser'};
+
+    const datasetIndexRepository = {
+      rollback: (failedTransaction, onRolledback) => {
+        expect(failedTransaction).to.be.equal(expectedTransaction);
+
+        return onRolledback();
+      }
+    };
+
+    const transactionRepository = {
+      findLatestFailedByDataset: (datasetId, onFailedTransactionFound) => {
+        expect(datasetId).to.be.equal(expectedDatasetId);
+
+        return onFailedTransactionFound(null, expectedTransaction);
+      },
+      removeById: (failedTransactionId, onTransactionRemoved) => {
+        expect(failedTransactionId).to.be.equal(expectedTransaction._id);
+
+        return onTransactionRemoved();
+      },
+      countByDataset: (datasetId, onTransactionsCounted) => {
+        expect(datasetId).to.be.equal(expectedDatasetId);
+        return onTransactionsCounted(null, 0);
+      }
+    };
+
+    const datasetRepository = {
+      forceLock: (datasetName, onDatasetLocked) => {
+        expect(datasetName).to.be.equal(expectedDatasetName);
+
+        return onDatasetLocked();
+      },
+      forceUnlock: (datasetName, onDatasetUnlocked) => {
+        expect(datasetName).to.be.equal(expectedDatasetName);
+
+        return onDatasetUnlocked();
+      },
+      removeById: (datasetId, onDatasetRemoved) => {
+        expect(datasetId).to.be.equal(expectedDatasetId);
+
+        return onDatasetRemoved();
+      }
+    };
+    const datasetService = {
+      findDatasetByNameAndValidateOwnership: (externalContext, onDatasetValidated) => {
+        expect(externalContext.datasetName).to.be.equal(expectedDatasetName);
+        expect(externalContext.user).to.be.equal(expectedUser);
+
+        externalContext.datasetId = expectedDatasetId;
+        return onDatasetValidated(null, externalContext);
+      }
+    };
+
+    it('should fail when error happened while dataset ownership validating', done => {
+      const findDatasetByNameAndValidateOwnership = (externalContext, onDatasetValidated) => {
+        expect(externalContext.datasetName).to.be.equal(expectedDatasetName);
+        expect(externalContext.user).to.be.equal(expectedUser);
+
+        return onDatasetValidated(expectedError);
+      };
+
+      const datasetTransactionsService = proxyquire(datasetTransactionsServicePath, {
+        [transactionsRepositoryPath]: _.defaults({findLatestFailedByDataset: shouldNotCall, countByDataset: shouldNotCall, removeById: shouldNotCall}, transactionRepository),
+        [datasetServicePath]: _.defaults({findDatasetByNameAndValidateOwnership}, datasetService),
+        [datasetRepositoryPath]: _.defaults({removeById: shouldNotCall, forceUnlock: shouldNotCall, forceLock: shouldNotCall}, datasetRepository),
+        [datasetIndexRepositoryPath]: _.defaults({rollback: shouldNotCall}, datasetIndexRepository)
+      });
+
+      datasetTransactionsService.rollbackFailedTransactionFor(expectedDatasetName, expectedUser, (error) => {
+        expect(error).to.equal(expectedError);
+        done();
+      });
+    });
+
+    it('should fail when error happened while failed transaction search', done => {
+      const findLatestFailedByDataset = (datasetId, onFailedTransactionFound) => {
+        expect(datasetId).to.be.equal(expectedDatasetId);
+
+        return onFailedTransactionFound(expectedError);
+      };
+
+      const datasetTransactionsService = proxyquire(datasetTransactionsServicePath, {
+        [transactionsRepositoryPath]: _.defaults({findLatestFailedByDataset, countByDataset: shouldNotCall, removeById: shouldNotCall}, transactionRepository),
+        [datasetServicePath]: datasetService,
+        [datasetRepositoryPath]: _.defaults({removeById: shouldNotCall, forceUnlock: shouldNotCall, forceLock: shouldNotCall}, datasetRepository),
+        [datasetIndexRepositoryPath]: _.defaults({rollback: shouldNotCall}, datasetIndexRepository)
+      });
+
+      datasetTransactionsService.rollbackFailedTransactionFor(expectedDatasetName, expectedUser, (error) => {
+        expect(error).to.equal(expectedError);
+        done();
+      });
+    });
+
+    it('should fail when failed transaction was not found', done => {
+      const findLatestFailedByDataset = (datasetId, onFailedTransactionFound) => {
+        expect(datasetId).to.be.equal(expectedDatasetId);
+
+        return onFailedTransactionFound(null, null);
+      };
+
+      const datasetTransactionsService = proxyquire(datasetTransactionsServicePath, {
+        [transactionsRepositoryPath]: _.defaults({findLatestFailedByDataset, countByDataset: shouldNotCall, removeById: shouldNotCall}, transactionRepository),
+        [datasetServicePath]: datasetService,
+        [datasetRepositoryPath]: _.defaults({removeById: shouldNotCall, forceUnlock: shouldNotCall, forceLock: shouldNotCall}, datasetRepository),
+        [datasetIndexRepositoryPath]: _.defaults({rollback: shouldNotCall}, datasetIndexRepository)
+      });
+
+      datasetTransactionsService.rollbackFailedTransactionFor(expectedDatasetName, expectedUser, (error) => {
+        expect(error).to.equal('There is nothing to rollback - all transactions are completed successfully');
+        done();
+      });
+    });
+
+    it('should fail when error happened while dataset force locking', done => {
+      const forceLock = (datasetName, onDatasetLocked) => {
+        expect(datasetName).to.be.equal(expectedDatasetName);
+
+        return onDatasetLocked(expectedError);
+      };
+
+      const datasetTransactionsService = proxyquire(datasetTransactionsServicePath, {
+        [transactionsRepositoryPath]: _.defaults({countByDataset: shouldNotCall, removeById: shouldNotCall}, transactionRepository),
+        [datasetServicePath]: datasetService,
+        [datasetRepositoryPath]: _.defaults({removeById: shouldNotCall, forceUnlock: shouldNotCall, forceLock}, datasetRepository),
+        [datasetIndexRepositoryPath]: _.defaults({rollback: shouldNotCall}, datasetIndexRepository)
+      });
+
+      datasetTransactionsService.rollbackFailedTransactionFor(expectedDatasetName, expectedUser, (error) => {
+        expect(error).to.equal(expectedError);
+        done();
+      });
+    });
+
+    it('should fail when error happened while documents removing in dataset index collection', function(done) {
+      this.timeout(20000);
+
+      const rollback = (failedTransaction, onRolledback) => {
+        expect(failedTransaction).to.be.equal(expectedTransaction);
+
+        return onRolledback(expectedError);
+      };
+
+      const datasetTransactionsService = proxyquire(datasetTransactionsServicePath, {
+        [transactionsRepositoryPath]: _.defaults({countByDataset: shouldNotCall, removeById: shouldNotCall}, transactionRepository),
+        [datasetServicePath]: datasetService,
+        [datasetRepositoryPath]: _.defaults({removeById: shouldNotCall, forceUnlock: shouldNotCall}, datasetRepository),
+        [datasetIndexRepositoryPath]: _.defaults({rollback}, datasetIndexRepository)
+      });
+
+      return datasetTransactionsService.rollbackFailedTransactionFor(expectedDatasetName, expectedUser, (error) => {
+        expect(error).to.equal(expectedError);
+        return done();
+      });
+    });
+
+    it('should fail when error happened while failed transaction removing', done => {
+      const removeById = (failedTransactionId, onTransactionRemoved) => {
+        expect(failedTransactionId).to.be.equal(expectedTransaction._id);
+
+        return onTransactionRemoved(expectedError);
+      };
+
+      const datasetTransactionsService = proxyquire(datasetTransactionsServicePath, {
+        [transactionsRepositoryPath]: _.defaults({countByDataset: shouldNotCall, removeById}, transactionRepository),
+        [datasetServicePath]: datasetService,
+        [datasetRepositoryPath]: _.defaults({removeById: shouldNotCall, forceUnlock: shouldNotCall}, datasetRepository),
+        [datasetIndexRepositoryPath]: datasetIndexRepository
+      });
+
+      datasetTransactionsService.rollbackFailedTransactionFor(expectedDatasetName, expectedUser, (error) => {
+        expect(error).to.equal(expectedError);
+        done();
+      });
+    });
+
+    it('should fail when error happened while dataset force unlocking', done => {
+      const forceUnlock = (datasetName, onDatasetUnlocked) => {
+        expect(datasetName).to.be.equal(expectedDatasetName);
+
+        return onDatasetUnlocked(expectedError);
+      };
+
+      const datasetTransactionsService = proxyquire(datasetTransactionsServicePath, {
+        [transactionsRepositoryPath]: _.defaults({countByDataset: shouldNotCall}, transactionRepository),
+        [datasetServicePath]: datasetService,
+        [datasetRepositoryPath]: _.defaults({removeById: shouldNotCall, forceUnlock}, datasetRepository),
+        [datasetIndexRepositoryPath]: datasetIndexRepository
+      });
+
+      datasetTransactionsService.rollbackFailedTransactionFor(expectedDatasetName, expectedUser, (error) => {
+        expect(error).to.equal(expectedError);
+        done();
+      });
+    });
+
+    it('should fail when error happened while getting transactions count by datasetId', done => {
+      const countByDataset = (datasetId, onTransactionsCounted) => {
+        expect(datasetId).to.be.equal(expectedDatasetId);
+        return onTransactionsCounted(expectedError);
+      };
+
+      const datasetTransactionsService = proxyquire(datasetTransactionsServicePath, {
+        [transactionsRepositoryPath]: _.defaults({countByDataset}, transactionRepository),
+        [datasetServicePath]: datasetService,
+        [datasetRepositoryPath]: _.defaults({removeById: shouldNotCall}, datasetRepository),
+        [datasetIndexRepositoryPath]: datasetIndexRepository
+      });
+
+      datasetTransactionsService.rollbackFailedTransactionFor(expectedDatasetName, expectedUser, (error) => {
+        expect(error).to.equal(expectedError);
+        done();
+      });
+    });
+
+    it('should skip removing dataset step because it has transactions', done => {
+      const countByDataset = (datasetId, onTransactionsCounted) => {
+        expect(datasetId).to.be.equal(expectedDatasetId);
+        return onTransactionsCounted(null, 1);
+      };
+
+      const datasetTransactionsService = proxyquire(datasetTransactionsServicePath, {
+        [transactionsRepositoryPath]: _.defaults({countByDataset}, transactionRepository),
+        [datasetServicePath]: datasetService,
+        [datasetRepositoryPath]: _.defaults({removeById: shouldNotCall}, datasetRepository),
+        [datasetIndexRepositoryPath]: datasetIndexRepository
+      });
+
+      return datasetTransactionsService.rollbackFailedTransactionFor(expectedDatasetName, expectedUser, (error) => {
+        expect(error).to.not.exists;
+        return done();
+      });
+    });
+
+    it('should fail when error happened while dataset without any transaction removing', done => {
+      const removeById = (datasetId, onDatasetRemoved) => {
+        expect(datasetId).to.be.equal(expectedDatasetId);
+
+        return onDatasetRemoved(expectedError);
+      };
+
+      const datasetTransactionsService = proxyquire(datasetTransactionsServicePath, {
+        [transactionsRepositoryPath]: transactionRepository,
+        [datasetServicePath]: datasetService,
+        [datasetRepositoryPath]: _.defaults({removeById}, datasetRepository),
+        [datasetIndexRepositoryPath]: datasetIndexRepository
+      });
+
+      return datasetTransactionsService.rollbackFailedTransactionFor(expectedDatasetName, expectedUser, (error) => {
+        expect(error).to.equal(expectedError);
+        return done();
+      });
+    });
+
+    it('should remove dataset if after rollback it hasn\'t any transaction', done => {
+      const datasetTransactionsService = proxyquire(datasetTransactionsServicePath, {
+        [transactionsRepositoryPath]: transactionRepository,
+        [datasetServicePath]: datasetService,
+        [datasetRepositoryPath]: datasetRepository,
+        [datasetIndexRepositoryPath]: datasetIndexRepository
+      });
+
+      return datasetTransactionsService.rollbackFailedTransactionFor(expectedDatasetName, expectedUser, (error) => {
+        expect(error).to.not.exists;
+        return done();
+      });
+    });
+
   });
 });
