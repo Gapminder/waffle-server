@@ -91,7 +91,9 @@ ConceptsRepository.prototype.count = function (onCounted) {
   return Concepts.count(countQuery, onCounted);
 };
 
-ConceptsRepository.prototype.rollback = function ({createdAt: versionToRollback}, onRolledback) {
+ConceptsRepository.prototype.rollback = function (transaction, onRolledback) {
+  const {createdAt: versionToRollback} = transaction;
+
   return async.parallelLimit([
     done => Concepts.update({to: versionToRollback}, {$set: {to: constants.MAX_VERSION}}, {multi: true}).lean().exec(done),
     done => Concepts.remove({from: versionToRollback}, done)

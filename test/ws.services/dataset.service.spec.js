@@ -8,6 +8,8 @@ const proxyquire = require('proxyquire');
 const chai  = require('chai');
 const expect = chai.expect;
 
+const shouldNotCall = () => expect.fail(null, null, 'This function should not be called');
+
 const datasetsRepositoryPath = '../ws.repository/ddf/datasets/datasets.repository';
 const transactionsRepositoryPath = '../ws.repository/ddf/dataset-transactions/dataset-transactions.repository';
 const datasetIndexRepositoryPath = '../ws.repository/ddf/dataset-index/dataset-index.repository';
@@ -73,7 +75,8 @@ describe('remove dataset', function() {
     };
 
     const datasetsService = proxyquire('../../ws.services/datasets.service', {
-      [datasetsRepositoryPath]: _.defaults({findByName}, datasetsRepository)
+      [datasetsRepositoryPath]: _.defaults({findByName, lock: shouldNotCall, unlock: shouldNotCall, removeById: shouldNotCall}, datasetsRepository),
+      [transactionsRepositoryPath]: _.defaults({findDefault: shouldNotCall, removeAllByDataset: shouldNotCall}, transactionsRepository)
     });
 
     datasetsService.removeDatasetData(expectedDatasetPath, expectedOwnerUser, (error) => {
@@ -89,7 +92,8 @@ describe('remove dataset', function() {
     };
 
     const datasetsService = proxyquire('../../ws.services/datasets.service', {
-      [datasetsRepositoryPath]: _.defaults({findByName}, datasetsRepository)
+      [datasetsRepositoryPath]: _.defaults({findByName, lock: shouldNotCall, unlock: shouldNotCall, removeById: shouldNotCall}, datasetsRepository),
+      [transactionsRepositoryPath]: _.defaults({findDefault: shouldNotCall, removeAllByDataset: shouldNotCall}, transactionsRepository)
     });
 
     datasetsService.removeDatasetData(expectedDatasetPath, expectedOwnerUser, (error) => {
@@ -100,7 +104,8 @@ describe('remove dataset', function() {
 
   it('should return error when not owner tries to remove dataset', (done) => {
     const datasetsService = proxyquire('../../ws.services/datasets.service', {
-      [datasetsRepositoryPath]: datasetsRepository
+      [datasetsRepositoryPath]: _.defaults({lock: shouldNotCall, unlock: shouldNotCall, removeById: shouldNotCall}, datasetsRepository),
+      [transactionsRepositoryPath]: _.defaults({findDefault: shouldNotCall, removeAllByDataset: shouldNotCall}, transactionsRepository)
     });
 
     datasetsService.removeDatasetData(expectedDatasetPath, expectedNotOwnerUser, (error) => {
@@ -116,7 +121,8 @@ describe('remove dataset', function() {
     };
 
     const datasetsService = proxyquire('../../ws.services/datasets.service', {
-      [datasetsRepositoryPath]: _.defaults({lock}, datasetsRepository)
+      [datasetsRepositoryPath]: _.defaults({lock, unlock: shouldNotCall, removeById: shouldNotCall}, datasetsRepository),
+      [transactionsRepositoryPath]: _.defaults({findDefault: shouldNotCall, removeAllByDataset: shouldNotCall}, transactionsRepository)
     });
 
     datasetsService.removeDatasetData(expectedDatasetPath, expectedOwnerUser, (error) => {
@@ -132,8 +138,9 @@ describe('remove dataset', function() {
     };
 
     const datasetsService = proxyquire('../../ws.services/datasets.service', {
-      [datasetsRepositoryPath]: _.defaults({lock}, datasetsRepository)
-    });
+      [datasetsRepositoryPath]: _.defaults({lock, unlock: shouldNotCall, removeById: shouldNotCall}, datasetsRepository),
+      [transactionsRepositoryPath]: _.defaults({findDefault: shouldNotCall, removeAllByDataset: shouldNotCall}, transactionsRepository)
+  });
 
     datasetsService.removeDatasetData(expectedDatasetPath, expectedOwnerUser, (error) => {
       expect(error).to.be.equal(`Version of dataset "${expectedDatasetPath}" was already locked`);
@@ -148,8 +155,8 @@ describe('remove dataset', function() {
     };
 
     const datasetsService = proxyquire('../../ws.services/datasets.service', {
-      [datasetsRepositoryPath]: datasetsRepository,
-      [transactionsRepositoryPath]: _.defaults({findDefault}, transactionsRepository)
+      [datasetsRepositoryPath]: _.defaults({unlock: shouldNotCall, removeById: shouldNotCall}, datasetsRepository),
+      [transactionsRepositoryPath]: _.defaults({findDefault, removeAllByDataset: shouldNotCall}, transactionsRepository)
     });
 
     datasetsService.removeDatasetData(expectedDatasetPath, expectedOwnerUser, (error) => {
@@ -178,8 +185,8 @@ describe('remove dataset', function() {
     };
 
     const datasetsService = proxyquire('../../ws.services/datasets.service', {
-      [datasetsRepositoryPath]: _.defaults({unlock}, datasetsRepository),
-      [transactionsRepositoryPath]: _.defaults({findDefault}, transactionsRepository)
+      [datasetsRepositoryPath]: _.defaults({unlock, removeById: shouldNotCall}, datasetsRepository),
+      [transactionsRepositoryPath]: _.defaults({findDefault, removeAllByDataset: shouldNotCall}, transactionsRepository)
     });
 
     datasetsService.removeDatasetData(expectedDatasetPath, expectedOwnerUser, (error) => {
@@ -204,8 +211,8 @@ describe('remove dataset', function() {
     };
 
     const datasetsService = proxyquire('../../ws.services/datasets.service', {
-      [datasetsRepositoryPath]: datasetsRepository,
-      [transactionsRepositoryPath]: _.defaults({findDefault}, transactionsRepository)
+      [datasetsRepositoryPath]: _.defaults({removeById: shouldNotCall}, datasetsRepository),
+      [transactionsRepositoryPath]: _.defaults({findDefault, removeAllByDataset: shouldNotCall}, transactionsRepository)
     });
 
     datasetsService.removeDatasetData(expectedDatasetPath, expectedOwnerUser, (error) => {
@@ -225,8 +232,8 @@ describe('remove dataset', function() {
     };
 
     const datasetsService = proxyquire('../../ws.services/datasets.service', {
-      [datasetsRepositoryPath]: datasetsRepository,
-      [transactionsRepositoryPath]: transactionsRepository,
+      [datasetsRepositoryPath]: _.defaults({removeById: shouldNotCall}, datasetsRepository),
+      [transactionsRepositoryPath]: _.defaults({removeAllByDataset: shouldNotCall}, transactionsRepository),
       [datasetIndexRepositoryPath]: datasetIndexRepository
     });
 
@@ -243,7 +250,7 @@ describe('remove dataset', function() {
     };
 
     const datasetsService = proxyquire('../../ws.services/datasets.service', {
-      [datasetsRepositoryPath]: datasetsRepository,
+      [datasetsRepositoryPath]: _.defaults({removeById: shouldNotCall}, datasetsRepository),
       [transactionsRepositoryPath]: _.defaults({removeAllByDataset}, transactionsRepository)
     });
 

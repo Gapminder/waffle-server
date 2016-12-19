@@ -34,7 +34,9 @@ EntitiesRepository.prototype.count = function (onCounted) {
   return Entities.count(countQuery, onCounted);
 };
 
-EntitiesRepository.prototype.rollback = function ({createdAt: versionToRollback}, onRolledback) {
+EntitiesRepository.prototype.rollback = function (transaction, onRolledback) {
+  const {createdAt: versionToRollback} = transaction;
+
   return async.parallelLimit([
     done => Entities.update({to: versionToRollback}, {$set: {to: constants.MAX_VERSION}}, {multi: true}).lean().exec(done),
     done => Entities.remove({from: versionToRollback}, done)

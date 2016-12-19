@@ -31,7 +31,9 @@ DataPointsRepository.prototype.count = function (onCounted) {
   return DataPoints.count(countQuery, onCounted);
 };
 
-DataPointsRepository.prototype.rollback = function ({createdAt: versionToRollback}, onRolledback) {
+DataPointsRepository.prototype.rollback = function (transaction, onRolledback) {
+  const {createdAt: versionToRollback} = transaction;
+
   return async.parallelLimit([
     done => DataPoints.update({to: versionToRollback}, {$set: {to: constants.MAX_VERSION}}, {multi: true}).lean().exec(done),
     done => DataPoints.remove({from: versionToRollback}, done)
