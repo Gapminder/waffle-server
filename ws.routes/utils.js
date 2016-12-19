@@ -10,6 +10,7 @@ const config = require('../ws.config/config');
 const logger = require('../ws.config/log');
 
 const datasetsRepository = require('../ws.repository/ddf/datasets/datasets.repository');
+const recentDdfqlQueriesRepository = require('../ws.repository/ddf/recent-ddfql-queries/recent-ddfql-queries.repository');
 
 const parseUrlonAsync = async.asyncify(query => URLON.parse(query));
 const parseJsonAsync = async.asyncify(query => JSON.parse(decodeURIComponent(query)));
@@ -25,15 +26,22 @@ module.exports = {
 function bodyFromUrlQuery(req, res, next) {
   const query = _.get(req.query, 'query', null);
   const parser = query
-    ? {parse: parseJsonAsync, query}
-    : {parse: parseUrlonAsync, query: url.parse(req.url).query};
+    ? {parse: parseJsonAsync, query, queryType: 'JSON'}
+    : {parse: parseUrlonAsync, query: url.parse(req.url).query, queryType: 'URLON'};
 
   parser.parse(parser.query, (error, parsedQuery) => {
-    logger.debug({obj: parsedQuery}, 'DDFQL: ddfql parsed from url query');
-
+    logger.info({ddfqlRaw: parser.query});
     if (error) {
       return res.json({success: false, error: 'Query was sent in incorrect format'});
     }
+
+    if (parsedQuery) {
+      const recentDdfqlQuery = {queryRaw: parser.query, queryParsed: parsedQuery, type: parser.queryType};
+      recentDdfqlQueriesRepository.create(recentDdfqlQuery, (error, record) => {
+        return record && logger.debug({obj: record.toObject()}, 'Writing query to db');
+      });
+    }
+
     req.body = parsedQuery;
     next();
   });
@@ -41,7 +49,7 @@ function bodyFromUrlQuery(req, res, next) {
 
 function getCacheConfig(prefix) {
   return function (req, res, next) {
-    if (String(req.query.force) === 'true') {
+    if (String(req.query.force) === 'true' && !config.IS_PRODUCTION) {
       res.use_express_redis_cache = false;
       return next();
     }

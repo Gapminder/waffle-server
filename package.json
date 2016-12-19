@@ -60,6 +60,7 @@
     "morgan": "1.7.0",
     "newrelic": "1.30.3",
     "node-cache": "4.1.0",
+    "node-fetch": "1.6.3",
     "passport": "0.3.2",
     "passport-local": "1.0.0",
     "passport-unique-token": "0.1.4",
@@ -74,7 +75,7 @@
     "through2": "2.0.1",
     "traverse": "0.6.6",
     "validator": "5.7.0",
-    "waffle-server-import-cli": "~2.5.14"
+    "waffle-server-import-cli": "~2.5.15"
   },
   "devDependencies": {
     "chai": "3.5.0",

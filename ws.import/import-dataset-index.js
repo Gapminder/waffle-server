@@ -7,9 +7,9 @@ const entitiesRepositoryFactory = require('../ws.repository/ddf/entities/entitie
 const datapointsRepositoryFactory = require('../ws.repository/ddf/data-points/data-points.repository');
 const indexRepository = require('../ws.repository/ddf/dataset-index/dataset-index.repository');
 
-const ddfImportUtils = require('./utils/import-ddf.utils');
 const logger = require('../ws.config/log');
 const constants = require('../ws.utils/constants');
+const fileUtils = require('../ws.utils/file');
 
 const entityOriginIdsCache = new Map();
 
@@ -45,7 +45,7 @@ function _generateDatasetIndexFromConcepts(pipe, done) {
   const conceptResources = _.filter(resources, resource => resource.type === constants.CONCEPTS);
 
   return async.mapLimit(conceptResources, constants.LIMIT_NUMBER_PROCESS, (conceptResource, completeSearchForConcepts) => {
-      ddfImportUtils.readCsvFile(pathToDdfFolder, conceptResource.path, {}, (err, res) => {
+      fileUtils.readCsvFile(pathToDdfFolder, conceptResource.path, {}, (err, res) => {
 
         if (err) {
           return completeSearchForConcepts(err);

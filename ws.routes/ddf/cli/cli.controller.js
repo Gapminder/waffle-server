@@ -14,6 +14,7 @@ const transactionsService = require('../../../ws.services/dataset-transactions.s
 const datasetsService = require('../../../ws.services/datasets.service');
 
 const cache = require('../../../ws.utils/redis-cache');
+const cacheUtils = require('../../../ws.utils/cache-warmup');
 const logger = require('../../../ws.config/log');
 
 module.exports = serviceLocator => {
@@ -103,7 +104,14 @@ module.exports = serviceLocator => {
           return res.json({success: !cacheCleanError, error: cacheCleanError});
         }
 
-        return res.json({success: !error, data: defaultDatasetAndCommit});
+        cacheUtils.warmUpCache(cacheWarmUpError => {
+          if (cacheWarmUpError) {
+            return logger.error('Cache warm up error. ', cacheWarmUpError);
+          }
+          return logger.info('Cache is warmed up.');
+        });
+
+        return res.json({success: true, data: defaultDatasetAndCommit});
       });
     });
   }

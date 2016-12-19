@@ -9,6 +9,7 @@ const async = require('async');
 const logger = require('../../ws.config/log');
 const config = require('../../ws.config/config');
 const constants = require('../../ws.utils/constants');
+const fileUtils = require('../../ws.utils/file');
 const ddfMappers = require('../utils/ddf-mappers');
 const ChangesDescriptor = require('../utils/changes-descriptor').ChangesDescriptor;
 const entitiesUtils = require('../utils/entities.utils');
@@ -35,7 +36,7 @@ module.exports = function startEntitiesUpdate(externalContext, done) {
 
 function updateEntities(externalContextFrozen) {
   const entityChangesStream =
-    ddfImportUtils.readTextFileByLineAsJsonStream(externalContextFrozen.pathToDatasetDiff)
+    fileUtils.readTextFileByLineAsJsonStream(externalContextFrozen.pathToDatasetDiff)
     .map(changes => new ChangesDescriptor(changes))
     .filter(changesDescriptor => changesDescriptor.describes(constants.ENTITIES))
     .map(changesDescriptor => {

@@ -6,6 +6,7 @@ const hi = require('highland');
 const async = require('async');
 const logger = require('../../../ws.config/log');
 const constants = require('../../../ws.utils/constants');
+const fileUtils = require('../../../ws.utils/file');
 const ChangesDescriptor = require('../../utils/changes-descriptor').ChangesDescriptor;
 const ddfImportUtils = require('../../utils/import-ddf.utils');
 
@@ -32,7 +33,7 @@ function createTranslationsUpdater(plugin, externalContext, done) {
 }
 
 function createTranslationsDiffStream(plugin, externalContext) {
-  return ddfImportUtils
+  return fileUtils
     .readTextFileByLineAsJsonStream(externalContext.pathToLangDiff)
     .map(changes => new ChangesDescriptor(changes))
     .filter(changesDescriptor => changesDescriptor.describes(plugin.dataType))

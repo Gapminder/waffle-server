@@ -16,7 +16,7 @@ const DEFAULT_HOST_URLS = Object.freeze({
   local: 'http://localhost',
   development: 'https://waffle-server-dev.gapminderdev.org',
   stage: 'https://waffle-server-stage.gapminderdev.org',
-  production: 'https://waffle-server.gapminderdev.org'
+  production: 'https://waffle-server.gapminder.org'
 });
 
 const LOG_MARKERS = {
