@@ -14,7 +14,8 @@ module.exports = (function () {
     'datasets',
     'dataset-index',
     'entities',
-    'key-value'
+    'key-value',
+    'recent-ddfql-queries'
   ];
 
   _.forEach(ddfModels, (model) => {

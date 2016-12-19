@@ -7,6 +7,7 @@ const path = require('path');
 
 const logger = require('../ws.config/log');
 const constants = require('../ws.utils/constants');
+const fileUtils = require('../ws.utils/file');
 const ddfImportUtils = require('./utils/import-ddf.utils');
 const ddfMappers = require('./utils/ddf-mappers');
 const datapackageParser = require('./utils/datapackage.parser');
@@ -152,7 +153,7 @@ function extendTranslationsToResourceStream(translations, resource) {
 function loadTranslationsFromCsv(resource, externalContext) {
   const {pathToDdfFolder} = externalContext;
 
-  return ddfImportUtils.readCsvFileAsStream(pathToDdfFolder, resource.pathToTranslationFile)
+  return fileUtils.readCsvFileAsStream(pathToDdfFolder, resource.pathToTranslationFile)
     .map(rawTranslation => {
       return {object: rawTranslation, resource};
     });

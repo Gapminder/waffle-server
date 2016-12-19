@@ -7,6 +7,7 @@ const hi = require('highland');
 const logger = require('../ws.config/log');
 const ddfImportUtils = require('./utils/import-ddf.utils');
 const constants = require('../ws.utils/constants');
+const fileUtils = require('../ws.utils/file');
 const entitiesUtils = require('./utils/entities.utils');
 const ddfMappers = require('./utils/ddf-mappers');
 const entitiesRepositoryFactory = require('../ws.repository/ddf/entities/entities.repository');
@@ -40,7 +41,7 @@ function createEntities(externalContext) {
 function loadEntitiesFromCsv(resource, externalContext) {
   const {pathToDdfFolder} = externalContext;
 
-  return ddfImportUtils.readCsvFileAsStream(pathToDdfFolder, resource.path)
+  return fileUtils.readCsvFileAsStream(pathToDdfFolder, resource.path)
     .map(rawEntity => {
       const setsAndDomain = entitiesUtils.getSetsAndDomain(resource, externalContext);
       const context = _.extend({filename: resource.path}, setsAndDomain, externalContext);

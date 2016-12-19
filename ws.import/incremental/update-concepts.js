@@ -9,6 +9,7 @@ const conceptsRepositoryFactory = require('../../ws.repository/ddf/concepts/conc
 const ddfImportUtils = require('../utils/import-ddf.utils');
 const conceptsUtils = require('../utils/concepts.utils');
 const constants = require('../../ws.utils/constants');
+const fileUtils = require('../../ws.utils/file');
 const ddfMappers = require('../utils/ddf-mappers');
 const logger = require('../../ws.config/log');
 
@@ -32,7 +33,7 @@ function startConceptsCreation(externalContext, done) {
 function updateConcepts(externalContext, done) {
   let removedProperties;
 
-  return ddfImportUtils.readTextFileByLineAsJsonStream(externalContext.pathToDatasetDiff)
+  return fileUtils.readTextFileByLineAsJsonStream(externalContext.pathToDatasetDiff)
     .map(changes => new ChangesDescriptor(changes))
     .filter(changesDescriptor => changesDescriptor.describes(constants.CONCEPTS))
     .map(changesDescriptor => {

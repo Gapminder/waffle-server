@@ -1,9 +1,7 @@
 /*eslint no-process-env:0 */
 'use strict';
 
-const path = require('path');
 const _ = require('lodash');
-const fs = require('fs');
 const DEFAULT_CONFIG = require('./environment.config');
 
 const PRODUCTION_ENVS = new Set(['stage', 'production']);
@@ -32,7 +30,8 @@ module.exports = (function () {
 
     // { error: 0, warn: 1, info: 2, verbose: 3, debug: 4, silly: 5 }
     LOG_LEVEL: process.env.LOG_LEVEL || DEFAULT_CONFIG.LOG_LEVEL,
-    DEFAULT_USER_PASSWORD: process.env.DEFAULT_USER_PASSWORD
+    DEFAULT_USER_PASSWORD: process.env.DEFAULT_USER_PASSWORD,
+    THRASHING_MACHINE: process.env.THRASHING_MACHINE
   };
 
   config.IS_PRODUCTION = PRODUCTION_ENVS.has(config.NODE_ENV);

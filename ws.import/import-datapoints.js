@@ -8,6 +8,7 @@ const hi = require('highland');
 const logger = require('../ws.config/log');
 const ddfImportUtils = require('./utils/import-ddf.utils');
 const constants = require('../ws.utils/constants');
+const fileUtils = require('../ws.utils/file');
 const datapointsUtils = require('./utils/datapoints.utils');
 
 module.exports = function startDatapointsCreation(externalContext, done) {
@@ -45,7 +46,7 @@ function createDatapoints(externalContextFrozen) {
         .map(segregatedEntities => ({filename: resource.path, measures, dimensions, segregatedEntities}));
     })
     .map(context => {
-      return ddfImportUtils.readCsvFileAsStream(pathToDdfFolder, context.filename)
+      return fileUtils.readCsvFileAsStream(pathToDdfFolder, context.filename)
         .map(datapoint => ({datapoint, context}));
     })
     .parallel(ddfImportUtils.MONGODB_DOC_CREATION_THREADS_AMOUNT)

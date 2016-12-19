@@ -9,6 +9,7 @@ const async = require('async');
 const logger = require('../../ws.config/log');
 const config = require('../../ws.config/config');
 const constants = require('../../ws.utils/constants');
+const fileUtils = require('../../ws.utils/file');
 const ddfImportUtils = require('../utils/import-ddf.utils');
 const datapointsUtils = require('../utils/datapoints.utils');
 const ChangesDescriptor = require('../utils/changes-descriptor').ChangesDescriptor;
@@ -42,7 +43,7 @@ function updateDatapoints(externalContextFrozen) {
   );
 
   const datapointsChangesWithContextStream =
-    ddfImportUtils.readTextFileByLineAsJsonStream(externalContextFrozen.pathToDatasetDiff)
+    fileUtils.readTextFileByLineAsJsonStream(externalContextFrozen.pathToDatasetDiff)
     .map(changes => new ChangesDescriptor(changes))
     .filter(changesDescriptor => changesDescriptor.describes(constants.DATAPOINTS))
     .flatMap(changesDescriptor => {
