@@ -10,4 +10,5 @@ const RecentDdfqlQueriesSchema = new Schema({
   createdAt: {type: Date, default: Date.now},
 }, { strict: false, capped: { size: 50000000, max: 512 } });
 
+RecentDdfqlQueriesSchema.index({queryRaw: 1});
 module.exports = mongoose.model('RecentDdfqlQueries', RecentDdfqlQueriesSchema);
