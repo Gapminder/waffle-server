@@ -12,6 +12,8 @@ const datasetRepositoryPath = '../ws.repository/ddf/datasets/datasets.repository
 const transactionsRepositoryPath = '../ws.repository/ddf/dataset-transactions/dataset-transactions.repository';
 const datasetIndexRepositoryPath = '../ws.repository/ddf/dataset-index/dataset-index.repository';
 
+const shouldNotCall = () => expect.fail(null, null, 'This function should not be called');
+
 describe('Dataset Transactions Service', () => {
 
   describe('Getting default dataset and transaction - Dataset name and transaction commit are given', () => {
@@ -520,7 +522,6 @@ describe('Dataset Transactions Service', () => {
   });
 
   describe('Rollback failed transaction', () => {
-    const shouldNotCall = () => expect.fail(null, null, 'This function should not be called');
     const expectedError = 'Something went wrong';
     const expectedDatasetId = 'expectedDatasetId';
     const expectedDatasetName = 'expectedDatasetName';
@@ -796,4 +797,249 @@ describe('Dataset Transactions Service', () => {
     });
 
   });
+
+  describe('Set default dataset', () => {
+    const expectedError = 'Something went wrong';
+    const expectedDatasetId = 'expectedDatasetId';
+    const expectedDatasetName = 'expectedDatasetName';
+    const expectedDataset = {
+      _id: expectedDatasetId,
+      name: expectedDatasetName
+    };
+    const expectedTransactionId = 'expectedTransactionId';
+    const expectedTransactionCommit = 'aaaaaaa';
+    const expectedTransaction = {_id: expectedTransactionId, createdAt: Date.now(), commit: expectedTransactionCommit, isClosed: true};
+    const expectedUserId = 'expectedUser';
+
+    const transactionRepository = {
+      findByDatasetAndCommit: (datasetId, transactionCommit, onDatasetFound) => {
+        expect(datasetId).to.be.equal(expectedDatasetId);
+        expect(transactionCommit).to.be.equal(expectedTransactionCommit);
+
+        return onDatasetFound(null, expectedTransaction);
+      }
+    };
+
+    const datasetRepository = {
+      findByNameAndUser: (datasetName, userId, onDatasetFound) => {
+        expect(datasetName).to.be.equal(expectedDatasetName);
+        expect(userId).to.be.equal(expectedUserId);
+
+        return onDatasetFound(null, expectedDataset);
+      }
+    };
+
+    it('should fail when error happened while failed dataset search by datasetName and userId', done => {
+      const findByNameAndUser = (datasetName, userId, onDatasetFound) => {
+        expect(datasetName).to.be.equal(expectedDatasetName);
+        expect(userId).to.be.equal(expectedUserId);
+
+        return onDatasetFound(expectedError);
+      };
+
+      const datasetTransactionsService = proxyquire(datasetTransactionsServicePath, {
+        [transactionsRepositoryPath]: _.defaults({findByDatasetAndCommit: shouldNotCall, setAsDefault: shouldNotCall}, transactionRepository),
+        [datasetRepositoryPath]: _.defaults({findByNameAndUser}, datasetRepository)
+      });
+
+      datasetTransactionsService.setTransactionAsDefault(expectedUserId, expectedDatasetName, expectedTransactionCommit, (error, result) => {
+        expect(error).to.equal(expectedError);
+        expect(result).to.not.exist;
+
+        done();
+      });
+    });
+
+    it('should fail when isn\'t found dataset by datasetName and userId', done => {
+      const findByNameAndUser = (datasetName, userId, onDatasetFound) => {
+        expect(datasetName).to.be.equal(expectedDatasetName);
+        expect(userId).to.be.equal(expectedUserId);
+
+        return onDatasetFound(null, null);
+      };
+
+      const datasetTransactionsService = proxyquire(datasetTransactionsServicePath, {
+        [transactionsRepositoryPath]: _.defaults({findByDatasetAndCommit: shouldNotCall, setAsDefault: shouldNotCall}, transactionRepository),
+        [datasetRepositoryPath]: _.defaults({findByNameAndUser}, datasetRepository)
+      });
+
+      datasetTransactionsService.setTransactionAsDefault(expectedUserId, expectedDatasetName, expectedTransactionCommit, (error, result) => {
+        expect(error).to.equal(`Given dataset was not found: '${expectedDatasetName}'`);
+        expect(result).to.not.exist;
+
+        done();
+      });
+    });
+
+    it('should fail when dataset is private', done => {
+      const findByNameAndUser = (datasetName, userId, onDatasetFound) => {
+        expect(datasetName).to.be.equal(expectedDatasetName);
+        expect(userId).to.be.equal(expectedUserId);
+
+        return onDatasetFound(null, _.defaults({private: true}, expectedDataset));
+      };
+
+      const datasetTransactionsService = proxyquire(datasetTransactionsServicePath, {
+        [transactionsRepositoryPath]: _.defaults({findByDatasetAndCommit: shouldNotCall, setAsDefault: shouldNotCall}, transactionRepository),
+        [datasetRepositoryPath]: _.defaults({findByNameAndUser}, datasetRepository)
+      });
+
+      datasetTransactionsService.setTransactionAsDefault(expectedUserId, expectedDatasetName, expectedTransactionCommit, (error, result) => {
+        expect(error).to.equal(`Private dataset cannot be default`);
+        expect(result).to.not.exist;
+
+        done();
+      });
+    });
+
+    it('should fail when error happened while failed transaction search by datasetId and transactionCommit', done => {
+      const findByDatasetAndCommit = (datasetId, transactionCommit, onDatasetFound) => {
+        expect(datasetId).to.be.equal(expectedDatasetId);
+        expect(transactionCommit).to.be.equal(expectedTransactionCommit);
+
+        return onDatasetFound(expectedError);
+      };
+
+      const datasetTransactionsService = proxyquire(datasetTransactionsServicePath, {
+        [transactionsRepositoryPath]: _.defaults({findByDatasetAndCommit, setAsDefault: shouldNotCall}, transactionRepository),
+        [datasetRepositoryPath]: datasetRepository
+      });
+
+      datasetTransactionsService.setTransactionAsDefault(expectedUserId, expectedDatasetName, expectedTransactionCommit, (error, result) => {
+        expect(error).to.equal(expectedError);
+        expect(result).to.not.exist;
+
+        done();
+      });
+    });
+
+    it('should fail when isn\'t found transaction', done => {
+      const findByDatasetAndCommit = (datasetId, transactionCommit, onDatasetFound) => {
+        expect(datasetId).to.be.equal(expectedDatasetId);
+        expect(transactionCommit).to.be.equal(expectedTransactionCommit);
+
+        return onDatasetFound(null, null);
+      };
+
+      const datasetTransactionsService = proxyquire(datasetTransactionsServicePath, {
+        [transactionsRepositoryPath]: _.defaults({findByDatasetAndCommit, setAsDefault: shouldNotCall}, transactionRepository),
+        [datasetRepositoryPath]: datasetRepository
+      });
+
+      datasetTransactionsService.setTransactionAsDefault(expectedUserId, expectedDatasetName, expectedTransactionCommit, (error, result) => {
+        expect(error).to.equal(`Given transaction was not found: '${expectedTransactionCommit}'`);
+        expect(result).to.not.exist;
+
+        done();
+      });
+    });
+
+    it('should fail when is found opened transaction', done => {
+      const findByDatasetAndCommit = (datasetId, transactionCommit, onDatasetFound) => {
+        expect(datasetId).to.be.equal(expectedDatasetId);
+        expect(transactionCommit).to.be.equal(expectedTransactionCommit);
+
+        return onDatasetFound(null, _.defaults({isClosed: false}));
+      };
+
+      const datasetTransactionsService = proxyquire(datasetTransactionsServicePath, {
+        [transactionsRepositoryPath]: _.defaults({findByDatasetAndCommit, setAsDefault: shouldNotCall}, transactionRepository),
+        [datasetRepositoryPath]: datasetRepository
+      });
+
+      datasetTransactionsService.setTransactionAsDefault(expectedUserId, expectedDatasetName, expectedTransactionCommit, (error, result) => {
+        expect(error).to.equal(`Given transaction was not found: '${expectedTransactionCommit}'`);
+        expect(result).to.not.exist;
+
+        done();
+      });
+    });
+
+    it('should fail when is found opened transaction', done => {
+      const findByDatasetAndCommit = (datasetId, transactionCommit, onDatasetFound) => {
+        expect(datasetId).to.be.equal(expectedDatasetId);
+        expect(transactionCommit).to.be.equal(expectedTransactionCommit);
+
+        return onDatasetFound(null, _.defaults({lastError: "Last error"}, expectedTransaction));
+      };
+
+      const datasetTransactionsService = proxyquire(datasetTransactionsServicePath, {
+        [transactionsRepositoryPath]: _.defaults({findByDatasetAndCommit, setAsDefault: shouldNotCall}, transactionRepository),
+        [datasetRepositoryPath]: datasetRepository
+      });
+
+      datasetTransactionsService.setTransactionAsDefault(expectedUserId, expectedDatasetName, expectedTransactionCommit, (error, result) => {
+        expect(error).to.equal(`Given transaction was not found: '${expectedTransactionCommit}'`);
+        expect(result).to.not.exist;
+
+        done();
+      });
+    });
+
+    it('should fail when is found corrupted transaction', done => {
+      const findByDatasetAndCommit = (datasetId, transactionCommit, onDatasetFound) => {
+        expect(datasetId).to.be.equal(expectedDatasetId);
+        expect(transactionCommit).to.be.equal(expectedTransactionCommit);
+
+        return onDatasetFound(null, _.defaults({isClosed: false, lastError: "Test"}, expectedTransaction));
+      };
+
+      const datasetTransactionsService = proxyquire(datasetTransactionsServicePath, {
+        [transactionsRepositoryPath]: _.defaults({findByDatasetAndCommit, setAsDefault: shouldNotCall}, transactionRepository),
+        [datasetRepositoryPath]: datasetRepository
+      });
+
+      datasetTransactionsService.setTransactionAsDefault(expectedUserId, expectedDatasetName, expectedTransactionCommit, (error, result) => {
+        expect(error).to.equal(`Given transaction was not found: '${expectedTransactionCommit}'`);
+        expect(result).to.not.exist;
+        done();
+      });
+    });
+
+    it('should fail when error happened while set transaction as default', done => {
+      const setAsDefault = (userId, datasetId, transactionId, onDatasetFound) => {
+        expect(userId).to.be.equal(expectedUserId);
+        expect(datasetId).to.be.equal(expectedDatasetId);
+        expect(transactionId).to.be.equal(expectedTransactionId);
+
+        return onDatasetFound(expectedError);
+      };
+
+      const datasetTransactionsService = proxyquire(datasetTransactionsServicePath, {
+        [transactionsRepositoryPath]: _.defaults({setAsDefault}, transactionRepository),
+        [datasetRepositoryPath]: datasetRepository
+      });
+
+      datasetTransactionsService.setTransactionAsDefault(expectedUserId, expectedDatasetName, expectedTransactionCommit, (error, result) => {
+        expect(error).to.equal(expectedError);
+        expect(result).to.not.exist;
+        done();
+      });
+    });
+
+    it('should set choosen transaction as default', done => {
+      const setAsDefault = (userId, datasetId, transactionId, onDatasetFound) => {
+        expect(userId).to.be.equal(expectedUserId);
+        expect(datasetId).to.be.equal(expectedDatasetId);
+        expect(transactionId).to.be.equal(expectedTransactionId);
+
+        return onDatasetFound();
+      };
+
+      const datasetTransactionsService = proxyquire(datasetTransactionsServicePath, {
+        [transactionsRepositoryPath]: _.defaults({setAsDefault}, transactionRepository),
+        [datasetRepositoryPath]: datasetRepository
+      });
+
+      datasetTransactionsService.setTransactionAsDefault(expectedUserId, expectedDatasetName, expectedTransactionCommit, (error, result) => {
+        expect(error).to.not.exist;
+        expect(result).to.be.deep.equal({
+          name: expectedDatasetName,
+          commit: expectedTransactionCommit,
+          createdAt: new Date(expectedTransaction.createdAt)
+        });
+        done();
+      });
+    });
+  })
 });

@@ -35,43 +35,43 @@ function setTransactionAsDefault(userId, datasetName, transactionCommit, onSetAs
   ], onSetAsDefault);
 }
 
-function _findDatasetByNameAndUser(pipe, done) {
-  return datasetsRepository.findByNameAndUser(pipe.datasetName, pipe.userId, (error, dataset) => {
+function _findDatasetByNameAndUser(externalContext, done) {
+  return datasetsRepository.findByNameAndUser(externalContext.datasetName, externalContext.userId, (error, dataset) => {
     if (error || !dataset) {
-      return done(error || `Given dataset was not found: '${pipe.datasetName}'`);
+      return done(error || `Given dataset was not found: '${externalContext.datasetName}'`);
     }
 
     if (dataset.private) {
       return done(`Private dataset cannot be default`);
     }
 
-    pipe.dataset = dataset;
-    return done(null, pipe);
+    externalContext.dataset = dataset;
+    return done(null, externalContext);
   });
 }
 
-function _setTransactionAsDefault(pipe, done) {
-  return transactionsRepository.setAsDefault(pipe.userId, pipe.dataset._id, pipe.transaction._id, error => {
+function _findTransactionByDatasetAndCommit(extrenalContext, done) {
+  return transactionsRepository.findByDatasetAndCommit(extrenalContext.dataset._id, extrenalContext.transactionCommit, (error, transaction) => {
+    if (error || !_isTransactionValid(transaction)) {
+      return done(error || `Given transaction was not found: '${extrenalContext.transactionCommit}'`);
+    }
+
+    extrenalContext.transaction = transaction;
+    return done(null, extrenalContext);
+  });
+}
+
+function _setTransactionAsDefault(externalContext, done) {
+  return transactionsRepository.setAsDefault(externalContext.userId, externalContext.dataset._id, externalContext.transaction._id, error => {
     if (error) {
       return done(error);
     }
 
     return done(null, {
-      name: pipe.datasetName,
-      commit: pipe.transactionCommit,
-      createdAt: new Date(pipe.transaction.createdAt)
+      name: externalContext.datasetName,
+      commit: externalContext.transactionCommit,
+      createdAt: new Date(externalContext.transaction.createdAt)
     });
-  });
-}
-
-function _findTransactionByDatasetAndCommit(pipe, done) {
-  return transactionsRepository.findByDatasetAndCommit(pipe.dataset._id, pipe.transactionCommit, (error, transaction) => {
-    if (error || !_isTransactionValid(transaction)) {
-      return done(error || `Given transaction was not found: '${pipe.transactionCommit}'`);
-    }
-
-    pipe.transaction = transaction;
-    return done(null, pipe);
   });
 }
 
