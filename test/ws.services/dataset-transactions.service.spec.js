@@ -521,7 +521,7 @@ describe('Dataset Transactions Service', () => {
     });
   });
 
-  describe('Rollback failed transaction', () => {
+  describe('Rollback latest transaction', () => {
     const expectedError = 'Something went wrong';
     const expectedDatasetId = 'expectedDatasetId';
     const expectedDatasetName = 'expectedDatasetName';
@@ -530,21 +530,21 @@ describe('Dataset Transactions Service', () => {
     const expectedUser = {_id: 'expectedUser'};
 
     const datasetIndexRepository = {
-      rollback: (failedTransaction, onRolledback) => {
-        expect(failedTransaction).to.be.equal(expectedTransaction);
+      rollback: (latestTransaction, onRolledback) => {
+        expect(latestTransaction).to.be.equal(expectedTransaction);
 
         return onRolledback();
       }
     };
 
     const transactionRepository = {
-      findLatestFailedByDataset: (datasetId, onFailedTransactionFound) => {
+      findLatestByDataset: (datasetId, onLatestTransactionFound) => {
         expect(datasetId).to.be.equal(expectedDatasetId);
 
-        return onFailedTransactionFound(null, expectedTransaction);
+        return onLatestTransactionFound(null, expectedTransaction);
       },
-      removeById: (failedTransactionId, onTransactionRemoved) => {
-        expect(failedTransactionId).to.be.equal(expectedTransaction._id);
+      removeById: (latestTransactionId, onTransactionRemoved) => {
+        expect(latestTransactionId).to.be.equal(expectedTransaction._id);
 
         return onTransactionRemoved();
       },
@@ -590,54 +590,54 @@ describe('Dataset Transactions Service', () => {
       };
 
       const datasetTransactionsService = proxyquire(datasetTransactionsServicePath, {
-        [transactionsRepositoryPath]: _.defaults({findLatestFailedByDataset: shouldNotCall, countByDataset: shouldNotCall, removeById: shouldNotCall}, transactionRepository),
+        [transactionsRepositoryPath]: _.defaults({findLatestByDataset: shouldNotCall, countByDataset: shouldNotCall, removeById: shouldNotCall}, transactionRepository),
         [datasetServicePath]: _.defaults({findDatasetByNameAndValidateOwnership}, datasetService),
         [datasetRepositoryPath]: _.defaults({removeById: shouldNotCall, forceUnlock: shouldNotCall, forceLock: shouldNotCall}, datasetRepository),
         [datasetIndexRepositoryPath]: _.defaults({rollback: shouldNotCall}, datasetIndexRepository)
       });
 
-      datasetTransactionsService.rollbackFailedTransactionFor(expectedDatasetName, expectedUser, (error) => {
+      datasetTransactionsService.rollbackLatestTransactionFor(expectedDatasetName, expectedUser, (error) => {
         expect(error).to.equal(expectedError);
         done();
       });
     });
 
-    it('should fail when error happened while failed transaction search', done => {
-      const findLatestFailedByDataset = (datasetId, onFailedTransactionFound) => {
+    it('should fail when error happened while latest transaction search', done => {
+      const findLatestByDataset = (datasetId, onLatestTransactionFound) => {
         expect(datasetId).to.be.equal(expectedDatasetId);
 
-        return onFailedTransactionFound(expectedError);
+        return onLatestTransactionFound(expectedError);
       };
 
       const datasetTransactionsService = proxyquire(datasetTransactionsServicePath, {
-        [transactionsRepositoryPath]: _.defaults({findLatestFailedByDataset, countByDataset: shouldNotCall, removeById: shouldNotCall}, transactionRepository),
+        [transactionsRepositoryPath]: _.defaults({findLatestByDataset, countByDataset: shouldNotCall, removeById: shouldNotCall}, transactionRepository),
         [datasetServicePath]: datasetService,
         [datasetRepositoryPath]: _.defaults({removeById: shouldNotCall, forceUnlock: shouldNotCall, forceLock: shouldNotCall}, datasetRepository),
         [datasetIndexRepositoryPath]: _.defaults({rollback: shouldNotCall}, datasetIndexRepository)
       });
 
-      datasetTransactionsService.rollbackFailedTransactionFor(expectedDatasetName, expectedUser, (error) => {
+      datasetTransactionsService.rollbackLatestTransactionFor(expectedDatasetName, expectedUser, (error) => {
         expect(error).to.equal(expectedError);
         done();
       });
     });
 
-    it('should fail when failed transaction was not found', done => {
-      const findLatestFailedByDataset = (datasetId, onFailedTransactionFound) => {
+    it('should fail when latest transaction was not found', done => {
+      const findLatestByDataset = (datasetId, onLatestTransactionFound) => {
         expect(datasetId).to.be.equal(expectedDatasetId);
 
-        return onFailedTransactionFound(null, null);
+        return onLatestTransactionFound(null, null);
       };
 
       const datasetTransactionsService = proxyquire(datasetTransactionsServicePath, {
-        [transactionsRepositoryPath]: _.defaults({findLatestFailedByDataset, countByDataset: shouldNotCall, removeById: shouldNotCall}, transactionRepository),
+        [transactionsRepositoryPath]: _.defaults({findLatestByDataset, countByDataset: shouldNotCall, removeById: shouldNotCall}, transactionRepository),
         [datasetServicePath]: datasetService,
         [datasetRepositoryPath]: _.defaults({removeById: shouldNotCall, forceUnlock: shouldNotCall, forceLock: shouldNotCall}, datasetRepository),
         [datasetIndexRepositoryPath]: _.defaults({rollback: shouldNotCall}, datasetIndexRepository)
       });
 
-      datasetTransactionsService.rollbackFailedTransactionFor(expectedDatasetName, expectedUser, (error) => {
-        expect(error).to.equal('There is nothing to rollback - all transactions are completed successfully');
+      datasetTransactionsService.rollbackLatestTransactionFor(expectedDatasetName, expectedUser, (error) => {
+        expect(error).to.equal('There is nothing to rollback');
         done();
       });
     });
@@ -656,7 +656,7 @@ describe('Dataset Transactions Service', () => {
         [datasetIndexRepositoryPath]: _.defaults({rollback: shouldNotCall}, datasetIndexRepository)
       });
 
-      datasetTransactionsService.rollbackFailedTransactionFor(expectedDatasetName, expectedUser, (error) => {
+      datasetTransactionsService.rollbackLatestTransactionFor(expectedDatasetName, expectedUser, (error) => {
         expect(error).to.equal(expectedError);
         done();
       });
@@ -665,8 +665,8 @@ describe('Dataset Transactions Service', () => {
     it('should fail when error happened while documents removing in dataset index collection', function(done) {
       this.timeout(20000);
 
-      const rollback = (failedTransaction, onRolledback) => {
-        expect(failedTransaction).to.be.equal(expectedTransaction);
+      const rollback = (latestTransaction, onRolledback) => {
+        expect(latestTransaction).to.be.equal(expectedTransaction);
 
         return onRolledback(expectedError);
       };
@@ -678,15 +678,15 @@ describe('Dataset Transactions Service', () => {
         [datasetIndexRepositoryPath]: _.defaults({rollback}, datasetIndexRepository)
       });
 
-      return datasetTransactionsService.rollbackFailedTransactionFor(expectedDatasetName, expectedUser, (error) => {
+      return datasetTransactionsService.rollbackLatestTransactionFor(expectedDatasetName, expectedUser, (error) => {
         expect(error).to.equal(expectedError);
         return done();
       });
     });
 
-    it('should fail when error happened while failed transaction removing', done => {
-      const removeById = (failedTransactionId, onTransactionRemoved) => {
-        expect(failedTransactionId).to.be.equal(expectedTransaction._id);
+    it('should fail when error happened while latest transaction removing', done => {
+      const removeById = (latestTransactionId, onTransactionRemoved) => {
+        expect(latestTransactionId).to.be.equal(expectedTransaction._id);
 
         return onTransactionRemoved(expectedError);
       };
@@ -698,7 +698,7 @@ describe('Dataset Transactions Service', () => {
         [datasetIndexRepositoryPath]: datasetIndexRepository
       });
 
-      datasetTransactionsService.rollbackFailedTransactionFor(expectedDatasetName, expectedUser, (error) => {
+      datasetTransactionsService.rollbackLatestTransactionFor(expectedDatasetName, expectedUser, (error) => {
         expect(error).to.equal(expectedError);
         done();
       });
@@ -718,7 +718,7 @@ describe('Dataset Transactions Service', () => {
         [datasetIndexRepositoryPath]: datasetIndexRepository
       });
 
-      datasetTransactionsService.rollbackFailedTransactionFor(expectedDatasetName, expectedUser, (error) => {
+      datasetTransactionsService.rollbackLatestTransactionFor(expectedDatasetName, expectedUser, (error) => {
         expect(error).to.equal(expectedError);
         done();
       });
@@ -737,7 +737,7 @@ describe('Dataset Transactions Service', () => {
         [datasetIndexRepositoryPath]: datasetIndexRepository
       });
 
-      datasetTransactionsService.rollbackFailedTransactionFor(expectedDatasetName, expectedUser, (error) => {
+      datasetTransactionsService.rollbackLatestTransactionFor(expectedDatasetName, expectedUser, (error) => {
         expect(error).to.equal(expectedError);
         done();
       });
@@ -756,7 +756,7 @@ describe('Dataset Transactions Service', () => {
         [datasetIndexRepositoryPath]: datasetIndexRepository
       });
 
-      return datasetTransactionsService.rollbackFailedTransactionFor(expectedDatasetName, expectedUser, (error) => {
+      return datasetTransactionsService.rollbackLatestTransactionFor(expectedDatasetName, expectedUser, (error) => {
         expect(error).to.not.exists;
         return done();
       });
@@ -776,7 +776,7 @@ describe('Dataset Transactions Service', () => {
         [datasetIndexRepositoryPath]: datasetIndexRepository
       });
 
-      return datasetTransactionsService.rollbackFailedTransactionFor(expectedDatasetName, expectedUser, (error) => {
+      return datasetTransactionsService.rollbackLatestTransactionFor(expectedDatasetName, expectedUser, (error) => {
         expect(error).to.equal(expectedError);
         return done();
       });
@@ -790,7 +790,7 @@ describe('Dataset Transactions Service', () => {
         [datasetIndexRepositoryPath]: datasetIndexRepository
       });
 
-      return datasetTransactionsService.rollbackFailedTransactionFor(expectedDatasetName, expectedUser, (error) => {
+      return datasetTransactionsService.rollbackLatestTransactionFor(expectedDatasetName, expectedUser, (error) => {
         expect(error).to.not.exists;
         return done();
       });
