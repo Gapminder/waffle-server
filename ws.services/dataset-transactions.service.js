@@ -17,7 +17,7 @@ const datasetIndexRepository = require('../ws.repository/ddf/dataset-index/datas
 module.exports = {
   setLastError,
   setTransactionAsDefault,
-  rollbackFailedTransactionFor,
+  rollbackLatestTransactionFor,
   findDefaultDatasetAndTransaction,
   getStatusOfLatestTransactionByDatasetName
 };
@@ -75,32 +75,32 @@ function _setTransactionAsDefault(externalContext, done) {
   });
 }
 
-function rollbackFailedTransactionFor(datasetName, user, onRollbackCompleted) {
+function rollbackLatestTransactionFor(datasetName, user, onRollbackCompleted) {
   return async.waterfall([
     async.constant({datasetName, user}),
     datasetService.findDatasetByNameAndValidateOwnership,
-    _findLatestFailedTransactionByDataset,
+    _findLatestTransactionByDataset,
     _forceDatasetLock,
     _rollbackDatasetData,
-    _removeFailedTransaction,
+    _removeLatestTransaction,
     _forceDatasetUnlock,
     _removeDatasetWithoutTransactions
   ], onRollbackCompleted);
 }
 
-function _findLatestFailedTransactionByDataset(externalContext, onFailedTransactionFound) {
-  return transactionsRepository.findLatestFailedByDataset(externalContext.datasetId, (error, failedTransaction) => {
+function _findLatestTransactionByDataset(externalContext, onLatestTransactionFound) {
+  return transactionsRepository.findLatestByDataset(externalContext.datasetId, (error, latestTransaction) => {
     if (error) {
-      return onFailedTransactionFound(error);
+      return onLatestTransactionFound(error);
     }
 
-    if (!failedTransaction) {
-      return onFailedTransactionFound('There is nothing to rollback - all transactions are completed successfully');
+    if (!latestTransaction) {
+      return onLatestTransactionFound('There is nothing to rollback');
     }
 
-    externalContext.failedTransaction = failedTransaction;
+    externalContext.latestTransaction = latestTransaction;
 
-    return onFailedTransactionFound(null, externalContext);
+    return onLatestTransactionFound(null, externalContext);
   });
 }
 
@@ -122,10 +122,10 @@ function _rollbackDatasetData(externalContext, onRollbackDataFinished) {
   const datapointsRepository = datapointsRepositoryFactory.versionAgnostic();
 
   return async.parallel([
-    async.retry(retryConfig, async.apply(conceptsRepository.rollback, externalContext.failedTransaction)),
-    async.retry(retryConfig, async.apply(entitiesRepository.rollback, externalContext.failedTransaction)),
-    async.retry(retryConfig, async.apply(datapointsRepository.rollback, externalContext.failedTransaction)),
-    async.retry(retryConfig, async.apply(datasetIndexRepository.rollback, externalContext.failedTransaction))
+    async.retry(retryConfig, async.apply(conceptsRepository.rollback, externalContext.latestTransaction)),
+    async.retry(retryConfig, async.apply(entitiesRepository.rollback, externalContext.latestTransaction)),
+    async.retry(retryConfig, async.apply(datapointsRepository.rollback, externalContext.latestTransaction)),
+    async.retry(retryConfig, async.apply(datasetIndexRepository.rollback, externalContext.latestTransaction))
   ], (rollbackDataError) => {
     if (rollbackDataError) {
       return onRollbackDataFinished(rollbackDataError);
@@ -135,8 +135,8 @@ function _rollbackDatasetData(externalContext, onRollbackDataFinished) {
   });
 }
 
-function _removeFailedTransaction(externalContext, onTransactionRemoved) {
-  return transactionsRepository.removeById(externalContext.failedTransaction._id, (removeTransactionError) => {
+function _removeLatestTransaction(externalContext, onTransactionRemoved) {
+  return transactionsRepository.removeById(externalContext.latestTransaction._id, (removeTransactionError) => {
     if (removeTransactionError) {
       return onTransactionRemoved(removeTransactionError);
     }

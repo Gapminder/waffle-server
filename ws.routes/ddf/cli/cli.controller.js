@@ -161,7 +161,7 @@ module.exports = serviceLocator => {
       return res.json({success: false, error: 'No dataset name was given'});
     }
 
-    return transactionsService.rollbackFailedTransactionFor(datasetName, req.user, rollbackError => {
+    return transactionsService.rollbackLatestTransactionFor(datasetName, req.user, rollbackError => {
       if (rollbackError) {
         logger.error(rollbackError);
         return res.json({success: !rollbackError, error: rollbackError});
