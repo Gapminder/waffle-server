@@ -32,7 +32,7 @@ function getPopulateDocumentByQuery(options, onFound) {
               return onFound(error);
             }
 
-            async.map(conceptsDocuments, 0, function (previousDocument, currentDocument, done) {
+            async.reduce(conceptsDocuments, 0, function (previousDocument, currentDocument, done) {
 
               return conceptsRepositoryFactory.versionAgnostic()
                 .findConceptsByQuery({
