@@ -28,6 +28,9 @@ function help {
       NODE_ECR_NAME
 
     With defaults:
+      MEMORY_LB             -> 3 Gb
+      MEMORY_NODE           -> 3 Gb
+      MEMORY_TM             -> 7 Gb
       HAPROXY_ECR_LABEL     -> latest
       NODE_ECR_LABEL        -> latest
       ECS_INSTANCE_TYPE     -> t2.micro

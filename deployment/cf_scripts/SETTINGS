@@ -13,8 +13,8 @@ export ECS_INSTANCE_TYPE_LB=""
 export ECS_INSTANCE_TYPE=""
 export ECS_INSTANCE_TYPE_TM=""
 export THRASHING_MACHINE="THRASHING_MACHINE"
-export AWS_DEFAULT_REGION="eu-west-1"
-export NODE_ENV="production"
+export AWS_DEFAULT_REGION=""
+export NODE_ENV=""
 
 
 
