@@ -36,9 +36,11 @@ function bodyFromUrlQuery(req, res, next) {
     }
 
     if (parsedQuery) {
-      const recentDdfqlQuery = {queryRaw: parser.query, queryParsed: parsedQuery, type: parser.queryType};
-      recentDdfqlQueriesRepository.create(recentDdfqlQuery, (error, record) => {
-        return record && logger.debug({obj: record.toObject()}, 'Writing query to db');
+      const recentDdfqlQuery = {queryRaw: parser.query, type: parser.queryType};
+      recentDdfqlQueriesRepository.create(recentDdfqlQuery, error => {
+        if (!error) {
+          logger.debug('Writing query to cache warm up storage', parser.query);
+        }
       });
     }
 
