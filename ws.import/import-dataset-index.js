@@ -67,7 +67,7 @@ function _generateDatasetIndexFromConcepts(pipe, done) {
       });
     },
     (err, conceptsIndexAmounts) => {
-      logger.info('** load Dataset files Concepts: ' + _.sum(conceptsIndexAmounts));
+      logger.info('** loaded Dataset files Concepts: ' + _.sum(conceptsIndexAmounts));
       return done(err, pipe);
     }
   );
@@ -98,7 +98,7 @@ function _generateDatasetIndexFromEntities(pipe, done) {
       return completeSearchForEntities(null, _.size(datasetEntitiesIndexes));
     },
     (err, entityIndexAmounts) => {
-      logger.info('** load Dataset files Entities: ' + _.sum(entityIndexAmounts));
+      logger.info('** loaded Dataset files Entities: ' + _.sum(entityIndexAmounts));
       return done(err, pipe);
     }
   );
@@ -127,12 +127,16 @@ function _generateDatasetIndexFromDatapoints(pipe, done) {
       return completeSearchForDatapoints();
     },
     err => {
+      logger.info('** loaded Dataset files Datapoints');
       return done(err, pipe);
     }
   );
 }
 
 function _convertDatasetIndexToModel(pipe, done) {
+
+  logger.info('** convert Dataset Index to model');
+
   return async.setImmediate(() => {
     pipe.datasetIndexes = _.map(pipe.datasetIndex, mapDdfIndexToWsModel(pipe));
     return done(null, pipe);
@@ -140,6 +144,9 @@ function _convertDatasetIndexToModel(pipe, done) {
 }
 
 function _populateDatasetIndexWithOriginIds(pipe, done) {
+
+  logger.info('** populate Dataset Index with originIds');
+
   return async.mapLimit(pipe.datasetIndexes, constants.LIMIT_NUMBER_PROCESS, (index, onIndexPopulated) => {
     index.keyOriginIds = _.chain(index.key).map(getOriginId).compact().value();
     index.valueOriginId = getOriginId(getLast(index.value));
@@ -167,6 +174,7 @@ function _populateDatasetIndexWithOriginIds(pipe, done) {
 }
 
 function _createDatasetIndex(pipe, done) {
+
   logger.info('** create Dataset Index documents');
 
   return async.eachLimit(
@@ -178,6 +186,9 @@ function _createDatasetIndex(pipe, done) {
 }
 
 function findEntityOriginIds(pipe, done) {
+
+  logger.info('**** find Entity originIds');
+
   const cacheKey = `${pipe.dataset._id}${pipe.version}${_.join(pipe.index.key, ',')}`;
   if (entityOriginIdsCache.has(cacheKey)) {
     return async.setImmediate(() => {
@@ -199,6 +210,9 @@ function findEntityOriginIds(pipe, done) {
 }
 
 function findDatapointsStatsForMeasure(pipe, done) {
+
+  logger.info(`** find Datapoints stats for Measure ${_.get(pipe.index, 'gid')}`);
+
   if (pipe.index.type !== constants.DATAPOINTS) {
     return async.setImmediate(() => done(null, pipe.index));
   }
