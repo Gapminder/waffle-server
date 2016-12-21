@@ -182,9 +182,9 @@ module.exports = serviceLocator => {
       return res.json({success: false, error: 'No dataset name was given'});
     }
 
-    const userId = req.user._id;
+    const user = req.user;
 
-    return datasetsService.removeDatasetData(datasetName, userId, removeError => {
+    return datasetsService.removeDatasetData(datasetName, user, removeError => {
       if (removeError) {
         logger.error(removeError);
         return res.json({success: !removeError, error: removeError});
