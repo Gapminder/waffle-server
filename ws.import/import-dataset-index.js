@@ -147,7 +147,7 @@ function _populateDatasetIndexWithOriginIds(pipe, done) {
 
   logger.info('** populate Dataset Index with originIds');
 
-  return async.mapLimit(pipe.datasetIndexes, constants.LIMIT_NUMBER_PROCESS, (index, onIndexPopulated) => {
+  return async.mapSeries(pipe.datasetIndexes, (index, onIndexPopulated) => {
     index.keyOriginIds = _.chain(index.key).map(getOriginId).compact().value();
     index.valueOriginId = getOriginId(getLast(index.value));
 
