@@ -2,6 +2,7 @@
 
 require('../../ws.config/db.config');
 require('../../ws.repository');
+const _ = require('lodash');
 const md5 = require('md5');
 const url = require('url');
 const URLON = require('URLON');
@@ -344,9 +345,11 @@ describe('Routes utils', () => {
         }
       };
 
+      const queryRaw = encodeURIComponent(JSON.stringify(ddfql));
+
       const req = {
         query: {
-          query: encodeURIComponent(JSON.stringify(ddfql))
+          query: queryRaw
         },
       };
 
@@ -355,7 +358,9 @@ describe('Routes utils', () => {
       };
 
       const next = () => {
-        expect(req.body).to.deep.equal(ddfql);
+        const rawDdfQuery = {queryRaw: queryRaw, type: 'JSON'};
+        const expectedBody = _.extend({rawDdfQuery}, ddfql);
+        expect(req.body).to.deep.equal(expectedBody);
         done();
       };
 
@@ -396,16 +401,20 @@ describe('Routes utils', () => {
         }
       };
 
+      const queryRaw = URLON.stringify(ddfql);
+
       const req = {
         query: {},
-        url: `/api/ddf/ql/?${URLON.stringify(ddfql)}`
+        url: `/api/ddf/ql/?${queryRaw}`
       };
 
       const res = {
       };
 
       const next = () => {
-        expect(req.body).to.deep.equal(ddfql);
+        const rawDdfQuery = {queryRaw, type: 'URLON'};
+        const expectedBody = _.extend({rawDdfQuery}, ddfql);
+        expect(req.body).to.deep.equal(expectedBody);
         done();
       };
 

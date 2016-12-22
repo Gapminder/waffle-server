@@ -20,7 +20,7 @@ console.log(`++ Redis address: ${REDIS_HOST}`);
 shell.exec('service rsyslog restart');
 
 if (THRASHING_MACHINE) {
-  shell.exec('INNER_PORT=80 /usr/bin/node server.js')
+  shell.exec('INNER_PORT=80 /usr/bin/node --max_old_space_size=10000 server.js');
 } else {
   shell.exec('/usr/bin/forever start -c \"/usr/bin/node --stack_trace_limit=0\" -m 10 --minUptime 500 --spinSleepTime 600 server.js',  {silent:true});
   register_us();

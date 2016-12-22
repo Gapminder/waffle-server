@@ -55,8 +55,10 @@ module.exports = serviceLocator => {
     logger.info({req}, 'DDFQL URL');
     logger.info({obj: req.body}, 'DDFQL');
 
-    const from = req.body.from;
-    const onEntriesCollected = routeUtils.respondWithRawDdf(req, res, next);
+    const from = _.get(req, 'body.from', null);
+    const rawDdfQuery = _.get(req, 'body.rawDdfQuery', null);
+
+    const onEntriesCollected = routeUtils.respondWithRawDdf(rawDdfQuery, req, res, next);
 
     if (!from) {
       return onEntriesCollected(`The filed 'from' must present in query.`);
@@ -97,7 +99,7 @@ module.exports = serviceLocator => {
       return conceptsService.collectConceptsByDdfql(options, onEntriesCollected);
     } else if (queryToSchema(from)) {
       req.ddfDataType = constants.SCHEMA;
-      const onSchemaEntriesFound = routeUtils.respondWithRawDdf(req, res, next);
+      const onSchemaEntriesFound = routeUtils.respondWithRawDdf(rawDdfQuery, req, res, next);
       return schemaService.findSchemaByDdfql(options, onSchemaEntriesFound);
     } else {
       return onEntriesCollected(`Value '${from}' in the 'from' field isn't supported yet.`);

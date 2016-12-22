@@ -853,7 +853,7 @@
     "MemoryNodeThrashingMachine":{
       "Type": "Number",
       "Description": "Ram ThrashingMachine",
-      "Default": 7000
+      "Default": 14000
 
     },
     "DdfRepoPath": {
@@ -1074,7 +1074,7 @@
                 ]
               ]
             },
-            "Cpu": "1000",
+            "Cpu": "3584",
             "Memory": {
               "Ref": "MemoryNodeThrashingMachine"
             },
