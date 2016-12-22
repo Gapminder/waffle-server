@@ -35,16 +35,7 @@ function bodyFromUrlQuery(req, res, next) {
       return res.json({success: false, error: 'Query was sent in incorrect format'});
     }
 
-    if (parsedQuery) {
-      const recentDdfqlQuery = {queryRaw: parser.query, type: parser.queryType};
-      recentDdfqlQueriesRepository.create(recentDdfqlQuery, error => {
-        if (!error) {
-          logger.debug('Writing query to cache warm up storage', parser.query);
-        }
-      });
-    }
-
-    req.body = parsedQuery;
+    req.body = _.extend(parsedQuery, {rawDdfQuery: {queryRaw: parser.query, type: parser.queryType}});
     next();
   });
 }
@@ -68,7 +59,7 @@ function ensureAuthenticatedViaToken(res, req, next) {
   return passport.authenticate('token')(res, req, next);
 }
 
-function respondWithRawDdf(req, res, next) {
+function respondWithRawDdf(rawDdfQuery, req, res, next) {
   return (error, result) => {
     if (error) {
       logger.error(error);
@@ -76,10 +67,24 @@ function respondWithRawDdf(req, res, next) {
       return res.json({success: false, error: error});
     }
 
+    _storeWarmUpQueryForDefaultDataset(rawDdfQuery);
+
     req.rawData = {rawDdf: result};
 
     return next();
   };
+}
+
+function _storeWarmUpQueryForDefaultDataset(rawDdfQuery) {
+  if (_.has(rawDdfQuery, 'dataset') || _.has(rawDdfQuery, 'version')) {
+    return;
+  }
+
+  recentDdfqlQueriesRepository.create(rawDdfQuery, error => {
+    if (!error) {
+      logger.debug('Writing query to cache warm up storage', rawDdfQuery.queryRaw);
+    }
+  });
 }
 
 function checkDatasetAccessibility(req, res, next) {

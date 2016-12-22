@@ -43,7 +43,7 @@
     "cors": "2.8.1",
     "csvtojson": "1.0.3",
     "ddf-time-utils": "0.1.6",
-    "ddf-validation": "~1.1.5",
+    "ddf-validation": "~1.2.3",
     "entities": "1.1.1",
     "express": "4.14.0",
     "express-redis-cache": "0.5.0",
@@ -75,7 +75,7 @@
     "through2": "2.0.1",
     "traverse": "0.6.6",
     "validator": "5.7.0",
-    "waffle-server-import-cli": "~2.5.15"
+    "waffle-server-import-cli": "~2.5.19"
   },
   "devDependencies": {
     "chai": "3.5.0",
