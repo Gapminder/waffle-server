@@ -48,6 +48,7 @@ DataPointsRepository.prototype.removeByDataset = function (datasetId, onRemove) 
 DataPointsRepository.prototype.findByQuery = function(subDatapointQuery, onDatapointsFound) {
   const query = this._composeQuery(subDatapointQuery);
 
+  logger.debug({obj: query}, 'Datapoints query');
   return DataPoints.find(query).lean().exec(onDatapointsFound);
 };
 

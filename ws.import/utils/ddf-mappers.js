@@ -68,6 +68,7 @@ function mapDdfDataPointToWsModel(entry, context) {
           value: _.isNil(datapointValueAsNumber) ? datapointValue : datapointValueAsNumber,
           measure: context.measures[measureGid].originId,
           dimensions: dimensions,
+          dimensionsConcepts: context.dimensionsConcepts,
 
           properties: entry,
           originId: entry.originId,

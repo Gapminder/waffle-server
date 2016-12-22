@@ -12,6 +12,7 @@ const DataPoints = new Schema({
   isNumeric: {type: Boolean, required: true},
   measure: {type: Schema.Types.ObjectId, required: true},
   dimensions: [{type: Schema.Types.ObjectId}],
+  dimensionsConcepts: [{type: Schema.Types.ObjectId}],
   properties: {type: Schema.Types.Mixed, default: {}},
   languages: {type: Schema.Types.Mixed, default: {}},
 
@@ -28,6 +29,7 @@ DataPoints.plugin(originId, {
 });
 
 DataPoints.index({dataset: 1, from: 1, to: 1, measure: 1, dimensions: 1, value: 1});
+DataPoints.index({dataset: 1, from: 1, to: 1, dimensionsConcepts: 1});
 DataPoints.index({from: 1});
 DataPoints.index({to: 1});
 DataPoints.index({originId: 1});
