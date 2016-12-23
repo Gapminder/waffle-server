@@ -144,15 +144,31 @@ function groupDatapointsByFilename(datapointsBatch) {
     .groupBy('context.filename')
     .mapValues((datapoints, filename) => {
       const anyDatapoint = _.head(datapoints);
+      const dimensions = _.get(anyDatapoint, 'context.dimensions', {});
+
       return {
         filename,
         datapoints,
         context: anyDatapoint.context,
         measures: _.get(anyDatapoint, 'context.measures'),
-        dimensions: _.get(anyDatapoint, 'context.dimensions'),
+        dimensions,
+        dimensionsConcepts: flattenDimensions(dimensions)
       };
     })
     .value();
+}
+
+function flattenDimensions(dimensions) {
+  const flatDimensionsSet = _.reduce(dimensions, (result, dimension) => {
+    const domain = _.get(dimension, 'domain');
+    if (domain) {
+      result.add(_.toString(domain));
+    }
+    result.add(_.toString(dimension.originId));
+    return result;
+  }, new Set());
+
+  return Array.from(flatDimensionsSet);
 }
 
 function createEntitiesFoundInDatapointsSaverWithCache() {
@@ -198,7 +214,7 @@ function saveDatapoints(datapointsByFilename, externalContextFrozen) {
 }
 
 function mapAndStoreDatapointsToDb(datapointsFromSameFile, externalContext) {
-  const {measures, filename, dimensions, context: {segregatedEntities: entities}} = datapointsFromSameFile;
+  const {measures, filename, dimensions, dimensionsConcepts, context: {segregatedEntities: entities}} = datapointsFromSameFile;
 
   const {dataset: {_id: datasetId}, transaction: {createdAt: version}, concepts} = externalContext;
 
@@ -206,6 +222,7 @@ function mapAndStoreDatapointsToDb(datapointsFromSameFile, externalContext) {
     measures,
     filename,
     dimensions,
+    dimensionsConcepts,
     entities,
     datasetId,
     version,
