@@ -76,6 +76,10 @@ function respondWithRawDdf(rawDdfQuery, req, res, next) {
 }
 
 function _storeWarmUpQueryForDefaultDataset(rawDdfQuery) {
+  if (!rawDdfQuery) {
+    return;
+  }
+
   if (_.has(rawDdfQuery, 'dataset') || _.has(rawDdfQuery, 'version')) {
     return;
   }
