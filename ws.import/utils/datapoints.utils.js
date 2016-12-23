@@ -176,6 +176,7 @@ function createEntitiesFoundInDatapointsSaverWithCache() {
   return (entities) => {
     const notSeenEntities = _.reduce(entities, (result, entity) => {
       if (!entitiesFoundInDatapointsCache[entity.gid]) {
+        entitiesFoundInDatapointsCache[entity.gid] = entity;
         result.push(entity);
       }
       return result;
@@ -187,7 +188,8 @@ function createEntitiesFoundInDatapointsSaverWithCache() {
 
     return storeEntitiesToDb(notSeenEntities)
       .then(entityModels => {
-        return _.reduce(_.map(entityModels, '_doc'), (cache, entity) => {
+        return _.reduce(entityModels, (cache, model) => {
+          const entity = model.toObject();
           cache[entity.gid] = entity;
           return cache;
         }, entitiesFoundInDatapointsCache);
