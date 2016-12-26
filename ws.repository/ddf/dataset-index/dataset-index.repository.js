@@ -13,7 +13,8 @@ DatasetIndexRepository.prototype.findByDdfql = function (query, onFound) {
 };
 
 DatasetIndexRepository.prototype.create = function (indexOrBatchIndexes, onCreated) {
-  return DatasetIndex.create(indexOrBatchIndexes, onCreated);
+  indexOrBatchIndexes = Array.isArray(indexOrBatchIndexes) ? indexOrBatchIndexes : [indexOrBatchIndexes];
+  return DatasetIndex.insertMany(indexOrBatchIndexes, onCreated);
 };
 
 DatasetIndexRepository.prototype.rollback = function ({_id: transactionId}, onRolledback) {

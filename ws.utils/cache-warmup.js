@@ -20,7 +20,10 @@ function warmUpCache(done) {
     .map(logRecord => hi(executeDdfql(logRecord)))
     .sequence()
     .tap(({queryRaw, status, success}) => {
-      warmedQueriesAmount++;
+      if (success !== false) {
+        warmedQueriesAmount++;
+      }
+
       logger.info(`Cache warm up attempt. Status:  ${status}. Success: ${success}. DDFQL raw: `, queryRaw);
     });
 

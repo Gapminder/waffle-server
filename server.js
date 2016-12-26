@@ -36,7 +36,7 @@ app.listen(config.INNER_PORT, () => {
         return logger.info(`Cache is warm. Amount of warmed queries: ${warmedQueriesAmount}`);
       }
 
-      return logger.info(`There are no queries to warm up cache`);
+      return logger.info(`There are no queries to warm up cache OR queries were executed with no success`);
     });
   }
 });

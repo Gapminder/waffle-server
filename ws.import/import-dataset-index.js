@@ -3,15 +3,13 @@
 const _ = require('lodash');
 const fs = require('fs');
 const async = require('async');
-const entitiesRepositoryFactory = require('../ws.repository/ddf/entities/entities.repository');
+const ddfImportUtils = require('../ws.import/utils/import-ddf.utils');
 const datapointsRepositoryFactory = require('../ws.repository/ddf/data-points/data-points.repository');
 const indexRepository = require('../ws.repository/ddf/dataset-index/dataset-index.repository');
 
 const logger = require('../ws.config/log');
 const constants = require('../ws.utils/constants');
 const fileUtils = require('../ws.utils/file');
-
-const entityOriginIdsCache = new Map();
 
 module.exports = createDatasetIndex;
 
@@ -144,21 +142,18 @@ function _convertDatasetIndexToModel(pipe, done) {
 }
 
 function _populateDatasetIndexWithOriginIds(pipe, done) {
-
   logger.info('** populate Dataset Index with originIds');
 
+  //TODO: This might be executed in parallel in future
   return async.mapSeries(pipe.datasetIndexes, (index, onIndexPopulated) => {
-    index.keyOriginIds = _.chain(index.key).map(getOriginId).compact().value();
-    index.valueOriginId = getOriginId(getLast(index.value));
+    const getOriginIdCurried = _.curry(getOriginId)(pipe.concepts);
 
-    return async.waterfall([
-      async.constant({dataset: pipe.dataset, transacton: pipe.transaction, version: pipe.transaction.createdAt, index}),
-      findEntityOriginIds,
-      findDatapointsStatsForMeasure
-    ], onIndexPopulated);
+    index.keyOriginIds = _.chain(index.key).map(getOriginIdCurried).compact().value();
+    index.valueOriginId = getOriginIdCurried(getLast(index.value));
+
+    const context = {dataset: pipe.dataset, transacton: pipe.transaction, version: pipe.transaction.createdAt, index};
+    return findDatapointsStatsForMeasure(context, onIndexPopulated);
   }, (error, populatedDatasetIndexes) => {
-    entityOriginIdsCache.clear();
-
     if (error) {
       return done(error);
     }
@@ -166,69 +161,47 @@ function _populateDatasetIndexWithOriginIds(pipe, done) {
     pipe.datasetIndexes = populatedDatasetIndexes;
     return done(null, pipe);
   });
-
-  function getOriginId(key) {
-    const concept = pipe.concepts[key];
-    return concept ? concept.originId : null;
-  }
-}
-
-function _createDatasetIndex(pipe, done) {
-
-  logger.info('** create Dataset Index documents');
-
-  return async.eachLimit(
-    _.chunk(pipe.datasetIndexes, 100),
-    constants.LIMIT_NUMBER_PROCESS,
-    indexRepository.create.bind(indexRepository),
-    (err) => done(err, pipe)
-  );
-}
-
-function findEntityOriginIds(pipe, done) {
-
-  logger.info('**** find Entity originIds');
-
-  const cacheKey = `${pipe.dataset._id}${pipe.version}${_.join(pipe.index.key, ',')}`;
-  if (entityOriginIdsCache.has(cacheKey)) {
-    return async.setImmediate(() => {
-      pipe.entityOriginIds = entityOriginIdsCache.get(cacheKey);
-      done(null, pipe);
-    });
-  }
-
-  return entitiesRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version)
-    .findAllHavingGivenDomainsOrSets(pipe.index.keyOriginIds, pipe.index.keyOriginIds, (error, entities) => {
-      if (error) {
-        return done(error);
-      }
-
-      pipe.entityOriginIds = _.map(entities, 'originId');
-      entityOriginIdsCache.set(cacheKey, pipe.entityOriginIds);
-      return done(null, pipe);
-    });
 }
 
 function findDatapointsStatsForMeasure(pipe, done) {
-
   logger.info(`** find Datapoints stats for Measure ${_.get(pipe.index, 'value')}`);
 
   if (pipe.index.type !== constants.DATAPOINTS) {
     return async.setImmediate(() => done(null, pipe.index));
   }
 
-  return datapointsRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version).findStats({
+  const options = {
     measureId: pipe.index.valueOriginId,
-    entityIds: pipe.entityOriginIds,
+    dimensionsConceptsIds: pipe.index.keyOriginIds,
     dimensionsSize: _.size(pipe.index.key)
-  }, (error, stats) => {
-    if (error) {
-      return done(error);
-    }
+  };
 
-    _.merge(pipe.index, _.omit(stats, '_id'));
-    return done(null, pipe.index);
-  });
+  return datapointsRepositoryFactory
+    .currentVersion(pipe.dataset._id, pipe.version)
+    .findStats(options, (error, stats) => {
+      if (error) {
+        return done(error);
+      }
+
+      _.merge(pipe.index, _.omit(stats, '_id'));
+      return done(null, pipe.index);
+    });
+}
+
+function getOriginId(concepts, key) {
+  const concept = concepts[key];
+  return concept ? concept.originId : null;
+}
+
+function _createDatasetIndex(pipe, done) {
+
+  logger.info('** create Dataset Index documents');
+
+  return async.eachSeries(
+    _.chunk(pipe.datasetIndexes, ddfImportUtils.DEFAULT_CHUNK_SIZE),
+    indexRepository.create.bind(indexRepository),
+    (err) => done(err, pipe)
+  );
 }
 
 function mapDdfIndexToWsModel(pipe) {

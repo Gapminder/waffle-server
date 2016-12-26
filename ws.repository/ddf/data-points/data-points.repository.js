@@ -6,7 +6,6 @@ const async = require('async');
 const logger = require('../../../ws.config/log');
 
 const mongoose = require('mongoose');
-const ObjectId = mongoose.Types.ObjectId;
 const DataPoints = mongoose.model('DataPoints');
 
 const ddfImportUtils = require('../../../ws.import/utils/import-ddf.utils');
@@ -41,7 +40,7 @@ DataPointsRepository.prototype.rollback = function (transaction, onRolledback) {
 };
 
 DataPointsRepository.prototype.removeByDataset = function (datasetId, onRemove) {
-  return DataPoints.remove({dataset: datasetId}, onRemove)
+  return DataPoints.remove({dataset: datasetId}, onRemove);
 };
 
 //FIXME: This should be used only for queries that came from normalizer!!!
@@ -101,29 +100,19 @@ DataPointsRepository.prototype.addTranslationsForGivenProperties = function (pro
   return DataPoints.update(query, updateQuery, {multi: true}).exec(done);
 };
 
-DataPointsRepository.prototype.findStats = function (params, onDatapointsFound) {
-  const measureId = ObjectId(params.measureId);
-  const entityIds = _.map(params.entityIds, id => ObjectId(id));
-  const dimensionsSize = params.dimensionsSize;
-
+DataPointsRepository.prototype.findStats = function ({measureId, dimensionsSize, dimensionsConceptsIds}, onDatapointsFound) {
   const query = this._composeQuery({
     measure: measureId,
     dimensions: {
-      $size: dimensionsSize,
-      $in: entityIds
+      $size: dimensionsSize
+    },
+    dimensionsConcepts: {
+      $all: dimensionsConceptsIds
     }
   });
 
   return DataPoints.aggregate()
     .match(query)
-    .project({
-      measure: 1,
-      value: 1,
-      dimensionsMatched: {$setIsSubset: ['$dimensions', entityIds]}
-    })
-    .match({
-      dimensionsMatched: true
-    })
     .group({
       _id: '$measure',
       min: {$min: '$value'},
