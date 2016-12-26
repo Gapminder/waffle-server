@@ -211,7 +211,7 @@ function findEntityOriginIds(pipe, done) {
 
 function findDatapointsStatsForMeasure(pipe, done) {
 
-  logger.info(`** find Datapoints stats for Measure ${_.get(pipe.index, 'gid')}`);
+  logger.info(`** find Datapoints stats for Measure ${_.get(pipe.index, 'value')}`);
 
   if (pipe.index.type !== constants.DATAPOINTS) {
     return async.setImmediate(() => done(null, pipe.index));

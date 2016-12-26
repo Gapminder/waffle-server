@@ -24,7 +24,7 @@ const transactionsRepository = require('../../ws.repository/ddf/dataset-transact
 const conceptsRepositoryFactory = require('../../ws.repository/ddf/concepts/concepts.repository');
 
 const UPDATE_ACTIONS = new Set(['change', 'update']);
-const DEFAULT_CHUNK_SIZE = 2000;
+const DEFAULT_CHUNK_SIZE = 6000;
 const MONGODB_DOC_CREATION_THREADS_AMOUNT = 3;
 const RESERVED_PROPERTIES = ['properties', 'dimensions', 'subsetOf', 'from', 'to', 'originId', 'gid', 'domain', 'type', 'languages'];
 

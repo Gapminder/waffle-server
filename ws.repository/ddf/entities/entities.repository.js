@@ -13,11 +13,15 @@ const constants = require('../../../ws.utils/constants');
 
 util.inherits(EntitiesRepository, repositoryModel);
 
-function EntitiesRepository() {
-  repositoryModel.apply(this, arguments);
+function EntitiesRepository(... args) {
+  repositoryModel.apply(this, args);
 }
 
 module.exports = new RepositoryFactory(EntitiesRepository);
+
+EntitiesRepository.prototype._getModel = function () {
+  return Entities;
+};
 
 EntitiesRepository.prototype.findByOriginId = function (originId, done) {
   const query = this._composeQuery({originId: originId});
@@ -73,10 +77,6 @@ EntitiesRepository.prototype.removeTranslation = function ({originId, language},
 
 EntitiesRepository.prototype.addTranslation = function ({id, language, translation}, done) {
   return Entities.findOneAndUpdate({_id: id}, {$set: {[`languages.${language}`]: translation}}, {new: true}, done);
-};
-
-EntitiesRepository.prototype.create = function (entityOrBatchOfEntities, onCreated) {
-  return Entities.create(entityOrBatchOfEntities, onCreated);
 };
 
 EntitiesRepository.prototype.findAllHavingGivenDomainsOrSets = function (domainsIds, setsIds, onFound) {

@@ -1,6 +1,8 @@
 'use strict';
+
 const _ = require('lodash');
 const constants = require('../ws.utils/constants');
+const mongoose = require('mongoose');
 
 module.exports = VersionedModelRepository;
 
@@ -13,6 +15,22 @@ function VersionedModelRepository(versionQueryFragment, datasetId, version) {
 VersionedModelRepository.prototype._composeQuery = function () {
   return _.merge.bind(_, {}, this.versionQueryFragment).apply(undefined, arguments);
 };
+
+VersionedModelRepository.prototype.create = function (documents, onCreated) {
+  documents = Array.isArray(documents) ? setId(documents) : setId([documents]);
+  return this._getModel().insertMany(documents, onCreated);
+};
+
+function setId(documents) {
+  _.forEach(documents, document => {
+    const id = mongoose.Types.ObjectId();
+    document._id = id;
+    if (!document.originId) {
+      document.originId = id;
+    }
+  });
+  return documents;
+}
 
 VersionedModelRepository.prototype._normalizeWhereClause = function (where) {
   return _.reduce(where, normalizeValue, {});

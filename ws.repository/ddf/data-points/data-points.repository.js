@@ -16,14 +16,14 @@ const constants = require('../../../ws.utils/constants');
 
 util.inherits(DataPointsRepository, repositoryModel);
 
-function DataPointsRepository() {
-  repositoryModel.apply(this, arguments);
+function DataPointsRepository(... args) {
+  repositoryModel.apply(this, args);
 }
 
 module.exports = new RepositoryFactory(DataPointsRepository);
 
-DataPointsRepository.prototype.create = function(datapointOrBatchOfDatapoints, done) {
-  return DataPoints.create(datapointOrBatchOfDatapoints, done);
+DataPointsRepository.prototype._getModel = function() {
+  return DataPoints;
 };
 
 DataPointsRepository.prototype.count = function (onCounted) {

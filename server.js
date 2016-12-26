@@ -31,7 +31,12 @@ app.listen(config.INNER_PORT, () => {
       if(error) {
         return logger.error(error, 'Cache warm up failed.');
       }
-      return logger.info(`Cache is warm. Amount of warmed queries: ${warmedQueriesAmount}`);
+
+      if (warmedQueriesAmount) {
+        return logger.info(`Cache is warm. Amount of warmed queries: ${warmedQueriesAmount}`);
+      }
+
+      return logger.info(`There are no queries to warm up cache`);
     });
   }
 });

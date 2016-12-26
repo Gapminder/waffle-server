@@ -9,7 +9,7 @@ function RecentDdfqlQueriesRepository() {
 }
 
 RecentDdfqlQueriesRepository.prototype.findAllAsStream = function () {
-  return RecentDdfqlQueries.find().stream();
+  return RecentDdfqlQueries.find().cursor();
 };
 
 RecentDdfqlQueriesRepository.prototype.create = function (query, done) {

@@ -12,19 +12,19 @@ const constants = require('../../../ws.utils/constants');
 
 util.inherits(ConceptsRepository, repositoryModel);
 
-function ConceptsRepository() {
-  repositoryModel.apply(this, arguments);
+function ConceptsRepository(... args) {
+  repositoryModel.apply(this, args);
 }
 
 module.exports = new RepositoryFactory(ConceptsRepository);
 
+ConceptsRepository.prototype._getModel = function() {
+  return Concepts;
+};
+
 ConceptsRepository.prototype.findConceptsByQuery = function (conceptsQuery, onPropertiesFound) {
   const composedQuery = this._composeQuery(conceptsQuery);
   return Concepts.find(composedQuery).lean().exec(onPropertiesFound);
-};
-
-ConceptsRepository.prototype.create = function (conceptOrConceptsChunk, onCreated) {
-  return Concepts.create(conceptOrConceptsChunk, onCreated);
 };
 
 ConceptsRepository.prototype.findConceptProperties = function (select, where, onPropertiesFound) {
@@ -101,7 +101,7 @@ ConceptsRepository.prototype.rollback = function (transaction, onRolledback) {
 };
 
 ConceptsRepository.prototype.removeByDataset = function (datasetId, onRemove) {
-  return Concepts.remove({dataset: datasetId}, onRemove)
+  return Concepts.remove({dataset: datasetId}, onRemove);
 };
 
 ConceptsRepository.prototype.findAllPopulated = function (done) {

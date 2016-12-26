@@ -1,9 +1,11 @@
 'use strict';
 const mongoose = require('mongoose');
 const async = require('async');
+const logger = require('../../ws.config/log');
 
 module.exports = exports = function lastModifiedPlugin (schema, settings) {
   schema.post('save', function (doc, next) {
+    logger.debug('Extra query to set up originId for newly created document', settings.modelName);
     if (!doc.originId) {
       doc.originId = doc._id;
       mongoose.model(settings.modelName).update({ _id: doc._id }, { $set: { originId: doc._id } }, (error, result) => {
@@ -15,14 +17,11 @@ module.exports = exports = function lastModifiedPlugin (schema, settings) {
   });
 
   schema.post('find', function(result, next) {
-    const _result = wrapArray(result);
-
-    if (this.options.join) {
-      return async.eachLimit(
-        _result,
-        10,
-        (item, cb) => populateWithOrigin(item, this.options.join, settings, cb),
-        err => next(err));
+    if (this.options && this.options.join) {
+      return async.eachLimit(wrapArray(result), 10, (item, cb) => {
+        return populateWithOrigin(item, this.options.join, settings, cb);
+      },
+      err => next(err));
     }
 
     return next();
