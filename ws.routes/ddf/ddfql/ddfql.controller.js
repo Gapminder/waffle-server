@@ -15,7 +15,6 @@ const dataPostProcessors = require('../../data-post-processors');
 
 const cache = require('../../../ws.utils/redis-cache');
 const logger = require('../../../ws.config/log');
-const config = require('../../../ws.config/config');
 
 const routeUtils = require('../../utils');
 

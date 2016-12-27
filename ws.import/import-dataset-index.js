@@ -8,6 +8,7 @@ const datapointsRepositoryFactory = require('../ws.repository/ddf/data-points/da
 const indexRepository = require('../ws.repository/ddf/dataset-index/dataset-index.repository');
 
 const logger = require('../ws.config/log');
+const config = require('../ws.config/config');
 const constants = require('../ws.utils/constants');
 const fileUtils = require('../ws.utils/file');
 
@@ -150,6 +151,10 @@ function _populateDatasetIndexWithOriginIds(pipe, done) {
 
     index.keyOriginIds = _.chain(index.key).map(getOriginIdCurried).compact().value();
     index.valueOriginId = getOriginIdCurried(getLast(index.value));
+
+    if (!config.CALCULATE_SCHEMA_QUERIES_AGG_FUNCTIONS) {
+      return onIndexPopulated(null, index);
+    }
 
     const context = {dataset: pipe.dataset, transacton: pipe.transaction, version: pipe.transaction.createdAt, index};
     return findDatapointsStatsForMeasure(context, onIndexPopulated);

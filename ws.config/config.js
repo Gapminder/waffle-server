@@ -36,6 +36,8 @@ module.exports = (function () {
 
   config.IS_PRODUCTION = PRODUCTION_ENVS.has(config.NODE_ENV);
 
+  config.CALCULATE_SCHEMA_QUERIES_AGG_FUNCTIONS = config.NODE_ENV === 'local';
+
   const REQUIRED_ENVIRONMENT_VARIABLES = Object.freeze([
     'MONGODB_URL',
   ]);
