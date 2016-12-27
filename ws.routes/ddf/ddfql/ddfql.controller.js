@@ -54,16 +54,15 @@ module.exports = serviceLocator => {
     logger.info({req}, 'DDFQL URL');
     logger.info({obj: req.body}, 'DDFQL');
 
+    const query = _.get(req, 'body', {});
     const from = _.get(req, 'body.from', null);
-    const rawDdfQuery = _.get(req, 'body.rawDdfQuery', null);
 
-    const onEntriesCollected = routeUtils.respondWithRawDdf(rawDdfQuery, req, res, next);
+    const onEntriesCollected = routeUtils.respondWithRawDdf(query, req, res, next);
 
     if (!from) {
       return onEntriesCollected(`The filed 'from' must present in query.`);
     }
 
-    const query = _.get(req, 'body', {});
     const where = _.get(req, 'body.where', {});
     const language = _.get(req, 'body.language', {});
     const select = _.get(req, 'body.select.value', []);
@@ -98,7 +97,7 @@ module.exports = serviceLocator => {
       return conceptsService.collectConceptsByDdfql(options, onEntriesCollected);
     } else if (queryToSchema(from)) {
       req.ddfDataType = constants.SCHEMA;
-      const onSchemaEntriesFound = routeUtils.respondWithRawDdf(rawDdfQuery, req, res, next);
+      const onSchemaEntriesFound = routeUtils.respondWithRawDdf(query, req, res, next);
       return schemaService.findSchemaByDdfql(options, onSchemaEntriesFound);
     } else {
       return onEntriesCollected(`Value '${from}' in the 'from' field isn't supported yet.`);

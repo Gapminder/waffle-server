@@ -59,7 +59,7 @@ function ensureAuthenticatedViaToken(res, req, next) {
   return passport.authenticate('token')(res, req, next);
 }
 
-function respondWithRawDdf(rawDdfQuery, req, res, next) {
+function respondWithRawDdf(query, req, res, next) {
   return (error, result) => {
     if (error) {
       logger.error(error);
@@ -67,7 +67,7 @@ function respondWithRawDdf(rawDdfQuery, req, res, next) {
       return res.json({success: false, error: error});
     }
 
-    _storeWarmUpQueryForDefaultDataset(rawDdfQuery);
+    _storeWarmUpQueryForDefaultDataset(query);
 
     req.rawData = {rawDdf: result};
 
@@ -75,12 +75,14 @@ function respondWithRawDdf(rawDdfQuery, req, res, next) {
   };
 }
 
-function _storeWarmUpQueryForDefaultDataset(rawDdfQuery) {
+function _storeWarmUpQueryForDefaultDataset(query) {
+  const rawDdfQuery = _.get(query, 'rawDdfQuery', null);
+
   if (!rawDdfQuery) {
     return;
   }
 
-  if (_.has(rawDdfQuery, 'dataset') || _.has(rawDdfQuery, 'version')) {
+  if (_.has(query, 'dataset') || _.has(query, 'version')) {
     return;
   }
 
