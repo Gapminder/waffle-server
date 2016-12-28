@@ -52,8 +52,9 @@ function getCacheConfig(prefix) {
 
     const reqBody = JSON.stringify(req.body);
     const parsedUrl = url.parse(req.url);
+    const parsedUrlPathname = _.trimEnd(parsedUrl.pathname, '/');
 
-    res.express_redis_cache_name = `${prefix || 'PREFIX_NOT_SET'}-${req.method}-${parsedUrl.pathname}-${md5(parsedUrl.query + reqBody)}`;
+    res.express_redis_cache_name = `${prefix || 'PREFIX_NOT_SET'}-${req.method}-${parsedUrlPathname}-${md5(parsedUrl.query + reqBody)}`;
     next();
   };
 }
