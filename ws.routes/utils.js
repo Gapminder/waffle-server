@@ -20,7 +20,10 @@ module.exports = {
   ensureAuthenticatedViaToken,
   respondWithRawDdf,
   checkDatasetAccessibility,
-  bodyFromUrlQuery
+  bodyFromUrlQuery,
+  toDataResponse,
+  toErrorResponse,
+  toMessageResponse
 };
 
 function bodyFromUrlQuery(req, res, next) {
@@ -126,4 +129,17 @@ function _validateDatasetAccessToken(datasetAccessToken, providedAccessToken) {
   const tokensAreEqual = datasetAccessToken === providedAccessToken;
   const tokensAreNotEmpty = !_.isEmpty(datasetAccessToken) && !_.isEmpty(providedAccessToken);
   return tokensAreNotEmpty && tokensAreEqual;
+}
+
+function toErrorResponse(error) {
+  logger.error(error);
+  return {success: false, error: error.message || error};
+}
+
+function toMessageResponse(message) {
+  return {success: true, message};
+}
+
+function toDataResponse(data) {
+  return {success: true, data};
 }
