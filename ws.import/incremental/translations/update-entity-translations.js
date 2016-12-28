@@ -46,6 +46,6 @@ function makeTranslationTargetBasedOnItsClosedVersion(closedTarget, context) {
   return entitiesUtils.makeEntityBasedOnItsClosedVersion(closedTarget.properties, closedTarget, context);
 }
 
-function processTranslationBeforeUpdate(translation) {
-  return ddfMappers.transformEntityTranslation(translation);
+function processTranslationBeforeUpdate(translation, context) {
+  return ddfMappers.transformEntityProperties(translation, context.concepts);
 }

@@ -42,5 +42,5 @@ function makeTranslationTargetBasedOnItsClosedVersion(closedTarget, context) {
 }
 
 function processTranslationBeforeUpdate(translation) {
-  return ddfMappers.transformConceptTranslation(translation);
+  return ddfMappers.transformConceptProperties(translation);
 }

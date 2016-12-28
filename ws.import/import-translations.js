@@ -37,7 +37,8 @@ function createTranslations(externalContext) {
     pathToDdfFolder,
     datapackage: {resources, translations},
     dataset: {_id: datasetId},
-    transaction: {createdAt: version}
+    transaction: {createdAt: version},
+    concepts
   } = externalContext;
 
   const loadTranslationsStream = hi(resources)
@@ -78,7 +79,7 @@ function createTranslations(externalContext) {
         }
         return result;
       }, {});
-      const context = {source, properties, language, resolvedProperties, datasetId, version};
+      const context = {source, properties, language, resolvedProperties, datasetId, version, concepts};
 
       return hi(storeEntitiesTranslationsToDb(context));
     })
@@ -109,7 +110,7 @@ function createTranslations(externalContext) {
 }
 
 function storeConceptsTranslationsToDb({properties, language, datasetId, version}) {
-  const translation = ddfMappers.transformConceptTranslation(properties);
+  const translation = ddfMappers.transformConceptProperties(properties);
 
   return conceptsRepositoryFactory
     .allOpenedInGivenVersion(datasetId, version)
@@ -117,8 +118,8 @@ function storeConceptsTranslationsToDb({properties, language, datasetId, version
 }
 
 function storeEntitiesTranslationsToDb(externalContext) {
-  const {source, properties, language, resolvedProperties, datasetId, version} = externalContext;
-  const translation = ddfMappers.transformEntityTranslation(properties);
+  const {source, properties, language, resolvedProperties, datasetId, version, concepts} = externalContext;
+  const translation = ddfMappers.transformEntityProperties(properties, concepts);
 
   return entitiesRepositoryFactory
     .allOpenedInGivenVersion(datasetId, version)
