@@ -4,13 +4,12 @@ const _ = require('lodash');
 const async = require('async');
 
 const config = require('../ws.config/config');
-const logger = require('../ws.config/log');
 const ddfImportUtils = require('./utils/import-ddf.utils.js');
 const importEntities = require('./import-entities');
 const importConcepts = require('./import-concepts');
 const importDatapoints = require('./import-datapoints');
 const importTranslations = require('./import-translations');
-const createDatasetIndex = require('./import-dataset-index');
+const createDatasetSchema = require('./import-dataset-schema');
 
 const DATASET_IMPORT_LABEL = 'Dataset import';
 
@@ -40,7 +39,7 @@ module.exports = (options, done) => {
     importEntities,
     importDatapoints,
     importTranslations,
-    createDatasetIndex,
+    createDatasetSchema,
     ddfImportUtils.closeTransaction
   ], (importError, pipe) => {
     console.timeEnd(DATASET_IMPORT_LABEL);

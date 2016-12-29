@@ -31,7 +31,21 @@
         "company",
         "project"
       ],
+      "latitude"
+    ],
+    [
+      [
+        "company",
+        "project"
+      ],
       "lines_of_code"
+    ],
+    [
+      [
+        "company",
+        "project"
+      ],
+      "longitude"
     ],
     [
       [

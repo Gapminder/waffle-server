@@ -39,9 +39,27 @@
         "company",
         "project"
       ],
+      "latitude",
+      1.23,
+      88
+    ],
+    [
+      [
+        "company",
+        "project"
+      ],
       "lines_of_code",
       4857,
       4893993
+    ],
+    [
+      [
+        "company",
+        "project"
+      ],
+      "longitude",
+      1.23,
+      90
     ],
     [
       [

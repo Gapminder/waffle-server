@@ -163,6 +163,8 @@ function transformConceptProperties(object) {
       result[key] = null;
     } else if (isJsonColumn(key) && _.isString(value)) {
       result[key] = ddfImportUtils.isJson(value) ? JSON.parse(value) : null;
+    } else if (_.isObjectLike(value)) {
+      result[key] = value;
     } else {
       result[key] = String(value);
     }

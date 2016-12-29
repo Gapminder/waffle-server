@@ -937,7 +937,7 @@
                 ]
               ]
             },
-            "Cpu": "1000",
+            "Cpu": "2048",
             "Memory": {
               "Ref": "MemoryLb"
             },
@@ -1215,7 +1215,7 @@
                 ]
               ]
             },
-            "Cpu": "1000",
+            "Cpu": "2048",
             "Memory": {
               "Ref": "MemoryNode"
             },
