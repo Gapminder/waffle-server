@@ -162,7 +162,7 @@ function flattenDimensions(dimensions) {
   const flatDimensionsSet = _.reduce(dimensions, (result, dimension) => {
     const domain = _.get(dimension, 'domain');
     if (domain) {
-      result.add(_.toString(domain));
+      result.add(_.toString(_.get(domain, 'originId', domain)));
     }
     result.add(_.toString(dimension.originId));
     return result;
