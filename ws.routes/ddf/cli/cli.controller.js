@@ -23,6 +23,7 @@ module.exports = {
   getDatasets,
   setDefaultDataset,
   generateDatasetAccessToken,
+  getPrivateDatasets
 };
 
 function getToken(req, res) {
@@ -171,6 +172,22 @@ function getAvailableDatasetsAndVersions(req, res) {
     logger.info(`finished getting available datasets and versions`);
 
     return res.json(routeUtils.toDataResponse(datasetsAndVersions));
+  });
+}
+
+function getPrivateDatasets(req, res) {
+  if (!req.user) {
+    return res.json(routeUtils.toErrorResponse('There is no authenticated user to get its datasets'));
+  }
+
+  cliService.getPrivateDatasets(req.user._id, (error, privateDatasets) => {
+    if (error) {
+      return res.json(routeUtils.toErrorResponse(error));
+    }
+
+    logger.info(`finished getting private datasets`);
+
+    return res.json(routeUtils.toDataResponse(privateDatasets));
   });
 }
 

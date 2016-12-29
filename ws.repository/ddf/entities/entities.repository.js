@@ -10,6 +10,7 @@ const Concepts = mongoose.model('Concepts');
 const RepositoryFactory = require('../../repository.factory');
 const repositoryModel = require('../../repository.model');
 const constants = require('../../../ws.utils/constants');
+const logger = require('../../../ws.config/log');
 
 util.inherits(EntitiesRepository, repositoryModel);
 
@@ -96,6 +97,7 @@ EntitiesRepository.prototype.findAllHavingGivenDomainsOrSets = function (domains
 
 EntitiesRepository.prototype.findEntityPropertiesByQuery = function(entitiesQuery, onPropertiesFound) {
   const composedQuery = this._composeQuery(entitiesQuery);
+  logger.debug({obj: composedQuery}, 'Query to get entities according to ddfql');
   return Entities.find(composedQuery).lean().exec(onPropertiesFound);
 };
 

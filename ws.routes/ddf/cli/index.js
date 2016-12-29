@@ -24,6 +24,7 @@ module.exports = serviceLocator => {
   router.get('/commit-of-latest-dataset-version', cliController.getCommitOfLatestDatasetVersion);
   router.get('/transactions/latest/status', cliController.getStateOfLatestTransaction);
   router.get('/datasets', cliController.getDatasets);
+  router.get('/datasets/private', cliController.getPrivateDatasets);
 
   router.post('/update-incremental', cliController.updateIncrementally);
   router.post('/import-dataset', cliController.importDataset);

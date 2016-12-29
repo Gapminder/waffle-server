@@ -30,7 +30,8 @@ module.exports = {
   findDatasetsWithVersions,
   setTransactionAsDefault,
   cleanDdfRedisCache,
-  setAccessTokenForDataset
+  setAccessTokenForDataset,
+  getPrivateDatasets
 };
 
 function getGitCommitsList(github, onCommitsRecieved) {
@@ -179,6 +180,18 @@ function _runIncrementalUpdate(pipe, onDatasetUpdated) {
   };
 
   return incrementalUpdateService(options, onDatasetUpdated);
+}
+
+function getPrivateDatasets(userId, done) {
+  return datasetsRepository.findPrivateByUser(userId, (error, datasets) => {
+    if (error) {
+      return done(error);
+    }
+
+    return done(null, _.map(datasets, dataset => {
+      return {name: dataset.name, githubUrl: dataset.path};
+    }));
+  });
 }
 
 function getAvailableDatasetsAndVersions(userId, onQueriesGot) {
