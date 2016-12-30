@@ -31,7 +31,8 @@ module.exports = {
   setTransactionAsDefault,
   cleanDdfRedisCache,
   setAccessTokenForDataset,
-  getPrivateDatasets
+  getPrivateDatasets,
+  getRemovableDatasets
 };
 
 function getGitCommitsList(github, onCommitsRecieved) {
@@ -201,7 +202,9 @@ function getAvailableDatasetsAndVersions(userId, onQueriesGot) {
         return cb(null, {
           createdAt: version.createdAt,
           datasetName: dataset.name,
+          githubUrl: dataset.path,
           version: version.commit,
+          isDefault: version.isDefault
         });
       }, onDatasetsAndVersionsFound);
     }, (error, result) => {
@@ -210,6 +213,26 @@ function getAvailableDatasetsAndVersions(userId, onQueriesGot) {
       }
       return onQueriesGot(null, _.flattenDeep(result));
     });
+  });
+}
+
+function getRemovableDatasets(userId, done) {
+  return getAvailableDatasetsAndVersions(userId, (error, availableDatasetsAndVersions) => {
+    if (error) {
+      return done(error);
+    }
+
+    const defaultDatasetName = _.get(_.find(availableDatasetsAndVersions, dataset => dataset.isDefault), 'datasetName');
+
+    const removableDatasets = _.chain(availableDatasetsAndVersions)
+      .filter(metadata => metadata.datasetName !== defaultDatasetName)
+      .uniqBy('datasetName')
+      .map(metadata => {
+        return {name: metadata.datasetName, githubUrl: metadata.githubUrl};
+      })
+      .value();
+
+    return done(null, removableDatasets);
   });
 }
 

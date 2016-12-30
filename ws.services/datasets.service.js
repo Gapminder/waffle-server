@@ -161,6 +161,7 @@ function _findAllCompletedVersionsByDataset(dataset, onTransactionsFound) {
     const datasetWithVersions = {
       id: dataset._id,
       name: dataset.name,
+      path: dataset.path,
       isDefault: _.some(versions, version => version.isDefault),
       versions
     };

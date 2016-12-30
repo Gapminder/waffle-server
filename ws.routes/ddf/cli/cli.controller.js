@@ -13,6 +13,7 @@ const cacheUtils = require('../../../ws.utils/cache-warmup');
 module.exports = {
   getToken,
   getAvailableDatasetsAndVersions,
+  getRemovableDatasets,
   updateIncrementally,
   importDataset,
   removeDataset,
@@ -172,6 +173,21 @@ function getAvailableDatasetsAndVersions(req, res) {
     logger.info(`finished getting available datasets and versions`);
 
     return res.json(routeUtils.toDataResponse(datasetsAndVersions));
+  });
+}
+
+function getRemovableDatasets(req, res) {
+  if (!req.user) {
+    return res.json(routeUtils.toErrorResponse('There is no authenticated user to get its datasets'));
+  }
+
+  cliService.getRemovableDatasets (req.user._id, (error, removableDatasets) => {
+    if (error) {
+      return res.json(routeUtils.toErrorResponse(error));
+    }
+
+    logger.info(`finished getting removable datasets`);
+    return res.json(routeUtils.toDataResponse(removableDatasets));
   });
 }
 
