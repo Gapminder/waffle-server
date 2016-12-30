@@ -123,7 +123,7 @@ DataPointsRepository.prototype.findStats = function ({measureId, dimensionsSize,
         return onDatapointsFound(error);
       }
 
-      return onDatapointsFound(null, _.head(stats));
+      return onDatapointsFound(null, _.omit(_.head(stats), '_id'));
     });
 };
 

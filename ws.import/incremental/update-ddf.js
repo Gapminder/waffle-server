@@ -6,12 +6,11 @@ const path = require('path');
 const async = require('async');
 
 const config = require('../../ws.config/config');
-const logger = require('../../ws.config/log');
 const ddfImportUtils = require('../utils/import-ddf.utils');
 const updateConcepts = require('./update-concepts');
 const updateEntities = require('./update-entities');
 const updateDatapoints = require('./update-datapoints');
-const createDatasetIndex = require('../import-dataset-index');
+const createDatasetSchema = require('../import-dataset-schema');
 const updateEntityTranslations = require('./translations/update-entity-translations');
 const updateConceptTranslations = require('./translations/update-concept-translations');
 const updateDatapointTranslations = require('./translations/update-datapoint-translations');
@@ -50,7 +49,7 @@ module.exports = (options, done) => {
     updateConceptTranslations,
     updateEntityTranslations,
     updateDatapointTranslations,
-    createDatasetIndex,
+    createDatasetSchema,
     ddfImportUtils.closeTransaction
   ], (updateError, pipe) => {
     console.timeEnd(DATASET_INCREMENTAL_UPDATE_LABEL);
