@@ -56,11 +56,16 @@ function _getPathToRepo(pipe, done) {
 
 function _findCurrentUser(pipe, done) {
   usersRepository.findUserByEmail(constants.DEFAULT_USER_EMAIL, (error, user) => {
-    if (error || !user) {
-      return done(error || 'User that tries to initiate import was not found');
+    if (error) {
+      return done(error);
     }
+
+    if (!user) {
+      return done('User that tries to initiate import was not found');
+    }
+
     pipe.user = user;
-    return done(error, pipe);
+    return done(null, pipe);
   });
 }
 
