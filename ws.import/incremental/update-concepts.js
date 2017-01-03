@@ -193,6 +193,11 @@ function applyChangesToConcepts(changedConcepts) {
           return onChangesApplied(error);
         }
 
+        if (!originalConcept) {
+          logger.debug(`There is no original concept with gid '${gid}' in db`);
+          return onChangesApplied();
+        }
+
         const updatedConcept = mergeConcepts(originalConcept, changesToConcept, pipe.external.transaction);
         return conceptsRepository.create(updatedConcept, onChangesApplied);
       });
