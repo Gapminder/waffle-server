@@ -33,6 +33,7 @@ module.exports = serviceLocator => {
   router.post('/transactions/latest/rollback', cliController.activateRollback);
   router.post('/datasets/default', cliController.setDefaultDataset);
   router.post('/datasets/accessToken', cliController.generateDatasetAccessToken);
+  router.post('/cache/clean', cliController.cleanCache);
 
   const app = serviceLocator.getApplication();
   return app.use('/api/ddf/cli', router);

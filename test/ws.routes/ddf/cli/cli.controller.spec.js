@@ -167,4 +167,83 @@ describe('WS-CLI controller', () => {
 
     cliController.importDataset(req, res);
   }));
+
+  it('should clean cache', sinon.test(function (done) {
+    const toMessageResponseSpy = this.spy(routeUtils, 'toMessageResponse');
+    const expectedMessage = 'Cache is clean';
+
+    const cliController = proxyqire('../../../../ws.routes/ddf/cli/cli.controller', {
+      [cliServicePath]: {
+        cleanDdfRedisCache: onCleaned => {
+          onCleaned(null);
+        }
+      },
+    });
+
+    const req = {
+      user: {
+        name: 'fake'
+      }
+    };
+
+    const res = {
+      json: () => {
+        expect(toMessageResponseSpy.withArgs(expectedMessage).calledOnce).to.be.true;
+        done();
+      }
+    };
+
+    cliController.cleanCache(req, res);
+  }));
+
+  it('should not clean cache cause user is not authenticated', sinon.test(function (done) {
+    const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    const expectedMessage = 'There is no authenticated user to get its datasets';
+
+    const cliController = proxyqire('../../../../ws.routes/ddf/cli/cli.controller', {
+      [cliServicePath]: {
+        cleanDdfRedisCache: () => {
+          throw new Error('This should not be called');
+        }
+      },
+    });
+
+    const req = {};
+    const res = {
+      json: () => {
+        expect(toErrorResponseSpy.withArgs(expectedMessage).calledOnce).to.be.true;
+        done();
+      }
+    };
+
+    cliController.cleanCache(req, res);
+  }));
+
+  it('should respond with an error if cache clean failed', sinon.test(function (done) {
+    const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    const expectedError = 'Boo!';
+
+    const cliController = proxyqire('../../../../ws.routes/ddf/cli/cli.controller', {
+      [cliServicePath]: {
+        cleanDdfRedisCache: onCleaned => {
+          onCleaned(expectedError);
+        }
+      },
+    });
+
+    const req = {
+      user: {
+        name: 'fake'
+      }
+    };
+
+    const res = {
+      json: () => {
+        expect(toErrorResponseSpy.withArgs(expectedError).calledOnce).to.be.true;
+        done();
+      }
+    };
+
+    cliController.cleanCache(req, res);
+  }));
 });
