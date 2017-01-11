@@ -24,7 +24,8 @@ module.exports = {
   getDatasets,
   setDefaultDataset,
   generateDatasetAccessToken,
-  getPrivateDatasets
+  getPrivateDatasets,
+  cleanCache
 };
 
 function getToken(req, res) {
@@ -331,5 +332,18 @@ function generateDatasetAccessToken(req, res) {
     }
 
     return res.json(routeUtils.toDataResponse({accessToken: dataset.accessToken}));
+  });
+}
+
+function cleanCache(req, res) {
+  if (!req.user) {
+    return res.json(routeUtils.toErrorResponse('There is no authenticated user to get its datasets'));
+  }
+
+  return cliService.cleanDdfRedisCache(cacheCleanError => {
+    if (cacheCleanError) {
+      return res.json(routeUtils.toErrorResponse(cacheCleanError));
+    }
+    return res.json(routeUtils.toMessageResponse('Cache is clean'));
   });
 }

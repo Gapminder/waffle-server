@@ -29,8 +29,8 @@ dumps
 /ws.config/env
 
 # Directory for GitHub repositories
-/ws.import/repos
-/ws.import/diffs
+ws.import/repos
+ws.import/diffs
 
 settings_gapminder*.txt
 settings_valor.txt
