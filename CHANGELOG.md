@@ -1,3 +1,48 @@
+<a name="2.3.0"></a>
+# [2.3.0](https://github.com/Gapminder/waffle-server/compare/v2.2.0...v2.3.0) (2017-01-11)
+
+
+### Bug Fixes
+
+* **availability queries:** calculate functions for datapoints in series not in parallel because of mongo connection timeout ([938e64a](https://github.com/Gapminder/waffle-server/commit/938e64a))
+* **cache:** do not try to store parsed ddfql queries in mongo cause they contain dollar signs ([2b87bb7](https://github.com/Gapminder/waffle-server/commit/2b87bb7))
+* **cache:** fix cache for GET and POST routes to ddfql ([7404fd2](https://github.com/Gapminder/waffle-server/commit/7404fd2))
+* **cache:** remove trailing slashes from cache key part and obsolete cache cleaning tasks ([1355568](https://github.com/Gapminder/waffle-server/commit/1355568))
+* **cli-controller:** fix removing dataset to proper usage of user ([1487b42](https://github.com/Gapminder/waffle-server/commit/1487b42))
+* **entities,concepts:** do not coerce fields to numbers if they are not of type "measure" ([fea3d05](https://github.com/Gapminder/waffle-server/commit/fea3d05))
+* **entity:** fix cached of founded in datapoints entites (these are time entities most often like years, months, etc.) ([c0db7e4](https://github.com/Gapminder/waffle-server/commit/c0db7e4))
+* **inc-update:** update concepts ([30b20af](https://github.com/Gapminder/waffle-server/commit/30b20af))
+* **model:** take into account that object might come with populated values in ddf mapper ([7261f4e](https://github.com/Gapminder/waffle-server/commit/7261f4e))
+* **package.json:** provide correct URLON version ([1184595](https://github.com/Gapminder/waffle-server/commit/1184595))
+* **schema:** change a way schema stats are collected for datapoint - currently those queries should work much faster ([14f1119](https://github.com/Gapminder/waffle-server/commit/14f1119))
+* **translations:** translate property only when actual translation for it is available - otherwise use  original value ([003b0e6](https://github.com/Gapminder/waffle-server/commit/003b0e6))
+* **warmup:**  don't use query done via post to warm up WS ([3cf05b2](https://github.com/Gapminder/waffle-server/commit/3cf05b2))
+* **warmup:** store warm up queries only for default dataset ([6eaf726](https://github.com/Gapminder/waffle-server/commit/6eaf726))
+* **warmup:** store warmup queries only when it is proved that they are ok to be executed ([818c284](https://github.com/Gapminder/waffle-server/commit/818c284))
+
+
+### Features
+
+* **cache:** add cache warmup when WS starts and switches dataset ([4236a15](https://github.com/Gapminder/waffle-server/commit/4236a15))
+* **cli-api:** add cache invalidation route ([a79fb6e](https://github.com/Gapminder/waffle-server/commit/a79fb6e))
+* **cli.controller:** make sure that errors will come to cli as strings, refactor cli.controller to make it more testable ([c603146](https://github.com/Gapminder/waffle-server/commit/c603146))
+* **cli.controller:** provide route for getting private datasets ([4b95d95](https://github.com/Gapminder/waffle-server/commit/4b95d95))
+* **configure_template:** add memory params ([314729b](https://github.com/Gapminder/waffle-server/commit/314729b))
+* **configure_template:** add vps params ([e7f712a](https://github.com/Gapminder/waffle-server/commit/e7f712a))
+* **dataset-service:** implement removing dataset from mongodb ([58f4e45](https://github.com/Gapminder/waffle-server/commit/58f4e45))
+* **datasets:** add support for importing and incrementally update datasets from private repositories ([a804718](https://github.com/Gapminder/waffle-server/commit/a804718))
+* **ddfql:** add support for querying GET requests ([2ac855e](https://github.com/Gapminder/waffle-server/commit/2ac855e))
+* **ddfql:** change the way ddfql queries are generated for datapoints ([b2fd811](https://github.com/Gapminder/waffle-server/commit/b2fd811))
+* **ddfql route:** parse queries in URLON format, improve redis cache key name generation ([e0f2964](https://github.com/Gapminder/waffle-server/commit/e0f2964))
+* **haproxy:** change haproxy conf ([c591055](https://github.com/Gapminder/waffle-server/commit/c591055))
+* **import:** add logger to dataset index import process ([7058629](https://github.com/Gapminder/waffle-server/commit/7058629))
+* **route:** add route for getting only datasets that can be removed ([5f04138](https://github.com/Gapminder/waffle-server/commit/5f04138))
+* **unit-tests:** add unit test for removing dataset process ([f0b3b1f](https://github.com/Gapminder/waffle-server/commit/f0b3b1f))
+* **unit-tests:** add unittests for rollback functionality ([fd24347](https://github.com/Gapminder/waffle-server/commit/fd24347))
+* **unit-tests:** add unittests for set default transaction functionality ([17fe52f](https://github.com/Gapminder/waffle-server/commit/17fe52f))
+
+
+
 <a name="2.2.0"></a>
 # [2.2.0](https://github.com/Gapminder/waffle-server/compare/v2.1.2...v2.2.0) (2016-12-07)
 
