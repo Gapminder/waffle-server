@@ -1,281 +1,349 @@
 'use strict';
 
-const _ = require('lodash');
-const cors = require('cors');
-const express = require('express');
-const passport = require('passport');
-const JSONStream = require('JSONStream');
-const compression = require('compression');
-
-const routeUtils = require('../../utils');
-
 const cliService = require('./../../../ws.services/cli.service');
 const reposService = require('../../../ws.services/repos.service');
 const transactionsService = require('../../../ws.services/dataset-transactions.service');
+const datasetsService = require('../../../ws.services/datasets.service');
 
 const cache = require('../../../ws.utils/redis-cache');
 const logger = require('../../../ws.config/log');
+const routeUtils = require('../../utils');
+const cacheUtils = require('../../../ws.utils/cache-warmup');
 
-module.exports = serviceLocator => {
-  const router = express.Router();
+module.exports = {
+  getToken,
+  getAvailableDatasetsAndVersions,
+  getRemovableDatasets,
+  updateIncrementally,
+  importDataset,
+  removeDataset,
+  getGitCommitsList,
+  getCommitOfLatestDatasetVersion,
+  getStateOfLatestTransaction,
+  activateRollback,
+  getDatasets,
+  setDefaultDataset,
+  generateDatasetAccessToken,
+  getPrivateDatasets,
+  cleanCache
+};
 
-  router.use(cors());
-  router.use(compression());
+function getToken(req, res) {
+  const email = req.body.email;
+  const password = req.body.password;
 
-  // authentication route should be defined before router.use(passport.authenticate('token'));
-  // cause it is entry point for acquiring token and requesting other resources
-  router.post('/api/ddf/cli/authenticate', _getToken);
-
-  router.use(routeUtils.ensureAuthenticatedViaToken);
-
-  router.get('/api/ddf/cli/prestored-queries', _getAvailableDatasetsAndVersions);
-
-  router.post('/api/ddf/cli/update-incremental', _updateIncrementally);
-
-  router.post('/api/ddf/cli/import-dataset', _importDataset);
-
-  router.get('/api/ddf/cli/git-commits-list', _getGitCommitsList);
-
-  router.get('/api/ddf/cli/commit-of-latest-dataset-version', _getCommitOfLatestDatasetVersion);
-
-  router.get('/api/ddf/cli/transactions/latest/status', _getStateOfLatestTransaction);
-
-  router.post('/api/ddf/cli/transactions/latest/rollback', _activateRollback);
-
-  router.get('/api/ddf/cli/datasets', _getDatasets);
-
-  router.post('/api/ddf/cli/datasets/default', _setDefaultDataset);
-
-  const app = serviceLocator.getApplication();
-  return app.use(router);
-
-  function _getToken(req, res) {
-    const email = req.body.email;
-    const password = req.body.password;
-
-    if (!email) {
-      return res.json({success: false, error: 'Email was not provided'});
-    }
-
-    if (!password) {
-      return res.json({success: false, error: 'Password was not provided'});
-    }
-
-    return cliService.authenticate({email, password}, (error, token) => {
-      if (error) {
-        logger.error(error);
-        return res.json({success: !error, error});
-      }
-
-      return res.json({success: !error, data: {token}});
-    });
+  if (!email) {
+    return res.json(routeUtils.toErrorResponse('Email was not provided'));
   }
 
-  function _setDefaultDataset(req, res) {
-    const datasetName = req.body.datasetName;
-    const transactionCommit = req.body.commit;
+  if (!password) {
+    return res.json(routeUtils.toErrorResponse('Password was not provided'));
+  }
 
-    if (!req.user) {
-      return res.json({success: false, error: 'There is no authenticated user to get its datasets'});
+  return cliService.authenticate({email, password}, (error, token) => {
+    if (error) {
+      return res.json(routeUtils.toErrorResponse(error));
     }
 
-    if (!datasetName) {
-      return res.json({success: false, error: 'Dataset name was not provided'});
+    return res.json(routeUtils.toDataResponse({token}));
+  });
+}
+
+function setDefaultDataset(req, res) {
+  const datasetName = req.body.datasetName;
+  const transactionCommit = req.body.commit;
+
+  if (!req.user) {
+    return res.json(routeUtils.toErrorResponse('There is no authenticated user to get its datasets'));
+  }
+
+  if (!datasetName) {
+    return res.json(routeUtils.toErrorResponse('Dataset name was not provided'));
+  }
+
+  if (!transactionCommit) {
+    return res.json(routeUtils.toErrorResponse('Transaction commit was not provided'));
+  }
+
+  cliService.setTransactionAsDefault(req.user._id, datasetName, transactionCommit, (error, defaultDatasetAndCommit) => {
+    if (error) {
+      return res.json(routeUtils.toErrorResponse(error));
     }
 
-    if (!transactionCommit) {
-      return res.json({success: false, error: 'Transaction commit was not provided'});
-    }
-
-    cliService.setTransactionAsDefault(req.user._id, datasetName, transactionCommit, (error, defaultDatasetAndCommit) => {
-      if (error) {
-        logger.error(error);
-        return res.json({success: !error, error});
+    return cliService.cleanDdfRedisCache(cacheCleanError => {
+      if (cacheCleanError) {
+        return res.json(routeUtils.toErrorResponse(cacheCleanError));
       }
 
-      return cliService.cleanDdfRedisCache(cacheCleanError => {
-        if (cacheCleanError) {
-          logger.error(cacheCleanError);
-          return res.json({success: !cacheCleanError, error: cacheCleanError});
+      cacheUtils.warmUpCache(cacheWarmUpError => {
+        if (cacheWarmUpError) {
+          return logger.error('Cache warm up error. ', cacheWarmUpError);
         }
-
-        return res.json({success: !error, data: defaultDatasetAndCommit});
+        return logger.info('Cache is warmed up.');
       });
+
+      return res.json(routeUtils.toDataResponse(defaultDatasetAndCommit));
     });
+  });
+}
+
+function getDatasets(req, res) {
+  if (!req.user) {
+    return res.json(routeUtils.toErrorResponse('There is no authenticated user to get its datasets'));
   }
 
-  function _getDatasets(req, res) {
-    if (!req.user) {
-      return res.json({success: false, error: 'There is no authenticated user to get its datasets'});
+  return cliService.findDatasetsWithVersions(req.user._id, (error, datasetsWithVersions) => {
+    if (error) {
+      return res.json(routeUtils.toErrorResponse(error));
     }
 
-    return cliService.findDatasetsWithVersions(req.user._id, (error, datasetsWithVersions) => {
-      if (error) {
-        logger.error(error);
-        return res.json({success: !error, error});
-      }
+    return res.json(routeUtils.toDataResponse(datasetsWithVersions));
+  });
+}
 
-      return res.json({success: !error, data: datasetsWithVersions});
-    });
+function getStateOfLatestTransaction(req, res) {
+  if (!req.user) {
+    return res.json(routeUtils.toErrorResponse('Unauthenticated user cannot perform CLI operations'));
   }
 
-  function _getStateOfLatestTransaction(req, res) {
-    const datasetName = req.query.datasetName;
-    if (!datasetName) {
-      return res.json({success: false, error: 'No dataset name was given'});
-    }
-
-    return transactionsService.getStatusOfLatestTransactionByDatasetName(datasetName, (statusError, status) => {
-      if (statusError) {
-        logger.error(statusError);
-        return res.json({success: !statusError, error: statusError});
-      }
-
-      return res.json({success: !statusError, data: status});
-    });
+  const datasetName = req.query.datasetName;
+  if (!datasetName) {
+    return res.json(routeUtils.toErrorResponse('No dataset name was given'));
   }
 
-  function _activateRollback(req, res) {
-    const datasetName = req.body.datasetName;
-    if (!datasetName) {
-      return res.json({success: false, error: 'No dataset name was given'});
+  return transactionsService.getStatusOfLatestTransactionByDatasetName(datasetName, req.user, (statusError, status) => {
+    if (statusError) {
+      return res.json(routeUtils.toErrorResponse(statusError));
     }
 
-    return transactionsService.rollbackFailedTransactionFor(datasetName, rollbackError => {
-      if (rollbackError) {
-        logger.error(rollbackError);
-        return res.json({success: !rollbackError, error: rollbackError});
-      }
+    return res.json(routeUtils.toDataResponse(status));
+  });
+}
 
-      return res.json({success: !rollbackError, message: 'Rollback completed successfully'});
-    });
+function activateRollback(req, res) {
+  if (!req.user) {
+    return res.json(routeUtils.toErrorResponse('Unauthenticated user cannot perform CLI operations'));
   }
 
-  function _getAvailableDatasetsAndVersions(req, res) {
-    if (!req.user) {
-      return res.json({success: false, error: 'There is no authenticated user to get its datasets'});
-    }
-
-    cliService.getAvailableDatasetsAndVersions (req.user._id, (error, datasetsAndVersions) => {
-      if (error) {
-        logger.error(error);
-        return res.json({success: !error, error});
-      }
-
-      logger.info(`finished getting available datasets and versions`);
-
-      return res.json({success: !error, data: datasetsAndVersions});
-    });
+  const datasetName = req.body.datasetName;
+  if (!datasetName) {
+    return res.json(routeUtils.toErrorResponse('No dataset name was given'));
   }
 
-  function _updateIncrementally(req, res) {
-    const {hashFrom, hashTo, github} = req.body;
-
-    if (!hashFrom) {
-      return res.json({success: false, message: 'Start commit for update was not given'});
+  return transactionsService.rollbackFailedTransactionFor(datasetName, req.user, rollbackError => {
+    if (rollbackError) {
+      return res.json(routeUtils.toErrorResponse(rollbackError));
     }
 
-    if (!hashTo) {
-      return res.json({success: false, message: 'End commit for update was not given'});
-    }
+    return res.json(routeUtils.toMessageResponse('Rollback completed successfully'));
+  });
+}
 
-    if (!github) {
-      return res.json({success: false, message: 'Repository github url was not given'});
-    }
-
-    const options = {
-      github,
-      hashTo,
-      commit: hashTo,
-      hashFrom,
-      datasetName: reposService.getRepoNameForDataset(github),
-      lifecycleHooks: {
-        onTransactionCreated: () => {
-          if (!res.headersSent) {
-            return res.json({success: true, message: 'Dataset updating is in progress ...'});
-          }
-        }
-      }
-    };
-
-    cliService.updateIncrementally(options, updateError => {
-      if (updateError && !res.headersSent) {
-        logger.error(updateError);
-        return res.json({success: !updateError, error: updateError});
-      }
-
-      if (updateError) {
-        return logger.error(updateError);
-      }
-
-      logger.info(`finished import for dataset '${github}' and commit '${hashTo}'`);
-    });
+function removeDataset(req, res) {
+  if (!req.user) {
+    return res.json(routeUtils.toErrorResponse('There is no authenticated user to remove dataset'));
   }
 
-  function _importDataset(req, res) {
-    const params = req.body;
+  const datasetName = req.body.datasetName;
 
-    params.lifecycleHooks = {
+  if (!datasetName) {
+    return res.json(routeUtils.toErrorResponse('No dataset name was given'));
+  }
+
+  const user = req.user;
+
+  return datasetsService.removeDatasetData(datasetName, user, removeError => {
+    if (removeError) {
+      return res.json(routeUtils.toErrorResponse(removeError));
+    }
+
+    return res.json(routeUtils.toMessageResponse('Removing dataset was completed successfully'));
+  });
+}
+
+function getAvailableDatasetsAndVersions(req, res) {
+  if (!req.user) {
+    return res.json(routeUtils.toErrorResponse('There is no authenticated user to get its datasets'));
+  }
+
+  cliService.getAvailableDatasetsAndVersions (req.user._id, (error, datasetsAndVersions) => {
+    if (error) {
+      return res.json(routeUtils.toErrorResponse(error));
+    }
+
+    logger.info(`finished getting available datasets and versions`);
+
+    return res.json(routeUtils.toDataResponse(datasetsAndVersions));
+  });
+}
+
+function getRemovableDatasets(req, res) {
+  if (!req.user) {
+    return res.json(routeUtils.toErrorResponse('There is no authenticated user to get its datasets'));
+  }
+
+  cliService.getRemovableDatasets (req.user._id, (error, removableDatasets) => {
+    if (error) {
+      return res.json(routeUtils.toErrorResponse(error));
+    }
+
+    logger.info(`finished getting removable datasets`);
+    return res.json(routeUtils.toDataResponse(removableDatasets));
+  });
+}
+
+function getPrivateDatasets(req, res) {
+  if (!req.user) {
+    return res.json(routeUtils.toErrorResponse('There is no authenticated user to get its datasets'));
+  }
+
+  cliService.getPrivateDatasets(req.user._id, (error, privateDatasets) => {
+    if (error) {
+      return res.json(routeUtils.toErrorResponse(error));
+    }
+
+    logger.info(`finished getting private datasets`);
+
+    return res.json(routeUtils.toDataResponse(privateDatasets));
+  });
+}
+
+function updateIncrementally(req, res) {
+  const {hashFrom, hashTo, github} = req.body;
+
+  if (!hashFrom) {
+    return res.json(routeUtils.toErrorResponse('Start commit for update was not given'));
+  }
+
+  if (!hashTo) {
+    return res.json(routeUtils.toErrorResponse('End commit for update was not given'));
+  }
+
+  if (!github) {
+    return res.json(routeUtils.toErrorResponse('Repository github url was not given'));
+  }
+
+  const options = {
+    github,
+    hashTo,
+    commit: hashTo,
+    hashFrom,
+    datasetName: reposService.getRepoNameForDataset(github),
+    lifecycleHooks: {
       onTransactionCreated: () => {
         if (!res.headersSent) {
-          res.json({success: true, message: 'Dataset importing is in progress ...'});
+          return res.json(routeUtils.toMessageResponse('Dataset updating is in progress ...'));
         }
       }
-    };
+    }
+  };
 
-    return cliService.importDataset(params, importError => {
-      if (importError && !res.headersSent) {
-        logger.error(importError);
-        return res.json({success: !importError, error: importError});
+  cliService.updateIncrementally(options, updateError => {
+    if (updateError && !res.headersSent) {
+      return res.json(routeUtils.toErrorResponse(updateError));
+    }
+
+    if (updateError) {
+      return logger.error(updateError);
+    }
+
+    logger.info(`finished import for dataset '${github}' and commit '${hashTo}'`);
+  });
+}
+
+function importDataset(req, res) {
+  const params = req.body;
+
+  params.lifecycleHooks = {
+    onTransactionCreated: () => {
+      if (!res.headersSent) {
+        res.json(routeUtils.toMessageResponse('Dataset importing is in progress ...'));
       }
+    }
+  };
 
-      if (importError) {
-        return logger.error(importError);
-      }
+  return cliService.importDataset(params, importError => {
+    if (importError && !res.headersSent) {
+      return res.json(routeUtils.toErrorResponse(importError));
+    }
 
-      logger.info(`finished import for dataset '${params.github}' and commit '${params.commit}'`);
-    });
+    if (importError) {
+      return logger.error(importError);
+    }
+
+    logger.info(`finished import for dataset '${params.github}' and commit '${params.commit}'`);
+  });
+}
+
+function getGitCommitsList(req, res) {
+  const github = req.query.github;
+
+  cliService.getGitCommitsList(github, (error, result) => {
+    if (error) {
+      return res.json(routeUtils.toErrorResponse(error));
+    }
+
+    logger.info(`finished getting commits list for dataset '${github}'`);
+
+    return res.json(routeUtils.toDataResponse({commits: result.commits}));
+  });
+}
+
+function getCommitOfLatestDatasetVersion(req, res) {
+  if (!req.user) {
+    return res.json(routeUtils.toErrorResponse('Unauthenticated user cannot perform CLI operations'));
   }
 
-  function _getGitCommitsList(req, res) {
-    const github = req.query.github;
+  const github = req.query.github;
 
-    cliService.getGitCommitsList(github, (error, result) => {
-      if (error) {
-        logger.error(error);
-        return res.json({success: !error, error});
-      }
+  cliService.getCommitOfLatestDatasetVersion(github, req.user, (error, result) => {
+    if (error) {
+      return res.json(routeUtils.toErrorResponse(error));
+    }
 
-      logger.info(`finished getting commits list for dataset '${github}'`);
+    logger.info(`finished getting latest commit '${result.transaction.commit}' for dataset '${github}'`);
 
-      return res.json({
-        success: !error,
-        data: {
-          commits: result.commits
-        }
-      });
-    });
+    return res.json(routeUtils.toDataResponse({
+      github: result.dataset.path,
+      dataset: result.dataset.name,
+      commit: result.transaction.commit
+    }));
+  });
+}
+
+function generateDatasetAccessToken(req, res) {
+  if (!req.user) {
+    return res.json(routeUtils.toErrorResponse('Unauthenticated user cannot perform CLI operations'));
   }
 
-  function _getCommitOfLatestDatasetVersion(req, res) {
-    const github = req.query.github;
-
-    cliService.getCommitOfLatestDatasetVersion(github, (error, result) => {
-      if (error) {
-        logger.error(error);
-        return res.json({success: !error, error});
-      }
-
-      logger.info(`finished getting latest commit '${result.transaction.commit}' for dataset '${github}'`);
-
-      return res.json({
-        success: !error,
-        data: {
-          github: result.dataset.path,
-          dataset: result.dataset.name,
-          commit: result.transaction.commit
-        }
-      });
-    });
+  const datasetName = req.body.datasetName;
+  if (!datasetName) {
+    return res.json(routeUtils.toErrorResponse('No dataset name was given'));
   }
-};
+
+  return cliService.setAccessTokenForDataset(datasetName, req.user._id, (error, dataset) => {
+    if (error) {
+      return res.json(routeUtils.toErrorResponse(error));
+    }
+
+    if (!dataset) {
+      logger.warn(`User was trying to generate an accessToken for not existing dataset: ${datasetName} or dataset that is not owned by him (Id: ${req.user._id}).`);
+      return res.json(routeUtils.toErrorResponse('Cannot generate access token for given dataset'));
+    }
+
+    return res.json(routeUtils.toDataResponse({accessToken: dataset.accessToken}));
+  });
+}
+
+function cleanCache(req, res) {
+  if (!req.user) {
+    return res.json(routeUtils.toErrorResponse('There is no authenticated user to get its datasets'));
+  }
+
+  return cliService.cleanDdfRedisCache(cacheCleanError => {
+    if (cacheCleanError) {
+      return res.json(routeUtils.toErrorResponse(cacheCleanError));
+    }
+    return res.json(routeUtils.toMessageResponse('Cache is clean'));
+  });
+}

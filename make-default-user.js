@@ -31,6 +31,6 @@ module.exports = () => {
       });
     }
 
-    return logger.info('Default user was updated');
+    return logger.info('Default user already exists - no need to create new one');
   });
 };

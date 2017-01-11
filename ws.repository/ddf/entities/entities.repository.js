@@ -10,14 +10,19 @@ const Concepts = mongoose.model('Concepts');
 const RepositoryFactory = require('../../repository.factory');
 const repositoryModel = require('../../repository.model');
 const constants = require('../../../ws.utils/constants');
+const logger = require('../../../ws.config/log');
 
 util.inherits(EntitiesRepository, repositoryModel);
 
-function EntitiesRepository() {
-  repositoryModel.apply(this, arguments);
+function EntitiesRepository(... args) {
+  repositoryModel.apply(this, args);
 }
 
 module.exports = new RepositoryFactory(EntitiesRepository);
+
+EntitiesRepository.prototype._getModel = function () {
+  return Entities;
+};
 
 EntitiesRepository.prototype.findByOriginId = function (originId, done) {
   const query = this._composeQuery({originId: originId});
@@ -34,11 +39,17 @@ EntitiesRepository.prototype.count = function (onCounted) {
   return Entities.count(countQuery, onCounted);
 };
 
-EntitiesRepository.prototype.rollback = function (versionToRollback, onRolledback) {
+EntitiesRepository.prototype.rollback = function (transaction, onRolledback) {
+  const {createdAt: versionToRollback} = transaction;
+
   return async.parallelLimit([
     done => Entities.update({to: versionToRollback}, {$set: {to: constants.MAX_VERSION}}, {multi: true}).lean().exec(done),
     done => Entities.remove({from: versionToRollback}, done)
   ], constants.LIMIT_NUMBER_PROCESS, onRolledback);
+};
+
+EntitiesRepository.prototype.removeByDataset = function (datasetId, onRemove) {
+  return Entities.remove({dataset: datasetId}, onRemove);
 };
 
 EntitiesRepository.prototype.closeByDomainAndSets = function ({domain, sets}, done) {
@@ -69,10 +80,6 @@ EntitiesRepository.prototype.addTranslation = function ({id, language, translati
   return Entities.findOneAndUpdate({_id: id}, {$set: {[`languages.${language}`]: translation}}, {new: true}, done);
 };
 
-EntitiesRepository.prototype.create = function (entityOrBatchOfEntities, onCreated) {
-  return Entities.create(entityOrBatchOfEntities, onCreated);
-};
-
 EntitiesRepository.prototype.findAllHavingGivenDomainsOrSets = function (domainsIds, setsIds, onFound) {
   const query = this._composeQuery({
     $or: [
@@ -90,6 +97,7 @@ EntitiesRepository.prototype.findAllHavingGivenDomainsOrSets = function (domains
 
 EntitiesRepository.prototype.findEntityPropertiesByQuery = function(entitiesQuery, onPropertiesFound) {
   const composedQuery = this._composeQuery(entitiesQuery);
+  logger.debug({obj: composedQuery}, 'Query to get entities according to ddfql');
   return Entities.find(composedQuery).lean().exec(onPropertiesFound);
 };
 

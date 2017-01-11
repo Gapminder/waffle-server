@@ -69,11 +69,14 @@ describe('entities import', function() {
     };
 
     const ddfImportUtils = {
-      readCsvFileAsStream: () => {
-        return hi(entities);
-      },
       MONGODB_DOC_CREATION_THREADS_AMOUNT: 3,
       DEFAULT_CHUNK_SIZE: DEFAULT_CHUNK_SIZE
+    };
+
+    const fileUtils = {
+      readCsvFileAsStream: () => {
+        return hi(entities);
+      }
     };
 
     const ddfMappers = {
@@ -105,6 +108,7 @@ describe('entities import', function() {
     const importEntities  = proxyquire('../../ws.import/import-entities', {
       './utils/entities.utils': entitiesUtils,
       './utils/import-ddf.utils': ddfImportUtils,
+      '../ws.utils/file': fileUtils,
       './utils/ddf-mappers': ddfMappers,
       '../ws.repository/ddf/entities/entities.repository': entitiesRepository
     });

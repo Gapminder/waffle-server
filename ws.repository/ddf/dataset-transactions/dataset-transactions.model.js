@@ -4,12 +4,12 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const DatasetTransactions = new Schema({
-  isClosed: {type: Boolean, 'default': false},
-  isDefault: {type: Boolean, 'default': false},
+  isClosed: {type: Boolean, default: false},
+  isDefault: {type: Boolean, default: false},
   lastError: {type: String},
 
   createdBy: {type: Schema.Types.ObjectId, ref: 'Users', required: true},
-  createdAt: {type: Number, 'default': Date.now(), required: true},
+  createdAt: {type: Number, default: Date.now, required: true},
 
   timeSpentInMillis: Number,
   dataset: {type: Schema.Types.ObjectId, ref: 'Datasets'},

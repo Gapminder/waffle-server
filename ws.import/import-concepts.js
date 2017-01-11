@@ -6,6 +6,7 @@ const async = require('async');
 const hi = require('highland');
 
 const ddfImportUtils = require('./utils/import-ddf.utils');
+const fileUtils = require('../ws.utils/file');
 const logger = require('../ws.config/log');
 const config = require('../ws.config/config');
 const constants = require('../ws.utils/constants');
@@ -54,8 +55,9 @@ function _loadConcepts(pipe, done) {
     .filter(resource => resource.type === constants.CONCEPTS)
     .head()
     .flatMap(resource => {
-      return ddfImportUtils.readCsvFileAsStream(pathToDdfFolder, resource.path)
-        .map(rawConcept => ({filename: resource.path, object: rawConcept}))
+      return fileUtils
+        .readCsvFileAsStream(pathToDdfFolder, resource.path)
+        .map(rawConcept => ({filename: resource.path, object: rawConcept}));
     })
     .collect()
     .toCallback((error, rawConcepts) => {

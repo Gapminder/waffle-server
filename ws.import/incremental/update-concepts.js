@@ -3,14 +3,13 @@
 const _ = require('lodash');
 const async = require('async');
 const fs = require('fs');
-const byline = require('byline');
-const JSONStream = require('JSONStream');
-const hi = require('highland');
 
+const ChangesDescriptor = require('../utils/changes-descriptor').ChangesDescriptor;
 const conceptsRepositoryFactory = require('../../ws.repository/ddf/concepts/concepts.repository');
 const ddfImportUtils = require('../utils/import-ddf.utils');
 const conceptsUtils = require('../utils/concepts.utils');
 const constants = require('../../ws.utils/constants');
+const fileUtils = require('../../ws.utils/file');
 const ddfMappers = require('../utils/ddf-mappers');
 const logger = require('../../ws.config/log');
 
@@ -32,25 +31,18 @@ function startConceptsCreation(externalContext, done) {
 }
 
 function updateConcepts(externalContext, done) {
-  const fileWithChangesStream = fs.createReadStream(externalContext.pathToDatasetDiff, {encoding: 'utf8'});
-
-  const changesByLine = byline(fileWithChangesStream).pipe(JSONStream.parse());
-
   let removedProperties;
 
-  return  hi(changesByLine)
-    .filter((row) => {
-      return row.metadata.type === constants.CONCEPTS;
-    })
-    .map(row => {
+  return fileUtils.readTextFileByLineAsJsonStream(externalContext.pathToDatasetDiff)
+    .map(changes => new ChangesDescriptor(changes))
+    .filter(changesDescriptor => changesDescriptor.describes(constants.CONCEPTS))
+    .map(changesDescriptor => {
       if (!removedProperties) {
-        removedProperties = row.metadata.removedColumns;
+        removedProperties = changesDescriptor.removedColumns;
       }
-      return row;
+      return changesDescriptor;
     })
-    .group(row => {
-      return row.metadata.action;
-    })
+    .group(changesDescriptor => changesDescriptor.action)
     .stopOnError(error => {
       return done(error);
     })
@@ -59,10 +51,10 @@ function updateConcepts(externalContext, done) {
         return done(err);
       }
 
-      const remove = _.map(allChanges.remove, 'object');
-      const create = _.map(allChanges.create, 'object');
-      const change = _.map(allChanges.change, 'object');
-      const update = _.map(allChanges.update, 'object');
+      const remove = _.map(allChanges.remove, '_object');
+      const create = _.map(allChanges.create, '_object');
+      const change = _.map(allChanges.change, '_object');
+      const update = _.map(allChanges.update, '_object');
 
       return async.waterfall([
         async.constant({external: externalContext, internal: {}}),
@@ -199,6 +191,11 @@ function applyChangesToConcepts(changedConcepts) {
       conceptsRepository.closeByGid(gid, (error, originalConcept) => {
         if (error) {
           return onChangesApplied(error);
+        }
+
+        if (!originalConcept) {
+          logger.debug(`There is no original concept with gid '${gid}' in db`);
+          return onChangesApplied();
         }
 
         const updatedConcept = mergeConcepts(originalConcept, changesToConcept, pipe.external.transaction);

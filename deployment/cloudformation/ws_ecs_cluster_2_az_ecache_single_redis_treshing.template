@@ -840,6 +840,22 @@
       "Type": "String",
       "Description": "Current application environment"
     },
+    "MemoryLb": {
+      "Type": "Number",
+      "Description": "Ram Load Balancer",
+      "Default": 3000
+    },
+    "MemoryNode":{
+      "Type": "Number",
+      "Description": "Ram Nodes",
+      "Default": 3000
+    },
+    "MemoryNodeThrashingMachine":{
+      "Type": "Number",
+      "Description": "Ram ThrashingMachine",
+      "Default": 14000
+
+    },
     "DdfRepoPath": {
       "Type": "String",
       "Description": "ddf repositories path",
@@ -921,8 +937,11 @@
                 ]
               ]
             },
-            "Cpu": "1000",
-            "Memory": "950",
+            "Cpu": "2048",
+            "Memory": {
+              "Ref": "MemoryLb"
+            },
+
             "PortMappings": [
               {
                 "ContainerPort": "80",
@@ -1055,8 +1074,11 @@
                 ]
               ]
             },
-            "Cpu": "1000",
-            "Memory": "950",
+            "Cpu": "3584",
+            "Memory": {
+              "Ref": "MemoryNodeThrashingMachine"
+            },
+
             "PortMappings": [
               {
                 "ContainerPort": "80",
@@ -1193,8 +1215,11 @@
                 ]
               ]
             },
-            "Cpu": "1000",
-            "Memory": "950",
+            "Cpu": "2048",
+            "Memory": {
+              "Ref": "MemoryNode"
+            },
+
             "PortMappings": [
               {
                 "ContainerPort": "3000",

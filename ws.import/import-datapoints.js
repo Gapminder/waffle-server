@@ -6,13 +6,12 @@ const path = require('path');
 const hi = require('highland');
 
 const logger = require('../ws.config/log');
-const ddfUtils = require('./utils/import-ddf.utils');
+const ddfImportUtils = require('./utils/import-ddf.utils');
 const constants = require('../ws.utils/constants');
+const fileUtils = require('../ws.utils/file');
 const datapointsUtils = require('./utils/datapoints.utils');
 
-module.exports = startDatapointsCreation;
-
-function startDatapointsCreation(externalContext, done) {
+module.exports = function startDatapointsCreation(externalContext, done) {
   logger.info('start process creating data points');
 
   const externalContextFrozen = Object.freeze(_.pick(externalContext, [
@@ -24,18 +23,9 @@ function startDatapointsCreation(externalContext, done) {
     'dataset'
   ]));
 
-  const errors = [];
-  createDatapoints(externalContextFrozen)
-    .stopOnError(error => {
-      errors.push(error);
-    })
-    .done(() => {
-      if (!_.isEmpty(errors)) {
-        return done(errors, externalContext);
-      }
-      return done(null, externalContext);
-    });
-}
+  const datapointsCreateStream = createDatapoints(externalContextFrozen);
+  ddfImportUtils.startStreamProcessing(datapointsCreateStream, externalContext, done);
+};
 
 function createDatapoints(externalContextFrozen) {
   const {pathToDdfFolder, datapackage: {resources}} = externalContextFrozen;
@@ -56,10 +46,10 @@ function createDatapoints(externalContextFrozen) {
         .map(segregatedEntities => ({filename: resource.path, measures, dimensions, segregatedEntities}));
     })
     .map(context => {
-      return ddfUtils.readCsvFileAsStream(pathToDdfFolder, context.filename)
+      return fileUtils.readCsvFileAsStream(pathToDdfFolder, context.filename)
         .map(datapoint => ({datapoint, context}));
     })
-    .parallel(ddfUtils.MONGODB_DOC_CREATION_THREADS_AMOUNT)
+    .parallel(ddfImportUtils.MONGODB_DOC_CREATION_THREADS_AMOUNT)
     .map(({datapoint, context}) => {
       const entitiesFoundInDatapoint = datapointsUtils.findEntitiesInDatapoint(datapoint, context, externalContextFrozen);
       return {datapoint, entitiesFoundInDatapoint, context};

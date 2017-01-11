@@ -5,12 +5,10 @@ const datapackageParser = require('./datapackage.parser');
 const ddfImportUtils = require('./import-ddf.utils');
 const constants = require('../../ws.utils/constants');
 
-const REMOVE_ACTION_NAME = 'remove';
-
 class ChangesDescriptor {
   constructor(rawChangesDescriptor) {
-    this.object = _.get(rawChangesDescriptor, 'object', {});
-    this.metadata = _.get(rawChangesDescriptor, 'metadata', {});
+    this._object = _.get(rawChangesDescriptor, 'object', {});
+    this._metadata = _.get(rawChangesDescriptor, 'metadata', {});
     this._cachedOldResource = null;
     this._cachedCurrentResource = null;
   }
@@ -28,20 +26,20 @@ class ChangesDescriptor {
 
   get changes() {
     if (this.isUpdateAction()) {
-      return this.object['data-update'];
+      return this._object['data-update'];
     }
-    return this.object;
+    return this._object;
   }
 
   get original() {
-    if (this.isUpdateAction() && this.object['data-origin']) {
-      return this.object['data-origin'];
+    if (this.isUpdateAction() && this._object['data-origin']) {
+      return this._object['data-origin'];
     }
-    return this.object;
+    return this._object;
   }
 
   get language() {
-    return this.metadata.lang;
+    return this._metadata.lang;
   }
 
   get oldResource() {
@@ -52,7 +50,7 @@ class ChangesDescriptor {
   }
 
   get oldResourceRaw() {
-    return _.get(this.metadata.file, 'old');
+    return _.get(this._metadata.file, 'old');
   }
 
   get currentResource() {
@@ -63,31 +61,35 @@ class ChangesDescriptor {
   }
 
   get currentResourceRaw() {
-    return _.get(this.metadata.file, 'new');
+    return _.get(this._metadata.file, 'new');
   }
 
   get removedColumns() {
-    return this.metadata.removedColumns || [];
+    return this._metadata.removedColumns || [];
   }
 
   get onlyColumnsRemoved() {
-    return this.metadata.onlyColumnsRemoved;
+    return this._metadata.onlyColumnsRemoved;
+  }
+
+  get action() {
+    return _.get(this._metadata, 'action');
   }
 
   describes(dataType) {
-    return this.metadata.type === dataType;
+    return this._metadata.type === dataType;
   }
 
   isCreateAction() {
-    return this.metadata.action === 'create';
+    return this.action === 'create';
   }
 
   isRemoveAction() {
-    return this.metadata.action === REMOVE_ACTION_NAME;
+    return this.action === ChangesDescriptor.REMOVE_ACTION_NAME;
   }
 
   isUpdateAction() {
-    return ddfImportUtils.UPDATE_ACTIONS.has(this.metadata.action);
+    return ddfImportUtils.UPDATE_ACTIONS.has(this.action);
   }
 
   _parseResource(resource) {
@@ -101,9 +103,11 @@ class ChangesDescriptor {
 
     return datapackageParser.parseDatapointsResource(resource);
   }
-}
 
-ChangesDescriptor.REMOVE_ACTION_NAME = REMOVE_ACTION_NAME;
+  static get REMOVE_ACTION_NAME() {
+    return 'remove';
+  }
+}
 
 module.exports = {
   ChangesDescriptor

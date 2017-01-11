@@ -1,10 +1,10 @@
 /*eslint no-process-env:0 */
 'use strict';
 
-const path = require('path');
 const _ = require('lodash');
-const fs = require('fs');
 const DEFAULT_CONFIG = require('./environment.config');
+
+const PRODUCTION_ENVS = new Set(['stage', 'production']);
 
 module.exports = (function () {
   const config = {
@@ -30,31 +30,26 @@ module.exports = (function () {
 
     // { error: 0, warn: 1, info: 2, verbose: 3, debug: 4, silly: 5 }
     LOG_LEVEL: process.env.LOG_LEVEL || DEFAULT_CONFIG.LOG_LEVEL,
-
-    DEFAULT_OPTIONS_CONVERTING_JSON_TO_CSV: {
-      DELIMITER: {
-        FIELD: ';',
-        ARRAY: ',',
-        WRAP: '"'
-      },
-      EOL: '\n',
-      PARSE_CSV_NUMBERS: false
-    },
-
-    DEFAULT_USER_PASSWORD: process.env.DEFAULT_USER_PASSWORD
+    DEFAULT_USER_PASSWORD: process.env.DEFAULT_USER_PASSWORD,
+    THRASHING_MACHINE: process.env.THRASHING_MACHINE
   };
+
+  config.IS_PRODUCTION = PRODUCTION_ENVS.has(config.NODE_ENV);
+
+  config.CALCULATE_SCHEMA_QUERIES_AGG_FUNCTIONS = config.NODE_ENV === 'local';
 
   const REQUIRED_ENVIRONMENT_VARIABLES = Object.freeze([
     'MONGODB_URL',
   ]);
 
   // Check that all the REQUIRED VARIABLES was setup.
-  if (['production', 'stage'].some(env => config.NODE_ENV === env))
-    _.each(REQUIRED_ENVIRONMENT_VARIABLES, function (CURRENT_VARIABLE) {
+  if (config.IS_PRODUCTION) {
+    _.each(REQUIRED_ENVIRONMENT_VARIABLES, CURRENT_VARIABLE => {
       if (!process.env[CURRENT_VARIABLE] && !DEFAULT_CONFIG[CURRENT_VARIABLE]) {
-        throw new Error(`You need to set up ${CURRENT_VARIABLE}`);
+        throw Error(`You need to set up ${CURRENT_VARIABLE}`);
       }
     });
+  }
 
   return config;
 }());

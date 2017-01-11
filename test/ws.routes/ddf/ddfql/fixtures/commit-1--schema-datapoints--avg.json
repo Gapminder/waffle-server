@@ -35,8 +35,24 @@
         "company",
         "project"
       ],
+      "latitude",
+      49.86333
+    ],
+    [
+      [
+        "company",
+        "project"
+      ],
       "lines_of_code",
-      1702551.3333333333
+      1702551.33333
+    ],
+    [
+      [
+        "company",
+        "project"
+      ],
+      "longitude",
+      56.055
     ],
     [
       [
@@ -44,7 +60,7 @@
         "project"
       ],
       "num_users",
-      11448.333333333334
+      11448.33333
     ]
   ]
 }

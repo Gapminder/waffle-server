@@ -3,12 +3,14 @@
 const _ = require('lodash');
 const git = require('simple-git');
 const async = require('async');
+const crypto = require('crypto');
 
 const cache = require('../ws.utils/redis-cache');
 const config = require('../ws.config/config');
 const constants = require('../ws.utils/constants');
 const authService = require('./auth.service');
 const reposService = require('./repos.service');
+const securityUtils = require('../ws.utils/security');
 const ddfImportUtils = require('../ws.import/utils/import-ddf.utils');
 const datasetsService = require('./datasets.service');
 const usersRepository = require('../ws.repository/ddf/users/users.repository');
@@ -27,10 +29,13 @@ module.exports = {
   authenticate,
   findDatasetsWithVersions,
   setTransactionAsDefault,
-  cleanDdfRedisCache
+  cleanDdfRedisCache,
+  setAccessTokenForDataset,
+  getPrivateDatasets,
+  getRemovableDatasets
 };
 
-function getGitCommitsList(github, cb) {
+function getGitCommitsList(github, onCommitsRecieved) {
   if (!github) {
     return cb('Url to dataset\'s github repository was not provided');
   }
@@ -39,7 +44,7 @@ function getGitCommitsList(github, cb) {
     async.constant({github}),
     ddfImportUtils.cloneDdfRepo,
     _getPathToRepo
-  ], cb);
+  ], onCommitsRecieved);
 }
 
 function _getPathToRepo(pipe, done) {
@@ -51,11 +56,16 @@ function _getPathToRepo(pipe, done) {
 
 function _findCurrentUser(pipe, done) {
   usersRepository.findUserByEmail(constants.DEFAULT_USER_EMAIL, (error, user) => {
-    if (error || !user) {
-      return done(error || 'User that tries to initiate import was not found');
+    if (error) {
+      return done(error);
     }
+
+    if (!user) {
+      return done('User that tries to initiate import was not found');
+    }
+
     pipe.user = user;
-    return done(error, pipe);
+    return done(null, pipe);
   });
 }
 
@@ -77,6 +87,10 @@ function importDataset(params, onDatasetImported) {
 
 function _findDataset(pipe, done) {
   return datasetsRepository.findByGithubUrl(pipe.github, (error, dataset) => {
+    if (error) {
+      return done(error);
+    }
+
     pipe.dataset = dataset;
     return done(error, pipe);
   });
@@ -92,6 +106,7 @@ function _validateDatasetBeforeImport(pipe, done) {
 
 function _importDdfService(pipe, onDatasetImported) {
   const options = {
+    isDatasetPrivate: pipe.repoType === 'private',
     datasetName: reposService.getRepoNameForDataset(pipe.github),
     commit: pipe.commit,
     github: pipe.github,
@@ -116,6 +131,8 @@ function updateIncrementally(params, onDatasetUpdated) {
   return async.waterfall([
     async.constant(params),
     _findCurrentUser,
+    _findDataset,
+    securityUtils.validateDatasetOwner,
     _lockDataset,
     _checkTransaction,
     _runIncrementalUpdate,
@@ -134,16 +151,15 @@ function updateIncrementally(params, onDatasetUpdated) {
 }
 
 function _lockDataset(pipe, done) {
-  return datasetsRepository.lock(pipe.datasetName, (err, dataset) => {
+  return datasetsRepository.lock(pipe.dataset.name, (err, dataset) => {
     if (err) {
       return done(err);
     }
 
     if (!dataset) {
-      return done(`Version of dataset "${pipe.datasetName}" was already locked or dataset is absent`);
+      return done(`Version of dataset "${pipe.dataset.name}" was already locked or dataset is absent`);
     }
 
-    pipe.dataset = dataset;
     return done(null, pipe);
   });
 }
@@ -172,6 +188,18 @@ function _runIncrementalUpdate(pipe, onDatasetUpdated) {
   return incrementalUpdateService(options, onDatasetUpdated);
 }
 
+function getPrivateDatasets(userId, done) {
+  return datasetsRepository.findPrivateByUser(userId, (error, datasets) => {
+    if (error) {
+      return done(error);
+    }
+
+    return done(null, _.map(datasets, dataset => {
+      return {name: dataset.name, githubUrl: dataset.path};
+    }));
+  });
+}
+
 function getAvailableDatasetsAndVersions(userId, onQueriesGot) {
   return datasetsService.findDatasetsWithVersions(userId, (error, datasetsWithVersions) => {
     return async.mapLimit(datasetsWithVersions, 3, (dataset, onDatasetsAndVersionsFound) => {
@@ -179,7 +207,9 @@ function getAvailableDatasetsAndVersions(userId, onQueriesGot) {
         return cb(null, {
           createdAt: version.createdAt,
           datasetName: dataset.name,
+          githubUrl: dataset.path,
           version: version.commit,
+          isDefault: version.isDefault
         });
       }, onDatasetsAndVersionsFound);
     }, (error, result) => {
@@ -191,12 +221,31 @@ function getAvailableDatasetsAndVersions(userId, onQueriesGot) {
   });
 }
 
-function getCommitOfLatestDatasetVersion(github, cb) {
-  let pipe = {github};
+function getRemovableDatasets(userId, done) {
+  return getAvailableDatasetsAndVersions(userId, (error, availableDatasetsAndVersions) => {
+    if (error) {
+      return done(error);
+    }
 
+    const defaultDatasetName = _.get(_.find(availableDatasetsAndVersions, dataset => dataset.isDefault), 'datasetName');
+
+    const removableDatasets = _.chain(availableDatasetsAndVersions)
+      .filter(metadata => metadata.datasetName !== defaultDatasetName)
+      .uniqBy('datasetName')
+      .map(metadata => {
+        return {name: metadata.datasetName, githubUrl: metadata.githubUrl};
+      })
+      .value();
+
+    return done(null, removableDatasets);
+  });
+}
+
+function getCommitOfLatestDatasetVersion(github, user, cb) {
   return async.waterfall([
-    async.constant(pipe),
+    async.constant({github, user}),
     _findDataset,
+    securityUtils.validateDatasetOwner,
     _validateDatasetBeforeIncrementalUpdate,
     _findTransaction
   ], cb);
@@ -241,11 +290,24 @@ function setTransactionAsDefault(userId, datasetName, transactionCommit, onSetAs
 
 function cleanDdfRedisCache(onCacheCleaned) {
   const cacheCleaningTasks = [
-    done => cache.del(`${constants.DDF_REDIS_CACHE_NAME_CONCEPTS}*`, done),
-    done => cache.del(`${constants.DDF_REDIS_CACHE_NAME_ENTITIES}*`, done),
-    done => cache.del(`${constants.DDF_REDIS_CACHE_NAME_DATAPOINTS}*`, done),
     done => cache.del(`${constants.DDF_REDIS_CACHE_NAME_DDFQL}*`, done),
   ];
 
   return async.parallelLimit(cacheCleaningTasks, constants.LIMIT_NUMBER_PROCESS, onCacheCleaned);
+}
+
+function setAccessTokenForDataset(datasetName, userId, onAccessTokenSet) {
+  crypto.randomBytes(24, (randomBytesError, buf) => {
+    if (randomBytesError) {
+      return onAccessTokenSet(randomBytesError);
+    }
+
+    const options = {
+      userId,
+      datasetName,
+      accessToken: buf.toString('hex')
+    };
+
+    return datasetsRepository.setAccessTokenForPrivateDataset(options, onAccessTokenSet);
+  });
 }

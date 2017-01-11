@@ -51,6 +51,24 @@
       "num_users",
       4,
       54345
+    ],
+    [
+      [
+        "company",
+        "project"
+      ],
+      "latitude",
+      1.23,
+      88
+    ],
+    [
+      [
+        "company",
+        "project"
+      ],
+      "longitude",
+      1.23,
+      90
     ]
   ]
 }

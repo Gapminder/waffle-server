@@ -5,12 +5,14 @@ const async = require('async');
 const mongoose = require('mongoose');
 
 const constants = require('../ws.utils/constants');
+const datasetService = require('./datasets.service');
 
 const datasetsRepository = require('../ws.repository/ddf/datasets/datasets.repository');
 const transactionsRepository = require('../ws.repository/ddf/dataset-transactions/dataset-transactions.repository');
 const conceptsRepositoryFactory = require('../ws.repository/ddf/concepts/concepts.repository');
 const entitiesRepositoryFactory = require('../ws.repository/ddf/entities/entities.repository');
 const datapointsRepositoryFactory = require('../ws.repository/ddf/data-points/data-points.repository');
+const datasetIndexRepository = require('../ws.repository/ddf/dataset-index/dataset-index.repository');
 
 module.exports = {
   setLastError,
@@ -26,153 +28,202 @@ function setLastError(transactionId, lastErrorMessage, onErrorSet) {
 
 function setTransactionAsDefault(userId, datasetName, transactionCommit, onSetAsDefault) {
   return async.waterfall([
-    async.constant({}),
+    async.constant({userId, datasetName, transactionCommit}),
     _findDatasetByNameAndUser,
-    _findTransactionByDatasetAndCommit(transactionCommit),
+    _findTransactionByDatasetAndCommit,
     _setTransactionAsDefault
-  ], (error, datasetWithTransactionCommit) => {
-    return onSetAsDefault(error, datasetWithTransactionCommit);
+  ], onSetAsDefault);
+}
+
+function _findDatasetByNameAndUser(externalContext, done) {
+  return datasetsRepository.findByNameAndUser(externalContext.datasetName, externalContext.userId, (error, dataset) => {
+    if (error || !dataset) {
+      return done(error || `Given dataset was not found: '${externalContext.datasetName}'`);
+    }
+
+    if (dataset.private) {
+      return done(`Private dataset cannot be default`);
+    }
+
+    externalContext.dataset = dataset;
+    return done(null, externalContext);
   });
+}
 
-  function _findDatasetByNameAndUser(pipe, done) {
-    return datasetsRepository.findByNameAndUser(datasetName, userId, (error, dataset) => {
-      if (error || !dataset) {
-        return done(error || `Given dataset was not found: '${datasetName}'`);
-      }
+function _findTransactionByDatasetAndCommit(extrenalContext, done) {
+  return transactionsRepository.findByDatasetAndCommit(extrenalContext.dataset._id, extrenalContext.transactionCommit, (error, transaction) => {
+    if (error || !_isTransactionValid(transaction)) {
+      return done(error || `Given transaction was not found: '${extrenalContext.transactionCommit}'`);
+    }
 
-      pipe.dataset = dataset;
-      return done(null, pipe);
+    extrenalContext.transaction = transaction;
+    return done(null, extrenalContext);
+  });
+}
+
+function _setTransactionAsDefault(externalContext, done) {
+  return transactionsRepository.setAsDefault(externalContext.userId, externalContext.dataset._id, externalContext.transaction._id, error => {
+    if (error) {
+      return done(error);
+    }
+
+    return done(null, {
+      name: externalContext.datasetName,
+      commit: externalContext.transactionCommit,
+      createdAt: new Date(externalContext.transaction.createdAt)
     });
-  }
+  });
+}
 
-  function _setTransactionAsDefault(pipe, done) {
-    return transactionsRepository.setAsDefault(userId, pipe.dataset._id, pipe.transaction._id, error => {
+function rollbackFailedTransactionFor(datasetName, user, onRollbackCompleted) {
+  return async.waterfall([
+    async.constant({datasetName, user}),
+    datasetService.findDatasetByNameAndValidateOwnership,
+    _findLatestFailedTransactionByDataset,
+    _forceDatasetLock,
+    _rollbackDatasetData,
+    _removeFailedTransaction,
+    _forceDatasetUnlock,
+    _removeDatasetWithoutTransactions
+  ], onRollbackCompleted);
+}
+
+function _findLatestFailedTransactionByDataset(externalContext, onFailedTransactionFound) {
+  return transactionsRepository.findLatestFailedByDataset(externalContext.datasetId, (error, failedTransaction) => {
+    if (error) {
+      return onFailedTransactionFound(error);
+    }
+
+    if (!failedTransaction) {
+      return onFailedTransactionFound('There is nothing to rollback - all transactions are completed successfully');
+    }
+
+    externalContext.failedTransaction = failedTransaction;
+
+    return onFailedTransactionFound(null, externalContext);
+  });
+}
+
+function _forceDatasetLock(externalContext, onDatasetLocked) {
+  return datasetsRepository.forceLock(externalContext.datasetName, (forceLockError) => {
+    if (forceLockError) {
+      return onDatasetLocked(forceLockError);
+    }
+
+    return onDatasetLocked(null, externalContext);
+  });
+}
+
+function _rollbackDatasetData(externalContext, onRollbackDataFinished) {
+  const retryConfig = {times: 3, interval: 3000};
+
+  const conceptsRepository = conceptsRepositoryFactory.versionAgnostic();
+  const entitiesRepository = entitiesRepositoryFactory.versionAgnostic();
+  const datapointsRepository = datapointsRepositoryFactory.versionAgnostic();
+
+  return async.parallel([
+    async.retry(retryConfig, async.apply(conceptsRepository.rollback, externalContext.failedTransaction)),
+    async.retry(retryConfig, async.apply(entitiesRepository.rollback, externalContext.failedTransaction)),
+    async.retry(retryConfig, async.apply(datapointsRepository.rollback, externalContext.failedTransaction)),
+    async.retry(retryConfig, async.apply(datasetIndexRepository.rollback, externalContext.failedTransaction))
+  ], (rollbackDataError) => {
+    if (rollbackDataError) {
+      return onRollbackDataFinished(rollbackDataError);
+    }
+
+    return onRollbackDataFinished(null, externalContext);
+  });
+}
+
+function _removeFailedTransaction(externalContext, onTransactionRemoved) {
+  return transactionsRepository.removeById(externalContext.failedTransaction._id, (removeTransactionError) => {
+    if (removeTransactionError) {
+      return onTransactionRemoved(removeTransactionError);
+    }
+
+    return onTransactionRemoved(null, externalContext);
+  });
+}
+
+function _forceDatasetUnlock(externalContext, onDatasetUnlocked) {
+  return datasetsRepository.forceUnlock(externalContext.datasetName, (forceUnlockError) => {
+    if (forceUnlockError) {
+      return onDatasetUnlocked(forceUnlockError);
+    }
+
+    return onDatasetUnlocked(null, externalContext);
+  });
+}
+
+function _removeDatasetWithoutTransactions(externalContext, onDatasetRemoved) {
+  return transactionsRepository.countByDataset(externalContext.datasetId, (countTransactionError, amount) => {
+    if (countTransactionError) {
+      return onDatasetRemoved(countTransactionError);
+    }
+
+    if (amount > 0) {
+      return onDatasetRemoved();
+    }
+
+    return datasetsRepository.removeById(externalContext.datasetId, onDatasetRemoved);
+  });
+}
+
+function getStatusOfLatestTransactionByDatasetName(datasetName, user, done) {
+  return datasetService.findDatasetByNameAndValidateOwnership({datasetName, user}, (error, externalContext)=> {
+    if (error) {
+      return done(error);
+    }
+
+    return _findObjectsModifiedDuringLastTransaction(externalContext, done);
+  });
+}
+
+function _findObjectsModifiedDuringLastTransaction(externalContext, done) {
+  return transactionsRepository.findLatestByDataset(externalContext.datasetId, (error, latestTransaction) => {
+    if (error) {
+      return done(error);
+    }
+
+    if (!latestTransaction) {
+      return done(`Transaction is absent for dataset: ${externalContext.datasetName}`);
+    }
+
+    const modifiedObjectsTasks =
+      _createTasksForCountingObjectsModifiedInGivenVersion(externalContext.datasetId, latestTransaction.createdAt);
+
+    return async.parallelLimit(modifiedObjectsTasks, constants.LIMIT_NUMBER_PROCESS, (error, stats) => {
       if (error) {
         return done(error);
       }
 
-      return done(null, {
-        name: datasetName,
-        commit: transactionCommit,
-        createdAt: new Date(pipe.transaction.createdAt)
-      });
-    });
-  }
-}
-
-function _findTransactionByDatasetAndCommit(transactionCommit) {
-  return (pipe, done) => {
-    return transactionsRepository.findByDatasetAndCommit(pipe.dataset._id, transactionCommit, (error, transaction) => {
-      if (error || !_isTransactionValid(transaction)) {
-        return done(error || `Given transaction was not found: '${transactionCommit}'`);
-      }
-
-      pipe.transaction = transaction;
-      return done(null, pipe);
-    });
-  };
-}
-
-function rollbackFailedTransactionFor(datasetName, onRollbackCompleted) {
-  const retryConfig = {times: 3, interval: 3000};
-
-  return _findLatestFailedTransactionByDatasetName(datasetName, (error, failedTransaction) => {
-    if (error) {
-      return onRollbackCompleted(error);
-    }
-
-    if (!failedTransaction) {
-      return onRollbackCompleted('There is nothing to rollback - all transactions are completed successfully');
-    }
-
-    const failedVersion = failedTransaction.createdAt;
-
-    const rollbackTasks =
-      _.chain([conceptsRepositoryFactory, entitiesRepositoryFactory, datapointsRepositoryFactory])
-        .map(repositoryFactory => toRollbackFunction(repositoryFactory, failedVersion))
-        .flatten()
-        .map(rollbackTask => (done => async.retry(retryConfig, rollbackTask, done)))
-        .value();
-
-    async.series([
-      done => datasetsRepository.forceLock(datasetName, done),
-      done => async.parallelLimit(rollbackTasks, constants.LIMIT_NUMBER_PROCESS, done),
-      done => transactionsRepository.removeById(failedTransaction._id, done),
-      done => datasetsRepository.forceUnlock(datasetName, done),
-      done => _removeDatasetWithoutTransactions(failedTransaction.dataset, done)
-    ],
-    onRollbackCompleted);
-  });
-}
-
-function toRollbackFunction(repositoryFactory, versionToRollback) {
-  const repository = repositoryFactory.versionAgnostic();
-  return repository.rollback.bind(repository, versionToRollback);
-}
-
-function _removeDatasetWithoutTransactions(datasetId, done) {
-  return transactionsRepository.countByDataset(datasetId, (error, amount) => {
-    if (amount > 0) {
-      return done();
-    }
-    return datasetsRepository.removeById(datasetId, done);
-  });
-}
-
-function _findLatestFailedTransactionByDatasetName(datasetName, done) {
-  return datasetsRepository.findByName(datasetName, (error, dataset) => {
-    if (error || !dataset) {
-      return done(error || `Dataset was not found for the given name: ${datasetName}`);
-    }
-
-    return transactionsRepository.findLatestFailedByDataset(dataset._id, done);
-  });
-}
-
-function getStatusOfLatestTransactionByDatasetName(datasetName, done) {
-  return datasetsRepository.findByName(datasetName, (error, dataset) => {
-    if (error || !dataset) {
-      return done(error || `Dataset was not found for the given name: ${datasetName}`);
-    }
-
-    return transactionsRepository.findLatestByDataset(dataset._id, (error, latestTransaction) => {
-      if (error || !latestTransaction) {
-        return done(error || `Transaction is absent for dataset: ${datasetName}`);
-      }
-
-      const version = latestTransaction.createdAt;
-
-      const conceptsRepository = conceptsRepositoryFactory.closedOrOpenedInGivenVersion(dataset._id, version);
-      const entitiesRepository = entitiesRepositoryFactory.closedOrOpenedInGivenVersion(dataset._id, version);
-      const datapointsRepository = datapointsRepositoryFactory.closedOrOpenedInGivenVersion(dataset._id, version);
-
-      const modifiedObjectsTasks = {
-        concepts: done => conceptsRepository.count(done),
-        entities: done => entitiesRepository.count(done),
-        datapoints: done => datapointsRepository.count(done),
+      const result = {
+        datasetName: externalContext.datasetName,
+        transaction: {
+          languages: latestTransaction.languages,
+          lastError: latestTransaction.lastError,
+          commit: latestTransaction.commit,
+          status: latestTransaction.isClosed ? 'Completed' : 'In progress',
+          createdAt: new Date(latestTransaction.createdAt)
+        },
+        modifiedObjects: stats
       };
 
-      return async.parallelLimit(modifiedObjectsTasks, constants.LIMIT_NUMBER_PROCESS, (error, stats) => {
-          if (error) {
-            return done(error);
-          }
-
-          const result = {
-            datasetName,
-            transaction: {
-              languages: latestTransaction.languages,
-              lastError: latestTransaction.lastError,
-              commit: latestTransaction.commit,
-              status: latestTransaction.isClosed ? 'Completed' : 'In progress',
-              createdAt: new Date(latestTransaction.createdAt)
-            },
-            modifiedObjects: stats
-          };
-
-          return done(error, result);
-        });
+      return done(error, result);
     });
   });
+}
+
+function _createTasksForCountingObjectsModifiedInGivenVersion(datasetId, version) {
+  const conceptsRepository = conceptsRepositoryFactory.closedOrOpenedInGivenVersion(datasetId, version);
+  const entitiesRepository = entitiesRepositoryFactory.closedOrOpenedInGivenVersion(datasetId, version);
+  const datapointsRepository = datapointsRepositoryFactory.closedOrOpenedInGivenVersion(datasetId, version);
+
+  return {
+    concepts: done => conceptsRepository.count(done),
+    entities: done => entitiesRepository.count(done),
+    datapoints: done => datapointsRepository.count(done),
+  };
 }
 
 function findDefaultDatasetAndTransaction(datasetName, commit, onFound) {
@@ -190,65 +241,65 @@ function findDefaultDatasetAndTransaction(datasetName, commit, onFound) {
     return _findDefaultDatasetAndTransactionByCommit(croppedCommit, onFound);
   }
 
-  return _findDefaultDatasetAndTransaction(onFound);
+  return _findDefaultPopulatedDatasetAndTransaction(onFound);
 }
 
-function _findDefaultDatasetAndTransactionByDatasetNameAndCommit(datasetName, commit, onFound) {
-  return _getDefaultDatasetAndTransaction([
-    _findDatasetByName(datasetName),
-    _findTransactionByDatasetAndCommit(commit)
+function _findDefaultDatasetAndTransactionByDatasetNameAndCommit(datasetName, transactionCommit, onFound) {
+  return _getDefaultDatasetAndTransaction({transactionCommit, datasetName}, [
+    _findDatasetByName,
+    _findTransactionByDatasetAndCommit
   ], onFound);
 }
 
-function _findDatasetByName(datasetName) {
-  return (pipe, done) => datasetsRepository.findByName(datasetName, (error, dataset) => {
+function _findDatasetByName(externalContext, done) {
+  return datasetsRepository.findByName(externalContext.datasetName, (error, dataset) => {
     if (error || !dataset) {
-      return done(error || `Dataset was not found: ${datasetName}`);
+      return done(error || `Dataset was not found: ${externalContext.datasetName}`);
     }
 
-    pipe.dataset = dataset;
-    return done(null, pipe);
+    externalContext.dataset = dataset;
+    return done(null, externalContext);
   });
 }
 
 function _findDefaultDatasetAndTransactionByDatasetName(datasetName, onFound) {
-  return _getDefaultDatasetAndTransaction([
-    _findDatasetByName(datasetName),
+  return _getDefaultDatasetAndTransaction({datasetName}, [
+    _findDatasetByName,
     _findDefaultByDatasetId,
     _findLatestCompletedByDatasetId
   ], onFound);
 
-  function _findDefaultByDatasetId(pipe, done) {
-    return transactionsRepository.findDefault({datasetId: pipe.dataset._id}, (error, transaction) => {
+  function _findDefaultByDatasetId(externalContext, done) {
+    return transactionsRepository.findDefault({datasetId: externalContext.dataset._id}, (error, transaction) => {
       if (error) {
         return done(error);
       }
 
-      pipe.transaction = transaction;
-      return done(null, pipe);
+      externalContext.transaction = transaction;
+      return done(null, externalContext);
     });
   }
 
-  function _findLatestCompletedByDatasetId(pipe, done) {
-    if (pipe.transaction) {
-      return async.setImmediate(() => done(null, pipe));
+  function _findLatestCompletedByDatasetId(externalContext, done) {
+    if (externalContext.transaction) {
+      return async.setImmediate(() => done(null, externalContext));
     }
 
-    return transactionsRepository.findLatestCompletedByDataset(pipe.dataset._id, (error, transaction) => {
+    return transactionsRepository.findLatestCompletedByDataset(externalContext.dataset._id, (error, transaction) => {
       if (error || !_isTransactionValid(transaction)) {
         return done(error || 'No versions were found for the given dataset');
       }
 
-      pipe.transaction = transaction;
-      return done(null, pipe);
+      externalContext.transaction = transaction;
+      return done(null, externalContext);
     });
   }
 }
 
-function _findDefaultDatasetAndTransactionByCommit(commit, onFound) {
-  return _getDefaultDatasetAndTransaction([
+function _findDefaultDatasetAndTransactionByCommit(transactionCommit, onFound) {
+  return _getDefaultDatasetAndTransaction({transactionCommit}, [
     _findDefaultDataset,
-    _findTransactionByDatasetAndCommit(commit)
+    _findTransactionByDatasetAndCommit
   ], onFound);
 
   function _findDefaultDataset(pipe, done) {
@@ -263,25 +314,21 @@ function _findDefaultDatasetAndTransactionByCommit(commit, onFound) {
   }
 }
 
-function _findDefaultDatasetAndTransaction(onFound) {
-  return _getDefaultDatasetAndTransaction([_findDefaultTransactionWithPopulatedDataset], onFound);
+function _findDefaultPopulatedDatasetAndTransaction(onFound) {
+  return transactionsRepository.findDefault({populateDataset: true}, (error, transaction) => {
+    if (error || !transaction) {
+      return onFound(error || 'Default dataset was not set');
+    }
 
-  function _findDefaultTransactionWithPopulatedDataset(pipe, done) {
-    return transactionsRepository.findDefault({populateDataset: true}, (error, transaction) => {
-      if (error || !transaction) {
-        return done(error || 'Default dataset was not set');
-      }
-
-      return done(null, {
-        dataset: transaction.dataset,
-        transaction: transaction
-      });
+    return onFound(null, {
+      dataset: transaction.dataset,
+      transaction: transaction
     });
-  }
+  });
 }
 
-function _getDefaultDatasetAndTransaction(tasks, onFound) {
-  return async.waterfall([async.constant({})].concat(tasks), (error, pipe) => {
+function _getDefaultDatasetAndTransaction(options, tasks, onFound) {
+  return async.waterfall([async.constant(options)].concat(tasks), (error, pipe) => {
     if (error) {
       return onFound(error);
     }

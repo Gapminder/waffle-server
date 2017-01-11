@@ -13,14 +13,13 @@ module.exports = {
   mapDdfConceptsToWsModel,
   mapDdfEntityFoundInDatapointToWsModel,
   mapDdfDataPointToWsModel,
-  transformEntityTranslation,
-  transformConceptTranslation,
+  transformEntityProperties,
   transformConceptProperties
 };
 
 function mapDdfEntityToWsModel(entry, context) {
-    const gid = entry[context.entitySet.gid];
-    const transformedEntry = transformEntityProperties(entry);
+    const transformedEntry = transformEntityProperties(entry, context.concepts);
+    const gid = transformedEntry[context.entitySet.gid];
 
     const domainOriginId = _.get(context, 'entityDomain.originId', context.entityDomain);
 
@@ -34,7 +33,7 @@ function mapDdfEntityToWsModel(entry, context) {
       parsedProperties: ddfImportUtils.parseProperties(context.entityDomain, gid, transformedEntry, context.timeConcepts),
 
       originId: _.get(context, 'originId', null),
-      languages: transformTranslations(context.languages, transformEntityTranslation),
+      languages: transformTranslations(context.languages, translation => transformEntityProperties(translation, context.concepts)),
 
       domain: domainOriginId,
       sets: context.entitySetsOriginIds,
@@ -68,6 +67,7 @@ function mapDdfDataPointToWsModel(entry, context) {
           value: _.isNil(datapointValueAsNumber) ? datapointValue : datapointValueAsNumber,
           measure: context.measures[measureGid].originId,
           dimensions: dimensions,
+          dimensionsConcepts: context.dimensionsConcepts,
 
           properties: entry,
           originId: entry.originId,
@@ -112,7 +112,7 @@ function mapDdfConceptsToWsModel(entry, context) {
 
     domain: _.get(context, 'domain', null),
 
-    languages: transformTranslations(context.languages, transformConceptTranslation),
+    languages: transformTranslations(context.languages, transformConceptProperties),
 
     subsetOf: [],
 
@@ -129,14 +129,6 @@ function mapDdfConceptsToWsModel(entry, context) {
   return concept;
 }
 
-function transformEntityTranslation(translation) {
-  return transformEntityProperties(translation);
-}
-
-function transformConceptTranslation(translation) {
-  return transformConceptProperties(translation);
-}
-
 function transformTranslations(translationsByLang, transform) {
   return _.reduce(translationsByLang, (result, translation, lang) => {
     result[lang] = transform(translation);
@@ -144,7 +136,7 @@ function transformTranslations(translationsByLang, transform) {
   }, {});
 }
 
-function transformEntityProperties(object) {
+function transformEntityProperties(object, concepts) {
   return _.transform(object, (result, value, key) => {
     const ddfBool = ddfImportUtils.toBoolean(value);
     if (!_.isNil(ddfBool)) {
@@ -152,13 +144,16 @@ function transformEntityProperties(object) {
       return;
     }
 
-    const ddfNumeric = ddfImportUtils.toNumeric(value);
-    if (!_.isNil(ddfNumeric)) {
-      result[key] = ddfNumeric;
-      return;
+    const concept = concepts[key];
+    if (concept && concept.type === 'measure') {
+      const ddfNumeric = ddfImportUtils.toNumeric(value);
+      if (!_.isNil(ddfNumeric)) {
+        result[key] = ddfNumeric;
+        return;
+      }
     }
 
-    result[key] = value;
+    result[key] = String(value);
   }, {});
 }
 
@@ -168,8 +163,10 @@ function transformConceptProperties(object) {
       result[key] = null;
     } else if (isJsonColumn(key) && _.isString(value)) {
       result[key] = ddfImportUtils.isJson(value) ? JSON.parse(value) : null;
-    } else {
+    } else if (_.isObjectLike(value)) {
       result[key] = value;
+    } else {
+      result[key] = String(value);
     }
   }, {});
 }

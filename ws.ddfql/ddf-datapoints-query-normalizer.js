@@ -96,10 +96,8 @@ function ___extendWhereWithDefaultClause(query, options) {
 
   query.where = {
     $and: [
-      {dimensions: {
-        $size: _.size(query.select.key),
-        $all: ____getParsedDomainSubQuery(query, options)
-      }},
+      {dimensions: {$size: _.size(query.select.key)}},
+      {dimensionsConcepts: {$all: _.map(query.select.key, (conceptGid) => options.conceptOriginIdsByGids[conceptGid])}},
       {measure: {$in: query.select.value}}
     ]
   };

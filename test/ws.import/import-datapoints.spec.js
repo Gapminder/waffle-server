@@ -107,16 +107,20 @@ describe('datapoints import', function() {
     };
 
     const ddfImportUtils = {
-      readCsvFileAsStream: () => {
-        return hi(datapoints);
-      },
       MONGODB_DOC_CREATION_THREADS_AMOUNT: 3,
       DEFAULT_CHUNK_SIZE: DEFAULT_CHUNK_SIZE
     };
 
+    const fileUtils = {
+      readCsvFileAsStream: () => {
+        return hi(datapoints);
+      }
+    };
+
     const importDatapoints  = proxyquire('../../ws.import/import-datapoints', {
       './utils/datapoints.utils': datapointsUtils,
-      './utils/import-ddf.utils': ddfImportUtils
+      './utils/import-ddf.utils': ddfImportUtils,
+      '../ws.utils/file': fileUtils
     });
 
     return importDatapoints(context, (error, externalContext) => {

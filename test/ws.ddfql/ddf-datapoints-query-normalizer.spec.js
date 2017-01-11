@@ -104,26 +104,6 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
             }
           ]
         },
-        "$parsed_domain_geo_1": {
-          "$or": [
-            {
-              "domain": "17a3470d3a8c9b37009b9bf9"
-            },
-            {
-              "sets": "17a3470d3a8c9b37009b9bf9"
-            }
-          ]
-        },
-        "$parsed_domain_time_1": {
-          "$or": [
-            {
-              "domain": "27a3470d3a8c9b37009b9bf9"
-            },
-            {
-              "sets": "27a3470d3a8c9b37009b9bf9"
-            }
-          ]
-        },
         "$time": {
           "$or": [
             {
@@ -175,19 +155,8 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       },
       "where": {
         "$and": [
-          {
-            "dimensions": {
-              "$all": [
-                {
-                  "$elemMatch": "$parsed_domain_geo_1"
-                },
-                {
-                  "$elemMatch": "$parsed_domain_time_1"
-                }
-              ],
-              "$size": 2
-            }
-          },
+          { "dimensions": {"$size": 2} },
+          { "dimensionsConcepts": {$all: ["17a3470d3a8c9b37009b9bf9", "27a3470d3a8c9b37009b9bf9"]} },
           {
             "measure": {
               "$in": [
@@ -243,13 +212,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       }
     };
 
-    const mock = sinon.mock(Math);
-    mock.expects("random").twice().returns(1);
-
     expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options)).to.deep.equal(normalizedDdfql);
-
-    mock.verify();
-    mock.restore();
   });
 
   it('should create links in join section for entities filter', () => {
@@ -278,26 +241,6 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     const normalizedDdfql = {
       "from": "datapoints",
       "join": {
-        "$parsed_domain_geo_4": {
-          "$or": [
-            {
-              "domain": "17a3470d3a8c9b37009b9bf9"
-            },
-            {
-              "sets": "17a3470d3a8c9b37009b9bf9"
-            }
-          ]
-        },
-        "$parsed_domain_quarter_5": {
-          "$or": [
-            {
-              "domain": "77a3471d3a8c9b37009b9bf0"
-            },
-            {
-              "sets": "77a3471d3a8c9b37009b9bf0"
-            }
-          ]
-        },
         "$parsed_geo_3": {
           "$or": [
             {
@@ -345,19 +288,8 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       },
       "where": {
         "$and": [
-          {
-            "dimensions": {
-              "$all": [
-                {
-                  "$elemMatch": "$parsed_domain_geo_4"
-                },
-                {
-                  "$elemMatch": "$parsed_domain_quarter_5"
-                }
-              ],
-              "$size": 2
-            }
-          },
+          { "dimensions": {"$size": 2} },
+          { "dimensionsConcepts": {$all: ["17a3470d3a8c9b37009b9bf9", "77a3471d3a8c9b37009b9bf0"]} },
           {
             "measure": {
               "$in": [
@@ -420,37 +352,12 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       "from": "datapoints",
       "where": {
         "$and": [
-          {"dimensions": {
-            "$size": 2,
-            "$all": [
-              {"$elemMatch": "$parsed_domain_geo_1"},
-              {"$elemMatch": "$parsed_domain_time_2"}
-            ]
-          }},
+          { "dimensions": {"$size": 2} },
+          { "dimensionsConcepts": {$all: ["17a3470d3a8c9b37009b9bf9", "27a3470d3a8c9b37009b9bf9"]} },
           {"measure": {"$in": ["sg_population"]}},
         ]
       },
       "join": {
-        "$parsed_domain_geo_1": {
-          "$or": [
-            {
-              "domain": "17a3470d3a8c9b37009b9bf9"
-            },
-            {
-              "sets": "17a3470d3a8c9b37009b9bf9"
-            }
-          ]
-        },
-        "$parsed_domain_time_2": {
-          "$or": [
-            {
-              "domain": "27a3470d3a8c9b37009b9bf9"
-            },
-            {
-              "sets": "27a3470d3a8c9b37009b9bf9"
-            }
-          ]
-        }
       }
     };
 
@@ -502,26 +409,6 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
           ],
           "properties.is--country": true
         },
-        "$parsed_domain_geo_2": {
-          "$or": [
-            {
-              "domain": "17a3470d3a8c9b37009b9bf9"
-            },
-            {
-              "sets": "17a3470d3a8c9b37009b9bf9"
-            }
-          ]
-        },
-        "$parsed_domain_time_3": {
-          "$or": [
-            {
-              "domain": "27a3470d3a8c9b37009b9bf9"
-            },
-            {
-              "sets": "27a3470d3a8c9b37009b9bf9"
-            }
-          ]
-        },
         "$parsed_time_1": {
           "$or": [
             {
@@ -549,19 +436,8 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       },
       "where": {
         "$and": [
-          {
-            "dimensions": {
-              "$all": [
-                {
-                  "$elemMatch": "$parsed_domain_geo_2"
-                },
-                {
-                  "$elemMatch": "$parsed_domain_time_3"
-                }
-              ],
-              "$size": 2
-            }
-          },
+          { "dimensions": {"$size": 2} },
+          { "dimensionsConcepts": {$all: ["17a3470d3a8c9b37009b9bf9", "27a3470d3a8c9b37009b9bf9"]} },
           {
             "measure": {
               "$in": [
@@ -631,26 +507,6 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
           ],
           "properties.is--country": true
         },
-        "$parsed_domain_geo_2": {
-          "$or": [
-            {
-              "domain": "17a3470d3a8c9b37009b9bf9"
-            },
-            {
-              "sets": "17a3470d3a8c9b37009b9bf9"
-            }
-          ]
-        },
-        "$parsed_domain_time_3": {
-          "$or": [
-            {
-              "domain": "27a3470d3a8c9b37009b9bf9"
-            },
-            {
-              "sets": "27a3470d3a8c9b37009b9bf9"
-            }
-          ]
-        },
         "$parsed_time_1": {
           "$or": [
             {
@@ -678,19 +534,8 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       },
       "where": {
         "$and": [
-          {
-            "dimensions": {
-              "$all": [
-                {
-                  "$elemMatch": "$parsed_domain_geo_2"
-                },
-                {
-                  "$elemMatch": "$parsed_domain_time_3"
-                }
-              ],
-              "$size": 2
-            }
-          },
+          { "dimensions": {"$size": 2} },
+          { "dimensionsConcepts": {$all: ["17a3470d3a8c9b37009b9bf9", "27a3470d3a8c9b37009b9bf9"]} },
           {
             "measure": {
               "$in": [
@@ -746,26 +591,6 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     const normalizedDdfql = {
       "from": "datapoints",
       "join": {
-        "$parsed_domain_geo_2": {
-          "$or": [
-            {
-              "domain": "17a3470d3a8c9b37009b9bf9"
-            },
-            {
-              "sets": "17a3470d3a8c9b37009b9bf9"
-            }
-          ]
-        },
-        "$parsed_domain_time_3": {
-          "$or": [
-            {
-              "domain": "27a3470d3a8c9b37009b9bf9"
-            },
-            {
-              "sets": "27a3470d3a8c9b37009b9bf9"
-            }
-          ]
-        },
         "$parsed_geo_1": {
           "$or": [
             {
@@ -795,19 +620,8 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       },
       "where": {
         "$and": [
-          {
-            "dimensions": {
-              "$all": [
-                {
-                  "$elemMatch": "$parsed_domain_geo_2"
-                },
-                {
-                  "$elemMatch": "$parsed_domain_time_3"
-                }
-              ],
-              "$size": 2
-            }
-          },
+          { "dimensions": {"$size": 2} },
+          { "dimensionsConcepts": {$all: ["17a3470d3a8c9b37009b9bf9", "27a3470d3a8c9b37009b9bf9"]} },
           {
             "measure": {
               "$in": [
@@ -855,26 +669,6 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     const normalizedDdfql = {
       "from": "datapoints",
       "join": {
-        "$parsed_domain_company_2": {
-          "$or": [
-            {
-              "domain": "17a3470d3a8c9b37429b9bf9"
-            },
-            {
-              "sets": "17a3470d3a8c9b37429b9bf9"
-            }
-          ]
-        },
-        "$parsed_domain_project_3": {
-          "$or": [
-            {
-              "domain": "27a3470d3a8c9b37429b9bf9"
-            },
-            {
-              "sets": "27a3470d3a8c9b37429b9bf9"
-            }
-          ]
-        },
         "$parsed_project_1": {
           "$or": [
             {
@@ -908,19 +702,8 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       },
       "where": {
         "$and": [
-          {
-            "dimensions": {
-              "$all": [
-                {
-                  "$elemMatch": "$parsed_domain_company_2"
-                },
-                {
-                  "$elemMatch": "$parsed_domain_project_3"
-                }
-              ],
-              "$size": 2
-            }
-          },
+          { "dimensions": {"$size": 2} },
+          { "dimensionsConcepts": {$all: ["17a3470d3a8c9b37429b9bf9", "27a3470d3a8c9b37429b9bf9"]} },
           {
             "measure": {
               "$in": [
@@ -979,26 +762,6 @@ describe('ddf datapoints query normalizer - different time types', () => {
     const normalizedDdfql = {
       "from": "datapoints",
       "join": {
-        "$parsed_domain_geo_1": {
-          "$or": [
-            {
-              "domain": "17a3470d3a8c9b37009b9bf9"
-            },
-            {
-              "sets": "17a3470d3a8c9b37009b9bf9"
-            }
-          ]
-        },
-        "$parsed_domain_time_1": {
-          "$or": [
-            {
-              "domain": "27a3470d3a8c9b37009b9bf9"
-            },
-            {
-              "sets": "27a3470d3a8c9b37009b9bf9"
-            }
-          ]
-        },
         "$time": {
           "$or": [
             {
@@ -1028,19 +791,8 @@ describe('ddf datapoints query normalizer - different time types', () => {
       },
       "where": {
         "$and": [
-          {
-            "dimensions": {
-              "$all": [
-                {
-                  "$elemMatch": "$parsed_domain_geo_1"
-                },
-                {
-                  "$elemMatch": "$parsed_domain_time_1"
-                }
-              ],
-              "$size": 2
-            }
-          },
+          { "dimensions": {"$size": 2} },
+          { "dimensionsConcepts": {$all: ["17a3470d3a8c9b37009b9bf9", "27a3470d3a8c9b37009b9bf9"]} },
           {
             "measure": {
               "$in": [
@@ -1062,13 +814,7 @@ describe('ddf datapoints query normalizer - different time types', () => {
       }
     };
 
-    const mock = sinon.mock(Math);
-    mock.expects("random").twice().returns(1);
-
     expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options)).to.deep.equal(normalizedDdfql);
-
-    mock.verify();
-    mock.restore();
   });
 
   it('should be parsed YEAR time type', () => {
@@ -1098,26 +844,6 @@ describe('ddf datapoints query normalizer - different time types', () => {
     const normalizedDdfql = {
       "from": "datapoints",
       "join": {
-        "$parsed_domain_geo_1": {
-          "$or": [
-            {
-              "domain": "17a3470d3a8c9b37009b9bf9"
-            },
-            {
-              "sets": "17a3470d3a8c9b37009b9bf9"
-            }
-          ]
-        },
-        "$parsed_domain_time_1": {
-          "$or": [
-            {
-              "domain": "27a3470d3a8c9b37009b9bf9"
-            },
-            {
-              "sets": "27a3470d3a8c9b37009b9bf9"
-            }
-          ]
-        },
         "$time": {
           "$or": [
             {
@@ -1147,19 +873,8 @@ describe('ddf datapoints query normalizer - different time types', () => {
       },
       "where": {
         "$and": [
-          {
-            "dimensions": {
-              "$all": [
-                {
-                  "$elemMatch": "$parsed_domain_geo_1"
-                },
-                {
-                  "$elemMatch": "$parsed_domain_time_1"
-                }
-              ],
-              "$size": 2
-            }
-          },
+          { "dimensions": {"$size": 2} },
+          { "dimensionsConcepts": {$all: ["17a3470d3a8c9b37009b9bf9", "27a3470d3a8c9b37009b9bf9"]} },
           {
             "measure": {
               "$in": [
@@ -1181,13 +896,7 @@ describe('ddf datapoints query normalizer - different time types', () => {
       }
     };
 
-    const mock = sinon.mock(Math);
-    mock.expects("random").twice().returns(1);
-
     expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options)).to.deep.equal(normalizedDdfql);
-
-    mock.verify();
-    mock.restore();
   });
 
   it('should be parsed WEEK time type', () => {
@@ -1217,26 +926,6 @@ describe('ddf datapoints query normalizer - different time types', () => {
     const normalizedDdfql = {
       "from": "datapoints",
       "join": {
-        "$parsed_domain_geo_1": {
-          "$or": [
-            {
-              "domain": "17a3470d3a8c9b37009b9bf9"
-            },
-            {
-              "sets": "17a3470d3a8c9b37009b9bf9"
-            }
-          ]
-        },
-        "$parsed_domain_time_1": {
-          "$or": [
-            {
-              "domain": "27a3470d3a8c9b37009b9bf9"
-            },
-            {
-              "sets": "27a3470d3a8c9b37009b9bf9"
-            }
-          ]
-        },
         "$time": {
           "$and": [
             {
@@ -1276,19 +965,8 @@ describe('ddf datapoints query normalizer - different time types', () => {
       },
       "where": {
         "$and": [
-          {
-            "dimensions": {
-              "$all": [
-                {
-                  "$elemMatch": "$parsed_domain_geo_1"
-                },
-                {
-                  "$elemMatch": "$parsed_domain_time_1"
-                }
-              ],
-              "$size": 2
-            }
-          },
+          { "dimensions": {"$size": 2} },
+          { "dimensionsConcepts": {$all: ["17a3470d3a8c9b37009b9bf9", "27a3470d3a8c9b37009b9bf9"]} },
           {
             "measure": {
               "$in": [
@@ -1310,13 +988,7 @@ describe('ddf datapoints query normalizer - different time types', () => {
       }
     };
 
-    const mock = sinon.mock(Math);
-    mock.expects("random").twice().returns(1);
-
     expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options)).to.deep.equal(normalizedDdfql);
-
-    mock.verify();
-    mock.restore();
   });
 
   it('should be parsed DATE time type', () => {
@@ -1349,26 +1021,6 @@ describe('ddf datapoints query normalizer - different time types', () => {
     const normalizedDdfql = {
       "from": "datapoints",
       "join": {
-        "$parsed_domain_geo_1": {
-          "$or": [
-            {
-              "domain": "17a3470d3a8c9b37009b9bf9"
-            },
-            {
-              "sets": "17a3470d3a8c9b37009b9bf9"
-            }
-          ]
-        },
-        "$parsed_domain_time_1": {
-          "$or": [
-            {
-              "domain": "27a3470d3a8c9b37009b9bf9"
-            },
-            {
-              "sets": "27a3470d3a8c9b37009b9bf9"
-            }
-          ]
-        },
         "$time": {
           "$and": [
             {
@@ -1408,19 +1060,8 @@ describe('ddf datapoints query normalizer - different time types', () => {
       },
       "where": {
         "$and": [
-          {
-            "dimensions": {
-              "$all": [
-                {
-                  "$elemMatch": "$parsed_domain_geo_1"
-                },
-                {
-                  "$elemMatch": "$parsed_domain_time_1"
-                }
-              ],
-              "$size": 2
-            }
-          },
+          { "dimensions": {"$size": 2} },
+          { "dimensionsConcepts": {$all: ["17a3470d3a8c9b37009b9bf9", "27a3470d3a8c9b37009b9bf9"]} },
           {
             "measure": {
               "$in": [
@@ -1442,13 +1083,7 @@ describe('ddf datapoints query normalizer - different time types', () => {
       }
     };
 
-    const mock = sinon.mock(Math);
-    mock.expects("random").twice().returns(1);
-
     expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options)).to.deep.equal(normalizedDdfql);
-
-    mock.verify();
-    mock.restore();
   });
 
   it('should normalized queries for quarters range', () => {
@@ -1492,13 +1127,8 @@ describe('ddf datapoints query normalizer - different time types', () => {
       "from": "datapoints",
       "where": {
         "$and": [
-          {"dimensions": {
-            "$size": 2,
-            "$all": [
-              {"$elemMatch": "$parsed_domain_geo_1"},
-              {"$elemMatch": "$parsed_domain_time_1"}
-            ]
-          }},
+          { "dimensions": {"$size": 2} },
+          { "dimensionsConcepts": {$all: ["17a3470d3a8c9b37009b9bf9", "77a3471d3a8c9b37009b9bf0"]} },
           {"measure": {"$in": ["sg_population"]}},
           {
             "$and": [
@@ -1518,24 +1148,12 @@ describe('ddf datapoints query normalizer - different time types', () => {
           "domain": "quarter",
           "parsedProperties.quarter.timeType": "QUARTER_TYPE",
           "parsedProperties.quarter.millis": {"$lt": 1435708800000}
-        },
-        "$parsed_domain_geo_1": {
-          "domain": "geo",
-        },
-        "$parsed_domain_time_1": {
-          "domain": "time"
         }
       }
     };
 
-    const mock = sinon.mock(Math);
-    mock.expects("random").twice().returns(1);
-
     const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options);
     expect(actualDdfql, normalizedDdfql);
-
-    mock.verify();
-    mock.restore();
   });
 });
 
@@ -1551,7 +1169,8 @@ describe('ddf datapoints query normalizer - substitute links', () => {
       "from": "datapoints",
       "where": {
         "$and": [
-          {"dimensions": {"$size": 2}},
+          { "dimensions": {"$size": 2} },
+          { "dimensionsConcepts": {$all: ["17a3470d3a8c9b37009b9bf9", "27a3470d3a8c9b37009b9bf9"]} },
           {
             "$and": [
               {"dimensions": "$geo"},
@@ -1612,7 +1231,8 @@ describe('ddf datapoints query normalizer - substitute links', () => {
       "from": "datapoints",
       "where": {
         "$and": [
-          {"dimensions": {"$size": 2}},
+          { "dimensions": {"$size": 2} },
+          { "dimensionsConcepts": {$all: ["17a3470d3a8c9b37009b9bf9", "27a3470d3a8c9b37009b9bf9"]} },
           {
             "$and": [
               {"dimensions": "$geo"},
@@ -1695,7 +1315,8 @@ describe('ddf datapoints query normalizer - substitute links', () => {
       "from": "datapoints",
       "where": {
         "$and": [
-          {"dimensions": {"$size": 2}},
+          { "dimensions": {"$size": 2} },
+          { "dimensionsConcepts": {$all: ["17a3470d3a8c9b37009b9bf9", "27a3470d3a8c9b37009b9bf9"]} },
           {
             "$and": [
               {
@@ -1761,7 +1382,8 @@ describe('ddf datapoints query normalizer - substitute links', () => {
       "from": "datapoints",
       "where": {
         "$and": [
-          {"dimensions": {"$size": 2}},
+          { "dimensions": {"$size": 2} },
+          { "dimensionsConcepts": {$all: ["17a3470d3a8c9b37009b9bf9", "27a3470d3a8c9b37009b9bf9"]} },
           {
             "$and": [
               {

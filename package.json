@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "JSONStream": "1.2.1",
+    "URLON": "2.0.0",
     "async": "1.5.2",
     "bcryptjs": "2.3.0",
     "body-parser": "1.15.2",
@@ -42,10 +43,10 @@
     "cors": "2.8.1",
     "csvtojson": "1.0.3",
     "ddf-time-utils": "0.1.6",
-    "ddf-validation": "~1.1.5",
+    "ddf-validation": "~1.2.3",
     "entities": "1.1.1",
     "express": "4.14.0",
-    "express-redis-cache": "0.4.2",
+    "express-redis-cache": "0.5.0",
     "express-session": "1.14.1",
     "highland": "2.10.0",
     "json2csv": "3.7.0",
@@ -59,6 +60,7 @@
     "morgan": "1.7.0",
     "newrelic": "1.30.3",
     "node-cache": "4.1.0",
+    "node-fetch": "1.6.3",
     "passport": "0.3.2",
     "passport-local": "1.0.0",
     "passport-unique-token": "0.1.4",
@@ -73,7 +75,7 @@
     "through2": "2.0.1",
     "traverse": "0.6.6",
     "validator": "5.7.0",
-    "waffle-server-import-cli": "~2.5.14"
+    "waffle-server-import-cli": "~2.5.19"
   },
   "devDependencies": {
     "chai": "3.5.0",

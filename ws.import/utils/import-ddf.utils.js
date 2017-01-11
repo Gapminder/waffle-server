@@ -23,10 +23,8 @@ const datapackageParser = require('./datapackage.parser');
 const transactionsRepository = require('../../ws.repository/ddf/dataset-transactions/dataset-transactions.repository');
 const conceptsRepositoryFactory = require('../../ws.repository/ddf/concepts/concepts.repository');
 
-const Converter = require('csvtojson').Converter;
-
 const UPDATE_ACTIONS = new Set(['change', 'update']);
-const DEFAULT_CHUNK_SIZE = 2000;
+const DEFAULT_CHUNK_SIZE = 6000;
 const MONGODB_DOC_CREATION_THREADS_AMOUNT = 3;
 const RESERVED_PROPERTIES = ['properties', 'dimensions', 'subsetOf', 'from', 'to', 'originId', 'gid', 'domain', 'type', 'languages'];
 
@@ -46,8 +44,6 @@ module.exports = {
   parseProperties,
   toNumeric,
   toBoolean,
-  readCsvFile,
-  readCsvFileAsStream,
   resolvePathToDdfFolder,
   closeTransaction,
   establishTransactionForDataset,
@@ -61,7 +57,6 @@ module.exports = {
   cloneDdfRepo,
   generateDiffForDatasetUpdate,
   startStreamProcessing,
-  readTextFileByLineAsJsonStream
 };
 
 function getAllConcepts(externalContext, done) {
@@ -148,40 +143,16 @@ function toBoolean(value) {
   return null;
 }
 
-function readCsvFileAsStream(pathToDdfFolder, filepath) {
-  const resolvedFilepath = path.resolve(pathToDdfFolder, filepath);
-
-  return hi(fs.createReadStream(resolvedFilepath, 'utf-8')
-    .pipe(new Converter({constructResult: false}, {objectMode: true})));
-}
-
-function readCsvFile(pathToDdfFolder, filepath, options, cb) {
-  const resolvedFilepath = path.resolve(pathToDdfFolder, filepath);
-
-  const converter = new Converter(Object.assign({}, {
-    workerNum: 1,
-    flatKeys: true
-  }, options));
-
-  converter.fromFile(resolvedFilepath, (err, data) => {
-    if (err) {
-      const isCannotFoundError = _.includes(err.toString(), "cannot be found.");
-      if (isCannotFoundError) {
-        logger.warn(err);
-      } else {
-        logger.error(err);
-      }
-    }
-
-    return cb(null, data);
-  });
-}
-
 function cloneDdfRepo(pipe, done) {
   logger.info('Clone ddf repo: ', pipe.github, pipe.commit);
   return reposService.cloneRepo(pipe.github, pipe.commit, (error, repoInfo) => {
+    if (error) {
+      return done(error, pipe);
+    }
+
     pipe.repoInfo = repoInfo;
-    return done(error, pipe);
+
+    return done(null, pipe);
   });
 }
 
@@ -288,10 +259,19 @@ function createDataset(pipe, done) {
     name: pipe.datasetName,
     path: pipe.github,
     createdAt: pipe.transaction.createdAt,
-    createdBy: pipe.user._id
+    createdBy: pipe.user._id,
+    private: pipe.isDatasetPrivate
   };
 
   datasetsRepository.create(dataset ,(err, createdDataset) => {
+    if (err) {
+      return done(err);
+    }
+
+    if (!createdDataset) {
+      return done('Dataset was not created due to some issues');
+    }
+
     pipe.dataset = createdDataset;
     return done(err, pipe);
   });
@@ -336,12 +316,6 @@ function updateTransactionLanguages(pipe, done) {
   };
 
   transactionsRepository.updateLanguages(options, err => done(err, pipe));
-}
-
-function readTextFileByLineAsJsonStream(pathToFile) {
-  const fileWithChangesStream = fs.createReadStream(pathToFile, {encoding: 'utf8'});
-  const jsonByLine = byline(fileWithChangesStream).pipe(JSONStream.parse());
-  return hi(jsonByLine);
 }
 
 function startStreamProcessing(stream, externalContext, done) {

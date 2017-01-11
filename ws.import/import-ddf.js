@@ -9,12 +9,13 @@ const importEntities = require('./import-entities');
 const importConcepts = require('./import-concepts');
 const importDatapoints = require('./import-datapoints');
 const importTranslations = require('./import-translations');
-const createDatasetIndex = require('./import-dataset-index');
+const createDatasetSchema = require('./import-dataset-schema');
 
 const DATASET_IMPORT_LABEL = 'Dataset import';
 
 module.exports = (options, done) => {
   const pipe = _.extend(_.pick(options, [
+    'isDatasetPrivate',
     'github',
     'datasetName',
     'commit',
@@ -38,19 +39,19 @@ module.exports = (options, done) => {
     importEntities,
     importDatapoints,
     importTranslations,
-    createDatasetIndex,
+    createDatasetSchema,
     ddfImportUtils.closeTransaction
   ], (importError, pipe) => {
     console.timeEnd(DATASET_IMPORT_LABEL);
 
-    if (importError && pipe.transaction) {
+    if (importError && _.get(pipe, 'transaction')) {
       return done(importError, {transactionId: pipe.transaction._id});
     }
 
     return done(importError, {
       datasetName: pipe.datasetName,
-      version: pipe.transaction.createdAt,
-      transactionId: pipe.transaction._id
+      version: _.get(pipe.transaction, 'createdAt'),
+      transactionId: _.get(pipe.transaction, '_id')
     });
   });
 };

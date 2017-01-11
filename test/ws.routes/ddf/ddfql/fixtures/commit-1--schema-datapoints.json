@@ -39,6 +39,20 @@
         "project"
       ],
       "num_users"
+    ],
+    [
+      [
+        "company",
+        "project"
+      ],
+      "longitude"
+    ],
+    [
+      [
+        "company",
+        "project"
+      ],
+      "latitude"
     ]
   ]
 }

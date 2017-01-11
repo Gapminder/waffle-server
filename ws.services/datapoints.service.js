@@ -19,6 +19,7 @@ module.exports = {
 function collectDatapointsByDdfql(options, onMatchedDatapoints) {
   console.time('finish matching DataPoints');
   const pipe = {
+    user: options.user,
     select: options.select,
     headers: options.headers,
     domainGids: options.domainGids,

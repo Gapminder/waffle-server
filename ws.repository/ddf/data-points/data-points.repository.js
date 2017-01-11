@@ -6,7 +6,6 @@ const async = require('async');
 const logger = require('../../../ws.config/log');
 
 const mongoose = require('mongoose');
-const ObjectId = mongoose.Types.ObjectId;
 const DataPoints = mongoose.model('DataPoints');
 
 const ddfImportUtils = require('../../../ws.import/utils/import-ddf.utils');
@@ -16,14 +15,14 @@ const constants = require('../../../ws.utils/constants');
 
 util.inherits(DataPointsRepository, repositoryModel);
 
-function DataPointsRepository() {
-  repositoryModel.apply(this, arguments);
+function DataPointsRepository(... args) {
+  repositoryModel.apply(this, args);
 }
 
 module.exports = new RepositoryFactory(DataPointsRepository);
 
-DataPointsRepository.prototype.create = function(datapointOrBatchOfDatapoints, done) {
-  return DataPoints.create(datapointOrBatchOfDatapoints, done);
+DataPointsRepository.prototype._getModel = function() {
+  return DataPoints;
 };
 
 DataPointsRepository.prototype.count = function (onCounted) {
@@ -31,17 +30,24 @@ DataPointsRepository.prototype.count = function (onCounted) {
   return DataPoints.count(countQuery, onCounted);
 };
 
-DataPointsRepository.prototype.rollback = function (versionToRollback, onRolledback) {
+DataPointsRepository.prototype.rollback = function (transaction, onRolledback) {
+  const {createdAt: versionToRollback} = transaction;
+
   return async.parallelLimit([
     done => DataPoints.update({to: versionToRollback}, {$set: {to: constants.MAX_VERSION}}, {multi: true}).lean().exec(done),
     done => DataPoints.remove({from: versionToRollback}, done)
   ], constants.LIMIT_NUMBER_PROCESS, onRolledback);
 };
 
+DataPointsRepository.prototype.removeByDataset = function (datasetId, onRemove) {
+  return DataPoints.remove({dataset: datasetId}, onRemove);
+};
+
 //FIXME: This should be used only for queries that came from normalizer!!!
 DataPointsRepository.prototype.findByQuery = function(subDatapointQuery, onDatapointsFound) {
   const query = this._composeQuery(subDatapointQuery);
 
+  logger.debug({obj: query}, 'Datapoints query');
   return DataPoints.find(query).lean().exec(onDatapointsFound);
 };
 
@@ -94,29 +100,19 @@ DataPointsRepository.prototype.addTranslationsForGivenProperties = function (pro
   return DataPoints.update(query, updateQuery, {multi: true}).exec(done);
 };
 
-DataPointsRepository.prototype.findStats = function (params, onDatapointsFound) {
-  const measureId = ObjectId(params.measureId);
-  const entityIds = _.map(params.entityIds, id => ObjectId(id));
-  const dimensionsSize = params.dimensionsSize;
-
+DataPointsRepository.prototype.findStats = function ({measureId, dimensionsSize, dimensionsConceptsIds}, onDatapointsFound) {
   const query = this._composeQuery({
     measure: measureId,
     dimensions: {
-      $size: dimensionsSize,
-      $in: entityIds
+      $size: dimensionsSize
+    },
+    dimensionsConcepts: {
+      $all: dimensionsConceptsIds
     }
   });
 
   return DataPoints.aggregate()
     .match(query)
-    .project({
-      measure: 1,
-      value: 1,
-      dimensionsMatched: {$setIsSubset: ['$dimensions', entityIds]}
-    })
-    .match({
-      dimensionsMatched: true
-    })
     .group({
       _id: '$measure',
       min: {$min: '$value'},
@@ -127,7 +123,7 @@ DataPointsRepository.prototype.findStats = function (params, onDatapointsFound) 
         return onDatapointsFound(error);
       }
 
-      return onDatapointsFound(null, _.head(stats));
+      return onDatapointsFound(null, _.omit(_.head(stats), '_id'));
     });
 };
 
