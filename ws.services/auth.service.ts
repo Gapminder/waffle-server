@@ -1,9 +1,9 @@
-const crypto = require('crypto');
+import * as crypto from 'crypto';
 
-const constants = require('../ws.utils/constants');
-const usersRepository = require('../ws.repository/ddf/users/users.repository');
+import * as constants from '../ws.utils/constants';
+import * as usersRepository from '../ws.repository/ddf/users/users.repository';
 
-module.exports = {
+export {
   authenticate
 };
 

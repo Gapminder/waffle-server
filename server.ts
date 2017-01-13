@@ -1,33 +1,40 @@
-require('newrelic');
+import 'newrelic';
 
-const express = require('express');
+import * as express from 'express';
 
 const app = express();
 
-const config = require('./ws.config/config');
-const logger = require('./ws.config/log');
+import * as config from './ws.config/config';
+import * as logger from './ws.config/log';
 
 process.on('uncaughtException', function(err) {
   logger.error(err);
 });
 
-const bodyParser = require('body-parser');
+import * as bodyParser from 'body-parser';
 app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
 app.use(bodyParser.json({limit: '10mb'}));
 
-const serviceLocator = require('./ws.service-locator')(app);
+import * as ServiceLocator from './ws.service-locator';
+const serviceLocator = ServiceLocator(app);
 
-require('./ws.repository');
-require('./ws.config')(serviceLocator);
-require('./ws.routes')(serviceLocator);
+import './ws.repository';
+import * as Config from './ws.config';
+Config(serviceLocator);
+import * as Routes from './ws.routes';
+Routes(serviceLocator);
+
+import * as makeDefaultUser from './make-default-user';
+import * as Cache from './ws.utils/cache-warmup';
 
 app.listen(config.INNER_PORT, () => {
   console.log('\nExpress server listening on port %d in %s mode', config.INNER_PORT, app.settings.env);
 
-  require('./make-default-user')();
+  makeDefaultUser();
 
   if(config.THRASHING_MACHINE) {
-    require('./ws.utils/cache-warmup').warmUpCache((error, warmedQueriesAmount)=> {
+
+    Cache.warmUpCache((error, warmedQueriesAmount)=> {
       if(error) {
         return logger.error(error, 'Cache warm up failed.');
       }

@@ -30,7 +30,7 @@ function sendDdfqlRequest(ddfql, onResponseReceived) {
 function startWaffleServer() {
   setUpEnvironmentVariables();
   if (START_WAFFLE_SERVER) {
-    shell.exec(`./node_modules/.bin/forever start -t -o /dev/null -l /dev/null -a --uid "${e2eEnv.wsUid}" server.js`);
+    shell.exec(`./node_modules/.bin/forever start -t -o /dev/null -l /dev/null -a --uid "${e2eEnv.wsUid}" ./dist/server.js`);
   }
 }
 

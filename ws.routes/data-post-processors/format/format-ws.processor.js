@@ -135,14 +135,15 @@ function mapDatapointsToWsJson(data) {
       const datapointValue = _.get(translatedDatapointProperties, measureGid);
       partialRow[measureGid] = ddfImportUtils.toNumeric(datapointValue) || ddfImportUtils.toBoolean(datapointValue) || datapointValue;
 
-      if (!result[datapointKey]) {
-        result[datapointKey] = partialRow;
-        return result;
+      if (_.isNil(result[datapointKey])) {
+        result[datapointKey] = {};
       }
-      _.extend(result[datapointKey], partialRow);
+      result[datapointKey] = _.extend(result[datapointKey], partialRow);
       return result;
     }, {})
-    .map(row => _.map(data.headers, column => coerceValue(row[column])))
+    .map(row => {
+      return _.map(data.headers, column => coerceValue(row[column]))
+    })
     .value();
 
   const result = {

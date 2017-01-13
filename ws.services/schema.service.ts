@@ -1,14 +1,19 @@
-'use strict';
+import * as _ from 'lodash';
+import * as async from 'async';
 
-const _ = require("lodash");
-const async = require("async");
+import * as commonService from './common.service';
+import * as schemaQueryNormalizer from '../ws.ddfql/ddf-schema-query-normalizer';
+import * as datasetIndexRepository from '../ws.repository/ddf/dataset-index/dataset-index.repository';
+import * as ddfQueryValidator from '../ws.ddfql/ddf-query-validator';
 
-const commonService = require('../ws.services/common.service');
-const schemaQueryNormalizer = require('../ws.ddfql/ddf-schema-query-normalizer');
-const datasetIndexRepository = require('../ws.repository/ddf/dataset-index/dataset-index.repository');
-const ddfQueryValidator = require('../ws.ddfql/ddf-query-validator');
+//todo: move interface to ddfQueryValidator
+interface ValidateQuery {
+  valid: boolean,
+  messages?: Array<string>,
+  log?: string
+}
 
-module.exports = {
+export {
   findSchemaByDdfql
 };
 
@@ -24,7 +29,7 @@ function findSchemaByDdfql(options, onFound) {
 function _findSchemaByDdfql(pipe, done) {
   const normalizedQuery = schemaQueryNormalizer.normalize(pipe.query, {transactionId: pipe.transaction._id});
 
-  const validateQuery = ddfQueryValidator.validateMongoQuery(normalizedQuery.where);
+  const validateQuery:ValidateQuery = ddfQueryValidator.validateMongoQuery(normalizedQuery.where);
   if(!validateQuery.valid) {
     return done(validateQuery.log, pipe);
   }

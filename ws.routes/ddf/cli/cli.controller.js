@@ -1,6 +1,7 @@
 'use strict';
 
 const cliService = require('./../../../ws.services/cli.service');
+const authService = require('../../../ws.services/auth.service');
 const reposService = require('../../../ws.services/repos.service');
 const transactionsService = require('../../../ws.services/dataset-transactions.service');
 const datasetsService = require('../../../ws.services/datasets.service');
@@ -39,7 +40,7 @@ function getToken(req, res) {
     return res.json(routeUtils.toErrorResponse('Password was not provided'));
   }
 
-  return cliService.authenticate({email, password}, (error, token) => {
+  return authService.authenticate({email, password}, (error, token) => {
     if (error) {
       return res.json(routeUtils.toErrorResponse(error));
     }

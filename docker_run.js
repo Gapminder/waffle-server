@@ -20,9 +20,9 @@ console.log(`++ Redis address: ${REDIS_HOST}`);
 shell.exec('service rsyslog restart');
 
 if (THRASHING_MACHINE) {
-  shell.exec('INNER_PORT=80 /usr/bin/node --max_old_space_size=10000 server.js');
+  shell.exec('INNER_PORT=80 /usr/bin/node --max_old_space_size=10000 dist/server.js');
 } else {
-  shell.exec('/usr/bin/forever start -c \"/usr/bin/node --stack_trace_limit=0\" -m 10 --minUptime 500 --spinSleepTime 600 server.js',  {silent:true});
+  shell.exec('/usr/bin/forever start -c \"/usr/bin/node --stack_trace_limit=0\" -m 10 --minUptime 500 --spinSleepTime 600 dist/server.js',  {silent:true});
   register_us();
 }
 
@@ -38,7 +38,7 @@ function register_us(){
       process.exit(1);
     }
 
-    if (shell.exec('/usr/bin/forever list | /bin/grep server.js | wc -l',  {silent:true}).stdout != 1) {
+    if (shell.exec('/usr/bin/forever list | /bin/grep dist/server.js | wc -l',  {silent:true}).stdout != 1) {
         console.log("-- ERROR: ws is failed to start. Exit.");
         shell.exec('/usr/bin/forever stopall');
         process.exit(1);

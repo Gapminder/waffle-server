@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "outDir": "dist/",
+    "noImplicitReturns": true,
+    "noImplicitAny": false,
+    "allowJs": true,
+    "preserveConstEnums": true,
+    "removeComments": true,
+    "sourceMap": true,
+    "types": [
+      "node",
+      "mocha",
+      "proxyquire"
+    ]
+  },
+  "include": [
+    "**/*"
+  ],
+  "exclude": [
+    "dist",
+    "gulp",
+    "coverage",
+    "node_modules"
+  ]
+}

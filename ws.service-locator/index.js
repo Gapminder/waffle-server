@@ -1,6 +1,7 @@
 'use strict';
 
 let serviceLocator;
+
 module.exports = function (application) {
   if (!application && !serviceLocator) {
     throw new Error('Please, supply instance of express application to a constructor of ServiceLocator');

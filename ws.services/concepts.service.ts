@@ -1,15 +1,19 @@
-'use strict';
+import * as _ from 'lodash';
+import * as async from 'async';
 
-const _ = require('lodash');
-const async = require('async');
+import * as commonService from './common.service';
+import * as ddfql from '../ws.ddfql/ddf-concepts-query-normalizer';
+import * as conceptsRepositoryFactory from '../ws.repository/ddf/concepts/concepts.repository';
+import * as ddfQueryValidator from '../ws.ddfql/ddf-query-validator';
 
-const ddfql = require('../ws.ddfql/ddf-concepts-query-normalizer');
-const constants = require('../ws.utils/constants');
-const commonService = require('./common.service');
-const ddfQueryValidator = require('../ws.ddfql/ddf-query-validator');
-const conceptsRepositoryFactory = require('../ws.repository/ddf/concepts/concepts.repository');
+//todo: move interface to ddfQueryValidator
+interface ValidateQuery {
+  valid: boolean,
+  messages?: Array<string>,
+  log?: string
+}
 
-module.exports = {
+export {
   getConcepts,
   collectConceptsByDdfql
 };
@@ -50,7 +54,7 @@ function getConceptsByDdfql(pipe, cb) {
   const conceptsRepository = conceptsRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version);
   const normalizedQuery = ddfql.normalizeConcepts(pipe.query, pipe.allConcepts);
 
-  const validateQuery = ddfQueryValidator.validateMongoQuery(normalizedQuery.where);
+  const validateQuery:ValidateQuery = ddfQueryValidator.validateMongoQuery(normalizedQuery.where);
   if(!validateQuery.valid) {
     return cb(validateQuery.log, pipe);
   }

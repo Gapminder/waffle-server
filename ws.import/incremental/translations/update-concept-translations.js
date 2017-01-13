@@ -9,6 +9,7 @@ const conceptsRepositoryFactory = require('../../../ws.repository/ddf/concepts/c
 module.exports = (externalContext, done) => {
 
   const externalContextFrozen = Object.freeze({
+    transaction: externalContext.transaction,
     datasetId: externalContext.dataset._id,
     version: externalContext.transaction.createdAt,
     pathToLangDiff: externalContext.pathToLangDiff,

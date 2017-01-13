@@ -6,7 +6,7 @@ const DATAPOINTS = 'datapoints';
 const TRANSLATIONS = 'translations';
 
 const TIME_CONCEPT_TYPES = ['time', 'year', 'week', 'month', 'day', 'quarter'];
-const DEFAULT_ENTITY_GROUP_TYPES = ['entity_domain', 'entity_set', ... TIME_CONCEPT_TYPES];
+const DEFAULT_ENTITY_GROUP_TYPES = ['entity_domain', 'entity_set', ...TIME_CONCEPT_TYPES];
 
 module.exports = {
   //versioning

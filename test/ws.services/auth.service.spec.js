@@ -6,7 +6,6 @@ require('../../ws.config/db.config');
 require('../../ws.repository');
 const proxyquire = require('proxyquire');
 
-
 describe('auth service testing', () => {
 
   it('should return an error: Error was happened during credentials verification', (done) => {

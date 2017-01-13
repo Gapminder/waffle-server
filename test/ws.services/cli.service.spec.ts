@@ -1,13 +1,18 @@
-'use strict';
+import 'mocha';
+import * as proxyqire from 'proxyquire';
+import {expect} from 'chai';
+import * as sinon from 'sinon';
+import * as constants from '../../ws.utils/constants';
 
-const proxyqire = require('proxyquire');
-const expect = require('chai').expect;
-const sinon = require('sinon');
-const constants = require('../../ws.utils/constants');
+import '../../ws.repository';
 
-require('../../ws.repository');
+const cliServicePath = '../../ws.services/cli.service.ts';
+const usersRepositoryPath = '../ws.repository/ddf/users/users.repository';
+const datasetsRepositoryPath = '../ws.repository/ddf/datasets/datasets.repository';
+const importDdfServicePath = '../ws.import/import-ddf';
+const datasetTransactionsServicePath = './dataset-transactions.service';
 
-describe('WS-CLI service', () => {
+describe('WS-CLI service', function () {
   it('should store last happened error in transaction if it was created at that moment', sinon.test(function (done) {
 
     const params = {
@@ -29,24 +34,24 @@ describe('WS-CLI service', () => {
 
     const flowStepCounterSpy = this.spy();
 
-    const cliService = proxyqire('../../ws.services/cli.service', {
-      '../ws.repository/ddf/users/users.repository': {
+    const cliService = proxyqire(cliServicePath, {
+      [usersRepositoryPath]: {
         findUserByEmail: (email, onFound) => {
           flowStepCounterSpy('findUserByEmail');
           onFound(null, expectedUser);
         }
       },
-      '../ws.repository/ddf/datasets/datasets.repository': {
+      [datasetsRepositoryPath]: {
         findByGithubUrl: (githubUrl, onFound) => {
           flowStepCounterSpy('findByGithubUrl');
           onFound(null, null);
         }
       },
-      '../ws.import/import-ddf': (options, onImported) => {
+      [importDdfServicePath]: (options, onImported) => {
         flowStepCounterSpy('importService');
         onImported(expectedError, {dataset: expectedDataset, datasetName: expectedDataset.name, transactionId: expectedTransactionId});
       },
-      './dataset-transactions.service': {
+      [datasetTransactionsServicePath]: {
         setLastError: (transactionId, message, onSet) => {
           flowStepCounterSpy('setLastError');
           expect(transactionId).to.equal(expectedTransactionId);
@@ -97,15 +102,15 @@ describe('WS-CLI service', () => {
 
     const flowStepCounterSpy = this.spy();
 
-    const cliService = proxyqire('../../ws.services/cli.service', {
-      '../ws.repository/ddf/users/users.repository': {
+    const cliService = proxyqire(cliServicePath, {
+      [usersRepositoryPath]: {
         findUserByEmail: (email, onFound) => {
           flowStepCounterSpy('findUserByEmail');
           expect(email).to.equal(constants.DEFAULT_USER_EMAIL);
           onFound(null, expectedUser);
         }
       },
-      '../ws.repository/ddf/datasets/datasets.repository': {
+      [datasetsRepositoryPath]: {
         findByGithubUrl: (githubUrl, onFound) => {
           flowStepCounterSpy('findByGithubUrl');
           expect(githubUrl).to.equal(params.github);
@@ -118,7 +123,7 @@ describe('WS-CLI service', () => {
           onUnlocked(null, expectedDataset);
         }
       },
-      '../ws.import/import-ddf': (options, onImported) => {
+      [importDdfServicePath]: (options, onImported) => {
         flowStepCounterSpy('importService');
         expect(options).to.deep.equal(importServiceExpectedOptions);
         onImported(null, {dataset: expectedDataset, datasetName: expectedDataset.name});
@@ -158,14 +163,14 @@ describe('WS-CLI service', () => {
 
     const flowStepCounterSpy = this.spy();
 
-    const cliService = proxyqire('../../ws.services/cli.service', {
-      '../ws.repository/ddf/users/users.repository': {
+    const cliService = proxyqire(cliServicePath, {
+      [usersRepositoryPath]: {
         findUserByEmail: (email, onFound) => {
           flowStepCounterSpy('findUserByEmail');
           onFound(null, expectedUser);
         }
       },
-      '../ws.repository/ddf/datasets/datasets.repository': {
+      [datasetsRepositoryPath]: {
         findByGithubUrl: (githubUrl, onFound) => {
           flowStepCounterSpy('findByGithubUrl');
           onFound(null, null);
@@ -175,7 +180,7 @@ describe('WS-CLI service', () => {
           onUnlocked(null, null);
         }
       },
-      '../ws.import/import-ddf': (options, onImported) => {
+      [importDdfServicePath]: (options, onImported) => {
         flowStepCounterSpy('importService');
         onImported(null, {dataset: expectedDataset, datasetName: expectedDataset.name});
       }
@@ -214,15 +219,15 @@ describe('WS-CLI service', () => {
 
     const flowStepCounterSpy = this.spy();
 
-    const cliService = proxyqire('../../ws.services/cli.service', {
-      '../ws.repository/ddf/users/users.repository': {
+    const cliService = proxyqire(cliServicePath, {
+      [usersRepositoryPath]: {
         findUserByEmail: (email, onFound) => {
           flowStepCounterSpy('findUserByEmail');
           expect(email).to.equal(constants.DEFAULT_USER_EMAIL);
           onFound(null, expectedUser);
         }
       },
-      '../ws.repository/ddf/datasets/datasets.repository': {
+      [datasetsRepositoryPath]: {
         findByGithubUrl: (githubUrl, onFound) => {
           flowStepCounterSpy('findByGithubUrl');
           expect(githubUrl).to.equal(params.github);
@@ -241,7 +246,6 @@ describe('WS-CLI service', () => {
     });
   }));
 
-
   it('should yield error when during dataset importing error occurred while searching for user', sinon.test(function (done) {
     const params = {
       commit: '8ad3096185b5b17bc80ae582870fb956f00019fd',
@@ -251,8 +255,8 @@ describe('WS-CLI service', () => {
 
     const expectedError = 'Boo!';
 
-    const cliService = proxyqire('../../ws.services/cli.service', {
-      '../ws.repository/ddf/users/users.repository': {
+    const cliService = proxyqire(cliServicePath, {
+      [usersRepositoryPath]: {
         findUserByEmail: (email, onFound) => {
           onFound(expectedError);
         }
@@ -275,8 +279,8 @@ describe('WS-CLI service', () => {
 
     const expectedError = 'User that tries to initiate import was not found';
 
-    const cliService = proxyqire('../../ws.services/cli.service', {
-      '../ws.repository/ddf/users/users.repository': {
+    const cliService = proxyqire(cliServicePath, {
+      [usersRepositoryPath]: {
         findUserByEmail: (email, onFound) => {
           onFound(null, null);
         }
@@ -300,13 +304,13 @@ describe('WS-CLI service', () => {
     const expectedError = 'Boo!';
     const user = {};
 
-    const cliService = proxyqire('../../ws.services/cli.service', {
-      '../ws.repository/ddf/users/users.repository': {
+    const cliService = proxyqire(cliServicePath, {
+      [usersRepositoryPath]: {
         findUserByEmail: (email, onFound) => {
           onFound(null, user);
         }
       },
-      '../ws.repository/ddf/datasets/datasets.repository': {
+      [datasetsRepositoryPath]: {
         findByGithubUrl: (githubUrl, onFound) => {
           onFound(expectedError);
         }

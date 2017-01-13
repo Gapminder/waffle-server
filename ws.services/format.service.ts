@@ -1,20 +1,16 @@
-'use strict';
+import * as _ from 'lodash';
+import * as async from 'async';
 
-const _ = require('lodash');
-const async = require('async');
-
-const wsJsonPack = require('../ws.routes/data-post-processors/format/format-ws.processor');
-const constants = require('../ws.utils/constants');
-
-module.exports = {
-  wsJson: packToWsJson,
-  default: packToWsJson,
-};
+import * as wsJsonPack from '../ws.routes/data-post-processors/format/format-ws.processor';
+import * as constants from '../ws.utils/constants';
 
 function packToWsJson(data, format, onSendResponse) {
-  const rawDdf = _.get(data, 'rawDdf', {});
-  rawDdf.datasetName = _.get(data, 'rawDdf.dataset.name');
-  rawDdf.datasetVersionCommit = _.get(data, 'rawDdf.transaction.commit');
+  const datasetName = _.get(data, 'rawDdf.dataset.name');
+  const datasetVersionCommit = _.get(data, 'rawDdf.transaction.commit');
+  const rawDdf = _.extend({
+    datasetName,
+    datasetVersionCommit
+  }, _.get(data, 'rawDdf', {}));
 
   const ddfDataType = _.get(data, 'type');
 
@@ -32,3 +28,8 @@ function packToWsJson(data, format, onSendResponse) {
 
   return async.setImmediate(() => onSendResponse(null, json));
 }
+
+export {
+  packToWsJson as wsJson,
+  packToWsJson as default
+};

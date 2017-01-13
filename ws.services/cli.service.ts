@@ -1,32 +1,27 @@
-'use strict';
+import * as _ from 'lodash';
+import * as git from 'simple-git';
+import * as async from 'async';
+import * as crypto from 'crypto';
 
-const _ = require('lodash');
-const git = require('simple-git');
-const async = require('async');
-const crypto = require('crypto');
+import * as cache from '../ws.utils/redis-cache';
+import * as constants from '../ws.utils/constants';
+import * as reposService from './repos.service';
+import * as securityUtils from '../ws.utils/security';
+import * as ddfImportUtils from '../ws.import/utils/import-ddf.utils';
+import * as datasetsService from './datasets.service';
+import * as usersRepository from '../ws.repository/ddf/users/users.repository';
+import * as importDdfService from '../ws.import/import-ddf';
+import * as datasetsRepository from '../ws.repository/ddf/datasets/datasets.repository';
+import * as transactionsService from './dataset-transactions.service';
+import * as transactionsRepository from '../ws.repository/ddf/dataset-transactions/dataset-transactions.repository';
+import * as incrementalUpdateService from '../ws.import/incremental/update-ddf';
 
-const cache = require('../ws.utils/redis-cache');
-const config = require('../ws.config/config');
-const constants = require('../ws.utils/constants');
-const authService = require('./auth.service');
-const reposService = require('./repos.service');
-const securityUtils = require('../ws.utils/security');
-const ddfImportUtils = require('../ws.import/utils/import-ddf.utils');
-const datasetsService = require('./datasets.service');
-const usersRepository = require('../ws.repository/ddf/users/users.repository');
-const importDdfService = require('../ws.import/import-ddf');
-const datasetsRepository = require('../ws.repository/ddf/datasets/datasets.repository');
-const transactionsService = require('./dataset-transactions.service');
-const transactionsRepository = require('../ws.repository/ddf/dataset-transactions/dataset-transactions.repository');
-const incrementalUpdateService = require('../ws.import/incremental/update-ddf');
-
-module.exports = {
+export {
   getGitCommitsList,
   importDataset,
   updateIncrementally,
   getAvailableDatasetsAndVersions,
   getCommitOfLatestDatasetVersion,
-  authenticate,
   findDatasetsWithVersions,
   setTransactionAsDefault,
   cleanDdfRedisCache,
@@ -35,9 +30,26 @@ module.exports = {
   getRemovableDatasets
 };
 
+interface DatasetModel {
+  name: string,
+  path: string,
+  versions: Array<VersionModel>
+}
+
+interface ContextModel {
+  transactionId: string,
+  datasetId: string
+}
+
+interface VersionModel {
+  createdAt: number,
+  commit: string,
+  isDefault: boolean
+}
+
 function getGitCommitsList(github, onCommitsRecieved) {
   if (!github) {
-    return cb('Url to dataset\'s github repository was not provided');
+    return onCommitsRecieved('Url to dataset\'s github repository was not provided');
   }
 
   return async.waterfall([
@@ -77,11 +89,11 @@ function importDataset(params, onDatasetImported) {
     _validateDatasetBeforeImport,
     _importDdfService,
     _unlockDataset
-  ], (importError, pipe) => {
-    if (importError && pipe && pipe.transactionId) {
-      return transactionsService.setLastError(pipe.transactionId, _.toString(importError), () => onDatasetImported(importError));
+  ], (importError, context: ContextModel) => {
+    if (importError && _.get(context, 'transactionId', false)) {
+      return transactionsService.setLastError(context.transactionId, _.toString(importError), () => onDatasetImported(importError));
     }
-    return onDatasetImported(importError, pipe);
+    return onDatasetImported(importError, context);
   });
 }
 
@@ -127,9 +139,9 @@ function _unlockDataset(pipe, done) {
   });
 }
 
-function updateIncrementally(params, onDatasetUpdated) {
+function updateIncrementally(externalContext, onDatasetUpdated) {
   return async.waterfall([
-    async.constant(params),
+    async.constant(externalContext),
     _findCurrentUser,
     _findDataset,
     securityUtils.validateDatasetOwner,
@@ -137,16 +149,16 @@ function updateIncrementally(params, onDatasetUpdated) {
     _checkTransaction,
     _runIncrementalUpdate,
     _unlockDataset
-  ], (importError, pipe) => {
+  ], (importError, context:ContextModel) => {
     if (importError) {
-      if (pipe && pipe.transactionId) {
-        return transactionsService.setLastError(pipe.transactionId, _.toString(importError), () => onDatasetUpdated(importError));
+      if (_.get(context, 'transactionId', false)) {
+        return transactionsService.setLastError(context.transactionId, _.toString(importError), () => onDatasetUpdated(importError));
       }
 
-      return _unlockDataset({datasetName: params.datasetName}, unlockError => onDatasetUpdated(importError));
+      return _unlockDataset({datasetName: externalContext.datasetName}, unlockError => onDatasetUpdated(importError));
     }
 
-    return onDatasetUpdated(importError, pipe);
+    return onDatasetUpdated(importError, context);
   });
 }
 
@@ -194,7 +206,7 @@ function getPrivateDatasets(userId, done) {
       return done(error);
     }
 
-    return done(null, _.map(datasets, dataset => {
+    return done(null, _.map(datasets, (dataset:DatasetModel) => {
       return {name: dataset.name, githubUrl: dataset.path};
     }));
   });
@@ -202,8 +214,8 @@ function getPrivateDatasets(userId, done) {
 
 function getAvailableDatasetsAndVersions(userId, onQueriesGot) {
   return datasetsService.findDatasetsWithVersions(userId, (error, datasetsWithVersions) => {
-    return async.mapLimit(datasetsWithVersions, 3, (dataset, onDatasetsAndVersionsFound) => {
-      return async.mapLimit(dataset.versions, 3, (version, cb) => {
+    return async.mapLimit(datasetsWithVersions, 3, (dataset:DatasetModel, onDatasetsAndVersionsFound) => {
+      return async.mapLimit(dataset.versions, 3, (version:VersionModel, cb) => {
         return cb(null, {
           createdAt: version.createdAt,
           datasetName: dataset.name,
@@ -227,7 +239,7 @@ function getRemovableDatasets(userId, done) {
       return done(error);
     }
 
-    const defaultDatasetName = _.get(_.find(availableDatasetsAndVersions, dataset => dataset.isDefault), 'datasetName');
+    const defaultDatasetName = _.get(_.find(availableDatasetsAndVersions, (dataset:DatasetModel | VersionModel) => _.get(dataset, 'isDefault', false)), 'datasetName');
 
     const removableDatasets = _.chain(availableDatasetsAndVersions)
       .filter(metadata => metadata.datasetName !== defaultDatasetName)
@@ -274,10 +286,6 @@ function _findTransaction(pipe, done) {
     pipe.transaction = transaction;
     return done(error, pipe);
   });
-}
-
-function authenticate(credentials, onAuthenticated) {
-  return authService.authenticate(credentials, onAuthenticated);
 }
 
 function findDatasetsWithVersions(userId, onFound) {
