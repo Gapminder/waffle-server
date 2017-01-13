@@ -52,15 +52,15 @@ function getPrimaryKey(schema) {
 }
 
 function isConceptsResource(primaryKey) {
-  return primaryKey.length === 1 && _.head(primaryKey) === 'concept';
+  return Array.isArray(primaryKey) && primaryKey.length === 1 && _.head(primaryKey) === 'concept';
 }
 
 function isDatapointsResource(primaryKey) {
-  return primaryKey.length > 1;
+  return Array.isArray(primaryKey) && primaryKey.length > 1;
 }
 
 function isEntitiesResource(primaryKey) {
-  return primaryKey.length === 1 && _.head(primaryKey) !== 'concept';
+  return Array.isArray(primaryKey) && primaryKey.length === 1 && _.head(primaryKey) !== 'concept';
 }
 
 function parseEntitiesResource(resource, primaryKey = getPrimaryKey(resource.schema)) {
