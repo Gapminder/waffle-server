@@ -2,16 +2,27 @@
 
 const _ = require('lodash');
 const async = require('async');
-
+const hi = require('highland');
+const fastCsv = require('fast-csv');
 const wsJsonPack = require('../ws.routes/data-post-processors/format/format-ws.processor');
 const constants = require('../ws.utils/constants');
 
+const toFormatter = _.curry(sendResponse);
+const csvFormatter = toFormatter(packToCsv);
+const wsJsonFormatter = toFormatter(packToWsJson);
+
 module.exports = {
-  wsJson: packToWsJson,
-  default: packToWsJson,
+  csv: csvFormatter,
+  wsJson: wsJsonFormatter,
+  default: wsJsonFormatter,
 };
 
-function packToWsJson(data, format, onSendResponse) {
+function packToCsv(data) {
+  const wsJson = packToWsJson(data);
+  return hi(wsJson.rows).map(row => _.zipObject(wsJson.headers, row)).pipe(fastCsv.createWriteStream({headers: true}));
+}
+
+function packToWsJson(data) {
   const rawDdf = _.get(data, 'rawDdf', {});
   rawDdf.datasetName = _.get(data, 'rawDdf.dataset.name');
   rawDdf.datasetVersionCommit = _.get(data, 'rawDdf.transaction.commit');
@@ -30,5 +41,9 @@ function packToWsJson(data, format, onSendResponse) {
     json = wsJsonPack.mapSchema(rawDdf);
   }
 
-  return async.setImmediate(() => onSendResponse(null, json));
+  return json;
+}
+
+function sendResponse(format, data, onSendResponse) {
+  return async.setImmediate(() => onSendResponse(null, format(data)));
 }
