@@ -35,7 +35,7 @@ module.exports = (function () {
   };
 
   config.IS_PRODUCTION = PRODUCTION_ENVS.has(config.NODE_ENV);
-
+  config.CAN_POPULATE_DOCUMENTS = config.NODE_ENV === 'local';
   config.CALCULATE_SCHEMA_QUERIES_AGG_FUNCTIONS = config.NODE_ENV === 'local';
 
   const REQUIRED_ENVIRONMENT_VARIABLES = Object.freeze([
