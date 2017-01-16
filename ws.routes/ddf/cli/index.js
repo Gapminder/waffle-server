@@ -26,6 +26,7 @@ module.exports = serviceLocator => {
   router.get('/datasets', cliController.getDatasets);
   router.get('/datasets/private', cliController.getPrivateDatasets);
   router.get('/datasets/removable', cliController.getRemovableDatasets);
+  router.get('/datasets/inProgress', cliController.getDatasetsInProgress);
 
   router.post('/update-incremental', cliController.updateIncrementally);
   router.post('/import-dataset', cliController.importDataset);

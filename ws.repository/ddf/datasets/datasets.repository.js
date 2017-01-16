@@ -27,6 +27,10 @@ DatasetsRepository.prototype.findPrivateByUser = function (userId, done) {
   return Datasets.find({createdBy: userId, private: true}).lean().exec(done);
 };
 
+DatasetsRepository.prototype.findDatasetsInProgressByUser = function (userId, done) {
+  return Datasets.find({createdBy: userId, isLocked: true}).lean().exec(done);
+};
+
 DatasetsRepository.prototype.findByGithubUrl = function (githubUrl, done) {
   return Datasets.findOne({path: githubUrl}).lean().exec(done);
 };

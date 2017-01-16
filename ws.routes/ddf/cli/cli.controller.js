@@ -25,6 +25,7 @@ module.exports = {
   setDefaultDataset,
   generateDatasetAccessToken,
   getPrivateDatasets,
+  getDatasetsInProgress,
   cleanCache
 };
 
@@ -345,5 +346,21 @@ function cleanCache(req, res) {
       return res.json(routeUtils.toErrorResponse(cacheCleanError));
     }
     return res.json(routeUtils.toMessageResponse('Cache is clean'));
+  });
+}
+
+function getDatasetsInProgress(req, res) {
+  if (!req.user) {
+    return res.json(routeUtils.toErrorResponse('There is no authenticated user to get its datasets'));
+  }
+
+  cliService.getDatasetsInProgress(req.user._id, (error, datasetsInProgress) => {
+    if (error) {
+      return res.json(routeUtils.toErrorResponse(error));
+    }
+
+    logger.info(`finished getting private datasets is progress`);
+
+    return res.json(routeUtils.toDataResponse(datasetsInProgress));
   });
 }
