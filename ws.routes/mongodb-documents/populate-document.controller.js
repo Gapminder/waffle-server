@@ -29,12 +29,13 @@ module.exports = serviceLocator => {
       queryToCollections
     };
 
-      return propertiesByQueryService.getPopulateDocumentByQuery(externalContext, (error, document) => {
-        if (error) {
-         return logger.error('Wrong query!');
-        }
+    return propertiesByQueryService.getPopulateDocumentByQuery(externalContext, (error, document) => {
+      if (error || document.length === 0) {
+        logger.error('Wrong query!');
+        return res.json('Wrong query!');
+      }
 
-        return res.json(document);
-      })
-    }
+      return res.json(document);
+    })
+  }
 };

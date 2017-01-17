@@ -31,56 +31,36 @@ function getPopulateDocumentByQuery(externalContext, onFound) {
 
   const {collection} = externalContext;
 
-  if (collection === 'concepts') {
-    async.waterfall([
-      async.constant(externalContext),
-      findDatasetAndTransaction,
-      getConceptsDocuments,
-      mapDocuments
-    ], (err, populatedDocuments) => {
-      if (err) {
-        return logger.error('Query was not correct!');
-      }
+  let commonFunctions = [
+    async.constant(externalContext),
+    findDatasetAndTransaction,
+  ];
 
-      return onFound(null, populatedDocuments);
-    })
+  if (collection === 'concepts') {
+    commonFunctions.push(getConceptsDocuments, mapDocuments);
   }
 
   if (collection === 'datapoints') {
-
-    async.waterfall([
-      async.constant(externalContext),
-      findDatasetAndTransaction,
-      getDataPointsDocuments,
-      mapDocuments
-    ], (err, populatedDocuments) => {
-      if (err) {
-        return logger.error('Query was not correct!');
-      }
-
-      return onFound(null, populatedDocuments);
-    })
+    commonFunctions.push(getDataPointsDocuments, mapDocuments);
   }
 
   if (collection === 'entities') {
-    async.waterfall([
-      async.constant(externalContext),
-      findDatasetAndTransaction,
-      getEntitiesDocuments,
-      mapDocuments
-    ], (err, populatedDocuments) => {
-      if (err) {
+    commonFunctions.push(getEntitiesDocuments, mapDocuments);
+  }
+
+  return async.waterfall(
+    commonFunctions,
+    (error, populatedDocuments) => {
+      if (error) {
         return logger.error('Query was not correct!');
       }
 
       return onFound(null, populatedDocuments);
     })
-  }
-
 }
 
-function findDatasetAndTransaction(externalContext, onFound) {
-  let {datasetName, commit} = externalContext;
+function findDatasetAndTransaction(external, onFound) {
+  let {datasetName, commit} = external;
 
   return datasetTransactionService
     .findDefaultDatasetAndTransaction(datasetName, commit, (error, datasetAndTransaction) => {
@@ -90,100 +70,104 @@ function findDatasetAndTransaction(externalContext, onFound) {
 
       const {dataset: {_id: datasetId}, transaction: {createdAt: version}} = datasetAndTransaction;
 
-      externalContext.datasetId = datasetId;
-      externalContext.version = version;
+      external.datasetId = datasetId;
+      external.version = version;
 
-      return onFound(null, externalContext);
+      return onFound(null, external);
     })
 }
 
-function getConceptsDocuments(externalContext, onFound) {
-  let {datasetId, version, queryToCollections} = externalContext;
+function getConceptsDocuments(external, onFound) {
+  let {datasetId, version, queryToCollections} = external;
 
   return conceptsRepositoryFactory
     .currentVersion(datasetId, version)
     .findConceptsByQuery(queryToCollections, (error, conceptsDocuments) => {
       if (error) {
-        return onFound(error || `Documents was not found`);
+        logger.error('Concepts documents was not found by given query', queryToCollections);
+        return onFound(error)
       }
 
-      externalContext.documents = conceptsDocuments;
+      external.documents = conceptsDocuments;
 
-      return onFound(null, externalContext);
+      return onFound(null, external);
     });
 }
 
-function getDataPointsDocuments(externalContext, onFound) {
-  let {datasetId, version, queryToCollections} = externalContext;
+function getDataPointsDocuments(external, onFound) {
+  let {datasetId, version, queryToCollections} = external;
 
   return datapointsRepositoryFactory
     .currentVersion(datasetId, version)
     .findByQuery(queryToCollections, (error, dataPointsDocuments) => {
       if (error) {
-        return onFound(error || `Documents was not found`);
+        logger.error('DataPoints documents was not found by given query', queryToCollections);
+        return onFound(error)
       }
 
-      externalContext.documents = dataPointsDocuments;
+      external.documents = dataPointsDocuments;
 
-      return onFound(null, externalContext);
+      return onFound(null, external);
     });
 }
 
-function getEntitiesDocuments(externalContext, onFound) {
-  let {datasetId, version, queryToCollections} = externalContext;
+function getEntitiesDocuments(external, onFound) {
+  let {datasetId, version, queryToCollections} = external;
 
   return entitiesRepositoryFactory
     .currentVersion(datasetId, version)
     .findEntityPropertiesByQuery(queryToCollections, (error, entitiesDocuments) => {
 
       if (error) {
-        return onFound(error || `Documents was not found`);
+        logger.error('Entities documents was not found by given query', queryToCollections);
+        return onFound(error);
       }
 
-      externalContext.documents = entitiesDocuments;
-      return onFound(null, externalContext);
+      external.documents = entitiesDocuments;
+      return onFound(null, external);
     });
 }
 
-function mapDocuments(externalContext, onFound) {
-  let {documents} = externalContext;
+function mapDocuments(external, onFound) {
+  let {documents} = external;
 
   async.map(documents, (document, done) => {
-    externalContext.document = document;
+    external.document = document;
 
-    return getAllPopulatedDocuments(externalContext, done);
+    return getAllPopulatedDocuments(external, done);
   }, (error, populatedDocuments) => {
     if (error) {
-      return onFound(error || `Documents was not found`);
+      return onFound(error);
     }
 
     return onFound(null, populatedDocuments);
   });
 }
 
-function getAllPopulatedDocuments(externalContext, onFound) {
-  let {document, collection} = externalContext;
+function getAllPopulatedDocuments(external, onFound) {
+  let {document, collection} = external;
 
   async.reduce(objectIdsProperties[collection], document, (originalDocument, propertyContext, callback) => {
     const key = propertyContext[0];
     const subCollection = propertyContext[1];
 
-    return getDocumentProperties(originalDocument[key], subCollection, externalContext, (error, properties) => {
-      properties = Array.isArray(properties) ? properties : [properties];
+    return getDocumentProperties(originalDocument[key], subCollection, external, (error, properties) => {
       originalDocument[key] = properties;
       return callback(null, originalDocument);
     });
 
   }, (error, populatedDocument) => {
     if (error) {
-      return logger.error('Wrong query!');
+      return onFound(error);
     }
     return onFound(null, populatedDocument);
   })
 }
 
-function getDocumentProperties(objectIds, subCollection, externalContext, done) {
-  let {datasetId, version} = externalContext;
+function getDocumentProperties(objectIds, subCollection, external, done) {
+  let {datasetId, version} = external;
+
+  objectIds = Array.isArray(objectIds) ? objectIds : [objectIds];
 
   if (subCollection === 'Concepts') {
     conceptsRepositoryFactory
