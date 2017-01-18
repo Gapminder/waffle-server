@@ -246,4 +246,95 @@ describe('WS-CLI controller', () => {
 
     cliController.cleanCache(req, res);
   }));
+
+  it('should not fetch datasets in progress cause user is not authenticated', sinon.test(function (done) {
+    const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    const expectedMessage = 'There is no authenticated user to get its datasets';
+
+    const cliController = proxyqire('../../../../ws.routes/ddf/cli/cli.controller', {
+      [cliServicePath]: {
+        getDatasetsInProgress: () => {
+          throw new Error('This should not be called');
+        }
+      },
+    });
+
+    const req = {};
+    const res = {
+      json: () => {
+        expect(toErrorResponseSpy.withArgs(expectedMessage).calledOnce).to.be.true;
+        done();
+      }
+    };
+
+    cliController.getDatasetsInProgress(req, res);
+  }));
+
+  it('should fetch datasets that are currently in progress (being deleted, updated or imported)', sinon.test(function (done) {
+    const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
+    const expectedData = [{
+      name: 'dataset.name',
+      githubUrl: 'dataset.path'
+    }];
+
+    const cliController = proxyqire('../../../../ws.routes/ddf/cli/cli.controller', {
+      [cliServicePath]: {
+        getDatasetsInProgress: (userId, onFound) => {
+          expect(userId).to.equal('fakeId');
+          onFound(null, expectedData);
+        }
+      },
+    });
+
+
+
+    const req = {
+      user: {
+        _id: 'fakeId',
+        name: 'fake'
+      }
+    };
+
+    const res = {
+      json: () => {
+        expect(toDataResponseSpy.withArgs(expectedData).calledOnce).to.be.true;
+        done();
+      }
+    };
+
+    cliController.getDatasetsInProgress(req, res);
+  }));
+
+  it('should respond with an error if trying to get datasets in progress got the error', sinon.test(function (done) {
+    const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
+    const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    const expectedError = 'Boo!';
+
+    const cliController = proxyqire('../../../../ws.routes/ddf/cli/cli.controller', {
+      [cliServicePath]: {
+        getDatasetsInProgress: (userId, onFound) => {
+          onFound(expectedError);
+        }
+      },
+    });
+
+
+
+    const req = {
+      user: {
+        name: 'fake'
+      }
+    };
+
+    const res = {
+      json: () => {
+        expect(toErrorResponseSpy.withArgs(expectedError).calledOnce).to.be.true;
+        done();
+      }
+    };
+
+    cliController.getDatasetsInProgress(req, res);
+
+    sinon.assert.notCalled(toDataResponseSpy);
+  }));
 });

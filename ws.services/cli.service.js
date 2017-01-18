@@ -32,6 +32,7 @@ module.exports = {
   cleanDdfRedisCache,
   setAccessTokenForDataset,
   getPrivateDatasets,
+  getDatasetsInProgress,
   getRemovableDatasets
 };
 
@@ -190,6 +191,18 @@ function _runIncrementalUpdate(pipe, onDatasetUpdated) {
 
 function getPrivateDatasets(userId, done) {
   return datasetsRepository.findPrivateByUser(userId, (error, datasets) => {
+    if (error) {
+      return done(error);
+    }
+
+    return done(null, _.map(datasets, dataset => {
+      return {name: dataset.name, githubUrl: dataset.path};
+    }));
+  });
+}
+
+function getDatasetsInProgress(userId, done) {
+  return datasetsRepository.findDatasetsInProgressByUser(userId, (error, datasets) => {
     if (error) {
       return done(error);
     }

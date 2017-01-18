@@ -7,6 +7,8 @@ const constants = require('../../ws.utils/constants');
 
 require('../../ws.repository');
 
+const datasetsRepository = require('../../ws.repository/ddf/datasets/datasets.repository');
+
 describe('WS-CLI service', () => {
   it('should store last happened error in transaction if it was created at that moment', sinon.test(function (done) {
 
@@ -316,6 +318,52 @@ describe('WS-CLI service', () => {
     cliService.importDataset(params, error => {
       expect(error).to.exist;
       expect(error).to.equal(expectedError);
+      done();
+    });
+  }));
+
+  it('it should find datasets in progress', sinon.test(function (done) {
+    const expectedUserId = 'userId';
+
+    const foundDatasets = [{
+      name: 'fake',
+      path: 'fakePath'
+    }];
+
+    const findDatasetsInProgressByUserStub = this.stub(datasetsRepository, 'findDatasetsInProgressByUser', (userId, onFound) => {
+      onFound(null, foundDatasets);
+    });
+
+    const cliService = proxyqire('../../ws.services/cli.service', {});
+
+    cliService.getDatasetsInProgress(expectedUserId, (error, datasets) => {
+      expect(error).to.not.exist;
+      expect(datasets).to.deep.equal([{name: 'fake', githubUrl: 'fakePath'}]);
+
+      sinon.assert.calledOnce(findDatasetsInProgressByUserStub);
+      sinon.assert.calledWith(findDatasetsInProgressByUserStub, expectedUserId);
+
+      done();
+    });
+  }));
+
+  it('it should find datasets in progress: error happened', sinon.test(function (done) {
+    const expectedUserId = 'userId';
+    const expectedError = 'Boo!';
+
+    const findDatasetsInProgressByUserStub = this.stub(datasetsRepository, 'findDatasetsInProgressByUser', (userId, onFound) => {
+      onFound(expectedError);
+    });
+
+    const cliService = proxyqire('../../ws.services/cli.service', {});
+
+    cliService.getDatasetsInProgress(expectedUserId, (error, datasets) => {
+      expect(error).to.equal(expectedError);
+      expect(datasets).to.not.exist;
+
+      sinon.assert.calledOnce(findDatasetsInProgressByUserStub);
+      sinon.assert.calledWith(findDatasetsInProgressByUserStub, expectedUserId);
+
       done();
     });
   }));
