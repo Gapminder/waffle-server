@@ -59,8 +59,8 @@ function getCacheConfig(prefix) {
   };
 }
 
-function ensureAuthenticatedViaToken(res, req, next) {
-  return passport.authenticate('token')(res, req, next);
+function ensureAuthenticatedViaToken(req, res, next) {
+  return passport.authenticate('token')(req, res, next);
 }
 
 function respondWithRawDdf(query, req, res, next) {
@@ -68,7 +68,7 @@ function respondWithRawDdf(query, req, res, next) {
     if (error) {
       logger.error(error);
       res.use_express_redis_cache = false;
-      return res.json({success: false, error: error});
+      return res.json(toErrorResponse(error));
     }
 
     _storeWarmUpQueryForDefaultDataset(query);
@@ -86,12 +86,14 @@ function _storeWarmUpQueryForDefaultDataset(query) {
     return;
   }
 
-  if (_.has(query, 'dataset') || _.has(query, 'version')) {
+  if (_.has(query, 'dataset') || _.has(query, 'version') || _.has(query, 'format')) {
     return;
   }
 
   recentDdfqlQueriesRepository.create(rawDdfQuery, error => {
-    if (!error) {
+    if (error) {
+      logger.debug(error);
+    } else {
       logger.debug('Writing query to cache warm up storage', rawDdfQuery.queryRaw);
     }
   });

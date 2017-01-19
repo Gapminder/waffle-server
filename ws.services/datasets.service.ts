@@ -1,19 +1,20 @@
-'use strict';
+import * as _ from 'lodash';
+import * as async from 'async';
+import * as securityUtils from '../ws.utils/security';
 
-const _ = require('lodash');
-const async = require('async');
-const securityUtils = require('../ws.utils/security');
+import * as datasetsRepository from '../ws.repository/ddf/datasets/datasets.repository';
+import * as conceptsRepositoryFactory from '../ws.repository/ddf/concepts/concepts.repository';
+import * as entitiesRepositoryFactory from '../ws.repository/ddf/entities/entities.repository';
+import * as datapointsRepositoryFactory from '../ws.repository/ddf/data-points/data-points.repository';
+import * as datasetIndexRepository from '../ws.repository/ddf/dataset-index/dataset-index.repository';
+import * as transactionsRepository from '../ws.repository/ddf/dataset-transactions/dataset-transactions.repository';
 
-const datasetsRepository = require('../ws.repository/ddf/datasets/datasets.repository');
-const conceptsRepositoryFactory = require('../ws.repository/ddf/concepts/concepts.repository');
-const entitiesRepositoryFactory = require('../ws.repository/ddf/entities/entities.repository');
-const datapointsRepositoryFactory = require('../ws.repository/ddf/data-points/data-points.repository');
-const datasetIndexRepository = require('../ws.repository/ddf/dataset-index/dataset-index.repository');
-const transactionsRepository = require('../ws.repository/ddf/dataset-transactions/dataset-transactions.repository');
+import * as constants from '../ws.utils/constants';
+import * as logger from '../ws.config/log';
 
-const constants = require('../ws.utils/constants');
+const DATAPOINTS_TO_REMOVE_CHUNK_SIZE = 50000;
 
-module.exports = {
+export {
   findDatasetsWithVersions,
   removeDatasetData,
   findDatasetByNameAndValidateOwnership
@@ -96,22 +97,44 @@ function _checkDefaultTransactionInDataset(externalContext, onTransactionsFound)
 }
 
 function _removeAllDataByDataset(externalContext, onDataRemoved) {
-  const retryConfig = {times: 3, interval: 3000};
   const conceptsRepository = conceptsRepositoryFactory.versionAgnostic();
   const entitiesRepository = entitiesRepositoryFactory.versionAgnostic();
-  const datapointsRepository = datapointsRepositoryFactory.versionAgnostic();
 
   return async.parallel([
-    async.retry(retryConfig, async.apply(conceptsRepository.removeByDataset, externalContext.datasetId)),
-    async.retry(retryConfig, async.apply(entitiesRepository.removeByDataset, externalContext.datasetId)),
-    async.retry(retryConfig, async.apply(datapointsRepository.removeByDataset, externalContext.datasetId)),
-    async.retry(retryConfig, async.apply(datasetIndexRepository.removeByDataset, externalContext.datasetId))
+    done => conceptsRepository.removeByDataset(externalContext.datasetId, done),
+    done => entitiesRepository.removeByDataset(externalContext.datasetId, done),
+    done => removeDatapointsInChunks(externalContext.datasetId, done),
+    done => datasetIndexRepository.removeByDataset(externalContext.datasetId, done)
   ], (removingDataError) => {
     if (removingDataError) {
       return onDataRemoved(removingDataError);
     }
 
     return onDataRemoved(null, externalContext);
+  });
+}
+
+function removeDatapointsInChunks(datasetId, onRemoved): void {
+  const datapointsRepository = datapointsRepositoryFactory.versionAgnostic();
+  datapointsRepository.findIdsByDatasetAndLimit(datasetId, DATAPOINTS_TO_REMOVE_CHUNK_SIZE, (error, datapointIds) => {
+    logger.info('Removing datapoints', _.size(datapointIds));
+
+    if (error) {
+      logger.error('Datapoints removing error', error);
+      return onRemoved(error);
+    }
+
+    if (_.isEmpty(datapointIds)) {
+      return onRemoved(null);
+    }
+
+    datapointsRepository.removeByIds(datapointIds, error => {
+      if (error) {
+        return onRemoved(error);
+      }
+
+      removeDatapointsInChunks(datasetId, onRemoved);
+    });
   });
 }
 
@@ -150,7 +173,7 @@ function _findAllCompletedVersionsByDataset(dataset, onTransactionsFound) {
       return onTransactionsFound(transactionSearchError);
     }
 
-    const versions = _.map(transactions, transaction => {
+    const versions = _.map(transactions, (transaction: any) => {
       return {
         commit: transaction.commit,
         isDefault: transaction.isDefault,

@@ -6,7 +6,7 @@ import * as constants from '../../ws.utils/constants';
 
 import '../../ws.repository';
 
-const cliServicePath = '../../ws.services/cli.service.ts';
+const cliServicePath = '../../ws.services/cli.service';
 const usersRepositoryPath = '../ws.repository/ddf/users/users.repository';
 const datasetsRepositoryPath = '../ws.repository/ddf/datasets/datasets.repository';
 const importDdfServicePath = '../ws.import/import-ddf';

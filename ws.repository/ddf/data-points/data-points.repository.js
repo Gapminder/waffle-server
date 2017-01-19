@@ -43,6 +43,21 @@ DataPointsRepository.prototype.removeByDataset = function (datasetId, onRemove) 
   return DataPoints.remove({dataset: datasetId}, onRemove);
 };
 
+DataPointsRepository.prototype.removeByDatasetAndIds = function (datasetId, ids, onRemove) {
+  return DataPoints.remove({dataset: datasetId, _id: {$in: ids}}, onRemove);
+};
+
+DataPointsRepository.prototype.removeByIds = function (ids, onRemove) {
+  return DataPoints.remove({_id: {$in: ids}}, onRemove);
+};
+
+DataPointsRepository.prototype.findIdsByDatasetAndLimit = function(datasetId, limit, onDatapointsFound) {
+  const query = this._composeQuery({dataset: datasetId});
+
+  logger.debug({obj: query}, 'Datapoints query');
+  return DataPoints.find(query, {_id: 1}).limit(limit).lean().exec(onDatapointsFound);
+};
+
 //FIXME: This should be used only for queries that came from normalizer!!!
 DataPointsRepository.prototype.findByQuery = function(subDatapointQuery, onDatapointsFound) {
   const query = this._composeQuery(subDatapointQuery);

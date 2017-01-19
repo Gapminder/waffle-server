@@ -1,18 +1,17 @@
-'use strict';
-const _ = require('lodash');
-const async = require('async');
+import * as _ from 'lodash';
+import * as async from 'async';
 
-const ddfql = require('../ws.ddfql/ddf-datapoints-query-normalizer');
-const logger = require('../ws.config/log');
-const constants = require('../ws.utils/constants');
-const commonService = require('./common.service');
-const conceptsService = require('./concepts.service');
-const entitiesService = require('./entities.service');
-const ddfQueryValidator = require('../ws.ddfql/ddf-query-validator');
-const entitiesRepositoryFactory = require('../ws.repository/ddf/entities/entities.repository');
-const datapointsRepositoryFactory = require('../ws.repository/ddf/data-points/data-points.repository');
+import * as ddfql from '../ws.ddfql/ddf-datapoints-query-normalizer';
+import * as logger from '../ws.config/log';
+import * as constants from '../ws.utils/constants';
+import * as commonService from './common.service';
+import * as conceptsService from './concepts.service';
+import * as entitiesService from './entities.service';
+import * as ddfQueryValidator from '../ws.ddfql/ddf-query-validator';
+import * as entitiesRepositoryFactory from '../ws.repository/ddf/entities/entities.repository';
+import * as datapointsRepositoryFactory from '../ws.repository/ddf/data-points/data-points.repository';
 
-module.exports = {
+export {
   collectDatapointsByDdfql
 };
 
@@ -86,7 +85,7 @@ function normalizeQueriesToDatapointsByDdfql(pipe, cb) {
   const normalizedQuery = ddfql.normalizeDatapoints(pipe.query, pipe.concepts);
 
   return async.mapLimit(normalizedQuery.join, 10, (joinQuery, mcb) => {
-    const validateQuery = ddfQueryValidator.validateMongoQuery(joinQuery);
+    const validateQuery: any = ddfQueryValidator.validateMongoQuery(joinQuery);
 
     if(!validateQuery.valid) {
       return cb(validateQuery.log, pipe);
@@ -102,7 +101,7 @@ function normalizeQueriesToDatapointsByDdfql(pipe, cb) {
 
     const promotedQuery = ddfql.substituteDatapointJoinLinks(normalizedQuery, substituteJoinLinks);
     const subDatapointQuery = promotedQuery.where;
-    const validateQuery = ddfQueryValidator.validateMongoQuery(subDatapointQuery);
+    const validateQuery: any = ddfQueryValidator.validateMongoQuery(subDatapointQuery);
 
     if(!validateQuery.valid) {
       return cb(validateQuery.log, pipe);

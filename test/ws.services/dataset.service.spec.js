@@ -5,8 +5,14 @@ const _ = require('lodash');
 const async = require('async');
 const constants = require('../../ws.utils/constants');
 const proxyquire = require('proxyquire');
+const sinon  = require('sinon');
 const chai  = require('chai');
 const expect = chai.expect;
+
+const indexRepository = require('../../ws.repository/ddf/dataset-index/dataset-index.repository');
+const conceptsRepositoryFactory = require('../../ws.repository/ddf/concepts/concepts.repository');
+const entitiesRepositoryFactory = require('../../ws.repository/ddf/entities/entities.repository');
+const datapointsRepositoryFactory = require('../../ws.repository/ddf/data-points/data-points.repository');
 
 const shouldNotCall = () => expect.fail(null, null, 'This function should not be called');
 
@@ -289,4 +295,217 @@ describe('remove dataset', function() {
     });
   });
 
+  it('should fail removing datapoints on error', sinon.test(function(done) {
+
+    const expectedError = 'Boo!';
+
+    this.stub(conceptsRepositoryFactory, 'versionAgnostic', () => {
+      return {
+        removeByDataset: (datasetId, done) => {
+          done();
+        }
+      };
+    });
+
+    this.stub(entitiesRepositoryFactory, 'versionAgnostic', () => {
+      return {
+        removeByDataset: (datasetId, done) => {
+          done();
+        }
+      };
+    });
+
+    this.stub(indexRepository, 'removeByDataset', (datasetId, done) => {
+      done();
+    });
+
+    this.stub(datapointsRepositoryFactory, 'versionAgnostic', () => {
+      return {
+        findIdsByDatasetAndLimit: (datasetId, limit, done) => {
+          done(expectedError);
+        }
+      };
+    });
+
+    const datasetsService = proxyquire('../../ws.services/datasets.service', {
+      [datasetsRepositoryPath]: datasetsRepository,
+      [transactionsRepositoryPath]: transactionsRepository
+    });
+
+    datasetsService.removeDatasetData(expectedDatasetPath, expectedOwnerUser, error => {
+      expect(error).to.equal(expectedError);
+      return done();
+    });
+  }));
+
+  it('should consider datapoints removal successful if no more datapoints returned from db', sinon.test(function(done) {
+    this.stub(conceptsRepositoryFactory, 'versionAgnostic', () => {
+      return {
+        removeByDataset: (datasetId, done) => {
+          done();
+        }
+      };
+    });
+
+    this.stub(entitiesRepositoryFactory, 'versionAgnostic', () => {
+      return {
+        removeByDataset: (datasetId, done) => {
+          done();
+        }
+      };
+    });
+
+    this.stub(indexRepository, 'removeByDataset', (datasetId, done) => {
+      done();
+    });
+
+    const datapointsRepository = {
+      findIdsByDatasetAndLimit: () => {},
+    };
+
+    const findIdsByDatasetAndLimitStub = this.stub(datapointsRepository, 'findIdsByDatasetAndLimit', (datasetId, limit, done) => {
+      done(null, []);
+    });
+
+    this.stub(datapointsRepositoryFactory, 'versionAgnostic', () => {
+      return datapointsRepository;
+    });
+
+    const datasetsService = proxyquire('../../ws.services/datasets.service', {
+      [datasetsRepositoryPath]: datasetsRepository,
+      [transactionsRepositoryPath]: transactionsRepository
+    });
+
+    datasetsService.removeDatasetData(expectedDatasetPath, expectedOwnerUser, error => {
+      expect(error).to.not.exist;
+
+      sinon.assert.calledOnce(findIdsByDatasetAndLimitStub);
+      sinon.assert.calledWith(findIdsByDatasetAndLimitStub, expectedRemovableDataset._id, 50000);
+
+      return done();
+    });
+  }));
+
+  it('should respond with an error if it has happened during datapoints removal', sinon.test(function(done) {
+
+    const expectedError = 'Boo!';
+    const expectedFoundDatapointsIds = ['1', '2'];
+
+    this.stub(conceptsRepositoryFactory, 'versionAgnostic', () => {
+      return {
+        removeByDataset: (datasetId, done) => {
+          done();
+        }
+      };
+    });
+
+    this.stub(entitiesRepositoryFactory, 'versionAgnostic', () => {
+      return {
+        removeByDataset: (datasetId, done) => {
+          done();
+        }
+      };
+    });
+
+    this.stub(indexRepository, 'removeByDataset', (datasetId, done) => {
+      done();
+    });
+
+    const datapointsRepository = {
+      findIdsByDatasetAndLimit: () => {},
+      removeByIds: () => {},
+    };
+
+    const removeByIdsStub = this.stub(datapointsRepository, 'removeByIds', (datasetId, done) => {
+      done(expectedError);
+    });
+
+    const findIdsByDatasetAndLimitStub = this.stub(datapointsRepository, 'findIdsByDatasetAndLimit', (datasetId, limit, done) => {
+      done(null, expectedFoundDatapointsIds);
+    });
+
+    this.stub(datapointsRepositoryFactory, 'versionAgnostic', () => {
+      return datapointsRepository;
+    });
+
+    const datasetsService = proxyquire('../../ws.services/datasets.service', {
+      [datasetsRepositoryPath]: datasetsRepository,
+      [transactionsRepositoryPath]: transactionsRepository
+    });
+
+    datasetsService.removeDatasetData(expectedDatasetPath, expectedOwnerUser, error => {
+      expect(error).to.equal(expectedError);
+
+      sinon.assert.calledOnce(findIdsByDatasetAndLimitStub);
+      sinon.assert.calledWith(findIdsByDatasetAndLimitStub, expectedRemovableDataset._id, 50000);
+
+      sinon.assert.calledOnce(removeByIdsStub);
+      sinon.assert.calledWith(removeByIdsStub, expectedFoundDatapointsIds);
+
+      return done();
+    });
+  }));
+
+
+  it('should remove datapoints recursively', sinon.test(function(done) {
+
+    const expectedError = 'Boo!';
+    const expectedFoundDatapointsIds = ['1', '2'];
+
+    this.stub(conceptsRepositoryFactory, 'versionAgnostic', () => {
+      return {
+        removeByDataset: (datasetId, done) => {
+          done();
+        }
+      };
+    });
+
+    this.stub(entitiesRepositoryFactory, 'versionAgnostic', () => {
+      return {
+        removeByDataset: (datasetId, done) => {
+          done();
+        }
+      };
+    });
+
+    this.stub(indexRepository, 'removeByDataset', (datasetId, done) => {
+      done();
+    });
+
+    const datapointsRepository = {
+      findIdsByDatasetAndLimit: () => {},
+      removeByIds: () => {},
+    };
+
+    const removeByIdsStub = this.stub(datapointsRepository, 'removeByIds', (datasetId, done) => {
+      done();
+    });
+
+
+    const findIdsByDatasetAndLimitStub = this.stub(datapointsRepository, 'findIdsByDatasetAndLimit');
+    findIdsByDatasetAndLimitStub
+      .onFirstCall().callsArgWith(2, null, expectedFoundDatapointsIds)
+      .onSecondCall().callsArgWith(2, null, []);
+
+    this.stub(datapointsRepositoryFactory, 'versionAgnostic', () => {
+      return datapointsRepository;
+    });
+
+    const datasetsService = proxyquire('../../ws.services/datasets.service', {
+      [datasetsRepositoryPath]: datasetsRepository,
+      [transactionsRepositoryPath]: transactionsRepository
+    });
+
+    datasetsService.removeDatasetData(expectedDatasetPath, expectedOwnerUser, (error) => {
+      expect(error).to.not.exist;
+
+      sinon.assert.calledTwice(findIdsByDatasetAndLimitStub);
+      sinon.assert.calledWith(findIdsByDatasetAndLimitStub, expectedRemovableDataset._id, 50000);
+
+      sinon.assert.calledOnce(removeByIdsStub);
+      sinon.assert.calledWith(removeByIdsStub, expectedFoundDatapointsIds);
+
+      return done();
+    });
+  }));
 });

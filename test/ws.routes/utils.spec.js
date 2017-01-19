@@ -1,14 +1,20 @@
 'use strict';
 
-require('../../ws.config/db.config');
-require('../../ws.repository');
 const _ = require('lodash');
-const md5 = require('md5');
 const url = require('url');
+const md5 = require('md5');
 const URLON = require('URLON');
-const proxyquire = require('proxyquire');
+const passport = require('passport');
+
 const sinon = require('sinon');
 const expect = require('chai').expect;
+const proxyquire = require('proxyquire');
+
+require('../../ws.config/db.config');
+require('../../ws.repository');
+const logger = require('../../ws.config/log');
+const routeUtils = require('../../ws.routes/utils');
+const recentDdfqlQueriesRepository = require('../../ws.repository/ddf/recent-ddfql-queries/recent-ddfql-queries.repository');
 
 describe('Routes utils', () => {
   describe('Dataset accessibility check', () => {
@@ -442,6 +448,303 @@ describe('Routes utils', () => {
       };
 
       routeUtils.bodyFromUrlQuery(req, res, next);
+    });
+  });
+
+
+  describe('RouteUtils.respondWithRawDdf', () => {
+    it('should flush redis cache if error occured', sinon.test(function() {
+      const expectedError = 'Boo!';
+      const expectedErrorResponse = {success: false, error: 'Boo!'};
+
+      const anyQuery = {};
+
+      const req = {
+        query: {},
+        url: 'doesn\'t matter'
+      };
+
+      const jsonSpy = this.spy();
+      const nextSpy = this.spy();
+
+      const res = {
+        use_express_redis_cache: true,
+        json: jsonSpy
+      };
+
+      routeUtils.respondWithRawDdf(anyQuery, req, res, nextSpy)(expectedError);
+
+      sinon.assert.calledOnce(jsonSpy);
+      sinon.assert.calledWith(jsonSpy, expectedErrorResponse);
+
+      expect(res.use_express_redis_cache).to.equal(false);
+
+      sinon.assert.notCalled(nextSpy);
+    }));
+
+    it('should respond with raw data (data that came from db)', sinon.test(function() {
+      const anyQuery = {};
+
+      const req = {
+        query: {},
+        url: 'doesn\'t matter'
+      };
+
+      const jsonSpy = this.spy();
+      const nextSpy = this.spy();
+
+      const res = {
+        use_express_redis_cache: true,
+        json: jsonSpy
+      };
+
+      const rawDdfData = [];
+
+      routeUtils.respondWithRawDdf(anyQuery, req, res, nextSpy)(null, rawDdfData);
+
+      sinon.assert.notCalled(jsonSpy);
+      sinon.assert.calledOnce(nextSpy);
+
+      expect(res.use_express_redis_cache).to.equal(true);
+      expect(req.rawData.rawDdf).to.equal(rawDdfData);
+    }));
+
+    it('should store query for which data will be returned in db (for the subsequernt warmups)', sinon.test(function() {
+      const ddfQuery = {
+        rawDdfQuery: {
+          queryRaw: {
+            some: 'bla'
+          }
+        }
+      };
+
+      const req = {
+        query: {},
+        url: 'doesn\'t matter'
+      };
+
+      const jsonSpy = this.spy();
+      const nextSpy = this.spy();
+
+      const res = {
+        use_express_redis_cache: true,
+        json: jsonSpy
+      };
+
+      const debugStub  = this.stub(logger, 'debug');
+      const createWarmpUpQueryStub = this.stub(recentDdfqlQueriesRepository, 'create', (query, done) => {
+        done(null, ddfQuery.rawDdfQuery);
+      });
+
+      const rawDdfData = [];
+      routeUtils.respondWithRawDdf(ddfQuery, req, res, nextSpy)(null, rawDdfData);
+
+      sinon.assert.notCalled(jsonSpy);
+      sinon.assert.calledOnce(nextSpy);
+
+      sinon.assert.calledOnce(createWarmpUpQueryStub);
+      sinon.assert.calledWith(createWarmpUpQueryStub, ddfQuery.rawDdfQuery);
+
+      sinon.assert.calledOnce(debugStub);
+      sinon.assert.calledWith(debugStub, 'Writing query to cache warm up storage', ddfQuery.rawDdfQuery.queryRaw);
+
+      expect(res.use_express_redis_cache).to.equal(true);
+      expect(req.rawData.rawDdf).to.equal(rawDdfData);
+    }));
+
+    it('should log error if it is happened while sroring warmup query', sinon.test(function() {
+      const expectedError = 'Boo!';
+
+      const ddfQuery = {
+        rawDdfQuery: {
+          queryRaw: {}
+        }
+      };
+
+      const req = {
+        query: {},
+        url: 'doesn\'t matter'
+      };
+
+      const jsonSpy = this.spy();
+      const nextSpy = this.spy();
+
+      const res = {
+        use_express_redis_cache: true,
+        json: jsonSpy
+      };
+
+      const debugStub  = this.stub(logger, 'debug');
+
+      this.stub(recentDdfqlQueriesRepository, 'create', (query, done) => {
+        done(expectedError);
+      });
+
+      const rawDdfData = [];
+      routeUtils.respondWithRawDdf(ddfQuery, req, res, nextSpy)(null, rawDdfData);
+
+      sinon.assert.calledWith(debugStub, expectedError);
+
+      sinon.assert.calledOnce(nextSpy);
+    }));
+
+    it('should not store warmup query if it was sent with dataset property', sinon.test(function() {
+      const ddfQuery = {
+        dataset: 'dataset',
+        rawDdfQuery: {}
+      };
+
+      const req = {
+        query: {},
+        url: 'doesn\'t matter'
+      };
+
+      const jsonSpy = this.spy();
+      const nextSpy = this.spy();
+
+      const res = {
+        use_express_redis_cache: true,
+        json: jsonSpy
+      };
+
+      const createWarmpUpQueryStub = this.stub(recentDdfqlQueriesRepository, 'create');
+
+      const rawDdfData = [];
+      routeUtils.respondWithRawDdf(ddfQuery, req, res, nextSpy)(null, rawDdfData);
+
+      sinon.assert.notCalled(jsonSpy);
+      sinon.assert.calledOnce(nextSpy);
+
+      sinon.assert.notCalled(createWarmpUpQueryStub);
+
+      expect(res.use_express_redis_cache).to.equal(true);
+      expect(req.rawData.rawDdf).to.equal(rawDdfData);
+    }));
+
+    it('should not store warmup query if it was sent with version property', sinon.test(function() {
+      const routeUtils = proxyquire('../../ws.routes/utils.js', {});
+
+      const ddfQuery = {
+        rawDdfQuery: {},
+        version: 'version'
+      };
+
+      const req = {
+        query: {},
+        url: 'doesn\'t matter'
+      };
+
+      const jsonSpy = this.spy();
+      const nextSpy = this.spy();
+
+      const res = {
+        use_express_redis_cache: true,
+        json: jsonSpy
+      };
+
+      const createWarmpUpQueryStub = this.stub(recentDdfqlQueriesRepository, 'create');
+
+      const rawDdfData = [];
+      routeUtils.respondWithRawDdf(ddfQuery, req, res, nextSpy)(null, rawDdfData);
+
+      sinon.assert.notCalled(jsonSpy);
+      sinon.assert.calledOnce(nextSpy);
+
+      sinon.assert.notCalled(createWarmpUpQueryStub);
+
+      expect(res.use_express_redis_cache).to.equal(true);
+      expect(req.rawData.rawDdf).to.equal(rawDdfData);
+    }));
+
+    it('should not store warmup query if it was sent with format property', sinon.test(function() {
+      const ddfQuery = {
+        rawDdfQuery: {},
+        format: 'format'
+      };
+
+      const req = {
+        query: {},
+        url: 'doesn\'t matter'
+      };
+
+      const jsonSpy = this.spy();
+      const nextSpy = this.spy();
+
+      const res = {
+        use_express_redis_cache: true,
+        json: jsonSpy
+      };
+
+      const createWarmpUpQueryStub = this.stub(recentDdfqlQueriesRepository, 'create');
+
+      const rawDdfData = [];
+      routeUtils.respondWithRawDdf(ddfQuery, req, res, nextSpy)(null, rawDdfData);
+
+      sinon.assert.notCalled(jsonSpy);
+      sinon.assert.calledOnce(nextSpy);
+
+      sinon.assert.notCalled(createWarmpUpQueryStub);
+
+      expect(res.use_express_redis_cache).to.equal(true);
+      expect(req.rawData.rawDdf).to.equal(rawDdfData);
+    }));
+  });
+
+  describe('Token authentication', () => {
+    it('should return token authentication middleware', sinon.test(function() {
+      const req = {};
+      const res = {};
+      const next = () => {};
+      const middleware = () => {};
+
+      const tokenAuthSpy = this.stub().returns(middleware);
+      const passportAuthStub = this.stub(passport, 'authenticate', () => {
+        return tokenAuthSpy;
+      });
+
+      const tokenMiddleware = routeUtils.ensureAuthenticatedViaToken(res, req, next);
+
+      expect(tokenMiddleware).to.equal(middleware);
+
+      sinon.assert.calledOnce(passportAuthStub);
+      sinon.assert.calledWith(passportAuthStub, 'token');
+
+      sinon.assert.calledOnce(tokenAuthSpy);
+      sinon.assert.calledWith(tokenAuthSpy);
+    }));
+  });
+
+  describe('Response types', () => {
+    it('should produce error response from string', function() {
+      const expectedError = 'Boo!';
+      const response = routeUtils.toErrorResponse(expectedError);
+
+      expect(response.success).to.be.false;
+      expect(response.error).to.equal(expectedError);
+    });
+
+    it('should produce error response from Error', function() {
+      const expectedError = Error('Boo!');
+      const response = routeUtils.toErrorResponse(expectedError);
+
+      expect(response.success).to.be.false;
+      expect(response.error).to.equal(expectedError.message);
+    });
+
+    it('should produce message response', function() {
+      const expectedMsg = 'Hello!';
+      const response = routeUtils.toMessageResponse(expectedMsg);
+
+      expect(response.success).to.be.true;
+      expect(response.message).to.equal(expectedMsg);
+    });
+
+    it('should produce data response', function() {
+      const expectedData = {foo: 'bar'};
+      const response = routeUtils.toDataResponse(expectedData);
+
+      expect(response.success).to.be.true;
+      expect(response.data).to.equal(expectedData);
     });
   });
 });
