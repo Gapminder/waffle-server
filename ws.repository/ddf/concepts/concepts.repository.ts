@@ -1,174 +1,168 @@
 import * as _ from 'lodash';
-import * as util from 'util';
 import * as async from 'async';
 import { model } from 'mongoose';
 
-import { RepositoryFactory } from '../../repository.factory';
-import { RepositoryModel } from '../../repository.model';
+import { VersionedModelRepository } from '../../versioned-model-repository';
+import { VersionedModelRepositoryFactory } from '../../versioned-model-repository-factory';
 import { constants } from '../../../ws.utils/constants';
 
 const Concepts = model('Concepts');
 
-util.inherits(ConceptsRepository, RepositoryModel);
-
-function ConceptsRepository(... args) {
-  RepositoryModel.apply(this, args);
-}
-
-ConceptsRepository.prototype._getModel = function() {
-  return Concepts;
-};
-
-ConceptsRepository.prototype.findConceptsByQuery = function (conceptsQuery, onPropertiesFound) {
-  const composedQuery = this._composeQuery(conceptsQuery);
-  return Concepts.find(composedQuery).lean().exec(onPropertiesFound);
-};
-
-ConceptsRepository.prototype.findConceptProperties = function (select, where, onPropertiesFound) {
-  const projection = makePositiveProjectionFor(select);
-  if (!_.isEmpty(projection)) {
-    projection.gid = 1;
-    projection.originId = 1;
-    projection['properties.concept_type'] = 1;
+export class ConceptsRepository extends VersionedModelRepository {
+  public constructor(versionQueryFragment, datasetId?, version?) {
+    super(versionQueryFragment, datasetId, version);
   }
 
-  const normalizedWhereClause = this._normalizeWhereClause(where);
-  const conceptQuery = this._composeQuery(prefixWithProperties(normalizedWhereClause));
+  protected _getModel(): any {
+    return Concepts;
+  }
 
-  return Concepts.find(conceptQuery, projection).lean().exec(onPropertiesFound);
-};
+  public findConceptsByQuery(conceptsQuery, onPropertiesFound) {
+    const composedQuery = this._composeQuery(conceptsQuery);
+    return Concepts.find(composedQuery).lean().exec(onPropertiesFound);
+  }
 
-ConceptsRepository.prototype.addDimensionsForMeasure = function ({measureOriginId, dimensions}, done) {
-  const query = this._composeQuery({originId: measureOriginId});
-  return Concepts.update(query, {$addToSet: {dimensions: {$each: dimensions}}}, done);
-};
-
-ConceptsRepository.prototype.addSubsetOfByGid = function ({gid, parentConceptId}, done) {
-  const query = this._composeQuery({'properties.drill_up': gid});
-  return Concepts.update(query, {$addToSet: {'subsetOf': parentConceptId}}, {multi: true}, done);
-};
-
-ConceptsRepository.prototype.setDomainByGid = function ({gid, domainConceptId}, done) {
-  const query = this._composeQuery({'properties.domain': gid});
-  return Concepts.update(query,  {$set: {'domain': domainConceptId}}, {multi: true}, done);
-};
-
-ConceptsRepository.prototype.findDistinctDrillups = function (done) {
-  const query = this._composeQuery();
-  return Concepts.distinct('properties.drill_up', query).lean().exec(done);
-};
-
-ConceptsRepository.prototype.findDistinctDomains = function (done) {
-  const query = this._composeQuery();
-  return Concepts.distinct('properties.domain', query).lean().exec(done);
-};
-
-ConceptsRepository.prototype.closeByGid = function (gid, onClosed) {
-  const query = this._composeQuery({gid});
-  return Concepts.findOneAndUpdate(query, {$set: {to: this.version}}, {'new': false}).lean().exec(onClosed);
-};
-
-ConceptsRepository.prototype.closeOneByQuery = function (closingQuery, onClosed) {
-  const query = this._composeQuery(closingQuery);
-  return Concepts.findOneAndUpdate(query, {$set: {to: this.version}}, {'new': false}).lean().exec(onClosed);
-};
-
-ConceptsRepository.prototype.closeById = function (conceptId, onClosed) {
-  const query = this._composeQuery({_id: conceptId});
-  return Concepts.findOneAndUpdate(query, {$set: {to: this.version}}, {'new': false}).lean().exec(onClosed);
-};
-
-ConceptsRepository.prototype.closeByOriginId = function (originId, onClosed) {
-  const query = this._composeQuery({originId});
-  return Concepts.findOneAndUpdate(query, {$set: {to: this.version}}, {'new': false}).lean().exec(onClosed);
-};
-
-ConceptsRepository.prototype.count = function (onCounted) {
-  const countQuery = this._composeQuery();
-  return Concepts.count(countQuery, onCounted);
-};
-
-ConceptsRepository.prototype.rollback = function (transaction, onRolledback) {
-  const {createdAt: versionToRollback} = transaction;
-
-  return async.parallelLimit([
-    done => Concepts.update({to: versionToRollback}, {$set: {to: constants.MAX_VERSION}}, {multi: true}).lean().exec(done),
-    done => Concepts.remove({from: versionToRollback}, done)
-  ], constants.LIMIT_NUMBER_PROCESS, onRolledback);
-};
-
-ConceptsRepository.prototype.removeByDataset = function (datasetId, onRemove) {
-  return Concepts.remove({dataset: datasetId}, onRemove);
-};
-
-ConceptsRepository.prototype.findAllPopulated = function (done) {
-  const composedQuery = this._composeQuery();
-  return Concepts.find(composedQuery, null, {
-    join: {
-      domain: {
-        $find: composedQuery
-      },
-      subsetOf: {
-        $find: composedQuery
-      }
+  public findConceptProperties(select, where, onPropertiesFound) {
+    const projection = ConceptsRepository.makePositiveProjectionFor(select);
+    if (!_.isEmpty(projection)) {
+      projection.gid = 1;
+      projection.originId = 1;
+      projection['properties.concept_type'] = 1;
     }
-  })
-    .populate('dataset')
-    .lean()
-    .exec(done);
-};
 
-ConceptsRepository.prototype.findAll = function (onFound) {
-  const countQuery = this._composeQuery();
-  return Concepts.find(countQuery).lean().exec(onFound);
-};
+    const normalizedWhereClause = this._normalizeWhereClause(where);
+    const conceptQuery = this._composeQuery(ConceptsRepository.prefixWithProperties(normalizedWhereClause));
 
-ConceptsRepository.prototype.findByGid = function (gid, onFound) {
-  const query = this._composeQuery({gid});
-  return Concepts.findOne(query).lean().exec(onFound);
-};
+    return Concepts.find(conceptQuery, projection).lean().exec(onPropertiesFound);
+  }
 
-ConceptsRepository.prototype.findTargetForTranslation = function (params, done) {
-  return this.findByGid(params.gid, done);
-};
+  public addSubsetOfByGid({gid, parentConceptId}, done) {
+    const query = this._composeQuery({'properties.drill_up': gid});
+    return Concepts.update(query, {$addToSet: {'subsetOf': parentConceptId}}, {multi: true}, done);
+  }
 
-ConceptsRepository.prototype.removeTranslation = function ({originId, language}, done) {
-  return Concepts.findOneAndUpdate({originId}, {$unset: {[`languages.${language}`]: 1}}, {'new': true}, done);
-};
+  public setDomainByGid({gid, domainConceptId}, done) {
+    const query = this._composeQuery({'properties.domain': gid});
+    return Concepts.update(query, {$set: {'domain': domainConceptId}}, {multi: true}, done);
+  }
 
-ConceptsRepository.prototype.addTranslation = function ({id, language, translation}, done) {
-  return Concepts.findOneAndUpdate({_id: id}, {$set: {[`languages.${language}`]: translation}}, {'new': true}, done);
-};
+  public findDistinctDrillups(done) {
+    const query = this._composeQuery();
+    return Concepts.distinct('properties.drill_up', query).lean().exec(done);
+  }
 
-ConceptsRepository.prototype.addTranslationsForGivenProperties = function (properties, externalContext, done) {
-  const {language} = externalContext;
+  public findDistinctDomains(done) {
+    const query = this._composeQuery();
+    return Concepts.distinct('properties.domain', query).lean().exec(done);
+  }
 
-  const subEntityQuery = {
-    gid: properties.concept
+  public closeByGid(gid, onClosed) {
+    const query = this._composeQuery({gid});
+    return Concepts.findOneAndUpdate(query, {$set: {to: this.version}}, {'new': false}).lean().exec(onClosed);
+  }
+
+  public closeOneByQuery(closingQuery, onClosed) {
+    const query = this._composeQuery(closingQuery);
+    return Concepts.findOneAndUpdate(query, {$set: {to: this.version}}, {'new': false}).lean().exec(onClosed);
+  }
+
+  public closeById(conceptId, onClosed) {
+    const query = this._composeQuery({_id: conceptId});
+    return Concepts.findOneAndUpdate(query, {$set: {to: this.version}}, {'new': false}).lean().exec(onClosed);
+  }
+
+  public count(onCounted) {
+    const countQuery = this._composeQuery();
+    return Concepts.count(countQuery, onCounted);
+  }
+
+  public rollback(transaction, onRolledback) {
+    const {createdAt: versionToRollback} = transaction;
+
+    return async.parallelLimit([
+      done => Concepts.update({to: versionToRollback}, {$set: {to: constants.MAX_VERSION}}, {multi: true}).lean().exec(done),
+      done => Concepts.remove({from: versionToRollback}, done)
+    ], constants.LIMIT_NUMBER_PROCESS, onRolledback);
   };
 
-  const query = this._composeQuery(subEntityQuery);
-  const updateQuery = {
-    $set: {
-      languages: {
-        [language.id]: properties
+  public removeByDataset(datasetId, onRemove) {
+    return Concepts.remove({dataset: datasetId}, onRemove);
+  }
+
+  public findAllPopulated(done) {
+    const composedQuery = this._composeQuery();
+    return Concepts.find(composedQuery, null, {
+      join: {
+        domain: {
+          $find: composedQuery
+        },
+        subsetOf: {
+          $find: composedQuery
+        }
       }
-    }
-  };
+    })
+      .populate('dataset')
+      .lean()
+      .exec(done);
+  }
 
-  return Concepts.update(query, updateQuery).exec(done);
-};
+  public findAll(onFound) {
+    const countQuery = this._composeQuery();
+    return Concepts.find(countQuery).lean().exec(onFound);
+  }
 
-//TODO: Move this in utils that should be common across all repositories
-function makePositiveProjectionFor(properties): any {
-  const positiveProjectionValues = _.fill(new Array(_.size(properties)), 1);
-  return prefixWithProperties(_.zipObject(properties, positiveProjectionValues));
+  public findByGid(gid, onFound) {
+    const query = this._composeQuery({gid});
+    return Concepts.findOne(query).lean().exec(onFound);
+  }
+
+  public findTargetForTranslation(params, done) {
+    return this.findByGid(params.gid, done);
+  }
+
+  public removeTranslation({originId, language}, done) {
+    return Concepts.findOneAndUpdate({originId}, {$unset: {[`languages.${language}`]: 1}}, {'new': true}, done);
+  }
+
+  public addTranslation({id, language, translation}, done) {
+    return Concepts.findOneAndUpdate({_id: id}, {$set: {[`languages.${language}`]: translation}}, {'new': true}, done);
+  }
+
+  public addTranslationsForGivenProperties(properties, externalContext, done) {
+    const {language} = externalContext;
+
+    const subEntityQuery = {
+      gid: properties.concept
+    };
+
+    const query = this._composeQuery(subEntityQuery);
+    const updateQuery = {
+      $set: {
+        languages: {
+          [language.id]: properties
+        }
+      }
+    };
+
+    return Concepts.update(query, updateQuery).exec(done);
+  }
+
+  //TODO: Move this in utils that should be common across all repositories
+  private static makePositiveProjectionFor(properties): any {
+    const positiveProjectionValues = _.fill(new Array(_.size(properties)), 1);
+    return ConceptsRepository.prefixWithProperties(_.zipObject(properties, positiveProjectionValues));
+  }
+
+  private static prefixWithProperties(object) {
+    return _.mapKeys(object, (value, property) => `properties.${property}`);
+  }
 }
 
-function prefixWithProperties(object) {
-  return _.mapKeys(object, (value, property) => `properties.${property}`);
+class ConceptsRepositoryFactory extends VersionedModelRepositoryFactory<ConceptsRepository> {
+  public constructor() {
+    super(ConceptsRepository);
+  }
 }
 
-const repositoryFactory = new RepositoryFactory(ConceptsRepository);
-
+const repositoryFactory = new ConceptsRepositoryFactory();
 export { repositoryFactory as ConceptsRepositoryFactory };

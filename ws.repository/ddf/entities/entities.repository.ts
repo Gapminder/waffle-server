@@ -1,203 +1,145 @@
 import * as _ from 'lodash';
-import * as util from 'util';
 import * as async from 'async';
 import { model } from 'mongoose';
 
-import { RepositoryFactory } from '../../repository.factory';
-import { RepositoryModel } from '../../repository.model';
+import { VersionedModelRepositoryFactory } from '../../versioned-model-repository-factory';
+import { VersionedModelRepository } from '../../versioned-model-repository';
 import { constants } from '../../../ws.utils/constants';
 import { logger } from '../../../ws.config/log';
 
 const Entities = model('Entities');
 const Concepts = model('Concepts');
 
-util.inherits(EntitiesRepository, RepositoryModel);
+class EntitiesRepository extends VersionedModelRepository {
+  public constructor(versionQueryFragment, datasetId?, version?) {
+    super(versionQueryFragment, datasetId, version);
+  }
 
-function EntitiesRepository(...args) {
-  RepositoryModel.apply(this, args);
-}
+  protected _getModel(): any {
+    return Entities;
+  }
 
-EntitiesRepository.prototype._getModel = function () {
-  return Entities;
-};
+  public count(onCounted) {
+    const countQuery = this._composeQuery();
+    return Entities.count(countQuery, onCounted);
+  }
 
-EntitiesRepository.prototype.findByOriginId = function (originId, done) {
-  const query = this._composeQuery({originId: originId});
-  return Entities.findOne(query).lean().exec(done);
-};
+  public rollback(transaction, onRolledback) {
+    const {createdAt: versionToRollback} = transaction;
 
-EntitiesRepository.prototype.addDrillupsByEntityId = function ({entitiyId, drillups}, done) {
-  const query = this._composeQuery({_id: entitiyId});
-  return Entities.update(query, {$addToSet: {'drillups': {$each: drillups}}}, {multi: true}, done);
-};
+    return async.parallelLimit([
+      done => Entities.update({to: versionToRollback}, {$set: {to: constants.MAX_VERSION}}, {multi: true}).lean().exec(done),
+      done => Entities.remove({from: versionToRollback}, done)
+    ], constants.LIMIT_NUMBER_PROCESS, onRolledback);
+  }
 
-EntitiesRepository.prototype.count = function (onCounted) {
-  const countQuery = this._composeQuery();
-  return Entities.count(countQuery, onCounted);
-};
+  public removeByDataset(datasetId, onRemove) {
+    return Entities.remove({dataset: datasetId}, onRemove);
+  }
 
-EntitiesRepository.prototype.rollback = function (transaction, onRolledback) {
-  const {createdAt: versionToRollback} = transaction;
+  public closeOneByQuery(closeQuery, done) {
+    const query = this._composeQuery(closeQuery);
+    return Entities.findOneAndUpdate(query, {$set: {to: this.version}}, {'new': true}).lean().exec(done);
+  }
 
-  return async.parallelLimit([
-    done => Entities.update({to: versionToRollback}, {$set: {to: constants.MAX_VERSION}}, {multi: true}).lean().exec(done),
-    done => Entities.remove({from: versionToRollback}, done)
-  ], constants.LIMIT_NUMBER_PROCESS, onRolledback);
-};
+  public findOneByDomainAndSetsAndGid(params, done) {
+    const {domain, sets, gid} = params;
+    const query = this._composeQuery({domain, sets, gid});
+    return Entities.findOne(query).lean().exec(done);
+  }
 
-EntitiesRepository.prototype.removeByDataset = function (datasetId, onRemove) {
-  return Entities.remove({dataset: datasetId}, onRemove);
-};
+  public findTargetForTranslation(params, done) {
+    return this.findOneByDomainAndSetsAndGid(params, done);
+  }
 
-EntitiesRepository.prototype.closeByDomainAndSets = function ({domain, sets}, done) {
-  const query = this._composeQuery({domain, sets});
-  return Entities.update(query, {$set: {to: this.version}}, {multi: true}, done);
-};
+  public removeTranslation({originId, language}, done) {
+    return Entities.findOneAndUpdate({originId}, {$unset: {[`languages.${language}`]: 1}}, {'new': true}, done);
+  }
 
-EntitiesRepository.prototype.closeOneByQuery = function (closeQuery, done) {
-  const query = this._composeQuery(closeQuery);
-  return Entities.findOneAndUpdate(query, {$set: {to: this.version}}, {'new': true}).lean().exec(done);
-};
+  public addTranslation({id, language, translation}, done) {
+    return Entities.findOneAndUpdate({_id: id}, {$set: {[`languages.${language}`]: translation}}, {'new': true}, done);
+  }
 
-EntitiesRepository.prototype.findOneByDomainAndSetsAndGid = function (params, done) {
-  const {domain, sets, gid} = params;
-  const query = this._composeQuery({domain, sets, gid});
-  return Entities.findOne(query).lean().exec(done);
-};
+  public findEntityPropertiesByQuery(entitiesQuery, onPropertiesFound) {
+    const composedQuery = this._composeQuery(entitiesQuery);
+    logger.debug({obj: composedQuery}, 'Query to get entities according to ddfql');
+    return Entities.find(composedQuery).lean().exec(onPropertiesFound);
+  }
 
-EntitiesRepository.prototype.findTargetForTranslation = function (params, done) {
-  return this.findOneByDomainAndSetsAndGid(params, done);
-};
+  public findAll(done) {
+    const composedQuery = this._composeQuery();
+    return Entities.find(composedQuery).lean().exec(done);
+  }
 
-EntitiesRepository.prototype.removeTranslation = function ({originId, language}, done) {
-  return Entities.findOneAndUpdate({originId}, {$unset: {[`languages.${language}`]: 1}}, {'new': true}, done);
-};
-
-EntitiesRepository.prototype.addTranslation = function ({id, language, translation}, done) {
-  return Entities.findOneAndUpdate({_id: id}, {$set: {[`languages.${language}`]: translation}}, {'new': true}, done);
-};
-
-EntitiesRepository.prototype.findAllHavingGivenDomainsOrSets = function (domainsIds, setsIds, onFound) {
-  const query = this._composeQuery({
-    $or: [
-      {
-        domain: {$in: domainsIds}
-      },
-      {
-        sets: {$in: setsIds}
-      }
-    ]
-  });
-
-  return Entities.find(query).lean().exec(onFound);
-};
-
-EntitiesRepository.prototype.findEntityPropertiesByQuery = function (entitiesQuery, onPropertiesFound) {
-  const composedQuery = this._composeQuery(entitiesQuery);
-  logger.debug({obj: composedQuery}, 'Query to get entities according to ddfql');
-  return Entities.find(composedQuery).lean().exec(onPropertiesFound);
-};
-
-EntitiesRepository.prototype.findAllPopulated = function (done) {
-  const composedQuery = this._composeQuery();
-  return Entities.find(composedQuery, null, {
-    join: {
-      domain: {
-        $find: composedQuery
-      },
-      sets: {
-        $find: composedQuery
-      }
-    }
-  })
-    .populate('dataset')
-    .lean()
-    .exec(done);
-};
-
-EntitiesRepository.prototype.findByDomainAndSets = function ({domain, sets}, done) {
-  const composedQuery = this._composeQuery({domain, sets});
-  return Entities.find(composedQuery).lean().exec(done);
-};
-
-EntitiesRepository.prototype.findAll = function (done) {
-  const composedQuery = this._composeQuery();
-  return Entities.find(composedQuery).lean().exec(done);
-};
-
-EntitiesRepository.prototype.findDistinctSets = function (entitiesOriginIds, done) {
-  const composedQuery = this._composeQuery({originId: {$in: entitiesOriginIds}});
-  return Entities.distinct('sets', composedQuery).lean().exec(done);
-};
-
-EntitiesRepository.prototype.findDistinctDomains = function (entitiesOriginIds, done) {
-  const composedQuery = this._composeQuery({originId: {$in: entitiesOriginIds}});
-  return Entities.distinct('domain', composedQuery).lean().exec(done);
-};
-
-EntitiesRepository.prototype.findEntityProperties = function (entityDomainGid, select, where, onPropertiesFound) {
-  const conceptQuery = this._composeQuery({
-    gid: entityDomainGid,
-    'properties.concept_type': {$in: constants.DEFAULT_ENTITY_GROUP_TYPES}
-  });
-
-  return Concepts.findOne(conceptQuery).lean().exec((error, concept: any) => {
-    if (error || !concept) {
-      return onPropertiesFound(error || `There is no entity domain '${entityDomainGid}'`);
-    }
-
-    const projection = makePositiveProjectionFor(_.without(select, entityDomainGid));
-    if (_.includes(select, entityDomainGid)) {
-      projection.gid = 1;
-    }
-    if (!_.isEmpty(projection)) {
-      projection.gid = 1;
-      projection.originId = 1;
-      projection.domain = 1;
-    }
-
-    const normalizedWhereClause = this._normalizeWhereClause(where);
-    const whereClauseWithSubstitutedGid = _.mapKeys(normalizedWhereClause, (value, key: string) => {
-      if (entityDomainGid === key) {
-        return 'gid';
-      }
-
-      return key.slice(key.indexOf('.') + 1);
+  public findEntityProperties(entityDomainGid, select, where, onPropertiesFound) {
+    const conceptQuery = this._composeQuery({
+      gid: entityDomainGid,
+      'properties.concept_type': {$in: constants.DEFAULT_ENTITY_GROUP_TYPES}
     });
-    const whereWithPrefixedProperties = toPropertiesDotNotation(whereClauseWithSubstitutedGid);
 
-    const entitiesQuery = this._composeQuery({$or: [{domain: concept.originId}, {sets: concept.originId}]}, whereWithPrefixedProperties);
-
-    return Entities.find(entitiesQuery, projection).lean().exec(onPropertiesFound);
-  });
-};
-
-EntitiesRepository.prototype.addTranslationsForGivenProperties = function (properties, externalContext, done) {
-  const {source, language, resolvedProperties} = externalContext;
-
-  const subEntityQuery = _.extend({sources: source}, resolvedProperties);
-  const query = this._composeQuery(subEntityQuery);
-
-  const updateQuery = {
-    $set: {
-      languages: {
-        [language.id]: properties
+    return Concepts.findOne(conceptQuery).lean().exec((error, concept: any) => {
+      if (error || !concept) {
+        return onPropertiesFound(error || `There is no entity domain '${entityDomainGid}'`);
       }
-    }
-  };
 
-  return Entities.update(query, updateQuery).exec(done);
-};
+      const projection = EntitiesRepository.makePositiveProjectionFor(_.without(select, entityDomainGid));
+      if (_.includes(select, entityDomainGid)) {
+        projection.gid = 1;
+      }
+      if (!_.isEmpty(projection)) {
+        projection.gid = 1;
+        projection.originId = 1;
+        projection.domain = 1;
+      }
 
-function makePositiveProjectionFor(properties): any {
-  const positiveProjectionValues = _.fill(new Array(_.size(properties)), 1);
-  return toPropertiesDotNotation(_.chain(properties).zipObject(positiveProjectionValues).value());
+      const normalizedWhereClause = this._normalizeWhereClause(where);
+      const whereClauseWithSubstitutedGid = _.mapKeys(normalizedWhereClause, (value, key: string) => {
+        if (entityDomainGid === key) {
+          return 'gid';
+        }
+
+        return key.slice(key.indexOf('.') + 1);
+      });
+      const whereWithPrefixedProperties = EntitiesRepository.toPropertiesDotNotation(whereClauseWithSubstitutedGid);
+
+      const entitiesQuery = this._composeQuery({$or: [{domain: concept.originId}, {sets: concept.originId}]}, whereWithPrefixedProperties);
+
+      return Entities.find(entitiesQuery, projection).lean().exec(onPropertiesFound);
+    });
+  }
+
+  public addTranslationsForGivenProperties(properties, externalContext, done) {
+    const {source, language, resolvedProperties} = externalContext;
+
+    const subEntityQuery = _.extend({sources: source}, resolvedProperties);
+    const query = this._composeQuery(subEntityQuery);
+
+    const updateQuery = {
+      $set: {
+        languages: {
+          [language.id]: properties
+        }
+      }
+    };
+
+    return Entities.update(query, updateQuery).exec(done);
+  }
+
+  private static makePositiveProjectionFor(properties): any {
+    const positiveProjectionValues = _.fill(new Array(_.size(properties)), 1);
+    return EntitiesRepository.toPropertiesDotNotation(_.chain(properties).zipObject(positiveProjectionValues).value());
+  }
+
+  private static toPropertiesDotNotation(object) {
+    return _.mapKeys(object, (value, property: string) => property === 'gid' ? property : `properties.${property}`);
+  }
 }
 
-function toPropertiesDotNotation(object) {
-  return _.mapKeys(object, (value, property: string) => property === 'gid' ? property : `properties.${property}`);
+class EntitiesRepositoryFactory extends VersionedModelRepositoryFactory<EntitiesRepository> {
+  public constructor() {
+    super(EntitiesRepository);
+  }
 }
 
-const repositoryFactory = new RepositoryFactory(EntitiesRepository);
-
+const repositoryFactory = new EntitiesRepositoryFactory();
 export { repositoryFactory as EntitiesRepositoryFactory };
