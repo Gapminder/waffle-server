@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "noImplicitReturns": true,
+    "noImplicitAny": false,
+    "preserveConstEnums": true,
+    "removeComments": true,
+    "sourceMap": true,
+    "types": [
+      "sinon",
+      "async",
+      "node",
+      "chai",
+      "mocha",
+      "proxyquire"
+    ]
+  },
+  "include": [
+    "**/*"
+  ],
+  "exclude": [
+    "coverage",
+    "node_modules"
+  ]
+}

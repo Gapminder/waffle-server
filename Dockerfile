@@ -35,6 +35,7 @@ VOLUME /home/waffle-server/ddf
 COPY ./ ./
 
 RUN npm i
+RUN npm run tsc
 EXPOSE 3000
 EXPOSE 80
 
