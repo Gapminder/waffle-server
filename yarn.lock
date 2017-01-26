@@ -2,13 +2,13 @@
 # yarn lockfile v1
 
 
-"@types/async@1.4.29":
-  version "1.4.29"
-  resolved "https://registry.yarnpkg.com/@types/async/-/async-1.4.29.tgz#4d76ec7498d82dc27faea62b0423568406b1a436"
-
 "@types/async@2.0.34":
   version "2.0.34"
   resolved "https://registry.yarnpkg.com/@types/async/-/async-2.0.34.tgz#f23e1729609ccbe6cfaffc88270c5e71a6341678"
+
+"@types/async@^2.0.38":
+  version "2.0.38"
+  resolved "https://registry.yarnpkg.com/@types/async/-/async-2.0.38.tgz#5c369dcb14788da0621daafa8594a053b0edcb21"
 
 "@types/babyparse@0.0.30":
   version "0.0.30"
@@ -304,15 +304,11 @@ async-each@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/async-each/-/async-each-1.0.1.tgz#19d386a1d9edc6e7c1c85d388aedbcc56d33602d"
 
-async@0.2.9:
+async@0.2.9, async@0.2.x, async@~0.2.6, async@~0.2.9:
   version "0.2.9"
   resolved "https://registry.yarnpkg.com/async/-/async-0.2.9.tgz#df63060fbf3d33286a76aaf6d55a2986d9ff8619"
 
-async@0.2.x, async@~0.2.6, async@~0.2.9:
-  version "0.2.10"
-  resolved "https://registry.yarnpkg.com/async/-/async-0.2.10.tgz#b6bbe0b0674b9d719708ca38de8c237cb526c3d1"
-
-async@1.5.2, async@1.x, async@^1.2.1, async@^1.4.0, async@^1.5.2, async@~1.5.0:
+async@1.x, async@^1.2.1, async@^1.4.0, async@^1.5.2, async@~1.5.0:
   version "1.5.2"
   resolved "https://registry.yarnpkg.com/async/-/async-1.5.2.tgz#ec6a61ae56480c0c3cb241c95618e20892f9672a"
 
@@ -328,7 +324,7 @@ async@2.1.2:
   dependencies:
     lodash "^4.14.0"
 
-async@2.1.4:
+async@2.1.4, async@^2.1.4:
   version "2.1.4"
   resolved "https://registry.yarnpkg.com/async/-/async-2.1.4.tgz#2d2160c7788032e4dd6cbe2502f1f9a2c8f6cde4"
   dependencies:

@@ -368,7 +368,7 @@ describe('remove dataset', function() {
     });
 
     datasetsService.removeDatasetData(expectedDatasetPath, expectedOwnerUser, (error) => {
-      expect(error).to.be.undefined;
+      expect(error).to.be.null;
       return done();
     });
   });

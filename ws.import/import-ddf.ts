@@ -41,7 +41,7 @@ function importDdf(options, done) {
     createTranslations,
     createDatasetSchema,
     ddfImportUtils.closeTransaction
-  ], (importError, pipe) => {
+  ], (importError, pipe: any) => {
     console.timeEnd(DATASET_IMPORT_LABEL);
 
     if (importError && _.get(pipe, 'transaction')) {

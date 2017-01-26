@@ -66,7 +66,7 @@ class EntitiesRepository extends VersionedModelRepository {
     return Entities.find(composedQuery).lean().exec(onPropertiesFound);
   }
 
-  public findAll(done) {
+  public findAll(done?) {
     const composedQuery = this._composeQuery();
     return Entities.find(composedQuery).lean().exec(done);
   }
@@ -108,7 +108,7 @@ class EntitiesRepository extends VersionedModelRepository {
     });
   }
 
-  public addTranslationsForGivenProperties(properties, externalContext, done) {
+  public addTranslationsForGivenProperties(properties, externalContext, done?) {
     const {source, language, resolvedProperties} = externalContext;
 
     const subEntityQuery = _.extend({sources: source}, resolvedProperties);

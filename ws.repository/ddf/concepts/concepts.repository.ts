@@ -128,7 +128,7 @@ export class ConceptsRepository extends VersionedModelRepository {
     return Concepts.findOneAndUpdate({_id: id}, {$set: {[`languages.${language}`]: translation}}, {'new': true}, done);
   }
 
-  public addTranslationsForGivenProperties(properties, externalContext, done) {
+  public addTranslationsForGivenProperties(properties, externalContext, done?) {
     const {language} = externalContext;
 
     const subEntityQuery = {

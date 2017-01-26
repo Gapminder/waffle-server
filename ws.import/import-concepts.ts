@@ -31,7 +31,7 @@ function createConcepts(pipe, done) {
     _addConceptSubsetOf,
     _addConceptDomains,
     ddfImportUtils.getAllConcepts
-  ], (err, res) => {
+  ], (err, res: any) => {
     pipe.concepts = res.concepts;
     pipe.timeConcepts = res.timeConcepts;
     return done(err, pipe);

@@ -84,7 +84,7 @@ function normalizeQueriesToDatapointsByDdfql(pipe, cb) {
   const entitiesRepository = EntitiesRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version);
   const normalizedQuery = ddfql.normalizeDatapoints(pipe.query, pipe.concepts);
 
-  return async.mapLimit(normalizedQuery.join, 10, (joinQuery, mcb) => {
+  return async.mapValuesLimit(normalizedQuery.join, 10, (joinQuery, link, mcb: Function) => {
     const validateQuery: ValidateQueryModel = ddfQueryValidator.validateMongoQuery(joinQuery);
 
     if(!validateQuery.valid) {

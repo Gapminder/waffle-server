@@ -85,7 +85,7 @@ class DataPointsRepository extends VersionedModelRepository {
     return DataPoints.findOneAndUpdate({_id: id}, {$set: {[`languages.${language}`]: translation}}, {'new': true}, done);
   }
 
-  public addTranslationsForGivenProperties(properties, externalContext, done) {
+  public addTranslationsForGivenProperties(properties, externalContext, done?) {
     const {source, language, resolvedProperties} = externalContext;
 
     const subDatapointQuery = _.extend({sources: source}, resolvedProperties);
