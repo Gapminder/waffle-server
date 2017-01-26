@@ -1,61 +1,45 @@
-# waffle-server
-Waffle server
-please read [implementation.md](implementation.md)
+# Waffle Server (or simply WS)
 
-## install linux
-```bash
-sudo apt-get install -y nodejs
-sudo npm i -g webpack webpack-dev-server
+- The main goal of WS is to store, update, evolve and serve DDF data.
+- WS imports [DDF](https://docs.google.com/document/d/1wQ9hp3OoLKE3oor2TtSxXx4QMkEqEtoEYDfzQASfA6E) data from DDF repositories stored on github.
+- WS serves DDF using query language specifically designed for DDF data format - [DDFQL](https://docs.google.com/document/d/1olFm-XXjWxQ4LrTCfM42an6LbjbIgnt__V1DZxSmnuQ)
 
-```
+## Tools that should be set up
+ - MongoDB
+ - Redis
+ - Node.js (version >= 6.9)
 
-## required env variables
-AWS_ACCESS_KEY_ID
-AWS_SECRET_ACCESS_KEY
-S3_BUCKET
+## Environment variables
+- `DEFAULT_USER_PASSWORD`	- is a variable for defining default WS user (example `DEFAULT_USER_PASSWORD=123`)
+- `MONGODB_URL` - defines connection url for mongodb (example	`MONGODB_URL=mongodb://localhost:27017/ws_ddf_local`)
+- `INNER_PORT` - defines on which port WS should run (example `INNER_PORT=3000`)
+- `THRASHING_MACHINE` - this variable should be set only for WS machine that dealing with DDF importing and updating (example `THRASHING_MACHINE=true`)
+- `NODE_ENV` - environment in which WS is running  (example `NODE_ENV=local`). Possible values:
+ - local
+ - production
+ - stage
+ - development
 
-# Waffle Server - Vizabi integration
+## NPM scripts
+- **test** - runs all the WS test: end-to-end and unit
+- **spec** - runs all units tests
+- **spec:coverage** - runs all units tests and generates WS coverage report
+- **e2e** - runs all integration tests
+- **e2e:allCommits** - runs integration tests for all commits in DDF repository (this includes data importing and update)
+- **e2e:2commit** - runs integration tests starting DDF import from second commit
+- **e2e:3commit** - runs integration tests starting DDF import from third commit
+- **e2e:4commit** - runs integration tests starting DDF import from fourth commit
+- **local** - runs WS in local development mode
+- **tsc** - compiles WS typescript files
 
-Integration script [is here](./ws-vizabi).
+## Run WS:
+ - clone WS to the directory of you choice
+ - enter this directory
+ - npm i
+ - npm run tsc
+ - npm run local
 
-Before this script use please, read carefully the next comments:
-
-## Next soft should be alive:
- 1. MongoDB
- 2. Redis
- 3. Neo4J (!password=`neo4j`)
- 4. WS and Vizabi Tools should not be alive
-
-### You can use next command for stop all of `NodeJS` instances (WS or Vizabi Tools):
-`kill $(ps aux | grep 'node ' | awk '{print $2}')`
-
-## Usage:
- 1. Create a separate directory.
- 2. Put this script into the directory.
- 3. Put [run script](./run) from current directory into the directory.
- 4. Edit [run script](./run) script: put into this script AWS S3 credentials (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, S3_BUCKET).
- 5. Run this script.
-
-## Specification of query accepted by WS API
-please read [query specification accepted by WS Public API](ws-public-api.md)
-
-## Supported gulp tasks:
-
-```
-├── lint
-├── test
-├── e2e
-└─ default
- ├── lint
- ├── test
-```
-
-1. `gulp lint` - checks codebase using `eslint`
-2. `gulp test` - runs all the unit tests
-3. `gulp e2e` - runs all the end to end tests
-
-
-## Release
+## How to perform a release of new WS version
 1. `npm run changelog` - generates content for `CHANGELOG.md` file with changes that have happened since last release
 2. `npm version` - this one is a bit more complicated. Let's start with what it needs in order to run.
   - `CONVENTIONAL_GITHUB_RELEASER_TOKEN` environment variable should be set up for this command:

@@ -43,7 +43,7 @@ function getDocumentsByQuery(externalContext, onFound) {
     getDatasetAndTransaction,
     getDocuments,
     populateDocuments
-  ], (error, result) => {
+  ], (error, result: any) => {
     if (error) {
       return onFound(error);
     }

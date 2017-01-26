@@ -49,7 +49,7 @@ function updateDdf(options, done) {
     updateDatapointsTranslations,
     createDatasetSchema,
     ddfImportUtils.closeTransaction
-  ], (updateError, pipe) => {
+  ], (updateError, pipe: any) => {
     console.timeEnd(DATASET_INCREMENTAL_UPDATE_LABEL);
 
     if (updateError && _.get(pipe, 'transaction')) {

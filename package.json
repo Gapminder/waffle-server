@@ -4,7 +4,7 @@
   "description": "Server for keeping and serving ddf data",
   "main": "server.js",
   "scripts": {
-    "test": "npm run spec && npm run e2e",
+    "test": "npm run tsc && npm run spec && npm run e2e",
     "spec": "mocha --timeout 10000 --compilers ts:ts-node/register 'test/**/*.spec.ts'",
     "spec:coverage": "istanbul --include-all-sources cover _mocha -- -R spec --timeout 10000 --compilers ts:ts-node/register 'test/**/*.spec.ts' && node_modules/.bin/remap-istanbul -i coverage/coverage.json -e node_modules,coverage,'ws.import/repos' -t html -o coverage/remap-istanbul",
     "e2e": "npm run e2e:allCommits && npm run e2e:2commit && npm run e2e:3commit && npm run e2e:4commit",
@@ -14,7 +14,7 @@
     "e2e:2commit": "COMMIT_INDEX_TO_IMPORT=1 npm run e2e:allCommits",
     "e2e:3commit": "COMMIT_INDEX_TO_IMPORT=2 npm run e2e:allCommits",
     "e2e:4commit": "COMMIT_INDEX_TO_IMPORT=3 npm run e2e:allCommits",
-    "dev": "NODE_ENV=development npm run start",
+    "local": "DEFAULT_USER_PASSWORD=123 MONGODB_URL='mongodb://localhost:27017/ws_ddf_local' INNER_PORT=3000 NODE_ENV=local ts-node server.ts",
     "start": "forever stopall && forever start --logFile forever.log --outFile logs/out.log --errFile logs/err.log -a -p logs --minUptime 1000 --spinSleepTime 1000000 server.js",
     "changelog": "conventional-changelog -i CHANGELOG.md -s -p angular",
     "github-release": "conventional-github-releaser -p angular",
@@ -27,7 +27,7 @@
     "postversion": "git push origin master && git push --tags && npm run github-release"
   },
   "dependencies": {
-    "@types/async": "1.4.29",
+    "@types/async": "2.0.38",
     "@types/body-parser": "0.0.33",
     "@types/levenshtein": "1.0.1",
     "@types/lodash": "4.14.50",
@@ -40,7 +40,7 @@
     "@types/traverse": "0.6.29",
     "JSONStream": "1.3.0",
     "URLON": "2.0.0",
-    "async": "1.5.2",
+    "async": "2.1.4",
     "bcryptjs": "2.4.0",
     "body-parser": "1.16.0",
     "bunyan": "1.8.5",

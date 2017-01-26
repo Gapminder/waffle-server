@@ -12,7 +12,7 @@ export abstract class VersionedModelRepository {
     return _.merge.bind(_, {}, this.versionQueryFragment).apply(undefined, args);
   }
 
-  public create(documents, onCreated) {
+  public create(documents, onCreated?) {
     const documentsForStoring = Array.isArray(documents) ? this.setId(documents) : this.setId([documents]);
     return this._getModel().insertMany(documentsForStoring, onCreated);
   }

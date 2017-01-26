@@ -31,7 +31,7 @@ function lastModifiedPlugin (schema, settings) {
     return async.forEachOfLimit(
       query,
       2,
-      (match, fieldName, cb) => {
+      (match: any, fieldName, cb) => {
         if (!settings[fieldName]) {
           return cb(new Error(`There is no field with name '${fieldName}' in settings of origin-id plugin for model '${settings.modelName}'`));
         }
