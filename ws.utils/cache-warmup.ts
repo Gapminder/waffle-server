@@ -13,7 +13,9 @@ export {
 function warmUpCache(done) {
   let warmedQueriesAmount = 0;
   const cacheWarmUpStream = hi(RecentDdfqlQueriesRepository.findAllAsStream())
-    .map(logRecord => hi(executeDdfql(logRecord)))
+    .map(logRecord => {
+      return hi(executeDdfql(logRecord));
+    })
     .sequence()
     .tap(({queryRaw, status, success}) => {
       if (success !== false) {
@@ -31,7 +33,9 @@ function executeDdfql(logRecord) {
   logger.debug('Cache is going to be warmed up from url: ', url);
 
   return fetch(url)
-    .then(response => response.json())
+    .then(response => {
+      return response.json();
+    })
     .then(response => {
       return {
         queryRaw: logRecord.queryRaw,

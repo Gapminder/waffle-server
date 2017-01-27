@@ -186,7 +186,7 @@ describe('Format Service', () => {
       type: constants.DATAPOINTS
     };
 
-    const wsJsonFormattedData = {headers: ['anno', 'population'], rows: [['1900', 20000], ['1901', 30000], ['1902', 40000]]};
+    const wsJsonFormattedData = hi([{headers: ['anno', 'population'], rows: [['1900', 20000], ['1901', 30000], ['1902', 40000]]}]);
     this.stub(wsJsonFormatter, 'mapDatapoints').returns(wsJsonFormattedData);
 
     formatService.csv(data, (error, formattedData) => {
