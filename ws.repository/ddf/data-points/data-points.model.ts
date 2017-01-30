@@ -13,6 +13,7 @@ const DataPoints: any = new Schema({
   properties: {type: Schema.Types.Mixed, 'default': {}},
   languages: {type: Schema.Types.Mixed, 'default': {}},
 
+  originId: {type: Schema.Types.ObjectId},
   from: {type: Number, required: true},
   to: {type: Number, required: true, 'default': constants.MAX_VERSION},
   dataset: {type: Schema.Types.ObjectId, ref: 'Datasets', required: true},
