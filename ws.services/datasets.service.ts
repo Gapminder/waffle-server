@@ -2,21 +2,22 @@ import * as _ from 'lodash';
 import * as async from 'async';
 import * as securityUtils from '../ws.utils/security';
 import { DatasetsRepository } from '../ws.repository/ddf/datasets/datasets.repository';
-import {ConceptsRepositoryFactory} from '../ws.repository/ddf/concepts/concepts.repository';
-import {EntitiesRepositoryFactory} from '../ws.repository/ddf/entities/entities.repository';
-import {DatapointsRepositoryFactory} from '../ws.repository/ddf/data-points/data-points.repository';
-import {DatasetSchemaRepository} from '../ws.repository/ddf/dataset-index/dataset-index.repository';
-import {DatasetTransactionsRepository} from '../ws.repository/ddf/dataset-transactions/dataset-transactions.repository';
-
-import {constants} from '../ws.utils/constants';
+import { ConceptsRepositoryFactory } from '../ws.repository/ddf/concepts/concepts.repository';
+import { EntitiesRepositoryFactory } from '../ws.repository/ddf/entities/entities.repository';
+import { DatapointsRepositoryFactory } from '../ws.repository/ddf/data-points/data-points.repository';
+import { DatasetSchemaRepository } from '../ws.repository/ddf/dataset-index/dataset-index.repository';
+import { DatasetTransactionsRepository } from '../ws.repository/ddf/dataset-transactions/dataset-transactions.repository';
+import { constants } from '../ws.utils/constants';
 import { logger } from '../ws.config/log';
+import { DatasetRemovalTracker } from './datasets-removal-tracker';
 
 const DATAPOINTS_TO_REMOVE_CHUNK_SIZE = 50000;
 
 export {
   findDatasetsWithVersions,
   removeDatasetData,
-  findDatasetByNameAndValidateOwnership
+  findDatasetByNameAndValidateOwnership,
+  getRemovalStateForDataset
 };
 
 function findDatasetsWithVersions(userId, onFound) {
@@ -30,6 +31,7 @@ function findDatasetsWithVersions(userId, onFound) {
 }
 
 function removeDatasetData(datasetName, user, onRemovedDataset) {
+  DatasetRemovalTracker.track(datasetName);
   return async.waterfall([
     async.constant({datasetName, user}),
     findDatasetByNameAndValidateOwnership,
@@ -39,6 +41,7 @@ function removeDatasetData(datasetName, user, onRemovedDataset) {
     _removeAllTransactions,
     _removeDataset
   ], (error) => {
+    DatasetRemovalTracker.clean(datasetName);
     return onRemovedDataset(error);
   });
 }
@@ -100,23 +103,43 @@ function _removeAllDataByDataset(externalContext, onDataRemoved) {
   const entitiesRepository = EntitiesRepositoryFactory.versionAgnostic();
 
   return async.parallel([
-    done => conceptsRepository.removeByDataset(externalContext.datasetId, done),
-    done => entitiesRepository.removeByDataset(externalContext.datasetId, done),
-    done => removeDatapointsInChunks(externalContext.datasetId, done),
+    done => conceptsRepository.removeByDataset(externalContext.datasetId, (error, removeResult) => {
+      if (error) {
+        return done(error);
+      }
+
+      DatasetRemovalTracker
+        .get(externalContext.datasetName)
+        .increment(constants.CONCEPTS, removeResult.result.n);
+
+      return done();
+    }),
+    done => entitiesRepository.removeByDataset(externalContext.datasetId, (error, removeResult) => {
+      if (error) {
+        return done(error);
+      }
+
+      DatasetRemovalTracker
+        .get(externalContext.datasetName)
+        .increment(constants.ENTITIES, removeResult.result.n);
+
+      return done();
+    }),
+    done => removeDatapointsInChunks(externalContext, done),
     done => DatasetSchemaRepository.removeByDataset(externalContext.datasetId, done)
   ], (removingDataError) => {
     if (removingDataError) {
       return onDataRemoved(removingDataError);
     }
-
     return onDataRemoved(null, externalContext);
   });
 }
 
-function removeDatapointsInChunks(datasetId, onRemoved): void {
+function removeDatapointsInChunks({datasetId, datasetName}, onRemoved): void {
   const datapointsRepository = DatapointsRepositoryFactory.versionAgnostic();
   datapointsRepository.findIdsByDatasetAndLimit(datasetId, DATAPOINTS_TO_REMOVE_CHUNK_SIZE, (error, datapointIds) => {
-    logger.info('Removing datapoints', _.size(datapointIds));
+    const amountOfDatapointsToRemove = _.size(datapointIds);
+    logger.info('Removing datapoints', amountOfDatapointsToRemove);
 
     if (error) {
       logger.error('Datapoints removing error', error);
@@ -132,8 +155,22 @@ function removeDatapointsInChunks(datasetId, onRemoved): void {
         return onRemoved(error);
       }
 
+      DatasetRemovalTracker
+        .get(datasetName)
+        .increment(constants.DATAPOINTS, amountOfDatapointsToRemove);
+
       removeDatapointsInChunks(datasetId, onRemoved);
     });
+  });
+}
+
+function getRemovalStateForDataset(datasetName: any, user: any, done: Function): any {
+  return findDatasetByNameAndValidateOwnership({datasetName, user}, (error, externalContext: any)=> {
+    if (error) {
+      return done(error);
+    }
+
+    return done(null, DatasetRemovalTracker.get(datasetName).getState());
   });
 }
 

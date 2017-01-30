@@ -21,6 +21,7 @@ function registerDdfCliRoutes(serviceLocator) {
   router.get('/git-commits-list', CliController.getGitCommitsList);
   router.get('/commit-of-latest-dataset-version', CliController.getCommitOfLatestDatasetVersion);
   router.get('/transactions/latest/status', CliController.getStateOfLatestTransaction);
+  router.get('/datasets/removalStatus', CliController.getStateOfDatasetRemoval);
   router.get('/datasets', CliController.getDatasets);
   router.get('/datasets/private', CliController.getPrivateDatasets);
   router.get('/datasets/removable', CliController.getRemovableDatasets);

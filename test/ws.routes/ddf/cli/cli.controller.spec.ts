@@ -5,6 +5,8 @@ import {expect} from 'chai';
 import * as sinon from 'sinon';
 import {logger} from '../../../../ws.config/log';
 import * as routeUtils from '../../../../ws.routes/utils';
+import * as datasetsService from '../../../../ws.services/datasets.service';
+import * as cliController from '../../../../ws.routes/ddf/cli/cli.controller';
 
 const cliServicePath = './../../../ws.services/cli.service';
 
@@ -284,8 +286,6 @@ describe('WS-CLI controller', () => {
       },
     });
 
-
-
     const req = {
       user: {
         _id: 'fakeId',
@@ -316,8 +316,6 @@ describe('WS-CLI controller', () => {
       },
     });
 
-
-
     const req = {
       user: {
         name: 'fake'
@@ -334,5 +332,124 @@ describe('WS-CLI controller', () => {
     cliController.getDatasetsInProgress(req, res);
 
     sinon.assert.notCalled(toDataResponseSpy);
+  }));
+
+  it('should fetch removal state of dataset that is being removed', sinon.test(function (done) {
+    const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
+    const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+
+    const removalStatus = {
+      concepts: 42,
+      entities: 42,
+      datapoints: 42,
+    };
+
+    const getRemovalStateForDatasetStub = this.stub(datasetsService, 'getRemovalStateForDataset');
+    getRemovalStateForDatasetStub
+      .onFirstCall().callsArgWith(2, null, removalStatus);
+
+    const req = {
+      query: {
+        datasetName: 'datasetName'
+      },
+      user: {
+        name: 'fake'
+      }
+    };
+
+    const res = {
+      json: () => {
+        sinon.assert.notCalled(toErrorResponseSpy);
+        sinon.assert.calledOnce(toDataResponseSpy);
+        sinon.assert.calledWith(toDataResponseSpy, removalStatus);
+
+        sinon.assert.calledOnce(getRemovalStateForDatasetStub);
+        sinon.assert.calledWith(getRemovalStateForDatasetStub, req.query.datasetName, req.user);
+
+        done();
+      }
+    };
+
+    cliController.getStateOfDatasetRemoval(req, res);
+  }));
+
+  it('should respond with an error if smth went wrong during status fetching', sinon.test(function (done) {
+    const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
+    const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+
+    const expectedError = 'Boo!';
+
+    const getRemovalStateForDatasetStub = this.stub(datasetsService, 'getRemovalStateForDataset');
+    getRemovalStateForDatasetStub
+      .onFirstCall().callsArgWith(2, expectedError, null);
+
+    const req = {
+      query: {
+        datasetName: 'datasetName'
+      },
+      user: {
+        name: 'fake'
+      }
+    };
+
+    const res = {
+      json: () => {
+        sinon.assert.notCalled(toDataResponseSpy);
+        sinon.assert.calledOnce(toErrorResponseSpy);
+        sinon.assert.calledWith(toErrorResponseSpy, expectedError);
+
+        sinon.assert.calledOnce(getRemovalStateForDatasetStub);
+        sinon.assert.calledWith(getRemovalStateForDatasetStub, req.query.datasetName, req.user);
+        done();
+      }
+    };
+
+    cliController.getStateOfDatasetRemoval(req, res);
+  }));
+
+  it('should respond with an error if dataset name was not provided in request', sinon.test(function (done) {
+    const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
+    const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+
+    const expectedError = 'No dataset name was given';
+
+    const req = {
+      query: {
+      },
+      user: {
+        name: 'fake'
+      }
+    };
+
+    const res = {
+      json: () => {
+        sinon.assert.notCalled(toDataResponseSpy);
+        sinon.assert.calledOnce(toErrorResponseSpy);
+        sinon.assert.calledWith(toErrorResponseSpy, expectedError);
+        done();
+      }
+    };
+
+    cliController.getStateOfDatasetRemoval(req, res);
+  }));
+
+  it('should respond with an error if user is not authenticated', sinon.test(function (done) {
+    const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
+    const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+
+    const expectedError = 'Unauthenticated user cannot perform CLI operations';
+
+    const req = {};
+
+    const res = {
+      json: () => {
+        sinon.assert.notCalled(toDataResponseSpy);
+        sinon.assert.calledOnce(toErrorResponseSpy);
+        sinon.assert.calledWith(toErrorResponseSpy, expectedError);
+        done();
+      }
+    };
+
+    cliController.getStateOfDatasetRemoval(req, res);
   }));
 });
