@@ -14,7 +14,7 @@ function createPopulateDocumentsController(serviceLocator) {
 
   const router = express.Router();
 
-  router.post('/api/populate-documents',
+  router.post('/api/development/populate-documents',
     getDocumentByQuery
   );
 

@@ -202,7 +202,6 @@ function _findObjectsModifiedDuringLastTransaction(externalContext, done) {
       const result = {
         datasetName: externalContext.datasetName,
         transaction: {
-          languages: latestTransaction.languages,
           lastError: latestTransaction.lastError,
           commit: latestTransaction.commit,
           status: latestTransaction.isClosed ? 'Completed' : 'In progress',
