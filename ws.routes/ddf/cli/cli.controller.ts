@@ -18,6 +18,7 @@ export {
   getGitCommitsList,
   getCommitOfLatestDatasetVersion,
   getStateOfLatestTransaction,
+  getStateOfDatasetRemoval,
   activateRollback,
   getDatasets,
   setDefaultDataset,
@@ -111,6 +112,25 @@ function getStateOfLatestTransaction(req, res) {
   }
 
   return transactionsService.getStatusOfLatestTransactionByDatasetName(datasetName, req.user, (statusError, status) => {
+    if (statusError) {
+      return res.json(routeUtils.toErrorResponse(statusError));
+    }
+
+    return res.json(routeUtils.toDataResponse(status));
+  });
+}
+
+function getStateOfDatasetRemoval(req, res) {
+  if (!req.user) {
+    return res.json(routeUtils.toErrorResponse('Unauthenticated user cannot perform CLI operations'));
+  }
+
+  const datasetName = req.query.datasetName;
+  if (!datasetName) {
+    return res.json(routeUtils.toErrorResponse('No dataset name was given'));
+  }
+
+  return datasetsService.getRemovalStateForDataset(datasetName, req.user, (statusError, status) => {
     if (statusError) {
       return res.json(routeUtils.toErrorResponse(statusError));
     }
