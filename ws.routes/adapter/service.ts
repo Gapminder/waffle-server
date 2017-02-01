@@ -8,9 +8,9 @@ import { constants } from '../../ws.utils/constants';
 
 import { KeyValueRepository } from '../../ws.repository/ddf/key-value/key-value.repository';
 
-import mcPrecomputedShapes from './fixtures/mc_precomputed_shapes.json';
-import world50m from './fixtures/world-50m.json';
-import enStrings from './fixtures/en.json';
+import * as mcPrecomputedShapes from './fixtures/mc_precomputed_shapes.json';
+import * as world50m from './fixtures/world-50m.json';
+import * as enStrings from './fixtures/en.json';
 
 function createAdapterServiceController(serviceLocator) {
   const app = serviceLocator.getApplication();
