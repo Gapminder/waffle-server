@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import * as _ from 'lodash';
 import * as shell from 'shelljs';
 
 const REDIS_HOST = process.env.REDIS_HOST;
@@ -36,7 +37,8 @@ function register_us(){
       process.exit(1);
     }
 
-    if ((shell.exec('/usr/bin/forever list | /bin/grep server.js | wc -l', {silent: true}) as shell.ExecOutputReturnValue).stdout !== '1') {
+    const isWaffleServerNotRunning = _.trim((shell.exec('/usr/bin/forever list | /bin/grep server.js | wc -l', {silent: true}) as shell.ExecOutputReturnValue).stdout) != '1';
+    if (isWaffleServerNotRunning) {
         console.log("-- ERROR: ws is failed to start. Exit.");
         shell.exec('/usr/bin/forever stopall');
         process.exit(1);

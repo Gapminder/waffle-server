@@ -36,6 +36,8 @@ COPY ./ ./
 
 RUN npm i
 RUN npm run tsc
+RUN chmod +x docker_run.js
+
 EXPOSE 3000
 EXPOSE 80
 
