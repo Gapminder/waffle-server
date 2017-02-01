@@ -159,7 +159,7 @@ function removeDatapointsInChunks({datasetId, datasetName}, onRemoved): void {
         .get(datasetName)
         .increment(constants.DATAPOINTS, amountOfDatapointsToRemove);
 
-      removeDatapointsInChunks(datasetId, onRemoved);
+      removeDatapointsInChunks({datasetId, datasetName}, onRemoved);
     });
   });
 }
