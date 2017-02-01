@@ -15,21 +15,20 @@ export {
   wsJsonFormatter as default
 };
 
-interface WsJson {
-  headers?: Array<string | null>,
-  rows?: Array<string | null>
-}
-
 interface RawDdf {
   datasetName?: string,
   datasetVersionCommit?: string
 }
 
 function packToCsv(data) {
-  const wsJson: WsJson = packToWsJson(data);
-  const rows = _.get(wsJson, 'rows', []);
-  const headers = _.get(wsJson, 'headers', []);
-  return hi(rows).map(row => _.zipObject(wsJson.headers, row)).pipe(fastCsv.createWriteStream({headers: true}));
+  const wsJsonStream: any = packToWsJson(data);
+
+  return hi(wsJsonStream).flatMap(wsJson => {
+    const rows = _.get(wsJson, 'rows', []);
+    const headers = _.get(wsJson, 'headers', []);
+
+    return hi(rows).map(row => _.zipObject(headers, row));
+  }).pipe(fastCsv.createWriteStream({headers: true}));
 }
 
 function packToWsJson(data) {

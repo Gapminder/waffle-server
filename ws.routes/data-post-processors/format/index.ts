@@ -3,10 +3,11 @@ import { logger } from '../../../ws.config/log';
 
 import { format } from './format.processor';
 import * as routesUtils from '../../utils';
+import * as hi from 'highland';
 
-const DEFAULT_MIME_TYPE = 'application/x-ws+json';
+const DEFAULT_MIME_TYPE = 'application/json; charset=utf-8';
 const MIME_TYPE_MAPPINGS = {
-  wsJson: 'application/x-ws+json',
+  wsJson: DEFAULT_MIME_TYPE,
   csv: 'application/csv',
 };
 
@@ -18,6 +19,8 @@ function formatMiddleware(req, res) {
   let formatType = req.query.format;
   const data = req.rawData;
   data.type = req.ddfDataType;
+
+  logger.debug(`transform requested data in choosen ${formatType || 'default'} format`);
 
   return format(data, formatType, (err, packedData) => {
     if (err) {
@@ -34,7 +37,14 @@ function formatMiddleware(req, res) {
 
 function streamOrSend(data, response) {
   if (data instanceof Readable) {
-    data.pipe(response);
+    return data.pipe(response);
+  } else if (hi.isStream(data)) {
+    return data.toCallback((error, result) => {
+      if (error) {
+        return response.json(routesUtils.toErrorResponse(error));
+      }
+      return response.json(result);
+    });
   } else {
     return response.send(data);
   }
