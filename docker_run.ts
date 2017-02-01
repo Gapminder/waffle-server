@@ -9,6 +9,7 @@ const HA_REG_EXPIRE = process.env.HA_REG_EXPIRE || 60;
 const NODE_PORT = process.env.NODE_PORT || 3000;
 const SERVICE_NAME = process.env.SERVICE_NAME || "default";
 const THRASHING_MACHINE = process.env.THRASHING_MACHINE;
+const LOGS_SYNC_DISABLED = process.env.LOGS_SYNC_DISABLED;
 
 if (!REDIS_HOST){
   console.log("-- ERROR: REDIS_HOST is not set. Exit.");
@@ -16,7 +17,9 @@ if (!REDIS_HOST){
 }
 console.log(`++ Redis address: ${REDIS_HOST}`);
 
-shell.exec('service rsyslog restart');
+if (!LOGS_SYNC_DISABLED) {
+  shell.exec('service rsyslog restart');
+}
 
 if (THRASHING_MACHINE) {
   shell.exec('INNER_PORT=80 /usr/bin/node --max_old_space_size=10000 server.js');
