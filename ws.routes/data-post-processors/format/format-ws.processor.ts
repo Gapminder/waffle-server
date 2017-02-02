@@ -1,4 +1,5 @@
 import * as _ from 'lodash';
+import * as hi from 'highland';
 import {constants} from '../../../ws.utils/constants';
 import * as ddfQueryUtils from '../../../ws.ddfql/ddf-query-utils';
 import * as commonService from '../../../ws.services/common.service';
@@ -114,48 +115,68 @@ function mapDatapointsToWsJson(data) {
   const conceptsByOriginId = _.keyBy(data.concepts, constants.ORIGIN_ID);
   const entitiesByOriginId = _.keyBy(data.entities, constants.ORIGIN_ID);
 
-  const rows = _.chain(data.datapoints)
-    .reduce((result, datapoint: any) => {
-      const partialRow = {};
-      const datapointKeyParts = [];
-      const translatedDatapointProperties = commonService.translateDocument(datapoint, data.language);
-
-      _.each(datapoint.dimensions, (dimension) => {
-        const originEntity = entitiesByOriginId[dimension];
-        const domainGid = _getGidOfSelectedConceptByEntity(selectedConceptsByOriginId, selectedConceptsOriginIds, originEntity);
-
-        partialRow[domainGid] = originEntity[constants.GID];
-        datapointKeyParts.push(originEntity[constants.GID]);
-      });
-
-      const datapointKey = datapointKeyParts.join(DATAPOINT_KEY_SEPARATOR);
-      const measureGid = conceptsByOriginId[datapoint.measure][constants.GID];
-      const datapointValue = _.get(translatedDatapointProperties, measureGid);
-      partialRow[measureGid] = ddfImportUtils.toNumeric(datapointValue) || ddfImportUtils.toBoolean(datapointValue) || datapointValue;
-
-      if (_.isNil(result[datapointKey])) {
-        result[datapointKey] = {};
-      }
-      result[datapointKey] = _.extend(result[datapointKey], partialRow);
-      return result;
-    }, {})
-    .map(row => {
-      return _.map(data.headers, (column: string) => coerceValue(row[column]))
-    })
-    .value();
-
   const result = {
     dataset: data.datasetName,
     version: data.datasetVersionCommit,
     headers: data.headers,
-    rows: sortRows(rows, data.query, data.headers)
+    rows: []
   };
 
   if (data.language) {
-    return _.extend(result, {language: data.language});
+    _.extend(result, {language: data.language});
   }
 
-  return result;
+  const dimensionsDictionary = new Map();
+
+  const headerConceptsDictionary = _.reduce(data.headers, (dictionary, header, index) => {
+    dictionary.set(header, index);
+    return dictionary;
+  }, new Map());
+
+  return hi(data.datapoints)
+    .reduce(result, (result, datapoint: any) => {
+      const rows = result.rows;
+      const sortedDimensions = _.chain(datapoint.dimensions)
+        .sortBy((value) => value.toString())
+        .join('.')
+        .value();
+      if (!dimensionsDictionary.has(sortedDimensions)) {
+        dimensionsDictionary.set(sortedDimensions, rows.length);
+      }
+
+      const rowIndex = dimensionsDictionary.get(sortedDimensions);
+      const translatedDatapointProperties = commonService.translateDocument(datapoint, data.language);
+
+      if (!Array.isArray(rows[rowIndex])) {
+        const context = {entitiesByOriginId, selectedConceptsByOriginId, selectedConceptsOriginIds, headerConceptsDictionary, headers: data.headers};
+        const newRow = createNewDatapointsRow(datapoint, context);
+        rows.push(newRow);
+      }
+
+      const measureGid = conceptsByOriginId[datapoint.measure][constants.GID];
+      const measureIndex = headerConceptsDictionary.get(measureGid);
+      const datapointValue = _.get(translatedDatapointProperties, measureGid);
+
+      rows[rowIndex][measureIndex] = coerceValue(datapointValue);
+
+      return result;
+    })
+    .map((result) => {
+      return _.extend(result, {rows: sortRows(result.rows, data.query, result.headers)});
+    });
+}
+
+function createNewDatapointsRow(datapoint, externalContext) {
+  const {entitiesByOriginId, selectedConceptsByOriginId, selectedConceptsOriginIds, headerConceptsDictionary, headers} = externalContext;
+  const rowTemplate = _.times(headers.length, () => null);
+
+  return _.reduce(datapoint.dimensions, (row, dimension: any) => {
+    const originEntity = entitiesByOriginId[dimension];
+    const domainGid = _getGidOfSelectedConceptByEntity(selectedConceptsByOriginId, selectedConceptsOriginIds, originEntity);
+    const domainIndex = headerConceptsDictionary.get(domainGid);
+    row[domainIndex] = originEntity[constants.GID];
+    return row;
+  }, rowTemplate);
 }
 
 function _getGidOfSelectedConceptByEntity(selectedConceptsByOriginId, selectedConceptsOriginIds, entity): string {
@@ -164,7 +185,8 @@ function _getGidOfSelectedConceptByEntity(selectedConceptsByOriginId, selectedCo
   return _.get(selectedConceptsByOriginId[originIdOfSelectedConcept], constants.GID) as string;
 }
 
-function coerceValue(value) {
+function coerceValue(datapointValue) {
+  const value = ddfImportUtils.toNumeric(datapointValue) || ddfImportUtils.toBoolean(datapointValue) || datapointValue;
   return _.isNil(value) ? null : value;
 }
 

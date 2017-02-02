@@ -105,24 +105,6 @@ function ___extendWhereWithDefaultClause(query, options) {
   }
 }
 
-function ____getParsedDomainSubQuery(query, options) {
-  const conceptsByGids = options.conceptsByGids;
-  const conceptsByOriginIds = options.conceptsByOriginIds;
-
-  return _.map(query.select.key, (conceptGid: string) => {
-    const concept = conceptsByGids[conceptGid];
-    const domain = concept.domain ? conceptsByOriginIds[concept.domain] : concept;
-    const parsedDomainJoinLink = `$parsed_domain_${domain[constants.GID]}_${_.random()}`;
-
-    query.join[parsedDomainJoinLink] = {
-      key: domain[constants.GID],
-      where: {}
-    };
-
-    return {$elemMatch: parsedDomainJoinLink};
-  });
-}
-
 function ___evaluateNormalizedFilterByEntityFilter(filterValue, key, query) {
   const join = _.get(query, 'join', {});
   const isUsedExistedLink = _.startsWith(filterValue, '$') && join.hasOwnProperty(filterValue);

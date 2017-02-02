@@ -21,7 +21,7 @@ export {
 function sendDdfqlRequest(ddfql, onResponseReceived) {
   ddfql.force = true;
   return wsApi.get(`/api/ddf/ql?${URLON.stringify(ddfql)}`)
-    .set('Accept', 'application/x-ws+json')
+    .set('Accept', 'application/json')
     .expect(200)
     .expect('Content-Type', /application\/json/)
     .end(onResponseReceived);
@@ -56,6 +56,7 @@ function setUpEnvironmentVariables() {
 
 function sendDdfqlRequestAndVerifyResponse(ddfql, expectedResponse, done) {
   sendDdfqlRequest(ddfql, (error, response) => {
+    expect(error).to.not.exist;
     const actualRows = _.sortBy(response.body.rows);
     const expectedRows = _.sortBy(expectedResponse.rows);
 
