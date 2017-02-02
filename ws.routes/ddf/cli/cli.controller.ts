@@ -171,13 +171,14 @@ function removeDataset(req, res) {
 
   const user = req.user;
 
-  return datasetsService.removeDatasetData(datasetName, user, removeError => {
+  datasetsService.removeDatasetData(datasetName, user, removeError => {
     if (removeError) {
-      return res.json(routeUtils.toErrorResponse(removeError));
+      return logger.error(removeError);
     }
-
-    return res.json(routeUtils.toMessageResponse('Removing dataset was completed successfully'));
+    return logger.info('Dataset has been deleted successfully');
   });
+
+  return res.json(routeUtils.toMessageResponse('Dataset is being deleted ...'));
 }
 
 function getAvailableDatasetsAndVersions(req, res) {
