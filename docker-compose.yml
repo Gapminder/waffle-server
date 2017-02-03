@@ -1,0 +1,33 @@
+version: "3"
+services:
+  mongodb:
+    image: "mongo:3.4.1"
+    ports:
+       - "27017"
+    volumes:
+      - ~/waffle-server/mongodata:/data/db
+  redis:
+    image: "redis:3.2.7"
+    ports:
+       - "6379"
+  waffle-server:
+    depends_on:
+      - "mongodb"
+      - "redis"
+    build:
+      context: .
+      args:
+        REDIS_HOST: "redis"
+        MONGODB_URL: "mongodb://mongodb:27017/ws_ddf_docker"
+        DEFAULT_USER_PASSWORD: "123"
+        THRASHING_MACHINE: "true"
+        NODE_ENV: "development"
+        LOGS_SYNC_DISABLED: "true"
+    # "image" is used in here (in "build" section) in order to name image that will be built
+    image: waffle-server:standalone
+    ports:
+      - '3001:80'
+    volumes:
+      - ~/waffle-server/repositories:/home/waffle-server/ws.import/repos
+      - ~/waffle-server/diffs:/home/waffle-server/ws.import/diffs
+
