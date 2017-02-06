@@ -28,6 +28,7 @@ services:
     ports:
       - '3001:80'
     volumes:
+      - ~/waffle-server/logs:/home/waffle-server/logs
       - ~/waffle-server/repositories:/home/waffle-server/ws.import/repos
       - ~/waffle-server/diffs:/home/waffle-server/ws.import/diffs
 
