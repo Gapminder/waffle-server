@@ -3,15 +3,6 @@ services:
   mongodb:
     volumes:
       - mongodata:/data/db
-  waffle-server:
-    volumes:
-      - logs:/home/waffle-server/logs
-      - repositories:/home/waffle-server/ws.import/repos
-      - diffs:/home/waffle-server/ws.import/diffs
-
 volumes:
   mongodata:
-  logs:
-  repositories:
-  diffs:
 

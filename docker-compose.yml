@@ -8,8 +8,11 @@ services:
       - ~/waffle-server/mongodata:/data/db
   redis:
     image: "redis:3.2.7"
+    command: redis-server --appendonly yes
+    volumes:
+      - ~/waffle-server/redisdata:/data
     ports:
-       - "6379"
+      - "6379"
   waffle-server:
     depends_on:
       - "mongodb"
