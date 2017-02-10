@@ -15,6 +15,7 @@ import * as ddfImportUtils from '../../../ws.import/utils/import-ddf.utils';
 
 describe('Dataset incremental update', () => {
   it('should update dataset', sinon.test(function (done) {
+    // *** Prepared Data
     const options = {
       user: {
         _id: 'USERID',
@@ -27,19 +28,24 @@ describe('Dataset incremental update', () => {
       datasetName: 'dataset',
       lifecycleHooks: this.spy()
     };
+
+    // *** Expected Data
     const expectedVersion = Date.now();
     const expectedTransactionId = 'TRANSACTIONID';
+
     const extendedOptions1 = _.defaults({
       transaction: {
         createdAt: expectedVersion,
         _id: expectedTransactionId
       }
     }, options);
+
     const extendedOptions2 = _.defaults({
       dataset: {
         name: options.datasetName
       }
     }, extendedOptions1);
+
     const expectedData = {
       datasetName: options.datasetName,
       version: expectedVersion,
@@ -48,49 +54,72 @@ describe('Dataset incremental update', () => {
 
     const indexOfCallback = 1;
     const expectedError = null;
+
+    // *** Stubbed functions
     const resolvePathToDdfFolderStub = this.stub(ddfImportUtils, 'resolvePathToDdfFolder');
     resolvePathToDdfFolderStub.callsArgWithAsync(indexOfCallback, expectedError, options);
+
     const createTransactionStub = this.stub(ddfImportUtils, 'createTransaction');
     createTransactionStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions1);
+
     const findDatasetStub = this.stub(ddfImportUtils, 'findDataset');
     findDatasetStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
+
     const establishTransactionForDatasetStub = this.stub(ddfImportUtils, 'establishTransactionForDataset');
     establishTransactionForDatasetStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
+
     const findPreviousTransactionStub = this.stub(ddfImportUtils, 'findPreviousTransaction');
     findPreviousTransactionStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
+
     const lifecycleHookStub = this.stub();
     lifecycleHookStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
+
     const activateLifecycleHookStub = this.stub(ddfImportUtils, 'activateLifecycleHook');
     activateLifecycleHookStub.returns(lifecycleHookStub);
+
     const cloneDdfRepoStub = this.stub(ddfImportUtils, 'cloneDdfRepo');
     cloneDdfRepoStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
+
     const validateDdfRepoStub = this.stub(ddfImportUtils, 'validateDdfRepo');
     validateDdfRepoStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
+
     const getDatapackageStub = this.stub(ddfImportUtils, 'getDatapackage');
     getDatapackageStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
+
     const generateDiffForDatasetUpdateStub = this.stub(ddfImportUtils, 'generateDiffForDatasetUpdate');
     generateDiffForDatasetUpdateStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
+
     const getAllConceptsStub = this.stub(ddfImportUtils, 'getAllConcepts');
     getAllConceptsStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
+
     const getAllPreviousConceptsStub = this.stub(ddfImportUtils, 'getAllPreviousConcepts');
     getAllPreviousConceptsStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
+
     const closeTransactionStub = this.stub(ddfImportUtils, 'closeTransaction');
     closeTransactionStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
+
     const updateConceptsStub = this.stub(updateConcepts, 'updateConcepts');
     updateConceptsStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
+
     const updateEntitiesStub = this.stub(updateEntities, 'updateEntities');
     updateEntitiesStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
+
     const updateDatapointsStub = this.stub(updateDatapoints, 'updateDatapoints');
     updateDatapointsStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
+
     const updateConceptsTranslationsStub = this.stub(updateConceptsTranslations, 'updateConceptsTranslations');
     updateConceptsTranslationsStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
+
     const updateEntitiesTranslationStub = this.stub(updateEntitiesTranslation, 'updateEntitiesTranslation');
     updateEntitiesTranslationStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
+
     const updateDatapointsTranslationsStub = this.stub(updateDatapointsTranslations, 'updateDatapointsTranslations');
     updateDatapointsTranslationsStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
+
     const createDatasetSchemaStub = this.stub(createDatasetSchema, 'createDatasetSchema');
     createDatasetSchemaStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
 
+    // *** Assertions
     const onDatasetUpdatedSpy = this.spy(() => {
       sinon.assert.calledOnce(activateLifecycleHookStub);
       sinon.assert.calledOnce(resolvePathToDdfFolderStub);
@@ -123,6 +152,7 @@ describe('Dataset incremental update', () => {
   }));
 
   it('should respond with an error when smth went wrong during the process of establishing transaction for dataset', sinon.test(function (done) {
+    // *** Prepared Data
     const options = {
       user: {
         _id: 'USERID',
@@ -135,19 +165,24 @@ describe('Dataset incremental update', () => {
       datasetName: 'dataset',
       lifecycleHooks: this.spy()
     };
+
+    // *** Expected Data
     const expectedVersion = Date.now();
     const expectedTransactionId = 'TRANSACTIONID';
+
     const extendedOptions1 = _.defaults({
       transaction: {
         createdAt: expectedVersion,
         _id: expectedTransactionId
       }
     }, options);
+
     const extendedOptions2 = _.defaults({
       dataset: {
         name: options.datasetName
       }
     }, extendedOptions1);
+
     const expectedData = {
       transactionId: expectedTransactionId
     };
@@ -155,18 +190,26 @@ describe('Dataset incremental update', () => {
     const indexOfCallback = 1;
     const expectedError1 = null;
     const expectedError2 = 'Boo!';
+
+    // *** Stubbed functions
     const resolvePathToDdfFolderStub = this.stub(ddfImportUtils, 'resolvePathToDdfFolder');
     resolvePathToDdfFolderStub.callsArgWithAsync(indexOfCallback, expectedError1, options);
+
     const createTransactionStub = this.stub(ddfImportUtils, 'createTransaction');
     createTransactionStub.callsArgWithAsync(indexOfCallback, expectedError1, extendedOptions1);
+
     const findDatasetStub = this.stub(ddfImportUtils, 'findDataset');
     findDatasetStub.callsArgWithAsync(indexOfCallback, expectedError1, extendedOptions2);
+
     const establishTransactionForDatasetStub = this.stub(ddfImportUtils, 'establishTransactionForDataset');
     establishTransactionForDatasetStub.callsArgWithAsync(indexOfCallback, expectedError2, extendedOptions2);
+
     const findPreviousTransactionStub = this.stub(ddfImportUtils, 'findPreviousTransaction');
     const lifecycleHookStub = this.stub();
+
     const activateLifecycleHookStub = this.stub(ddfImportUtils, 'activateLifecycleHook');
     activateLifecycleHookStub.returns(lifecycleHookStub);
+
     const cloneDdfRepoStub = this.stub(ddfImportUtils, 'cloneDdfRepo');
     const validateDdfRepoStub = this.stub(ddfImportUtils, 'validateDdfRepo');
     const getDatapackageStub = this.stub(ddfImportUtils, 'getDatapackage');
@@ -182,6 +225,7 @@ describe('Dataset incremental update', () => {
     const createDatasetSchemaStub = this.stub(createDatasetSchema, 'createDatasetSchema');
     const closeTransactionStub = this.stub(ddfImportUtils, 'closeTransaction');
 
+    // *** Assertions
     const onDatasetUpdatedSpy = this.spy(() => {
       sinon.assert.calledOnce(activateLifecycleHookStub);
       sinon.assert.calledOnce(resolvePathToDdfFolderStub);
@@ -214,6 +258,7 @@ describe('Dataset incremental update', () => {
   }));
 
   it('should respond with an error when smth went wrong during the process of creating transaction', sinon.test(function (done) {
+    // *** Prepared Data
     const options = {
       user: {
         _id: 'USERID',
@@ -226,6 +271,8 @@ describe('Dataset incremental update', () => {
       datasetName: 'dataset',
       lifecycleHooks: this.spy()
     };
+
+    // *** Expected Data
     const expectedData = {
       datasetName: undefined,
       transactionId: undefined,
@@ -235,16 +282,22 @@ describe('Dataset incremental update', () => {
     const indexOfCallback = 1;
     const expectedError1 = null;
     const expectedError2 = 'Boo!';
+
+    // *** Stubbed functions
     const resolvePathToDdfFolderStub = this.stub(ddfImportUtils, 'resolvePathToDdfFolder');
     resolvePathToDdfFolderStub.callsArgWithAsync(indexOfCallback, expectedError1, options);
+
     const createTransactionStub = this.stub(ddfImportUtils, 'createTransaction');
     createTransactionStub.callsArgWithAsync(indexOfCallback, expectedError2, options);
+
     const findDatasetStub = this.stub(ddfImportUtils, 'findDataset');
     const establishTransactionForDatasetStub = this.stub(ddfImportUtils, 'establishTransactionForDataset');
     const findPreviousTransactionStub = this.stub(ddfImportUtils, 'findPreviousTransaction');
     const lifecycleHookStub = this.stub();
+
     const activateLifecycleHookStub = this.stub(ddfImportUtils, 'activateLifecycleHook');
     activateLifecycleHookStub.returns(lifecycleHookStub);
+    
     const cloneDdfRepoStub = this.stub(ddfImportUtils, 'cloneDdfRepo');
     const validateDdfRepoStub = this.stub(ddfImportUtils, 'validateDdfRepo');
     const getDatapackageStub = this.stub(ddfImportUtils, 'getDatapackage');
@@ -260,6 +313,7 @@ describe('Dataset incremental update', () => {
     const createDatasetSchemaStub = this.stub(createDatasetSchema, 'createDatasetSchema');
     const closeTransactionStub = this.stub(ddfImportUtils, 'closeTransaction');
 
+    // *** Assertions
     const onDatasetUpdatedSpy = this.spy(() => {
       sinon.assert.calledOnce(activateLifecycleHookStub);
       sinon.assert.calledOnce(resolvePathToDdfFolderStub);
