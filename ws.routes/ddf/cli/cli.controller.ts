@@ -1,12 +1,11 @@
-import * as cliService from './../../../ws.services/cli.service';
+import {logger} from '../../../ws.config/log';
 import * as authService from '../../../ws.services/auth.service';
-import * as reposService from '../../../ws.services/repos.service';
+import * as cliService from '../../../ws.services/cli.service';
 import * as transactionsService from '../../../ws.services/dataset-transactions.service';
 import * as datasetsService from '../../../ws.services/datasets.service';
-
-import {logger} from '../../../ws.config/log';
-import * as routeUtils from '../../utils';
+import * as reposService from '../../../ws.services/repos.service';
 import * as cacheUtils from '../../../ws.utils/cache-warmup';
+import * as routeUtils from '../../utils';
 
 export {
   getToken,
@@ -15,7 +14,6 @@ export {
   updateIncrementally,
   importDataset,
   removeDataset,
-  getGitCommitsList,
   getCommitOfLatestDatasetVersion,
   getStateOfLatestTransaction,
   getStateOfDatasetRemoval,
@@ -229,6 +227,10 @@ function getPrivateDatasets(req, res) {
 }
 
 function updateIncrementally(req, res) {
+  if (!req.user) {
+    return res.json(routeUtils.toErrorResponse('Unauthenticated user cannot perform CLI operations'));
+  }
+
   const {hashFrom, hashTo, github} = req.body;
 
   if (!hashFrom) {
@@ -295,26 +297,16 @@ function importDataset(req, res) {
   });
 }
 
-function getGitCommitsList(req, res) {
-  const github = req.query.github;
-
-  cliService.getGitCommitsList(github, (error, result) => {
-    if (error) {
-      return res.json(routeUtils.toErrorResponse(error));
-    }
-
-    logger.info(`finished getting commits list for dataset '${github}'`);
-
-    return res.json(routeUtils.toDataResponse({commits: result.commits}));
-  });
-}
-
 function getCommitOfLatestDatasetVersion(req, res) {
   if (!req.user) {
     return res.json(routeUtils.toErrorResponse('Unauthenticated user cannot perform CLI operations'));
   }
 
   const github = req.query.github;
+
+  if (!github) {
+    return res.json(routeUtils.toErrorResponse('Repository github url was not given'));
+  }
 
   cliService.getCommitOfLatestDatasetVersion(github, req.user, (error, result) => {
     if (error) {

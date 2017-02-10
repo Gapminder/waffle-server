@@ -1,455 +1,2307 @@
 import '../../../../ws.repository';
-
-import * as proxyqire from 'proxyquire';
 import {expect} from 'chai';
 import * as sinon from 'sinon';
+import {setTimeout} from 'timers';
 import {logger} from '../../../../ws.config/log';
-import * as routeUtils from '../../../../ws.routes/utils';
-import * as datasetsService from '../../../../ws.services/datasets.service';
 import * as cliController from '../../../../ws.routes/ddf/cli/cli.controller';
-
-const cliServicePath = './../../../ws.services/cli.service';
+import * as routeUtils from '../../../../ws.routes/utils';
+import * as authService from '../../../../ws.services/auth.service';
+import * as cliService from '../../../../ws.services/cli.service';
+import * as transactionsService from '../../../../ws.services/dataset-transactions.service';
+import * as datasetsService from '../../../../ws.services/datasets.service';
+import * as reposService from '../../../../ws.services/repos.service';
+import * as cacheUtils from '../../../../ws.utils/cache-warmup';
 
 describe('WS-CLI controller', () => {
-  it('should respond with an error when error happened during import and server didn\'t send response yet', sinon.test(function (done) {
-    const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
-    const expectedError = {message: 'Boo!'};
-    const expectedResponse = {success: false, error: 'Boo!'};
 
-    const cliController = proxyqire('../../../../ws.routes/ddf/cli/cli.controller', {
-      [cliServicePath]: {
-        importDataset: (params, onImported) => {
-          onImported(expectedError);
+  describe('Import Dataset', function() {
+    it('should respond with an error when error happened during import and server didn\'t send response yet', sinon.test(function () {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = {message: 'Boo!'};
+      const expectedResponse = {success: false, error: 'Boo!'};
+
+      const loggerStub = this.stub(logger, 'error');
+      const cliServiceStub = this.stub(cliService, 'importDataset', (params, onImported) => onImported(expectedError));
+      const resJsonSpy = this.spy();
+
+      const req = {
+        body: {}
+      };
+
+      const res = {
+        headersSent: false,
+        json: resJsonSpy
+      };
+
+      cliController.importDataset(req, res);
+
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWith(resJsonSpy, expectedResponse);
+
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWith(toErrorResponseSpy, expectedError);
+
+      sinon.assert.calledOnce(cliServiceStub);
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWith(loggerStub, expectedError);
+
+    }));
+
+    it('should log an error when it occurred during import and server did send response already', sinon.test(function () {
+      const expectedError = {message: 'Boo!'};
+
+      const loggerStub = this.stub(logger, 'error');
+      const cliServiceStub = this.stub(cliService, 'importDataset', (params, onImported) => onImported(expectedError));
+      const resJsonSpy = this.spy();
+
+      const req = {
+        body: {}
+      };
+
+      const res = {
+        headersSent: true,
+        json: resJsonSpy
+      };
+
+      cliController.importDataset(req, res);
+
+      sinon.assert.notCalled(resJsonSpy);
+      sinon.assert.calledOnce(cliServiceStub);
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWith(loggerStub, expectedError);
+    }));
+
+    it('should log that import succeeded', sinon.test(function () {
+      const loggerStub = this.stub(logger, 'info');
+      const resJsonSpy = this.spy();
+
+      const github = 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git';
+      const commit = '8744022391f4c6518b0d070e3b85ff12b7884dd2';
+
+      const expectedMessage = `finished import for dataset '${github}' and commit '${commit}'`;
+      const cliServiceStub = this.stub(cliService, 'importDataset', (params, onImported) => onImported());
+
+      const req = {
+        body: {
+          github,
+          commit
         }
-      },
-    });
+      };
 
-    const req = {
-      body: {}
-    };
+      const res = {
+        json: resJsonSpy
+      };
 
-    const res = {
-      headersSent: false,
-      json: response => {
-        expect(response).to.deep.equal(expectedResponse);
-        expect(toErrorResponseSpy.withArgs(expectedError).calledOnce).to.be.true;
-        done();
-      }
-    };
+      cliController.importDataset(req, res);
 
-    cliController.importDataset(req, res);
-  }));
+      sinon.assert.notCalled(resJsonSpy);
+      sinon.assert.calledOnce(cliServiceStub);
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWith(loggerStub, expectedMessage);
 
-  it('should log an error when it occurred during import and server did send response already', sinon.test(function (done) {
-    const loggerSpy = this.spy(logger, 'error');
-    const expectedError = {message: 'Boo!'};
+      const params = cliServiceStub.args[0][0];
 
-    const cliController = proxyqire('../../../../ws.routes/ddf/cli/cli.controller', {
-      [cliServicePath]: {
-        importDataset: (params, onImported) => {
-          onImported(expectedError);
+      expect(params).to.include.keys('github', 'commit', 'lifecycleHooks');
+      expect(params.github).to.equal(github);
+      expect(params.commit).to.equal(commit);
 
-          expect(loggerSpy.withArgs(expectedError).calledOnce).to.be.true;
-          done();
+      expect(params.lifecycleHooks).to.include.keys('onTransactionCreated');
+      expect(params.lifecycleHooks.onTransactionCreated).to.be.instanceof(Function);
+    }));
+
+    it('should release connection once transaction was created for import process', sinon.test(function() {
+      const toMessageResponseSpy = this.spy(routeUtils, 'toMessageResponse');
+      const expectedMessage = 'Dataset importing is in progress ...';
+      const expectedResponse = {success: true, message: expectedMessage};
+
+      const resJsonSpy = this.spy();
+      const cliServiceStub = this.stub(cliService, 'importDataset', params => {
+        params.lifecycleHooks.onTransactionCreated();
+      });
+
+      const req = {
+        body: {}
+      };
+
+      const res = {
+        headersSent: false,
+        json: resJsonSpy
+      };
+
+      cliController.importDataset(req, res);
+
+      sinon.assert.calledOnce(cliServiceStub);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toMessageResponseSpy);
+      sinon.assert.calledWithExactly(toMessageResponseSpy, expectedMessage);
+    }));
+
+    it('should do nothing if response was already sent and transaction was created after', sinon.test(function () {
+      const toMessageResponseSpy = this.spy(routeUtils, 'toMessageResponse');
+
+      const resJsonSpy = this.spy();
+      const cliServiceStub = this.stub(cliService, 'importDataset', params => {
+        params.lifecycleHooks.onTransactionCreated();
+      });
+
+      const req = {
+        body: {}
+      };
+
+      const res = {
+        headersSent: true,
+        json: resJsonSpy
+      };
+
+      cliController.importDataset(req, res);
+
+      sinon.assert.calledOnce(cliServiceStub);
+      sinon.assert.notCalled(resJsonSpy);
+      sinon.assert.notCalled(toMessageResponseSpy);
+    }));
+  });
+
+  describe('Clean cache', function() {
+    it('should clean cache', sinon.test(function () {
+      const toMessageResponseSpy = this.spy(routeUtils, 'toMessageResponse');
+      const expectedMessage = 'Cache is clean';
+      const expectedResponse = {success: true, message: expectedMessage};
+
+      const resJsonSpy = this.spy();
+      const cliServiceStub = this.stub(cliService, 'cleanDdfRedisCache', onCleaned => onCleaned(null));
+
+      const req = {
+        user: {
+          name: 'fake'
         }
-      },
-    });
+      };
 
-    const req = {
-      body: {}
-    };
+      const res = {
+        json: resJsonSpy
+      };
 
-    const res = {
-      headersSent: true,
-      json: () => {
-        throw new Error('This should not be called');
-      }
-    };
+      cliController.cleanCache(req, res);
 
-    cliController.importDataset(req, res);
-  }));
+      sinon.assert.calledOnce(cliServiceStub);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toMessageResponseSpy);
+      sinon.assert.calledWithExactly(toMessageResponseSpy, expectedMessage);
+    }));
 
-  it('should log that import succeeded', sinon.test(function (done) {
-    const loggerSpy = this.spy(logger, 'info');
+    it('should not clean cache cause user is not authenticated', sinon.test(function () {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'There is no authenticated user to get its datasets';
+      const expectedResponse = {success: false, error: expectedError};
 
-    const github = 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git';
-    const commit = '8744022391f4c6518b0d070e3b85ff12b7884dd2';
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+      const cliServiceStub = this.stub(cliService, 'cleanDdfRedisCache');
 
-    const expectedMessage = `finished import for dataset '${github}' and commit '${commit}'`;
+      const req = {};
+      const res = {
+        json: resJsonSpy
+      };
 
-    const cliController = proxyqire('../../../../ws.routes/ddf/cli/cli.controller', {
-      [cliServicePath]: {
-        importDataset: (params, onImported) => {
-          onImported();
+      cliController.cleanCache(req, res);
 
-          expect(params).to.include.keys('github', 'commit', 'lifecycleHooks');
-          expect(params.github).to.equal(github);
-          expect(params.commit).to.equal(commit);
+      sinon.assert.notCalled(cliServiceStub);
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
 
-          expect(params.lifecycleHooks).to.include.keys('onTransactionCreated');
-          expect(params.lifecycleHooks.onTransactionCreated).to.be.instanceof(Function);
+    it('should respond with an error if cache clean failed', sinon.test(function () {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'Boo!';
+      const expectedResponse = {success: false, error: expectedError};
 
-          expect(loggerSpy.withArgs(expectedMessage).calledOnce).to.be.true;
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+      const cliServiceStub = this.stub(cliService, 'cleanDdfRedisCache', onCleaned => onCleaned(expectedError));
 
-          done();
+      const req = {
+        user: {
+          name: 'fake'
         }
-      },
-    });
+      };
 
-    const req = {
-      body: {
-        github,
-        commit
-      }
-    };
+      const res = {
+        json: resJsonSpy
+      };
 
-    const res = {
-      json: () => {
-        throw new Error('This should not be called');
-      }
-    };
+      cliController.cleanCache(req, res);
 
-    cliController.importDataset(req, res);
-  }));
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(cliServiceStub);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+  });
 
-  it('should release connection once transaction was created for import process', sinon.test(function(done) {
-    const toMessageResponseSpy = this.spy(routeUtils, 'toMessageResponse');
-    const expectedMessage = 'Dataset importing is in progress ...';
-    const expectedResponse = {success: true, message: expectedMessage};
+  describe('Authenticate user', function() {
+    it('should log an error when email is absent in req.body', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'Email was not provided';
+      const expectedResponse = {success: false, error: expectedError};
 
-    const cliController = proxyqire('../../../../ws.routes/ddf/cli/cli.controller', {
-      [cliServicePath]: {
-        importDataset: params => {
-          params.lifecycleHooks.onTransactionCreated();
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+
+      const req = {
+        body: {}
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.getToken(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+
+    it('should log an error when password is absent in req.body', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'Password was not provided';
+      const expectedResponse = {success: false, error: expectedError};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+
+      const req = {
+        body: {
+          email: 'test'
         }
-      },
-    });
+      };
 
-    const req = {
-      body: {}
-    };
+      const res = {
+        json: resJsonSpy
+      };
 
-    const res = {
-      headersSent: false,
-      json: response => {
-        expect(response).to.deep.equal(expectedResponse);
-        expect(toMessageResponseSpy.withArgs(expectedMessage).calledOnce).to.be.true;
-        done();
-      }
-    };
+      cliController.getToken(req, res);
 
-    cliController.importDataset(req, res);
-  }));
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
 
-  it('should do nothing if respose was already sent and transaction was created after', sinon.test(function (done) {
-    const toMessageResponseSpy = this.spy(routeUtils, 'toMessageResponse');
+    it('should log an error when throw error during authenticating user', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'Boo!';
+      const expectedResponse = {success: false, error: expectedError};
 
-    const cliController = proxyqire('../../../../ws.routes/ddf/cli/cli.controller', {
-      [cliServicePath]: {
-        importDataset: params => {
-          params.lifecycleHooks.onTransactionCreated();
-          sinon.assert.notCalled(toMessageResponseSpy);
-          done();
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+      const authServiceStub = this.stub(authService, 'authenticate', ({email, password}, onAuthenticated) => {
+        return onAuthenticated(expectedError);
+      });
+
+      const req = {
+        body: {
+          email: 'test',
+          password: '123'
         }
-      },
-    });
+      };
 
-    const req = {
-      body: {}
-    };
+      const res = {
+        json: resJsonSpy
+      };
 
-    const res = {
-      headersSent: true,
-      json: () => {
-        throw Error('This should not be called');
-      }
-    };
+      cliController.getToken(req, res);
 
-    cliController.importDataset(req, res);
-  }));
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(authServiceStub);
+      sinon.assert.calledWith(authServiceStub, req.body);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
 
-  it('should clean cache', sinon.test(function (done) {
-    const toMessageResponseSpy = this.spy(routeUtils, 'toMessageResponse');
-    const expectedMessage = 'Cache is clean';
+    it('should authenticate user', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const toDataResponseStub = this.spy(routeUtils, 'toDataResponse');
+      const expectedData = '111';
+      const expectedResponse = {success: true, data: {token: expectedData}};
 
-    const cliController = proxyqire('../../../../ws.routes/ddf/cli/cli.controller', {
-      [cliServicePath]: {
-        cleanDdfRedisCache: onCleaned => {
-          onCleaned(null);
+      const resJsonSpy = this.spy();
+      const authServiceStub = this.stub(authService, 'authenticate', ({email, password}, onAuthenticated) => {
+        return onAuthenticated(null, expectedData);
+      });
+
+      const req = {
+        body: {
+          email: 'test',
+          password: '123'
         }
-      },
-    });
+      };
 
-    const req = {
-      user: {
-        name: 'fake'
-      }
-    };
+      const res = {
+        json: resJsonSpy
+      };
 
-    const res = {
-      json: () => {
-        expect(toMessageResponseSpy.withArgs(expectedMessage).calledOnce).to.be.true;
-        done();
-      }
-    };
+      cliController.getToken(req, res);
 
-    cliController.cleanCache(req, res);
-  }));
+      sinon.assert.calledOnce(authServiceStub);
+      sinon.assert.calledWith(authServiceStub, req.body);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.notCalled(toErrorResponseSpy);
+      sinon.assert.calledOnce(toDataResponseStub);
+      sinon.assert.calledWithExactly(toDataResponseStub, {token: expectedData});
+    }));
+  });
 
-  it('should not clean cache cause user is not authenticated', sinon.test(function (done) {
-    const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
-    const expectedMessage = 'There is no authenticated user to get its datasets';
+  describe('Get state of the latest Transaction', function() {
+    it('should log an error when unauthenticated user request state of the latest transaction', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'Unauthenticated user cannot perform CLI operations';
+      const expectedResponse = {success: false, error: expectedError};
 
-    const cliController = proxyqire('../../../../ws.routes/ddf/cli/cli.controller', {
-      [cliServicePath]: {
-        cleanDdfRedisCache: () => {
-          throw new Error('This should not be called');
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+
+      const req = {
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.getStateOfLatestTransaction(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+
+    it('should log an error when dataset name is absent in req.query', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'No dataset name was given';
+      const expectedResponse = {success: false, error: expectedError};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'user'
+        },
+        query: {}
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.getStateOfLatestTransaction(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+
+    it('should log an error when transaction service coulnd\'t get status of the latest transaction', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'Boo!';
+      const expectedResponse = {success: false, error: expectedError};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+      const transactionsServiceStub = this.stub(transactionsService, 'getStatusOfLatestTransactionByDatasetName', (datasetName, user, onStatusGot) => {
+        return onStatusGot(expectedError);
+      });
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'user'
+        },
+        query: {
+          datasetName: 'dataset'
         }
-      },
-    });
+      };
 
-    const req = {};
-    const res = {
-      json: () => {
-        expect(toErrorResponseSpy.withArgs(expectedMessage).calledOnce).to.be.true;
-        done();
-      }
-    };
+      const res = {
+        json: resJsonSpy
+      };
 
-    cliController.cleanCache(req, res);
-  }));
+      cliController.getStateOfLatestTransaction(req, res);
 
-  it('should respond with an error if cache clean failed', sinon.test(function (done) {
-    const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
-    const expectedError = 'Boo!';
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(transactionsServiceStub);
+      sinon.assert.calledWith(transactionsServiceStub, req.query.datasetName, req.user);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
 
-    const cliController = proxyqire('../../../../ws.routes/ddf/cli/cli.controller', {
-      [cliServicePath]: {
-        cleanDdfRedisCache: onCleaned => {
-          onCleaned(expectedError);
+    it('should get state of the latest transaction', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const toDataResponseStub = this.spy(routeUtils, 'toDataResponse');
+      const expectedData = 'Complete';
+      const expectedResponse = {success: true, data: expectedData};
+
+      const resJsonSpy = this.spy();
+      const transactionsServiceStub = this.stub(transactionsService, 'getStatusOfLatestTransactionByDatasetName', (datasetName, user, onStatusGot) => {
+        return onStatusGot(null, expectedData);
+      });
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'user'
+        },
+        query: {
+          datasetName: 'dataset'
         }
-      },
-    });
+      };
 
-    const req = {
-      user: {
-        name: 'fake'
-      }
-    };
+      const res = {
+        json: resJsonSpy
+      };
 
-    const res = {
-      json: () => {
-        expect(toErrorResponseSpy.withArgs(expectedError).calledOnce).to.be.true;
-        done();
-      }
-    };
+      cliController.getStateOfLatestTransaction(req, res);
 
-    cliController.cleanCache(req, res);
-  }));
+      sinon.assert.calledOnce(transactionsServiceStub);
+      sinon.assert.calledWith(transactionsServiceStub, req.query.datasetName, req.user);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.notCalled(toErrorResponseSpy);
+      sinon.assert.calledOnce(toDataResponseStub);
+      sinon.assert.calledWithExactly(toDataResponseStub, expectedData);
+    }));
+  });
 
-  it('should not fetch datasets in progress cause user is not authenticated', sinon.test(function (done) {
-    const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
-    const expectedMessage = 'There is no authenticated user to get its datasets';
+  describe('Activate rollback', function() {
+    it('should log an error when unauthenticated user request activation rollback of the latest transaction', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'Unauthenticated user cannot perform CLI operations';
+      const expectedResponse = {success: false, error: expectedError};
 
-    const cliController = proxyqire('../../../../ws.routes/ddf/cli/cli.controller', {
-      [cliServicePath]: {
-        getDatasetsInProgress: () => {
-          throw new Error('This should not be called');
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+
+      const req = {
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.activateRollback(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+
+    it('should log an error when dataset name is absent in req.body', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'No dataset name was given';
+      const expectedResponse = {success: false, error: expectedError};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'user'
+        },
+        body: {}
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.activateRollback(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+
+    it('should log an error when transaction service coulnd\'t activate rollback of the latest transaction', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'Boo!';
+      const expectedResponse = {success: false, error: expectedError};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+      const transactionsServiceStub = this.stub(transactionsService, 'rollbackFailedTransactionFor', (datasetName, user, onRollbackActivated) => {
+        return onRollbackActivated(expectedError);
+      });
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'user'
+        },
+        body: {
+          datasetName: 'dataset'
         }
-      },
-    });
+      };
 
-    const req = {};
-    const res = {
-      json: () => {
-        expect(toErrorResponseSpy.withArgs(expectedMessage).calledOnce).to.be.true;
-        done();
-      }
-    };
+      const res = {
+        json: resJsonSpy
+      };
 
-    cliController.getDatasetsInProgress(req, res);
-  }));
+      cliController.activateRollback(req, res);
 
-  it('should fetch datasets that are currently in progress (being deleted, updated or imported)', sinon.test(function (done) {
-    const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
-    const expectedData = [{
-      name: 'dataset.name',
-      githubUrl: 'dataset.path'
-    }];
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(transactionsServiceStub);
+      sinon.assert.calledWith(transactionsServiceStub, req.body.datasetName, req.user);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
 
-    const cliController = proxyqire('../../../../ws.routes/ddf/cli/cli.controller', {
-      [cliServicePath]: {
-        getDatasetsInProgress: (userId, onFound) => {
-          expect(userId).to.equal('fakeId');
-          onFound(null, expectedData);
+    it('should activate rollback of the latest transaction', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const toMessageResponseStub = this.spy(routeUtils, 'toMessageResponse');
+      const expectedMessage = 'Rollback completed successfully';
+      const expectedResponse = {success: true, message: expectedMessage};
+
+      const resJsonSpy = this.spy();
+      const transactionsServiceStub = this.stub(transactionsService, 'rollbackFailedTransactionFor', (datasetName, user, onRollbackActivated) => {
+        return onRollbackActivated(null);
+      });
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'user'
+        },
+        body: {
+          datasetName: 'dataset'
         }
-      },
-    });
+      };
 
-    const req = {
-      user: {
-        _id: 'fakeId',
-        name: 'fake'
-      }
-    };
+      const res = {
+        json: resJsonSpy
+      };
 
-    const res = {
-      json: () => {
-        expect(toDataResponseSpy.withArgs(expectedData).calledOnce).to.be.true;
-        done();
-      }
-    };
+      cliController.activateRollback(req, res);
 
-    cliController.getDatasetsInProgress(req, res);
-  }));
+      sinon.assert.calledOnce(transactionsServiceStub);
+      sinon.assert.calledWith(transactionsServiceStub, req.body.datasetName, req.user);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.notCalled(toErrorResponseSpy);
+      sinon.assert.calledOnce(toMessageResponseStub);
+      sinon.assert.calledWithExactly(toMessageResponseStub, expectedMessage);
+    }));
+  });
 
-  it('should respond with an error if trying to get datasets in progress got the error', sinon.test(function (done) {
-    const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
-    const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
-    const expectedError = 'Boo!';
+  describe('Remove Dataset', function() {
+    it('should log an error when unauthenticated user request remove dataset', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'There is no authenticated user to remove dataset';
+      const expectedResponse = {success: false, error: expectedError};
 
-    const cliController = proxyqire('../../../../ws.routes/ddf/cli/cli.controller', {
-      [cliServicePath]: {
-        getDatasetsInProgress: (userId, onFound) => {
-          onFound(expectedError);
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+
+      const req = {
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.removeDataset(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+
+    it('should log an error when dataset name is absent in req.body', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'No dataset name was given';
+      const expectedResponse = {success: false, error: expectedError};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'user'
+        },
+        body: {}
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.removeDataset(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+
+    it('should log an error when dataset service coulnd\'t remove choosen dataset', sinon.test(function() {
+      const toMessageResponseSpy = this.spy(routeUtils, 'toMessageResponse');
+      const expectedError = 'Boo!';
+      const expectedMessage = 'Dataset is being deleted ...';
+      const expectedResponse = {success: true, message: expectedMessage};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+      const datasetsServiceStub = this.stub(datasetsService, 'removeDatasetData', (datasetName, user, onDatasetRemoved) => {
+        return onDatasetRemoved(expectedError);
+      });
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'user'
+        },
+        body: {
+          datasetName: 'dataset'
         }
-      },
-    });
+      };
 
-    const req = {
-      user: {
-        name: 'fake'
-      }
-    };
+      const res = {
+        json: resJsonSpy
+      };
 
-    const res = {
-      json: () => {
-        expect(toErrorResponseSpy.withArgs(expectedError).calledOnce).to.be.true;
-        done();
-      }
-    };
+      cliController.removeDataset(req, res);
 
-    cliController.getDatasetsInProgress(req, res);
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(datasetsServiceStub);
+      sinon.assert.calledWith(datasetsServiceStub, req.body.datasetName, req.user);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toMessageResponseSpy);
+      sinon.assert.calledWithExactly(toMessageResponseSpy, expectedMessage);
+    }));
 
-    sinon.assert.notCalled(toDataResponseSpy);
-  }));
+    it('should remove dataset', sinon.test(function(done) {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const toMessageResponseSpy = this.spy(routeUtils, 'toMessageResponse');
+      const expectedInfoMessage = 'Dataset has been deleted successfully';
+      const expectedMessage = 'Dataset is being deleted ...';
+      const expectedResponse = {success: true, message: expectedMessage};
 
-  it('should fetch removal state of dataset that is being removed', sinon.test(function (done) {
-    const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
-    const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const resJsonSpy = this.spy();
+      const datasetsServiceStub = this.stub(datasetsService, 'removeDatasetData', (datasetName, user, onDatasetRemoved) => {
+        return setTimeout(onDatasetRemoved, 1);
+      });
 
-    const removalStatus = {
-      concepts: 42,
-      entities: 42,
-      datapoints: 42,
-    };
+      const req = {
+        user: {
+          _id: '123',
+          name: 'user'
+        },
+        body: {
+          datasetName: 'dataset'
+        }
+      };
 
-    const getRemovalStateForDatasetStub = this.stub(datasetsService, 'getRemovalStateForDataset');
-    getRemovalStateForDatasetStub
-      .onFirstCall().callsArgWith(2, null, removalStatus);
+      const res = {
+        json: resJsonSpy
+      };
 
-    const req = {
-      query: {
-        datasetName: 'datasetName'
-      },
-      user: {
-        name: 'fake'
-      }
-    };
-
-    const res = {
-      json: () => {
+      const loggerStub = this.stub(logger, 'info', () => {
+        sinon.assert.calledOnce(loggerStub);
+        sinon.assert.calledWithExactly(loggerStub, expectedInfoMessage);
+        sinon.assert.calledOnce(datasetsServiceStub);
+        sinon.assert.calledWith(datasetsServiceStub, req.body.datasetName, req.user);
+        sinon.assert.calledOnce(resJsonSpy);
+        sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
         sinon.assert.notCalled(toErrorResponseSpy);
-        sinon.assert.calledOnce(toDataResponseSpy);
-        sinon.assert.calledWith(toDataResponseSpy, removalStatus);
-
-        sinon.assert.calledOnce(getRemovalStateForDatasetStub);
-        sinon.assert.calledWith(getRemovalStateForDatasetStub, req.query.datasetName, req.user);
+        sinon.assert.calledOnce(toMessageResponseSpy);
+        sinon.assert.calledWithExactly(toMessageResponseSpy, expectedMessage);
+        sinon.assert.callOrder(datasetsServiceStub, toMessageResponseSpy, resJsonSpy, loggerStub);
 
         done();
-      }
-    };
+      });
 
-    cliController.getStateOfDatasetRemoval(req, res);
-  }));
+      cliController.removeDataset(req, res);
+    }));
+  });
 
-  it('should respond with an error if smth went wrong during status fetching', sinon.test(function (done) {
-    const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
-    const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+  describe('Get available Datasets and Versions', function() {
+    it('should log an error when unauthenticated user request activation rollback of the latest transaction', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'There is no authenticated user to get its datasets';
+      const expectedResponse = {success: false, error: expectedError};
 
-    const expectedError = 'Boo!';
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
 
-    const getRemovalStateForDatasetStub = this.stub(datasetsService, 'getRemovalStateForDataset');
-    getRemovalStateForDatasetStub
-      .onFirstCall().callsArgWith(2, expectedError, null);
+      const req = {
+      };
 
-    const req = {
-      query: {
-        datasetName: 'datasetName'
-      },
-      user: {
-        name: 'fake'
-      }
-    };
+      const res = {
+        json: resJsonSpy
+      };
 
-    const res = {
-      json: () => {
-        sinon.assert.notCalled(toDataResponseSpy);
-        sinon.assert.calledOnce(toErrorResponseSpy);
-        sinon.assert.calledWith(toErrorResponseSpy, expectedError);
+      cliController.getAvailableDatasetsAndVersions(req, res);
 
-        sinon.assert.calledOnce(getRemovalStateForDatasetStub);
-        sinon.assert.calledWith(getRemovalStateForDatasetStub, req.query.datasetName, req.user);
-        done();
-      }
-    };
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
 
-    cliController.getStateOfDatasetRemoval(req, res);
-  }));
+    it('should log an error when cli service coulnd\'t activate rollback of the latest transaction', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'Boo!';
+      const expectedResponse = {success: false, error: expectedError};
 
-  it('should respond with an error if dataset name was not provided in request', sinon.test(function (done) {
-    const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
-    const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+      const cliServiceStub = this.stub(cliService, 'getAvailableDatasetsAndVersions', (user, onDatasetAndVersionsGot) => {
+        return onDatasetAndVersionsGot(expectedError);
+      });
 
-    const expectedError = 'No dataset name was given';
+      const req = {
+        user: {
+          _id: '123',
+          name: 'user'
+        }
+      };
 
-    const req = {
-      query: {
-      },
-      user: {
-        name: 'fake'
-      }
-    };
+      const res = {
+        json: resJsonSpy
+      };
 
-    const res = {
-      json: () => {
-        sinon.assert.notCalled(toDataResponseSpy);
-        sinon.assert.calledOnce(toErrorResponseSpy);
-        sinon.assert.calledWith(toErrorResponseSpy, expectedError);
-        done();
-      }
-    };
+      cliController.getAvailableDatasetsAndVersions(req, res);
 
-    cliController.getStateOfDatasetRemoval(req, res);
-  }));
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(cliServiceStub);
+      sinon.assert.calledWith(cliServiceStub, req.user._id);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
 
-  it('should respond with an error if user is not authenticated', sinon.test(function (done) {
-    const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
-    const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should get available datasets and versions', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const toDataResponseStub = this.spy(routeUtils, 'toDataResponse');
+      const expectedMessage = `finished getting available datasets and versions`;
+      const expectedData = [];
+      const expectedResponse = {success: true, data: expectedData};
 
-    const expectedError = 'Unauthenticated user cannot perform CLI operations';
+      const loggerStub = this.stub(logger, 'info');
+      const resJsonSpy = this.spy();
+      const cliServiceStub = this.stub(cliService, 'getAvailableDatasetsAndVersions', (user, onDatasetAndVersionsGot) => {
+        return onDatasetAndVersionsGot(null, expectedData);
+      });
 
-    const req = {};
+      const req = {
+        user: {
+          _id: '123',
+          name: 'user'
+        },
+        body: {
+          datasetName: 'dataset'
+        }
+      };
 
-    const res = {
-      json: () => {
-        sinon.assert.notCalled(toDataResponseSpy);
-        sinon.assert.calledOnce(toErrorResponseSpy);
-        sinon.assert.calledWith(toErrorResponseSpy, expectedError);
-        done();
-      }
-    };
+      const res = {
+        json: resJsonSpy
+      };
 
-    cliController.getStateOfDatasetRemoval(req, res);
-  }));
+      cliController.getAvailableDatasetsAndVersions(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedMessage);
+      sinon.assert.calledOnce(cliServiceStub);
+      sinon.assert.calledWith(cliServiceStub, req.user._id);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.notCalled(toErrorResponseSpy);
+      sinon.assert.calledOnce(toDataResponseStub);
+      sinon.assert.calledWithExactly(toDataResponseStub, expectedData);
+    }));
+  });
+
+  describe('Update Dataset incrementally', function() {
+    it('should log an error when unauthenticated user tries to update dataset incrementally', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'Unauthenticated user cannot perform CLI operations';
+      const expectedResponse = {success: false, error: expectedError};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+
+      const req = {
+        query: {}
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.updateIncrementally(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+
+    it('should log an error when hashFrom url is absent in req.body', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'Start commit for update was not given';
+      const expectedResponse = {success: false, error: expectedError};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'user'
+        },
+        body: {}
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.updateIncrementally(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+
+    it('should log an error when hashTo url is absent in req.body', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'End commit for update was not given';
+      const expectedResponse = {success: false, error: expectedError};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'user'
+        },
+        body: {
+          hashFrom: 'AAAAAAA'
+        }
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.updateIncrementally(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+
+    it('should log an error when github url is absent in req.body', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'Repository github url was not given';
+      const expectedResponse = {success: false, error: expectedError};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'user'
+        },
+        body: {
+          hashFrom: 'AAAAAAA',
+          hashTo: 'BBBBBBB'
+        }
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.updateIncrementally(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+
+    it('should log an error when cli service coulnd\'t update dataset incrementally and response header was not sent', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedGithubUrl = 'git@github.com:Gapminder/waffle-server.git#stage';
+      const expectedError = 'Boo!';
+      const expectedResponse = {success: false, error: expectedError};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+      const cliServiceStub = this.stub(cliService, 'updateIncrementally', (options,  onDatasetUpdated) => {
+        return onDatasetUpdated(expectedError);
+      });
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'user'
+        },
+        body: {
+          hashFrom: 'AAAAAAA',
+          hashTo: 'BBBBBBB',
+          github: expectedGithubUrl
+        }
+      };
+
+      const res = {
+        json: resJsonSpy,
+        headersSent: false
+      };
+
+      cliController.updateIncrementally(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(cliServiceStub);
+      const actualOptions = cliServiceStub.args[0][0];
+      expect(actualOptions.github).to.be.equal(expectedGithubUrl);
+      expect(actualOptions.hashTo).to.be.equal(req.body.hashTo);
+      expect(actualOptions.commit).to.be.equal(req.body.hashTo);
+      expect(actualOptions.hashFrom).to.be.equal(req.body.hashFrom);
+      expect(actualOptions.datasetName).to.be.equal(reposService.getRepoNameForDataset(expectedGithubUrl));
+      expect(actualOptions.lifecycleHooks).to.exist;
+      expect(actualOptions.lifecycleHooks).to.have.property('onTransactionCreated');
+      expect(actualOptions.lifecycleHooks.onTransactionCreated).to.be.an.instanceof(Function);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+
+    it('should log an error when cli service coulnd\'t update dataset incrementally and response header was sent', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedGithubUrl = 'git@github.com:Gapminder/waffle-server.git#stage';
+      const expectedError = 'Boo!';
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+      const cliServiceStub = this.stub(cliService, 'updateIncrementally', (options,  onDatasetUpdated) => {
+        return onDatasetUpdated(expectedError);
+      });
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'user'
+        },
+        body: {
+          hashFrom: 'AAAAAAA',
+          hashTo: 'BBBBBBB',
+          github: expectedGithubUrl
+        }
+      };
+
+      const res = {
+        json: resJsonSpy,
+        headersSent: true
+      };
+
+      cliController.updateIncrementally(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(cliServiceStub);
+      const actualOptions = cliServiceStub.args[0][0];
+      expect(actualOptions.github).to.be.equal(expectedGithubUrl);
+      expect(actualOptions.hashTo).to.be.equal(req.body.hashTo);
+      expect(actualOptions.commit).to.be.equal(req.body.hashTo);
+      expect(actualOptions.hashFrom).to.be.equal(req.body.hashFrom);
+      expect(actualOptions.datasetName).to.be.equal(reposService.getRepoNameForDataset(expectedGithubUrl));
+      expect(actualOptions.lifecycleHooks).to.exist;
+      expect(actualOptions.lifecycleHooks).to.have.property('onTransactionCreated');
+      expect(actualOptions.lifecycleHooks.onTransactionCreated).to.be.an.instanceof(Function);
+      sinon.assert.notCalled(resJsonSpy);
+      sinon.assert.notCalled(toErrorResponseSpy);
+    }));
+
+    it('should get commit of latest dataset version', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
+      const expectedGithubUrl = 'git@github.com:Gapminder/waffle-server.git#stage';
+      const expectedHashFrom = 'AAAAAAA';
+      const expectedHashTo = 'BBBBBBB';
+      const expectedMessage = `finished import for dataset '${expectedGithubUrl}' and commit '${expectedHashTo}'`;
+
+      const loggerStub = this.stub(logger, 'info');
+      const resJsonSpy = this.spy();
+      const cliServiceStub = this.stub(cliService, 'updateIncrementally', (options, onDatasetUpdated) => {
+        options.lifecycleHooks.onTransactionCreated();
+        return onDatasetUpdated(null);
+      });
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'user'
+        },
+        body: {
+          hashFrom: expectedHashFrom,
+          hashTo: expectedHashTo,
+          github: expectedGithubUrl
+        }
+      };
+
+      const res = {
+        json: resJsonSpy,
+        headersSent: true
+      };
+
+      cliController.updateIncrementally(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedMessage);
+      sinon.assert.calledOnce(cliServiceStub);
+      const actualOptions = cliServiceStub.args[0][0];
+      expect(actualOptions.github).to.be.equal(expectedGithubUrl);
+      expect(actualOptions.hashTo).to.be.equal(req.body.hashTo);
+      expect(actualOptions.commit).to.be.equal(req.body.hashTo);
+      expect(actualOptions.hashFrom).to.be.equal(req.body.hashFrom);
+      expect(actualOptions.datasetName).to.be.equal(reposService.getRepoNameForDataset(expectedGithubUrl));
+      expect(actualOptions.lifecycleHooks).to.exist;
+      expect(actualOptions.lifecycleHooks).to.have.property('onTransactionCreated');
+      expect(actualOptions.lifecycleHooks.onTransactionCreated).to.be.an.instanceof(Function);
+      sinon.assert.notCalled(resJsonSpy);
+      sinon.assert.notCalled(toErrorResponseSpy);
+      sinon.assert.notCalled(toDataResponseSpy);
+    }));
+
+    it('should get commit of latest dataset version', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
+      const toMessageResponseSpy = this.spy(routeUtils, 'toMessageResponse');
+      const expectedGithubUrl = 'git@github.com:Gapminder/waffle-server.git#stage';
+      const expectedHashFrom = 'AAAAAAA';
+      const expectedHashTo = 'BBBBBBB';
+      const expectedInfoMessage = `finished import for dataset '${expectedGithubUrl}' and commit '${expectedHashTo}'`;
+      const expectedMessage = 'Dataset updating is in progress ...';
+      const expectedResponse = {success: true, message: expectedMessage};
+
+      const loggerStub = this.stub(logger, 'info');
+      const resJsonSpy = this.spy();
+      const cliServiceStub = this.stub(cliService, 'updateIncrementally', (options, onDatasetUpdated) => {
+        options.lifecycleHooks.onTransactionCreated();
+        return onDatasetUpdated(null);
+      });
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'user'
+        },
+        body: {
+          hashFrom: expectedHashFrom,
+          hashTo: expectedHashTo,
+          github: expectedGithubUrl
+        }
+      };
+
+      const res = {
+        json: resJsonSpy,
+        headersSent: false
+      };
+
+      cliController.updateIncrementally(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedInfoMessage);
+      sinon.assert.calledOnce(cliServiceStub);
+      const actualOptions = cliServiceStub.args[0][0];
+      expect(actualOptions.github).to.be.equal(expectedGithubUrl);
+      expect(actualOptions.hashTo).to.be.equal(req.body.hashTo);
+      expect(actualOptions.commit).to.be.equal(req.body.hashTo);
+      expect(actualOptions.hashFrom).to.be.equal(req.body.hashFrom);
+      expect(actualOptions.datasetName).to.be.equal(reposService.getRepoNameForDataset(expectedGithubUrl));
+      expect(actualOptions.lifecycleHooks).to.exist;
+      expect(actualOptions.lifecycleHooks).to.have.property('onTransactionCreated');
+      expect(actualOptions.lifecycleHooks.onTransactionCreated).to.be.an.instanceof(Function);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.notCalled(toErrorResponseSpy);
+      sinon.assert.notCalled(toDataResponseSpy);
+      sinon.assert.calledOnce(toMessageResponseSpy);
+      sinon.assert.calledWithExactly(toMessageResponseSpy, expectedMessage);
+    }));
+  });
+
+  describe('Get commit of the latest Dataset Version', function() {
+    it('should log an error when unauthenticated user request commit of the latest dataset version', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'Unauthenticated user cannot perform CLI operations';
+      const expectedResponse = {success: false, error: expectedError};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+
+      const req = {
+        query: {}
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.getCommitOfLatestDatasetVersion(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+
+    it('should log an error when github url is absent in req.query', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'Repository github url was not given';
+      const expectedResponse = {success: false, error: expectedError};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'user'
+        },
+        query: {}
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.getCommitOfLatestDatasetVersion(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+
+    it('should log an error when cli service coulnd\'t get commit of the latest dataset version', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedGithubUrl = 'github:url';
+      const expectedError = 'Boo!';
+      const expectedResponse = {success: false, error: expectedError};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+      const cliServiceStub = this.stub(cliService, 'getCommitOfLatestDatasetVersion', (github, user,  onCommitGot) => {
+        return onCommitGot(expectedError);
+      });
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'user'
+        },
+        query: {
+          github: expectedGithubUrl
+        }
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.getCommitOfLatestDatasetVersion(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(cliServiceStub);
+      sinon.assert.calledWith(cliServiceStub, req.query.github, req.user);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+
+    it('should get commit of latest dataset version', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const toDataResponseStub = this.spy(routeUtils, 'toDataResponse');
+      const expectedGithubUrl = 'github:url';
+      const expectedCommit = 'AAAAAAA';
+      const expectedDatasetName = 'dataset';
+      const expectedMessage = `finished getting latest commit '${expectedCommit}' for dataset '${expectedGithubUrl}'`;
+      const expectedData = {
+        github: expectedGithubUrl,
+        dataset: expectedDatasetName,
+        commit: expectedCommit
+      };
+      const expectedResponse = {
+        success: true,
+        data: expectedData
+      };
+      const result = {
+        dataset: {
+          path: expectedGithubUrl,
+          name: expectedDatasetName
+        },
+        transaction: {
+          commit: expectedCommit
+        }
+      };
+
+      const loggerStub = this.stub(logger, 'info');
+      const resJsonSpy = this.spy();
+      const cliServiceStub = this.stub(cliService, 'getCommitOfLatestDatasetVersion', (github, user, onCommitListGot) => {
+        return onCommitListGot(null, result);
+      });
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'user'
+        },
+        query: {
+          github: expectedGithubUrl
+        }
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.getCommitOfLatestDatasetVersion(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedMessage);
+      sinon.assert.calledOnce(cliServiceStub);
+      sinon.assert.calledWith(cliServiceStub, req.query.github, req.user);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.notCalled(toErrorResponseSpy);
+      sinon.assert.calledOnce(toDataResponseStub);
+      sinon.assert.calledWithExactly(toDataResponseStub, expectedData);
+    }));
+  });
+
+  describe('Set default Dataset', function() {
+    it('should log an error when unauthenticated user tries to set default dataset', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'There is no authenticated user to get its datasets';
+      const expectedResponse = {success: false, error: expectedError};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+
+      const req = {
+        body: {}
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.setDefaultDataset(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+
+    it('should log an error when dataset name is absent in req.body', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'Dataset name was not provided';
+      const expectedResponse = {success: false, error: expectedError};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'user'
+        },
+        body: {}
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.setDefaultDataset(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+
+    it('should log an error when hash commit is absent in req.body', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'Transaction commit was not provided';
+      const expectedResponse = {success: false, error: expectedError};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'user'
+        },
+        body: {
+          datasetName: 'datasetName'
+        }
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.setDefaultDataset(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+
+    it('should respond an error when cli service coulnd\'t set transaction as default one', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'Boo!';
+      const expectedResponse = {success: false, error: expectedError};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+      const cliServiceStub = this.stub(cliService, 'setTransactionAsDefault', (userId, datasetName, transactionCommit, onDatasetUpdated) => {
+        return onDatasetUpdated(expectedError);
+      });
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'user'
+        },
+        body: {
+          datasetName: 'datasetName',
+          commit: 'AAAAAAA'
+        }
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.setDefaultDataset(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(cliServiceStub);
+      sinon.assert.calledWith(cliServiceStub, req.user._id, req.body.datasetName, req.body.commit);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+
+    it('should respond an error when cli service coulnd\'t clean redis cache', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'Boo!';
+      const expectedResponse = {success: false, error: expectedError};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+      const setTransactionAsDefaultStub = this.stub(cliService, 'setTransactionAsDefault', (userId, datasetName, transactionCommit, onDatasetUpdated) => {
+        return onDatasetUpdated();
+      });
+      const cleanDdfRedisCacheStub = this.stub(cliService, 'cleanDdfRedisCache', (onCacheCleaned) => {
+        return onCacheCleaned(expectedError);
+      });
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'user'
+        },
+        body: {
+          datasetName: 'datasetName',
+          commit: 'AAAAAAA'
+        }
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.setDefaultDataset(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(setTransactionAsDefaultStub);
+      sinon.assert.calledWith(setTransactionAsDefaultStub, req.user._id, req.body.datasetName, req.body.commit);
+      sinon.assert.calledOnce(cleanDdfRedisCacheStub);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+
+    it('should log an error when cli service coulnd\'t warm up cache', sinon.test(function() {
+      const toDataResponse = this.spy(routeUtils, 'toDataResponse');
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'Boo!';
+      const expectedData = {
+        dataset: 'datasetName',
+        transaction: 'AAAAAAA'
+      };
+      const expectedResponse = {success: true, data: expectedData};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+      const setTransactionAsDefaultStub = this.stub(cliService, 'setTransactionAsDefault', (userId, datasetName, transactionCommit, onDatasetUpdated) => {
+        return onDatasetUpdated(null, expectedData);
+      });
+      const cleanDdfRedisCacheStub = this.stub(cliService, 'cleanDdfRedisCache', (onCacheCleaned) => {
+        return onCacheCleaned();
+      });
+      const cacheUtilsStub = this.stub(cacheUtils, 'warmUpCache', (onCacheWarmedUp) => {
+        return onCacheWarmedUp(expectedError);
+      });
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'user'
+        },
+        body: {
+          datasetName: 'datasetName',
+          commit: 'AAAAAAA'
+        }
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.setDefaultDataset(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, 'Cache warm up error. ', expectedError);
+      sinon.assert.calledOnce(setTransactionAsDefaultStub);
+      sinon.assert.calledWith(setTransactionAsDefaultStub, req.user._id, req.body.datasetName, req.body.commit);
+      sinon.assert.calledOnce(cleanDdfRedisCacheStub);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.notCalled(toErrorResponseSpy);
+      sinon.assert.calledOnce(toDataResponse);
+      sinon.assert.calledWithExactly(toDataResponse, expectedData);
+    }));
+
+    it('should set default transaction for public dataset', sinon.test(function() {
+      const toDataResponse = this.spy(routeUtils, 'toDataResponse');
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'Cache is warmed up.';
+      const expectedData = {
+        dataset: 'datasetName',
+        transaction: 'AAAAAAA'
+      };
+      const expectedResponse = {success: true, data: expectedData};
+
+      const loggerStub = this.stub(logger, 'info');
+      const resJsonSpy = this.spy();
+      const setTransactionAsDefaultStub = this.stub(cliService, 'setTransactionAsDefault', (userId, datasetName, transactionCommit, onDatasetUpdated) => {
+        return onDatasetUpdated(null, expectedData);
+      });
+      const cleanDdfRedisCacheStub = this.stub(cliService, 'cleanDdfRedisCache', (onCacheCleaned) => {
+        return onCacheCleaned();
+      });
+      const cacheUtilsStub = this.stub(cacheUtils, 'warmUpCache', (onCacheWarmedUp) => {
+        return onCacheWarmedUp();
+      });
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'user'
+        },
+        body: {
+          datasetName: 'datasetName',
+          commit: 'AAAAAAA'
+        }
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.setDefaultDataset(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(setTransactionAsDefaultStub);
+      sinon.assert.calledWith(setTransactionAsDefaultStub, req.user._id, req.body.datasetName, req.body.commit);
+      sinon.assert.calledOnce(cleanDdfRedisCacheStub);
+      sinon.assert.calledOnce(cacheUtilsStub);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.notCalled(toErrorResponseSpy);
+      sinon.assert.calledOnce(toDataResponse);
+      sinon.assert.calledWithExactly(toDataResponse, expectedData);
+    }));
+  });
+
+  describe('Get Datasets', function() {
+    it('should get the list of available datasets for authenticated user', sinon.test(function () {
+      const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
+      const expectedData = [];
+      const expectedResponse = {success: true, data: expectedData};
+
+      const resJsonSpy = this.spy();
+      const cliServiceStub = this.stub(cliService, 'findDatasetsWithVersions', (userId, onCleaned) => onCleaned(null, expectedData));
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'fake'
+        }
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.getDatasets(req, res);
+
+      sinon.assert.calledOnce(cliServiceStub);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toDataResponseSpy);
+      sinon.assert.calledWithExactly(toDataResponseSpy, expectedData);
+    }));
+
+    it('should respond with an error if user is not authenticated', sinon.test(function () {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'There is no authenticated user to get its datasets';
+      const expectedResponse = {success: false, error: expectedError};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+      const cliServiceStub = this.stub(cliService, 'findDatasetsWithVersions');
+
+      const req = {};
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.getDatasets(req, res);
+
+      sinon.assert.notCalled(cliServiceStub);
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+
+    it('should respond with an error if receiving available datasets got failed', sinon.test(function () {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'Boo!';
+      const expectedResponse = {success: false, error: expectedError};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+      const cliServiceStub = this.stub(cliService, 'findDatasetsWithVersions', (userId, onCleaned) => onCleaned(expectedError));
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'fake'
+        }
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.getDatasets(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(cliServiceStub);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+  });
+
+  describe('Get state of Dataset removal', function() {
+    it('should fetch removal state of dataset that is being removed', sinon.test(function (done) {
+      const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+
+      const removalStatus = {
+        concepts: 42,
+        entities: 42,
+        datapoints: 42,
+      };
+
+      const getRemovalStateForDatasetStub = this.stub(datasetsService, 'getRemovalStateForDataset');
+      getRemovalStateForDatasetStub
+        .onFirstCall().callsArgWith(2, null, removalStatus);
+
+      const req = {
+        query: {
+          datasetName: 'datasetName'
+        },
+        user: {
+          name: 'fake'
+        }
+      };
+
+      const res = {
+        json: () => {
+          sinon.assert.notCalled(toErrorResponseSpy);
+          sinon.assert.calledOnce(toDataResponseSpy);
+          sinon.assert.calledWith(toDataResponseSpy, removalStatus);
+
+          sinon.assert.calledOnce(getRemovalStateForDatasetStub);
+          sinon.assert.calledWith(getRemovalStateForDatasetStub, req.query.datasetName, req.user);
+
+          done();
+        }
+      };
+
+      cliController.getStateOfDatasetRemoval(req, res);
+    }));
+
+    it('should respond with an error if smth went wrong during status fetching', sinon.test(function (done) {
+      const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+
+      const expectedError = 'Boo!';
+
+      const loggerStub = this.stub(logger, 'error');
+      const getRemovalStateForDatasetStub = this.stub(datasetsService, 'getRemovalStateForDataset');
+      getRemovalStateForDatasetStub
+        .onFirstCall().callsArgWith(2, expectedError, null);
+
+      const req = {
+        query: {
+          datasetName: 'datasetName'
+        },
+        user: {
+          name: 'fake'
+        }
+      };
+
+      const res = {
+        json: () => {
+          sinon.assert.notCalled(toDataResponseSpy);
+          sinon.assert.calledOnce(toErrorResponseSpy);
+          sinon.assert.calledWith(toErrorResponseSpy, expectedError);
+
+          sinon.assert.calledOnce(loggerStub);
+          sinon.assert.calledWith(loggerStub, expectedError);
+
+          sinon.assert.calledOnce(getRemovalStateForDatasetStub);
+          sinon.assert.calledWith(getRemovalStateForDatasetStub, req.query.datasetName, req.user);
+          done();
+        }
+      };
+
+      cliController.getStateOfDatasetRemoval(req, res);
+    }));
+
+    it('should respond with an error if dataset name was not provided in request', sinon.test(function (done) {
+      const loggerStub = this.stub(logger, 'error');
+      const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+
+      const expectedError = 'No dataset name was given';
+
+      const req = {
+        query: {
+        },
+        user: {
+          name: 'fake'
+        }
+      };
+
+      const res = {
+        json: () => {
+          sinon.assert.notCalled(toDataResponseSpy);
+          sinon.assert.calledOnce(toErrorResponseSpy);
+          sinon.assert.calledWith(toErrorResponseSpy, expectedError);
+
+          sinon.assert.calledOnce(loggerStub);
+          sinon.assert.calledWith(loggerStub, expectedError);
+
+          done();
+        }
+      };
+
+      cliController.getStateOfDatasetRemoval(req, res);
+    }));
+
+    it('should respond with an error if user is not authenticated', sinon.test(function (done) {
+      const loggerStub = this.stub(logger, 'error');
+      const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+
+      const expectedError = 'Unauthenticated user cannot perform CLI operations';
+
+      const req = {};
+
+      const res = {
+        json: () => {
+          sinon.assert.notCalled(toDataResponseSpy);
+          sinon.assert.calledOnce(toErrorResponseSpy);
+          sinon.assert.calledWith(toErrorResponseSpy, expectedError);
+
+          sinon.assert.calledOnce(loggerStub);
+          sinon.assert.calledWith(loggerStub, expectedError);
+
+          done();
+        }
+      };
+
+      cliController.getStateOfDatasetRemoval(req, res);
+    }));
+  });
+
+  describe('Get removable Datasets', function() {
+    it('should get the list of removable datasets for authenticated user', sinon.test(function () {
+      const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
+      const expectedInfoMessage = `finished getting removable datasets`;
+      const expectedData = [];
+      const expectedResponse = {success: true, data: expectedData};
+
+      const loggerStub = this.stub(logger, 'info');
+      const resJsonSpy = this.spy();
+      const cliServiceStub = this.stub(cliService, 'getRemovableDatasets', (userId, onCleaned) => onCleaned(null, expectedData));
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'fake'
+        }
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.getRemovableDatasets(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedInfoMessage);
+      sinon.assert.calledOnce(cliServiceStub);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toDataResponseSpy);
+      sinon.assert.calledWithExactly(toDataResponseSpy, expectedData);
+    }));
+
+    it('should respond with an error if user is not authenticated', sinon.test(function () {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'There is no authenticated user to get its datasets';
+      const expectedResponse = {success: false, error: expectedError};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+      const cliServiceStub = this.stub(cliService, 'getRemovableDatasets');
+
+      const req = {};
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.getRemovableDatasets(req, res);
+
+      sinon.assert.notCalled(cliServiceStub);
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+
+    it('should respond with an error if receiving removable datasets got failed', sinon.test(function () {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'Boo!';
+      const expectedResponse = {success: false, error: expectedError};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+      const cliServiceStub = this.stub(cliService, 'getRemovableDatasets', (userId, onCleaned) => onCleaned(expectedError));
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'fake'
+        }
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.getRemovableDatasets(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(cliServiceStub);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+  });
+
+  describe('Get private Datasets', function() {
+    it('should get the list of private datasets for authenticated user', sinon.test(function () {
+      const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
+      const expectedInfoMessage = `finished getting private datasets`;
+      const expectedData = [];
+      const expectedResponse = {success: true, data: expectedData};
+
+      const loggerStub = this.stub(logger, 'info');
+      const resJsonSpy = this.spy();
+      const cliServiceStub = this.stub(cliService, 'getPrivateDatasets', (userId, onCleaned) => onCleaned(null, expectedData));
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'fake'
+        }
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.getPrivateDatasets(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedInfoMessage);
+      sinon.assert.calledOnce(cliServiceStub);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toDataResponseSpy);
+      sinon.assert.calledWithExactly(toDataResponseSpy, expectedData);
+    }));
+
+    it('should respond with an error if user is not authenticated', sinon.test(function () {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'There is no authenticated user to get its datasets';
+      const expectedResponse = {success: false, error: expectedError};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+      const cliServiceStub = this.stub(cliService, 'getPrivateDatasets');
+
+      const req = {};
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.getPrivateDatasets(req, res);
+
+      sinon.assert.notCalled(cliServiceStub);
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+
+    it('should respond with an error if receiving private datasets got failed', sinon.test(function () {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'Boo!';
+      const expectedResponse = {success: false, error: expectedError};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+      const cliServiceStub = this.stub(cliService, 'getPrivateDatasets', (userId, onCleaned) => onCleaned(expectedError));
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'fake'
+        }
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.getPrivateDatasets(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(cliServiceStub);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+  });
+
+  describe('Generate Dataset access token', function() {
+    it('should respond with an error when unauthenticated user request to generate dataset access token', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'Unauthenticated user cannot perform CLI operations';
+      const expectedResponse = {success: false, error: expectedError};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+
+      const req = {
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.generateDatasetAccessToken(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+
+    it('should respond with an error when dataset name is absent in req.body', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'No dataset name was given';
+      const expectedResponse = {success: false, error: expectedError};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'user'
+        },
+        body: {}
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.generateDatasetAccessToken(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+
+    it('should respond with an error when cli service coulnd\'t set access token for given dataset', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'Boo!';
+      const expectedResponse = {success: false, error: expectedError};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+      const cliServiceStub = this.stub(cliService, 'setAccessTokenForDataset', (datasetName, userId, onDatasetRemoved) => {
+        return onDatasetRemoved(expectedError);
+      });
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'user'
+        },
+        body: {
+          datasetName: 'dataset'
+        }
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.generateDatasetAccessToken(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(cliServiceStub);
+      sinon.assert.calledWith(cliServiceStub, req.body.datasetName, req.user._id);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+
+    it('should respond with an error when cli service couln\'t find dataset', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'Cannot generate access token for given dataset';
+      const expectedResponse = {success: false, error: expectedError};
+
+      const loggerErrorStub = this.stub(logger, 'error');
+      const loggerWarnStub = this.stub(logger, 'warn');
+      const resJsonSpy = this.spy();
+      const cliServiceStub = this.stub(cliService, 'setAccessTokenForDataset', (datasetName, userId, onDatasetRemoved) => {
+        return onDatasetRemoved(null, null);
+      });
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'user'
+        },
+        body: {
+          datasetName: 'dataset'
+        }
+      };
+
+      const expectedWarn = `User was trying to generate an accessToken for not existing dataset: ${req.body.datasetName} or dataset that is not owned by him (Id: ${req.user._id}).`;
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.generateDatasetAccessToken(req, res);
+
+      sinon.assert.calledOnce(loggerErrorStub);
+      sinon.assert.calledWithExactly(loggerErrorStub, expectedError);
+      sinon.assert.calledOnce(loggerWarnStub);
+      sinon.assert.calledWithExactly(loggerWarnStub, expectedWarn);
+      sinon.assert.calledOnce(cliServiceStub);
+      sinon.assert.calledWith(cliServiceStub, req.body.datasetName, req.user._id);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+
+    it('should generate dataset access token', sinon.test(function() {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
+      const expectedData = {
+        _id: 'AAAAA',
+        name: 'dataset',
+        accessToken: 'TTTTTTTTT'
+      };
+      const expectedResponse = {success: true, data: {accessToken: expectedData.accessToken}};
+
+      const loggerErrorStub = this.stub(logger, 'error');
+      const loggerWarnStub = this.stub(logger, 'warn');
+      const resJsonSpy = this.spy();
+      const cliServiceStub = this.stub(cliService, 'setAccessTokenForDataset', (datasetName, userId, onDatasetRemoved) => {
+        return onDatasetRemoved(null, expectedData);
+      });
+
+      const req = {
+        user: {
+          _id: '123',
+          name: 'user'
+        },
+        body: {
+          datasetName: 'dataset'
+        }
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.generateDatasetAccessToken(req, res);
+
+      sinon.assert.notCalled(loggerErrorStub);
+      sinon.assert.notCalled(loggerWarnStub);
+      sinon.assert.calledOnce(cliServiceStub);
+      sinon.assert.calledWith(cliServiceStub, req.body.datasetName, req.user._id);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.notCalled(toErrorResponseSpy);
+      sinon.assert.calledOnce(toDataResponseSpy);
+      sinon.assert.calledWithExactly(toDataResponseSpy, {accessToken: expectedData.accessToken});
+    }));
+  });
+
+  describe('Get Datasets in progress', function() {
+    it('should not fetch datasets in progress cause user is not authenticated', sinon.test(function () {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedMessage = 'There is no authenticated user to get its datasets';
+      const expectedResponse = {success: false, error: expectedMessage};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+      const cliServiceStub = this.stub(cliService, 'cleanDdfRedisCache');
+
+      const req = {};
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.getDatasetsInProgress(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedMessage);
+      sinon.assert.notCalled(cliServiceStub);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedMessage);
+    }));
+
+    it('should fetch datasets that are currently in progress (being deleted, updated or imported)', sinon.test(function () {
+      const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
+      const expectedData = [{
+        name: 'dataset.name',
+        githubUrl: 'dataset.path'
+      }];
+      const expectedMessage = 'finished getting private datasets is progress';
+
+      const expectedResponse = {success: true, data: expectedData};
+
+      const loggerStub = this.stub(logger, 'info');
+      const resJsonSpy = this.spy();
+      const cliServiceStub = this.stub(cliService, 'getDatasetsInProgress', (userId, onFound) => {
+        return onFound(null, expectedData);
+      });
+
+      const req = {
+        user: {
+          _id: 'fakeId',
+          name: 'fake'
+        }
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.getDatasetsInProgress(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedMessage);
+      sinon.assert.calledOnce(cliServiceStub);
+      sinon.assert.calledWith(cliServiceStub, req.user._id);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toDataResponseSpy);
+      sinon.assert.calledWithExactly(toDataResponseSpy, expectedData);
+    }));
+
+    it('should respond with an error if trying to get datasets in progress got the error', sinon.test(function () {
+      const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedMessage = 'Boo!';
+      const expectedResponse = {success: false, error: expectedMessage};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+      const cliServiceStub = this.stub(cliService, 'getDatasetsInProgress', (userId, onFound) => {
+        return onFound(expectedMessage);
+      });
+
+      const req = {
+        user: {
+          name: 'fake'
+        }
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.getDatasetsInProgress(req, res);
+
+      sinon.assert.notCalled(toDataResponseSpy);
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedMessage);
+      sinon.assert.calledOnce(cliServiceStub);
+      sinon.assert.calledWith(cliServiceStub, undefined);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedMessage);
+    }));
+  });
 });

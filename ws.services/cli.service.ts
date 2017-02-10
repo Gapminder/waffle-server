@@ -1,22 +1,19 @@
-import * as _ from 'lodash';
-import * as git from 'simple-git';
 import * as async from 'async';
 import * as crypto from 'crypto';
-import {cache} from '../ws.utils/redis-cache';
-import {constants} from '../ws.utils/constants';
-import * as reposService from './repos.service';
-import * as securityUtils from '../ws.utils/security';
-import * as ddfImportUtils from '../ws.import/utils/import-ddf.utils';
-import * as datasetsService from './datasets.service';
-import {UsersRepository} from '../ws.repository/ddf/users/users.repository';
+import * as _ from 'lodash';
 import * as importDdfService from '../ws.import/import-ddf';
-import { DatasetsRepository } from '../ws.repository/ddf/datasets/datasets.repository';
-import * as transactionsService from './dataset-transactions.service';
-import {DatasetTransactionsRepository} from '../ws.repository/ddf/dataset-transactions/dataset-transactions.repository';
 import * as incrementalUpdateService from '../ws.import/incremental/update-ddf';
+import {DatasetTransactionsRepository} from '../ws.repository/ddf/dataset-transactions/dataset-transactions.repository';
+import {DatasetsRepository} from '../ws.repository/ddf/datasets/datasets.repository';
+import {UsersRepository} from '../ws.repository/ddf/users/users.repository';
+import {constants} from '../ws.utils/constants';
+import {cache} from '../ws.utils/redis-cache';
+import * as securityUtils from '../ws.utils/security';
+import * as transactionsService from './dataset-transactions.service';
+import * as datasetsService from './datasets.service';
+import * as reposService from './repos.service';
 
 export {
-  getGitCommitsList,
   importDataset,
   updateIncrementally,
   getAvailableDatasetsAndVersions,
@@ -45,25 +42,6 @@ interface VersionModel {
   createdAt: number,
   commit: string,
   isDefault: boolean
-}
-
-function getGitCommitsList(github, onCommitsRecieved) {
-  if (!github) {
-    return onCommitsRecieved('Url to dataset\'s github repository was not provided');
-  }
-
-  return async.waterfall([
-    async.constant({github}),
-    ddfImportUtils.cloneDdfRepo,
-    _getPathToRepo
-  ], onCommitsRecieved);
-}
-
-function _getPathToRepo(pipe, done) {
-  return git(pipe.repoInfo.pathToRepo)
-    .log((err, log) => {
-      return done(err, {commits: _.reverse(log.all)});
-    });
 }
 
 function _findCurrentUser(pipe, done) {
