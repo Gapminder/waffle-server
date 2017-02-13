@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "test": "npm run tsc && npm run spec && npm run e2e",
-    "spec": "mocha --timeout 10000 --compilers ts:ts-node/register 'test/**/*.spec.ts'",
+    "spec": "mocha --reporter mochawesome --reporter-options reportDir=specReports,reportFilename=specReport --timeout 10000 --compilers ts:ts-node/register 'test/**/*.spec.ts'",
     "spec:coverage": "istanbul --include-all-sources cover _mocha -- -R spec --timeout 10000 --compilers ts:ts-node/register 'test/**/*.spec.ts' && node_modules/.bin/remap-istanbul -i coverage/coverage.json -e node_modules,coverage,'ws.import/repos' -t html -o coverage/remap-istanbul",
     "e2e": "npm run e2e:allCommits && npm run e2e:2commit && npm run e2e:3commit && npm run e2e:4commit",
     "pree2e:allCommits": "ts-node ./test/pre-e2e.ts",
@@ -93,6 +93,7 @@
     "forever": "0.15.3",
     "istanbul": "0.4.5",
     "mocha": "3.2.0",
+    "mochawesome": "2.0.3",
     "pre-commit": "1.2.2",
     "proxyquire": "1.7.10",
     "remap-istanbul": "0.8.4",

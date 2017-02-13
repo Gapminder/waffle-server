@@ -1,7 +1,6 @@
 import '../../../ws.config/db.config';
 import '../../../ws.repository';
 import * as _ from 'lodash';
-
 import * as sinon from 'sinon';
 import * as createDatasetSchema from '../../../ws.import/import-dataset-schema';
 import * as updateConceptsTranslations from '../../../ws.import/incremental/translations/update-concept-translations';
@@ -297,7 +296,7 @@ describe('Dataset incremental update', () => {
 
     const activateLifecycleHookStub = this.stub(ddfImportUtils, 'activateLifecycleHook');
     activateLifecycleHookStub.returns(lifecycleHookStub);
-    
+
     const cloneDdfRepoStub = this.stub(ddfImportUtils, 'cloneDdfRepo');
     const validateDdfRepoStub = this.stub(ddfImportUtils, 'validateDdfRepo');
     const getDatapackageStub = this.stub(ddfImportUtils, 'getDatapackage');
