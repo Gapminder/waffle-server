@@ -126,10 +126,6 @@ function applyTranslationChanges({changesDescriptor, context}, translationsApi, 
 
     logger.debug('Translation target was found. OriginId: ', foundTarget.originId);
 
-    if (!translationsApi.translationChangeHandler) {
-      return onChangesApplied(null);
-    }
-
     const options = {changesDescriptor, context, foundTarget, fetchTranslationTargetQuery};
     return translationsApi.translationChangeHandler(translationsApi, options, onChangesApplied);
   });
