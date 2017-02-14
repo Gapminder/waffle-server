@@ -1,3 +1,29 @@
+<a name="2.4.0"></a>
+# [2.4.0](https://github.com/Gapminder/waffle-server/compare/v2.3.0...v2.4.0) (2017-02-14)
+
+
+### Bug Fixes
+
+* **adapter-service:** respond with shapes json correctly ([4d92489](https://github.com/Gapminder/waffle-server/commit/4d92489))
+* **dataset.serivce:** fix datapoints removal ([6ce780e](https://github.com/Gapminder/waffle-server/commit/6ce780e))
+* **deploy:** grant x permission for docker_run.js, fix docker_run.js shell ([e5b7b6b](https://github.com/Gapminder/waffle-server/commit/e5b7b6b))
+* **docker-compose:** store redis cache in a volume so that it could survive constainer restarts ([ba7aeaf](https://github.com/Gapminder/waffle-server/commit/ba7aeaf))
+
+
+### Features
+
+* migrate codebase to typescript ([9de9e10](https://github.com/Gapminder/waffle-server/commit/9de9e10))
+* **cli:** add dataset removal status route ([24e442f](https://github.com/Gapminder/waffle-server/commit/24e442f))
+* **csv-format:** add ability to send ddfql requests in csv ([919c01d](https://github.com/Gapminder/waffle-server/commit/919c01d))
+* **datasets in progress route:** add route that serves datasets that are currently in progress (removing, updating, importing) ([201036e](https://github.com/Gapminder/waffle-server/commit/201036e))
+* **docker-compose:** add docker-compose for Windows configuration, updated documentation ([6b0c611](https://github.com/Gapminder/waffle-server/commit/6b0c611))
+* **docker-compose:** add docker-compose.yml file in order to facilitate WS standalone feature ([03ba6e2](https://github.com/Gapminder/waffle-server/commit/03ba6e2))
+* **format:** update ws-json format ([d896481](https://github.com/Gapminder/waffle-server/commit/d896481))
+* **routes:** add new route for populating documents ([c0c95ff](https://github.com/Gapminder/waffle-server/commit/c0c95ff))
+* **vizabi-tools-page:** add vizabi tools page as a separate service in docker-compose ([ad1e283](https://github.com/Gapminder/waffle-server/commit/ad1e283))
+
+
+
 <a name="2.3.0"></a>
 # [2.3.0](https://github.com/Gapminder/waffle-server/compare/v2.2.0...v2.3.0) (2017-01-11)
 
