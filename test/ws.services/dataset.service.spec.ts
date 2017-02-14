@@ -78,14 +78,6 @@ const transactionsRepository = {
 };
 
 describe('remove dataset', function() {
-
-  // const findByNameStub = sinon.stub(datasetsRepository, 'findByName');
-  // const lockStub = sinon.stub(datasetsRepository, 'lock');
-  // const unlockStub = sinon.stub(datasetsRepository, 'unlock');
-  // const removeByIdStub = sinon.stub(datasetsRepository, 'removeById');
-  // const findDefaultStub = sinon.stub(transactionsRepository, 'findDefault');
-  // const removeAllByDatasetStub = sinon.stub(transactionsRepository, 'removeAllByDataset');
-
   it('should return error when something went wrong during trying to find dataset', sinon.test(function (done) {
     const findByNameStub = this.stub(DatasetsRepository, 'findByName', (datasetPath, onDatasetFound) => {
       return onDatasetFound(expectedError);
@@ -167,8 +159,8 @@ describe('remove dataset', function() {
     const findByName = (datasetName, onDatasetFound) => {
       return onDatasetFound(null, expectedRemovableDataset);
     };
-    const lock = (datasetPath, onDatasetFound) => {
-      expect(datasetPath).to.be.equal(expectedDatasetPath);
+    const lock = (datasetName, onDatasetFound) => {
+      expect(datasetName).to.be.equal(expectedDatasetName);
       return onDatasetFound(expectedError);
     };
 
@@ -191,8 +183,8 @@ describe('remove dataset', function() {
       return onDatasetFound(null, expectedRemovableDataset);
     };
 
-    const lock = (datasetPath, onDatasetFound) => {
-      expect(datasetPath).to.be.equal(expectedDatasetPath);
+    const lock = (datasetName, onDatasetFound) => {
+      expect(datasetName).to.be.equal(expectedDatasetName);
       return onDatasetFound();
     };
 
@@ -203,8 +195,8 @@ describe('remove dataset', function() {
       [transactionsRepositoryPath]: {DatasetTransactionsRepository: DatasetTransactionsRepositoryStub}
   });
 
-    datasetsService.removeDatasetData(expectedDatasetPath, expectedOwnerUser, (error) => {
-      expect(error).to.be.equal(`Version of dataset "${expectedDatasetPath}" was already locked`);
+    datasetsService.removeDatasetData(expectedDatasetName, expectedOwnerUser, (error) => {
+      expect(error).to.be.equal(`Version of dataset "${expectedDatasetName}" was already locked or dataset is absent`);
       return done();
     });
   });
@@ -213,8 +205,8 @@ describe('remove dataset', function() {
     const findByName = (datasetName, onDatasetFound) => {
       return onDatasetFound(null, expectedRemovableDataset);
     };
-    const lock = (datasetPath, onDatasetFound) => {
-      expect(datasetPath).to.be.equal(expectedDatasetPath);
+    const lock = (datasetName, onDatasetFound) => {
+      expect(datasetName).to.be.equal(expectedDatasetName);
       return onDatasetFound(null, expectedRemovableDataset);
     };
     const findDefault = (options, onTransactionFound) => {

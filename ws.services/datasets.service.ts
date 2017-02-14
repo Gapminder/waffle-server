@@ -17,7 +17,9 @@ export {
   findDatasetsWithVersions,
   removeDatasetData,
   findDatasetByNameAndValidateOwnership,
-  getRemovalStateForDataset
+  getRemovalStateForDataset,
+  lockDataset,
+  unlockDataset
 };
 
 function findDatasetsWithVersions(userId, onFound) {
@@ -35,7 +37,7 @@ function removeDatasetData(datasetName, user, onRemovedDataset) {
   return async.waterfall([
     async.constant({datasetName, user}),
     findDatasetByNameAndValidateOwnership,
-    _lockDataset,
+    lockDataset,
     _checkDefaultTransactionInDataset,
     _removeAllDataByDataset,
     _removeAllTransactions,
@@ -64,17 +66,28 @@ function findDatasetByNameAndValidateOwnership(externalContext, onDatasetValidat
   });
 }
 
-function _lockDataset(externalContext, onDatasetLocked) {
-  return DatasetsRepository.lock(externalContext.datasetName, (datasetLockError, dataset) => {
+function lockDataset(externalContext, onDatasetLocked) {
+  const datasetName = _.get(externalContext, 'dataset.name', externalContext.datasetName);
+  return DatasetsRepository.lock(datasetName, (datasetLockError, dataset) => {
     if (datasetLockError) {
       return onDatasetLocked(datasetLockError);
     }
 
     if (!dataset) {
-      return onDatasetLocked(`Version of dataset "${externalContext.datasetName}" was already locked`);
+      return onDatasetLocked(`Version of dataset "${datasetName}" was already locked or dataset is absent`);
     }
 
     return onDatasetLocked(null, externalContext);
+  });
+}
+
+function unlockDataset(externalContext, done) {
+  return DatasetsRepository.unlock(externalContext.datasetName, (err, dataset) => {
+    if (!dataset) {
+      return done(`Version of dataset "${externalContext.datasetName}" wasn't locked`);
+    }
+
+    return done(err, externalContext);
   });
 }
 

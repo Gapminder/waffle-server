@@ -66,7 +66,7 @@ function importDataset(params, onDatasetImported) {
     _findDataset,
     _validateDatasetBeforeImport,
     _importDdfService,
-    _unlockDataset
+    datasetsService.unlockDataset
   ], (importError, context: ContextModel) => {
     if (importError && _.get(context, 'transactionId', false)) {
       return transactionsService.setLastError(context.transactionId, _.toString(importError), () => onDatasetImported(importError));
@@ -107,50 +107,26 @@ function _importDdfService(pipe, onDatasetImported) {
   return importDdfService.importDdf(options, onDatasetImported);
 }
 
-function _unlockDataset(pipe, done) {
-  return DatasetsRepository.unlock(pipe.datasetName, (err, dataset) => {
-    if (!dataset) {
-      return done(`Version of dataset "${pipe.datasetName}" wasn't locked`);
-    }
-
-    return done(err, pipe);
-  });
-}
-
 function updateIncrementally(externalContext, onDatasetUpdated) {
   return async.waterfall([
     async.constant(externalContext),
     _findCurrentUser,
     _findDataset,
     securityUtils.validateDatasetOwner,
-    _lockDataset,
+    datasetsService.lockDataset,
     _checkTransaction,
     _runIncrementalUpdate,
-    _unlockDataset
+    datasetsService.unlockDataset
   ], (importError, context:ContextModel) => {
     if (importError) {
       if (_.get(context, 'transactionId', false)) {
         return transactionsService.setLastError(context.transactionId, _.toString(importError), () => onDatasetUpdated(importError));
       }
 
-      return _unlockDataset({datasetName: externalContext.datasetName}, unlockError => onDatasetUpdated(importError));
+      return datasetsService.unlockDataset({datasetName: externalContext.datasetName}, unlockError => onDatasetUpdated(importError));
     }
 
     return onDatasetUpdated(importError, context);
-  });
-}
-
-function _lockDataset(pipe, done) {
-  return DatasetsRepository.lock(pipe.dataset.name, (err, dataset) => {
-    if (err) {
-      return done(err);
-    }
-
-    if (!dataset) {
-      return done(`Version of dataset "${pipe.dataset.name}" was already locked or dataset is absent`);
-    }
-
-    return done(null, pipe);
   });
 }
 

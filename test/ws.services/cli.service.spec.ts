@@ -3,16 +3,18 @@ import 'mocha';
 import '../../ws.repository';
 
 import {expect} from 'chai';
-import * as sinon from 'sinon';
+import * as _ from 'lodash';
 import * as proxyquire from 'proxyquire';
-
-import {constants} from '../../ws.utils/constants';
+import * as sinon from 'sinon';
 import {DatasetsRepository} from '../../ws.repository/ddf/datasets/datasets.repository';
+import {constants} from '../../ws.utils/constants';
 
 const cliServicePath = '../../ws.services/cli.service';
+
 const usersRepositoryPath = '../ws.repository/ddf/users/users.repository';
 const datasetsRepositoryPath = '../ws.repository/ddf/datasets/datasets.repository';
 const importDdfServicePath = '../ws.import/import-ddf';
+const datasetsServicePath = './datasets.service';
 const datasetTransactionsServicePath = './dataset-transactions.service';
 
 describe('WS-CLI service', () => {
@@ -121,28 +123,36 @@ describe('WS-CLI service', () => {
           // Playing scenario where dataset doesn't exist
           onFound(null, null);
         },
-        unlock: (datasetName, onUnlocked) => {
-          flowStepCounterSpy('unlock');
-          expect(datasetName).to.equal(expectedDataset.name);
-          onUnlocked(null, expectedDataset);
-        }
       }},
-      [importDdfServicePath]: {importDdf: (options, onImported) => {
-        flowStepCounterSpy('importService');
-        expect(options).to.deep.equal(importServiceExpectedOptions);
-        onImported(null, {dataset: expectedDataset, datasetName: expectedDataset.name});
-      }}
+      [datasetsServicePath]: {
+        unlockDataset: (externalContext, onUnlocked) => {
+          flowStepCounterSpy('unlockDataset');
+          expect(externalContext).to.deep.equal({
+            datasetName: expectedDataset.name,
+            dataset: expectedDataset
+          });
+          externalContext.dataset.isLocked = false;
+          return onUnlocked(null, externalContext);
+        }
+      },
+      [importDdfServicePath]: {
+        importDdf: (options, onImported) => {
+          flowStepCounterSpy('importService');
+          expect(options).to.deep.equal(importServiceExpectedOptions);
+          onImported(null, {dataset: expectedDataset, datasetName: expectedDataset.name});
+        }
+      }
     });
 
     cliService.importDataset(params, (error, context) => {
       expect(error).to.not.exist;
 
-      expect(flowStepCounterSpy.withArgs('unlock').calledOnce).to.be.true;
+      expect(flowStepCounterSpy.withArgs('unlockDataset').calledOnce).to.be.true;
       expect(flowStepCounterSpy.withArgs('findByGithubUrl').calledOnce).to.be.true;
       expect(flowStepCounterSpy.withArgs('findUserByEmail').calledOnce).to.be.true;
       expect(flowStepCounterSpy.withArgs('importService').calledOnce).to.be.true;
 
-      expect(context).to.deep.equal({dataset: expectedDataset, datasetName: expectedDataset.name});
+      expect(context).to.deep.equal({dataset: _.defaults({isLocked: false}, expectedDataset), datasetName: expectedDataset.name});
       done();
     });
   }));
@@ -163,7 +173,7 @@ describe('WS-CLI service', () => {
       name: 'open-numbers/ddf--gapminder--systema_globalis'
     };
 
-    const expectedError = `Version of dataset "${expectedDataset.name}" wasn't locked`;
+    const expectedError = `Version of dataset "${expectedDataset.name}" wasn't locked or dataset is absent`;
 
     const flowStepCounterSpy = this.spy();
 
@@ -178,12 +188,18 @@ describe('WS-CLI service', () => {
         findByGithubUrl: (githubUrl, onFound) => {
           flowStepCounterSpy('findByGithubUrl');
           onFound(null, null);
-        },
-        unlock: (datasetName, onUnlocked) => {
-          flowStepCounterSpy('unlock');
-          onUnlocked(null, null);
         }
       }},
+      [datasetsServicePath]: {
+        unlockDataset: (externalContext, onUnlocked) => {
+          flowStepCounterSpy('unlockDataset');
+          expect(externalContext).to.deep.equal({
+            datasetName: expectedDataset.name,
+            dataset: expectedDataset
+          });
+          return onUnlocked(expectedError, null);
+        }
+      },
       [importDdfServicePath]: {importDdf: (options, onImported) => {
         flowStepCounterSpy('importService');
         onImported(null, {dataset: expectedDataset, datasetName: expectedDataset.name});
@@ -196,7 +212,7 @@ describe('WS-CLI service', () => {
       expect(error).to.exist;
       expect(error).to.equal(expectedError);
 
-      expect(flowStepCounterSpy.withArgs('unlock').calledOnce).to.be.true;
+      expect(flowStepCounterSpy.withArgs('unlockDataset').calledOnce).to.be.true;
       expect(flowStepCounterSpy.withArgs('findByGithubUrl').calledOnce).to.be.true;
       expect(flowStepCounterSpy.withArgs('findUserByEmail').calledOnce).to.be.true;
 
