@@ -1,0 +1,12 @@
+version: "3"
+services:
+  vizabi-tools-page:
+    build:
+     context: https://github.com/Gapminder/ng2-tools-page.git
+     args:
+      WAFFLE_SERVER_HOST: "${WAFFLE_SERVER_HOST:-localhost}"
+    depends_on:
+      - "waffle-server"
+    ports:
+      - "8080:8080"
+

@@ -35,6 +35,9 @@ VOLUME /home/waffle-server/ddf
 COPY ./ ./
 
 RUN npm i
+RUN npm run tsc
+RUN chmod +x docker_run.js
+
 EXPOSE 3000
 EXPOSE 80
 
@@ -60,6 +63,9 @@ ENV THRASHING_MACHINE ${THRASHING_MACHINE}
 
 ARG NODE_ENV
 ENV NODE_ENV ${NODE_ENV}
+
+ARG LOGS_SYNC_DISABLED
+ENV LOGS_SYNC_DISABLED ${LOGS_SYNC_DISABLED}
 
 ENV TERM xterm-256color
 
