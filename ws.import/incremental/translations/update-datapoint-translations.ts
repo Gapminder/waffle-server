@@ -48,7 +48,7 @@ function updateDatapointsTranslations(externalContext, done) {
         done(error, externalContext);
       });
     });
-};
+}
 
 function enrichContext(resource, changesDescriptor, externalContext) {
   return datapointsUtils.getDimensionsAndMeasures(resource, externalContext);
