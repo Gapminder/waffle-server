@@ -72,7 +72,7 @@ describe('Datapoints Translations Update Plugin', () => {
     });
   }));
 
-  it('creates the proper plugin', sinon.test(function (done) {
+  it('creates a proper plugin', sinon.test(function (done) {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
