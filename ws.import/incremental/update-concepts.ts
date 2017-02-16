@@ -45,10 +45,6 @@ function updateConcepts(externalContext, done) {
       return done(error);
     })
     .toCallback((err, allChanges) => {
-      if (err) {
-        return done(err);
-      }
-
       const remove = _.map(allChanges.remove, '_object');
       const create = _.map(allChanges.create, '_object');
       const change = _.map(allChanges.change, '_object');
@@ -65,6 +61,9 @@ function updateConcepts(externalContext, done) {
 
 function processRemovedConcepts(removedConcepts) {
   return (pipe, done) => {
+    if (_.isEmpty(removedConcepts)) {
+      return done(null, pipe);
+    }
 
     const conceptsRepository = ConceptsRepositoryFactory.latestExceptCurrentVersion(
       pipe.external.dataset._id,
@@ -97,7 +96,11 @@ function processCreatedConcepts(createdConcepts) {
 }
 
 function processUpdatedConcepts(updatedConcepts, removedProperties) {
-  return (pipe, done) => {
+  return (externalContext, done) => {
+    if (_.isEmpty(updatedConcepts) && _.isEmpty(removedProperties)) {
+      return done(null, externalContext);
+    }
+
     const propsWereAddedToConcepts = _.isEmpty(removedProperties);
 
     let applyModificationsToConcepts;
@@ -108,7 +111,7 @@ function processUpdatedConcepts(updatedConcepts, removedProperties) {
     }
 
     return async.waterfall([
-        async.constant(pipe),
+        async.constant(externalContext),
         applyModificationsToConcepts,
         getAllConcepts(),
         getDrillupsOfChangedConcepts(),
@@ -117,15 +120,19 @@ function processUpdatedConcepts(updatedConcepts, removedProperties) {
         populateConceptsDomains()
       ],
       error => {
-        return done(error, pipe);
+        return done(error, externalContext);
       });
   };
 }
 
 function createConcepts(conceptChanges) {
   return (pipe, done) => {
+    if (_.isEmpty(conceptChanges)) {
+      return done(null, pipe);
+    }
 
-    const {external: {dataset: {_id: datasetId}, transaction: {createdAt: version}}} = pipe;
+    const datasetId = _.get(pipe, 'external.dataset._id', null);
+    const version = _.get(pipe, 'external.transaction.createdAt', null);
 
     const concepts = _.map(conceptChanges, conceptChange => {
       return ddfMappers.mapDdfConceptsToWsModel(conceptChange, {datasetId, version});
@@ -236,7 +243,7 @@ function applyUpdatesToConcepts(changedConcepts, removedProperties) {
   };
 }
 
-function  getAllConcepts() {
+function getAllConcepts() {
   return (pipe, done) => {
     return ConceptsRepositoryFactory.latestVersion(pipe.external.dataset._id, pipe.external.transaction.createdAt)
       .findAll((error, res) => {
@@ -292,6 +299,7 @@ function getGid(conceptChange) {
 }
 
 function mergeConcepts(originalConcept, changesToConcept, currentTransaction) {
+  const originalConceptKeys = _.keys(originalConcept);
   let updatedConcept = _.mergeWith(originalConcept, changesToConcept, (originalValue, changedValue, property) => {
     if (property === 'concept') {
       originalConcept.gid = changedValue;
@@ -312,10 +320,12 @@ function mergeConcepts(originalConcept, changesToConcept, currentTransaction) {
 
   _.merge(updatedConcept.properties, ddfMappers.transformConceptProperties(changesToConcept));
 
-  updatedConcept = _.omit(updatedConcept, ['concept', 'drill_up', '_id', 'subsetOf', 'domain']);
+  updatedConcept = _.chain(updatedConcept)
+    .omit(['concept', 'drill_up', '_id', 'subsetOf', 'domain', 'transaction'])
+    .pick(originalConceptKeys)
+    .value();
   updatedConcept.from = currentTransaction.createdAt;
   updatedConcept.to = constants.MAX_VERSION;
-  updatedConcept.transaction = currentTransaction._id;
   return updatedConcept;
 }
 
