@@ -5,12 +5,14 @@ import * as _  from 'lodash';
 import * as hi from 'highland';
 import * as proxyquire from 'proxyquire';
 import {expect} from 'chai';
+import * as sinon from 'sinon';
 import {constants} from '../../ws.utils/constants';
 import * as datapoints from './fixtures/datapoints.json';
 import * as allEntities from './fixtures/allEntities.json';
+import { logger } from '../../ws.config/log';
 
 describe('datapoints import', function() {
-  it('should not be any error', function(done) {
+  it('should not be any error', sinon.test(function(done) {
     const dimensions = {
       geo: {gid: 'geo', properties: {}},
       time: {gid: 'time', properties: {}}
@@ -119,11 +121,15 @@ describe('datapoints import', function() {
       '../ws.utils/file': fileUtils
     }).createDatapoints;
 
+    const loggerInfoStub = this.stub(logger, 'info');
+
     return importDatapoints(context, (error, externalContext) => {
       expect(error).to.be.null;
       expect(externalContext).to.be.deep.equal(context);
+      sinon.assert.calledOnce(loggerInfoStub);
+      sinon.assert.calledWithExactly(loggerInfoStub, `start process creating data points`);
 
       return done();
     });
-  });
+  }));
 });
