@@ -164,6 +164,8 @@ describe('Datapoints incremental update flow', () => {
         });
     });
 
+    const loggerInfoStub = this.stub(logger, 'info');
+
     updateDatapoints(context, (errors, externalContext) => {
       expect(errors).to.not.exist;
       expect(externalContext).to.equal(context);
@@ -172,6 +174,9 @@ describe('Datapoints incremental update flow', () => {
       sinon.assert.calledOnce(saveDatapointsAndEntitiesFoundInThemStub);
 
       expect(collectedDatapoints.length).to.equal(2);
+
+      sinon.assert.calledOnce(loggerInfoStub);
+      sinon.assert.calledWithExactly(loggerInfoStub, 'Start process of datapoints update');
 
       // FIRST CREATED DATAPOINT ASSERTION -----------------------------------------------------------------------------
       const datapoint1 = collectedDatapoints[0];
@@ -329,6 +334,8 @@ describe('Datapoints incremental update flow', () => {
       }
     });
 
+    const loggerInfoStub = this.stub(logger, 'info');
+
     updateDatapoints(context, (errors, externalContext) => {
       expect(errors).to.not.exist;
       expect(externalContext).to.equal(context);
@@ -408,6 +415,10 @@ describe('Datapoints incremental update flow', () => {
         "num_users": "333"
       });
 
+      sinon.assert.calledTwice(loggerInfoStub);
+      sinon.assert.calledWithExactly(loggerInfoStub, 'Start process of datapoints update');
+      sinon.assert.calledWithExactly(loggerInfoStub, 'Closing updated datapoints');
+
       done();
     });
   }));
@@ -442,6 +453,7 @@ describe('Datapoints incremental update flow', () => {
     });
 
     const loggerErrorStub = this.stub(logger, 'error');
+    const loggerInfoStub = this.stub(logger, 'info');
 
     updateDatapoints(context, (errors, externalContext) => {
       expect(errors).to.not.exist;
@@ -456,6 +468,10 @@ describe('Datapoints incremental update flow', () => {
 
       sinon.assert.callCount(loggerErrorStub, 4);
       sinon.assert.calledWith(loggerErrorStub, 'Datapoint that should be closed was not found by given params: ');
+
+      sinon.assert.calledTwice(loggerInfoStub);
+      sinon.assert.calledWithExactly(loggerInfoStub, 'Start process of datapoints update');
+      sinon.assert.calledWithExactly(loggerInfoStub, 'Closing updated datapoints');
 
       done();
     });
@@ -492,9 +508,16 @@ describe('Datapoints incremental update flow', () => {
       }
     });
 
+    const loggerInfoStub = this.stub(logger, 'info');
+
     updateDatapoints(context, (errors, externalContext) => {
       expect(errors).to.deep.equal([expectedError]);
       expect(externalContext).to.equal(context);
+
+      sinon.assert.calledTwice(loggerInfoStub);
+      sinon.assert.calledWithExactly(loggerInfoStub, 'Start process of datapoints update');
+      sinon.assert.calledWithExactly(loggerInfoStub, 'Closing updated datapoints');
+
       done();
     });
   }));
@@ -526,6 +549,8 @@ describe('Datapoints incremental update flow', () => {
     this.stub(DatapointsRepositoryFactory, 'latestExceptCurrentVersion').returns({
       closeDatapointByMeasureAndDimensionsAndValue: closeDatapointByMeasureAndDimensionsAndValueStub
     });
+
+    const loggerInfoStub = this.stub(logger, 'info');
 
     updateDatapoints(context, (errors, externalContext) => {
       expect(errors).to.not.exist;
@@ -563,6 +588,10 @@ describe('Datapoints incremental update flow', () => {
         "datapointValue": "4"
       });
 
+      sinon.assert.calledTwice(loggerInfoStub);
+      sinon.assert.calledWithExactly(loggerInfoStub, 'Start process of datapoints update');
+      sinon.assert.calledWithExactly(loggerInfoStub, 'Closing removed datapoints');
+
       done();
     });
   }));
@@ -596,6 +625,7 @@ describe('Datapoints incremental update flow', () => {
     });
 
     const loggerErrorStub = this.stub(logger, 'error');
+    const loggerInfoStub = this.stub(logger, 'info');
 
     updateDatapoints(context, (errors, externalContext) => {
       expect(errors).to.not.exist;
@@ -603,6 +633,10 @@ describe('Datapoints incremental update flow', () => {
 
       sinon.assert.callCount(loggerErrorStub, 3);
       sinon.assert.calledWith(loggerErrorStub, 'Datapoint that should be closed was not found by given params: ');
+
+      sinon.assert.calledTwice(loggerInfoStub);
+      sinon.assert.calledWithExactly(loggerInfoStub, 'Start process of datapoints update');
+      sinon.assert.calledWithExactly(loggerInfoStub, 'Closing removed datapoints');
 
       done();
     });
@@ -637,9 +671,16 @@ describe('Datapoints incremental update flow', () => {
       closeDatapointByMeasureAndDimensionsAndValue: closeDatapointByMeasureAndDimensionsAndValueStub
     });
 
+    const loggerInfoStub = this.stub(logger, 'info');
+
     updateDatapoints(context, (errors, externalContext) => {
       expect(errors).to.deep.equal([expectedError]);
       expect(externalContext).to.equal(context);
+
+      sinon.assert.calledTwice(loggerInfoStub);
+      sinon.assert.calledWithExactly(loggerInfoStub, 'Start process of datapoints update');
+      sinon.assert.calledWithExactly(loggerInfoStub, 'Closing removed datapoints');
+
       done();
     });
   }));
