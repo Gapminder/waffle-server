@@ -5,18 +5,18 @@ import * as URLON from 'URLON';
 import * as passport from 'passport';
 
 import * as sinon from 'sinon';
-import { expect } from 'chai';
+import {expect} from 'chai';
 import * as proxyquire from 'proxyquire';
 
 import '../../ws.config/db.config';
 import '../../ws.repository';
-import { logger } from '../../ws.config/log';
+import {logger} from '../../ws.config/log';
 import * as routeUtils from '../../ws.routes/utils';
-import { RecentDdfqlQueriesRepository } from '../../ws.repository/ddf/recent-ddfql-queries/recent-ddfql-queries.repository';
+import {RecentDdfqlQueriesRepository} from '../../ws.repository/ddf/recent-ddfql-queries/recent-ddfql-queries.repository';
 
 describe('Routes utils', () => {
   describe('Dataset accessibility check', () => {
-    it('should send unsuccessful response with an error happened during dataset searching', done => {
+    it('should send unsuccessful response with an error happened during dataset searching', sinon.test(function (done) {
       const errorMessage = 'Searching error!';
       const expectedDatasetName = 'fake/dataset';
 
@@ -36,6 +36,7 @@ describe('Routes utils', () => {
           dataset: expectedDatasetName
         }
       };
+      const loggerErrorStub = this.stub(logger, 'error');
 
       const res = {
         json: response => {
@@ -46,10 +47,14 @@ describe('Routes utils', () => {
 
       const next = () => {
         expect.fail(null, null, 'This function should not be called');
+
+        sinon.assert.calledOnce(loggerErrorStub);
+        sinon.assert.calledWithExactly(loggerErrorStub, errorMessage);
       };
 
       routeUtils.checkDatasetAccessibility(req, res, next);
-    });
+    }));
+
 
     it('should call next middleware if no dataset name was found', done => {
       const routeUtils = proxyquire('../../ws.routes/utils.js', {});
@@ -86,7 +91,10 @@ describe('Routes utils', () => {
 
       const res = {
         json: response => {
-          expect(response).to.be.deep.equal({success: false, message: `Dataset with given name ${expectedDatasetName} was not found`});
+          expect(response).to.be.deep.equal({
+            success: false,
+            message: `Dataset with given name ${expectedDatasetName} was not found`
+          });
           done(); // At this point test is finished
         }
       };
@@ -186,7 +194,10 @@ describe('Routes utils', () => {
 
       const res = {
         json: (response) => {
-          expect(response).to.deep.equal({success: false, error: 'You are not allowed to access data according to given query'});
+          expect(response).to.deep.equal({
+            success: false,
+            error: 'You are not allowed to access data according to given query'
+          });
           done();
         }
       };
@@ -223,7 +234,10 @@ describe('Routes utils', () => {
 
       const res = {
         json: (response) => {
-          expect(response).to.deep.equal({success: false, error: 'You are not allowed to access data according to given query'});
+          expect(response).to.deep.equal({
+            success: false,
+            error: 'You are not allowed to access data according to given query'
+          });
           done();
         }
       };
@@ -260,7 +274,10 @@ describe('Routes utils', () => {
 
       const res = {
         json: (response) => {
-          expect(response).to.deep.equal({success: false, error: 'You are not allowed to access data according to given query'});
+          expect(response).to.deep.equal({
+            success: false,
+            error: 'You are not allowed to access data according to given query'
+          });
           done();
         }
       };
@@ -353,7 +370,7 @@ describe('Routes utils', () => {
   });
 
   describe('Parse query from url and populate request body with a result', () => {
-    it('should parse query as json if "query" param given in url', done => {
+    it('should parse query as json if "query" param given in url', sinon.test(function (done) {
       const routeUtils = proxyquire('../../ws.routes/utils.js', {});
 
       const ddfql = {
@@ -371,21 +388,25 @@ describe('Routes utils', () => {
         },
       };
 
-      const res = {
+      const res = {};
 
-      };
+      const loggerInfoStub = this.stub(logger, 'info');
 
       const next = () => {
         const rawDdfQuery = {queryRaw: queryRaw, type: 'JSON'};
         const expectedBody = _.extend({rawDdfQuery}, ddfql);
         expect(req.body).to.deep.equal(expectedBody);
+
+        sinon.assert.calledOnce(loggerInfoStub);
+        sinon.assert.calledWithExactly(loggerInfoStub, {ddfqlRaw: queryRaw});
+
         done();
       };
 
       routeUtils.bodyFromUrlQuery(req, res, next);
-    });
+    }));
 
-    it('should respond with an error when it is impossible to parse json', done => {
+    it('should respond with an error when it is impossible to parse json', sinon.test(function (done) {
       const routeUtils = proxyquire('../../ws.routes/utils.js', {});
 
       const req = {
@@ -394,10 +415,15 @@ describe('Routes utils', () => {
         },
       };
 
+      const loggerInfoStub = this.stub(logger, 'info');
+
       const res = {
         json: response => {
           expect(response.success).to.be.false;
           expect(response.error).to.equal('Query was sent in incorrect format');
+          sinon.assert.calledOnce(loggerInfoStub);
+          sinon.assert.calledWithExactly(loggerInfoStub, {ddfqlRaw: req.query.query});
+
           done();
         }
       };
@@ -407,9 +433,9 @@ describe('Routes utils', () => {
       };
 
       routeUtils.bodyFromUrlQuery(req, res, next);
-    });
+    }));
 
-    it('should parse query as urlon if "query" param is not given in url', done => {
+    it('should parse query as urlon if "query" param is not given in url', sinon.test(function (done) {
       const routeUtils = proxyquire('../../ws.routes/utils.js', {});
 
       const ddfql = {
@@ -426,20 +452,23 @@ describe('Routes utils', () => {
         url: `/api/ddf/ql/?${queryRaw}`
       };
 
-      const res = {
-      };
+      const res = {};
+
+      const loggerInfoStub = this.stub(logger, 'info');
 
       const next = () => {
         const rawDdfQuery = {queryRaw, type: 'URLON'};
         const expectedBody = _.extend({rawDdfQuery}, ddfql);
         expect(req.body).to.deep.equal(expectedBody);
+        sinon.assert.calledOnce(loggerInfoStub);
+        sinon.assert.calledWithExactly(loggerInfoStub, {ddfqlRaw: queryRaw});
         done();
       };
 
       routeUtils.bodyFromUrlQuery(req, res, next);
-    });
+    }));
 
-    it('should respond with an error when it is impossible to parse urlon', done => {
+    it('should respond with an error when it is impossible to parse urlon', sinon.test(function (done) {
       const routeUtils = proxyquire('../../ws.routes/utils.js', {});
 
       const req = {
@@ -447,10 +476,16 @@ describe('Routes utils', () => {
         url: '/api/ddf/ql/?%20%'
       };
 
+      const queryRaw = url.parse(req.url).query;
+
+      const loggerInfoStub = this.stub(logger, 'info');
+
       const res = {
         json: response => {
           expect(response.success).to.be.false;
           expect(response.error).to.equal('Query was sent in incorrect format');
+          sinon.assert.calledOnce(loggerInfoStub);
+          sinon.assert.calledWithExactly(loggerInfoStub, {ddfqlRaw: queryRaw});
           done();
         }
       };
@@ -460,15 +495,16 @@ describe('Routes utils', () => {
       };
 
       routeUtils.bodyFromUrlQuery(req, res, next);
-    });
+    }));
   });
 
 
   describe('RouteUtils.respondWithRawDdf', () => {
-    it('should flush redis cache if error occured', sinon.test(function() {
+    it('should flush redis cache if error occured', sinon.test(function () {
       const expectedError = 'Boo!';
       const expectedErrorResponse = {success: false, error: 'Boo!'};
 
+      const loggerStub = this.stub(logger, 'error');
       const anyQuery = {};
 
       const req = {
@@ -485,16 +521,18 @@ describe('Routes utils', () => {
       };
 
       (routeUtils.respondWithRawDdf(anyQuery, req, res, nextSpy) as Function)(expectedError);
+      expect(res.use_express_redis_cache).to.equal(false);
 
       sinon.assert.calledOnce(jsonSpy);
       sinon.assert.calledWith(jsonSpy, expectedErrorResponse);
 
-      expect(res.use_express_redis_cache).to.equal(false);
-
       sinon.assert.notCalled(nextSpy);
+
+      sinon.assert.calledTwice(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
     }));
 
-    it('should respond with raw data (data that came from db)', sinon.test(function() {
+    it('should respond with raw data (data that came from db)', sinon.test(function () {
       const anyQuery = {};
 
       const req: any = {
@@ -521,7 +559,7 @@ describe('Routes utils', () => {
       expect(req.rawData.rawDdf).to.equal(rawDdfData);
     }));
 
-    it('should store query for which data will be returned in db (for the subsequernt warmups)', sinon.test(function() {
+    it('should store query for which data will be returned in db (for the subsequernt warmups)', sinon.test(function () {
       const ddfQuery = {
         rawDdfQuery: {
           queryRaw: {
@@ -543,7 +581,7 @@ describe('Routes utils', () => {
         json: jsonSpy
       };
 
-      const debugStub  = this.stub(logger, 'debug');
+      const debugStub = this.stub(logger, 'debug');
       const createWarmpUpQueryStub = this.stub(RecentDdfqlQueriesRepository, 'create', (query, done) => {
         done(null, ddfQuery.rawDdfQuery);
       });
@@ -564,7 +602,7 @@ describe('Routes utils', () => {
       expect(req.rawData.rawDdf).to.equal(rawDdfData);
     }));
 
-    it('should log error if it is happened while sroring warmup query', sinon.test(function() {
+    it('should log error if it is happened while sroring warmup query', sinon.test(function () {
       const expectedError = 'Boo!';
 
       const ddfQuery = {
@@ -586,7 +624,7 @@ describe('Routes utils', () => {
         json: jsonSpy
       };
 
-      const debugStub  = this.stub(logger, 'debug');
+      const debugStub = this.stub(logger, 'debug');
 
       this.stub(RecentDdfqlQueriesRepository, 'create', (query, done) => {
         done(expectedError);
@@ -600,7 +638,7 @@ describe('Routes utils', () => {
       sinon.assert.calledOnce(nextSpy);
     }));
 
-    it('should not store warmup query if it was sent with dataset property', sinon.test(function() {
+    it('should not store warmup query if it was sent with dataset property', sinon.test(function () {
       const ddfQuery = {
         dataset: 'dataset',
         rawDdfQuery: {}
@@ -633,7 +671,7 @@ describe('Routes utils', () => {
       expect(req.rawData.rawDdf).to.equal(rawDdfData);
     }));
 
-    it('should not store warmup query if it was sent with version property', sinon.test(function() {
+    it('should not store warmup query if it was sent with version property', sinon.test(function () {
       const routeUtils = proxyquire('../../ws.routes/utils.js', {});
 
       const ddfQuery = {
@@ -668,7 +706,7 @@ describe('Routes utils', () => {
       expect(req.rawData.rawDdf).to.equal(rawDdfData);
     }));
 
-    it('should not store warmup query if it was sent with format property', sinon.test(function() {
+    it('should not store warmup query if it was sent with format property', sinon.test(function () {
       const ddfQuery = {
         rawDdfQuery: {},
         format: 'format'
@@ -703,11 +741,13 @@ describe('Routes utils', () => {
   });
 
   describe('Token authentication', () => {
-    it('should return token authentication middleware', sinon.test(function() {
+    it('should return token authentication middleware', sinon.test(function () {
       const req = {};
       const res = {};
-      const next = () => {};
-      const middleware = () => {};
+      const next = () => {
+      };
+      const middleware = () => {
+      };
 
       const tokenAuthSpy = this.stub().returns(middleware);
       const passportAuthStub = this.stub(passport, 'authenticate', () => {
@@ -727,23 +767,34 @@ describe('Routes utils', () => {
   });
 
   describe('Response types', () => {
-    it('should produce error response from string', function() {
+    it('should produce error response from string', sinon.test(function () {
+
+      const loggerErrorStub = this.stub(logger, 'error');
+
       const expectedError = 'Boo!';
       const response = routeUtils.toErrorResponse(expectedError);
 
       expect(response.success).to.be.false;
       expect(response.error).to.equal(expectedError);
-    });
 
-    it('should produce error response from Error', function() {
+      sinon.assert.calledOnce(loggerErrorStub);
+      sinon.assert.calledWithExactly(loggerErrorStub, expectedError);
+    }));
+
+    it('should produce error response from Error', sinon.test(function () {
+      const loggerErrorStub = this.stub(logger, 'error');
+
       const expectedError = Error('Boo!');
       const response = routeUtils.toErrorResponse(expectedError);
 
       expect(response.success).to.be.false;
       expect(response.error).to.equal(expectedError.message);
-    });
 
-    it('should produce message response', function() {
+      sinon.assert.calledOnce(loggerErrorStub);
+      sinon.assert.calledWithExactly(loggerErrorStub, expectedError);
+    }));
+
+    it('should produce message response', function () {
       const expectedMsg = 'Hello!';
       const response = routeUtils.toMessageResponse(expectedMsg);
 
@@ -751,7 +802,7 @@ describe('Routes utils', () => {
       expect(response.message).to.equal(expectedMsg);
     });
 
-    it('should produce data response', function() {
+    it('should produce data response', function () {
       const expectedData = {foo: 'bar'};
       const response = routeUtils.toDataResponse(expectedData);
 
