@@ -2,6 +2,7 @@ import * as _ from 'lodash';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { expect } from 'chai';
+import { logger } from '../../../../ws.config/log';
 
 import '../../../../ws.repository';
 import * as fileUtils from '../../../../ws.utils/file';
@@ -92,6 +93,8 @@ describe('Translations processing (common flow for entities, datapoints and conc
         .filter(obj => obj.metadata.action === 'create');
     });
 
+    const loggerInfoStub = this.stub(logger, 'info');
+
     // ACT -------------------------------------------------------------------------------------------------------------
 
     createTranslationsUpdater(entitiesPlugin, externalContext, (error, context) => {
@@ -128,6 +131,8 @@ describe('Translations processing (common flow for entities, datapoints and conc
         repoStub.findTargetForTranslation,
         repoStub.addTranslation
       );
+      sinon.assert.calledOnce(loggerInfoStub);
+      sinon.assert.calledWithExactly(loggerInfoStub, `Start translations updating process for:`, entitiesPlugin.dataType);
 
       sinon.assert.notCalled(repoStub.closeOneByQuery);
       done();
@@ -177,6 +182,8 @@ describe('Translations processing (common flow for entities, datapoints and conc
         .filter(obj => obj.metadata.action === 'create');
     });
 
+    const loggerInfoStub = this.stub(logger, 'info');
+
     // ACT -------------------------------------------------------------------------------------------------------------
 
     createTranslationsUpdater(entitiesPlugin, externalContext, (error, context: any) => {
@@ -204,6 +211,9 @@ describe('Translations processing (common flow for entities, datapoints and conc
         entitiesPlugin.makeTranslationTargetBasedOnItsClosedVersion,
         repoStub.create
       );
+
+      sinon.assert.calledOnce(loggerInfoStub);
+      sinon.assert.calledWithExactly(loggerInfoStub, `Start translations updating process for:`, entitiesPlugin.dataType);
 
       done();
     });
@@ -242,9 +252,13 @@ describe('Translations processing (common flow for entities, datapoints and conc
         .filter(obj => obj.metadata.action === 'create');
     });
 
+    const loggerInfoStub = this.stub(logger, 'info');
+
     createTranslationsUpdater(entitiesPlugin, externalContext, (error: any, context: any) => {
       expect(error).to.deep.equal([expectedError]);
       expect(context).to.equal(externalContext);
+      sinon.assert.calledOnce(loggerInfoStub);
+      sinon.assert.calledWithExactly(loggerInfoStub, `Start translations updating process for:`, entitiesPlugin.dataType);
       done();
     });
   }));
@@ -280,6 +294,9 @@ describe('Translations processing (common flow for entities, datapoints and conc
         .filter(obj => obj.metadata.action === 'create');
     });
 
+    const loggerInfoStub = this.stub(logger, 'info');
+    const loggerWarnStub = this.stub(logger, 'warn');
+
     createTranslationsUpdater(entitiesPlugin, externalContext, (error: any, context: any) => {
       expect(error).to.not.exist;
       expect(context).to.equal(externalContext);
@@ -288,6 +305,11 @@ describe('Translations processing (common flow for entities, datapoints and conc
       sinon.assert.notCalled(repoStub.removeTranslation);
       sinon.assert.notCalled(repoStub.addTranslation);
 
+      sinon.assert.calledOnce(loggerInfoStub);
+      sinon.assert.calledWithExactly(loggerInfoStub, `Start translations updating process for:`, entitiesPlugin.dataType);
+
+      sinon.assert.callCount(loggerWarnStub, 5);
+      sinon.assert.calledWithExactly(loggerWarnStub,'Translation target was not closed - VERY suspicious at this point of translations update flow!');
       done();
     });
   }));
@@ -319,6 +341,8 @@ describe('Translations processing (common flow for entities, datapoints and conc
         .filter(obj => obj.metadata.action === 'create');
     });
 
+    const loggerInfoStub = this.stub(logger, 'info');
+
     createTranslationsUpdater(entitiesPlugin, externalContext, (error: any, context: any) => {
       expect(error).to.deep.equal([expectedError]);
       expect(context).to.equal(externalContext);
@@ -327,6 +351,8 @@ describe('Translations processing (common flow for entities, datapoints and conc
       sinon.assert.notCalled(repoStub.removeTranslation);
       sinon.assert.notCalled(repoStub.addTranslation);
       sinon.assert.notCalled(repoStub.closeOneByQuery);
+      sinon.assert.calledOnce(loggerInfoStub);
+      sinon.assert.calledWithExactly(loggerInfoStub, `Start translations updating process for:`, entitiesPlugin.dataType);
 
       done();
     });
@@ -357,6 +383,8 @@ describe('Translations processing (common flow for entities, datapoints and conc
         .filter(obj => obj.metadata.action === 'create');
     });
 
+    const loggerInfoStub = this.stub(logger, 'info');
+
     createTranslationsUpdater(entitiesPlugin, externalContext, (error: any, context: any) => {
       expect(error).to.not.exist;
       expect(context).to.equal(externalContext);
@@ -365,6 +393,8 @@ describe('Translations processing (common flow for entities, datapoints and conc
       sinon.assert.notCalled(repoStub.removeTranslation);
       sinon.assert.notCalled(repoStub.addTranslation);
       sinon.assert.notCalled(repoStub.closeOneByQuery);
+      sinon.assert.calledOnce(loggerInfoStub);
+      sinon.assert.calledWithExactly(loggerInfoStub, `Start translations updating process for:`, entitiesPlugin.dataType);
 
       done();
     });
@@ -405,6 +435,8 @@ describe('Translations processing (common flow for entities, datapoints and conc
         .filter(obj => obj.metadata.action === 'remove');
     });
 
+    const loggerInfoStub = this.stub(logger, 'info');
+
     // ACT -------------------------------------------------------------------------------------------------------------
 
     createTranslationsUpdater(entitiesPlugin, externalContext, (error, context) => {
@@ -437,6 +469,8 @@ describe('Translations processing (common flow for entities, datapoints and conc
 
       sinon.assert.notCalled(entitiesPlugin.processTranslationBeforeUpdate);
       sinon.assert.notCalled(repoStub.closeOneByQuery);
+      sinon.assert.calledOnce(loggerInfoStub);
+      sinon.assert.calledWithExactly(loggerInfoStub, `Start translations updating process for:`, entitiesPlugin.dataType);
       done();
     });
   }));
@@ -483,6 +517,8 @@ describe('Translations processing (common flow for entities, datapoints and conc
         .filter(obj => obj.metadata.action === 'remove');
     });
 
+    const loggerInfoStub = this.stub(logger, 'info');
+
     // ACT -------------------------------------------------------------------------------------------------------------
 
     createTranslationsUpdater(entitiesPlugin, externalContext, (error, context) => {
@@ -515,6 +551,8 @@ describe('Translations processing (common flow for entities, datapoints and conc
 
       sinon.assert.notCalled(entitiesPlugin.processTranslationBeforeUpdate);
       sinon.assert.notCalled(repoStub.removeTranslation);
+      sinon.assert.calledOnce(loggerInfoStub);
+      sinon.assert.calledWithExactly(loggerInfoStub, `Start translations updating process for:`, entitiesPlugin.dataType);
       done();
     });
   }));
@@ -555,6 +593,8 @@ describe('Translations processing (common flow for entities, datapoints and conc
         .filter(obj => obj.metadata.action === 'remove');
     });
 
+    const loggerInfoStub = this.stub(logger, 'info');
+
     // ACT -------------------------------------------------------------------------------------------------------------
 
     createTranslationsUpdater(entitiesPlugin, externalContext, (error, context) => {
@@ -566,7 +606,8 @@ describe('Translations processing (common flow for entities, datapoints and conc
 
       sinon.assert.notCalled(repoStub.removeTranslation);
       sinon.assert.notCalled(repoStub.create);
-
+      sinon.assert.calledOnce(loggerInfoStub);
+      sinon.assert.calledWithExactly(loggerInfoStub, `Start translations updating process for:`, entitiesPlugin.dataType);
       done();
     });
   }));
@@ -606,6 +647,9 @@ describe('Translations processing (common flow for entities, datapoints and conc
         .filter(obj => obj.metadata.action === 'remove');
     });
 
+    const loggerInfoStub = this.stub(logger, 'info');
+    const loggerWarnStub = this.stub(logger, 'warn');
+
     // ACT -------------------------------------------------------------------------------------------------------------
     createTranslationsUpdater(entitiesPlugin, externalContext, (error, context) => {
       expect(error).to.not.exist;
@@ -617,6 +661,11 @@ describe('Translations processing (common flow for entities, datapoints and conc
       sinon.assert.notCalled(repoStub.removeTranslation);
       sinon.assert.notCalled(repoStub.create);
 
+      sinon.assert.calledOnce(loggerInfoStub);
+      sinon.assert.calledWithExactly(loggerInfoStub, `Start translations updating process for:`, entitiesPlugin.dataType);
+
+      sinon.assert.calledOnce(loggerWarnStub);
+      sinon.assert.calledWithExactly(loggerWarnStub,'Translation target was not closed - VERY suspicious at this point of translations update flow!');
       done();
     });
   }));
@@ -665,6 +714,8 @@ describe('Translations processing: handle "change" events', () => {
         .filter(obj => obj.metadata.action === 'change');
     });
 
+    const loggerInfoStub = this.stub(logger, 'info');
+
     // ACT -------------------------------------------------------------------------------------------------------------
 
     createTranslationsUpdater(datapointsPlugin, externalContext, (error, context) => {
@@ -690,6 +741,9 @@ describe('Translations processing: handle "change" events', () => {
         repoStub.findTargetForTranslation,
         repoStub.addTranslation
       );
+
+      sinon.assert.calledOnce(loggerInfoStub);
+      sinon.assert.calledWithExactly(loggerInfoStub, `Start translations updating process for:`, datapointsPlugin.dataType);
 
       sinon.assert.notCalled(repoStub.closeOneByQuery);
       done();
