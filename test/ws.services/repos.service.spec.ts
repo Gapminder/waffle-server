@@ -5,6 +5,7 @@ import {expect} from 'chai';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as proxyquire from 'proxyquire';
+import { logger } from '../../ws.config/log';
 
 import {config} from '../../ws.config/config';
 import * as reposService from '../../ws.services/repos.service';
@@ -154,7 +155,7 @@ describe('repos service', () => {
     });
   });
 
-  it('should clone repo successfully (when no commit given to checkout - HEAD is used instead)', done => {
+  it('should clone repo successfully (when no commit given to checkout - HEAD is used instead)', sinon.test(function(done) {
     const accountName = 'open-numbers';
     const expectedDdfRepoName = 'ddf--gapminder--systema_globalis';
     const expectedGithubUrl = `git@github.com:${accountName}/${expectedDdfRepoName}.git`;
@@ -202,12 +203,16 @@ describe('repos service', () => {
         }
       }
     });
+    const loggerInfoStub = this.stub(logger, 'info');
 
     stubbedReposService.cloneRepo(expectedGithubUrl, null, (error, cloneResult) => {
       expect(cloneResult.pathToRepo).to.equal(expectedPathToRepo);
+      sinon.assert.calledTwice(loggerInfoStub);
+      sinon.assert.calledWithExactly(loggerInfoStub, `** Start cloning dataset: ${expectedGithubUrl}`);
+      sinon.assert.calledWithExactly(loggerInfoStub, `** Dataset has been cloned: ${expectedGithubUrl}`);
       done();
     });
-  });
+  }));
 
   it('should fail cloning if github url to ddf repo was not given', done => {
     const noGithubUrl = null;

@@ -7,9 +7,11 @@ import {constants} from '../../ws.utils/constants';
 import * as proxyquire from 'proxyquire';
 import {expect} from 'chai';
 import * as entities from './fixtures/entities.json';
+import * as sinon from 'sinon';
+import { logger } from '../../ws.config/log';
 
 describe('entities import', function() {
-  it('should not be any error', function(done) {
+  it('should not be any error', sinon.test(function(done) {
     const entitySetsOriginIds = ["583eb88d7fc6e74f7b4c3ce7", "583eb88d7fc6e74f7b4c3ce8"];
     const sets = {country: {gid: 'country', originId: entitySetsOriginIds[0]}, city: {gid: 'city', originId: entitySetsOriginIds[1]}};
     const domain = {gid: 'geo', originId: "583eb88d7fc6e74f7b4c3ce6"};
@@ -113,11 +115,15 @@ describe('entities import', function() {
       }
     }).createEntities;
 
+    const loggerInfoStub = this.stub(logger, 'info');
+
     return importEntities(context, (error, externalContext) => {
       expect(error).to.be.null;
       expect(externalContext).to.be.deep.equal(context);
+      sinon.assert.calledOnce(loggerInfoStub);
+      sinon.assert.calledWithExactly(loggerInfoStub, `Start process of entities creation`);
 
       return done();
     });
-  });
+  }));
 });

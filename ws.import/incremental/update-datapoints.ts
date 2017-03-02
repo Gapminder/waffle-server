@@ -1,16 +1,14 @@
 import * as _ from 'lodash';
 import * as hi from 'highland';
-import * as fs from 'fs';
 import * as path from 'path';
 import * as async from 'async';
-import {logger} from '../../ws.config/log';
-import {config} from '../../ws.config/config';
-import {constants} from '../../ws.utils/constants';
+import { logger } from '../../ws.config/log';
+import { constants } from '../../ws.utils/constants';
 import * as fileUtils from '../../ws.utils/file';
 import * as ddfImportUtils from '../utils/import-ddf.utils';
 import * as datapointsUtils from '../utils/datapoints.utils';
-import {ChangesDescriptor} from '../utils/changes-descriptor';
-import {DatapointsRepositoryFactory} from '../../ws.repository/ddf/data-points/data-points.repository';
+import { ChangesDescriptor } from '../utils/changes-descriptor';
+import { DatapointsRepositoryFactory } from '../../ws.repository/ddf/data-points/data-points.repository';
 
 export {
   startDatapointsCreation as updateDatapoints
@@ -219,6 +217,7 @@ function closeDatapointsPerMeasure(rawDatapoint, externalContext, onDatapointsFo
 
           if (!closedDatapoint) {
             logger.error('Datapoint that should be closed was not found by given params: ', options);
+            return onDatapointClosed();
           }
 
           const {handleClosedDatapoint = _.noop} = externalContext;
