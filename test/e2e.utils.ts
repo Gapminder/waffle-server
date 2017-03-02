@@ -54,11 +54,13 @@ function setUpEnvironmentVariables() {
   shell.env['INNER_PORT'] = e2eEnv.wsPort;
 }
 
-function sendDdfqlRequestAndVerifyResponse(ddfql, expectedResponse, done) {
+function sendDdfqlRequestAndVerifyResponse(ddfql, expectedResponse, done, options: any = {}) {
+  const {sort = true} = options;
+
   sendDdfqlRequest(ddfql, (error, response) => {
     expect(error).to.not.exist;
-    const actualRows = _.sortBy(response.body.rows);
-    const expectedRows = _.sortBy(expectedResponse.rows);
+    const actualRows = sort ? _.sortBy(response.body.rows) : response.body.rows;
+    const expectedRows = sort ? _.sortBy(expectedResponse.rows) : expectedResponse.rows;
 
     expect(actualRows).to.deep.equal(expectedRows);
     expect(response.body.headers).to.deep.equal(expectedResponse.headers);
