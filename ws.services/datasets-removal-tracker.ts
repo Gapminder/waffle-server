@@ -7,13 +7,17 @@ export interface RemovalState {
   concepts: number;
 }
 
+/* tslint:disable: interface-name */
 export interface IDatasetRemovalTracker {
   increment(dataType: TrackableType, value: number): void;
   getState(): RemovalState;
 }
+/* tslint:enable: interface-name */
 
 const UNKNOWN_DATASET_REMOVAL_TRACKER: IDatasetRemovalTracker = {
-  increment(dataType: TrackableType, value: number): void {},
+  increment(dataType: TrackableType, value: number): void {
+    // nothing should be done here
+  },
   getState(): RemovalState {
     return {
       datapoints: 0,
@@ -23,8 +27,9 @@ const UNKNOWN_DATASET_REMOVAL_TRACKER: IDatasetRemovalTracker = {
   }
 };
 
+/* tslint:disable: member-ordering */
 export class DatasetRemovalTracker implements IDatasetRemovalTracker {
-  private static TRACKERS = new Map<string, DatasetRemovalTracker>();
+  private static TRACKERS: Map<string, DatasetRemovalTracker> = new Map<string, DatasetRemovalTracker>();
 
   private removedConceptsAmount: number = 0;
   private removedEntitiesAmount: number = 0;
@@ -71,3 +76,4 @@ export class DatasetRemovalTracker implements IDatasetRemovalTracker {
     DatasetRemovalTracker.TRACKERS.delete(identifier);
   }
 }
+/* tslint:enable: member-ordering */

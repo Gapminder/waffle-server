@@ -12,7 +12,7 @@ export {
   collectConceptsByDdfql
 };
 
-function collectConceptsByDdfql(options, cb) {
+function collectConceptsByDdfql(options: any, cb: Function): void {
   console.time('finish Concepts stats');
   const pipe = _.extend(options, {domainGid: _.first(options.domainGids)});
 
@@ -22,18 +22,18 @@ function collectConceptsByDdfql(options, cb) {
     commonService.findDefaultDatasetAndTransaction,
     getAllConcepts,
     getConceptsByDdfql
-  ], (error, result) => {
+  ], (error: any, result: any) => {
     console.timeEnd('finish Concepts stats');
 
     return cb(error, result);
   });
 }
 
-function getAllConcepts(pipe, cb) {
+function getAllConcepts(pipe: any, cb: Function): void {
   const conceptsRepository = ConceptsRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version);
 
   conceptsRepository
-    .findConceptsByQuery({}, (error, concepts) => {
+    .findConceptsByQuery({}, (error: any, concepts: any) => {
       if (error) {
         return cb(error);
       }
@@ -44,7 +44,7 @@ function getAllConcepts(pipe, cb) {
     });
 }
 
-function getConceptsByDdfql(pipe, cb) {
+function getConceptsByDdfql(pipe: any, cb: Function): void {
   const conceptsRepository = ConceptsRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version);
   const normalizedQuery = ddfql.normalizeConcepts(pipe.query, pipe.allConcepts);
 
@@ -54,7 +54,7 @@ function getConceptsByDdfql(pipe, cb) {
   }
 
   conceptsRepository
-    .findConceptsByQuery(normalizedQuery.where, (error, concepts) => {
+    .findConceptsByQuery(normalizedQuery.where, (error: any, concepts: any) => {
       if (error) {
         return cb(error);
       }
@@ -65,11 +65,11 @@ function getConceptsByDdfql(pipe, cb) {
     });
 }
 
-function getConcepts(pipe, cb) {
+function getConcepts(pipe: any, cb: Function): void {
   const conceptsRepository = ConceptsRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version);
 
   conceptsRepository
-    .findConceptProperties(pipe.headers, pipe.where, (error, concepts) => {
+    .findConceptProperties(pipe.headers, pipe.where, (error: any, concepts: any) => {
       if (error) {
         return cb(error);
       }

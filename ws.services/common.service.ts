@@ -3,8 +3,8 @@ import * as _ from 'lodash';
 import * as transactionsService from './dataset-transactions.service';
 
 interface DatasetAndTransaction {
-  dataset?: any,
-  transaction?: any
+  dataset?: any;
+  transaction?: any;
 }
 
 export {
@@ -12,8 +12,8 @@ export {
   translateDocument
 };
 
-function findDefaultDatasetAndTransaction(pipe, done) {
-  return transactionsService.findDefaultDatasetAndTransaction(pipe.datasetName, pipe.version, (error, datasetAndTransaction:DatasetAndTransaction) => {
+function findDefaultDatasetAndTransaction(pipe: any, done: Function): void {
+  return transactionsService.findDefaultDatasetAndTransaction(pipe.datasetName, pipe.version, (error: any, datasetAndTransaction: DatasetAndTransaction) => {
     if (error) {
       return done(error);
     }
@@ -34,7 +34,7 @@ function findDefaultDatasetAndTransaction(pipe, done) {
   });
 }
 
-function translateDocument(target, language) {
+function translateDocument(target: any, language: string): any {
   if (!language) {
     return target.properties;
   }

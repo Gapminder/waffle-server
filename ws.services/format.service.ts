@@ -16,23 +16,23 @@ export {
 };
 
 interface RawDdf {
-  datasetName?: string,
-  datasetVersionCommit?: string
+  datasetName?: string;
+  datasetVersionCommit?: string;
 }
 
-function packToCsv(data) {
+function packToCsv(data: any): any {
   const wsJsonStream: any = packToWsJson(data);
 
-  return hi(wsJsonStream).flatMap(wsJson => {
+  return hi(wsJsonStream).flatMap((wsJson: any) => {
     const rows = _.get(wsJson, 'rows', []);
     const headers = _.get(wsJson, 'headers', []);
 
-    return hi(rows).map(row => _.zipObject(headers, row));
+    return hi(rows).map((row: any) => _.zipObject(headers, row));
   }).pipe(fastCsv.createWriteStream({headers: true}));
 }
 
-function packToWsJson(data) {
-  const rawDdf:RawDdf = _.get(data, 'rawDdf', {});
+function packToWsJson(data: any): any {
+  const rawDdf: RawDdf = _.get(data, 'rawDdf', {});
   rawDdf.datasetName = _.get(data, 'rawDdf.dataset.name', '');
   rawDdf.datasetVersionCommit = _.get(data, 'rawDdf.transaction.commit', '');
 
@@ -53,6 +53,6 @@ function packToWsJson(data) {
   return json;
 }
 
-function sendResponse(format, data, onSendResponse) {
+function sendResponse(format: Function, data: any, onSendResponse: Function): void {
   return async.setImmediate(() => onSendResponse(null, format(data)));
 }

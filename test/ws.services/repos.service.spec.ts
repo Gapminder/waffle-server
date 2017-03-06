@@ -289,9 +289,7 @@ describe('repos service', () => {
 
   it('should return falsy value as is when it was passed as a github url', () => {
     const falsyInputs = [
-      0,
       '',
-      false,
       null,
       undefined
     ];

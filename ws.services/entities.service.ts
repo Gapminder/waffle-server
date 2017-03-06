@@ -13,7 +13,7 @@ export {
   collectEntitiesByDdfql,
 };
 
-function collectEntitiesByDdfql(options, cb) {
+function collectEntitiesByDdfql(options: any, cb: AsyncResultCallback<any, any>): void {
   console.time('finish Entities stats');
   const pipe = _.extend(options, {domainGid: _.first(options.domainGids)});
 
@@ -23,28 +23,28 @@ function collectEntitiesByDdfql(options, cb) {
     commonService.findDefaultDatasetAndTransaction,
     getConcepts,
     normalizeQueriesToEntitiesByDdfql
-  ],  (error, result) => {
+  ],  (error: any, result: any) => {
     console.timeEnd('finish Entities stats');
 
     return cb(error, result);
   });
 }
 
-function normalizeQueriesToEntitiesByDdfql(pipe, cb) {
+function normalizeQueriesToEntitiesByDdfql(pipe: any, cb: Function): void {
   const entitiesRepository = EntitiesRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version);
 
   const normlizedQuery = ddfql.normalizeEntities(pipe.query, pipe.concepts);
 
-  return async.mapValuesLimit(normlizedQuery.join, 10, (item, link, mcb) => {
+  return async.mapValuesLimit(normlizedQuery.join, 10, (item: any, link: any, mcb: Function) => {
     const validateQuery: ValidateQueryModel = ddfQueryValidator.validateMongoQuery(item);
     if(!validateQuery.valid) {
       return cb(validateQuery.log, pipe);
     }
     return entitiesRepository
-      .findEntityPropertiesByQuery(item, (error, entities) => {
+      .findEntityPropertiesByQuery(item, (error: any, entities: any) => {
         return mcb(error, _.map(entities, 'gid'));
       });
-  }, (err, substituteJoinLinks) => {
+  }, (err: any, substituteJoinLinks: any) => {
     const promotedQuery = ddfql.substituteEntityJoinLinks(normlizedQuery, substituteJoinLinks);
     const subEntityQuery = promotedQuery.where;
 
@@ -54,7 +54,7 @@ function normalizeQueriesToEntitiesByDdfql(pipe, cb) {
     }
 
     return entitiesRepository
-      .findEntityPropertiesByQuery(subEntityQuery, (error, entities) => {
+      .findEntityPropertiesByQuery(subEntityQuery, (error: any, entities: any) => {
         if (error) {
           return cb(error);
         }
@@ -66,11 +66,11 @@ function normalizeQueriesToEntitiesByDdfql(pipe, cb) {
   });
 }
 
-function getEntities(pipe, cb) {
+function getEntities(pipe: any, cb: Function): void {
   const entitiesRepository = EntitiesRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version);
 
   entitiesRepository
-    .findEntityProperties(pipe.domainGid, pipe.headers, pipe.where, (error, entities) => {
+    .findEntityProperties(pipe.domainGid, pipe.headers, pipe.where, (error: any, entities: any) => {
       if (error) {
         return cb(error);
       }
@@ -81,7 +81,7 @@ function getEntities(pipe, cb) {
     });
 }
 
-function getConcepts(pipe, cb) {
+function getConcepts(pipe: any, cb: Function): void {
   const _pipe = {
     dataset: pipe.dataset,
     version: pipe.version,
@@ -89,7 +89,7 @@ function getConcepts(pipe, cb) {
     where: {}
   };
 
-  return conceptsService.getConcepts(_pipe, (err, result) => {
+  return conceptsService.getConcepts(_pipe, (err: any, result: any) => {
     pipe.concepts = result.concepts;
 
     return cb(err, pipe);

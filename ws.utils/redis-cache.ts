@@ -8,23 +8,23 @@ const cache = expressRedisCache({
   port: config.REDIS_PORT
 });
 
-cache.on('error', function (error) {
+cache.on('error', (error: any) => {
   logger.error(error);
 });
 
-cache.on('message', function (message) {
+cache.on('message', (message: any) => {
   logger.debug(message);
 });
 
-cache.on('connected', function () {
+cache.on('connected', () => {
   logger.debug('Express redis cache connected to redis!');
 });
 
-cache.on('disconnected', function () {
+cache.on('disconnected', () => {
   logger.debug('Express redis cache disconnected from redis!');
 });
 
-cache.on('deprecated', function (deprecated) {
+cache.on('deprecated', (deprecated: any) => {
   logger.warn('deprecated warning', {
     type: deprecated.type,
     name: deprecated.name,
