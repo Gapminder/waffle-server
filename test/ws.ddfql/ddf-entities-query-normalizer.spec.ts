@@ -262,7 +262,7 @@ describe('ddf entities query normalizer', () => {
         },
         "$main_religion_2008": {
           "sets": "main_religion",
-          "properties.main_religion": {"$nin": ["eastern_religions"]}
+          "gid": {"$nin": ["eastern_religions"]}
         }
       },
       "order_by": []
