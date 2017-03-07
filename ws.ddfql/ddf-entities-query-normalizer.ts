@@ -130,12 +130,18 @@ function normalizeWhere(query, options) {
 function normalizeJoin(query, options) {
   const conceptsByGids = options.conceptsByGids;
 
+  const joinKeys = _.keyBy(query.join, 'key');
+
   traverse(query.join).forEach(function (filterValue) {
     let normalizedFilter = null;
 
     if (ddfQueryUtils.isEntityPropertyFilter(this.key, options) && _.includes(this.path, 'where')) {
       if (ddfQueryUtils.isTimePropertyFilter(this.key, options.timeConceptsGids)) {
         normalizedFilter = ddfQueryUtils.normalizeTimePropertyFilter(this.key, filterValue, this.path, query.join);
+      } else if (joinKeys[this.key]) {
+        normalizedFilter = {
+          gid: filterValue
+        };
       } else {
         normalizedFilter = {
           [ddfQueryUtils.wrapEntityProperties(this.key, options)]: filterValue,
