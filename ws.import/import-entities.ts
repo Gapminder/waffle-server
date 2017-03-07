@@ -12,7 +12,7 @@ export {
   startEntitiesCreation as createEntities
 };
 
-function startEntitiesCreation(externalContext, done) {
+function startEntitiesCreation(externalContext: any, done: Function): void {
   logger.info('Start process of entities creation');
 
   const externalContextFrozen = Object.freeze(_.pick(externalContext, [
@@ -28,33 +28,33 @@ function startEntitiesCreation(externalContext, done) {
   ddfImportUtils.startStreamProcessing(entitiesCreateStream, externalContext, done);
 }
 
-function createEntities(externalContext) {
+function createEntities(externalContext: any): any {
   return hi(externalContext.datapackage.resources)
-    .filter(resource => resource.type === constants.ENTITIES)
-    .flatMap(resource => loadEntitiesFromCsv(resource, externalContext))
+    .filter((resource: any) => resource.type === constants.ENTITIES)
+    .flatMap((resource: any) => loadEntitiesFromCsv(resource, externalContext))
     .batch(ddfImportUtils.DEFAULT_CHUNK_SIZE)
-    .flatMap(entitiesBatch => {
+    .flatMap((entitiesBatch: any[]) => {
       return hi(storeEntitesToDb(entitiesBatch));
     });
 }
 
-function loadEntitiesFromCsv(resource, externalContext) {
+function loadEntitiesFromCsv(resource: any, externalContext: any): any {
   const {pathToDdfFolder} = externalContext;
 
   return fileUtils.readCsvFileAsStream(pathToDdfFolder, resource.path)
-    .map(rawEntity => {
+    .map((rawEntity: any) => {
       const setsAndDomain = entitiesUtils.getSetsAndDomain(resource, externalContext);
       const context = _.extend({filename: resource.path}, setsAndDomain, externalContext);
       return toEntity(rawEntity, context);
     });
 }
 
-function storeEntitesToDb(entities) {
+function storeEntitesToDb(entities: any[]): Promise<any> {
   return EntitiesRepositoryFactory.versionAgnostic().create(entities);
 }
 
-function toEntity(rawEntity, externalContext) {
-  //entitySetsOriginIds is unnecessary for import process
+function toEntity(rawEntity: any, externalContext: any): any {
+  // entitySetsOriginIds is unnecessary for import process
   const {
     entitySet,
     entitySetsOriginIds,
