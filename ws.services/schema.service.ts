@@ -10,7 +10,7 @@ export {
   findSchemaByDdfql
 };
 
-function findSchemaByDdfql(options, onFound) {
+function findSchemaByDdfql(options: any, onFound: AsyncResultCallback<any, any>): void {
   return async.waterfall([
     async.constant(options),
     ddfQueryValidator.validateDdfQueryAsync,
@@ -19,7 +19,7 @@ function findSchemaByDdfql(options, onFound) {
   ], onFound);
 }
 
-function _findSchemaByDdfql(pipe, done) {
+function _findSchemaByDdfql(pipe: any, done: Function): void {
   const normalizedQuery = schemaQueryNormalizer.normalize(pipe.query, {transactionId: pipe.transaction._id});
 
   const validateQuery:ValidateQueryModel = ddfQueryValidator.validateMongoQuery(normalizedQuery.where);
@@ -27,7 +27,7 @@ function _findSchemaByDdfql(pipe, done) {
     return done(validateQuery.log, pipe);
   }
 
-  return DatasetSchemaRepository.findByDdfql(normalizedQuery, (error, schemaData) => {
+  return DatasetSchemaRepository.findByDdfql(normalizedQuery, (error: any, schemaData: any) => {
     if (error) {
       return done(error);
     }

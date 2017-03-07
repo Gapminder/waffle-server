@@ -1,42 +1,45 @@
-let serviceLocator;
+import * as express from 'express';
 
-export {
-  create
-}
+export class ServiceLocator {
+  private static DELIMITER: string = '.';
+  private static SERVICE_LOCATOR: ServiceLocator;
 
-function create(application) {
-  if (!application && !serviceLocator) {
-    throw new Error('Please, supply instance of express application to a constructor of ServiceLocator');
+  private application: express.Application;
+  private namePrefix: string;
+  private servicesList: string[] = [];
+
+  public static create(application: express.Application): ServiceLocator {
+    if (!application && !ServiceLocator.SERVICE_LOCATOR) {
+      throw new Error('Please, supply instance of express application to the create method');
+    }
+
+    if (application && !ServiceLocator.SERVICE_LOCATOR) {
+      ServiceLocator.SERVICE_LOCATOR = new ServiceLocator('waffle-server', application);
+    }
+
+    return ServiceLocator.SERVICE_LOCATOR;
   }
 
-  if (application && !serviceLocator) {
-    serviceLocator = new ServiceLocator('waffle-server', application);
-  }
-
-  return serviceLocator;
-}
-
-function ServiceLocator(namePrefix, application) {
-  const _delimeter = '.';
-  const _application = application;
-  const _namePrefix = namePrefix + _delimeter;
-  const servicesList = [];
-
-  this.set = function registerRepositoryInstance(name, instance) {
-    _application.set(_namePrefix + name, instance);
-    servicesList.push(name);
+  public set(name: string, instance: any): ServiceLocator {
+    this.application.set(this.namePrefix + name, instance);
+    this.servicesList.push(name);
     return this;
   };
 
-  this.get = function getRepositoryInstance(name) {
-    return _application.get(_namePrefix + name);
+  public get(name: string): any {
+    return this.application.get(this.namePrefix + name);
   };
 
-  this.list = function listRegisteredServices() {
-    return servicesList;
+  public list(): string[] {
+    return this.servicesList;
   };
 
-  this.getApplication = function () {
-    return _application;
+  public getApplication(): express.Application {
+    return this.application;
   };
+
+  private constructor(namePrefix: string, application: express.Application) {
+    this.application = application;
+    this.namePrefix = namePrefix + ServiceLocator.DELIMITER;
+  }
 }

@@ -6,12 +6,13 @@ import * as passport from 'passport';
 import * as URLON from 'URLON';
 import { config } from '../ws.config/config';
 import { logger } from '../ws.config/log';
+import * as express from 'express';
 
 import { DatasetsRepository } from '../ws.repository/ddf/datasets/datasets.repository';
 import { RecentDdfqlQueriesRepository } from '../ws.repository/ddf/recent-ddfql-queries/recent-ddfql-queries.repository';
 
-const parseUrlonAsync = async.asyncify(query => URLON.parse(query));
-const parseJsonAsync = async.asyncify(query => JSON.parse(decodeURIComponent(query)));
+const parseUrlonAsync: Function = async.asyncify((query: string) => URLON.parse(query));
+const parseJsonAsync: Function = async.asyncify((query: string) => JSON.parse(decodeURIComponent(query)));
 
 export {
   getCacheConfig,
@@ -24,27 +25,27 @@ export {
   toMessageResponse
 };
 
-function bodyFromUrlQuery(req, res, next) {
+function bodyFromUrlQuery(req: express.Request, res: express.Response, next: express.NextFunction): void {
   const query = _.get(req.query, 'query', null);
   const parser = query
     ? {parse: parseJsonAsync, query, queryType: 'JSON'}
     : {parse: parseUrlonAsync, query: url.parse(req.url).query, queryType: 'URLON'};
 
-  parser.parse(parser.query, (error, parsedQuery) => {
+  parser.parse(parser.query, (error: any, parsedQuery: any) => {
     logger.info({ddfqlRaw: parser.query});
     if (error) {
-      return res.json({success: false, error: 'Query was sent in incorrect format'});
+      res.json({success: false, error: 'Query was sent in incorrect format'});
+    } else {
+      req.body = _.extend(parsedQuery, {rawDdfQuery: {queryRaw: parser.query, type: parser.queryType}});
+      next();
     }
-
-    req.body = _.extend(parsedQuery, {rawDdfQuery: {queryRaw: parser.query, type: parser.queryType}});
-    next();
   });
 }
 
-function getCacheConfig(prefix) {
-  return function (req, res, next) {
+function getCacheConfig(prefix: string): express.Handler {
+  return function (req: express.Request, res: express.Response, next: express.NextFunction): void {
     if (String(req.query.force) === 'true' && !config.IS_PRODUCTION) {
-      res.use_express_redis_cache = false;
+      (res as any).use_express_redis_cache = false;
       return next();
     }
 
@@ -53,32 +54,32 @@ function getCacheConfig(prefix) {
     const parsedUrlPathname = _.trimEnd(parsedUrl.pathname, '/');
 
     const md5 = crypto.createHash('md5').update(parsedUrl.query + reqBody).digest('hex');
-    res.express_redis_cache_name = `${prefix || 'PREFIX_NOT_SET'}-${req.method}-${parsedUrlPathname}-${md5}`;
+    (res as any).express_redis_cache_name = `${prefix || 'PREFIX_NOT_SET'}-${req.method}-${parsedUrlPathname}-${md5}`;
     next();
   };
 }
 
-function ensureAuthenticatedViaToken(req, res, next) {
+function ensureAuthenticatedViaToken(req: express.Request, res: express.Response, next: express.NextFunction): express.Handler {
   return passport.authenticate('token')(req, res, next);
 }
 
-function respondWithRawDdf(query, req, res, next) {
-  return (error, result) => {
+function respondWithRawDdf(query: any, req: express.Request, res: express.Response, next: express.NextFunction): Function {
+  return (error: any, result: any) => {
     if (error) {
       logger.error(error);
-      res.use_express_redis_cache = false;
+      (res as any).use_express_redis_cache = false;
       return res.json(toErrorResponse(error));
     }
 
     _storeWarmUpQueryForDefaultDataset(query);
 
-    req.rawData = {rawDdf: result};
+    (req as any).rawData = {rawDdf: result};
 
     return next();
   };
 }
 
-function _storeWarmUpQueryForDefaultDataset(query) {
+function _storeWarmUpQueryForDefaultDataset(query: any): void {
   const rawDdfQuery = _.get(query, 'rawDdfQuery', null);
 
   if (!rawDdfQuery) {
@@ -89,7 +90,7 @@ function _storeWarmUpQueryForDefaultDataset(query) {
     return;
   }
 
-  RecentDdfqlQueriesRepository.create(rawDdfQuery, error => {
+  RecentDdfqlQueriesRepository.create(rawDdfQuery, (error: any) => {
     if (error) {
       logger.debug(error);
     } else {
@@ -98,13 +99,13 @@ function _storeWarmUpQueryForDefaultDataset(query) {
   });
 }
 
-function checkDatasetAccessibility(req, res, next) {
+function checkDatasetAccessibility(req: express.Request, res: express.Response, next: express.NextFunction): void {
   const datasetName = _.get(req, 'body.dataset', null);
   if (!datasetName) {
     return next();
   }
 
-  return DatasetsRepository.findByName(datasetName, (error, dataset) => {
+  return DatasetsRepository.findByName(datasetName, (error: any, dataset: any) => {
     if (error) {
       logger.error(error);
       return res.json({success: false, error});
@@ -127,21 +128,36 @@ function checkDatasetAccessibility(req, res, next) {
   });
 }
 
-function _validateDatasetAccessToken(datasetAccessToken, providedAccessToken) {
+function _validateDatasetAccessToken(datasetAccessToken: string, providedAccessToken: string): boolean {
   const tokensAreEqual = datasetAccessToken === providedAccessToken;
   const tokensAreNotEmpty = !_.isEmpty(datasetAccessToken) && !_.isEmpty(providedAccessToken);
   return tokensAreNotEmpty && tokensAreEqual;
 }
 
-function toErrorResponse(error) {
+function toErrorResponse(error: any): ErrorResponse {
   logger.error(error);
   return {success: false, error: error.message || error};
 }
 
-function toMessageResponse(message) {
+function toMessageResponse(message: string): MessageResponse {
   return {success: true, message};
 }
 
-function toDataResponse(data) {
+function toDataResponse(data: any): DataResponse {
   return {success: true, data};
+}
+
+interface ErrorResponse {
+  success: boolean;
+  error: any;
+}
+
+interface DataResponse {
+  success: boolean;
+  data: any;
+}
+
+interface MessageResponse {
+  success: boolean;
+  message: string;
 }

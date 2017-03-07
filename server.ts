@@ -2,7 +2,7 @@ import 'newrelic';
 
 import * as express from 'express';
 
-const app = express();
+const app: express.Application = express();
 
 import { config } from './ws.config/config';
 import { logger } from './ws.config/log';
@@ -15,7 +15,7 @@ import * as bodyParser from 'body-parser';
 app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
 app.use(bodyParser.json({limit: '10mb'}));
 
-import * as ServiceLocator from './ws.service-locator';
+import { ServiceLocator } from './ws.service-locator';
 const serviceLocator = ServiceLocator.create(app);
 
 import './ws.repository';

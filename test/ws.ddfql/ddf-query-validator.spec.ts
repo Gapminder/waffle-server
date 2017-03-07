@@ -6,7 +6,7 @@ import {expect} from 'chai';
 import * as ddfQueryValidator from '../../ws.ddfql/ddf-query-validator';
 
 describe('ddf query validator', () => {
-  it('should return error message: Invalid DDFQL-query. Validation of Where Clause: contain \'.\'', () => {
+  it('should return error message: Invalid DDFQL-query. Validation of Where Clause: contain "."', () => {
     const ddfql = {
       "where": {
         "$and": [
@@ -18,12 +18,12 @@ describe('ddf query validator', () => {
     };
 
     const message = ddfQueryValidator.validateDdfQuery(ddfql).messages;
-    const expectedMessage = 'Invalid DDFQL-query. Validation of Where Clause: contain \'.\' in';
+    const expectedMessage = 'Invalid DDFQL-query. Validation of Where Clause: contain "." in';
 
     expect(message.toString()).to.contain(expectedMessage);
   });
 
-  it('should return error message: Invalid DDFQL-query. Validation of Join Clause: does not contain \'$\'', () => {
+  it('should return error message: Invalid DDFQL-query. Validation of Join Clause: does not contain "$"', () => {
     const ddfql = {
       "join": {
         "geo": {
@@ -37,7 +37,7 @@ describe('ddf query validator', () => {
     };
 
     const message = ddfQueryValidator.validateDdfQuery(ddfql).messages;
-    const expectedMessage = 'Invalid DDFQL-query. Validation of Join Clause: does not contain \'$\' in ';
+    const expectedMessage = 'Invalid DDFQL-query. Validation of Join Clause: does not contain "$" in ';
 
     expect(message.toString()).to.contain(expectedMessage);
   });
@@ -83,12 +83,12 @@ describe('ddf query validator', () => {
     };
 
     const message = ddfQueryValidator.validateDdfQuery(ddfql).messages;
-    const expectedMessage = 'Invalid DDFQL-query. Validation of Select Clause: does not contain \'key\'';
+    const expectedMessage = 'Invalid DDFQL-query. Validation of Select Clause: does not contain "key"';
 
     expect(message.toString()).to.contain(expectedMessage);
   });
 
-  it(`should return error message: Invalid DDFQL-query. Validation of Select Clause: \'value\' 
+  it(`should return error message: Invalid DDFQL-query. Validation of Select Clause: "value" 
   contains more than 5 measures, please try again with less amount`, () => {
     const ddfql = {
       "select": {

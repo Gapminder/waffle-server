@@ -10,16 +10,14 @@ passport.serializeUser((user: any, done: Function) => {
   return done(null, user._id);
 });
 
-passport.deserializeUser((id, done) => {
-  return UsersRepository.findById(id, (error, user) => {
-    done(error, user);
-  });
+passport.deserializeUser((id: any, done: Function) => {
+  return UsersRepository.findById(id, done);
 });
 
 enableLocalStrategy();
 enableUniqueTokenStrategy();
 
-function enableUniqueTokenStrategy() {
+function enableUniqueTokenStrategy(): void {
   const tokenName = 'waffle-server-token';
   const strategyOptions = {
     tokenQuery: tokenName,
@@ -28,8 +26,8 @@ function enableUniqueTokenStrategy() {
     tokenHeader: tokenName
   };
 
-  passport.use(new UniqueTokenStrategy(strategyOptions, (token, done) => {
-    UsersRepository.findUserByUniqueTokenAndProlongSession(token, (error, user) => {
+  passport.use(new UniqueTokenStrategy(strategyOptions, (token: string, done: Function) => {
+    UsersRepository.findUserByUniqueTokenAndProlongSession(token, (error: any, user: any) => {
       if (error) {
         return done(error);
       }
@@ -43,9 +41,9 @@ function enableUniqueTokenStrategy() {
   }));
 }
 
-function enableLocalStrategy() {
-  passport.use(new LocalStrategy((username, password, done) => {
-      return UsersRepository.findUserByEmail(username, (error, user) => {
+function enableLocalStrategy(): void {
+  passport.use(new LocalStrategy((username: string, password: string, done: Function) => {
+      return UsersRepository.findUserByEmail(username, (error: any, user: any) => {
         if (error) {
           return done(error);
         }

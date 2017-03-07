@@ -10,14 +10,14 @@ export {
   warmUpCache
 };
 
-function warmUpCache(done) {
+function warmUpCache(done: Function): void {
   let warmedQueriesAmount = 0;
   const cacheWarmUpStream = hi(RecentDdfqlQueriesRepository.findAllAsStream())
-    .map(logRecord => {
+    .map((logRecord: any) => {
       return hi(executeDdfql(logRecord));
     })
     .sequence()
-    .tap(({queryRaw, status, success}) => {
+    .tap(({queryRaw, status, success}: any) => {
       if (success !== false) {
         warmedQueriesAmount++;
       }
@@ -25,18 +25,18 @@ function warmUpCache(done) {
       logger.info(`Cache warm up attempt. Status:  ${status}. Success: ${success}. DDFQL raw: `, queryRaw);
     });
 
-  return ddfImportUtils.startStreamProcessing(cacheWarmUpStream, null, error => done(error, warmedQueriesAmount));
+  return ddfImportUtils.startStreamProcessing(cacheWarmUpStream, null, (error: any) => done(error, warmedQueriesAmount));
 }
 
-function executeDdfql(logRecord) {
+function executeDdfql(logRecord: any): any {
   const url = `http://localhost:${config.INNER_PORT}/api/ddf/ql/?${logRecord.type === 'URLON' ? logRecord.queryRaw : 'query=' + logRecord.queryRaw}`;
   logger.debug('Cache is going to be warmed up from url: ', url);
 
   return fetch(url)
-    .then(response => {
+    .then((response: any) => {
       return response.json();
     })
-    .then(response => {
+    .then((response: any) => {
       return {
         queryRaw: logRecord.queryRaw,
         success: response.success,

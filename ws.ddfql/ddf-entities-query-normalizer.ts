@@ -2,7 +2,7 @@ import * as  _ from 'lodash';
 import * as traverse from 'traverse';
 
 import {constants} from '../ws.utils/constants';
-import * as ddfQueryUtils from "./ddf-query-utils";
+import * as ddfQueryUtils from './ddf-query-utils';
 import * as conceptUtils from '../ws.import/utils/concepts.utils';
 
 export {
@@ -10,7 +10,7 @@ export {
   substituteEntityJoinLinks
 };
 
-function normalizeEntities(query, concepts) {
+function normalizeEntities(query: any, concepts: any[]): any {
   const safeQuery = ddfQueryUtils.toSafeQuery(query);
   const safeConcepts = concepts || [];
 
@@ -28,7 +28,7 @@ function normalizeEntities(query, concepts) {
     domainGids: ddfQueryUtils.getDomainGids(safeConcepts),
     timeConceptsGids: conceptUtils.getTimeConceptGids(safeConcepts),
     conceptsByGids,
-    conceptsByOriginIds: ddfQueryUtils.getConceptsByOriginIds(safeConcepts),
+    conceptsByOriginIds: ddfQueryUtils.getConceptsByOriginIds(safeConcepts)
   });
 
   normalizeEntityDdfQuery(safeQuery, options);
@@ -37,50 +37,57 @@ function normalizeEntities(query, concepts) {
   return safeQuery;
 }
 
-function substituteEntityJoinLinks(query, linksInJoinToValues) {
+function substituteEntityJoinLinks(query: any, linksInJoinToValues: any): any {
   const safeQuery = ddfQueryUtils.toSafeQuery(query);
 
-  traverse(safeQuery.where).forEach(function (link) {
+  traverse(safeQuery.where).forEach(function (link: string): void {
+    /* tslint:disable: no-invalid-this */
     if (safeQuery.join.hasOwnProperty(link)) {
       const id = linksInJoinToValues[link];
       const value = id ? {$in: id} : link;
       _.set(safeQuery.where, this.path, value);
     }
+    /* tslint:enable: no-invalid-this */
   });
   return safeQuery;
 }
 
-function substituteEntityConceptsWithIds(query, options) {
+function substituteEntityConceptsWithIds(query: any, options: any): void {
   const conceptsToIds = options.conceptOriginIdsByGids;
 
-  traverse(query.where).forEach(function (concept) {
+  traverse(query.where).forEach(function (concept: string): void {
+    /* tslint:disable: no-invalid-this */
     if (shouldSubstituteValueWithId(this.key)) {
       const id = conceptsToIds[concept];
       this.update(id ? id : concept);
     }
+    /* tslint:enable: no-invalid-this */
   });
 
-  traverse(query.join).forEach(function (concept) {
+  traverse(query.join).forEach(function (concept: string): void {
+    /* tslint:disable: no-invalid-this */
     if (shouldSubstituteValueWithId(this.key)) {
       const id = conceptsToIds[concept];
       this.update(id ? id : concept);
     }
+    /* tslint:enable: no-invalid-this */
   });
 
   return query;
 }
 
-function normalizeEntityDdfQuery(query, options) {
+function normalizeEntityDdfQuery(query: any, options: any): any {
   normalizeWhere(query, options);
   normalizeJoin(query, options);
   ddfQueryUtils.normalizeOrderBy(query);
   return query;
 }
 
-function normalizeWhere(query, options) {
+function normalizeWhere(query: any, options: any): void {
   const conceptOriginIds = options.conceptOriginIds;
 
-  traverse(query.where).forEach(function (filterValue) {
+  traverse(query.where).forEach(function (filterValue: any): void {
+    /* tslint:disable: no-invalid-this */
     let normalizedFilter = null;
     const selectKey = _.first(query.select.key);
 
@@ -89,7 +96,7 @@ function normalizeWhere(query, options) {
         normalizedFilter = ddfQueryUtils.normalizeTimePropertyFilter(this.key, filterValue, this.path, query.where);
       } else {
         normalizedFilter = {
-          [ddfQueryUtils.wrapEntityProperties(this.key, options)]: filterValue,
+          [ddfQueryUtils.wrapEntityProperties(this.key, options)]: filterValue
         };
       }
     }
@@ -101,14 +108,15 @@ function normalizeWhere(query, options) {
     }
 
     if (normalizedFilter) {
-      const options = {
+      const replacementOptions = {
         key: this.key,
         path: this.path,
         normalizedValue: normalizedFilter,
         queryFragment: query.where
       };
-      ddfQueryUtils.replaceValueOnPath(options);
+      ddfQueryUtils.replaceValueOnPath(replacementOptions);
     }
+    /* tslint:enable: no-invalid-this */
   });
 
   const subWhere = query.where;
@@ -118,7 +126,7 @@ function normalizeWhere(query, options) {
       {$or: [
         {domain: {$in: conceptOriginIds}},
         {sets: {$in: conceptOriginIds}}
-      ]},
+      ]}
     ]
   };
 
@@ -127,12 +135,13 @@ function normalizeWhere(query, options) {
   }
 }
 
-function normalizeJoin(query, options) {
+function normalizeJoin(query: any, options: any): void {
   const conceptsByGids = options.conceptsByGids;
 
   const joinKeys = _.keyBy(query.join, 'key');
 
-  traverse(query.join).forEach(function (filterValue) {
+  traverse(query.join).forEach(function (filterValue: any): void {
+    /* tslint:disable: no-invalid-this */
     let normalizedFilter = null;
 
     if (ddfQueryUtils.isEntityPropertyFilter(this.key, options) && _.includes(this.path, 'where')) {
@@ -144,7 +153,7 @@ function normalizeJoin(query, options) {
         };
       } else {
         normalizedFilter = {
-          [ddfQueryUtils.wrapEntityProperties(this.key, options)]: filterValue,
+          [ddfQueryUtils.wrapEntityProperties(this.key, options)]: filterValue
         };
       }
     }
@@ -168,13 +177,15 @@ function normalizeJoin(query, options) {
         queryFragment: query.join
       });
     }
+    /* tslint:enable: no-invalid-this */
   });
 
   pullUpWhereSectionsInJoin(query);
 }
 
-function pullUpWhereSectionsInJoin(query) {
-  traverse(query.join).forEach(function () {
+function pullUpWhereSectionsInJoin(query: any): void {
+  traverse(query.join).forEach(function (): void {
+    /* tslint:disable: no-invalid-this */
     if (this.key === 'where') {
       ddfQueryUtils.replaceValueOnPath({
         key: this.key,
@@ -183,17 +194,18 @@ function pullUpWhereSectionsInJoin(query) {
         substituteEntryWithItsContent: true
       });
     }
+    /* tslint:enable: no-invalid-this */
   });
 }
 
-function isDomainFilter(key) {
+function isDomainFilter(key: string): boolean {
   return key === 'domain';
 }
 
-function isSetFilter(key) {
+function isSetFilter(key: string): boolean {
   return key === 'sets';
 }
 
-function shouldSubstituteValueWithId(key) {
+function shouldSubstituteValueWithId(key: string): boolean {
   return isSetFilter(key) || isDomainFilter(key);
 }

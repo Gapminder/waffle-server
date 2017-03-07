@@ -12,7 +12,7 @@ export {
   createDatasetSchema
 }
 
-function createDatasetSchema(externalContext, done) {
+function createDatasetSchema(externalContext: any, done: Function): void {
   const externalContextFrozen = Object.freeze({
     concepts: externalContext.concepts,
     datasetId: externalContext.dataset._id,
@@ -33,15 +33,15 @@ function createDatasetSchema(externalContext, done) {
   return ddfImportUtils.startStreamProcessing(datasetSchemaCreationStream, externalContext, done);
 }
 
-function toConceptsSchemaCreationStream(resourcesStream, externalContextFrozen) {
+function toConceptsSchemaCreationStream(resourcesStream: any, externalContextFrozen: any): any {
   return resourcesStream.fork()
-    .filter(resource => resource.type === constants.CONCEPTS)
-    .flatMap(resource => {
+    .filter((resource: any) => resource.type === constants.CONCEPTS)
+    .flatMap((resource: any) => {
       return fileUtils
         .readCsvFileAsStream(externalContextFrozen.pathToDdfFolder, resource.path)
-        .map(csvRecord => ({csvRecord, resource}));
+        .map((csvRecord: any) => ({csvRecord, resource}));
     })
-    .map(({csvRecord, resource}) => {
+    .map(({csvRecord, resource}: any) => {
       return {
         key: resource.primaryKey,
         value: csvRecord[resource.primaryKey],
@@ -52,15 +52,15 @@ function toConceptsSchemaCreationStream(resourcesStream, externalContextFrozen) 
       };
     })
     .batch(ddfImportUtils.DEFAULT_CHUNK_SIZE)
-    .flatMap(datasetSchemaBatch => hi(storeDatasetSchemaItemsToDb(datasetSchemaBatch)));
+    .flatMap((datasetSchemaBatch: any[]) => hi(storeDatasetSchemaItemsToDb(datasetSchemaBatch)));
 }
 
-function toEntitiesSchemaCreationStream(resourcesStream, externalContextFrozen) {
+function toEntitiesSchemaCreationStream(resourcesStream: any, externalContextFrozen: any): any {
   return resourcesStream.fork()
-    .filter(resource => resource.type === constants.ENTITIES)
-    .flatMap(resource => hi(resource.fields).map(field => ({field, resource})))
-    .filter(({field, resource}) => field !== resource.concept)
-    .map(({field, resource}) => {
+    .filter((resource: any) => resource.type === constants.ENTITIES)
+    .flatMap((resource: any) => hi(resource.fields).map((field: string) => ({field, resource})))
+    .filter(({field, resource}: any) => field !== resource.concept)
+    .map(({field, resource}: any) => {
       return {
         key: resource.concept,
         value: field,
@@ -71,14 +71,14 @@ function toEntitiesSchemaCreationStream(resourcesStream, externalContextFrozen) 
       };
     })
     .batch(ddfImportUtils.DEFAULT_CHUNK_SIZE)
-    .flatMap(datasetSchemaBatch => hi(storeDatasetSchemaItemsToDb(datasetSchemaBatch)));
+    .flatMap((datasetSchemaBatch: any[]) => hi(storeDatasetSchemaItemsToDb(datasetSchemaBatch)));
 }
 
-function toDatapointsSchemaCreationStream(resourcesStream, externalContextFrozen) {
+function toDatapointsSchemaCreationStream(resourcesStream: any, externalContextFrozen: any): any {
   return resourcesStream.fork()
-    .filter(resource => resource.type === constants.DATAPOINTS)
-    .flatMap(resource => {
-      const schemaItemsExplodedByIndicator = _.reduce(resource.indicators, (result, indicator) => {
+    .filter((resource: any) => resource.type === constants.DATAPOINTS)
+    .flatMap((resource: any) => {
+      const schemaItemsExplodedByIndicator = _.reduce(resource.indicators, (result: any, indicator: any) => {
         const schemaItem = {
           key: resource.dimensions,
           value: indicator,
@@ -93,23 +93,23 @@ function toDatapointsSchemaCreationStream(resourcesStream, externalContextFrozen
 
       return hi(schemaItemsExplodedByIndicator);
     })
-    .flatMap(schemaItem => hi.wrapCallback(populateDatapointsSchemaItemWithOriginIds)(schemaItem, externalContextFrozen))
+    .flatMap((schemaItem: any) => hi.wrapCallback(populateDatapointsSchemaItemWithOriginIds)(schemaItem, externalContextFrozen))
     .batch(ddfImportUtils.DEFAULT_CHUNK_SIZE)
-    .map(datasetSchemaBatch => {
-      return _.uniqWith(datasetSchemaBatch, (schemaItemA, schemaItemB) => {
+    .map((datasetSchemaBatch: any[]) => {
+      return _.uniqWith(datasetSchemaBatch, (schemaItemA: any, schemaItemB: any) => {
         return _.isEqual(_.sortBy(schemaItemA.key), _.sortBy(schemaItemB.key))
           && schemaItemA.value === schemaItemB.value;
       });
     })
-    .flatMap(datasetSchemaBatch => hi(storeDatasetSchemaItemsToDb(datasetSchemaBatch)));
+    .flatMap((datasetSchemaBatch: any[]) => hi(storeDatasetSchemaItemsToDb(datasetSchemaBatch)));
 }
 
-function storeDatasetSchemaItemsToDb(datasetSchemaItems) {
+function storeDatasetSchemaItemsToDb(datasetSchemaItems: any[]): Promise<any> {
   logger.info('** create Dataset schema items: ', _.size(datasetSchemaItems));
   return DatasetSchemaRepository.create(datasetSchemaItems);
 }
 
-function populateDatapointsSchemaItemWithOriginIds(index, externalContext, done) {
+function populateDatapointsSchemaItemWithOriginIds(index: any, externalContext: any, done: Function): void {
   logger.info('** populate Dataset Index with originIds');
 
   const getOriginIdCurried = _.curry(getOriginId)(externalContext.concepts);
@@ -124,7 +124,7 @@ function populateDatapointsSchemaItemWithOriginIds(index, externalContext, done)
   return findDatapointsStatsForMeasure(context, done);
 }
 
-function findDatapointsStatsForMeasure(externalContext, done) {
+function findDatapointsStatsForMeasure(externalContext: any, done: Function): void {
   logger.info(`** find Datapoints stats for Measure ${_.get(externalContext.index, 'value')}`);
 
   const options = {
@@ -134,7 +134,7 @@ function findDatapointsStatsForMeasure(externalContext, done) {
   };
 
   return DatapointsRepositoryFactory.currentVersion(externalContext.datasetId, externalContext.version)
-    .findStats(options, (error, stats) => {
+    .findStats(options, (error: any, stats: any) => {
       if (error) {
         return done(error);
       }
@@ -150,6 +150,6 @@ function findDatapointsStatsForMeasure(externalContext, done) {
     });
 }
 
-function getOriginId(concepts, key) {
+function getOriginId(concepts: any, key: string): any {
   return _.get(concepts, `${key}.originId`, null);
 }

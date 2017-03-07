@@ -5,16 +5,16 @@ const db = mongoose.connection;
 mongoose.set('debug', config.MONGOOSE_DEBUG);
 mongoose.connect(config.MONGODB_URL);
 
-(<any>mongoose).Promise = global.Promise;
+(mongoose as any).Promise = global.Promise;
 
-db.on('error', function (err) {
+db.on('error', function (err: any): void {
   console.log('db connect error', err);
 });
 
-db.once('open', function () {
+db.once('open', function (): void {
   console.log('db connect good');
 });
 
-db.once('close', function () {
+db.once('close', function (): void {
   console.log('db connect close');
 });

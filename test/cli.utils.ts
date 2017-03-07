@@ -23,8 +23,8 @@ export {
   getCommitByGithubUrl
 };
 
-function runDatasetImport(commitIndexToStartImport = 0, onIncrementalUpdateDone) {
-  return getCommitsByGithubUrl(DEFAULT_WS_CLI_OPTIONS.repo, (error, commits) => {
+function runDatasetImport(commitIndexToStartImport: number = 0, onIncrementalUpdateDone: Function): void {
+  return getCommitsByGithubUrl(DEFAULT_WS_CLI_OPTIONS.repo, (error: any, commits: string[]) => {
     if (error) {
       return onIncrementalUpdateDone(error);
     }
@@ -33,23 +33,23 @@ function runDatasetImport(commitIndexToStartImport = 0, onIncrementalUpdateDone)
     const finishCommitIndex = commitIndexToStartImport ? 3 - commitIndexToStartImport : _.size(allowedCommits);
     const cliOptions = _.extend({from: _.first(allowedCommits), to: _.get(allowedCommits, `${finishCommitIndex}`)}, DEFAULT_WS_CLI_OPTIONS);
 
-    wsCli.importUpdate(cliOptions, error => {
-      if (error) {
-        return onIncrementalUpdateDone(error);
+    wsCli.importUpdate(cliOptions, (importUpdateError: any) => {
+      if (importUpdateError) {
+        return onIncrementalUpdateDone(importUpdateError);
       }
       return onIncrementalUpdateDone();
     });
   });
 }
 
-function setDefaultCommit(commit, options?, done?) {
+function setDefaultCommit(commit: string, options?: any, done?: any): void {
   if (_.isFunction(options)) {
     done = options;
     options = {};
   }
 
   options = _.defaults(options, DEFAULT_WS_CLI_OPTIONS, {commit});
-  wsCli.setDefault(options, error => {
+  wsCli.setDefault(options, (error: any) => {
     if (error) {
       return done(error);
     }
@@ -58,8 +58,8 @@ function setDefaultCommit(commit, options?, done?) {
   });
 }
 
-function getCommitByGithubUrl(githubUrl, index, done) {
-  return getCommitsByGithubUrl(githubUrl, (error, commits) => {
+function getCommitByGithubUrl(githubUrl: string, index: number, done: Function): void {
+  return getCommitsByGithubUrl(githubUrl, (error: any, commits: string[]) => {
     if (error) {
       return done(error);
     }
@@ -68,14 +68,14 @@ function getCommitByGithubUrl(githubUrl, index, done) {
   });
 }
 
-function getCommitsByGithubUrl(githubUrl, done) {
-  let githubUrlObj = {githubUrl: githubUrl};
+function getCommitsByGithubUrl(githubUrl: string, done: Function): void {
+  const githubUrlObj = { githubUrl };
 
   if (CACHED_COMMITS.has(githubUrl)) {
     return done(null, CACHED_COMMITS.get(githubUrlObj));
   }
 
-  wsCli.getCommitListByGithubUrl(githubUrl, (error, commits) => {
+  wsCli.getCommitListByGithubUrl(githubUrl, (error: any, commits: string[]) => {
     if (error) {
       return done(error);
     }

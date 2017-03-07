@@ -10,10 +10,23 @@ const FIVE_HOURS = 5 * HOUR;
 const repositoriesCache = new NodeCache({ checkperiod: HOUR });
 
 export class VersionedModelRepositoryFactory<REPO extends VersionedModelRepository> {
-  public constructor(private Repository: new (name: string) => REPO) {
+  private Repository: new (name: string) => REPO;
+
+  private static checkPreconditions(datasetId: any, version: number): void {
+    if (!datasetId) {
+      throw new Error('datasetId must be given');
+    }
+
+    if (!version) {
+      throw new Error('dataset version must be given');
+    }
   }
 
-  public makeRepository(factoryName, versionQueryFragment, datasetId?, version?): REPO {
+  public constructor(Repository: new (name: string) => REPO) {
+    this.Repository = Repository;
+  }
+
+  public makeRepository(factoryName: string, versionQueryFragment: any, datasetId?: any, version?: number): REPO {
     const key = `${(this.Repository as any).name}:${factoryName}:${datasetId}:${version}`;
 
     let repository = repositoriesCache.get(key);
@@ -33,7 +46,7 @@ export class VersionedModelRepositoryFactory<REPO extends VersionedModelReposito
     return repository;
   }
 
-  public currentVersion(datasetId, version): REPO {
+  public currentVersion(datasetId: any, version: number): REPO {
     VersionedModelRepositoryFactory.checkPreconditions(datasetId, version);
 
     const versionQueryFragment = {
@@ -45,7 +58,7 @@ export class VersionedModelRepositoryFactory<REPO extends VersionedModelReposito
     return this.makeRepository('currentVersion', versionQueryFragment, datasetId, version);
   }
 
-  public latestVersion(datasetId, version): REPO {
+  public latestVersion(datasetId: any, version: number): REPO {
     VersionedModelRepositoryFactory.checkPreconditions(datasetId, version);
 
     const versionQueryFragment = {
@@ -57,18 +70,18 @@ export class VersionedModelRepositoryFactory<REPO extends VersionedModelReposito
     return this.makeRepository('latestVersion', versionQueryFragment, datasetId, version);
   }
 
-  public allOpenedInGivenVersion(datasetId, version): REPO {
+  public allOpenedInGivenVersion(datasetId: any, version: number): REPO {
     VersionedModelRepositoryFactory.checkPreconditions(datasetId, version);
 
     const versionQueryFragment = {
       dataset: datasetId,
-      from: version,
+      from: version
     };
 
     return this.makeRepository('allOpenedInGivenVersion', versionQueryFragment, datasetId, version);
   }
 
-  public latestExceptCurrentVersion(datasetId, version): REPO {
+  public latestExceptCurrentVersion(datasetId: any, version: number): REPO {
     VersionedModelRepositoryFactory.checkPreconditions(datasetId, version);
 
     const versionQueryFragment = {
@@ -80,7 +93,7 @@ export class VersionedModelRepositoryFactory<REPO extends VersionedModelReposito
     return this.makeRepository('latestExceptCurrentVersion', versionQueryFragment, datasetId, version);
   }
 
-  public closedOrOpenedInGivenVersion(datasetId, version): REPO {
+  public closedOrOpenedInGivenVersion(datasetId: any, version: number): REPO {
     VersionedModelRepositoryFactory.checkPreconditions(datasetId, version);
 
     const versionQueryFragment = {$or: [{from: version}, {to: version}], dataset: datasetId};
@@ -90,15 +103,5 @@ export class VersionedModelRepositoryFactory<REPO extends VersionedModelReposito
 
   public versionAgnostic(): REPO {
     return this.makeRepository('versionAgnostic', {});
-  }
-
-  private static checkPreconditions(datasetId, version): void {
-    if (!datasetId) {
-      throw new Error('datasetId must be given');
-    }
-
-    if (!version) {
-      throw new Error('dataset version must be given');
-    }
   }
 }

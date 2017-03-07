@@ -10,7 +10,7 @@ const logger = bunyan.createLogger({
   streams: getBunyanStreams(config.NODE_ENV)
 });
 
-function getBunyanStreams(environment) {
+function getBunyanStreams(environment: string): any[] {
   const fileStream = {
     level: config.LOG_LEVEL,
     type: 'rotating-file',
@@ -32,7 +32,7 @@ function getBunyanStreams(environment) {
   return [fileStream, consoleStream];
 }
 
-function getLogStream(environment) {
+function getLogStream(environment: string): any {
   if (environment === 'local') {
     const stream = new PrettyStream();
     stream.pipe(process.stdout);
@@ -42,7 +42,7 @@ function getLogStream(environment) {
   return process.stdout;
 }
 
-function objSerializer(obj) {
+function objSerializer(obj: any): any {
   return obj;
 }
 

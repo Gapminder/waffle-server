@@ -3,6 +3,7 @@ import * as url from 'url';
 import * as crypto from 'crypto';
 import * as URLON from 'URLON';
 import * as passport from 'passport';
+import * as express from 'express';
 
 import * as sinon from 'sinon';
 import {expect} from 'chai';
@@ -507,7 +508,7 @@ describe('Routes utils', () => {
       const loggerStub = this.stub(logger, 'error');
       const anyQuery = {};
 
-      const req = {
+      const req: any = {
         query: {},
         url: 'doesn\'t matter'
       };
@@ -515,7 +516,7 @@ describe('Routes utils', () => {
       const jsonSpy = this.spy();
       const nextSpy = this.spy();
 
-      const res = {
+      const res: any = {
         use_express_redis_cache: true,
         json: jsonSpy
       };
@@ -543,7 +544,7 @@ describe('Routes utils', () => {
       const jsonSpy = this.spy();
       const nextSpy = this.spy();
 
-      const res = {
+      const res: any = {
         use_express_redis_cache: true,
         json: jsonSpy
       };
@@ -576,7 +577,7 @@ describe('Routes utils', () => {
       const jsonSpy = this.spy();
       const nextSpy = this.spy();
 
-      const res = {
+      const res: any = {
         use_express_redis_cache: true,
         json: jsonSpy
       };
@@ -611,7 +612,7 @@ describe('Routes utils', () => {
         }
       };
 
-      const req = {
+      const req: any = {
         query: {},
         url: 'doesn\'t matter'
       };
@@ -619,7 +620,7 @@ describe('Routes utils', () => {
       const jsonSpy = this.spy();
       const nextSpy = this.spy();
 
-      const res = {
+      const res: any = {
         use_express_redis_cache: true,
         json: jsonSpy
       };
@@ -652,7 +653,7 @@ describe('Routes utils', () => {
       const jsonSpy = this.spy();
       const nextSpy = this.spy();
 
-      const res = {
+      const res: any = {
         use_express_redis_cache: true,
         json: jsonSpy
       };
@@ -722,28 +723,29 @@ describe('Routes utils', () => {
 
       const res = {
         use_express_redis_cache: true,
-        json: jsonSpy
+        json: jsonSpy,
+        status: null
       };
 
       const createWarmpUpQueryStub = this.stub(RecentDdfqlQueriesRepository, 'create');
 
       const rawDdfData = [];
-      routeUtils.respondWithRawDdf(ddfQuery, req, res, nextSpy)(null, rawDdfData);
+      routeUtils.respondWithRawDdf(ddfQuery, req as any, res as any, nextSpy)(null, rawDdfData);
 
       sinon.assert.notCalled(jsonSpy);
       sinon.assert.calledOnce(nextSpy);
 
       sinon.assert.notCalled(createWarmpUpQueryStub);
 
-      expect(res.use_express_redis_cache).to.equal(true);
+      expect((res as any).use_express_redis_cache).to.equal(true);
       expect(req.rawData.rawDdf).to.equal(rawDdfData);
     }));
   });
 
   describe('Token authentication', () => {
     it('should return token authentication middleware', sinon.test(function () {
-      const req = {};
-      const res = {};
+      const req = {} as express.Request;
+      const res = {} as express.Response;
       const next = () => {
       };
       const middleware = () => {
@@ -754,7 +756,7 @@ describe('Routes utils', () => {
         return tokenAuthSpy;
       });
 
-      const tokenMiddleware = routeUtils.ensureAuthenticatedViaToken(res, req, next);
+      const tokenMiddleware = routeUtils.ensureAuthenticatedViaToken(req, res, next);
 
       expect(tokenMiddleware).to.equal(middleware);
 

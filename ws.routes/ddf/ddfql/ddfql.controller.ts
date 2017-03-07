@@ -51,10 +51,10 @@ function createDdfqlController(serviceLocator) {
     const query = _.get(req, 'body', {});
     const from = _.get(req, 'body.from', null);
 
-    const onEntriesCollected: Function = routeUtils.respondWithRawDdf(query, req, res, next);
+    const onEntriesCollected = routeUtils.respondWithRawDdf(query, req, res, next) as AsyncResultCallback<any, any>;
 
     if (!from) {
-      return onEntriesCollected(`The filed 'from' must present in query.`);
+      return onEntriesCollected(`The filed 'from' must present in query.`, null);
     }
 
     const where = _.get(req, 'body.where', {});
@@ -91,10 +91,10 @@ function createDdfqlController(serviceLocator) {
       return conceptsService.collectConceptsByDdfql(options, onEntriesCollected);
     } else if (queryToSchema(from)) {
       req.ddfDataType = constants.SCHEMA;
-      const onSchemaEntriesFound = routeUtils.respondWithRawDdf(query, req, res, next);
+      const onSchemaEntriesFound = routeUtils.respondWithRawDdf(query, req, res, next) as AsyncResultCallback<any, any> ;
       return schemaService.findSchemaByDdfql(options, onSchemaEntriesFound);
     } else {
-      return onEntriesCollected(`Value '${from}' in the 'from' field isn't supported yet.`);
+      return onEntriesCollected(`Value '${from}' in the 'from' field isn't supported yet.`, null);
     }
   }
 }
