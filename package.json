@@ -27,6 +27,10 @@
     "version": "npm run changelog && git add CHANGELOG.md",
     "postversion": "git push origin master && git push --tags && npm run github-release"
   },
+  "pre-commit": [
+    "lint",
+    "test"
+  ],
   "dependencies": {
     "@types/async": "2.0.38",
     "@types/body-parser": "0.0.33",

@@ -19,12 +19,12 @@ shell.exec('sleep 20');
 
 import * as cliUtils from './cli.utils';
 process.on('SIGINT', () => {
-  console.log("Caught interrupt signal");
+  console.log('Caught interrupt signal');
   e2eUtils.stopWaffleServer();
   process.exit(0);
 });
 
-syncFn(cliUtils.runDatasetImport.bind(cliUtils))(COMMIT_INDEX_TO_IMPORT, error => {
+syncFn(cliUtils.runDatasetImport.bind(cliUtils))(COMMIT_INDEX_TO_IMPORT, (error: any) => {
   if (error) {
     e2eUtils.stopWaffleServer();
     process.exit(1);

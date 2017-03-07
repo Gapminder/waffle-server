@@ -44,7 +44,7 @@ const environment = Object.freeze({
   REDIS_HOST: process.env.REDIS_HOST || 'localhost',
   REDIS_PORT: process.env.REDIS_PORT || 6379,
 
-  NODE_ENV: NODE_ENV,
+  NODE_ENV,
   SESSION_TIMEOUT: 60000,
 
   MONGOOSE_DEBUG: false,

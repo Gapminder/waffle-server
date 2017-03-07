@@ -183,7 +183,7 @@ function wrapEntityProperties(key: string, options: any): string {
   return propertyName;
 }
 
-function getConceptGids(concepts: any[]): string[] {
+function getConceptGids(concepts: ReadonlyArray<any>): string[] {
   return _.chain(concepts)
     .map(constants.GID)
     .concat(['concept_type', 'concept'])
@@ -191,7 +191,7 @@ function getConceptGids(concepts: any[]): string[] {
     .value();
 }
 
-function getDomainGids(concepts: any[]): any[] {
+function getDomainGids(concepts: ReadonlyArray<any>): any[] {
   return _.chain(concepts)
     .filter((concept: any) => {
       return _.includes(constants.DEFAULT_ENTITY_GROUP_TYPES, _.get(concept, 'properties.concept_type', null));
@@ -200,17 +200,17 @@ function getDomainGids(concepts: any[]): any[] {
     .value();
 }
 
-function getConceptOriginIdsByGids(concepts: any[]): any {
+function getConceptOriginIdsByGids(concepts: ReadonlyArray<any>): any {
   return _.chain(concepts)
     .keyBy(constants.GID)
     .mapValues(constants.ORIGIN_ID)
     .value();
 }
 
-function getConceptsByGids(concepts: any[]): any {
+function getConceptsByGids(concepts: ReadonlyArray<any>): any {
   return _.keyBy(concepts, constants.GID);
 }
 
-function getConceptsByOriginIds(concepts: any[]): any {
+function getConceptsByOriginIds(concepts: ReadonlyArray<any>): any {
   return _.keyBy(concepts, constants.ORIGIN_ID);
 }

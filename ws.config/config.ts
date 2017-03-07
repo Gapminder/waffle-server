@@ -35,12 +35,12 @@ config.CAN_POPULATE_DOCUMENTS = config.NODE_ENV === 'local';
 config.CALCULATE_SCHEMA_QUERIES_AGG_FUNCTIONS = config.NODE_ENV === 'local';
 
 const REQUIRED_ENVIRONMENT_VARIABLES = Object.freeze([
-  'MONGODB_URL',
+  'MONGODB_URL'
 ]);
 
 // Check that all the REQUIRED VARIABLES was setup.
 if (config.IS_PRODUCTION) {
-  _.each(REQUIRED_ENVIRONMENT_VARIABLES, CURRENT_VARIABLE => {
+  _.each(REQUIRED_ENVIRONMENT_VARIABLES, (CURRENT_VARIABLE: string) => {
     if (!process.env[CURRENT_VARIABLE] && !DEFAULT_CONFIG[CURRENT_VARIABLE]) {
       throw Error(`You need to set up ${CURRENT_VARIABLE}`);
     }
