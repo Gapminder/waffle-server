@@ -42,9 +42,14 @@ function removeDatasetData(datasetName: string, user: any, onRemovedDataset: Asy
     _removeAllDataByDataset,
     _removeAllTransactions,
     _removeDataset
-  ], (error: any) => {
+  ], (removalError: any) => {
     DatasetRemovalTracker.clean(datasetName);
-    return onRemovedDataset(error, null);
+
+    if (removalError) {
+      return unlockDataset({datasetName}, () => onRemovedDataset(removalError, null));
+    }
+
+    return onRemovedDataset(removalError, null);
   });
 }
 
