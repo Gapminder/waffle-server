@@ -84,22 +84,10 @@ function mapEntitiesToWsJson(data) {
 }
 
 function _mapEntitiesPropertiesToWsJson(entityDomainGid, select, entity, language) {
-  const translatedEntityProperties = commonService.translateDocument(entity, language);
-  const entityWithGidNamedAfterDomain = __mapGidToEntityDomainGid(entityDomainGid, entity);
-  const flattenedEntity = _.extend(entityWithGidNamedAfterDomain, translatedEntityProperties);
+  const flattenedEntity = _.extend({[entityDomainGid]: entity.gid}, commonService.translateDocument(entity, language));
 
   return _.map(select, (property: string) => {
     return flattenedEntity[property];
-  });
-}
-
-function __mapGidToEntityDomainGid(entityDomainGid, object) {
-  return _.mapKeys(object, (value, property) => {
-    if (property === constants.GID) {
-      return entityDomainGid;
-    }
-
-    return property;
   });
 }
 
