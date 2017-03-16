@@ -50,7 +50,7 @@ function createTranslations(externalContext: any): any {
       return existTranslationFilepathStream(resolvedFilepath, resource);
     })
     .filter((resource: any) => {
-      return _.get(resource, 'access', true);
+      return _.get(resource, 'canReadTranslations', true);
     })
     .flatMap((resource: any) => {
       return loadTranslationsFromCsv(resource, externalContext);
@@ -133,15 +133,14 @@ function storeDatapointsTranslationsToDb(externalContext: any): any {
 }
 
 function existTranslationFilepathStream(resolvedFilepath: string, resource: any): any {
-  /* tslint:disable: no-bitwise */
-  return hi.wrapCallback(fs.access)(resolvedFilepath, fs.constants.F_OK | fs.constants.R_OK)
-    .errors(() => {
-      return _.extend({access: false}, resource);
-    })
-    .map(() => {
-      return _.extend({access: true}, resource);
+  return hi.wrapCallback((path, mode, done) => {
+    fs.access(path, mode, (error: any) => {
+      done(null, _.isNil(error));
     });
-  /* tslint:enable: no-bitwise */
+  })(resolvedFilepath, fs.constants.R_OK)
+    .map((canAccess: boolean) => {
+      return _.extend({canReadTranslations: canAccess}, resource);
+    });
 }
 
 function extendTranslationsToResourceStream(translations: any, resource: any): any {
