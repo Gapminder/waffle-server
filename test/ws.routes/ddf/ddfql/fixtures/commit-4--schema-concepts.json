@@ -8,85 +8,19 @@
       [
         "concept"
       ],
-      "company"
+      "additional_column"
     ],
     [
       [
         "concept"
       ],
-      "english_speaking"
-    ],
-    [
-      [
-        "concept"
-      ],
-      "company_scale"
-    ],
-    [
-      [
-        "concept"
-      ],
-      "name"
-    ],
-    [
-      [
-        "concept"
-      ],
-      "anno"
-    ],
-    [
-      [
-        "concept"
-      ],
-      "lines_of_code"
-    ],
-    [
-      [
-        "concept"
-      ],
-      "region"
-    ],
-    [
-      [
-        "concept"
-      ],
-      "country"
-    ],
-    [
-      [
-        "concept"
-      ],
-      "latitude"
-    ],
-    [
-      [
-        "concept"
-      ],
-      "longitude"
-    ],
-    [
-      [
-        "concept"
-      ],
-      "full_name_changed"
-    ],
-    [
-      [
-        "concept"
-      ],
-      "project"
+      "concept_type"
     ],
     [
       [
         "concept"
       ],
       "domain"
-    ],
-    [
-      [
-        "concept"
-      ],
-      "additional_column"
     ]
   ]
 }

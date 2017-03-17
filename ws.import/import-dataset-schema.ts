@@ -7,6 +7,7 @@ import * as fileUtils from '../ws.utils/file';
 import * as ddfImportUtils from '../ws.import/utils/import-ddf.utils';
 import {DatasetSchemaRepository} from '../ws.repository/ddf/dataset-index/dataset-index.repository';
 import {DatapointsRepositoryFactory} from '../ws.repository/ddf/data-points/data-points.repository';
+import { ConceptResource, EntityResource, DatapointResource } from './utils/datapackage.parser';
 
 export {
   createDatasetSchema
@@ -36,15 +37,15 @@ function createDatasetSchema(externalContext: any, done: Function): void {
 function toConceptsSchemaCreationStream(resourcesStream: any, externalContextFrozen: any): any {
   return resourcesStream.fork()
     .filter((resource: any) => resource.type === constants.CONCEPTS)
-    .flatMap((resource: any) => {
+    .flatMap((resource: ConceptResource) => {
       return fileUtils
         .readCsvFileAsStream(externalContextFrozen.pathToDdfFolder, resource.path)
-        .map((csvRecord: any) => ({csvRecord, resource}));
+        .through(_.curry(toConceptHeadersStream)(resource));
     })
-    .map(({csvRecord, resource}: any) => {
+    .map(({header, resource}: any) => {
       return {
         key: resource.primaryKey,
-        value: csvRecord[resource.primaryKey],
+        value: header,
         file: [resource.path],
         type: constants.CONCEPTS,
         dataset: externalContextFrozen.datasetId,
@@ -58,7 +59,7 @@ function toConceptsSchemaCreationStream(resourcesStream: any, externalContextFro
 function toEntitiesSchemaCreationStream(resourcesStream: any, externalContextFrozen: any): any {
   return resourcesStream.fork()
     .filter((resource: any) => resource.type === constants.ENTITIES)
-    .flatMap((resource: any) => hi(resource.fields).map((field: string) => ({field, resource})))
+    .flatMap((resource: EntityResource) => hi(resource.fields).map((field: string) => ({field, resource})))
     .filter(({field, resource}: any) => field !== resource.concept)
     .map(({field, resource}: any) => {
       return {
@@ -77,8 +78,8 @@ function toEntitiesSchemaCreationStream(resourcesStream: any, externalContextFro
 function toDatapointsSchemaCreationStream(resourcesStream: any, externalContextFrozen: any): any {
   return resourcesStream.fork()
     .filter((resource: any) => resource.type === constants.DATAPOINTS)
-    .flatMap((resource: any) => {
-      const schemaItemsExplodedByIndicator = _.reduce(resource.indicators, (result: any, indicator: any) => {
+    .flatMap((resource: DatapointResource) => {
+      const schemaItemsExplodedByIndicator = _.reduce(resource.indicators, (result: any[], indicator: string) => {
         const schemaItem = {
           key: resource.dimensions,
           value: indicator,
@@ -152,4 +153,15 @@ function findDatapointsStatsForMeasure(externalContext: any, done: Function): vo
 
 function getOriginId(concepts: any, key: string): any {
   return _.get(concepts, `${key}.originId`, null);
+}
+
+function toConceptHeadersStream(resource: ConceptResource, csvRecordsStream: any): any {
+  return csvRecordsStream
+    .head()
+    .flatMap((csvRecord: any) => {
+      const headers: string[] = _.keys(csvRecord);
+      return hi(headers)
+        .filter((header: string) => header !== 'concept')
+        .map((header: string) => ({header, resource}));
+    });
 }
