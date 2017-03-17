@@ -8,11 +8,7 @@ import {constants} from '../ws.utils/constants';
 import * as ddfMappers from './utils/ddf-mappers';
 import {ConceptsRepositoryFactory} from '../ws.repository/ddf/concepts/concepts.repository';
 
-export {
-  createConcepts
-};
-
-function createConcepts(pipe: any, done: Function): void {
+export function createConcepts(pipe: any, done: Function): void {
 
   logger.info('start process creating concepts');
 
