@@ -63,7 +63,7 @@ describe('Import dataset schema', () => {
     const expectedConceptSchemas = [
       {
         key: ['concept'],
-        value: 'name',
+        value: 'concept_type',
         file: ['concepts.csv'],
         type: constants.CONCEPTS,
         dataset: datasetId,
@@ -71,7 +71,7 @@ describe('Import dataset schema', () => {
       },
       {
         key: ['concept'],
-        value: 'description',
+        value: 'name',
         file: ['concepts.csv'],
         type: constants.CONCEPTS,
         dataset: datasetId,
@@ -83,11 +83,13 @@ describe('Import dataset schema', () => {
       return hi([
         {
           concept: 'name',
-          concept_type: 'string'
+          concept_type: 'string',
+          name: undefined
         },
         {
           concept: 'description',
-          concept_type: 'string'
+          concept_type: 'string',
+          bla: 'bla'
         }
       ]);
     });
