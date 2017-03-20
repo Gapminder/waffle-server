@@ -40,7 +40,7 @@ export abstract class VersionedModelRepository {
 
     function normalizeValue(result: any, setOfValues: any, key: string): any {
       // geo.is--country
-      if ( _.includes(key, constants.IS_OPERATOR) ) {
+      if ( _.includes(key, `.${constants.IS_OPERATOR}`) ) {
         result[key] = !!_.first(setOfValues);
 
         return result;
