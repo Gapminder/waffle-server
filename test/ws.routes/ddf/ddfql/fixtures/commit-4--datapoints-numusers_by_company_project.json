@@ -1,4 +1,0 @@
-{
-  "success": false,
-  "error": "You choose select column(s) 'num_users' which aren't present in choosen dataset"
-}

@@ -6,8 +6,6 @@ const INDEX_OF_INITIAL_COMMIT = 3;
 const COMMIT_INDEX_TO_IMPORT = process.env.COMMIT_INDEX_TO_IMPORT || 0;
 
 describe('Complex queries for Entities, Datapoints: JOIN', function() {
-  this.timeout(10000);
-
   if (COMMIT_INDEX_TO_IMPORT > INDEX_OF_INITIAL_COMMIT) {
     return;
   }

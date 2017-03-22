@@ -336,9 +336,7 @@ describe("Initial State, Version 1 (1st commit)", function() {
       };
 
       e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDatapointsNumUsersByCompanyProject, done);
-
     });
-
   });
 
   describe("Datapoints by Conditions", function() {

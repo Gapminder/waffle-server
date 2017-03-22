@@ -15,7 +15,8 @@ export {
   stopWaffleServer,
   startWaffleServer,
   setUpEnvironmentVariables,
-  sendDdfqlRequestAndVerifyResponse
+  sendDdfqlRequestAndVerifyResponse,
+  sendDdfqlRequestAndExpectError
 };
 
 function sendDdfqlRequest(ddfql: any, onResponseReceived: Function): void {
@@ -60,6 +61,10 @@ function sendDdfqlRequestAndVerifyResponse(ddfql: any, expectedResponse: any, do
   const {sort = true} = options;
 
   sendDdfqlRequest(ddfql, (error: any, response: any) => {
+    if (response.body.success === false) {
+      throw Error(`DDFQL response contains an error: ${response.body.error}`);
+    }
+
     expect(error).to.not.exist;
     const actualRows = sort ? _.sortBy(response.body.rows) : response.body.rows;
     const expectedRows = sort ? _.sortBy(expectedResponse.rows) : expectedResponse.rows;
@@ -68,5 +73,15 @@ function sendDdfqlRequestAndVerifyResponse(ddfql: any, expectedResponse: any, do
     expect(response.body.headers).to.deep.equal(expectedResponse.headers);
 
     done();
+  });
+}
+
+function sendDdfqlRequestAndExpectError(ddfql: any, expectedErrorMessage: string, done: Function): void {
+  sendDdfqlRequest(ddfql, (error: any, response: any) => {
+    if (response.body.success === false) {
+      expect(response.body.error).to.equal(expectedErrorMessage);
+      return done();
+    }
+    throw Error(`Error was expected: "${expectedErrorMessage}". But request returned status success: ${response.body.success}`);
   });
 }
