@@ -45,9 +45,9 @@ export function importDdf(options: any, done: Function): void {
     }
 
     return done(importError, {
-      datasetName: externalContext.datasetName,
-      version: _.get(externalContext.transaction, 'createdAt'),
-      transactionId: _.get(externalContext.transaction, '_id')
+      datasetName: _.get(externalContext, 'datasetName'),
+      version: _.get(externalContext, 'transaction.createdAt'),
+      transactionId: _.get(externalContext, 'transaction._id')
     });
   });
 }

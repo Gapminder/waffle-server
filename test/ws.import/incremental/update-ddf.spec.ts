@@ -2,13 +2,14 @@ import '../../../ws.config/db.config';
 import '../../../ws.repository';
 import * as _ from 'lodash';
 import * as sinon from 'sinon';
+import { expect } from 'chai';
 import * as createDatasetSchema from '../../../ws.import/import-dataset-schema';
 import * as updateConceptsTranslations from '../../../ws.import/incremental/translations/update-concept-translations';
 import * as updateDatapointsTranslations from '../../../ws.import/incremental/translations/update-datapoint-translations';
 import * as updateEntitiesTranslation from '../../../ws.import/incremental/translations/update-entity-translations';
 import * as updateConcepts from '../../../ws.import/incremental/update-concepts';
 import * as updateDatapoints from '../../../ws.import/incremental/update-datapoints';
-import {updateDdf} from '../../../ws.import/incremental/update-ddf';
+import { updateDdf } from '../../../ws.import/incremental/update-ddf';
 import * as updateEntities from '../../../ws.import/incremental/update-entities';
 import * as ddfImportUtils from '../../../ws.import/utils/import-ddf.utils';
 
@@ -342,5 +343,31 @@ describe('Dataset incremental update', () => {
     });
 
     updateDdf(options, onDatasetUpdatedSpy);
+  }));
+
+  it('should not fail when error has happened and transaction is not yet created', sinon.test(function (done) {
+    const context = {
+      isDatasetPrivate: false,
+      github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git',
+      commit: 'aaaaaaa',
+      user: {email: 'dev@gapminder.org'},
+      lifecycleHooks: {
+        onTransactionCreated: () => {}
+      },
+    };
+
+    const expectedError = 'Boo!';
+
+    const resolvePathToDdfFolderStub = this.stub(ddfImportUtils, 'resolvePathToDdfFolder').callsArgWithAsync(1, expectedError, context);
+
+    updateDdf(context, (error, externalContext) => {
+      expect(error).to.equal(expectedError);
+      expect(externalContext.transactionId).to.be.undefined;
+      expect(externalContext.version).to.be.undefined;
+      expect(externalContext.datasetName).to.be.undefined;
+
+      sinon.assert.calledOnce(resolvePathToDdfFolderStub);
+      done();
+    });
   }));
 });

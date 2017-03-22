@@ -138,4 +138,30 @@ describe('Import ddf dataset from git repository', () => {
       done();
     });
   }));
+
+  it('should not fail when error has happened and transaction is not yet created', sinon.test(function (done) {
+    const context = {
+      isDatasetPrivate: false,
+      github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git',
+      commit: 'aaaaaaa',
+      user: {email: 'dev@gapminder.org'},
+      lifecycleHooks: {
+        onTransactionCreated: () => {}
+      },
+    };
+
+    const expectedError = 'Boo!';
+
+    const resolvePathToDdfFolderStub = this.stub(ddfImportUtils, 'resolvePathToDdfFolder').callsArgWithAsync(1, expectedError, context);
+
+    importDdf(context, (error, externalContext) => {
+      expect(error).to.equal(expectedError);
+      expect(externalContext.transactionId).to.be.undefined;
+      expect(externalContext.version).to.be.undefined;
+      expect(externalContext.datasetName).to.be.undefined;
+
+      sinon.assert.calledOnce(resolvePathToDdfFolderStub);
+      done();
+    });
+  }));
 });
