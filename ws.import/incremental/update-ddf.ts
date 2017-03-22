@@ -57,9 +57,9 @@ function updateDdf(options, done) {
     }
 
     return done(updateError, {
-      datasetName: _.get(pipe.dataset, 'name'),
-      version: _.get(pipe.transaction, 'createdAt'),
-      transactionId: _.get(pipe.transaction, '_id')
+      datasetName: _.get(pipe, 'dataset.name'),
+      version: _.get(pipe, 'transaction.createdAt'),
+      transactionId: _.get(pipe, 'transaction._id')
     });
   });
 }
