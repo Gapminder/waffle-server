@@ -28,7 +28,11 @@ const externalContext = {
       originId: 'lines_of_codeOriginId'
     },
     company_scale: {
-      originId: 'company_scaleOriginId'
+      originId: 'company_scaleOriginId',
+      domain: {
+        gid: 'company',
+        originId: 'companyOriginId'
+      },
     }
   },
   pathToDdfFolder: 'pathToDdfFolder',
@@ -124,12 +128,25 @@ describe('Import dataset schema', () => {
       {
         type: constants.ENTITIES,
         primaryKey: [
+          "company"
+        ],
+        path: "ddf--entities--company.csv",
+        fields: [
+          "name",
+        ],
+        concept: "company",
+        entitySets: []
+      },
+      {
+        type: constants.ENTITIES,
+        primaryKey: [
           "company_scale"
         ],
         path: "ddf--entities--company--company_scale.csv",
         fields: [
           "company_scale",
           "full_name_changed",
+          "name",
           "is--company_scale"
         ],
         concept: "company_scale",
@@ -161,36 +178,48 @@ describe('Import dataset schema', () => {
     const expectedEntitiesSchemas = [
       {
         dataset: "datasetId",
-        file: ["ddf--entities--company--company_scale.csv"],
-        key: "company_scale",
-        transaction: "transactionId",
-        type: "entities",
-        value: "full_name_changed"
-      }, {
-        dataset: "datasetId",
-        file: ["ddf--entities--company--company_scale.csv"],
-        key: "company_scale",
-        transaction: "transactionId",
-        type: "entities",
-        value: "is--company_scale"
-      }, {
-        dataset: "datasetId",
-        file: ["ddf--entities--company--english_speaking.csv"],
-        key: "english_speaking",
-        transaction: "transactionId",
-        type: "entities",
-        value: "is--english_speaking"
-      }, {
-        dataset: "datasetId",
-        file: ["ddf--entities--company--english_speaking.csv"],
-        key: "english_speaking",
+        file: ["ddf--entities--company.csv"],
+        key: ["company"],
         transaction: "transactionId",
         type: "entities",
         value: "name"
-      }, {
+      },
+      {
+        dataset: "datasetId",
+        file: ["ddf--entities--company--company_scale.csv"],
+        key: ["company_scale"],
+        transaction: "transactionId",
+        type: "entities",
+        value: "full_name_changed"
+      },
+      {
+        dataset: "datasetId",
+        file: ["ddf--entities--company--company_scale.csv"],
+        key: ["company"],
+        transaction: "transactionId",
+        type: "entities",
+        value: "full_name_changed"
+      },
+      {
+        dataset: "datasetId",
+        file: ["ddf--entities--company--company_scale.csv"],
+        key: ["company_scale"],
+        transaction: "transactionId",
+        type: "entities",
+        value: "name"
+      },
+      {
         dataset: "datasetId",
         file: ["ddf--entities--company--english_speaking.csv"],
-        key: "english_speaking",
+        key: ["english_speaking"],
+        transaction: "transactionId",
+        type: "entities",
+        value: "name"
+      },
+      {
+        dataset: "datasetId",
+        file: ["ddf--entities--company--english_speaking.csv"],
+        key: ["english_speaking"],
         transaction: "transactionId",
         type: "entities",
         value: "additional_column"
@@ -201,7 +230,7 @@ describe('Import dataset schema', () => {
 
     const datasetSchemaRepositoryCreateStub = this.stub(DatasetSchemaRepository, 'create', schemaItems => {
       // Assert
-      expect(schemaItems.length).to.equal(5);
+      expect(schemaItems.length).to.equal(6);
       return Promise.resolve();
     });
 
@@ -216,7 +245,7 @@ describe('Import dataset schema', () => {
       sinon.assert.calledWith(datasetSchemaRepositoryCreateStub, expectedEntitiesSchemas);
 
       sinon.assert.calledOnce(loggerInfoStub);
-      sinon.assert.calledWithExactly(loggerInfoStub, `** create Dataset schema items: `, 5);
+      sinon.assert.calledWithExactly(loggerInfoStub, `** create Dataset schema items: `, 6);
 
       done();
     });

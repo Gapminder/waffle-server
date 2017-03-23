@@ -11,9 +11,10 @@ export {
   isConceptsResource,
   isDatapointsResource,
   isEntitiesResource,
-  ConceptResource,
-  EntityResource,
-  DatapointResource
+  ParsedConceptResource,
+  ParsedEntityResource,
+  ParsedDatapointResource,
+  ParsedResource
 };
 
 function loadDatapackage({folder, file = 'datapackage.json'}, done) {
@@ -63,7 +64,7 @@ function isEntitiesResource(primaryKey) {
   return Array.isArray(primaryKey) && primaryKey.length === 1 && _.head(primaryKey) !== 'concept';
 }
 
-function parseEntitiesResource(resource, primaryKey = getPrimaryKey(resource.schema)): EntityResource {
+function parseEntitiesResource(resource, primaryKey = getPrimaryKey(resource.schema)): ParsedEntityResource {
   const {entitySets, fields} = _.reduce(resource.schema.fields, (result, field: any) => {
     result.fields.push(field.name);
 
@@ -81,10 +82,10 @@ function parseEntitiesResource(resource, primaryKey = getPrimaryKey(resource.sch
     fields,
     concept: _.first(primaryKey),
     entitySets
-  } as EntityResource;
+  } as ParsedEntityResource;
 }
 
-function parseDatapointsResource(resource, primaryKey = getPrimaryKey(resource.schema)): DatapointResource {
+function parseDatapointsResource(resource, primaryKey = getPrimaryKey(resource.schema)): ParsedDatapointResource {
   const indicators = _.reduce(resource.schema.fields, (result, field: any) => {
     if (!_.includes(primaryKey, field.name)) {
       result.push(field.name);
@@ -101,7 +102,7 @@ function parseDatapointsResource(resource, primaryKey = getPrimaryKey(resource.s
   };
 }
 
-function parseConceptsResource(resource, primaryKey = getPrimaryKey(resource.schema)): ConceptResource {
+function parseConceptsResource(resource, primaryKey = getPrimaryKey(resource.schema)): ParsedConceptResource {
   return {
     type: constants.CONCEPTS,
     primaryKey,
@@ -116,25 +117,22 @@ function toEntitySet(fieldName) {
   return _.last(_.split(fieldName, 'is--'));
 }
 
-interface ConceptResource {
+interface ParsedResource {
   type: string;
   primaryKey: string[];
   path: string;
 }
 
-interface EntityResource {
-  type: string;
-  primaryKey: string[];
-  path: string;
-  fields: string[],
-  concept: string,
+interface ParsedConceptResource extends ParsedResource {
+}
+
+interface ParsedEntityResource extends ParsedResource {
+  fields: string[];
+  concept: string;
   entitySets: string[]
 }
 
-interface DatapointResource {
-  type: string;
-  primaryKey: string[];
-  path: string;
+interface ParsedDatapointResource extends ParsedResource {
   dimensions: string[];
   indicators: string[];
 }

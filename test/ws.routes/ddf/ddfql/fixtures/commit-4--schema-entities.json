@@ -12,18 +12,6 @@
     ],
     [
       [
-        "company_scale"
-      ],
-      "is--company_scale"
-    ],
-    [
-      [
-        "english_speaking"
-      ],
-      "is--english_speaking"
-    ],
-    [
-      [
         "english_speaking"
       ],
       "name"
@@ -33,6 +21,18 @@
         "english_speaking"
       ],
       "additional_column"
+    ],
+    [
+      [
+        "company"
+      ],
+      "additional_column"
+    ],
+    [
+      [
+        "company"
+      ],
+      "full_name_changed"
     ],
     [
       [

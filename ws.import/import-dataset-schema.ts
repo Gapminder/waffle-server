@@ -7,13 +7,9 @@ import * as fileUtils from '../ws.utils/file';
 import * as ddfImportUtils from '../ws.import/utils/import-ddf.utils';
 import {DatasetSchemaRepository} from '../ws.repository/ddf/dataset-index/dataset-index.repository';
 import {DatapointsRepositoryFactory} from '../ws.repository/ddf/data-points/data-points.repository';
-import { ConceptResource, EntityResource, DatapointResource } from './utils/datapackage.parser';
+import { ParsedConceptResource, ParsedEntityResource, ParsedDatapointResource, ParsedResource } from './utils/datapackage.parser';
 
-export {
-  createDatasetSchema
-}
-
-function createDatasetSchema(externalContext: any, done: Function): void {
+export function createDatasetSchema(externalContext: any, done: Function): void {
   const externalContextFrozen = Object.freeze({
     concepts: externalContext.concepts,
     datasetId: externalContext.dataset._id,
@@ -36,8 +32,8 @@ function createDatasetSchema(externalContext: any, done: Function): void {
 
 function toConceptsSchemaCreationStream(resourcesStream: any, externalContextFrozen: any): any {
   return resourcesStream.fork()
-    .filter((resource: any) => resource.type === constants.CONCEPTS)
-    .flatMap((resource: ConceptResource) => {
+    .filter((resource: ParsedResource) => resource.type === constants.CONCEPTS)
+    .flatMap((resource: ParsedConceptResource) => {
       return fileUtils
         .readCsvFileAsStream(externalContextFrozen.pathToDdfFolder, resource.path)
         .through(_.curry(toConceptHeadersStream)(resource));
@@ -57,28 +53,45 @@ function toConceptsSchemaCreationStream(resourcesStream: any, externalContextFro
 }
 
 function toEntitiesSchemaCreationStream(resourcesStream: any, externalContextFrozen: any): any {
+  const setsToDomains = _.chain(externalContextFrozen.concepts)
+    .mapValues('domain.gid')
+    .omitBy(_.isNil)
+    .value();
+
   return resourcesStream.fork()
-    .filter((resource: any) => resource.type === constants.ENTITIES)
-    .flatMap((resource: EntityResource) => hi(resource.fields).map((field: string) => ({field, resource})))
+    .filter((resource: ParsedResource) => resource.type === constants.ENTITIES)
+    .flatMap((resource: ParsedEntityResource) => hi(resource.fields).map((field: string) => ({field, resource})))
     .filter(({field, resource}: any) => field !== resource.concept)
-    .map(({field, resource}: any) => {
-      return {
-        key: resource.concept,
+    .filter(({field}: any) => !_.startsWith(field, constants.IS_OPERATOR))
+    .flatMap(({field, resource}: any) => {
+      const schemaItem = {
+        key: [resource.concept],
         value: field,
         file: [resource.path],
         type: constants.ENTITIES,
         dataset: externalContextFrozen.datasetId,
         transaction: externalContextFrozen.transactionId
       };
+
+      const schemaItems = setsToDomains[resource.concept]
+        ? [schemaItem, _.extend({}, schemaItem, {key: [setsToDomains[resource.concept]]})]
+        : [schemaItem];
+
+      return hi(schemaItems);
     })
     .batch(ddfImportUtils.DEFAULT_CHUNK_SIZE)
+    .map()
+    .uniqBy((schemaItemA: any, schemaItemB: any) => _.isEqual(
+      [... schemaItemA.key, schemaItemA.value],
+      [... schemaItemB.key, schemaItemB.value]
+    ))
     .flatMap((datasetSchemaBatch: any[]) => hi(storeDatasetSchemaItemsToDb(datasetSchemaBatch)));
 }
 
 function toDatapointsSchemaCreationStream(resourcesStream: any, externalContextFrozen: any): any {
   return resourcesStream.fork()
-    .filter((resource: any) => resource.type === constants.DATAPOINTS)
-    .flatMap((resource: DatapointResource) => {
+    .filter((resource: ParsedResource) => resource.type === constants.DATAPOINTS)
+    .flatMap((resource: ParsedDatapointResource) => {
       const schemaItemsExplodedByIndicator = _.reduce(resource.indicators, (result: any[], indicator: string) => {
         const schemaItem = {
           key: resource.dimensions,
@@ -155,7 +168,7 @@ function getOriginId(concepts: any, key: string): any {
   return _.get(concepts, `${key}.originId`, null);
 }
 
-function toConceptHeadersStream(resource: ConceptResource, csvRecordsStream: any): any {
+function toConceptHeadersStream(resource: ParsedConceptResource, csvRecordsStream: any): any {
   return csvRecordsStream
     .head()
     .flatMap((csvRecord: any) => {

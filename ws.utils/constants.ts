@@ -28,7 +28,7 @@ const constants: any = {
 
   GID: 'gid',
   ORIGIN_ID: 'originId',
-  IS_OPERATOR: '.is--',
+  IS_OPERATOR: 'is--',
   CONCEPT_TYPE: 'type',
   CONCEPT_TYPE_MEASURE: 'measure',
   CONCEPT_TYPE_ENTITY_DOMAIN: 'entity_domain',
