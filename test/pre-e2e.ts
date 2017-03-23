@@ -1,4 +1,5 @@
 import * as e2eUtils from './e2e.utils';
+import { e2eEnv } from './e2e.env';
 
 console.log('==========================================');
 console.log('Starting e2e tests');
@@ -18,13 +19,27 @@ e2eUtils.startWaffleServer();
 shell.exec('sleep 20');
 
 import * as cliUtils from './cli.utils';
+
 process.on('SIGINT', () => {
   console.log('Caught interrupt signal');
   e2eUtils.stopWaffleServer();
   process.exit(0);
 });
 
-syncFn(cliUtils.runDatasetImport.bind(cliUtils))(COMMIT_INDEX_TO_IMPORT, (error: any) => {
+const importOptions: cliUtils.ImportOptions = {
+  repos: [
+    {
+      url: e2eEnv.repo,
+      commitIndexToStartImport: COMMIT_INDEX_TO_IMPORT
+    },
+    {
+      url: e2eEnv.repo2,
+      commitIndexToStartImport: 9
+    }
+  ]
+};
+
+syncFn(cliUtils.runDatasetImport.bind(cliUtils))(importOptions, (error: any) => {
   if (error) {
     e2eUtils.stopWaffleServer();
     process.exit(1);
