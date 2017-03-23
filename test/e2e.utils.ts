@@ -1,6 +1,5 @@
 import * as _ from 'lodash';
 import * as shell from 'shelljs';
-import * as URLON from 'URLON';
 import {e2eEnv} from './e2e.env';
 import * as supertest from 'supertest';
 import {expect} from 'chai';
@@ -21,7 +20,7 @@ export {
 
 function sendDdfqlRequest(ddfql: any, onResponseReceived: Function): void {
   ddfql.force = true;
-  return wsApi.get(`/api/ddf/ql?${URLON.stringify(ddfql)}`)
+  return wsApi.get(`/api/ddf/ql?query=${encodeURIComponent(JSON.stringify(ddfql))}`)
     .set('Accept', 'application/json')
     .expect(200)
     .expect('Content-Type', /application\/json/)
