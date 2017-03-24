@@ -12,27 +12,15 @@
     ],
     [
       [
-        "company_size"
-      ],
-      "is--company_size"
-    ],
-    [
-      [
-        "english_speaking"
-      ],
-      "is--english_speaking"
-    ],
-    [
-      [
         "english_speaking"
       ],
       "name"
     ],
     [
       [
-        "foundation"
+        "company"
       ],
-      "is--foundation"
+      "full_name"
     ],
     [
       [

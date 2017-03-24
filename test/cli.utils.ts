@@ -1,4 +1,5 @@
 import * as _ from 'lodash';
+import * as async from 'async';
 import * as wsCli from 'waffle-server-import-cli';
 import { e2eEnv } from './e2e.env';
 import * as e2eUtils from './e2e.utils';
@@ -20,36 +21,48 @@ const DEFAULT_WS_CLI_OPTIONS = {
 export {
   setDefaultCommit,
   runDatasetImport,
-  getCommitByGithubUrl
+  getCommitByGithubUrl,
+  ImportOptions,
+  Repo
 };
 
-function runDatasetImport(commitIndexToStartImport = 0, onIncrementalUpdateDone) {
-  return getCommitsByGithubUrl(DEFAULT_WS_CLI_OPTIONS.repo, (error, commits) => {
+function runDatasetImport(options: ImportOptions, onIncrementalUpdateDone: Function): void {
+  async.series(_.map(options.repos, (repo: Repo) => _.curry(_runDatasetImport)(repo)), (error: any) => {
+    return onIncrementalUpdateDone(error);
+  });
+}
+
+function _runDatasetImport(repo: Repo, onIncrementalUpdateDone: Function): void {
+  console.log(`\nACHTUNG! Repo '${repo.url}' is going to be imported\n`);
+
+  const commitIndexToStartImport = repo.commitIndexToStartImport || 0;
+
+  return getCommitsByGithubUrl(repo.url, (error: any, commits: string[]) => {
     if (error) {
       return onIncrementalUpdateDone(error);
     }
 
     const allowedCommits = _.drop(commits, commitIndexToStartImport);
     const finishCommitIndex = commitIndexToStartImport ? 3 - commitIndexToStartImport : _.size(allowedCommits);
-    const cliOptions = _.extend({from: _.first(allowedCommits), to: _.get(allowedCommits, `${finishCommitIndex}`)}, DEFAULT_WS_CLI_OPTIONS);
+    const cliOptions = _.extend({from: _.first(allowedCommits), to: _.get(allowedCommits, `${finishCommitIndex}`)}, DEFAULT_WS_CLI_OPTIONS, {repo: repo.url});
 
-    wsCli.importUpdate(cliOptions, error => {
-      if (error) {
-        return onIncrementalUpdateDone(error);
+    wsCli.importUpdate(cliOptions, (importUpdateError: any) => {
+      if (importUpdateError) {
+        return onIncrementalUpdateDone(importUpdateError);
       }
       return onIncrementalUpdateDone();
     });
   });
 }
 
-function setDefaultCommit(commit, options?, done?) {
+function setDefaultCommit(commit: string, options?: any, done?: any): void {
   if (_.isFunction(options)) {
     done = options;
     options = {};
   }
 
   options = _.defaults(options, DEFAULT_WS_CLI_OPTIONS, {commit});
-  wsCli.setDefault(options, error => {
+  wsCli.setDefault(options, (error: any) => {
     if (error) {
       return done(error);
     }
@@ -58,8 +71,8 @@ function setDefaultCommit(commit, options?, done?) {
   });
 }
 
-function getCommitByGithubUrl(githubUrl, index, done) {
-  return getCommitsByGithubUrl(githubUrl, (error, commits) => {
+function getCommitByGithubUrl(githubUrl: string, index: number, done: Function): void {
+  return getCommitsByGithubUrl(githubUrl, (error: any, commits: string[]) => {
     if (error) {
       return done(error);
     }
@@ -68,14 +81,14 @@ function getCommitByGithubUrl(githubUrl, index, done) {
   });
 }
 
-function getCommitsByGithubUrl(githubUrl, done) {
-  let githubUrlObj = {githubUrl: githubUrl};
+function getCommitsByGithubUrl(githubUrl: string, done: Function): void {
+  const githubUrlObj = { githubUrl };
 
   if (CACHED_COMMITS.has(githubUrl)) {
     return done(null, CACHED_COMMITS.get(githubUrlObj));
   }
 
-  wsCli.getCommitListByGithubUrl(githubUrl, (error, commits) => {
+  wsCli.getCommitListByGithubUrl(githubUrl, (error: any, commits: string[]) => {
     if (error) {
       return done(error);
     }
@@ -83,4 +96,13 @@ function getCommitsByGithubUrl(githubUrl, done) {
     CACHED_COMMITS.set(githubUrlObj, commits);
     return done(null, CACHED_COMMITS.get(githubUrlObj));
   });
+}
+
+interface ImportOptions {
+  repos: Repo[];
+}
+
+interface Repo {
+  url: string;
+  commitIndexToStartImport?: number;
 }

@@ -1,12 +1,8 @@
 import * as _ from 'lodash';
 import * as traverse from 'traverse';
-import * as ddfQueryUtils from "./ddf-query-utils";
+import * as ddfQueryUtils from './ddf-query-utils';
 
-export {
-  normalizeConcepts
-};
-
-function normalizeConcepts(query, concepts) {
+export function normalizeConcepts(query: any, concepts: any): any {
   const safeQuery = ddfQueryUtils.toSafeQuery(query);
   const safeConcepts = concepts || [];
   const conceptGids = ddfQueryUtils.getConceptGids(safeConcepts);
@@ -20,19 +16,20 @@ function normalizeConcepts(query, concepts) {
   return safeQuery;
 }
 
-function normalizeConceptDdfQuery(query, options) {
+function normalizeConceptDdfQuery(query: any, options: any): any {
   normalizeWhere(query, options);
   ddfQueryUtils.normalizeOrderBy(query);
   return query;
 }
 
-function normalizeWhere(query, options) {
-  traverse(query.where).forEach(function (filterValue) {
+function normalizeWhere(query: any, options: any): void {
+  traverse(query.where).forEach(function (filterValue: any): void {
+    /* tslint:disable: no-invalid-this */
     let normalizedFilter = null;
 
     if (isConceptPropertyFilter(this.key, options.conceptGids)) {
       normalizedFilter = {
-        [ddfQueryUtils.wrapEntityProperties(this.key, options)]: filterValue,
+        [ddfQueryUtils.wrapEntityProperties(this.key, options)]: filterValue
       };
     }
 
@@ -44,10 +41,11 @@ function normalizeWhere(query, options) {
         queryFragment: query.where
       });
     }
+    /* tslint:enable: no-invalid-this */
   });
 }
 
-function isConceptPropertyFilter(key, resolvedProperties) {
+function isConceptPropertyFilter(key: string, resolvedProperties: any[]): boolean {
   const normalizedKey = ddfQueryUtils.getPrefixByDot(key);
   return _.includes(resolvedProperties, normalizedKey);
 }

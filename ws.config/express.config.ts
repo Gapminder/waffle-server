@@ -1,5 +1,6 @@
 import * as logger from 'morgan';
 import * as passport from 'passport';
+import * as express from 'express';
 import * as bodyParser from 'body-parser';
 import * as cookieParser from 'cookie-parser';
 import * as methodOverride from 'method-override';
@@ -11,7 +12,7 @@ const RedisStore = connectRedis(session);
 
 const REQUEST_BODY_SIZE_LIMIT = '50mb';
 
-function configureExpress(app) {
+export function configureExpress(app: express.Application): void {
   app.use(logger('dev'));
   app.use(bodyParser.json({limit: REQUEST_BODY_SIZE_LIMIT, type: 'application/vnd.api+json'}));
   app.use(bodyParser.urlencoded({limit: REQUEST_BODY_SIZE_LIMIT, extended: true}));
@@ -28,5 +29,3 @@ function configureExpress(app) {
   app.use(passport.session());
   app.set('passport', passport);
 }
-
-export { configureExpress };

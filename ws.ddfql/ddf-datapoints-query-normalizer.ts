@@ -11,20 +11,22 @@ export {
   substituteDatapointJoinLinks
 };
 
-function substituteDatapointJoinLinks(query, linksInJoinToValues) {
+function substituteDatapointJoinLinks(query: any, linksInJoinToValues: any): any {
   const safeQuery = ddfQueryUtils.toSafeQuery(query);
 
-  traverse(safeQuery.where).forEach(function (link) {
+  traverse(safeQuery.where).forEach(function (link: string): void {
+    /* tslint:disable: no-invalid-this */
     if (safeQuery.join.hasOwnProperty(link)) {
       const id = linksInJoinToValues[link];
       this.update(id ? {$in: id} : link);
     }
+    /* tslint:enable: no-invalid-this */
   });
 
   return safeQuery;
 }
 
-function normalizeDatapoints(query, concepts) {
+function normalizeDatapoints(query: any, concepts: any): any {
   const safeQuery = ddfQueryUtils.toSafeQuery(query);
   const safeConcepts = concepts || [];
 
@@ -35,7 +37,7 @@ function normalizeDatapoints(query, concepts) {
     domainGids: ddfQueryUtils.getDomainGids(safeConcepts),
     timeConceptsGids: conceptUtils.getTimeConceptGids(safeConcepts),
     conceptsByGids: ddfQueryUtils.getConceptsByGids(safeConcepts),
-    conceptsByOriginIds: ddfQueryUtils.getConceptsByOriginIds(safeConcepts),
+    conceptsByOriginIds: ddfQueryUtils.getConceptsByOriginIds(safeConcepts)
   });
 
   _normalizeDatapointDdfQuery(safeQuery, options);
@@ -44,7 +46,7 @@ function normalizeDatapoints(query, concepts) {
   return safeQuery;
 }
 
-function _normalizeDatapointDdfQuery(query, options) {
+function _normalizeDatapointDdfQuery(query: any, options: any): any {
 
   __normalizeWhere(query, options);
   __normalizeJoin(query, options);
@@ -53,8 +55,9 @@ function _normalizeDatapointDdfQuery(query, options) {
   return query;
 }
 
-function __normalizeWhere(query, options) {
-  traverse(query.where).forEach(function (filterValue) {
+function __normalizeWhere(query: any, options: any): any {
+  traverse(query.where).forEach(function (filterValue: any): void {
+    /* tslint:disable: no-invalid-this */
     let normalizedFilter = null;
 
     if (isMeasureFilter(this.key, query)) {
@@ -84,12 +87,13 @@ function __normalizeWhere(query, options) {
         queryFragment: query.where
       });
     }
+    /* tslint:enable: no-invalid-this */
   });
 
   ___extendWhereWithDefaultClause(query, options);
 }
 
-function ___extendWhereWithDefaultClause(query, options) {
+function ___extendWhereWithDefaultClause(query: any, options: any): void {
   const subWhere = query.where;
 
   query.where = {
@@ -105,20 +109,20 @@ function ___extendWhereWithDefaultClause(query, options) {
   }
 }
 
-function ___evaluateNormalizedFilterByEntityFilter(filterValue, key, query) {
+function ___evaluateNormalizedFilterByEntityFilter(filterValue: any, key: string, query: any): any {
   const join = _.get(query, 'join', {});
   const isUsedExistedLink = _.startsWith(filterValue, '$') && join.hasOwnProperty(filterValue);
 
   if (isUsedExistedLink) {
     return {
-      dimensions: filterValue,
+      dimensions: filterValue
     };
   }
 
   const joinLink = `$parsed_${key}_${_.random()}`;
 
   query.join[joinLink] = {
-    key: key,
+    key,
     where: {[key]: filterValue}
   };
 
@@ -128,8 +132,9 @@ function ___evaluateNormalizedFilterByEntityFilter(filterValue, key, query) {
 
 }
 
-function __normalizeJoin(query, options) {
-  traverse(query.join).forEach(function (filterValue) {
+function __normalizeJoin(query: any, options: any): void {
+  traverse(query.join).forEach(function (filterValue: any): void {
+    /* tslint:disable: no-invalid-this */
     let normalizedFilter = null;
 
     const isWhereClause = _.includes(this.path, 'where');
@@ -143,7 +148,7 @@ function __normalizeJoin(query, options) {
 
     if (isWhereClause && !isTimePropertyFilter && isEntityPropertyFilter) {
       normalizedFilter = {
-        [ddfQueryUtils.wrapEntityProperties(this.key, options)]: filterValue,
+        [ddfQueryUtils.wrapEntityProperties(this.key, options)]: filterValue
       };
     }
 
@@ -170,20 +175,22 @@ function __normalizeJoin(query, options) {
         queryFragment: query.join
       });
     }
+    /* tslint:enable: no-invalid-this */
   });
 
   pullUpWhereSectionsInJoin(query);
 }
 
-function _substituteDatapointConceptsWithIds(query, options) {
+function _substituteDatapointConceptsWithIds(query: any, options: any): any {
   __substituteWhereClause(query, options);
   __substituteJoinClauses(query, options);
 
   return query;
 }
 
-function __substituteWhereClause(query, options) {
-  traverse(query.where).forEach(function (concept) {
+function __substituteWhereClause(query: any, options: any): void {
+  traverse(query.where).forEach(function (concept: any): void {
+    /* tslint:disable: no-invalid-this */
     if (shouldSubstituteValueWithId(concept, query)) {
       let id;
 
@@ -199,21 +206,25 @@ function __substituteWhereClause(query, options) {
 
       this.update(id ? id : concept);
     }
+    /* tslint:enable: no-invalid-this */
   });
 }
 
-function __substituteJoinClauses(query, options) {
-  traverse(query.join).forEach(function (concept) {
+function __substituteJoinClauses(query: any, options: any): void {
+  traverse(query.join).forEach(function (concept: any): void {
+    /* tslint:disable: no-invalid-this */
     if (shouldSubstituteValueWithId(concept, query)) {
       const id = _.get(options.conceptOriginIdsByGids, concept, false);
       this.update(id ? _.toString(id) : concept);
     }
+    /* tslint:enable: no-invalid-this */
   });
 }
 
 // **** HELPERS
-function pullUpWhereSectionsInJoin(query) {
-  traverse(query.join).forEach(function () {
+function pullUpWhereSectionsInJoin(query: any): void {
+  traverse(query.join).forEach(function (): void {
+    /* tslint:disable: no-invalid-this */
     if (this.key === 'where') {
       ddfQueryUtils.replaceValueOnPath({
         key: this.key,
@@ -222,30 +233,31 @@ function pullUpWhereSectionsInJoin(query) {
         substituteEntryWithItsContent: true
       });
     }
+    /* tslint:enable: no-invalid-this */
   });
 }
 
-function isMeasureFilter(key, query) {
+function isMeasureFilter(key: string, query: any): boolean {
   return _.includes(query.select.value, key);
 }
 
-function isEntityFilter(key, query) {
+function isEntityFilter(key: string, query: any): boolean {
   return _.includes(query.select.key, key);
 }
 
-function isDatapointEntityPropertyFilter(key, query) {
+function isDatapointEntityPropertyFilter(key: string, query: any): boolean {
   // const concept = _.head(_.split(key, '.'));
   // return _.includes(query.select.key, concept) && _.includes(key, `${concept}.`);
   return !isEntityFilter(key, query) && !isOperator(key) && isNaN(Number(key));
 }
 
-function isOperator(key) {
+function isOperator(key: string): boolean {
   return _.startsWith(key, '$') || _.includes(['key', 'where'], key);
 }
 
-function shouldSubstituteValueWithId(value, query) {
+function shouldSubstituteValueWithId(value: any, query: any): any {
   if (_.isArray(value)) {
-    return value.every(item => shouldSubstituteValueWithId(item, query));
+    return value.every((item: any) => shouldSubstituteValueWithId(item, query));
   }
 
   return isEntityFilter(value, query) || isMeasureFilter(value, query);

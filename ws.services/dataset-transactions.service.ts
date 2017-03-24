@@ -26,11 +26,11 @@ interface ExternalContextModel extends RequestedParamsModel {
   dataset: any;
 }
 
-function setLastError(transactionId, lastErrorMessage, onErrorSet) {
+function setLastError(transactionId: any, lastErrorMessage: string, onErrorSet: Function): void {
   return DatasetTransactionsRepository.setLastError(transactionId, lastErrorMessage, onErrorSet);
 }
 
-function setTransactionAsDefault(userId, datasetName, transactionCommit, onSetAsDefault) {
+function setTransactionAsDefault(userId: any, datasetName: string, transactionCommit: any, onSetAsDefault: AsyncResultCallback<any, any>): void {
   return async.waterfall([
     async.constant({userId, datasetName, transactionCommit}),
     _findDatasetByNameAndUser,
@@ -39,8 +39,8 @@ function setTransactionAsDefault(userId, datasetName, transactionCommit, onSetAs
   ], onSetAsDefault);
 }
 
-function _findDatasetByNameAndUser(externalContext, done) {
-  return DatasetsRepository.findByNameAndUser(externalContext.datasetName, externalContext.userId, (error, dataset) => {
+function _findDatasetByNameAndUser(externalContext: any, done: Function): void {
+  return DatasetsRepository.findByNameAndUser(externalContext.datasetName, externalContext.userId, (error: any, dataset: any) => {
     if (error || !dataset) {
       return done(error || `Given dataset was not found: '${externalContext.datasetName}'`);
     }
@@ -54,8 +54,8 @@ function _findDatasetByNameAndUser(externalContext, done) {
   });
 }
 
-function _findTransactionByDatasetAndCommit(extrenalContext, done) {
-  return DatasetTransactionsRepository.findByDatasetAndCommit(extrenalContext.dataset._id, extrenalContext.transactionCommit, (error, transaction) => {
+function _findTransactionByDatasetAndCommit(extrenalContext: any, done: Function): void {
+  return DatasetTransactionsRepository.findByDatasetAndCommit(extrenalContext.dataset._id, extrenalContext.transactionCommit, (error: any, transaction: any) => {
     if (error || !_isTransactionValid(transaction)) {
       return done(error || `Given transaction was not found: '${extrenalContext.transactionCommit}'`);
     }
@@ -65,8 +65,8 @@ function _findTransactionByDatasetAndCommit(extrenalContext, done) {
   });
 }
 
-function _setTransactionAsDefault(externalContext, done) {
-  return DatasetTransactionsRepository.setAsDefault(externalContext.userId, externalContext.dataset._id, externalContext.transaction._id, error => {
+function _setTransactionAsDefault(externalContext: any, done: Function): void {
+  return DatasetTransactionsRepository.setAsDefault(externalContext.userId, externalContext.dataset._id, externalContext.transaction._id, (error: any) => {
     if (error) {
       return done(error);
     }
@@ -79,7 +79,7 @@ function _setTransactionAsDefault(externalContext, done) {
   });
 }
 
-function rollbackFailedTransactionFor(datasetName, user, onRollbackCompleted) {
+function rollbackFailedTransactionFor(datasetName: string, user: any, onRollbackCompleted: AsyncResultCallback<any, any>): void {
   return async.waterfall([
     async.constant({datasetName, user}),
     datasetsService.findDatasetByNameAndValidateOwnership,
@@ -92,8 +92,8 @@ function rollbackFailedTransactionFor(datasetName, user, onRollbackCompleted) {
   ], onRollbackCompleted);
 }
 
-function _findLatestFailedTransactionByDataset(externalContext, onFailedTransactionFound) {
-  return DatasetTransactionsRepository.findLatestFailedByDataset(externalContext.datasetId, (error, failedTransaction) => {
+function _findLatestFailedTransactionByDataset(externalContext: any, onFailedTransactionFound: Function): void {
+  return DatasetTransactionsRepository.findLatestFailedByDataset(externalContext.datasetId, (error: any, failedTransaction: any) => {
     if (error) {
       return onFailedTransactionFound(error);
     }
@@ -108,8 +108,8 @@ function _findLatestFailedTransactionByDataset(externalContext, onFailedTransact
   });
 }
 
-function _forceDatasetLock(externalContext, onDatasetLocked) {
-  return DatasetsRepository.forceLock(externalContext.datasetName, (forceLockError) => {
+function _forceDatasetLock(externalContext: any, onDatasetLocked: Function): void {
+  return DatasetsRepository.forceLock(externalContext.datasetName, (forceLockError: any) => {
     if (forceLockError) {
       return onDatasetLocked(forceLockError);
     }
@@ -118,7 +118,7 @@ function _forceDatasetLock(externalContext, onDatasetLocked) {
   });
 }
 
-function _rollbackDatasetData(externalContext, onRollbackDataFinished) {
+function _rollbackDatasetData(externalContext: any, onRollbackDataFinished: Function): void {
   const conceptsRepository = ConceptsRepositoryFactory.versionAgnostic();
   const entitiesRepository = EntitiesRepositoryFactory.versionAgnostic();
   const datapointsRepository = DatapointsRepositoryFactory.versionAgnostic();
@@ -128,7 +128,7 @@ function _rollbackDatasetData(externalContext, onRollbackDataFinished) {
     async.apply(entitiesRepository.rollback, externalContext.failedTransaction),
     async.apply(datapointsRepository.rollback, externalContext.failedTransaction),
     async.apply(DatasetSchemaRepository.rollback, externalContext.failedTransaction)
-  ], (rollbackDataError) => {
+  ], (rollbackDataError: any) => {
     if (rollbackDataError) {
       return onRollbackDataFinished(rollbackDataError);
     }
@@ -137,8 +137,8 @@ function _rollbackDatasetData(externalContext, onRollbackDataFinished) {
   });
 }
 
-function _removeFailedTransaction(externalContext, onTransactionRemoved) {
-  return DatasetTransactionsRepository.removeById(externalContext.failedTransaction._id, (removeTransactionError) => {
+function _removeFailedTransaction(externalContext: any, onTransactionRemoved: Function): void {
+  return DatasetTransactionsRepository.removeById(externalContext.failedTransaction._id, (removeTransactionError: any) => {
     if (removeTransactionError) {
       return onTransactionRemoved(removeTransactionError);
     }
@@ -147,8 +147,8 @@ function _removeFailedTransaction(externalContext, onTransactionRemoved) {
   });
 }
 
-function _forceDatasetUnlock(externalContext, onDatasetUnlocked) {
-  return DatasetsRepository.forceUnlock(externalContext.datasetName, (forceUnlockError) => {
+function _forceDatasetUnlock(externalContext: any, onDatasetUnlocked: Function): void {
+  return DatasetsRepository.forceUnlock(externalContext.datasetName, (forceUnlockError: any) => {
     if (forceUnlockError) {
       return onDatasetUnlocked(forceUnlockError);
     }
@@ -157,8 +157,8 @@ function _forceDatasetUnlock(externalContext, onDatasetUnlocked) {
   });
 }
 
-function _removeDatasetWithoutTransactions(externalContext, onDatasetRemoved) {
-  return DatasetTransactionsRepository.countByDataset(externalContext.datasetId, (countTransactionError, amount) => {
+function _removeDatasetWithoutTransactions(externalContext: any, onDatasetRemoved: Function): void {
+  return DatasetTransactionsRepository.countByDataset(externalContext.datasetId, (countTransactionError: any, amount: number) => {
     if (countTransactionError) {
       return onDatasetRemoved(countTransactionError);
     }
@@ -171,8 +171,8 @@ function _removeDatasetWithoutTransactions(externalContext, onDatasetRemoved) {
   });
 }
 
-function getStatusOfLatestTransactionByDatasetName(datasetName, user, done) {
-  return datasetsService.findDatasetByNameAndValidateOwnership({datasetName, user}, (error, externalContext)=> {
+function getStatusOfLatestTransactionByDatasetName(datasetName: string, user: any, done: Function): void {
+  return datasetsService.findDatasetByNameAndValidateOwnership({datasetName, user}, (error: any, externalContext: any)=> {
     if (error) {
       return done(error);
     }
@@ -181,8 +181,8 @@ function getStatusOfLatestTransactionByDatasetName(datasetName, user, done) {
   });
 }
 
-function _findObjectsModifiedDuringLastTransaction(externalContext, done) {
-  return DatasetTransactionsRepository.findLatestByDataset(externalContext.datasetId, (error, latestTransaction) => {
+function _findObjectsModifiedDuringLastTransaction(externalContext: any, done: Function): void {
+  return DatasetTransactionsRepository.findLatestByDataset(externalContext.datasetId, (error: any, latestTransaction: any) => {
     if (error) {
       return done(error);
     }
@@ -194,9 +194,9 @@ function _findObjectsModifiedDuringLastTransaction(externalContext, done) {
     const modifiedObjectsTasks =
       _createTasksForCountingObjectsModifiedInGivenVersion(externalContext.datasetId, latestTransaction.createdAt);
 
-    return async.parallelLimit(modifiedObjectsTasks, constants.LIMIT_NUMBER_PROCESS, (error, stats) => {
-      if (error) {
-        return done(error);
+    return async.parallelLimit(modifiedObjectsTasks, constants.LIMIT_NUMBER_PROCESS, (countingError: any, stats: any) => {
+      if (countingError) {
+        return done(countingError);
       }
 
       const result = {
@@ -210,24 +210,24 @@ function _findObjectsModifiedDuringLastTransaction(externalContext, done) {
         modifiedObjects: stats
       };
 
-      return done(error, result);
+      return done(countingError, result);
     });
   });
 }
 
-function _createTasksForCountingObjectsModifiedInGivenVersion(datasetId, version) {
+function _createTasksForCountingObjectsModifiedInGivenVersion(datasetId: any, version: any): any {
   const conceptsRepository = ConceptsRepositoryFactory.closedOrOpenedInGivenVersion(datasetId, version);
   const entitiesRepository = EntitiesRepositoryFactory.closedOrOpenedInGivenVersion(datasetId, version);
   const datapointsRepository = DatapointsRepositoryFactory.closedOrOpenedInGivenVersion(datasetId, version);
 
   return {
-    concepts: done => conceptsRepository.count(done),
-    entities: done => entitiesRepository.count(done),
-    datapoints: done => datapointsRepository.count(done),
+    concepts: (done: Function) => conceptsRepository.count(done),
+    entities: (done: Function) => entitiesRepository.count(done),
+    datapoints: (done: Function) => datapointsRepository.count(done)
   };
 }
 
-function findDefaultDatasetAndTransaction(datasetName, commit, onFound) {
+function findDefaultDatasetAndTransaction(datasetName: string, commit: string, onFound: Function): void {
   const croppedCommit = commit ? String(commit).slice(0, 7) : commit;
 
   if (datasetName && croppedCommit) {
@@ -245,15 +245,15 @@ function findDefaultDatasetAndTransaction(datasetName, commit, onFound) {
   return _findDefaultPopulatedDatasetAndTransaction(onFound);
 }
 
-function _findDefaultDatasetAndTransactionByDatasetNameAndCommit(datasetName, transactionCommit, onFound) {
+function _findDefaultDatasetAndTransactionByDatasetNameAndCommit(datasetName: string, transactionCommit: any, onFound: Function): void {
   return _getDefaultDatasetAndTransaction({transactionCommit, datasetName}, [
     _findDatasetByName,
     _findTransactionByDatasetAndCommit
   ], onFound);
 }
 
-function _findDatasetByName(externalContext, done) {
-  return DatasetsRepository.findByName(externalContext.datasetName, (error, dataset) => {
+function _findDatasetByName(externalContext: any, done: Function): void {
+  return DatasetsRepository.findByName(externalContext.datasetName, (error: any, dataset: any) => {
     if (error || !dataset) {
       return done(error || `Dataset was not found: ${externalContext.datasetName}`);
     }
@@ -263,15 +263,15 @@ function _findDatasetByName(externalContext, done) {
   });
 }
 
-function _findDefaultDatasetAndTransactionByDatasetName(datasetName, onFound) {
+function _findDefaultDatasetAndTransactionByDatasetName(datasetName: string, onFound: Function): void {
   return _getDefaultDatasetAndTransaction({datasetName}, [
     _findDatasetByName,
     _findDefaultByDatasetId,
     _findLatestCompletedByDatasetId
   ], onFound);
 
-  function _findDefaultByDatasetId(externalContext, done) {
-    return DatasetTransactionsRepository.findDefault({datasetId: externalContext.dataset._id}, (error, transaction) => {
+  function _findDefaultByDatasetId(externalContext: any, done: Function): void {
+    return DatasetTransactionsRepository.findDefault({datasetId: externalContext.dataset._id}, (error: any, transaction: any) => {
       if (error) {
         return done(error);
       }
@@ -281,12 +281,12 @@ function _findDefaultDatasetAndTransactionByDatasetName(datasetName, onFound) {
     });
   }
 
-  function _findLatestCompletedByDatasetId(externalContext, done) {
+  function _findLatestCompletedByDatasetId(externalContext: any, done: Function): void {
     if (externalContext.transaction) {
       return async.setImmediate(() => done(null, externalContext));
     }
 
-    return DatasetTransactionsRepository.findLatestCompletedByDataset(externalContext.dataset._id, (error, transaction) => {
+    return DatasetTransactionsRepository.findLatestCompletedByDataset(externalContext.dataset._id, (error: any, transaction: any) => {
       if (error || !_isTransactionValid(transaction)) {
         return done(error || 'No versions were found for the given dataset');
       }
@@ -297,14 +297,14 @@ function _findDefaultDatasetAndTransactionByDatasetName(datasetName, onFound) {
   }
 }
 
-function _findDefaultDatasetAndTransactionByCommit(transactionCommit, onFound) {
+function _findDefaultDatasetAndTransactionByCommit(transactionCommit: any, onFound: Function): void {
   return _getDefaultDatasetAndTransaction({transactionCommit}, [
     _findDefaultDataset,
     _findTransactionByDatasetAndCommit
   ], onFound);
 
-  function _findDefaultDataset(pipe, done) {
-    return DatasetTransactionsRepository.findDefault({populateDataset: true}, (error, transaction) => {
+  function _findDefaultDataset(pipe: any, done: Function): void {
+    return DatasetTransactionsRepository.findDefault({populateDataset: true}, (error: any, transaction: any) => {
       if (error || !transaction) {
         return done(error || `Default dataset was not set`);
       }
@@ -315,21 +315,21 @@ function _findDefaultDatasetAndTransactionByCommit(transactionCommit, onFound) {
   }
 }
 
-function _findDefaultPopulatedDatasetAndTransaction(onFound) {
-  return DatasetTransactionsRepository.findDefault({populateDataset: true}, (error, transaction) => {
+function _findDefaultPopulatedDatasetAndTransaction(onFound: Function): void {
+  return DatasetTransactionsRepository.findDefault({populateDataset: true}, (error: any, transaction: any) => {
     if (error || !transaction) {
       return onFound(error || 'Default dataset was not set');
     }
 
     return onFound(null, {
       dataset: transaction.dataset,
-      transaction: transaction
+      transaction
     });
   });
 }
 
-function _getDefaultDatasetAndTransaction(options: RequestedParamsModel, tasks, onFound) {
-  return async.waterfall([async.constant(options)].concat(tasks), (error, pipe: ExternalContextModel) => {
+function _getDefaultDatasetAndTransaction(options: RequestedParamsModel, tasks: any[], onFound: Function): void {
+  return async.waterfall([async.constant(options)].concat(tasks), (error: any, pipe: ExternalContextModel) => {
     if (error) {
       return onFound(error);
     }
@@ -341,6 +341,6 @@ function _getDefaultDatasetAndTransaction(options: RequestedParamsModel, tasks, 
   });
 }
 
-function _isTransactionValid(transaction) {
+function _isTransactionValid(transaction: any): boolean {
   return transaction && transaction.isClosed && !transaction.lastError;
 }

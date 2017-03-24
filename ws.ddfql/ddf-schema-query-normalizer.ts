@@ -4,11 +4,7 @@ import {constants} from '../ws.utils/constants';
 
 const FUNCTION_OPERATORS = ['min', 'max', 'avg'];
 
-export {
-  normalize
-};
-
-function normalize(query, options?) {
+export function normalize(query: any, options?: any): any {
   const safeQuery = ddfQueryUtils.toSafeQuery(query, {except: ['join']});
 
   switch(safeQuery.from) {
@@ -24,26 +20,26 @@ function normalize(query, options?) {
   }
 }
 
-function normalizeConceptsSchema(query, options) {
+function normalizeConceptsSchema(query: any, options: any): any {
   return normalizeSchema(query, options);
 }
 
-function normalizeEntitiesSchema(query, options) {
+function normalizeEntitiesSchema(query: any, options: any): any {
   return normalizeSchema(query, options);
 }
 
-function normalizeDatapointsSchema(query, options) {
+function normalizeDatapointsSchema(query: any, options: any): any {
   return normalizeSchema(query, options);
 }
 
-function normalizeSchema(query, options) {
+function normalizeSchema(query: any, options: any): any {
   normalizeWhere(query, options);
   normalizeSelect(query);
   ddfQueryUtils.normalizeOrderBy(query);
   return query;
 }
 
-function normalizeWhere(query, options) {
+function normalizeWhere(query: any, options: any): void {
   const $andClause = [{type: toSchemaType(query.from)}];
 
   if (!_.isEmpty(_.keys(query.where))) {
@@ -59,10 +55,10 @@ function normalizeWhere(query, options) {
   };
 }
 
-function normalizeSelect(query) {
+function normalizeSelect(query: any): void {
   const selectWithAliases = _.chain(query.select.key)
     .union(query.select.value)
-    .reduce((projection, field: string) => {
+    .reduce((projection: any, field: string) => {
       const operator = toFunctionOperator(field);
       if (operator) {
         projection.aliases[operator] = field;
@@ -79,7 +75,7 @@ function normalizeSelect(query) {
   query.aliases = selectWithAliases.aliases;
 }
 
-function toSchemaType(from) {
+function toSchemaType(from: string): string {
   switch(from) {
     case 'concepts.schema':
       return constants.CONCEPTS;
@@ -93,6 +89,6 @@ function toSchemaType(from) {
   }
 }
 
-function toFunctionOperator(value) {
-  return _.find(FUNCTION_OPERATORS, operator => _.startsWith(value, `${operator}(`) || operator === value);
+function toFunctionOperator(value: string): string {
+  return _.find(FUNCTION_OPERATORS, (operator: string) => _.startsWith(value, `${operator}(`) || operator === value);
 }

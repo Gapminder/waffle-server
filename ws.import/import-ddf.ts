@@ -9,12 +9,8 @@ import {createDatasetSchema} from './import-dataset-schema';
 
 const DATASET_IMPORT_LABEL = 'Dataset import';
 
-export {
-  importDdf
-};
-
-function importDdf(options, done) {
-  const pipe = _.extend(_.pick(options, [
+export function importDdf(options: any, done: Function): void {
+  const context = _.extend(_.pick(options, [
     'isDatasetPrivate',
     'github',
     'datasetName',
@@ -25,7 +21,7 @@ function importDdf(options, done) {
 
   console.time(DATASET_IMPORT_LABEL);
   async.waterfall([
-    async.constant(pipe),
+    async.constant(context),
     ddfImportUtils.resolvePathToDdfFolder,
     ddfImportUtils.createTransaction,
     ddfImportUtils.createDataset,
@@ -41,18 +37,17 @@ function importDdf(options, done) {
     createTranslations,
     createDatasetSchema,
     ddfImportUtils.closeTransaction
-  ], (importError, pipe: any) => {
+  ], (importError: any, externalContext: any) => {
     console.timeEnd(DATASET_IMPORT_LABEL);
 
-    if (importError && _.get(pipe, 'transaction')) {
-      return done(importError, {transactionId: pipe.transaction._id});
+    if (importError && _.get(externalContext, 'transaction')) {
+      return done(importError, {transactionId: externalContext.transaction._id});
     }
 
     return done(importError, {
-      datasetName: pipe.datasetName,
-      version: _.get(pipe.transaction, 'createdAt'),
-      transactionId: _.get(pipe.transaction, '_id')
+      datasetName: _.get(externalContext, 'datasetName'),
+      version: _.get(externalContext, 'transaction.createdAt'),
+      transactionId: _.get(externalContext, 'transaction._id')
     });
   });
 }
-

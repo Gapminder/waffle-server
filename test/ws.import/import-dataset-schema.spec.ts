@@ -2,6 +2,8 @@ import  * as _ from 'lodash';
 import  * as hi from 'highland';
 import  * as sinon from 'sinon';
 import  {expect} from 'chai';
+import {logger} from '../../ws.config/log';
+
 
 import '../../ws.repository';
 import {config} from '../../ws.config/config';
@@ -26,7 +28,11 @@ const externalContext = {
       originId: 'lines_of_codeOriginId'
     },
     company_scale: {
-      originId: 'company_scaleOriginId'
+      originId: 'company_scaleOriginId',
+      domain: {
+        gid: 'company',
+        originId: 'companyOriginId'
+      },
     }
   },
   pathToDdfFolder: 'pathToDdfFolder',
@@ -61,7 +67,7 @@ describe('Import dataset schema', () => {
     const expectedConceptSchemas = [
       {
         key: ['concept'],
-        value: 'name',
+        value: 'concept_type',
         file: ['concepts.csv'],
         type: constants.CONCEPTS,
         dataset: datasetId,
@@ -69,7 +75,7 @@ describe('Import dataset schema', () => {
       },
       {
         key: ['concept'],
-        value: 'description',
+        value: 'name',
         file: ['concepts.csv'],
         type: constants.CONCEPTS,
         dataset: datasetId,
@@ -77,18 +83,22 @@ describe('Import dataset schema', () => {
       }
     ];
 
-    this.stub(fileUtils, 'readCsvFileAsStream', function() {
+    this.stub(fileUtils, 'readCsvFileAsStream', function () {
       return hi([
         {
           concept: 'name',
-          concept_type: 'string'
+          concept_type: 'string',
+          name: undefined
         },
         {
           concept: 'description',
-          concept_type: 'string'
+          concept_type: 'string',
+          bla: 'bla'
         }
       ]);
     });
+
+    const loggerInfoStub = this.stub(logger, 'info');
 
     const datasetSchemaRepositoryCreateStub = this.stub(DatasetSchemaRepository, 'create', schemaItems => {
       // Assert
@@ -105,6 +115,9 @@ describe('Import dataset schema', () => {
       sinon.assert.calledOnce(datasetSchemaRepositoryCreateStub);
       sinon.assert.calledWith(datasetSchemaRepositoryCreateStub, expectedConceptSchemas);
 
+      sinon.assert.calledOnce(loggerInfoStub);
+      sinon.assert.calledWithExactly(loggerInfoStub, `** create Dataset schema items: `, 2);
+
       done();
     });
   }));
@@ -115,12 +128,25 @@ describe('Import dataset schema', () => {
       {
         type: constants.ENTITIES,
         primaryKey: [
+          "company"
+        ],
+        path: "ddf--entities--company.csv",
+        fields: [
+          "name",
+        ],
+        concept: "company",
+        entitySets: []
+      },
+      {
+        type: constants.ENTITIES,
+        primaryKey: [
           "company_scale"
         ],
         path: "ddf--entities--company--company_scale.csv",
         fields: [
           "company_scale",
           "full_name_changed",
+          "name",
           "is--company_scale"
         ],
         concept: "company_scale",
@@ -152,45 +178,59 @@ describe('Import dataset schema', () => {
     const expectedEntitiesSchemas = [
       {
         dataset: "datasetId",
-        file: ["ddf--entities--company--company_scale.csv"],
-        key: "company_scale",
-        transaction: "transactionId",
-        type: "entities",
-        value: "full_name_changed"
-      }, {
-        dataset: "datasetId",
-        file: ["ddf--entities--company--company_scale.csv"],
-        key: "company_scale",
-        transaction: "transactionId",
-        type: "entities",
-        value: "is--company_scale"
-      }, {
-        dataset: "datasetId",
-        file: ["ddf--entities--company--english_speaking.csv"],
-        key: "english_speaking",
-        transaction: "transactionId",
-        type: "entities",
-        value: "is--english_speaking"
-      }, {
-        dataset: "datasetId",
-        file: ["ddf--entities--company--english_speaking.csv"],
-        key: "english_speaking",
+        file: ["ddf--entities--company.csv"],
+        key: ["company"],
         transaction: "transactionId",
         type: "entities",
         value: "name"
-      }, {
+      },
+      {
+        dataset: "datasetId",
+        file: ["ddf--entities--company--company_scale.csv"],
+        key: ["company_scale"],
+        transaction: "transactionId",
+        type: "entities",
+        value: "full_name_changed"
+      },
+      {
+        dataset: "datasetId",
+        file: ["ddf--entities--company--company_scale.csv"],
+        key: ["company"],
+        transaction: "transactionId",
+        type: "entities",
+        value: "full_name_changed"
+      },
+      {
+        dataset: "datasetId",
+        file: ["ddf--entities--company--company_scale.csv"],
+        key: ["company_scale"],
+        transaction: "transactionId",
+        type: "entities",
+        value: "name"
+      },
+      {
         dataset: "datasetId",
         file: ["ddf--entities--company--english_speaking.csv"],
-        key: "english_speaking",
+        key: ["english_speaking"],
+        transaction: "transactionId",
+        type: "entities",
+        value: "name"
+      },
+      {
+        dataset: "datasetId",
+        file: ["ddf--entities--company--english_speaking.csv"],
+        key: ["english_speaking"],
         transaction: "transactionId",
         type: "entities",
         value: "additional_column"
       }
     ];
 
+    const loggerInfoStub = this.stub(logger, 'info');
+
     const datasetSchemaRepositoryCreateStub = this.stub(DatasetSchemaRepository, 'create', schemaItems => {
       // Assert
-      expect(schemaItems.length).to.equal(5);
+      expect(schemaItems.length).to.equal(6);
       return Promise.resolve();
     });
 
@@ -203,6 +243,9 @@ describe('Import dataset schema', () => {
 
       sinon.assert.calledOnce(datasetSchemaRepositoryCreateStub);
       sinon.assert.calledWith(datasetSchemaRepositoryCreateStub, expectedEntitiesSchemas);
+
+      sinon.assert.calledOnce(loggerInfoStub);
+      sinon.assert.calledWithExactly(loggerInfoStub, `** create Dataset schema items: `, 6);
 
       done();
     });
@@ -290,6 +333,8 @@ describe('Import dataset schema', () => {
       return Promise.resolve();
     });
 
+    const loggerInfoStub = this.stub(logger, 'info');
+
     // Act
     importDatasetSchema(datapointsSchemaContext, (error, context) => {
 
@@ -300,7 +345,11 @@ describe('Import dataset schema', () => {
       sinon.assert.calledOnce(datasetSchemaRepositoryCreateStub);
       sinon.assert.calledWith(datasetSchemaRepositoryCreateStub, expectedDatapointsSchemas);
 
-      done();
+      sinon.assert.callCount(loggerInfoStub, 4);
+      sinon.assert.calledWithExactly(loggerInfoStub, '** populate Dataset Index with originIds');
+      sinon.assert.calledWithExactly(loggerInfoStub, '** create Dataset schema items: ', expectedDatapointsSchemas.length);
+
+      done()
     });
   }));
 
@@ -386,6 +435,7 @@ describe('Import dataset schema', () => {
       }
     ];
 
+
     const datasetSchemaRepositoryCreateStub = this.stub(DatasetSchemaRepository, 'create', schemaItems => {
       // Assert
       expect(schemaItems.length).to.equal(2);
@@ -404,6 +454,8 @@ describe('Import dataset schema', () => {
     });
 
     const datapointsRepositoryFactoryCurrentVersionStub = this.stub(DatapointsRepositoryFactory, 'currentVersion', () => stubRepository);
+    const loggerInfoStub = this.stub(logger, 'info');
+    const measureName = _.map(datapointsResources, 'indicators');
 
     // Act
     importDatasetSchema(datapointsSchemaContext, (error, context) => {
@@ -414,8 +466,6 @@ describe('Import dataset schema', () => {
 
       sinon.assert.calledOnce(datasetSchemaRepositoryCreateStub);
       sinon.assert.calledWith(datasetSchemaRepositoryCreateStub, expectedDatapointsSchemas);
-
-      sinon.assert.calledThrice(findStatsStub);
 
       sinon.assert.calledWith(findStatsStub, {
         dimensionsConceptsIds: ["companyOriginId", "annoOriginId"],
@@ -431,6 +481,13 @@ describe('Import dataset schema', () => {
 
       sinon.assert.calledThrice(datapointsRepositoryFactoryCurrentVersionStub);
       sinon.assert.calledWith(datapointsRepositoryFactoryCurrentVersionStub, datapointsSchemaContext.dataset._id, datapointsSchemaContext.transaction.createdAt);
+
+      sinon.assert.callCount(loggerInfoStub, 7);
+      sinon.assert.calledWithExactly(loggerInfoStub, '** populate Dataset Index with originIds');
+      sinon.assert.calledWithExactly(loggerInfoStub, `** find Datapoints stats for Measure ${measureName[0]}`);
+      sinon.assert.calledWithExactly(loggerInfoStub, `** find Datapoints stats for Measure ${measureName[1]}`);
+      sinon.assert.calledWithExactly(loggerInfoStub, `** find Datapoints stats for Measure ${measureName[2]}`);
+      sinon.assert.calledWithExactly(loggerInfoStub, '** create Dataset schema items: ', expectedDatapointsSchemas.length);
 
       done();
     });
@@ -471,12 +528,19 @@ describe('Import dataset schema', () => {
 
     this.stub(DatapointsRepositoryFactory, 'currentVersion', () => stubRepository);
 
+    const loggerInfoStub = this.stub(logger, 'info');
+    const measureName = _.get(datapointsResources[0], 'indicators');
+
     // Act
     importDatasetSchema(datapointsSchemaContext, (error, context) => {
 
       // Assert
       expect(error).to.deep.equal(['MeasureId is not recognized']);
       expect(context === datapointsSchemaContext).to.be.true;
+
+      sinon.assert.calledTwice(loggerInfoStub);
+      sinon.assert.calledWithExactly(loggerInfoStub, `** populate Dataset Index with originIds`);
+      sinon.assert.calledWithExactly(loggerInfoStub, `** find Datapoints stats for Measure ${measureName}`);
       sinon.assert.notCalled(datasetSchemaRepositoryCreateStub);
       done();
     });

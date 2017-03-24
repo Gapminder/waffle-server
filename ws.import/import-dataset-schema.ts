@@ -1,18 +1,20 @@
 import * as _ from 'lodash';
 import * as hi from 'highland';
-import {logger} from '../ws.config/log';
-import {config} from '../ws.config/config';
-import {constants} from '../ws.utils/constants';
+import { logger } from '../ws.config/log';
+import { config } from '../ws.config/config';
+import { constants } from '../ws.utils/constants';
 import * as fileUtils from '../ws.utils/file';
 import * as ddfImportUtils from '../ws.import/utils/import-ddf.utils';
-import {DatasetSchemaRepository} from '../ws.repository/ddf/dataset-index/dataset-index.repository';
-import {DatapointsRepositoryFactory} from '../ws.repository/ddf/data-points/data-points.repository';
+import { DatasetSchemaRepository } from '../ws.repository/ddf/dataset-index/dataset-index.repository';
+import { DatapointsRepositoryFactory } from '../ws.repository/ddf/data-points/data-points.repository';
+import {
+  ParsedConceptResource,
+  ParsedEntityResource,
+  ParsedDatapointResource,
+  ParsedResource
+} from './utils/datapackage.parser';
 
-export {
-  createDatasetSchema
-}
-
-function createDatasetSchema(externalContext, done) {
+export function createDatasetSchema(externalContext: any, done: Function): void {
   const externalContextFrozen = Object.freeze({
     concepts: externalContext.concepts,
     datasetId: externalContext.dataset._id,
@@ -33,18 +35,18 @@ function createDatasetSchema(externalContext, done) {
   return ddfImportUtils.startStreamProcessing(datasetSchemaCreationStream, externalContext, done);
 }
 
-function toConceptsSchemaCreationStream(resourcesStream, externalContextFrozen) {
+function toConceptsSchemaCreationStream(resourcesStream: any, externalContextFrozen: any): any {
   return resourcesStream.fork()
-    .filter(resource => resource.type === constants.CONCEPTS)
-    .flatMap(resource => {
+    .filter((resource: ParsedResource) => resource.type === constants.CONCEPTS)
+    .flatMap((resource: ParsedConceptResource) => {
       return fileUtils
         .readCsvFileAsStream(externalContextFrozen.pathToDdfFolder, resource.path)
-        .map(csvRecord => ({csvRecord, resource}));
+        .through(_.curry(toConceptHeadersStream)(resource));
     })
-    .map(({csvRecord, resource}) => {
+    .map(({header, resource}: any) => {
       return {
         key: resource.primaryKey,
-        value: csvRecord[resource.primaryKey],
+        value: header,
         file: [resource.path],
         type: constants.CONCEPTS,
         dataset: externalContextFrozen.datasetId,
@@ -52,33 +54,51 @@ function toConceptsSchemaCreationStream(resourcesStream, externalContextFrozen) 
       };
     })
     .batch(ddfImportUtils.DEFAULT_CHUNK_SIZE)
-    .flatMap(datasetSchemaBatch => hi(storeDatasetSchemaItemsToDb(datasetSchemaBatch)));
+    .flatMap((datasetSchemaBatch: any[]) => hi(storeDatasetSchemaItemsToDb(datasetSchemaBatch)));
 }
 
-function toEntitiesSchemaCreationStream(resourcesStream, externalContextFrozen) {
+function toEntitiesSchemaCreationStream(resourcesStream: any, externalContextFrozen: any): any {
+  const setsToDomains = _.chain(externalContextFrozen.concepts)
+    .mapValues('domain.gid')
+    .omitBy(_.isNil)
+    .value();
+
   return resourcesStream.fork()
-    .filter(resource => resource.type === constants.ENTITIES)
-    .flatMap(resource => hi(resource.fields).map(field => ({field, resource})))
-    .filter(({field, resource}) => field !== resource.concept)
-    .map(({field, resource}) => {
-      return {
-        key: resource.concept,
+    .filter((resource: ParsedResource) => resource.type === constants.ENTITIES)
+    .flatMap((resource: ParsedEntityResource) => hi(resource.fields).map((field: string) => ({field, resource})))
+    .filter(({field, resource}: any) => field !== resource.concept)
+    .filter(({field}: any) => !_.startsWith(field, constants.IS_OPERATOR))
+    .flatMap(({field, resource}: any) => {
+      const schemaItem = {
+        key: [resource.concept],
         value: field,
         file: [resource.path],
         type: constants.ENTITIES,
         dataset: externalContextFrozen.datasetId,
         transaction: externalContextFrozen.transactionId
       };
+
+      const schemaItems = setsToDomains[resource.concept]
+        ? [schemaItem, _.extend({}, schemaItem, {key: [setsToDomains[resource.concept]]})]
+        : [schemaItem];
+
+      return hi(schemaItems);
+    })
+    .uniqBy((schemaItemA: any, schemaItemB: any) => {
+      return _.isEqual(
+        [...schemaItemA.key, schemaItemA.value],
+        [...schemaItemB.key, schemaItemB.value]
+      );
     })
     .batch(ddfImportUtils.DEFAULT_CHUNK_SIZE)
-    .flatMap(datasetSchemaBatch => hi(storeDatasetSchemaItemsToDb(datasetSchemaBatch)));
+    .flatMap((datasetSchemaBatch: any[]) => hi(storeDatasetSchemaItemsToDb(datasetSchemaBatch)));
 }
 
-function toDatapointsSchemaCreationStream(resourcesStream, externalContextFrozen) {
+function toDatapointsSchemaCreationStream(resourcesStream: any, externalContextFrozen: any): any {
   return resourcesStream.fork()
-    .filter(resource => resource.type === constants.DATAPOINTS)
-    .flatMap(resource => {
-      const schemaItemsExplodedByIndicator = _.reduce(resource.indicators, (result, indicator) => {
+    .filter((resource: ParsedResource) => resource.type === constants.DATAPOINTS)
+    .flatMap((resource: ParsedDatapointResource) => {
+      const schemaItemsExplodedByIndicator = _.reduce(resource.indicators, (result: any[], indicator: string) => {
         const schemaItem = {
           key: resource.dimensions,
           value: indicator,
@@ -93,23 +113,23 @@ function toDatapointsSchemaCreationStream(resourcesStream, externalContextFrozen
 
       return hi(schemaItemsExplodedByIndicator);
     })
-    .flatMap(schemaItem => hi.wrapCallback(populateDatapointsSchemaItemWithOriginIds)(schemaItem, externalContextFrozen))
+    .flatMap((schemaItem: any) => hi.wrapCallback(populateDatapointsSchemaItemWithOriginIds)(schemaItem, externalContextFrozen))
     .batch(ddfImportUtils.DEFAULT_CHUNK_SIZE)
-    .map(datasetSchemaBatch => {
-      return _.uniqWith(datasetSchemaBatch, (schemaItemA, schemaItemB) => {
+    .map((datasetSchemaBatch: any[]) => {
+      return _.uniqWith(datasetSchemaBatch, (schemaItemA: any, schemaItemB: any) => {
         return _.isEqual(_.sortBy(schemaItemA.key), _.sortBy(schemaItemB.key))
           && schemaItemA.value === schemaItemB.value;
       });
     })
-    .flatMap(datasetSchemaBatch => hi(storeDatasetSchemaItemsToDb(datasetSchemaBatch)));
+    .flatMap((datasetSchemaBatch: any[]) => hi(storeDatasetSchemaItemsToDb(datasetSchemaBatch)));
 }
 
-function storeDatasetSchemaItemsToDb(datasetSchemaItems) {
+function storeDatasetSchemaItemsToDb(datasetSchemaItems: any[]): Promise<any> {
   logger.info('** create Dataset schema items: ', _.size(datasetSchemaItems));
   return DatasetSchemaRepository.create(datasetSchemaItems);
 }
 
-function populateDatapointsSchemaItemWithOriginIds(index, externalContext, done) {
+function populateDatapointsSchemaItemWithOriginIds(index: any, externalContext: any, done: Function): void {
   logger.info('** populate Dataset Index with originIds');
 
   const getOriginIdCurried = _.curry(getOriginId)(externalContext.concepts);
@@ -124,7 +144,7 @@ function populateDatapointsSchemaItemWithOriginIds(index, externalContext, done)
   return findDatapointsStatsForMeasure(context, done);
 }
 
-function findDatapointsStatsForMeasure(externalContext, done) {
+function findDatapointsStatsForMeasure(externalContext: any, done: Function): void {
   logger.info(`** find Datapoints stats for Measure ${_.get(externalContext.index, 'value')}`);
 
   const options = {
@@ -134,7 +154,7 @@ function findDatapointsStatsForMeasure(externalContext, done) {
   };
 
   return DatapointsRepositoryFactory.currentVersion(externalContext.datasetId, externalContext.version)
-    .findStats(options, (error, stats) => {
+    .findStats(options, (error: any, stats: any) => {
       if (error) {
         return done(error);
       }
@@ -150,6 +170,17 @@ function findDatapointsStatsForMeasure(externalContext, done) {
     });
 }
 
-function getOriginId(concepts, key) {
+function getOriginId(concepts: any, key: string): any {
   return _.get(concepts, `${key}.originId`, null);
+}
+
+function toConceptHeadersStream(resource: ParsedConceptResource, csvRecordsStream: any): any {
+  return csvRecordsStream
+    .head()
+    .flatMap((csvRecord: any) => {
+      const headers: string[] = _.keys(csvRecord);
+      return hi(headers)
+        .filter((header: string) => header !== 'concept')
+        .map((header: string) => ({header, resource}));
+    });
 }

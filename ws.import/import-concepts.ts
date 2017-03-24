@@ -8,11 +8,7 @@ import {constants} from '../ws.utils/constants';
 import * as ddfMappers from './utils/ddf-mappers';
 import {ConceptsRepositoryFactory} from '../ws.repository/ddf/concepts/concepts.repository';
 
-export {
-  createConcepts
-};
-
-function createConcepts(pipe, done) {
+export function createConcepts(pipe: any, done: Function): void {
 
   logger.info('start process creating concepts');
 
@@ -31,14 +27,14 @@ function createConcepts(pipe, done) {
     _addConceptSubsetOf,
     _addConceptDomains,
     ddfImportUtils.getAllConcepts
-  ], (err, res: any) => {
+  ], (err: any, res: any) => {
     pipe.concepts = res.concepts;
     pipe.timeConcepts = res.timeConcepts;
     return done(err, pipe);
   });
 }
 
-function _loadConcepts(pipe, done) {
+function _loadConcepts(pipe: any, done: Function): void {
   logger.info('** load concepts');
 
   const {
@@ -49,22 +45,22 @@ function _loadConcepts(pipe, done) {
   } = pipe;
 
   hi(resources)
-    .filter(resource => resource.type === constants.CONCEPTS)
+    .filter((resource: any) => resource.type === constants.CONCEPTS)
     .head()
-    .flatMap(resource => {
+    .flatMap((resource: any) => {
       return fileUtils
         .readCsvFileAsStream(pathToDdfFolder, resource.path)
-        .map(rawConcept => ({filename: resource.path, object: rawConcept}));
+        .map((rawConcept: any) => ({filename: resource.path, object: rawConcept}));
     })
     .collect()
-    .toCallback((error, rawConcepts) => {
+    .toCallback((error: any, rawConcepts: any) => {
       const concepts = _.map(rawConcepts, (rawConcept: any) => {
         const context = {datasetId, version, filename: rawConcept.filename};
         return ddfMappers.mapDdfConceptsToWsModel(rawConcept.object, context);
       });
 
       pipe.raw = {
-        concepts: concepts,
+        concepts,
         subsetOf: reduceUniqueNestedValues(concepts, 'properties.drill_up'),
         domains: reduceUniqueNestedValues(concepts, 'properties.domain')
       };
@@ -73,31 +69,31 @@ function _loadConcepts(pipe, done) {
     });
 }
 
-function _createConcepts(pipe, done) {
+function _createConcepts(pipe: any, done: Function): void {
   logger.info('** create concepts documents');
 
   async.eachLimit(
     _.chunk(pipe.raw.concepts, ddfImportUtils.DEFAULT_CHUNK_SIZE),
     ddfImportUtils.MONGODB_DOC_CREATION_THREADS_AMOUNT,
     __createConcepts,
-    (err) => {
+    (err: any) => {
       return done(err, pipe);
     }
   );
 
-  function __createConcepts(chunk, cb) {
+  function __createConcepts(chunk: any, cb: Function): void {
     return ConceptsRepositoryFactory.versionAgnostic().create(chunk, cb);
   }
 }
 
-function _addConceptSubsetOf(pipe, done) {
+function _addConceptSubsetOf(pipe: any, done: Function): void {
   logger.info('** add concept subsetOf');
 
-  async.eachLimit(pipe.raw.subsetOf, constants.LIMIT_NUMBER_PROCESS, __updateConceptSubsetOf, (err) => {
+  async.eachLimit(pipe.raw.subsetOf, constants.LIMIT_NUMBER_PROCESS, __updateConceptSubsetOf, (err: any) => {
     return done(err, pipe);
   });
 
-  function __updateConceptSubsetOf(gid, escb) {
+  function __updateConceptSubsetOf(gid: string, escb: Function): any {
     let concept = pipe.concepts[gid];
 
     if (!concept) {
@@ -111,14 +107,14 @@ function _addConceptSubsetOf(pipe, done) {
   }
 }
 
-function _addConceptDomains(pipe, done) {
+function _addConceptDomains(pipe: any, done: Function): void {
   logger.info('** add entity domains to related concepts');
 
-  async.eachLimit(pipe.raw.domains, constants.LIMIT_NUMBER_PROCESS, __updateConceptDomain, (err) => {
+  async.eachLimit(pipe.raw.domains, constants.LIMIT_NUMBER_PROCESS, __updateConceptDomain, (err: any) => {
     return done(err, pipe);
   });
 
-  function __updateConceptDomain(gid, escb) {
+  function __updateConceptDomain(gid: string, escb: Function): any {
     let concept = pipe.concepts[gid];
 
     if (!concept) {
@@ -132,10 +128,10 @@ function _addConceptDomains(pipe, done) {
   }
 }
 
-//*** Utils ***
-function reduceUniqueNestedValues(data, propertyName) {
+// *** Utils ***
+function reduceUniqueNestedValues(data: any, propertyName: string): any {
   return _.chain(data)
-    .flatMap(item => _.get(item, propertyName))
+    .flatMap((item: any) => _.get(item, propertyName))
     .uniq()
     .compact()
     .value();

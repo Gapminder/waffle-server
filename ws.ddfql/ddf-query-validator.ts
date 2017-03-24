@@ -15,7 +15,7 @@ const VALID_RESPONSE = {
 
 interface ValidateQueryModel {
   valid: boolean;
-  messages?: Array<string>;
+  messages?: string[];
   log?: string;
 }
 
@@ -26,7 +26,7 @@ export {
   ValidateQueryModel
 };
 
-function validateDdfQueryAsync(pipe, onValidated) {
+function validateDdfQueryAsync(pipe: any, onValidated: Function): void {
   return async.setImmediate(() => {
     const result = validateDdfQuery(pipe.query);
     if (!result.valid) {
@@ -39,40 +39,42 @@ function validateDdfQueryAsync(pipe, onValidated) {
 // correct Query Structure by Mingo
 // correct operators by List of Available Items
 
-function validateMongoQuery(query) {
+function validateMongoQuery(query: any): any {
   let mQuery;
   const errorMessages = [];
 
   try {
     mQuery = new mingo.Query(query);
   } catch(error) {
-    errorMessages.push("Invalid DDFQL-query. Validated by Mingo, " + error.toString());
+    errorMessages.push('Invalid DDFQL-query. Validated by Mingo, ' + error.toString());
     return createResponse(errorMessages);
   }
 
   // validate by mingo
   if(!mQuery) {
-    errorMessages.push("Invalid DDFQL-query. Validated by Mingo, Error: Structure");
+    errorMessages.push('Invalid DDFQL-query. Validated by Mingo, Error: Structure');
     return createResponse(errorMessages);
   }
 
   // validate by available operators
-  traverse(query).forEach(function() {
+  traverse(query).forEach(function(): void {
+    /* tslint:disable: no-invalid-this */
     if(this.key) {
       const key = _.toString(this.key);
       if(isInvalidQueryOperator(key)) {
-        errorMessages.push("Invalid DDFQL-query. Validation by Operators, not acceptable: " + key);
+        errorMessages.push('Invalid DDFQL-query. Validation by Operators, not acceptable: ' + key);
       }
     }
+    /* tslint:enable: no-invalid-this */
   });
 
   return createResponse(errorMessages);
 }
 
 // where :: not contain '.'
-// join :: all first level properties contain "$"
+// join :: all first level properties contain '$'
 
-function validateDdfQuery (query) {
+function validateDdfQuery (query: any): any {
   return applyValidators(query, [
     _validateDdfQueryWhereClause,
     _validateDdfQueryJoinClause,
@@ -81,8 +83,7 @@ function validateDdfQuery (query) {
   ]);
 }
 
-
-function applyValidators(query, validators: Function[]) {
+function applyValidators(query: any, validators: Function[]): any {
   if (_.isEmpty(validators)) {
     return VALID_RESPONSE;
   }
@@ -96,26 +97,28 @@ function applyValidators(query, validators: Function[]) {
   return applyValidators(query, _.tail(validators));
 }
 
-function _validateDdfQueryWhereClause(query) {
-  const errorMessages = traverse(_.get(query, 'where', {})).reduce(function(errors) {
+function _validateDdfQueryWhereClause(query: any): any {
+  const errorMessages = traverse(_.get(query, 'where', {})).reduce(function(errors: string[]): string[] {
+    /* tslint:disable: no-invalid-this */
     if(this.key) {
       const key = _.toString(this.key);
-      if(_.includes(key, ".")) {
-        errors.push("Invalid DDFQL-query. Validation of Where Clause: contain '.' in " + key);
+      if(_.includes(key, '.')) {
+        errors.push('Invalid DDFQL-query. Validation of Where Clause: contain "." in ' + key);
       }
     }
 
     return errors;
+    /* tslint:enable: no-invalid-this */
   }, []);
 
   return createResponse(errorMessages);
 }
 
-function _validateDdfQueryJoinClause(query) {
+function _validateDdfQueryJoinClause(query: any): any {
   const errorMessages =
-    _.chain(_.get(query, 'join')).keys().reduce((errors, key) => {
-      if(!_.startsWith(key, "$")) {
-        errors.push("Invalid DDFQL-query. Validation of Join Clause: does not contain '$' in " + key);
+    _.chain(_.get(query, 'join')).keys().reduce((errors: string[], key: string) => {
+      if(!_.startsWith(key, '$')) {
+        errors.push('Invalid DDFQL-query. Validation of Join Clause: does not contain "$" in ' + key);
       }
       return errors;
     }, [])
@@ -124,7 +127,7 @@ function _validateDdfQueryJoinClause(query) {
   return createResponse(errorMessages);
 }
 
-function _validateDdfQuerySelectClause(query) {
+function _validateDdfQuerySelectClause(query: any): any {
   query = _.defaults(query, {
     select: {},
     from: ''
@@ -133,7 +136,7 @@ function _validateDdfQuerySelectClause(query) {
   const errors = [];
 
   if (!query.select.key) {
-    errors.push("Invalid DDFQL-query. Validation of Select Clause: does not contain 'key'");
+    errors.push('Invalid DDFQL-query. Validation of Select Clause: does not contain "key"');
   }
 
   if (query.from === constants.DATAPOINTS && _.size(query.select.value) > MAX_AMOUNT_OF_MEASURES_IN_SELECT) {
@@ -143,7 +146,7 @@ function _validateDdfQuerySelectClause(query) {
   return createResponse(errors);
 }
 
-function _validateDdfQueryOrderByClause(query) {
+function _validateDdfQueryOrderByClause(query: any): any {
   query = _.defaults(query, {
     order_by: []
   });
@@ -155,50 +158,50 @@ function _validateDdfQueryOrderByClause(query) {
 
   const propertiesAvailableForSorting = new Set(_.concat(_.get(query, 'select.key', []), _.get(query, 'select.value', [])));
 
-  _.reduce(query.order_by, (errorMessages, orderByItem: any) => {
+  _.reduce(query.order_by, (orderByErrorMessages: string[], orderByItem: any) => {
     if (_.isNil(orderByItem)) {
-      errorMessages.push(createOrderByErrorMessage('order_by should not contain empty values'));
+      orderByErrorMessages.push(createOrderByErrorMessage('order_by should not contain empty values'));
     }
 
     if (_.isArray(orderByItem)) {
-      errorMessages.push(createOrderByErrorMessage('order_by cannot contain arrays as its elements'));
+      orderByErrorMessages.push(createOrderByErrorMessage('order_by cannot contain arrays as its elements'));
     }
 
     if (!_.isString(orderByItem) && !_.isObject(orderByItem)) {
-      errorMessages.push(createOrderByErrorMessage('order_by should contain only string and objects'));
+      orderByErrorMessages.push(createOrderByErrorMessage('order_by should contain only string and objects'));
     }
 
     if (_.isObject(orderByItem)) {
       if (_.size(orderByItem) !== 1) {
-        errorMessages.push(createOrderByErrorMessage(
+        orderByErrorMessages.push(createOrderByErrorMessage(
           `object in order_by clause should contain only one key. Was ${JSON.stringify(_.keys(orderByItem))}`)
         );
       }
 
-      const allSortDirectionAreValid = _.every(orderByItem, sortDirection => SORT_DIRECTIONS.has(sortDirection));
+      const allSortDirectionAreValid = _.every(orderByItem, (sortDirection: string) => SORT_DIRECTIONS.has(sortDirection));
 
       if (!allSortDirectionAreValid) {
-        errorMessages.push(createOrderByErrorMessage(
+        orderByErrorMessages.push(createOrderByErrorMessage(
           `object in order_by clause should contain only following sort directions: 'asc', 'desc'. Was ${JSON.stringify(orderByItem)}`)
         );
       }
 
-      const allPropertiesAreAvailableForSorting = _.every(orderByItem, (sortDirection, property) => propertiesAvailableForSorting.has(property));
+      const allPropertiesAreAvailableForSorting = _.every(orderByItem, (sortDirection: string, property: string) => propertiesAvailableForSorting.has(property));
 
       if (!allPropertiesAreAvailableForSorting) {
-        errorMessages.push(createOrderByErrorMessage(
+        orderByErrorMessages.push(createOrderByErrorMessage(
           `order_by clause should contain only properties from select.key and select.value. Was ${JSON.stringify(orderByItem)}`)
         );
       }
     }
 
-    return errorMessages;
+    return orderByErrorMessages;
   }, errorMessages);
 
   return createResponse(errorMessages);
 }
 
-function createResponse (errorMessages) {
+function createResponse (errorMessages: string[]): any {
   if(_.isEmpty(errorMessages)) {
     return VALID_RESPONSE;
   }
@@ -206,14 +209,14 @@ function createResponse (errorMessages) {
   return _.extend({}, VALID_RESPONSE, {
     valid: false,
     messages: errorMessages,
-    log: _.join(errorMessages, "; ")
+    log: _.join(errorMessages, '; ')
   });
 }
 
-function isInvalidQueryOperator(operator) {
-  return _.startsWith(operator, "$") && !AVAILABLE_QUERY_OPERATORS.has(operator);
+function isInvalidQueryOperator(operator: string): boolean {
+  return _.startsWith(operator, '$') && !AVAILABLE_QUERY_OPERATORS.has(operator);
 }
 
-function createOrderByErrorMessage(message) {
+function createOrderByErrorMessage(message: string): string {
   return `Invalid DDFQL-query. Validation of order_by clause: ${message}`;
 }

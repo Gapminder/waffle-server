@@ -16,7 +16,7 @@ export {
   importTranslations as createTranslations
 }
 
-function importTranslations(externalContext, done) {
+function importTranslations(externalContext: any, done: Function): void {
   logger.info('start process creating translations');
 
   const externalContextFrozen = Object.freeze(_.pick(externalContext, [
@@ -31,7 +31,7 @@ function importTranslations(externalContext, done) {
   ddfImportUtils.startStreamProcessing(translationsCreateStream, externalContext, done);
 }
 
-function createTranslations(externalContext) {
+function createTranslations(externalContext: any): any {
   const {
     pathToDdfFolder,
     datapackage: {resources, translations},
@@ -41,24 +41,24 @@ function createTranslations(externalContext) {
   } = externalContext;
 
   const loadTranslationsStream = hi(resources)
-    .flatMap(resource => {
+    .flatMap((resource: any) => {
       return extendTranslationsToResourceStream(translations, resource);
     })
-    .flatMap(resource => {
+    .flatMap((resource: any) => {
       const resolvedFilepath = path.resolve(pathToDdfFolder, resource.pathToTranslationFile);
 
       return existTranslationFilepathStream(resolvedFilepath, resource);
     })
-    .filter(resource => {
-      return _.get(resource, 'access', true);
+    .filter((resource: any) => {
+      return _.get(resource, 'canReadTranslations', true);
     })
-    .flatMap(resource => {
+    .flatMap((resource: any) => {
       return loadTranslationsFromCsv(resource, externalContext);
     });
 
   const storeConceptTranslationsStream = loadTranslationsStream.fork()
-    .filter(({resource: {primaryKey}}) => datapackageParser.isConceptsResource(primaryKey))
-    .map(({object: properties, resource: {language}}) => {
+    .filter(({resource: {primaryKey}}: any) => datapackageParser.isConceptsResource(primaryKey))
+    .map(({object: properties, resource: {language}}: any) => {
       const context = {properties, language, datasetId, version};
 
       return hi(storeConceptsTranslationsToDb(context));
@@ -66,15 +66,15 @@ function createTranslations(externalContext) {
     .parallel(constants.LIMIT_NUMBER_PROCESS);
 
   const storeEntitiesTranslationsStream = loadTranslationsStream.fork()
-    .filter(({resource: {primaryKey}}) => datapackageParser.isEntitiesResource(primaryKey))
-    .map(({object: properties, resource: {language, path: source, primaryKey: [primaryKey], fields}}) => {
+    .filter(({resource: {primaryKey}}: any) => datapackageParser.isEntitiesResource(primaryKey))
+    .map(({object: properties, resource: {language, path: source, primaryKey: [primaryKey], fields}}: any) => {
       const fieldsByName = _.keyBy(fields, 'name');
-      const resolvedProperties = _.reduce(properties, (result, propertyValue, propertyName) => {
+      const resolvedProperties = _.reduce(properties, (result: any, propertyValue: any, propertyName: string) => {
         if (fieldsByName.hasOwnProperty(`is--${propertyName}`)) {
           result[`properties.is--${propertyName}`] = propertyValue;
         }
         if (propertyName === primaryKey) {
-          result['gid'] = propertyValue;
+          result.gid = propertyValue;
         }
         return result;
       }, {});
@@ -85,9 +85,9 @@ function createTranslations(externalContext) {
     .parallel(constants.LIMIT_NUMBER_PROCESS);
 
   const storeDatapointsTranslationsStream = loadTranslationsStream.fork()
-    .filter(({resource: {primaryKey}}) => datapackageParser.isDatapointsResource(primaryKey))
-    .map(({object: properties, resource: {language, path: source, primaryKey}}) => {
-      const resolvedProperties = _.reduce(properties, (result, propertyValue, propertyName) => {
+    .filter(({resource: {primaryKey}}: any) => datapackageParser.isDatapointsResource(primaryKey))
+    .map(({object: properties, resource: {language, path: source, primaryKey}}: any) => {
+      const resolvedProperties = _.reduce(properties, (result: any, propertyValue: any, propertyName: string) => {
         if (_.includes(primaryKey, propertyName)) {
           result[`properties.${propertyName}`] = propertyValue;
         }
@@ -108,7 +108,7 @@ function createTranslations(externalContext) {
   return hi(translationTasks).parallel(translationTasks.length);
 }
 
-function storeConceptsTranslationsToDb({properties, language, datasetId, version}) {
+function storeConceptsTranslationsToDb({properties, language, datasetId, version}: any): any {
   const translation = ddfMappers.transformConceptProperties(properties);
 
   return ConceptsRepositoryFactory
@@ -116,7 +116,7 @@ function storeConceptsTranslationsToDb({properties, language, datasetId, version
     .addTranslationsForGivenProperties(translation, {language});
 }
 
-function storeEntitiesTranslationsToDb(externalContext) {
+function storeEntitiesTranslationsToDb(externalContext: any): any {
   const {source, properties, language, resolvedProperties, datasetId, version, concepts} = externalContext;
   const translation = ddfMappers.transformEntityProperties(properties, concepts);
 
@@ -125,24 +125,25 @@ function storeEntitiesTranslationsToDb(externalContext) {
     .addTranslationsForGivenProperties(translation, {language, source, resolvedProperties});
 }
 
-function storeDatapointsTranslationsToDb(externalContext) {
+function storeDatapointsTranslationsToDb(externalContext: any): any {
   const {source, properties, language, resolvedProperties, datasetId, version} = externalContext;
   return DatapointsRepositoryFactory
     .allOpenedInGivenVersion(datasetId, version)
     .addTranslationsForGivenProperties(properties, {language, source, resolvedProperties});
 }
 
-function existTranslationFilepathStream(resolvedFilepath, resource) {
-  return hi.wrapCallback(fs.access)(resolvedFilepath, fs.constants.F_OK | fs.constants.R_OK)
-    .errors(() => {
-      return _.extend({access: false}, resource);
-    })
-    .map(() => {
-      return _.extend({access: true}, resource);
+function existTranslationFilepathStream(resolvedFilepath: string, resource: any): any {
+  return hi.wrapCallback((path: string, mode: number, done: Function) => {
+    fs.access(path, mode, (error: any) => {
+      done(null, _.isNil(error));
+    });
+  })(resolvedFilepath, fs.constants.R_OK)
+    .map((canAccess: boolean) => {
+      return _.extend({canReadTranslations: canAccess}, resource);
     });
 }
 
-function extendTranslationsToResourceStream(translations, resource) {
+function extendTranslationsToResourceStream(translations: any, resource: any): any {
   return hi(_.map(translations, (language: any) => {
     const pathToTranslationFile = path.join(constants.DEFAULT_DDF_LANGUAGE_FOLDER, language.id, resource.path);
 
@@ -150,11 +151,11 @@ function extendTranslationsToResourceStream(translations, resource) {
   }));
 }
 
-function loadTranslationsFromCsv(resource, externalContext) {
+function loadTranslationsFromCsv(resource: any, externalContext: any): any {
   const {pathToDdfFolder} = externalContext;
 
   return fileUtils.readCsvFileAsStream(pathToDdfFolder, resource.pathToTranslationFile)
-    .map(rawTranslation => {
+    .map((rawTranslation: any) => {
       return {object: rawTranslation, resource};
     });
 }

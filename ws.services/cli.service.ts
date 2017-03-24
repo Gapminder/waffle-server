@@ -28,24 +28,24 @@ export {
 };
 
 interface DatasetModel {
-  name: string,
-  path: string,
-  versions: Array<VersionModel>
+  name: string;
+  path: string;
+  versions: VersionModel[];
 }
 
 interface ContextModel {
-  transactionId: string,
-  datasetId: string
+  transactionId: string;
+  datasetId: string;
 }
 
 interface VersionModel {
-  createdAt: number,
-  commit: string,
-  isDefault: boolean
+  createdAt: number;
+  commit: string;
+  isDefault: boolean;
 }
 
-function _findCurrentUser(pipe, done) {
-  UsersRepository.findUserByEmail(constants.DEFAULT_USER_EMAIL, (error, user) => {
+function _findCurrentUser(pipe: any, done: Function): void {
+  UsersRepository.findUserByEmail(constants.DEFAULT_USER_EMAIL, (error: any, user: any) => {
     if (error) {
       return done(error);
     }
@@ -59,15 +59,15 @@ function _findCurrentUser(pipe, done) {
   });
 }
 
-function importDataset(params, onDatasetImported) {
+function importDataset(params: any, onDatasetImported: Function): void {
   return async.waterfall([
     async.constant(params),
     _findCurrentUser,
     _findDataset,
     _validateDatasetBeforeImport,
     _importDdfService,
-    _unlockDataset
-  ], (importError, context: ContextModel) => {
+    datasetsService.unlockDataset
+  ], (importError: any, context: ContextModel) => {
     if (importError && _.get(context, 'transactionId', false)) {
       return transactionsService.setLastError(context.transactionId, _.toString(importError), () => onDatasetImported(importError));
     }
@@ -75,8 +75,8 @@ function importDataset(params, onDatasetImported) {
   });
 }
 
-function _findDataset(pipe, done) {
-  return DatasetsRepository.findByGithubUrl(pipe.github, (error, dataset) => {
+function _findDataset(pipe: any, done: Function): void {
+  return DatasetsRepository.findByGithubUrl(pipe.github, (error: any, dataset: any) => {
     if (error) {
       return done(error);
     }
@@ -86,7 +86,7 @@ function _findDataset(pipe, done) {
   });
 }
 
-function _validateDatasetBeforeImport(pipe, done) {
+function _validateDatasetBeforeImport(pipe: any, done: Function): void {
   if (pipe.dataset) {
     return _handleAsynchronously('Dataset exists, cannot import same dataset twice', pipe, done);
   }
@@ -94,7 +94,7 @@ function _validateDatasetBeforeImport(pipe, done) {
   return _handleAsynchronously(null, pipe, done);
 }
 
-function _importDdfService(pipe, onDatasetImported) {
+function _importDdfService(pipe: any, onDatasetImported: Function): void {
   const options = {
     isDatasetPrivate: pipe.repoType === 'private',
     datasetName: reposService.getRepoNameForDataset(pipe.github),
@@ -107,55 +107,31 @@ function _importDdfService(pipe, onDatasetImported) {
   return importDdfService.importDdf(options, onDatasetImported);
 }
 
-function _unlockDataset(pipe, done) {
-  return DatasetsRepository.unlock(pipe.datasetName, (err, dataset) => {
-    if (!dataset) {
-      return done(`Version of dataset "${pipe.datasetName}" wasn't locked`);
-    }
-
-    return done(err, pipe);
-  });
-}
-
-function updateIncrementally(externalContext, onDatasetUpdated) {
+function updateIncrementally(externalContext: any, onDatasetUpdated: Function): void {
   return async.waterfall([
     async.constant(externalContext),
     _findCurrentUser,
     _findDataset,
     securityUtils.validateDatasetOwner,
-    _lockDataset,
+    datasetsService.lockDataset,
     _checkTransaction,
     _runIncrementalUpdate,
-    _unlockDataset
-  ], (importError, context:ContextModel) => {
+    datasetsService.unlockDataset
+  ], (importError: any, context: ContextModel) => {
     if (importError) {
       if (_.get(context, 'transactionId', false)) {
         return transactionsService.setLastError(context.transactionId, _.toString(importError), () => onDatasetUpdated(importError));
       }
 
-      return _unlockDataset({datasetName: externalContext.datasetName}, unlockError => onDatasetUpdated(importError));
+      return datasetsService.unlockDataset({datasetName: externalContext.datasetName}, (unlockError: any) => onDatasetUpdated(importError));
     }
 
     return onDatasetUpdated(importError, context);
   });
 }
 
-function _lockDataset(pipe, done) {
-  return DatasetsRepository.lock(pipe.dataset.name, (err, dataset) => {
-    if (err) {
-      return done(err);
-    }
-
-    if (!dataset) {
-      return done(`Version of dataset "${pipe.dataset.name}" was already locked or dataset is absent`);
-    }
-
-    return done(null, pipe);
-  });
-}
-
-function _checkTransaction(pipe, done) {
-  return DatasetTransactionsRepository.findByDatasetAndCommit(pipe.dataset._id, pipe.commit, (error, transaction) => {
+function _checkTransaction(pipe: any, done: Function): void {
+  return DatasetTransactionsRepository.findByDatasetAndCommit(pipe.dataset._id, pipe.commit, (error: any, transaction: any) => {
     if (transaction) {
       return done(`Version of dataset "${pipe.github}" with commit: "${transaction.commit}" was already applied`);
     }
@@ -164,7 +140,7 @@ function _checkTransaction(pipe, done) {
   });
 }
 
-function _runIncrementalUpdate(pipe, onDatasetUpdated) {
+function _runIncrementalUpdate(pipe: any, onDatasetUpdated: Function): void {
   const options = {
     datasetName: pipe.datasetName,
     commit: pipe.commit,
@@ -178,34 +154,34 @@ function _runIncrementalUpdate(pipe, onDatasetUpdated) {
   return incrementalUpdateService.updateDdf(options, onDatasetUpdated);
 }
 
-function getPrivateDatasets(userId, done) {
-  return DatasetsRepository.findPrivateByUser(userId, (error, datasets) => {
+function getPrivateDatasets(userId: any, done: Function): void {
+  return DatasetsRepository.findPrivateByUser(userId, (error: any, datasets: any[]) => {
     if (error) {
       return done(error);
     }
 
-    return done(null, _.map(datasets, (dataset:DatasetModel) => {
+    return done(null, _.map(datasets, (dataset: DatasetModel) => {
       return {name: dataset.name, githubUrl: dataset.path};
     }));
   });
 }
 
-function getDatasetsInProgress(userId, done) {
-  return DatasetsRepository.findDatasetsInProgressByUser(userId, (error, datasets) => {
+function getDatasetsInProgress(userId: any, done: Function): void {
+  return DatasetsRepository.findDatasetsInProgressByUser(userId, (error: any, datasets: any) => {
     if (error) {
       return done(error);
     }
 
-    return done(null, _.map(datasets, (dataset:DatasetModel) => {
+    return done(null, _.map(datasets, (dataset: DatasetModel) => {
       return {name: dataset.name, githubUrl: dataset.path};
     }));
   });
 }
 
-function getAvailableDatasetsAndVersions(userId, onQueriesGot) {
-  return datasetsService.findDatasetsWithVersions(userId, (error, datasetsWithVersions) => {
-    return async.mapLimit(datasetsWithVersions, 3, (dataset:DatasetModel, onDatasetsAndVersionsFound) => {
-      return async.mapLimit(dataset.versions, 3, (version:VersionModel, cb) => {
+function getAvailableDatasetsAndVersions(userId: any, onQueriesGot: Function): void {
+  return datasetsService.findDatasetsWithVersions(userId, (searchingError: any, datasetsWithVersions: any) => {
+    return async.mapLimit(datasetsWithVersions, 3, (dataset: any, onDatasetsAndVersionsFound: AsyncResultCallback<any, any>) => {
+      return async.mapLimit(dataset.versions, 3, (version:VersionModel, cb: Function) => {
         return cb(null, {
           createdAt: version.createdAt,
           datasetName: dataset.name,
@@ -214,7 +190,7 @@ function getAvailableDatasetsAndVersions(userId, onQueriesGot) {
           isDefault: version.isDefault
         });
       }, onDatasetsAndVersionsFound);
-    }, (error, result) => {
+    }, (error: any, result: any) => {
       if (error) {
         return onQueriesGot(error);
       }
@@ -223,8 +199,8 @@ function getAvailableDatasetsAndVersions(userId, onQueriesGot) {
   });
 }
 
-function getRemovableDatasets(userId, done) {
-  return getAvailableDatasetsAndVersions(userId, (error, availableDatasetsAndVersions) => {
+function getRemovableDatasets(userId: any, done: Function): void {
+  return getAvailableDatasetsAndVersions(userId, (error: any, availableDatasetsAndVersions: any) => {
     if (error) {
       return done(error);
     }
@@ -232,9 +208,9 @@ function getRemovableDatasets(userId, done) {
     const defaultDatasetName = _.get(_.find(availableDatasetsAndVersions, (dataset:DatasetModel | VersionModel) => _.get(dataset, 'isDefault', false)), 'datasetName');
 
     const removableDatasets = _.chain(availableDatasetsAndVersions)
-      .filter(metadata => metadata.datasetName !== defaultDatasetName)
+      .filter((metadata: any) => metadata.datasetName !== defaultDatasetName)
       .uniqBy('datasetName')
-      .map(metadata => {
+      .map((metadata: any) => {
         return {name: metadata.datasetName, githubUrl: metadata.githubUrl};
       })
       .value();
@@ -243,7 +219,7 @@ function getRemovableDatasets(userId, done) {
   });
 }
 
-function getCommitOfLatestDatasetVersion(github, user, cb) {
+function getCommitOfLatestDatasetVersion(github: string, user: any, cb: AsyncResultCallback<any, any>): void {
   return async.waterfall([
     async.constant({github, user}),
     _findDataset,
@@ -253,7 +229,7 @@ function getCommitOfLatestDatasetVersion(github, user, cb) {
   ], cb);
 }
 
-function _validateDatasetBeforeIncrementalUpdate(pipe, done) {
+function _validateDatasetBeforeIncrementalUpdate(pipe: any, done: Function): void {
   if (!pipe.dataset) {
     return _handleAsynchronously('Dataset was not found, hence hash commit of it\'s latest version cannot be acquired', pipe, done);
   }
@@ -265,37 +241,37 @@ function _validateDatasetBeforeIncrementalUpdate(pipe, done) {
   return _handleAsynchronously(null, pipe, done);
 }
 
-function _handleAsynchronously(error, result, done) {
+function _handleAsynchronously(error: any, result: any, done: Function): void {
   return async.setImmediate(() => {
     return done(error, result);
   });
 }
 
-function _findTransaction(pipe, done) {
-  return DatasetTransactionsRepository.findLatestByDataset(pipe.dataset._id, (error, transaction) => {
+function _findTransaction(pipe: any, done: Function): void {
+  return DatasetTransactionsRepository.findLatestByDataset(pipe.dataset._id, (error: any, transaction: any) => {
     pipe.transaction = transaction;
     return done(error, pipe);
   });
 }
 
-function findDatasetsWithVersions(userId, onFound) {
+function findDatasetsWithVersions(userId: any, onFound: AsyncResultCallback<any, any>): void {
   return datasetsService.findDatasetsWithVersions(userId, onFound);
 }
 
-function setTransactionAsDefault(userId, datasetName, transactionCommit, onSetAsDefault) {
+function setTransactionAsDefault(userId: any, datasetName: string, transactionCommit: string, onSetAsDefault: AsyncResultCallback<any, any>): void {
   return transactionsService.setTransactionAsDefault(userId, datasetName, transactionCommit, onSetAsDefault);
 }
 
-function cleanDdfRedisCache(onCacheCleaned) {
+function cleanDdfRedisCache(onCacheCleaned: AsyncResultCallback<any, any>): void {
   const cacheCleaningTasks = [
-    done => cache.del(`${constants.DDF_REDIS_CACHE_NAME_DDFQL}*`, done),
+    (done: Function) => cache.del(`${constants.DDF_REDIS_CACHE_NAME_DDFQL}*`, done)
   ];
 
   return async.parallelLimit(cacheCleaningTasks, constants.LIMIT_NUMBER_PROCESS, onCacheCleaned);
 }
 
-function setAccessTokenForDataset(datasetName, userId, onAccessTokenSet) {
-  crypto.randomBytes(24, (randomBytesError, buf) => {
+function setAccessTokenForDataset(datasetName: string, userId: any, onAccessTokenSet: Function): void {
+  crypto.randomBytes(24, (randomBytesError: Error, buf: Buffer) => {
     if (randomBytesError) {
       return onAccessTokenSet(randomBytesError);
     }

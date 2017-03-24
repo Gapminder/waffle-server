@@ -25,7 +25,7 @@ export {
 };
 
 // const normalizeKey = _.flow([cutPrefixByDot as Function, _.partialRight(_.split, '.'), _.first, cutPrefixByDashes]);
-function normalizeKey(value, prefix) {
+function normalizeKey(value: string, prefix: any): string {
   let result: any = cutPrefixByDot(value, prefix);
   result = _.split(result, '.');
   result = _.first(result);
@@ -33,7 +33,7 @@ function normalizeKey(value, prefix) {
   return result;
 }
 
-function toSafeQuery(query, options?) {
+function toSafeQuery(query: any, options?: any): any {
   const safeQuery = query || {};
   const safeOptions = options || {};
 
@@ -56,7 +56,7 @@ function toSafeQuery(query, options?) {
   return safeQuery;
 }
 
-function replaceValueOnPath(options) {
+function replaceValueOnPath(options: any): void {
   // we need to do a step back in path
   options.path.pop();
   const path = options.path;
@@ -67,7 +67,9 @@ function replaceValueOnPath(options) {
 
   const value = _.get(queryFragment, path);
 
-  if (!value) return;
+  if (!value) {
+    return;
+  }
 
   if (options.substituteEntryWithItsContent) {
     const content = value[key];
@@ -79,7 +81,7 @@ function replaceValueOnPath(options) {
   }
 }
 
-function normalizeOrderBy(query) {
+function normalizeOrderBy(query: any): void {
   if (!_.isArray(query.order_by)) {
     return;
   }
@@ -93,10 +95,11 @@ function normalizeOrderBy(query) {
   });
 }
 
-function normalizeTimePropertyFilter(key, filterValue, path, query) {
+function normalizeTimePropertyFilter(key: string, filterValue: any, path: string[], query: any): any {
   let timeType = '';
   const normalizedFilter = {
-    [`parsedProperties.${key}.millis`]: traverse(filterValue).map(function (value) {
+    [`parsedProperties.${key}.millis`]: traverse(filterValue).map(function (value: any): any {
+      /* tslint:disable: no-invalid-this */
       if (this.notLeaf) {
         return value;
       }
@@ -108,6 +111,7 @@ function normalizeTimePropertyFilter(key, filterValue, path, query) {
       const timeDescriptor = ddfTimeUtils.parseTime(value);
       timeType = timeDescriptor.type;
       return timeDescriptor.time;
+      /* tslint:enable: no-invalid-this */
     })
   };
 
@@ -118,18 +122,18 @@ function normalizeTimePropertyFilter(key, filterValue, path, query) {
   return normalizedFilter;
 }
 
-function isTimePropertyFilter(key, timeConceptsGids) {
+function isTimePropertyFilter(key: string, timeConceptsGids: string[]): boolean {
   return _.includes(timeConceptsGids, key);
 }
 
-function isDomainPropertyFilter(key, options) {
+function isDomainPropertyFilter(key: string, options: any): boolean {
   return _.includes(options.domainGids, key);
 }
 
-function convertOrderByForWsJson(orderBy, headers) {
-  const propertyIndexToSortDirection = _.map(orderBy, sortDescriptor => {
+function convertOrderByForWsJson(orderBy: any, headers: string[]): any {
+  const propertyIndexToSortDirection = _.map(orderBy, (sortDescriptor: any) => {
     const propertyToSort = _.first(_.keys(sortDescriptor));
-    const propertyToSortIndex = _.findIndex(headers, header => propertyToSort === header);
+    const propertyToSortIndex = _.findIndex(headers, (header: string) => propertyToSort === header);
     return [String(propertyToSortIndex), sortDescriptor[propertyToSort]];
   });
 
@@ -141,15 +145,15 @@ function convertOrderByForWsJson(orderBy, headers) {
   };
 }
 
-function isEntityPropertyFilter(key, options) {
+function isEntityPropertyFilter(key: string, options: any): boolean {
   return _.includes(options.conceptGids, normalizeKey(key, options.domainGids));
 }
 
-function getPrefixByDot(value) {
+function getPrefixByDot(value: string): string {
   return _.first(_.split(value, '.'));
 }
 
-function cutPrefixByDot(value, prefix?): string {
+function cutPrefixByDot(value: string, prefix?: any): string {
   if (_.isNil(prefix)) {
     return _.replace(value, /^\w*\./, '');
   }
@@ -169,7 +173,7 @@ function cutPrefixByDashes(value: string): string {
   return _.replace(value, /^is--/, '');
 }
 
-function wrapEntityProperties(key, options) {
+function wrapEntityProperties(key: string, options: any): string {
   const propertyName = cutPrefixByDot(key, options.domainGids);
 
   if (!isTimePropertyFilter(key, options) && isEntityPropertyFilter(propertyName, options)) {
@@ -179,7 +183,7 @@ function wrapEntityProperties(key, options) {
   return propertyName;
 }
 
-function getConceptGids(concepts) {
+function getConceptGids(concepts: ReadonlyArray<any>): string[] {
   return _.chain(concepts)
     .map(constants.GID)
     .concat(['concept_type', 'concept'])
@@ -187,26 +191,26 @@ function getConceptGids(concepts) {
     .value();
 }
 
-function getDomainGids(concepts) {
+function getDomainGids(concepts: ReadonlyArray<any>): any[] {
   return _.chain(concepts)
-    .filter(concept => {
+    .filter((concept: any) => {
       return _.includes(constants.DEFAULT_ENTITY_GROUP_TYPES, _.get(concept, 'properties.concept_type', null));
     })
     .map(constants.GID)
     .value();
 }
 
-function getConceptOriginIdsByGids(concepts) {
+function getConceptOriginIdsByGids(concepts: ReadonlyArray<any>): any {
   return _.chain(concepts)
     .keyBy(constants.GID)
     .mapValues(constants.ORIGIN_ID)
     .value();
 }
 
-function getConceptsByGids(concepts) {
+function getConceptsByGids(concepts: ReadonlyArray<any>): any {
   return _.keyBy(concepts, constants.GID);
 }
 
-function getConceptsByOriginIds(concepts) {
+function getConceptsByOriginIds(concepts: ReadonlyArray<any>): any {
   return _.keyBy(concepts, constants.ORIGIN_ID);
 }

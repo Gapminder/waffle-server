@@ -17,42 +17,49 @@ export {
   findDatasetsWithVersions,
   removeDatasetData,
   findDatasetByNameAndValidateOwnership,
-  getRemovalStateForDataset
+  getRemovalStateForDataset,
+  lockDataset,
+  unlockDataset
 };
 
-function findDatasetsWithVersions(userId, onFound) {
+function findDatasetsWithVersions(userId: any, onFound: AsyncResultCallback<any, any>): void {
   return async.waterfall([
     async.constant({userId}),
     _findDatasetsByUser,
     _collectVersionsForEachDataset
-  ], (error, datasetsWithVersions) => {
+  ], (error: any, datasetsWithVersions: any) => {
     return onFound(error, datasetsWithVersions);
   });
 }
 
-function removeDatasetData(datasetName, user, onRemovedDataset) {
+function removeDatasetData(datasetName: string, user: any, onRemovedDataset: AsyncResultCallback<any, any>): void {
   DatasetRemovalTracker.track(datasetName);
   return async.waterfall([
     async.constant({datasetName, user}),
     findDatasetByNameAndValidateOwnership,
-    _lockDataset,
+    lockDataset,
     _checkDefaultTransactionInDataset,
     _removeAllDataByDataset,
     _removeAllTransactions,
     _removeDataset
-  ], (error) => {
+  ], (removalError: any) => {
     DatasetRemovalTracker.clean(datasetName);
-    return onRemovedDataset(error);
+
+    if (removalError) {
+      return unlockDataset({datasetName}, () => onRemovedDataset(removalError, null));
+    }
+
+    return onRemovedDataset(removalError, null);
   });
 }
 
-function findDatasetByNameAndValidateOwnership(externalContext, onDatasetValidated) {
-  return DatasetsRepository.findByName(externalContext.datasetName, (datasetSearchError, dataset) => {
+function findDatasetByNameAndValidateOwnership(externalContext: any, onDatasetValidated: Function): void {
+  return DatasetsRepository.findByName(externalContext.datasetName, (datasetSearchError: any, dataset: any) => {
     if (datasetSearchError || !dataset) {
       return onDatasetValidated(datasetSearchError || `Dataset was not found for the given name: ${externalContext.datasetName}`);
     }
 
-    return securityUtils.validateDatasetOwner({dataset, user: externalContext.user}, datasetValidationError => {
+    return securityUtils.validateDatasetOwner({dataset, user: externalContext.user}, (datasetValidationError: any) => {
       if (datasetValidationError) {
         return onDatasetValidated(datasetValidationError);
       }
@@ -64,28 +71,39 @@ function findDatasetByNameAndValidateOwnership(externalContext, onDatasetValidat
   });
 }
 
-function _lockDataset(externalContext, onDatasetLocked) {
-  return DatasetsRepository.lock(externalContext.datasetName, (datasetLockError, dataset) => {
+function lockDataset(externalContext: any, onDatasetLocked: Function): void {
+  const datasetName = _.get(externalContext, 'dataset.name', externalContext.datasetName);
+  return DatasetsRepository.lock(datasetName, (datasetLockError: any, dataset: any) => {
     if (datasetLockError) {
       return onDatasetLocked(datasetLockError);
     }
 
     if (!dataset) {
-      return onDatasetLocked(`Version of dataset "${externalContext.datasetName}" was already locked`);
+      return onDatasetLocked(`Version of dataset "${datasetName}" was already locked or dataset is absent`);
     }
 
     return onDatasetLocked(null, externalContext);
   });
 }
 
-function _checkDefaultTransactionInDataset(externalContext, onTransactionsFound) {
-  return DatasetTransactionsRepository.findDefault({datasetId: externalContext.datasetId}, (transactionsSearchError, defaultTransaction) => {
+function unlockDataset(externalContext: any, done: Function): void {
+  return DatasetsRepository.unlock(externalContext.datasetName, (err: any, dataset: any) => {
+    if (!dataset) {
+      return done(`Version of dataset "${externalContext.datasetName}" wasn't locked`);
+    }
+
+    return done(err, externalContext);
+  });
+}
+
+function _checkDefaultTransactionInDataset(externalContext: any, onTransactionsFound: Function): void {
+  return DatasetTransactionsRepository.findDefault({datasetId: externalContext.datasetId}, (transactionsSearchError: any, defaultTransaction: any) => {
     if (transactionsSearchError) {
       return onTransactionsFound(transactionsSearchError);
     }
 
     if (defaultTransaction) {
-      return DatasetsRepository.unlock(externalContext.datasetName, (datasetUnlockError) => {
+      return DatasetsRepository.unlock(externalContext.datasetName, (datasetUnlockError: any) => {
         if (datasetUnlockError) {
           return onTransactionsFound(datasetUnlockError);
         }
@@ -98,12 +116,12 @@ function _checkDefaultTransactionInDataset(externalContext, onTransactionsFound)
   });
 }
 
-function _removeAllDataByDataset(externalContext, onDataRemoved) {
+function _removeAllDataByDataset(externalContext: any, onDataRemoved: AsyncResultCallback<any, any>): void {
   const conceptsRepository = ConceptsRepositoryFactory.versionAgnostic();
   const entitiesRepository = EntitiesRepositoryFactory.versionAgnostic();
 
   return async.parallel([
-    done => conceptsRepository.removeByDataset(externalContext.datasetId, (error, removeResult) => {
+    (done: Function) => conceptsRepository.removeByDataset(externalContext.datasetId, (error: any, removeResult: any) => {
       if (error) {
         return done(error);
       }
@@ -114,7 +132,7 @@ function _removeAllDataByDataset(externalContext, onDataRemoved) {
 
       return done();
     }),
-    done => entitiesRepository.removeByDataset(externalContext.datasetId, (error, removeResult) => {
+    (done: Function) => entitiesRepository.removeByDataset(externalContext.datasetId, (error: any, removeResult: any) => {
       if (error) {
         return done(error);
       }
@@ -125,19 +143,19 @@ function _removeAllDataByDataset(externalContext, onDataRemoved) {
 
       return done();
     }),
-    done => removeDatapointsInChunks(externalContext, done),
-    done => DatasetSchemaRepository.removeByDataset(externalContext.datasetId, done)
-  ], (removingDataError) => {
+    (done: Function) => removeDatapointsInChunks(externalContext, done),
+    (done: Function) => DatasetSchemaRepository.removeByDataset(externalContext.datasetId, done)
+  ], (removingDataError: any) => {
     if (removingDataError) {
-      return onDataRemoved(removingDataError);
+      return onDataRemoved(removingDataError, null);
     }
     return onDataRemoved(null, externalContext);
   });
 }
 
-function removeDatapointsInChunks({datasetId, datasetName}, onRemoved): void {
+function removeDatapointsInChunks({datasetId, datasetName}: any, onRemoved: Function): void {
   const datapointsRepository = DatapointsRepositoryFactory.versionAgnostic();
-  datapointsRepository.findIdsByDatasetAndLimit(datasetId, DATAPOINTS_TO_REMOVE_CHUNK_SIZE, (error, datapointIds) => {
+  datapointsRepository.findIdsByDatasetAndLimit(datasetId, DATAPOINTS_TO_REMOVE_CHUNK_SIZE, (error: any, datapointIds: any[]) => {
     const amountOfDatapointsToRemove = _.size(datapointIds);
     logger.info('Removing datapoints', amountOfDatapointsToRemove);
 
@@ -150,9 +168,9 @@ function removeDatapointsInChunks({datasetId, datasetName}, onRemoved): void {
       return onRemoved(null);
     }
 
-    datapointsRepository.removeByIds(datapointIds, error => {
-      if (error) {
-        return onRemoved(error);
+    datapointsRepository.removeByIds(datapointIds, (removalError: any) => {
+      if (removalError) {
+        return onRemoved(removalError);
       }
 
       DatasetRemovalTracker
@@ -165,7 +183,7 @@ function removeDatapointsInChunks({datasetId, datasetName}, onRemoved): void {
 }
 
 function getRemovalStateForDataset(datasetName: any, user: any, done: Function): any {
-  return findDatasetByNameAndValidateOwnership({datasetName, user}, (error, externalContext: any)=> {
+  return findDatasetByNameAndValidateOwnership({datasetName, user}, (error: any, externalContext: any) => {
     if (error) {
       return done(error);
     }
@@ -174,16 +192,16 @@ function getRemovalStateForDataset(datasetName: any, user: any, done: Function):
   });
 }
 
-function _removeAllTransactions(pipe, onTransactionsRemoved) {
-  return DatasetTransactionsRepository.removeAllByDataset(pipe.datasetId, (error) => onTransactionsRemoved(error, pipe));
+function _removeAllTransactions(pipe: any, onTransactionsRemoved: Function): void {
+  return DatasetTransactionsRepository.removeAllByDataset(pipe.datasetId, (error: any) => onTransactionsRemoved(error, pipe));
 }
 
-function _removeDataset(pipe, onDatasetRemoved) {
+function _removeDataset(pipe: any, onDatasetRemoved: Function): void {
   return DatasetsRepository.removeById(pipe.datasetId, onDatasetRemoved);
 }
 
-function _findDatasetsByUser(pipe, done) {
-  return DatasetsRepository.findByUser(pipe.userId, (datasetSearchError, datasets) => {
+function _findDatasetsByUser(pipe: any, done: Function): void {
+  return DatasetsRepository.findByUser(pipe.userId, (datasetSearchError: any, datasets: any[]) => {
     if (datasetSearchError) {
       return done(datasetSearchError);
     }
@@ -193,8 +211,8 @@ function _findDatasetsByUser(pipe, done) {
   });
 }
 
-function _collectVersionsForEachDataset(pipe, done) {
-  return async.mapLimit(pipe.datasets, constants.LIMIT_NUMBER_PROCESS, _findAllCompletedVersionsByDataset, (collectingVersionsError, datasetsWithVersions) => {
+function _collectVersionsForEachDataset(pipe: any, done: Function): void {
+  return async.mapLimit(pipe.datasets, constants.LIMIT_NUMBER_PROCESS, _findAllCompletedVersionsByDataset, (collectingVersionsError: any, datasetsWithVersions: any) => {
     if (collectingVersionsError) {
       return done(collectingVersionsError);
     }
@@ -203,8 +221,8 @@ function _collectVersionsForEachDataset(pipe, done) {
   });
 }
 
-function _findAllCompletedVersionsByDataset(dataset, onTransactionsFound) {
-  return DatasetTransactionsRepository.findAllCompletedByDataset(dataset._id, (transactionSearchError, transactions) => {
+function _findAllCompletedVersionsByDataset(dataset: any, onTransactionsFound: Function): void {
+  return DatasetTransactionsRepository.findAllCompletedByDataset(dataset._id, (transactionSearchError: any, transactions: any[]) => {
     if (transactionSearchError) {
       return onTransactionsFound(transactionSearchError);
     }
@@ -221,7 +239,7 @@ function _findAllCompletedVersionsByDataset(dataset, onTransactionsFound) {
       id: dataset._id,
       name: dataset.name,
       path: dataset.path,
-      isDefault: _.some(versions, version => version.isDefault),
+      isDefault: _.some(versions, (version: any) => version.isDefault),
       versions
     };
 

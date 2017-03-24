@@ -2,11 +2,8 @@ import './passport';
 import './db.config';
 
 import { configureExpress } from './express.config';
+import * as express from 'express';
 
-function configureWaffleServer(app) {
+export function configureWaffleServer(app: express.Application): void {
   configureExpress(app);
 }
-
-export {
-  configureWaffleServer
-};

@@ -4,7 +4,7 @@ export {
   validateDatasetOwner
 };
 
-function validateDatasetOwner(options, done) {
+function validateDatasetOwner(options: any, done: Function): void {
   const userId = _.toString(_.get(options.user, '_id'));
   const ownerId = _.toString(_.get(options.dataset, 'createdBy'));
 

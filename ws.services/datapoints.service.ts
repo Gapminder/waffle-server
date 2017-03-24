@@ -15,7 +15,7 @@ export {
   collectDatapointsByDdfql
 };
 
-function collectDatapointsByDdfql(options, onMatchedDatapoints) {
+function collectDatapointsByDdfql(options: any, onMatchedDatapoints: AsyncResultCallback<any, any>): void {
   console.time('finish matching DataPoints');
   const pipe = {
     user: options.user,
@@ -39,31 +39,31 @@ function collectDatapointsByDdfql(options, onMatchedDatapoints) {
     mapConcepts,
     getEntitiesByDdfql,
     normalizeQueriesToDatapointsByDdfql
-  ], (error, result) => {
+  ], (error: any, result: any) => {
     console.timeEnd('finish matching DataPoints');
 
     return onMatchedDatapoints(error, result);
   });
 }
 
-function getEntitiesByDdfql(pipe, cb) {
-  return async.map(pipe.resolvedDomainsAndSetGids, _getEntitiesByDomainOrSetGid, (err, result) => {
-    pipe.entityOriginIdsGroupedByDomain = _.mapValues(result, (value) => _.map(value, constants.ORIGIN_ID));
+function getEntitiesByDdfql(pipe: any, cb: Function): void {
+  return async.map(pipe.resolvedDomainsAndSetGids, _getEntitiesByDomainOrSetGid, (err: any, result: any) => {
+    pipe.entityOriginIdsGroupedByDomain = _.mapValues(result, (value: any) => _.map(value, constants.ORIGIN_ID));
     pipe.entities = _.flatMap(result);
 
     return cb(err, pipe);
   });
 
-  function _getEntitiesByDomainOrSetGid(domainGid, mcb) {
+  function _getEntitiesByDomainOrSetGid(domainGid: string, mcb: Function): void {
     const _pipe = {
       dataset: pipe.dataset,
       version: pipe.version,
-      domainGid: domainGid,
+      domainGid,
       headers: [],
       where: {}
     };
 
-    return entitiesService.getEntities(_pipe, (err, result) => {
+    return entitiesService.getEntities(_pipe, (err: any, result: any) => {
       if (err) {
         return mcb(err);
       }
@@ -72,7 +72,7 @@ function getEntitiesByDdfql(pipe, cb) {
   }
 }
 
-function normalizeQueriesToDatapointsByDdfql(pipe, cb) {
+function normalizeQueriesToDatapointsByDdfql(pipe: any, cb: Function): void {
   console.time('get datapoints');
 
   if (_.isEmpty(pipe.measures)) {
@@ -84,17 +84,17 @@ function normalizeQueriesToDatapointsByDdfql(pipe, cb) {
   const entitiesRepository = EntitiesRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version);
   const normalizedQuery = ddfql.normalizeDatapoints(pipe.query, pipe.concepts);
 
-  return async.mapValuesLimit(normalizedQuery.join, 10, (joinQuery, link, mcb: Function) => {
+  return async.mapValuesLimit(normalizedQuery.join, 10, (joinQuery: any, link: any, mcb: Function) => {
     const validateQuery: ValidateQueryModel = ddfQueryValidator.validateMongoQuery(joinQuery);
 
     if(!validateQuery.valid) {
       return cb(validateQuery.log, pipe);
     }
 
-    return entitiesRepository.findEntityPropertiesByQuery(joinQuery, (error, entities) => {
+    return entitiesRepository.findEntityPropertiesByQuery(joinQuery, (error: any, entities: any) => {
       return mcb(error, _.map(entities, constants.ORIGIN_ID));
     });
-  }, (err, substituteJoinLinks) => {
+  }, (err: any, substituteJoinLinks: any) => {
     if (err) {
       return cb(err, pipe);
     }
@@ -107,26 +107,26 @@ function normalizeQueriesToDatapointsByDdfql(pipe, cb) {
       return cb(validateQuery.log, pipe);
     }
 
-    return queryDatapointsByDdfql(pipe, subDatapointQuery, (err, pipe) => {
-      if (err) {
-        return cb(err, pipe);
+    return queryDatapointsByDdfql(pipe, subDatapointQuery, (queryErr: any, externalContext: any) => {
+      if (queryErr) {
+        return cb(queryErr, externalContext);
       }
 
       console.timeEnd('get datapoints');
-      if(err) {
-        return cb(err);
+      if(queryErr) {
+        return cb(queryErr);
       }
-      logger.info(`${_.size(pipe.datapoints)} items of datapoints were selected`);
+      logger.info(`${_.size(externalContext.datapoints)} items of datapoints were selected`);
 
-      return cb(null, pipe);
+      return cb(null, externalContext);
     });
   });
 }
 
-function queryDatapointsByDdfql(pipe, subDatapointQuery, cb) {
+function queryDatapointsByDdfql(pipe: any, subDatapointQuery: any, cb: Function): Promise<any> {
   return DatapointsRepositoryFactory
     .currentVersion(pipe.dataset._id, pipe.version)
-    .findByQuery(subDatapointQuery, (error, datapoints) => {
+    .findByQuery(subDatapointQuery, (error: any, datapoints: any) => {
       if (error) {
         return cb(error);
       }
@@ -137,7 +137,7 @@ function queryDatapointsByDdfql(pipe, subDatapointQuery, cb) {
     });
 }
 
-function getConcepts(pipe, cb) {
+function getConcepts(pipe: any, cb: Function): void {
   const _pipe = {
     dataset: pipe.dataset,
     version: pipe.version,
@@ -145,14 +145,14 @@ function getConcepts(pipe, cb) {
     where: {}
   };
 
-  return conceptsService.getConcepts(_pipe, (err, result) => {
+  return conceptsService.getConcepts(_pipe, (err: any, result: any) => {
     pipe.concepts = result.concepts;
 
     return cb(err, pipe);
   });
 }
 
-function mapConcepts(pipe, cb) {
+function mapConcepts(pipe: any, cb: Function): void {
   if (_.isEmpty(pipe.headers)) {
     return cb(`You didn't select any column`);
   }

@@ -629,7 +629,7 @@ describe('WS-CLI controller', () => {
     }));
   });
 
-  describe('Remove Dataset', function() {
+  describe('Removal Dataset Controller', function() {
     it('should log an error when unauthenticated user request remove dataset', sinon.test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'There is no authenticated user to remove dataset';

@@ -19,12 +19,10 @@ import * as fixtureDatapointsLinesOfCodeByCompanyAnno from './fixtures/commit-4-
 import * as fixtureDatapointsCompanySizeByCompanyAnno from './fixtures/commit-4--datapoints-companysize_by_company_anno.json';
 import * as fixtureDatapointsLinesOfCodeByCompanyProject from './fixtures/commit-4--datapoints-linesofcode_by_company_project.json';
 import * as fixtureDatapointsLinesOfCodeByCompanyProjectAnno from './fixtures/commit-4--datapoints-linesofcode_by_company_project_anno.json';
-import * as fixtureDatapointsNumUsersByCompanyProject from './fixtures/commit-4--datapoints-numusers_by_company_project.json';
 import * as fixtureQueryOperatorsLinesOfCodeByCompanyAnnoWithCondition from './fixtures/commit-4--operators-linesofcode_by_company_anno.json';
 import * as fixtureQueryOperatorsCompanySizeByCompanyAnnoWithCondition from './fixtures/commit-4--operators-companysize_by_company_anno.json';
 import * as fixtureQueryOperatorsLinesOfCodeByCompanyProjectWithCondition from './fixtures/commit-4--operators-linesofcode_by_company_project.json';
 import * as fixtureQueryOperatorsLinesOfCodeByCompanyProjectAnnoWithCondition from './fixtures/commit-4--operators-linesofcode_by_company_project_anno.json';
-import * as fixtureQueryOperatorsNumUsersByCompanyProjectWithCondition from './fixtures/commit-4--operators-numusers_by_company_project.json';
 import * as fixtureDatapointTranslationsCompanySize from './fixtures/commit-4--translations-datapoints-company_scale.json';
 import * as fixtureEntityTranslationsCompanySize from './fixtures/commit-4--translations-entities-company_scale.json';
 import * as fixtureEntityTranslationsRegion from './fixtures/commit-4--translations-entities-region.json';
@@ -336,7 +334,8 @@ describe("State Version 4 (4th commit)", function() {
         }
       };
 
-      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDatapointsNumUsersByCompanyProject, done);
+      const expectedError = "You choose select column(s) 'num_users' which aren't present in choosen dataset";
+      e2eUtils.sendDdfqlRequestAndExpectError(ddfql, expectedError, done);
     });
 
   });
@@ -444,7 +443,8 @@ describe("State Version 4 (4th commit)", function() {
         }
       };
 
-      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureQueryOperatorsNumUsersByCompanyProjectWithCondition, done);
+      const expectedError = "You choose select column(s) 'num_users' which aren't present in choosen dataset";
+      e2eUtils.sendDdfqlRequestAndExpectError(ddfql, expectedError, done);
     });
 
   });
