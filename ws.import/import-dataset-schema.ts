@@ -1,13 +1,18 @@
 import * as _ from 'lodash';
 import * as hi from 'highland';
-import {logger} from '../ws.config/log';
-import {config} from '../ws.config/config';
-import {constants} from '../ws.utils/constants';
+import { logger } from '../ws.config/log';
+import { config } from '../ws.config/config';
+import { constants } from '../ws.utils/constants';
 import * as fileUtils from '../ws.utils/file';
 import * as ddfImportUtils from '../ws.import/utils/import-ddf.utils';
-import {DatasetSchemaRepository} from '../ws.repository/ddf/dataset-index/dataset-index.repository';
-import {DatapointsRepositoryFactory} from '../ws.repository/ddf/data-points/data-points.repository';
-import { ParsedConceptResource, ParsedEntityResource, ParsedDatapointResource, ParsedResource } from './utils/datapackage.parser';
+import { DatasetSchemaRepository } from '../ws.repository/ddf/dataset-index/dataset-index.repository';
+import { DatapointsRepositoryFactory } from '../ws.repository/ddf/data-points/data-points.repository';
+import {
+  ParsedConceptResource,
+  ParsedEntityResource,
+  ParsedDatapointResource,
+  ParsedResource
+} from './utils/datapackage.parser';
 
 export function createDatasetSchema(externalContext: any, done: Function): void {
   const externalContextFrozen = Object.freeze({
@@ -79,12 +84,13 @@ function toEntitiesSchemaCreationStream(resourcesStream: any, externalContextFro
 
       return hi(schemaItems);
     })
+    .uniqBy((schemaItemA: any, schemaItemB: any) => {
+      return _.isEqual(
+        [...schemaItemA.key, schemaItemA.value],
+        [...schemaItemB.key, schemaItemB.value]
+      );
+    })
     .batch(ddfImportUtils.DEFAULT_CHUNK_SIZE)
-    .map()
-    .uniqBy((schemaItemA: any, schemaItemB: any) => _.isEqual(
-      [... schemaItemA.key, schemaItemA.value],
-      [... schemaItemB.key, schemaItemB.value]
-    ))
     .flatMap((datasetSchemaBatch: any[]) => hi(storeDatasetSchemaItemsToDb(datasetSchemaBatch)));
 }
 
