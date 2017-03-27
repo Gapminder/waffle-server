@@ -1,3 +1,31 @@
+<a name="2.5.0"></a>
+# [2.5.0](https://github.com/Gapminder/waffle-server/compare/v2.4.0...v2.5.0) (2017-03-24)
+
+
+### Bug Fixes
+
+* update dependencies, fix schema generator ([efca66f](https://github.com/Gapminder/waffle-server/commit/efca66f))
+* **concepts-schema:** generate concepts schema not from records but from headers ([2271a87](https://github.com/Gapminder/waffle-server/commit/2271a87))
+* **ddfql:** fix the way domain and sets from join.key interpreted in join.where ([8ece302](https://github.com/Gapminder/waffle-server/commit/8ece302))
+* **docker_run.ts:** make WS restarting on failure when running in docker container ([0789244](https://github.com/Gapminder/waffle-server/commit/0789244))
+* **entities schema:** serve domain's props as intersection of all its props with all its entity set props ([9a7654b](https://github.com/Gapminder/waffle-server/commit/9a7654b))
+* **import-update:** extract transaction in "after steps" handler properly ([715f26f](https://github.com/Gapminder/waffle-server/commit/715f26f))
+* **removal-dataset:** add dataset unlocking if error happened during removal process ([419ad1d](https://github.com/Gapminder/waffle-server/commit/419ad1d))
+* **ws-tests:** create stubs for logger in utils test ([752bbcc](https://github.com/Gapminder/waffle-server/commit/752bbcc))
+
+
+### Features
+
+* **ws-tests:** create stub for logger in import entities test ([d999d81](https://github.com/Gapminder/waffle-server/commit/d999d81))
+* **ws-tests:** create stubs fo logger in import dataset schema test ([cdd19cc](https://github.com/Gapminder/waffle-server/commit/cdd19cc))
+* **ws-tests:** create stubs fo logger in import dataset service test ([6692ea5](https://github.com/Gapminder/waffle-server/commit/6692ea5))
+* **ws-tests:** create stubs for logger in import datapoints test ([c46f679](https://github.com/Gapminder/waffle-server/commit/c46f679))
+* **ws-tests:** create stubs for logger in import repos service test ([0379433](https://github.com/Gapminder/waffle-server/commit/0379433))
+* **ws-tests:** create stubs for logger in translations test ([fb34c88](https://github.com/Gapminder/waffle-server/commit/fb34c88))
+* **ws-tests:** create stubs for logger in update datapoints test ([9509667](https://github.com/Gapminder/waffle-server/commit/9509667))
+
+
+
 <a name="2.4.0"></a>
 # [2.4.0](https://github.com/Gapminder/waffle-server/compare/v2.3.0...v2.4.0) (2017-02-14)
 
