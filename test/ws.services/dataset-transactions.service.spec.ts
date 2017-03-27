@@ -5,7 +5,15 @@ import '../../ws.config/db.config';
 
 import * as _ from 'lodash';
 import {expect} from 'chai';
+import * as sinon from 'sinon';
 import * as proxyquire from 'proxyquire';
+
+import * as datasetTransactionsService from '../../ws.services/dataset-transactions.service';
+import * as datasetsService from '../../ws.services/datasets.service';
+import { DatasetTransactionsRepository } from '../../ws.repository/ddf/dataset-transactions/dataset-transactions.repository';
+import {ConceptsRepositoryFactory} from '../../ws.repository/ddf/concepts/concepts.repository';
+import {EntitiesRepositoryFactory} from '../../ws.repository/ddf/entities/entities.repository';
+import {DatapointsRepositoryFactory} from '../../ws.repository/ddf/data-points/data-points.repository';
 
 const datasetTransactionsServicePath = '../../ws.services/dataset-transactions.service';
 const datasetServicePath = './datasets.service';
@@ -1102,4 +1110,207 @@ describe('Dataset Transactions Service', () => {
     });
   });
 
+  it('should set last error', sinon.test(function () {
+    const setLastErrorSpy = this.spy(DatasetTransactionsRepository, 'setLastError');
+
+    const transactionId = 'txId';
+    const lastErrorMessage = 'Boo!';
+    const onErrorSet = this.spy();
+    datasetTransactionsService.setLastError(transactionId, lastErrorMessage, onErrorSet);
+
+    sinon.assert.calledOnce(setLastErrorSpy);
+    sinon.assert.calledWith(setLastErrorSpy, transactionId, lastErrorMessage, onErrorSet);
+  }));
+
+  it('should get latest transaction status by dataset name', sinon.test(function (done) {
+    const externalContext = {
+      datasetId: 'dsId',
+      datasetName: 'dsName'
+    };
+    const latestTransaction = {
+      createdAt: Date.now(),
+      lastError: 'lastError',
+      commit: 'aaaaaaa',
+      isClosed: true
+    };
+
+    const user = {
+      email: 'dev@gapminder.org'
+    };
+
+    const findDatasetByNameAndValidateOwnershipStub =
+      this.stub(datasetsService, 'findDatasetByNameAndValidateOwnership')
+        .callsArgWith(1, null, externalContext);
+
+    this.stub(DatasetTransactionsRepository, 'findLatestByDataset').callsArgWithAsync(1, null, latestTransaction);
+
+    const conceptsCountStub = this.stub().callsArgWithAsync(0, null, 1);
+    const ConceptsRepositoryFactoryStub =
+      this.stub(ConceptsRepositoryFactory, 'closedOrOpenedInGivenVersion')
+        .returns({count: conceptsCountStub});
+
+    const entitiesCountStub = this.stub().callsArgWithAsync(0, null, 2);
+    const EntitiesRepositoryFactoryStub =
+      this.stub(EntitiesRepositoryFactory, 'closedOrOpenedInGivenVersion')
+        .returns({count: entitiesCountStub});
+
+    const datapointsCountStub = this.stub().callsArgWithAsync(0, null, 3);
+    const DatapointsRepositoryFactoryStub =
+      this.stub(DatapointsRepositoryFactory, 'closedOrOpenedInGivenVersion')
+        .returns({count: datapointsCountStub});
+
+    datasetTransactionsService.getStatusOfLatestTransactionByDatasetName(externalContext.datasetName, user, (error, status) => {
+      expect(error).to.not.exist;
+      expect(status).to.deep.equal({
+        datasetName: externalContext.datasetName,
+        transaction: {
+          lastError: latestTransaction.lastError,
+          commit: latestTransaction.commit,
+          status: 'Completed',
+          createdAt: new Date(latestTransaction.createdAt)
+        },
+        modifiedObjects: {
+          concepts: 1,
+          entities: 2,
+          datapoints: 3
+        }
+      });
+
+      sinon.assert.calledOnce(ConceptsRepositoryFactoryStub);
+      sinon.assert.calledWith(ConceptsRepositoryFactoryStub, externalContext.datasetId, latestTransaction.createdAt);
+
+      sinon.assert.calledOnce(EntitiesRepositoryFactoryStub);
+      sinon.assert.calledWith(EntitiesRepositoryFactoryStub, externalContext.datasetId, latestTransaction.createdAt);
+
+      sinon.assert.calledOnce(DatapointsRepositoryFactoryStub);
+      sinon.assert.calledWith(DatapointsRepositoryFactoryStub, externalContext.datasetId, latestTransaction.createdAt);
+
+      sinon.assert.calledOnce(conceptsCountStub);
+      sinon.assert.calledOnce(entitiesCountStub);
+      sinon.assert.calledOnce(datapointsCountStub);
+
+      sinon.assert.calledOnce(findDatasetByNameAndValidateOwnershipStub);
+      sinon.assert.calledWith(findDatasetByNameAndValidateOwnershipStub, {datasetName: externalContext.datasetName, user});
+      done();
+    });
+  }));
+
+  it('should determine transaction progress', sinon.test(function (done) {
+    const externalContext = {
+      datasetId: 'dsId',
+      datasetName: 'dsName'
+    };
+    const latestTransaction = {
+      createdAt: Date.now(),
+      lastError: 'lastError',
+      commit: 'aaaaaaa',
+      isClosed: false
+    };
+
+    const user = {
+      email: 'dev@gapminder.org'
+    };
+
+    this.stub(datasetsService, 'findDatasetByNameAndValidateOwnership').callsArgWith(1, null, externalContext);
+    this.stub(DatasetTransactionsRepository, 'findLatestByDataset').callsArgWithAsync(1, null, latestTransaction);
+
+    this.stub(ConceptsRepositoryFactory, 'closedOrOpenedInGivenVersion')
+      .returns({count: this.stub().callsArgWithAsync(0, null, 1)});
+
+    this.stub(EntitiesRepositoryFactory, 'closedOrOpenedInGivenVersion')
+      .returns({count: this.stub().callsArgWithAsync(0, null, 2)});
+
+    this.stub(DatapointsRepositoryFactory, 'closedOrOpenedInGivenVersion')
+      .returns({count: this.stub().callsArgWithAsync(0, null, 3)});
+
+    datasetTransactionsService.getStatusOfLatestTransactionByDatasetName(externalContext.datasetName, user, (error, status) => {
+      expect(error).to.not.exist;
+      expect(status).to.deep.equal({
+        datasetName: externalContext.datasetName,
+        transaction: {
+          lastError: latestTransaction.lastError,
+          commit: latestTransaction.commit,
+          status: 'In progress',
+          createdAt: new Date(latestTransaction.createdAt)
+        },
+        modifiedObjects: {
+          concepts: 1,
+          entities: 2,
+          datapoints: 3
+        }
+      });
+
+      done();
+    });
+  }));
+
+  it('shouldn\'t get latest transaction status by dataset name: fail because of dataset ownership check', sinon.test(function (done) {
+    const expectedError = 'Ownership check failed';
+    this.stub(datasetsService, 'findDatasetByNameAndValidateOwnership').callsArgWith(1, expectedError);
+
+    datasetTransactionsService.getStatusOfLatestTransactionByDatasetName(null, null, (error) => {
+      expect(error).to.equal(expectedError);
+      done();
+    });
+  }));
+
+  it('shouldn\'t get latest transaction status by dataset name: fail finding latest transaction', sinon.test(function (done) {
+    const expectedError = 'Latest transaction search failed';
+    this.stub(datasetsService, 'findDatasetByNameAndValidateOwnership').callsArgWith(1, null, {});
+    this.stub(DatasetTransactionsRepository, 'findLatestByDataset').callsArgWithAsync(1, expectedError);
+
+    datasetTransactionsService.getStatusOfLatestTransactionByDatasetName(null, null, (error) => {
+      expect(error).to.equal(expectedError);
+      done();
+    });
+  }));
+
+  it('shouldn\'t get latest transaction status by dataset name: fail cause there is no latest transaction', sinon.test(function (done) {
+    const expectedError = `Transaction is absent for dataset: sg`;
+    this.stub(datasetsService, 'findDatasetByNameAndValidateOwnership').callsArgWith(1, null, {datasetName: 'sg'});
+    this.stub(DatasetTransactionsRepository, 'findLatestByDataset').callsArgWithAsync(1, null);
+
+    datasetTransactionsService.getStatusOfLatestTransactionByDatasetName(null, null, (error) => {
+      expect(error).to.equal(expectedError);
+      done();
+    });
+  }));
+
+
+  it('shouldn\'t get latest transaction status by dataset name: fail cause was not able to count amount of changed objects', sinon.test(function (done) {
+    const externalContext = {
+      datasetId: 'dsId',
+      datasetName: 'dsName'
+    };
+    const latestTransaction = {
+      createdAt: Date.now(),
+      lastError: 'lastError',
+      commit: 'aaaaaaa',
+      isClosed: false
+    };
+
+    const user = {
+      email: 'dev@gapminder.org'
+    };
+
+    const expectedError = 'Datapoints count has failed';
+
+    this.stub(datasetsService, 'findDatasetByNameAndValidateOwnership').callsArgWith(1, null, externalContext);
+    this.stub(DatasetTransactionsRepository, 'findLatestByDataset').callsArgWithAsync(1, null, latestTransaction);
+
+    this.stub(ConceptsRepositoryFactory, 'closedOrOpenedInGivenVersion')
+      .returns({count: this.stub().callsArgWithAsync(0, null, 1)});
+
+    this.stub(EntitiesRepositoryFactory, 'closedOrOpenedInGivenVersion')
+      .returns({count: this.stub().callsArgWithAsync(0, null, 2)});
+
+    this.stub(DatapointsRepositoryFactory, 'closedOrOpenedInGivenVersion')
+      .returns({count: this.stub().callsArgWithAsync(0, expectedError)});
+
+    datasetTransactionsService.getStatusOfLatestTransactionByDatasetName(externalContext.datasetName, user, (error, status) => {
+      expect(error).to.equal(expectedError);
+
+      done();
+    });
+  }));
 });
