@@ -43,7 +43,7 @@ function loadEntitiesFromCsv(resource: any, externalContext: any): any {
 
   return fileUtils.readCsvFileAsStream(pathToDdfFolder, resource.path)
     .map((rawEntity: any) => {
-      const setsAndDomain = entitiesUtils.getSetsAndDomain(resource, externalContext);
+      const setsAndDomain = entitiesUtils.getSetsAndDomain(resource, externalContext, rawEntity);
       const context = _.extend({filename: resource.path}, setsAndDomain, externalContext);
       return toEntity(rawEntity, context);
     });

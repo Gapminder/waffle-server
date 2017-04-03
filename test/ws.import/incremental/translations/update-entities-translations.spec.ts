@@ -9,6 +9,7 @@ import { updateEntitiesTranslation } from '../../../../ws.import/incremental/tra
 import * as entitiesUtils from '../../../../ws.import/utils/entities.utils';
 import * as ddfMappers from '../../../../ws.import/utils/ddf-mappers';
 import { EntitiesRepositoryFactory } from '../../../../ws.repository/ddf/entities/entities.repository';
+import { ChangesDescriptor } from '../../../../ws.import/utils/changes-descriptor';
 
 const externalContext = {
   transaction: {
@@ -76,7 +77,8 @@ describe('Entities Translations Update Plugin', () => {
       entityDomain: {
         originId: 'entityDomainOriginId'
       },
-      entitySetsOriginIds: ['entitySetOriginId']
+      entitySetsOriginIds: ['entitySetOriginId'],
+      filename: 'path/to/translations-file'
     };
 
     this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
@@ -86,6 +88,7 @@ describe('Entities Translations Update Plugin', () => {
         domain: context.entityDomain.originId,
         sets: context.entitySetsOriginIds,
         gid: changesDescriptor.gid,
+        sources: context.filename
       });
 
       callback();
@@ -105,6 +108,28 @@ describe('Entities Translations Update Plugin', () => {
       foo: 'bar'
     };
 
+    const changesDescriptor = new ChangesDescriptor({
+      object: {
+        'data-origin': {
+          foo: 'hello',
+          baz: 'baz'
+        },
+        'data-update': {
+          foo: 'hello2',
+          bar: 'bar'
+        },
+      },
+      metadata: {
+        action: 'update',
+        removedColumns: ['baz']
+      }
+    });
+
+    const expectedEntity = {
+      foo: 'hello2',
+      bar: 'bar'
+    };
+
     const resourceFake = {
       primaryKey: []
     };
@@ -112,12 +137,12 @@ describe('Entities Translations Update Plugin', () => {
     const getSetsAndDomainStub = this.stub(entitiesUtils, 'getSetsAndDomain').returns(setsAndDomainFake);
 
     this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
-      const enrichment = plugin.enrichContext(resourceFake, null, contextFake);
+      const enrichment = plugin.enrichContext(resourceFake, changesDescriptor, contextFake);
 
       expect(enrichment).to.equal(setsAndDomainFake);
 
       sinon.assert.calledOnce(getSetsAndDomainStub);
-      sinon.assert.calledWith(getSetsAndDomainStub, resourceFake, contextFake);
+      sinon.assert.calledWith(getSetsAndDomainStub, resourceFake, contextFake, expectedEntity);
 
       callback();
     });

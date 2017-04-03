@@ -1,21 +1,25 @@
 import * as _ from 'lodash';
 import * as ddfMappers from './ddf-mappers';
+import { constants } from '../../ws.utils/constants';
 
 export {
   getSetsAndDomain,
   makeEntityBasedOnItsClosedVersion
 };
 
-function getSetsAndDomain(resource, context) {
+function getSetsAndDomain(resource, context, entity) {
   const entitySet = context.concepts[resource.concept] || context.previousConcepts[resource.concept];
   const entityDomain = entitySet.type === 'entity_domain' ? entitySet : entitySet.domain;
 
-  const entitySetsOriginIds = _.map(resource.entitySets, (set: string) => {
-    const concept = context.concepts[set] || context.previousConcepts[set];
-    return concept.originId;
-  });
+  const entitySets = _.reduce(resource.entitySets, (sets: any, set: string) => {
+    if (_.toUpper(_.toString(entity[`${constants.IS_OPERATOR}${set}`])) === 'TRUE') {
+      const concept = context.concepts[set] || context.previousConcepts[set];
+      return _.extend(sets, {[set]: concept.originId});
+    }
+    return sets;
+  }, {});
 
-  return {entitySet, entityDomain, entitySetsOriginIds};
+  return {entitySet, entityDomain, entitySetsOriginIds: _.values(entitySets)};
 }
 
 function makeEntityBasedOnItsClosedVersion(properties, closedEntity, externalContext) {

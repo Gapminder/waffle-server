@@ -67,11 +67,10 @@ function createTranslations(externalContext: any): any {
 
   const storeEntitiesTranslationsStream = loadTranslationsStream.fork()
     .filter(({resource: {primaryKey}}: any) => datapackageParser.isEntitiesResource(primaryKey))
-    .map(({object: properties, resource: {language, path: source, primaryKey: [primaryKey], fields}}: any) => {
-      const fieldsByName = _.keyBy(fields, 'name');
+    .map(({object: properties, resource: {language, path: source, primaryKey: [primaryKey]}}: any) => {
       const resolvedProperties = _.reduce(properties, (result: any, propertyValue: any, propertyName: string) => {
-        if (fieldsByName.hasOwnProperty(`is--${propertyName}`)) {
-          result[`properties.is--${propertyName}`] = propertyValue;
+        if (_.startsWith(propertyName, constants.IS_OPERATOR)) {
+          result[`properties.${propertyName}`] = ddfImportUtils.toBoolean(propertyValue);
         }
         if (propertyName === primaryKey) {
           result.gid = propertyValue;
