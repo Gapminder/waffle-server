@@ -84,7 +84,7 @@
     "ts-node": "3.0.2",
     "typescript": "2.2.1",
     "validator": "6.2.1",
-    "waffle-server-import-cli": "~2.5.19"
+    "waffle-server-import-cli": "~2.5.24"
   },
   "devDependencies": {
     "@types/chai": "3.4.35",

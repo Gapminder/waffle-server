@@ -169,7 +169,7 @@ const entitiesRepository = {
   // addSubsetOfByGid: _.noop
 };
 
-describe('Update Concepts', function () {
+describe('Update Entities', function () {
   it('should create new and remove old entities from fixture', sinon.test(function (done) {
     const originExternalContext = _.defaults({pathToDatasetDiff: path.resolve(__dirname, './fixtures/full-diff-entities.txt')}, externalContextFixture);
     const expectedError = null;
@@ -197,9 +197,26 @@ describe('Update Concepts', function () {
       expect(loggerDebugStub.args[1][1]).to.be.equal(3);
       expect(loggerDebugStub.args[1][2]).to.not.exist;
 
-      const expectedQuery1 = {domain: 'DOMAINID', 'properties.company_size': 'small', sets: ['ENTITYSETID']};
-      const expectedQuery2 = {domain: 'DOMAINID', 'properties.company_size': 'large', sets: ['ENTITYSETID']};
-      const expectedQuery3 = {domain: 'DOMAINID', 'properties.company_size': 'medium', sets: ['ENTITYSETID']};
+      const expectedQuery1 = {
+        domain: 'DOMAINID',
+        'properties.company_size': 'small',
+        sets: ['ENTITYSETID'],
+        "sources": "ddf--entities--company--company_size.csv"
+      };
+
+      const expectedQuery2 = {
+        domain: 'DOMAINID',
+        'properties.company_size': 'large',
+        sets: ['ENTITYSETID'],
+        "sources": "ddf--entities--company--company_size.csv"
+      };
+
+      const expectedQuery3 = {
+        domain: 'DOMAINID',
+        'properties.company_size': 'medium',
+        sets: ['ENTITYSETID'],
+        "sources": "ddf--entities--company--company_size.csv"
+      };
 
       expect(loggerDebugStub.args[2][0]).to.be.equal('Closing entity by query: ');
       expect(loggerDebugStub.args[2][1]).to.be.deep.equal(expectedQuery1);
@@ -219,7 +236,7 @@ describe('Update Concepts', function () {
       sinon.assert.calledWithExactly(loggerInfoStub, sinon.match('Start creating entities').or(sinon.match('Start removing entities')).or(sinon.match('Start updating entities')));
 
       sinon.assert.calledThrice(loggerErrorStub);
-      sinon.assert.calledWithExactly(loggerErrorStub, sinon.match('Entity was not closed, though it should be'));
+      sinon.assert.calledWithExactly(loggerErrorStub, sinon.match('Entity was not closed, though it should be'), sinon.match.object, sinon.match.object);
 
       // *** createConcepts
       sinon.assert.calledOnce(versionAgnosticStub);
@@ -231,9 +248,9 @@ describe('Update Concepts', function () {
       sinon.assert.calledWithExactly(latestVersionStub, datasetId, version);
 
       sinon.assert.callCount(closeOneByQueryStub, expectedCloseOneByQueryCallCount);
-      expect(closeOneByQueryStub.args[0][0]).to.be.deep.equal({ domain: 'DOMAINID', 'properties.company_size': 'small', sets: ['ENTITYSETID'] });
-      expect(closeOneByQueryStub.args[1][0]).to.be.deep.equal({ domain: 'DOMAINID', 'properties.company_size': 'large', sets: ['ENTITYSETID'] });
-      expect(closeOneByQueryStub.args[2][0]).to.be.deep.equal({ domain: 'DOMAINID', 'properties.company_size': 'medium', sets: ['ENTITYSETID'] });
+      expect(closeOneByQueryStub.args[0][0]).to.be.deep.equal(expectedQuery1);
+      expect(closeOneByQueryStub.args[1][0]).to.be.deep.equal(expectedQuery2);
+      expect(closeOneByQueryStub.args[2][0]).to.be.deep.equal(expectedQuery3);
 
       return done();
     });
@@ -265,9 +282,26 @@ describe('Update Concepts', function () {
       expect(loggerDebugStub.args[1][1]).to.be.equal(3);
       expect(loggerDebugStub.args[1][2]).to.not.exist;
 
-      const expectedQuery1 = {domain: 'DOMAINID', 'properties.company_size': 'small', sets: ['ENTITYSETID']};
-      const expectedQuery2 = {domain: 'DOMAINID', 'properties.company_size': 'large', sets: ['ENTITYSETID']};
-      const expectedQuery3 = {domain: 'DOMAINID', 'properties.company_size': 'medium', sets: ['ENTITYSETID']};
+      const expectedQuery1 = {
+        domain: 'DOMAINID',
+        'properties.company_size': 'small',
+        sets: ['ENTITYSETID'],
+        "sources": "ddf--entities--company--company_size.csv"
+      };
+
+      const expectedQuery2 = {
+        domain: 'DOMAINID',
+        'properties.company_size': 'large',
+        sets: ['ENTITYSETID'],
+        "sources": "ddf--entities--company--company_size.csv"
+      };
+
+      const expectedQuery3 = {
+        domain: 'DOMAINID',
+        'properties.company_size': 'medium',
+        sets: ['ENTITYSETID'],
+        "sources": "ddf--entities--company--company_size.csv"
+      };
 
       expect(loggerDebugStub.args[2][0]).to.be.equal('Closing entity by query: ');
       expect(loggerDebugStub.args[2][1]).to.be.deep.equal(expectedQuery1);
@@ -298,9 +332,9 @@ describe('Update Concepts', function () {
       sinon.assert.calledWithExactly(latestVersionStub, datasetId, version);
 
       sinon.assert.calledThrice(closeOneByQueryStub);
-      expect(closeOneByQueryStub.args[0][0]).to.be.deep.equal({ domain: 'DOMAINID', 'properties.company_size': 'small', sets: ['ENTITYSETID'] });
-      expect(closeOneByQueryStub.args[1][0]).to.be.deep.equal({ domain: 'DOMAINID', 'properties.company_size': 'large', sets: ['ENTITYSETID'] });
-      expect(closeOneByQueryStub.args[2][0]).to.be.deep.equal({ domain: 'DOMAINID', 'properties.company_size': 'medium', sets: ['ENTITYSETID'] });
+      expect(closeOneByQueryStub.args[0][0]).to.be.deep.equal(expectedQuery1);
+      expect(closeOneByQueryStub.args[1][0]).to.be.deep.equal(expectedQuery2);
+      expect(closeOneByQueryStub.args[2][0]).to.be.deep.equal(expectedQuery3);
 
       return done();
     });
@@ -334,9 +368,26 @@ describe('Update Concepts', function () {
       expect(loggerDebugStub.args[1][1]).to.be.equal(3);
       expect(loggerDebugStub.args[1][2]).to.not.exist;
 
-      const expectedQuery1 = {domain: 'DOMAINID', 'properties.company_size': 'small', sets: ['ENTITYSETID']};
-      const expectedQuery2 = {domain: 'DOMAINID', 'properties.company_size': 'large', sets: ['ENTITYSETID']};
-      const expectedQuery3 = {domain: 'DOMAINID', 'properties.company_size': 'medium', sets: ['ENTITYSETID']};
+      const expectedQuery1 = {
+        domain: 'DOMAINID',
+        'properties.company_size': 'small',
+        sets: ['ENTITYSETID'],
+        "sources": "ddf--entities--company--company_size.csv"
+      };
+
+      const expectedQuery2 = {
+        domain: 'DOMAINID',
+        'properties.company_size': 'large',
+        sets: ['ENTITYSETID'],
+        "sources": "ddf--entities--company--company_size.csv"
+      };
+
+      const expectedQuery3 = {
+        domain: 'DOMAINID',
+        'properties.company_size': 'medium',
+        sets: ['ENTITYSETID'],
+        "sources": "ddf--entities--company--company_size.csv"
+      };
 
       expect(loggerDebugStub.args[2][0]).to.be.equal('Closing entity by query: ');
       expect(loggerDebugStub.args[2][1]).to.be.deep.equal(expectedQuery1);
@@ -377,9 +428,9 @@ describe('Update Concepts', function () {
       sinon.assert.calledWithExactly(latestVersionStub, datasetId, version);
 
       sinon.assert.callCount(closeOneByQueryStub, expectedCloseOneByQueryCallCount);
-      expect(closeOneByQueryStub.args[0][0]).to.be.deep.equal({ domain: 'DOMAINID', 'properties.company_size': 'small', sets: ['ENTITYSETID'] });
-      expect(closeOneByQueryStub.args[1][0]).to.be.deep.equal({ domain: 'DOMAINID', 'properties.company_size': 'large', sets: ['ENTITYSETID'] });
-      expect(closeOneByQueryStub.args[2][0]).to.be.deep.equal({ domain: 'DOMAINID', 'properties.company_size': 'medium', sets: ['ENTITYSETID'] });
+      expect(closeOneByQueryStub.args[0][0]).to.be.deep.equal(expectedQuery1);
+      expect(closeOneByQueryStub.args[1][0]).to.be.deep.equal(expectedQuery2);
+      expect(closeOneByQueryStub.args[2][0]).to.be.deep.equal(expectedQuery3);
 
       return done();
     });
@@ -387,7 +438,6 @@ describe('Update Concepts', function () {
 
   it('should update entities without errors', sinon.test(function(done) {
     const originExternalContext = _.defaults({pathToDatasetDiff: path.resolve(__dirname, './fixtures/updated-entities.txt')}, externalContextFixture);
-    const expectedError = null;
     const expectedEntity = {
       _id: 'ENTITYID',
       originId: 'ENTITYID',
@@ -413,14 +463,14 @@ describe('Update Concepts', function () {
     const loggerInfoStub = this.stub(logger, 'info');
     const loggerErrorStub = this.stub(logger, 'error');
 
-    const createStub = this.stub(entitiesRepository, 'create').callsArgWithAsync(1, expectedError);
+    const createStub = this.stub(entitiesRepository, 'create').callsArgWithAsync(1, null);
     const versionAgnosticStub = this.stub(EntitiesRepositoryFactory, 'versionAgnostic').returns(entitiesRepository);
 
     const closeOneByQueryStub = this.stub(entitiesRepository, 'closeOneByQuery');
-    closeOneByQueryStub.onFirstCall().callsArgWithAsync(1, expectedError, expectedEntityGap);
-    closeOneByQueryStub.onCall(1).callsArgWithAsync(1, expectedError, expectedEntity);
-    closeOneByQueryStub.onCall(2).callsArgWithAsync(1, expectedError, expectedEntity);
-    closeOneByQueryStub.onCall(3).callsArgWithAsync(1, expectedError, expectedEntity);
+    closeOneByQueryStub.onFirstCall().callsArgWithAsync(1, null, expectedEntityGap);
+    closeOneByQueryStub.onCall(1).callsArgWithAsync(1, null, expectedEntity);
+    closeOneByQueryStub.onCall(2).callsArgWithAsync(1, null, expectedEntity);
+    closeOneByQueryStub.onCall(3).callsArgWithAsync(1, null, expectedEntity);
     const latestVersionStub = this.stub(EntitiesRepositoryFactory, 'latestVersion').returns(entitiesRepository);
 
     return updateService.updateEntities(originExternalContext, (error, externalContext) => {
@@ -438,9 +488,9 @@ describe('Update Concepts', function () {
       expect(loggerDebugStub.args[2][1]).to.be.equal(3);
       expect(loggerDebugStub.args[2][2]).to.not.exist;
 
-      const expectedQuery1 = {domain: 'DOMAINID', 'properties.english_speaking': 'gap', sets: ['ENTITYSETID2']};
-      const expectedQuery2 = {domain: 'ENTITYSETID3', 'properties.region': 'america', sets: []};
-      const expectedQuery3 = {domain: 'ENTITYSETID3', 'properties.region': 'europe', sets: []};
+      const expectedQuery1 = {domain: 'DOMAINID', 'properties.english_speaking': 'gap', sets: ['ENTITYSETID2'], "sources": "ddf--entities--company--english_speaking.csv"};
+      const expectedQuery2 = {domain: 'ENTITYSETID3', 'properties.region': 'america', sets: [], "sources": "ddf--entities--region.csv"};
+      const expectedQuery3 = {domain: 'ENTITYSETID3', 'properties.region': 'europe', sets: [], "sources": "ddf--entities--region.csv"};
 
       expect(loggerDebugStub.args[3][0]).to.be.equal('Closing entity by query: ');
       expect(loggerDebugStub.args[3][1]).to.be.deep.equal(expectedQuery1);
@@ -571,9 +621,9 @@ describe('Update Concepts', function () {
       sinon.assert.calledWithExactly(latestVersionStub, datasetId, version);
 
       sinon.assert.calledThrice(closeOneByQueryStub);
-      expect(closeOneByQueryStub.args[0][0]).to.be.deep.equal({ domain: 'DOMAINID', 'properties.english_speaking': 'gap', sets: ['ENTITYSETID2'] });
-      expect(closeOneByQueryStub.args[1][0]).to.be.deep.equal({ domain: 'ENTITYSETID3', 'properties.region': 'america', sets: [] });
-      expect(closeOneByQueryStub.args[2][0]).to.be.deep.equal({ domain: 'ENTITYSETID3', 'properties.region': 'europe', sets: [] });
+      expect(closeOneByQueryStub.args[0][0]).to.be.deep.equal(expectedQuery1);
+      expect(closeOneByQueryStub.args[1][0]).to.be.deep.equal(expectedQuery2);
+      expect(closeOneByQueryStub.args[2][0]).to.be.deep.equal(expectedQuery3);
 
       return done();
     });

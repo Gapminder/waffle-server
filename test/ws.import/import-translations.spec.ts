@@ -9,6 +9,7 @@ import { createTranslations } from '../../ws.import/import-translations';
 import { constants } from '../../ws.utils/constants';
 import * as fileUtils from '../../ws.utils/file';
 import * as ddfMappers from '../../ws.import/utils/ddf-mappers';
+import * as ddfImportUtils from '../../ws.import/utils/import-ddf.utils';
 
 import { ConceptsRepositoryFactory } from '../../ws.repository/ddf/concepts/concepts.repository';
 import { EntitiesRepositoryFactory } from '../../ws.repository/ddf/entities/entities.repository';
@@ -188,6 +189,8 @@ describe('Import translations', () => {
 
       const readCsvFileAsStreamStub = this.stub(fileUtils, 'readCsvFileAsStream').returns(hi([entityTranslation]));
 
+      const toBooleanSpy = this.spy(ddfImportUtils, 'toBoolean');
+
       createTranslations(context, (errors, externalContext) => {
         expect(errors).to.not.exist;
         expect(externalContext).to.equal(context);
@@ -197,6 +200,8 @@ describe('Import translations', () => {
           full_name_changed: "HEEL GROOT!!!$(#(*#*($",
           'is--company_scale': true
         };
+
+        sinon.assert.callCount(toBooleanSpy, 4);
 
         sinon.assert.calledOnce(fsAccessStub);
         sinon.assert.calledWith(fsAccessStub, '/some/path/lang/nl-nl/ddf--entities--company--company_scale.csv', fs.constants.R_OK);
@@ -211,7 +216,7 @@ describe('Import translations', () => {
         sinon.assert.calledWith(addTranslationsForGivenPropertiesSpy, expectedEntityTranslation, {
           language,
           source: entityResource.path,
-          resolvedProperties: { gid: 'large', 'properties.is--company_scale': 'large' }
+          resolvedProperties: { gid: 'large', 'properties.is--company_scale': true },
         });
 
         done();

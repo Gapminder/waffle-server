@@ -55,7 +55,7 @@ function toCreatedEntitiesStream(entityChangesStream) {
     .filter(({changesDescriptor}) => changesDescriptor.isCreateAction())
     .map(({changesDescriptor, context}) => {
       const currentResource = changesDescriptor.currentResource;
-      const setsAndDomain = entitiesUtils.getSetsAndDomain(currentResource, context);
+      const setsAndDomain = entitiesUtils.getSetsAndDomain(currentResource, context, changesDescriptor.changes);
       return ddfMappers.mapDdfEntityToWsModel(changesDescriptor.changes, _.extend({filename: currentResource.path}, setsAndDomain, context));
     })
     .batch(ddfImportUtils.DEFAULT_CHUNK_SIZE)
@@ -71,16 +71,17 @@ function toUpdatedEntitiesStream(entityChangesStream, externalContextFrozen) {
     .filter(({changesDescriptor}) => changesDescriptor.isUpdateAction())
     .map(({changesDescriptor, context}) => {
       const currentResource = changesDescriptor.currentResource;
-      const setsAndDomain = entitiesUtils.getSetsAndDomain(currentResource, externalContextFrozen);
+      const setsAndDomain = entitiesUtils.getSetsAndDomain(currentResource, externalContextFrozen, changesDescriptor.changedObject);
 
+      const oldResource = changesDescriptor.oldResource;
       const {
         entitySet: oldEntitySet,
         entityDomain: oldEntityDomain,
         entitySetsOriginIds: oldEntitySetsOriginIds
-      } = entitiesUtils.getSetsAndDomain(changesDescriptor.oldResource, externalContextFrozen);
+      } = entitiesUtils.getSetsAndDomain(oldResource, externalContextFrozen, changesDescriptor.original);
 
       const oldSetsAndDomain = {oldEntitySet, oldEntityDomain, oldEntitySetsOriginIds};
-      return {changesDescriptor, context: _.extend({filename: _.get(currentResource, 'path')}, setsAndDomain, oldSetsAndDomain, context)};
+      return {changesDescriptor, context: _.extend({filename: _.get(currentResource, 'path'), oldFilename: _.get(oldResource, 'path')}, setsAndDomain, oldSetsAndDomain, context)};
     })
     .batch(ddfImportUtils.DEFAULT_CHUNK_SIZE)
     .flatMap(updatedEntitiesBatch => {
@@ -103,11 +104,11 @@ function toRemovedEntitiesStream(entityChangesStream, externalContextFrozen) {
         entitySet: oldEntitySet,
         entityDomain: oldEntityDomain,
         entitySetsOriginIds: oldEntitySetsOriginIds
-      } = entitiesUtils.getSetsAndDomain(changesDescriptor.oldResource, externalContextFrozen);
+      } = entitiesUtils.getSetsAndDomain(changesDescriptor.oldResource, externalContextFrozen, changesDescriptor.original);
 
       const oldSetsAndDomain = {oldEntitySet, oldEntityDomain, oldEntitySetsOriginIds};
 
-      return {changesDescriptor, context: _.extend(oldSetsAndDomain, context)};
+      return {changesDescriptor, context: _.extend({oldFilename: _.get(changesDescriptor.oldResource, 'path')}, oldSetsAndDomain, context)};
     })
     .batch(ddfImportUtils.DEFAULT_CHUNK_SIZE)
     .flatMap((removedEntitiesBatch) => {
@@ -131,7 +132,8 @@ function closeEntities({entityChangesBatch, externalContext, handleClosedEntity}
     const query = {
       domain: context.oldEntityDomain.originId,
       sets: context.oldEntitySetsOriginIds,
-      [`properties.${changesDescriptor.concept}`]: changesDescriptor.gid
+      [`properties.${changesDescriptor.concept}`]: changesDescriptor.gid,
+      sources: context.oldFilename
     };
 
     logger.debug('Closing entity by query: ', query);
@@ -141,7 +143,7 @@ function closeEntities({entityChangesBatch, externalContext, handleClosedEntity}
       }
 
       if (!closedEntity) {
-        logger.error('Entity was not closed, though it should be');
+        logger.error(`Entity was not closed, though it should be`, query, changesDescriptor.original);
         return onEntityClosed(null);
       }
 

@@ -341,6 +341,51 @@ describe("State Version 3 (3rd commit)", function() {
 
   });
 
+  describe("Entities", function () {
+    it('should grab all foundations from WS', (done) => {
+      const ddfql = {
+        "select": {
+          "key": ["foundation"],
+          "value": ["is--foundation"]
+        },
+        "from": "entities"
+      };
+
+      const expectedResult = {
+        headers: ['foundation', 'is--foundation'],
+        rows: [
+          ['gap', true]
+        ]
+      };
+
+      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, expectedResult, done);
+    });
+
+    it('should correctly handle entities which were imported with "is--" operator disabled for particular entity set', (done) => {
+      const ddfql = {
+        "select": {
+          "key": ["company"],
+          "value": ["is--foundation"]
+        },
+        "from": "entities",
+        "where": {
+          "$and": [
+            {"is--foundation": false}
+          ]
+        }
+      };
+
+      const expectedResult = {
+        headers: ['company', 'is--foundation'],
+        rows: [
+          ['xsoft', false]
+        ]
+      };
+
+      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, expectedResult, done);
+    });
+  });
+
   describe("Datapoints by Conditions", function() {
 
     it('should return filtered list of values for company_size by company and anno according to conditions', done => {
