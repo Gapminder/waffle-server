@@ -49,7 +49,9 @@ class EntitiesRepository extends VersionedModelRepository {
   }
 
   public findTargetForTranslation(params, done) {
-    return this.findOneByDomainAndSetsAndGid(params, done);
+    const {domain, sets, gid, sources} = params;
+    const query = this._composeQuery({domain, sets, gid, sources});
+    return Entities.findOne(query).lean().exec(done);
   }
 
   public removeTranslation({originId, language}, done) {
@@ -121,6 +123,8 @@ class EntitiesRepository extends VersionedModelRepository {
         }
       }
     };
+
+    logger.debug('[Import:Entities] Add translations', query);
 
     return Entities.update(query, updateQuery).exec(done);
   }

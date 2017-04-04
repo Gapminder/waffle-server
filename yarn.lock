@@ -1711,9 +1711,9 @@ getpass@^0.1.1:
   dependencies:
     assert-plus "^1.0.0"
 
-git-csv-diff@1.2.0:
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/git-csv-diff/-/git-csv-diff-1.2.0.tgz#94a339c0bbbf29a7194a2f410db0ea4d0879163c"
+git-csv-diff@1.3.0:
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/git-csv-diff/-/git-csv-diff-1.3.0.tgz#475eba3ceba5d50172fce04365117aab36506f96"
   dependencies:
     async "2.1.2"
     daff "1.3.18"
@@ -1926,6 +1926,12 @@ hawk@~3.1.3:
     cryptiles "2.x.x"
     hoek "2.x.x"
     sntp "1.x.x"
+
+highland@2.10.2:
+  version "2.10.2"
+  resolved "https://registry.yarnpkg.com/highland/-/highland-2.10.2.tgz#61d7901a7636a3a68e0fce43c9894244d6dadb10"
+  dependencies:
+    util-deprecate "^1.0.2"
 
 highland@2.10.5:
   version "2.10.5"
@@ -3287,8 +3293,8 @@ raw-body@~2.2.0:
     unpipe "1.0.0"
 
 rc@^1.0.1, rc@^1.1.6, rc@^1.1.7:
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/rc/-/rc-1.2.0.tgz#c7de973b7b46297c041366b2fd3d2363b1697c66"
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/rc/-/rc-1.2.1.tgz#2e03e8e42ee450b8cb3dce65be1bf8974e1dfd95"
   dependencies:
     deep-extend "~0.4.0"
     ini "~1.3.0"
@@ -3403,8 +3409,8 @@ redis-commands@^1.2.0:
   resolved "https://registry.yarnpkg.com/redis-commands/-/redis-commands-1.3.1.tgz#81d826f45fa9c8b2011f4cd7a0fe597d241d442b"
 
 redis-parser@^2.5.0:
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/redis-parser/-/redis-parser-2.5.0.tgz#79fc2b1d4a6e4d2870b35368433639271fca2617"
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/redis-parser/-/redis-parser-2.6.0.tgz#52ed09dacac108f1a631c07e9b69941e7a19504b"
 
 redis@^2.1.0, redis@^2.4.2:
   version "2.7.1"
@@ -4293,16 +4299,17 @@ vinyl@^0.5.0:
     clone-stats "^0.0.1"
     replace-ext "0.0.1"
 
-waffle-server-import-cli@~2.5.19:
-  version "2.5.23"
-  resolved "https://registry.yarnpkg.com/waffle-server-import-cli/-/waffle-server-import-cli-2.5.23.tgz#6a95ddc6ba2c3461a912c0ebd43d27aa68c38a73"
+waffle-server-import-cli@~2.5.24:
+  version "2.5.24"
+  resolved "https://registry.yarnpkg.com/waffle-server-import-cli/-/waffle-server-import-cli-2.5.24.tgz#5ed4acb1ea09d55aea754275b2bf44c4ab781106"
   dependencies:
     JSONStream "1.1.2"
     async "2.0.0-rc.3"
     contentful "3.3.5"
     csvtojson "0.5.3"
     ddf-validation "~1.2.3"
-    git-csv-diff "1.2.0"
+    git-csv-diff "1.3.0"
+    highland "2.10.2"
     inquirer "1.0.2"
     ip-address "5.8.2"
     lodash "4.11.1"
