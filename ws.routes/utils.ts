@@ -3,7 +3,7 @@ import * as async from 'async';
 import * as crypto from 'crypto';
 import * as url from 'url';
 import * as passport from 'passport';
-import * as URLON from 'URLON';
+import * as URLON from 'urlon';
 import { config } from '../ws.config/config';
 import { logger } from '../ws.config/log';
 import * as express from 'express';
@@ -11,7 +11,16 @@ import * as express from 'express';
 import { DatasetsRepository } from '../ws.repository/ddf/datasets/datasets.repository';
 import { RecentDdfqlQueriesRepository } from '../ws.repository/ddf/recent-ddfql-queries/recent-ddfql-queries.repository';
 
-const parseUrlonAsync: Function = async.asyncify((query: string) => URLON.parse(query));
+const parseUrlonAsync: Function = async.asyncify((query: string) => {
+  const parsedQuery = URLON.parse(query);
+
+  if (parsedQuery.dataset) {
+    parsedQuery.dataset = decodeURIComponent(_.toString(parsedQuery.dataset));
+  }
+
+  return parsedQuery;
+});
+
 const parseJsonAsync: Function = async.asyncify((query: string) => JSON.parse(decodeURIComponent(query)));
 
 export {
@@ -34,7 +43,7 @@ function bodyFromUrlQuery(req: express.Request, res: express.Response, next: exp
   parser.parse(parser.query, (error: any, parsedQuery: any) => {
     logger.info({ddfqlRaw: parser.query});
     if (error) {
-      res.json({success: false, error: 'Query was sent in incorrect format'});
+      res.json(toErrorResponse('Query was sent in incorrect format'));
     } else {
       req.body = _.extend(parsedQuery, {rawDdfQuery: {queryRaw: parser.query, type: parser.queryType}});
       next();

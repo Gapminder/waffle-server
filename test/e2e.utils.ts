@@ -3,6 +3,7 @@ import * as shell from 'shelljs';
 import {e2eEnv} from './e2e.env';
 import * as supertest from 'supertest';
 import {expect} from 'chai';
+import * as URLON from 'urlon';
 
 const wsApi = supertest(e2eEnv.wsUrl);
 
@@ -19,8 +20,11 @@ export {
 };
 
 function sendDdfqlRequest(ddfql: any, onResponseReceived: Function): void {
-  ddfql.force = true;
-  return wsApi.get(`/api/ddf/ql?query=${encodeURIComponent(JSON.stringify(ddfql))}`)
+  const encodedDataset = _.has(ddfql, 'dataset') ? {dataset: encodeURIComponent(ddfql.dataset)} : {};
+  ddfql = Object.assign({}, ddfql, {force: true}, encodedDataset);
+  return wsApi.get(`/api/ddf/ql?${URLON.stringify(ddfql)}`)
+  // Here is alternative way of sending ddfql - via encoded JSON
+  // return wsApi.get(`/api/ddf/ql?query=${encodeURIComponent(JSON.stringify(ddfql))}`)
     .set('Accept', 'application/json')
     .expect(200)
     .expect('Content-Type', /application\/json/)
