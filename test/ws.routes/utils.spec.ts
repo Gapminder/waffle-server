@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import * as url from 'url';
 import * as crypto from 'crypto';
-import * as URLON from 'URLON';
+import * as URLON from 'urlon';
 import * as passport from 'passport';
 import * as express from 'express';
 
@@ -497,8 +497,94 @@ describe('Routes utils', () => {
 
       routeUtils.bodyFromUrlQuery(req, res, next);
     }));
-  });
 
+    it('assumes that dataset passed in urlon ddfql is encoded with encodeURIComponent', sinon.test(function (done) {
+      const ddfql = {
+        "from": "entities",
+        "dataset": 'VS-work%2Fddf--ws-testing%23master-twin-for-e2e',
+        "select": {
+          "key": ["company"]
+        }
+      };
+
+      const queryRaw = URLON.stringify(ddfql);
+
+      const req: any = {
+        query: {},
+        url: `/api/ddf/ql/?${queryRaw}`
+      };
+
+      const res = {};
+
+      const loggerInfoStub = this.stub(logger, 'info');
+
+      const next = () => {
+        expect(req.body.dataset).to.equal('VS-work/ddf--ws-testing#master-twin-for-e2e');
+        sinon.assert.calledOnce(loggerInfoStub);
+        sinon.assert.calledWithExactly(loggerInfoStub, {ddfqlRaw: queryRaw});
+        done();
+      };
+
+      routeUtils.bodyFromUrlQuery(req, res as express.Response, next);
+    }));
+
+    it('assumes that dataset passed in urlon ddfql is encoded with encodeURIComponent: dataset value is coerced to string', sinon.test(function (done) {
+      const ddfql = {
+        "from": "entities",
+        "dataset": 42,
+        "select": {
+          "key": ["company"]
+        }
+      };
+
+      const queryRaw = URLON.stringify(ddfql);
+
+      const req: any = {
+        query: {},
+        url: `/api/ddf/ql/?${queryRaw}`
+      };
+
+      const res = {};
+
+      const loggerInfoStub = this.stub(logger, 'info');
+
+      const next = () => {
+        expect(req.body.dataset).to.equal('42');
+        sinon.assert.calledOnce(loggerInfoStub);
+        sinon.assert.calledWithExactly(loggerInfoStub, {ddfqlRaw: queryRaw});
+        done();
+      };
+
+      routeUtils.bodyFromUrlQuery(req, res as express.Response, next);
+    }));
+
+    it('should respond with an error when it is impossible to decode dataset in urlon query with decodeURIComponent', sinon.test(function (done) {
+      const req = {
+        query: {},
+        url: '/api/ddf/ql/?_from=entities&dataset=%&select_key@=company'
+      };
+
+      const queryRaw = url.parse(req.url).query;
+
+      const loggerInfoStub = this.stub(logger, 'info');
+
+      const res = {
+        json: response => {
+          expect(response.success).to.be.false;
+          expect(response.error).to.equal('Query was sent in incorrect format');
+          sinon.assert.calledOnce(loggerInfoStub);
+          sinon.assert.calledWithExactly(loggerInfoStub, {ddfqlRaw: queryRaw});
+          done();
+        }
+      };
+
+      const next = () => {
+        expect.fail(null, null, 'Should not call next middleware');
+      };
+
+      routeUtils.bodyFromUrlQuery(req as any, res as any, next);
+    }));
+  });
 
   describe('RouteUtils.respondWithRawDdf', () => {
     it('should flush redis cache if error occured', sinon.test(function () {
