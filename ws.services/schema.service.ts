@@ -22,7 +22,7 @@ function findSchemaByDdfql(options: any, onFound: AsyncResultCallback<any, any>)
 function _findSchemaByDdfql(pipe: any, done: Function): void {
   const normalizedQuery = schemaQueryNormalizer.normalize(pipe.query, {transactionId: pipe.transaction._id});
 
-  const validateQuery:ValidateQueryModel = ddfQueryValidator.validateMongoQuery(normalizedQuery.where);
+  const validateQuery: ValidateQueryModel = ddfQueryValidator.validateMongoQuery(normalizedQuery.where);
   if(!validateQuery.valid) {
     return done(validateQuery.log, pipe);
   }
