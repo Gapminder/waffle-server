@@ -90,8 +90,15 @@ function getConcepts(pipe: any, cb: Function): void {
   };
 
   return conceptsService.getConcepts(_pipe, (err: any, result: any) => {
-    pipe.concepts = result.concepts;
+    if (err) {
+      return cb(err);
+    }
 
-    return cb(err, pipe);
+    if (!result) {
+      return cb('Concepts are not found');
+    }
+
+    pipe.concepts = result.concepts;
+    return cb(null, pipe);
   });
 }
