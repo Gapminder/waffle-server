@@ -54,17 +54,25 @@ export {
 function getAllConcepts(externalContext, done) {
   return ConceptsRepositoryFactory.latestVersion(externalContext.dataset._id, externalContext.transaction.createdAt)
     .findAllPopulated((err, concepts) => {
+      if (err) {
+        return done(err);
+      }
+
       externalContext.timeConcepts = _.keyBy(conceptsUtils.getTimeConcepts(concepts), 'gid');
       externalContext.concepts = _.keyBy(concepts, 'gid');
-      return done(err, externalContext);
+      return done(null, externalContext);
     });
 }
 
 function getAllPreviousConcepts(externalContext, done) {
   return ConceptsRepositoryFactory.currentVersion(externalContext.dataset._id, externalContext.previousTransaction.createdAt)
     .findAllPopulated((err, concepts) => {
+      if (err) {
+        return done(err);
+      }
+
       externalContext.previousConcepts = _.keyBy(concepts, 'gid');
-      return done(err, externalContext);
+      return done(null, externalContext);
     });
 }
 
@@ -226,8 +234,12 @@ function createTransaction(pipe, done) {
   };
 
   DatasetTransactionsRepository.create(transaction, (err, createdTransaction) => {
+    if (err) {
+      return done(err, pipe);
+    }
+
     pipe.transaction = createdTransaction;
-    return done(err, pipe);
+    return done(null, pipe);
   });
 }
 
@@ -278,7 +290,7 @@ function findDataset(pipe, done) {
     }
 
     if (!dataset) {
-      return done('Dataset was not found, hence update is impossible');
+      return done('Dataset was not found');
     }
 
     logger.info('Existing dataset was found: ', dataset.name);
