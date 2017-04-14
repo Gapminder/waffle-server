@@ -1,9 +1,13 @@
 import * as _ from 'lodash';
 import {environment as DEFAULT_CONFIG} from './environment.config';
+import * as packageJson from '../package.json';
 
 const PRODUCTION_ENVS = new Set(['stage', 'production']);
 
 const config: any = {
+    getWsCliVersionSupported(): string {
+      return _.get(packageJson, 'dependencies.waffle-server-import-cli') as string;
+    },
     NODE_ENV: process.env.NODE_ENV || DEFAULT_CONFIG.NODE_ENV,
     PORT: process.env.PORT || DEFAULT_CONFIG.PORT,
     INNER_PORT: process.env.INNER_PORT || DEFAULT_CONFIG.INNER_PORT,
