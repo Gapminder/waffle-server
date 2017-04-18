@@ -4,12 +4,10 @@ import { constants } from '../../../ws.utils/constants';
 const DatasetIndex: any = new Schema({
   key: [{type: String, required: true}],
   value: {type: Schema.Types.Mixed, required: true},
-  source: [{type: String, required: true}],
-  keyOriginIds: [{type: Schema.Types.ObjectId}],
-  valueOriginId: {type: Schema.Types.ObjectId},
   type: {type: String, 'enum': [constants.CONCEPTS, constants.ENTITIES, constants.DATAPOINTS]},
   dataset: {type: Schema.Types.ObjectId, ref: 'Datasets', required: true},
-  transaction: {type: Schema.Types.ObjectId, ref: 'DatasetIndex', required: true}
+  transaction: {type: Schema.Types.ObjectId, ref: 'DatasetIndex', required: true},
+  resources: [{type: String}]
 }, { strict: false });
 
 DatasetIndex.index({transaction: 1});
