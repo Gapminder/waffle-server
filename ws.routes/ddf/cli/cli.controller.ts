@@ -6,6 +6,8 @@ import * as datasetsService from '../../../ws.services/datasets.service';
 import * as reposService from '../../../ws.services/repos.service';
 import * as cacheUtils from '../../../ws.utils/cache-warmup';
 import * as routeUtils from '../../utils';
+import {cleanRepos as cliApiCleanRepos} from 'waffle-server-import-cli';
+import {config} from '../../../ws.config/config';
 
 export {
   getToken,
@@ -23,7 +25,8 @@ export {
   generateDatasetAccessToken,
   getPrivateDatasets,
   getDatasetsInProgress,
-  cleanCache
+  cleanCache,
+  cleanRepos
 };
 
 function getToken(req, res) {
@@ -359,6 +362,21 @@ function cleanCache(req, res) {
     return res.json(routeUtils.toMessageResponse('Cache is clean'));
   });
 }
+
+function cleanRepos(req, res) {
+  if (!req.user) {
+    return res.json(routeUtils.toErrorResponse('There is no authenticated user to make this action'));
+  }
+
+  return cliApiCleanRepos(config.PATH_TO_DDF_REPOSITORIES, reposCleanError => {
+    if (reposCleanError) {
+      return res.json(routeUtils.toErrorResponse(reposCleanError));
+    }
+
+    return res.json(routeUtils.toMessageResponse('Repos folder was cleaned'));
+  });
+}
+
 
 function getDatasetsInProgress(req, res) {
   if (!req.user) {
