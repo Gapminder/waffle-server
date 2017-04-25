@@ -12,6 +12,7 @@ import * as proxyquire from 'proxyquire';
 import '../../ws.config/db.config';
 import '../../ws.repository';
 import {logger} from '../../ws.config/log';
+import {config} from '../../ws.config/config';
 import * as routeUtils from '../../ws.routes/utils';
 import {RecentDdfqlQueriesRepository} from '../../ws.repository/ddf/recent-ddfql-queries/recent-ddfql-queries.repository';
 
@@ -897,5 +898,94 @@ describe('Routes utils', () => {
       expect(response.success).to.be.true;
       expect(response.data).to.equal(expectedData);
     });
+  });
+
+  describe('Ensure WS-CLI that speaks to WS has supported version', () => {
+    it('checks that requests from CLI with unsupported version are invalid', sinon.test(function () {
+      const header = this.stub().returns('2.5.24');
+      const req: any = {
+        header
+      };
+
+      const json = this.spy();
+      const res: any = {
+        json
+      };
+
+      const next = this.spy();
+
+      this.stub(config, 'getWsCliVersionSupported').returns('2.5.23');
+
+      routeUtils.ensureCliVersion(req, res, next);
+
+      sinon.assert.notCalled(next);
+      sinon.assert.calledOnce(json);
+      sinon.assert.calledWith(json, {success: false, error: `Please, change your WS-CLI version from 2.5.24 to 2.5.23`});
+    }));
+
+    it('checks that requests from CLI with invalid version are invalid', sinon.test(function () {
+      const header = this.stub().returns('bla');
+      const req: any = {
+        header
+      };
+
+      const json = this.spy();
+      const res: any = {
+        json
+      };
+
+      const next = this.spy();
+
+      this.stub(config, 'getWsCliVersionSupported').returns('2.5.23');
+
+      routeUtils.ensureCliVersion(req, res, next);
+
+      sinon.assert.notCalled(next);
+      sinon.assert.calledOnce(json);
+      sinon.assert.calledWith(json, {success: false, error: `Please, change your WS-CLI version from bla to 2.5.23`});
+    }));
+
+    it('responds with an error when WS-CLI version from client is not given', sinon.test(function () {
+      const header = this.stub().returns(undefined);
+      const req: any = {
+        header
+      };
+
+      const json = this.spy();
+      const res: any = {
+        json
+      };
+
+      const next = this.spy();
+
+      this.stub(config, 'getWsCliVersionSupported').returns('2.5.23');
+
+      routeUtils.ensureCliVersion(req, res, next);
+
+      sinon.assert.notCalled(next);
+      sinon.assert.calledOnce(json);
+      sinon.assert.calledWith(json, {success: false, error: 'This url can be accessed only from WS-CLI'});
+    }));
+
+    it('checks that requests from CLI with supported version are valid', sinon.test(function () {
+      const header = this.stub().returns('2.5.24');
+      const req: any = {
+        header
+      };
+
+      const json = this.spy();
+      const res: any = {
+        json
+      };
+
+      const next = this.spy();
+
+      this.stub(config, 'getWsCliVersionSupported').returns('2.5.24');
+
+      routeUtils.ensureCliVersion(req, res, next);
+
+      sinon.assert.notCalled(json);
+      sinon.assert.calledOnce(next);
+    }));
   });
 });

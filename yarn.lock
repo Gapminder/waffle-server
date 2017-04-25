@@ -325,13 +325,9 @@ async-each@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/async-each/-/async-each-1.0.1.tgz#19d386a1d9edc6e7c1c85d388aedbcc56d33602d"
 
-async@0.2.9:
+async@0.2.9, async@0.2.x, async@~0.2.9:
   version "0.2.9"
   resolved "https://registry.yarnpkg.com/async/-/async-0.2.9.tgz#df63060fbf3d33286a76aaf6d55a2986d9ff8619"
-
-async@0.2.x, async@~0.2.9:
-  version "0.2.10"
-  resolved "https://registry.yarnpkg.com/async/-/async-0.2.10.tgz#b6bbe0b0674b9d719708ca38de8c237cb526c3d1"
 
 async@1.x, async@^1.2.1, async@^1.4.0, async@^1.5.2, async@~1.5.0:
   version "1.5.2"
@@ -1076,17 +1072,17 @@ dateformat@^1.0.11, dateformat@^1.0.12:
     get-stdin "^4.0.1"
     meow "^3.3.0"
 
-ddf-time-utils@0.1.6:
-  version "0.1.6"
-  resolved "https://registry.yarnpkg.com/ddf-time-utils/-/ddf-time-utils-0.1.6.tgz#aaf9853573647e381afe7323cc64adabeeaec179"
+ddf-time-utils@0.1.7:
+  version "0.1.7"
+  resolved "https://registry.yarnpkg.com/ddf-time-utils/-/ddf-time-utils-0.1.7.tgz#356e79aee80db3ac79c0da064411d86134fae71a"
   dependencies:
     core-js "2.4.1"
     lodash "4.7.0"
     moment "2.14.1"
 
-ddf-validation@~1.2.3:
-  version "1.2.3"
-  resolved "https://registry.yarnpkg.com/ddf-validation/-/ddf-validation-1.2.3.tgz#e9e6965f5c9a7bc861d505553f095cb6a41f340c"
+ddf-validation@1.2.4, ddf-validation@~1.2.3:
+  version "1.2.4"
+  resolved "https://registry.yarnpkg.com/ddf-validation/-/ddf-validation-1.2.4.tgz#1705dc8a2ad801e96ee1bc2465350b0ae3ffd0bb"
   dependencies:
     "@types/async" "2.0.34"
     "@types/babyparse" "0.0.30"
@@ -1098,7 +1094,7 @@ ddf-validation@~1.2.3:
     "@types/yargs" "6.3.3"
     async "2.1.4"
     babyparse "0.4.6"
-    ddf-time-utils "0.1.6"
+    ddf-time-utils "0.1.7"
     deep-diff "0.3.4"
     fast-csv "2.3.0"
     fs "0.0.2"
@@ -3341,7 +3337,7 @@ read@1.0.x:
   dependencies:
     mute-stream "~0.0.4"
 
-readable-stream@2.1.5, readable-stream@^2.0.5, readable-stream@^2.1.5:
+readable-stream@2.1.5:
   version "2.1.5"
   resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-2.1.5.tgz#66fa8b720e1438b364681f2ad1a63c618448c9d0"
   dependencies:
@@ -3362,7 +3358,7 @@ readable-stream@^1.1.13, readable-stream@~1.1.9:
     isarray "0.0.1"
     string_decoder "~0.10.x"
 
-"readable-stream@^2.0.0 || ^1.1.13", readable-stream@^2.0.2, readable-stream@^2.1.4, readable-stream@^2.2.2:
+"readable-stream@^2.0.0 || ^1.1.13", readable-stream@^2.0.2, readable-stream@^2.0.5, readable-stream@^2.1.4, readable-stream@^2.1.5, readable-stream@^2.2.2:
   version "2.2.6"
   resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-2.2.6.tgz#8b43aed76e71483938d12a8d46c6cf1a00b1f816"
   dependencies:
@@ -3611,7 +3607,7 @@ semver-diff@^2.0.0:
   dependencies:
     semver "^5.0.3"
 
-"semver@2 || 3 || 4 || 5", semver@^5.0.1, semver@^5.0.3, semver@^5.1.0, semver@^5.3.0:
+"semver@2 || 3 || 4 || 5", semver@5.3.0, semver@^5.0.1, semver@^5.0.3, semver@^5.1.0, semver@^5.3.0:
   version "5.3.0"
   resolved "https://registry.yarnpkg.com/semver/-/semver-5.3.0.tgz#9b2ce5d3de02d17c6012ad326aa6b4d0cf54f94f"
 
@@ -4312,9 +4308,9 @@ vinyl@^0.5.0:
     clone-stats "^0.0.1"
     replace-ext "0.0.1"
 
-waffle-server-import-cli@~2.5.24:
-  version "2.5.24"
-  resolved "https://registry.yarnpkg.com/waffle-server-import-cli/-/waffle-server-import-cli-2.5.24.tgz#5ed4acb1ea09d55aea754275b2bf44c4ab781106"
+waffle-server-import-cli@2.5.25:
+  version "2.5.25"
+  resolved "https://registry.yarnpkg.com/waffle-server-import-cli/-/waffle-server-import-cli-2.5.25.tgz#785d6ef7101e85d7fdb6f3990396a0c2ed35a08c"
   dependencies:
     JSONStream "1.1.2"
     async "2.0.0-rc.3"

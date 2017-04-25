@@ -15,6 +15,7 @@ function registerDdfCliRoutes(serviceLocator) {
   router.post('/authenticate', CliController.getToken);
 
   router.use(routeUtils.ensureAuthenticatedViaToken);
+  router.use(routeUtils.ensureCliVersion);
 
   router.get('/prestored-queries', CliController.getAvailableDatasetsAndVersions);
   router.get('/commit-of-latest-dataset-version', CliController.getCommitOfLatestDatasetVersion);
