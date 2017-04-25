@@ -1,6 +1,6 @@
 {
   "name": "Waffle-Server",
-  "version": "2.5.0",
+  "version": "2.6.0",
   "description": "Server for keeping and serving ddf data",
   "main": "server.js",
   "scripts": {

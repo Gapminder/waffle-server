@@ -1,3 +1,20 @@
+<a name="2.6.0"></a>
+# [2.6.0](https://github.com/Gapminder/waffle-server/compare/v2.5.0...v2.6.0) (2017-04-25)
+
+
+### Bug Fixes
+
+* teach WS to handle is-- operator correctly during a dataset import/update ([b47a061](https://github.com/Gapminder/waffle-server/commit/b47a061))
+* **ddfql-urlon:** assume that dataset sent in urlon ddfql is encoded with encodeURIComponent ([5a7c12c](https://github.com/Gapminder/waffle-server/commit/5a7c12c))
+
+
+### Features
+
+* **steps:** add step for cleaning repos folder ([0c1cb90](https://github.com/Gapminder/waffle-server/commit/0c1cb90))
+* **WS-CLI:** ensure that clinent requests come from the WS-CLI version supported be WS ([66c987e](https://github.com/Gapminder/waffle-server/commit/66c987e))
+
+
+
 <a name="2.5.0"></a>
 # [2.5.0](https://github.com/Gapminder/waffle-server/compare/v2.4.0...v2.5.0) (2017-03-24)
 
