@@ -85,7 +85,7 @@
     "typescript": "2.2.1",
     "urlon": "2.0.1",
     "validator": "6.2.1",
-    "waffle-server-import-cli": "2.5.25"
+    "waffle-server-import-cli": "2.6.0"
   },
   "devDependencies": {
     "@types/chai": "3.4.35",
