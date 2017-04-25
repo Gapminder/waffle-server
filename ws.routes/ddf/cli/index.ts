@@ -15,6 +15,7 @@ function registerDdfCliRoutes(serviceLocator) {
   router.post('/authenticate', CliController.getToken);
 
   router.use(routeUtils.ensureAuthenticatedViaToken);
+  router.use(routeUtils.ensureCliVersion);
 
   router.get('/prestored-queries', CliController.getAvailableDatasetsAndVersions);
   router.get('/commit-of-latest-dataset-version', CliController.getCommitOfLatestDatasetVersion);
@@ -32,6 +33,7 @@ function registerDdfCliRoutes(serviceLocator) {
   router.post('/datasets/default', CliController.setDefaultDataset);
   router.post('/datasets/accessToken', CliController.generateDatasetAccessToken);
   router.post('/cache/clean', CliController.cleanCache);
+  router.post('/repos/clean', CliController.cleanRepos);
 
   const app = serviceLocator.getApplication();
   return app.use('/api/ddf/cli', router);

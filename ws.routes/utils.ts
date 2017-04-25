@@ -3,20 +3,31 @@ import * as async from 'async';
 import * as crypto from 'crypto';
 import * as url from 'url';
 import * as passport from 'passport';
-import * as URLON from 'URLON';
+import * as URLON from 'urlon';
 import { config } from '../ws.config/config';
 import { logger } from '../ws.config/log';
 import * as express from 'express';
+import * as semver from 'semver';
 
 import { DatasetsRepository } from '../ws.repository/ddf/datasets/datasets.repository';
 import { RecentDdfqlQueriesRepository } from '../ws.repository/ddf/recent-ddfql-queries/recent-ddfql-queries.repository';
 
-const parseUrlonAsync: Function = async.asyncify((query: string) => URLON.parse(query));
+const parseUrlonAsync: Function = async.asyncify((query: string) => {
+  const parsedQuery = URLON.parse(query);
+
+  if (parsedQuery.dataset) {
+    parsedQuery.dataset = decodeURIComponent(_.toString(parsedQuery.dataset));
+  }
+
+  return parsedQuery;
+});
+
 const parseJsonAsync: Function = async.asyncify((query: string) => JSON.parse(decodeURIComponent(query)));
 
 export {
   getCacheConfig,
   ensureAuthenticatedViaToken,
+  ensureCliVersion,
   respondWithRawDdf,
   checkDatasetAccessibility,
   bodyFromUrlQuery,
@@ -34,7 +45,7 @@ function bodyFromUrlQuery(req: express.Request, res: express.Response, next: exp
   parser.parse(parser.query, (error: any, parsedQuery: any) => {
     logger.info({ddfqlRaw: parser.query});
     if (error) {
-      res.json({success: false, error: 'Query was sent in incorrect format'});
+      res.json(toErrorResponse('Query was sent in incorrect format'));
     } else {
       req.body = _.extend(parsedQuery, {rawDdfQuery: {queryRaw: parser.query, type: parser.queryType}});
       next();
@@ -97,6 +108,36 @@ function _storeWarmUpQueryForDefaultDataset(query: any): void {
       logger.debug('Writing query to cache warm up storage', rawDdfQuery.queryRaw);
     }
   });
+}
+
+function ensureCliVersion(req: express.Request, res: express.Response, next: express.NextFunction): void {
+  const clientWsCliVersion = req.header('X-Gapminder-WSCLI-Version');
+
+  if(!clientWsCliVersion) {
+    res.json(toErrorResponse('This url can be accessed only from WS-CLI'));
+    return;
+  }
+
+  const serverWsCliVersion = config.getWsCliVersionSupported();
+
+  if (!ensureVersionsEquality(clientWsCliVersion, serverWsCliVersion)) {
+    const changeCliVersionResponse = toErrorResponse(
+      `Please, change your WS-CLI version from ${clientWsCliVersion} to ${serverWsCliVersion}`
+    );
+
+    res.json(changeCliVersionResponse);
+    return;
+  }
+
+  return next();
+}
+
+function ensureVersionsEquality(clientVersion: string, serverVersion: string): boolean {
+  try {
+    return semver.eq(clientVersion, serverVersion);
+  } catch (e) {
+    return false;
+  }
 }
 
 function checkDatasetAccessibility(req: express.Request, res: express.Response, next: express.NextFunction): void {

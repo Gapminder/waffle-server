@@ -1,13 +1,15 @@
 import 'mocha';
 
 import * as _ from 'lodash';
-import {expect} from 'chai';
+import { expect } from 'chai';
 import * as path from 'path';
 import * as sinon from 'sinon';
+import * as fs from 'fs';
 import * as proxyquire from 'proxyquire';
+import * as git from 'simple-git';
 import { logger } from '../../ws.config/log';
 
-import {config} from '../../ws.config/config';
+import { config } from '../../ws.config/config';
 import * as reposService from '../../ws.services/repos.service';
 
 describe('repos service', () => {
@@ -66,14 +68,16 @@ describe('repos service', () => {
           done(wasClonedBefore);
         }
       },
-      '../ws.config/log': {logger: {
-        error: (error) => {
-          expect(error).exist;
-        },
-        info: (msg) => {
-          expect(msg).exist;
-        },
-      }}
+      '../ws.config/log': {
+        logger: {
+          error: (error) => {
+            expect(error).exist;
+          },
+          info: (msg) => {
+            expect(msg).exist;
+          },
+        }
+      }
     });
 
     stubbedReposService.cloneRepo('fake repo', 'any commit', error => {
@@ -99,11 +103,13 @@ describe('repos service', () => {
         expect(pathTeRepo).to.equal(expectedPathToRepo);
         done('mkdirp was not able to create a folder <---- test error');
       },
-      '../ws.config/log': {logger: {
-        error: (error) => {
-          expect(error).exist;
+      '../ws.config/log': {
+        logger: {
+          error: (error) => {
+            expect(error).exist;
+          }
         }
-      }}
+      }
     });
 
     stubbedReposService.cloneRepo(expectedGithubUrl, 'any commit', error => {
@@ -139,14 +145,16 @@ describe('repos service', () => {
           done(wasClonedBefore);
         }
       },
-      '../ws.config/log': {logger: {
-        error: (error) => {
-          expect(error).to.contain('some error');
-        },
-        info: (msg) => {
-          expect(msg).exist;
-        },
-      }}
+      '../ws.config/log': {
+        logger: {
+          error: (error) => {
+            expect(error).to.contain('some error');
+          },
+          info: (msg) => {
+            expect(msg).exist;
+          },
+        }
+      }
     });
 
     stubbedReposService.cloneRepo(expectedGithubUrl, null, error => {
@@ -155,7 +163,7 @@ describe('repos service', () => {
     });
   });
 
-  it('should clone repo successfully (when no commit given to checkout - HEAD is used instead)', sinon.test(function(done) {
+  it('should clone repo successfully (when no commit given to checkout - HEAD is used instead)', sinon.test(function (done) {
     const accountName = 'open-numbers';
     const expectedDdfRepoName = 'ddf--gapminder--systema_globalis';
     const expectedGithubUrl = `git@github.com:${accountName}/${expectedDdfRepoName}.git`;
@@ -298,4 +306,132 @@ describe('repos service', () => {
       expect(reposService.getPathToRepo(falsyInput)).to.equal(falsyInput);
     });
   });
+
+  it('should handle fetching error during checkout', sinon.test(function (done) {
+    const existsStub = this.stub(fs, 'exists').callsArgWithAsync(1, true);
+
+    const fetchStub = this.stub().callsArgWithAsync(2, 'Boo!').returnsThis();
+    const resetStub = this.stub().callsArgWithAsync(1, null).returnsThis();
+    const cleanStub = this.stub().callsArgWithAsync(1, null).returnsThis();
+    const checkoutStub = this.stub().callsArgWithAsync(1, null);
+
+    const stubbedReposService = proxyquire('../../ws.services/repos.service', {
+      'simple-git': () => {
+        return {
+          fetch: fetchStub,
+          reset: resetStub,
+          clean: cleanStub,
+          checkout: checkoutStub
+        };
+      }
+    });
+
+    const githubUrl = `git@github.com:open-numbers/sg.git`;
+    stubbedReposService.cloneRepo(githubUrl, null, (error) => {
+      expect(error).to.equal(`Cannot fetch branch 'master' from repo ${githubUrl}`);
+
+      sinon.assert.calledOnce(existsStub);
+      sinon.assert.calledOnce(fetchStub);
+      sinon.assert.calledOnce(resetStub);
+      sinon.assert.calledOnce(cleanStub);
+      sinon.assert.calledOnce(checkoutStub);
+      done();
+    });
+  }));
+
+  it('should handle reset error during checkout', sinon.test(function (done) {
+    const existsStub = this.stub(fs, 'exists').callsArgWithAsync(1, true);
+
+    const fetchStub = this.stub().callsArgWithAsync(2, null).returnsThis();
+    const resetStub = this.stub().callsArgWithAsync(1, 'Boo!').returnsThis();
+    const cleanStub = this.stub().callsArgWithAsync(1, null).returnsThis();
+    const checkoutStub = this.stub().callsArgWithAsync(1, null);
+
+    const stubbedReposService = proxyquire('../../ws.services/repos.service', {
+      'simple-git': () => {
+        return {
+          fetch: fetchStub,
+          reset: resetStub,
+          clean: cleanStub,
+          checkout: checkoutStub
+        };
+      }
+    });
+
+    const githubUrl = `git@github.com:open-numbers/sg.git`;
+    stubbedReposService.cloneRepo(githubUrl, null, (error) => {
+      expect(error).to.equal(`Cannot reset repo from ${githubUrl}`);
+
+      sinon.assert.calledOnce(existsStub);
+      sinon.assert.calledOnce(fetchStub);
+      sinon.assert.calledOnce(resetStub);
+      sinon.assert.calledOnce(cleanStub);
+      sinon.assert.calledOnce(checkoutStub);
+      done();
+    });
+  }));
+
+  it('should handle cleaning error during checkout', sinon.test(function (done) {
+    const existsStub = this.stub(fs, 'exists').callsArgWithAsync(1, true);
+
+    const fetchStub = this.stub().callsArgWithAsync(2, null).returnsThis();
+    const resetStub = this.stub().callsArgWithAsync(1, null).returnsThis();
+    const cleanStub = this.stub().callsArgWithAsync(1, 'Boo!').returnsThis();
+    const checkoutStub = this.stub().callsArgWithAsync(1, null);
+
+    const stubbedReposService = proxyquire('../../ws.services/repos.service', {
+      'simple-git': () => {
+        return {
+          fetch: fetchStub,
+          reset: resetStub,
+          clean: cleanStub,
+          checkout: checkoutStub
+        };
+      }
+    });
+
+    const githubUrl = `git@github.com:open-numbers/sg.git`;
+    stubbedReposService.cloneRepo(githubUrl, null, (error) => {
+      expect(error).to.equal(`Cannot clean repo from ${githubUrl}`);
+
+      sinon.assert.calledOnce(existsStub);
+      sinon.assert.calledOnce(fetchStub);
+      sinon.assert.calledOnce(resetStub);
+      sinon.assert.calledOnce(cleanStub);
+      sinon.assert.calledOnce(checkoutStub);
+      done();
+    });
+  }));
+
+  it('should handle error during checkout', sinon.test(function (done) {
+    const existsStub = this.stub(fs, 'exists').callsArgWithAsync(1, true);
+
+    const fetchStub = this.stub().callsArgWithAsync(2, null).returnsThis();
+    const resetStub = this.stub().callsArgWithAsync(1, null).returnsThis();
+    const cleanStub = this.stub().callsArgWithAsync(1, null).returnsThis();
+    const checkoutStub = this.stub().callsArgWithAsync(1, 'Boo!');
+
+    const stubbedReposService = proxyquire('../../ws.services/repos.service', {
+      'simple-git': () => {
+        return {
+          fetch: fetchStub,
+          reset: resetStub,
+          clean: cleanStub,
+          checkout: checkoutStub
+        };
+      }
+    });
+
+    const githubUrl = `git@github.com:open-numbers/sg.git`;
+    stubbedReposService.cloneRepo(githubUrl, null, (error) => {
+      expect(error).to.equal(`Cannot checkout to branch 'master' in repo from ${githubUrl}`);
+
+      sinon.assert.calledOnce(existsStub);
+      sinon.assert.calledOnce(fetchStub);
+      sinon.assert.calledOnce(resetStub);
+      sinon.assert.calledOnce(cleanStub);
+      sinon.assert.calledOnce(checkoutStub);
+      done();
+    });
+  }));
 });

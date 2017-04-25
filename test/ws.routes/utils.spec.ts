@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import * as url from 'url';
 import * as crypto from 'crypto';
-import * as URLON from 'URLON';
+import * as URLON from 'urlon';
 import * as passport from 'passport';
 import * as express from 'express';
 
@@ -12,6 +12,7 @@ import * as proxyquire from 'proxyquire';
 import '../../ws.config/db.config';
 import '../../ws.repository';
 import {logger} from '../../ws.config/log';
+import {config} from '../../ws.config/config';
 import * as routeUtils from '../../ws.routes/utils';
 import {RecentDdfqlQueriesRepository} from '../../ws.repository/ddf/recent-ddfql-queries/recent-ddfql-queries.repository';
 
@@ -497,8 +498,94 @@ describe('Routes utils', () => {
 
       routeUtils.bodyFromUrlQuery(req, res, next);
     }));
-  });
 
+    it('assumes that dataset passed in urlon ddfql is encoded with encodeURIComponent', sinon.test(function (done) {
+      const ddfql = {
+        "from": "entities",
+        "dataset": 'VS-work%2Fddf--ws-testing%23master-twin-for-e2e',
+        "select": {
+          "key": ["company"]
+        }
+      };
+
+      const queryRaw = URLON.stringify(ddfql);
+
+      const req: any = {
+        query: {},
+        url: `/api/ddf/ql/?${queryRaw}`
+      };
+
+      const res = {};
+
+      const loggerInfoStub = this.stub(logger, 'info');
+
+      const next = () => {
+        expect(req.body.dataset).to.equal('VS-work/ddf--ws-testing#master-twin-for-e2e');
+        sinon.assert.calledOnce(loggerInfoStub);
+        sinon.assert.calledWithExactly(loggerInfoStub, {ddfqlRaw: queryRaw});
+        done();
+      };
+
+      routeUtils.bodyFromUrlQuery(req, res as express.Response, next);
+    }));
+
+    it('assumes that dataset passed in urlon ddfql is encoded with encodeURIComponent: dataset value is coerced to string', sinon.test(function (done) {
+      const ddfql = {
+        "from": "entities",
+        "dataset": 42,
+        "select": {
+          "key": ["company"]
+        }
+      };
+
+      const queryRaw = URLON.stringify(ddfql);
+
+      const req: any = {
+        query: {},
+        url: `/api/ddf/ql/?${queryRaw}`
+      };
+
+      const res = {};
+
+      const loggerInfoStub = this.stub(logger, 'info');
+
+      const next = () => {
+        expect(req.body.dataset).to.equal('42');
+        sinon.assert.calledOnce(loggerInfoStub);
+        sinon.assert.calledWithExactly(loggerInfoStub, {ddfqlRaw: queryRaw});
+        done();
+      };
+
+      routeUtils.bodyFromUrlQuery(req, res as express.Response, next);
+    }));
+
+    it('should respond with an error when it is impossible to decode dataset in urlon query with decodeURIComponent', sinon.test(function (done) {
+      const req = {
+        query: {},
+        url: '/api/ddf/ql/?_from=entities&dataset=%&select_key@=company'
+      };
+
+      const queryRaw = url.parse(req.url).query;
+
+      const loggerInfoStub = this.stub(logger, 'info');
+
+      const res = {
+        json: response => {
+          expect(response.success).to.be.false;
+          expect(response.error).to.equal('Query was sent in incorrect format');
+          sinon.assert.calledOnce(loggerInfoStub);
+          sinon.assert.calledWithExactly(loggerInfoStub, {ddfqlRaw: queryRaw});
+          done();
+        }
+      };
+
+      const next = () => {
+        expect.fail(null, null, 'Should not call next middleware');
+      };
+
+      routeUtils.bodyFromUrlQuery(req as any, res as any, next);
+    }));
+  });
 
   describe('RouteUtils.respondWithRawDdf', () => {
     it('should flush redis cache if error occured', sinon.test(function () {
@@ -811,5 +898,94 @@ describe('Routes utils', () => {
       expect(response.success).to.be.true;
       expect(response.data).to.equal(expectedData);
     });
+  });
+
+  describe('Ensure WS-CLI that speaks to WS has supported version', () => {
+    it('checks that requests from CLI with unsupported version are invalid', sinon.test(function () {
+      const header = this.stub().returns('2.5.24');
+      const req: any = {
+        header
+      };
+
+      const json = this.spy();
+      const res: any = {
+        json
+      };
+
+      const next = this.spy();
+
+      this.stub(config, 'getWsCliVersionSupported').returns('2.5.23');
+
+      routeUtils.ensureCliVersion(req, res, next);
+
+      sinon.assert.notCalled(next);
+      sinon.assert.calledOnce(json);
+      sinon.assert.calledWith(json, {success: false, error: `Please, change your WS-CLI version from 2.5.24 to 2.5.23`});
+    }));
+
+    it('checks that requests from CLI with invalid version are invalid', sinon.test(function () {
+      const header = this.stub().returns('bla');
+      const req: any = {
+        header
+      };
+
+      const json = this.spy();
+      const res: any = {
+        json
+      };
+
+      const next = this.spy();
+
+      this.stub(config, 'getWsCliVersionSupported').returns('2.5.23');
+
+      routeUtils.ensureCliVersion(req, res, next);
+
+      sinon.assert.notCalled(next);
+      sinon.assert.calledOnce(json);
+      sinon.assert.calledWith(json, {success: false, error: `Please, change your WS-CLI version from bla to 2.5.23`});
+    }));
+
+    it('responds with an error when WS-CLI version from client is not given', sinon.test(function () {
+      const header = this.stub().returns(undefined);
+      const req: any = {
+        header
+      };
+
+      const json = this.spy();
+      const res: any = {
+        json
+      };
+
+      const next = this.spy();
+
+      this.stub(config, 'getWsCliVersionSupported').returns('2.5.23');
+
+      routeUtils.ensureCliVersion(req, res, next);
+
+      sinon.assert.notCalled(next);
+      sinon.assert.calledOnce(json);
+      sinon.assert.calledWith(json, {success: false, error: 'This url can be accessed only from WS-CLI'});
+    }));
+
+    it('checks that requests from CLI with supported version are valid', sinon.test(function () {
+      const header = this.stub().returns('2.5.24');
+      const req: any = {
+        header
+      };
+
+      const json = this.spy();
+      const res: any = {
+        json
+      };
+
+      const next = this.spy();
+
+      this.stub(config, 'getWsCliVersionSupported').returns('2.5.24');
+
+      routeUtils.ensureCliVersion(req, res, next);
+
+      sinon.assert.notCalled(json);
+      sinon.assert.calledOnce(next);
+    }));
   });
 });

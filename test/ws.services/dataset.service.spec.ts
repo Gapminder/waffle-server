@@ -969,4 +969,117 @@ describe('Remove Dataset Service', function() {
       done();
     });
   }));
+
+  it(`shouldn't find dataset with versions: error while user searching`, sinon.test(function(done) {
+    const expectedError = 'User search has failed';
+    this.stub(DatasetsRepository, 'findByUser').callsArgWithAsync(1, expectedError);
+
+    datasetsService.findDatasetsWithVersions(null, (error) => {
+      expect(error).to.equal(expectedError);
+      done();
+    });
+  }));
+
+  it(`shouldn't find dataset with versions: error while completed transactions searching`, sinon.test(function(done) {
+    const datasets = [
+      {_id: 'ds1'},
+      {_id: 'ds2'}
+    ];
+
+    const expectedError = 'Completed transactions searching error';
+
+    this.stub(DatasetsRepository, 'findByUser').callsArgWithAsync(1, null, datasets);
+    this.stub(DatasetTransactionsRepository, 'findAllCompletedByDataset').callsArgWithAsync(1, expectedError);
+
+    datasetsService.findDatasetsWithVersions(null, (error) => {
+      expect(error).to.equal(expectedError);
+      done();
+    });
+  }));
+
+  it(`should find dataset with versions`, sinon.test(function (done) {
+    const datasets = [
+      {
+        _id: 'ds1',
+        name: 'ds1Name',
+        path: 'ds1Path'
+      },
+      {
+        _id: 'ds2',
+        name: 'ds2Name',
+        path: 'ds2Path'
+      }
+    ];
+
+    const currentTimeMillis = Date.now();
+
+    const transactionsDs1 = [
+      {
+        commit: 'bbbbbbb',
+        isDefault: false,
+        createdAt: currentTimeMillis
+      },
+      {
+        commit: 'ccccccc',
+        isDefault: false,
+        createdAt: currentTimeMillis
+      }
+    ];
+
+    const transactionsDs2 = [
+      {
+        commit: 'aaaaaaa',
+        isDefault: true,
+        createdAt: currentTimeMillis
+      }
+    ];
+
+    this.stub(DatasetsRepository, 'findByUser').callsArgWithAsync(1, null, datasets);
+    const findAllCompletedByDatasetStub = this.stub(DatasetTransactionsRepository, 'findAllCompletedByDataset');
+    findAllCompletedByDatasetStub
+      .withArgs('ds1', sinon.match.func)
+      .callsArgWithAsync(1, null, transactionsDs1);
+
+    findAllCompletedByDatasetStub
+      .withArgs('ds2', sinon.match.func)
+      .callsArgWithAsync(1, null, transactionsDs2);
+
+    datasetsService.findDatasetsWithVersions(null, (error, datasetWithVersions) => {
+      expect(error).to.not.exist;
+      expect(datasetWithVersions).to.deep.equal([
+        {
+          "id": "ds1",
+          "isDefault": false,
+          "name": "ds1Name",
+          "path": "ds1Path",
+          "versions": [
+            {
+              "commit": "bbbbbbb",
+              "createdAt": new Date(currentTimeMillis),
+              "isDefault": false
+            },
+            {
+              "commit": "ccccccc",
+              "createdAt": new Date(currentTimeMillis),
+              "isDefault": false
+            }
+          ]
+        },
+        {
+          "id": "ds2",
+          "isDefault": true,
+          "name": "ds2Name",
+          "path": "ds2Path",
+          "versions": [
+            {
+              "commit": "aaaaaaa",
+              "createdAt": new Date(currentTimeMillis),
+              "isDefault": true
+            }
+          ]
+        }
+      ]);
+      done();
+    });
+  }));
 });

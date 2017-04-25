@@ -132,11 +132,15 @@ function updateIncrementally(externalContext: any, onDatasetUpdated: Function): 
 
 function _checkTransaction(pipe: any, done: Function): void {
   return DatasetTransactionsRepository.findByDatasetAndCommit(pipe.dataset._id, pipe.commit, (error: any, transaction: any) => {
+    if (error) {
+      return done(error);
+    }
+
     if (transaction) {
       return done(`Version of dataset "${pipe.github}" with commit: "${transaction.commit}" was already applied`);
     }
 
-    return done(error, pipe);
+    return done(null, pipe);
   });
 }
 
@@ -180,6 +184,10 @@ function getDatasetsInProgress(userId: any, done: Function): void {
 
 function getAvailableDatasetsAndVersions(userId: any, onQueriesGot: Function): void {
   return datasetsService.findDatasetsWithVersions(userId, (searchingError: any, datasetsWithVersions: any) => {
+    if (searchingError) {
+      return onQueriesGot(searchingError);
+    }
+
     return async.mapLimit(datasetsWithVersions, 3, (dataset: any, onDatasetsAndVersionsFound: AsyncResultCallback<any, any>) => {
       return async.mapLimit(dataset.versions, 3, (version:VersionModel, cb: Function) => {
         return cb(null, {
@@ -191,9 +199,6 @@ function getAvailableDatasetsAndVersions(userId: any, onQueriesGot: Function): v
         });
       }, onDatasetsAndVersionsFound);
     }, (error: any, result: any) => {
-      if (error) {
-        return onQueriesGot(error);
-      }
       return onQueriesGot(null, _.flattenDeep(result));
     });
   });
@@ -249,8 +254,12 @@ function _handleAsynchronously(error: any, result: any, done: Function): void {
 
 function _findTransaction(pipe: any, done: Function): void {
   return DatasetTransactionsRepository.findLatestByDataset(pipe.dataset._id, (error: any, transaction: any) => {
+    if (error) {
+      return done(error);
+    }
+
     pipe.transaction = transaction;
-    return done(error, pipe);
+    return done(null, pipe);
   });
 }
 

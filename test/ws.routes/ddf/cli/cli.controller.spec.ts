@@ -11,6 +11,7 @@ import * as transactionsService from '../../../../ws.services/dataset-transactio
 import * as datasetsService from '../../../../ws.services/datasets.service';
 import * as reposService from '../../../../ws.services/repos.service';
 import * as cacheUtils from '../../../../ws.utils/cache-warmup';
+import * as cliApi from 'waffle-server-import-cli';
 
 describe('WS-CLI controller', () => {
 
@@ -235,6 +236,90 @@ describe('WS-CLI controller', () => {
       };
 
       cliController.cleanCache(req, res);
+
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(cliServiceStub);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+  });
+
+  describe('Clean repos folder', function() {
+    it('should clean without errors', sinon.test(function () {
+      const toMessageResponseSpy = this.spy(routeUtils, 'toMessageResponse');
+      const expectedMessage = 'Repos folder was cleaned';
+      const expectedResponse = {success: true, message: expectedMessage};
+
+      const resJsonSpy = this.spy();
+      const cliServiceStub = this.stub(cliApi, 'cleanRepos', (path, onCleaned) => onCleaned(null));
+
+      const req = {
+        user: {
+          name: 'fake'
+        }
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.cleanRepos(req, res);
+
+      sinon.assert.calledOnce(cliServiceStub);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toMessageResponseSpy);
+      sinon.assert.calledWithExactly(toMessageResponseSpy, expectedMessage);
+    }));
+
+    it('should not clean repos folder cause user is not authenticated', sinon.test(function () {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'There is no authenticated user to make this action';
+      const expectedResponse = {success: false, error: expectedError};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+      const cliServiceStub = this.stub(cliApi, 'cleanRepos');
+
+      const req = {};
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.cleanRepos(req, res);
+
+      sinon.assert.notCalled(cliServiceStub);
+      sinon.assert.calledOnce(loggerStub);
+      sinon.assert.calledWithExactly(loggerStub, expectedError);
+      sinon.assert.calledOnce(resJsonSpy);
+      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
+      sinon.assert.calledOnce(toErrorResponseSpy);
+      sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+    }));
+
+    it('should respond with an error if repos folder cleaning was failed', sinon.test(function () {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'Boo!';
+      const expectedResponse = {success: false, error: expectedError};
+
+      const loggerStub = this.stub(logger, 'error');
+      const resJsonSpy = this.spy();
+      const cliServiceStub = this.stub(cliApi, 'cleanRepos', (path, onCleaned) => onCleaned(expectedError));
+
+      const req = {
+        user: {
+          name: 'fake'
+        }
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.cleanRepos(req, res);
 
       sinon.assert.calledOnce(loggerStub);
       sinon.assert.calledWithExactly(loggerStub, expectedError);

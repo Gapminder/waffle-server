@@ -15,14 +15,14 @@ export class ChangesDescriptor {
   }
 
   get gid() {
-    return this.original[this.concept];
+    return this._object[this.concept];
   }
 
   get concept() {
     if (this.isCreateAction()) {
       return _.head(_.get(this.currentResource, 'primaryKey') as any[]);
     }
-    return this.original.gid;
+    return this._object.gid;
   }
 
   get changes() {
@@ -33,10 +33,17 @@ export class ChangesDescriptor {
   }
 
   get original() {
-    if (this.isUpdateAction() && this._object['data-origin']) {
+    const isObjectBeingUpdated = this.isUpdateAction() && this._object['data-origin'];
+    const isEntityBeingRemoved = this.isRemoveAction() && this.describes(constants.ENTITIES);
+
+    if (isObjectBeingUpdated || isEntityBeingRemoved) {
       return this._object['data-origin'];
     }
     return this._object;
+  }
+
+  get changedObject() {
+    return _.omit(_.extend({}, this.original, this.changes), this.removedColumns);
   }
 
   get language() {

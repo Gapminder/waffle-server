@@ -67,7 +67,7 @@ function getEntitiesByDdfql(pipe: any, cb: Function): void {
       if (err) {
         return mcb(err);
       }
-      return mcb(err, result.entities);
+      return mcb(null, result.entities);
     });
   }
 }
@@ -92,7 +92,11 @@ function normalizeQueriesToDatapointsByDdfql(pipe: any, cb: Function): void {
     }
 
     return entitiesRepository.findEntityPropertiesByQuery(joinQuery, (error: any, entities: any) => {
-      return mcb(error, _.map(entities, constants.ORIGIN_ID));
+      if (error) {
+        return mcb(error);
+      }
+
+      return mcb(null, _.map(entities, constants.ORIGIN_ID));
     });
   }, (err: any, substituteJoinLinks: any) => {
     if (err) {
@@ -113,9 +117,6 @@ function normalizeQueriesToDatapointsByDdfql(pipe: any, cb: Function): void {
       }
 
       console.timeEnd('get datapoints');
-      if(queryErr) {
-        return cb(queryErr);
-      }
       logger.info(`${_.size(externalContext.datapoints)} items of datapoints were selected`);
 
       return cb(null, externalContext);
@@ -146,9 +147,12 @@ function getConcepts(pipe: any, cb: Function): void {
   };
 
   return conceptsService.getConcepts(_pipe, (err: any, result: any) => {
-    pipe.concepts = result.concepts;
+    if (err) {
+      return cb(err);
+    }
 
-    return cb(err, pipe);
+    pipe.concepts = result.concepts;
+    return cb(null, pipe);
   });
 }
 

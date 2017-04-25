@@ -1,8 +1,9 @@
-import {constants} from '../../../ws.utils/constants';
+import { constants } from '../../../ws.utils/constants';
 import * as ddfMappers from '../../utils/ddf-mappers';
 import * as entitiesUtils from '../../utils/entities.utils';
-import {createTranslationsUpdater} from './update-translations-flow';
-import {EntitiesRepositoryFactory} from '../../../ws.repository/ddf/entities/entities.repository';
+import * as _ from 'lodash';
+import { createTranslationsUpdater } from './update-translations-flow';
+import { EntitiesRepositoryFactory } from '../../../ws.repository/ddf/entities/entities.repository';
 
 export {
   updateEntitiesTranslation
@@ -33,14 +34,16 @@ function updateEntitiesTranslation(externalContext, done) {
 }
 
 function enrichContext(resource, changesDescriptor, externalContext) {
-  return entitiesUtils.getSetsAndDomain(resource, externalContext);
+  const setsAndDomain = entitiesUtils.getSetsAndDomain(resource, externalContext, changesDescriptor.changedObject);
+  return _.extend(setsAndDomain, {filename: resource.path});
 }
 
 function makeQueryToFetchTranslationTarget(changesDescriptor, context) {
   return {
     domain: context.entityDomain.originId,
     sets: context.entitySetsOriginIds,
-    gid: changesDescriptor.gid
+    gid: changesDescriptor.gid,
+    sources: context.filename
   };
 }
 
