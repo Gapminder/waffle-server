@@ -134,7 +134,7 @@ function ensureCliVersion(req: express.Request, res: express.Response, next: exp
 
 function ensureVersionsEquality(clientVersion: string, serverVersion: string): boolean {
   try {
-    return semver.eq(clientVersion, serverVersion);
+    return semver.satisfies(clientVersion, serverVersion);
   } catch (e) {
     return false;
   }
