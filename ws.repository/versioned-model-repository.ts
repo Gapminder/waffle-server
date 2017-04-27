@@ -20,19 +20,22 @@ export abstract class VersionedModelRepository {
   }
 
   public create(documents: any, onCreated?: Function): any {
-    const documentsForStoring = Array.isArray(documents) ? this.setId(documents) : this.setId([documents]);
+    const documentsForStoring = Array.isArray(documents) ? this.setDocumentsId(documents) : this.setDocumentsId([documents]);
     return this._getModel().insertMany(documentsForStoring, onCreated);
   }
 
-  protected setId(documents: any[]): any[] {
-    _.forEach(documents, (document: any) => {
-      const id = Types.ObjectId();
-      document._id = id;
-      if (!document.originId) {
-        document.originId = id;
-      }
-    });
+  protected setDocumentsId(documents: any[]): any[] {
+    _.forEach(documents, this.setSingleDocumentId.bind(this));
     return documents;
+  }
+
+  protected setSingleDocumentId(document: any): any {
+    const id = Types.ObjectId();
+    document._id = id;
+    if (!document.originId) {
+      document.originId = id;
+    }
+    return document;
   }
 
   protected _normalizeWhereClause(where: any): any {
