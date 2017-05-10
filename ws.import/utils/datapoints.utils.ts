@@ -57,13 +57,14 @@ function flattenDimensions(dimensions) {
   const flatDimensionsSet = _.reduce(dimensions, (result, dimension: any) => {
     const domain = _.get(dimension, 'domain');
     if (domain) {
-      result.add(_.toString(_.get(domain, 'originId', domain)));
+      const domainOriginId = _.get(domain, 'originId', domain);
+      result.set(_.toString(domainOriginId), domainOriginId);
     }
-    result.add(_.toString(dimension.originId));
+    result.set(_.toString(dimension.originId), dimension.originId);
     return result;
-  }, new Set());
+  }, new Map());
 
-  return Array.from(flatDimensionsSet);
+  return Array.from(flatDimensionsSet.values());
 }
 
 function saveDatapoints(datapointsByFilename, externalContextFrozen) {

@@ -2,14 +2,14 @@ import * as _ from 'lodash';
 import * as async from 'async';
 import { logger } from '../../../ws.config/log';
 
-import { model } from 'mongoose';
+import * as mongoose from 'mongoose';
 
 import * as ddfImportUtils from '../../../ws.import/utils/import-ddf.utils';
 import { VersionedModelRepositoryFactory } from '../../versioned-model-repository-factory';
 import { VersionedModelRepository } from '../../versioned-model-repository';
 import { constants } from '../../../ws.utils/constants';
 
-const DataPoints = model('DataPoints');
+const DataPoints = mongoose.model('DataPoints');
 
 class DataPointsRepository extends VersionedModelRepository {
   public constructor(versionQueryFragment, datasetId?, version?) {
@@ -18,6 +18,28 @@ class DataPointsRepository extends VersionedModelRepository {
 
   protected _getModel(): any {
     return DataPoints;
+  }
+
+  public create(documents: any, onCreated?: Function): any {
+    const documentsForStoring = Array.isArray(documents) ? documents : [documents];
+
+    const executeDatapointsBulk = new Promise((resolve, reject) => {
+      const bulk = mongoose.connection.collection('datapoints').initializeUnorderedBulkOp();
+      documentsForStoring.forEach((document: any) => bulk.insert(this.setSingleDocumentId(document)));
+      bulk.execute((error, response) => {
+        if (error) {
+          return reject(error);
+        }
+        resolve(response);
+      });
+    });
+
+    if (onCreated) {
+      return executeDatapointsBulk
+        .then((response: any) => onCreated(null, response))
+        .catch((error: any) => onCreated(error));
+    }
+    return executeDatapointsBulk;
   }
 
   public count(onCounted) {
