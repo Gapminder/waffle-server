@@ -8,49 +8,114 @@
   "rows": [
     [
       [
-        "company",
-        "anno"
+        "anno",
+        "company"
       ],
       "company_size",
-      "large",
-      "small"
+      null,
+      null
     ],
     [
       [
-        "company",
-        "anno"
+        "anno",
+        "english_speaking"
       ],
-      "lines_of_code",
-      31111,
-      531062
+      "company_size",
+      null,
+      null
     ],
     [
       [
-        "company",
-        "project",
-        "anno"
+        "anno",
+        "foundation"
+      ],
+      "company_size",
+      null,
+      null
+    ],
+    [
+      [
+        "anno",
+        "company"
       ],
       "lines_of_code",
-      11111,
-      479679
+      null,
+      null
+    ],
+    [
+      [
+        "anno",
+        "english_speaking"
+      ],
+      "lines_of_code",
+      null,
+      null
+    ],
+    [
+      [
+        "anno",
+        "foundation"
+      ],
+      "lines_of_code",
+      null,
+      null
+    ],
+    [
+      [
+        "anno",
+        "company",
+        "project"
+      ],
+      "lines_of_code",
+      null,
+      null
+    ],
+    [
+      [
+        "anno",
+        "english_speaking",
+        "project"
+      ],
+      "lines_of_code",
+      null,
+      null
+    ],
+    [
+      [
+        "anno",
+        "foundation",
+        "project"
+      ],
+      "lines_of_code",
+      null,
+      null
     ],
     [
       [
         "company",
         "project"
       ],
-      "latitude",
-      1.23,
-      88
+      "lines_of_code",
+      null,
+      null
     ],
     [
       [
-        "company",
+        "english_speaking",
         "project"
       ],
       "lines_of_code",
-      4857,
-      4893993
+      null,
+      null
+    ],
+    [
+      [
+        "foundation",
+        "project"
+      ],
+      "lines_of_code",
+      null,
+      null
     ],
     [
       [
@@ -58,8 +123,35 @@
         "project"
       ],
       "longitude",
-      1.23,
-      90
+      null,
+      null
+    ],
+    [
+      [
+        "english_speaking",
+        "project"
+      ],
+      "longitude",
+      null,
+      null
+    ],
+    [
+      [
+        "company",
+        "project"
+      ],
+      "latitude",
+      null,
+      null
+    ],
+    [
+      [
+        "english_speaking",
+        "project"
+      ],
+      "latitude",
+      null,
+      null
     ],
     [
       [
@@ -67,8 +159,44 @@
         "project"
       ],
       "num_users",
-      4,
-      54345
+      null,
+      null
+    ],
+    [
+      [
+        "english_speaking",
+        "project"
+      ],
+      "num_users",
+      null,
+      null
+    ],
+    [
+      [
+        "foundation",
+        "project"
+      ],
+      "longitude",
+      null,
+      null
+    ],
+    [
+      [
+        "foundation",
+        "project"
+      ],
+      "latitude",
+      null,
+      null
+    ],
+    [
+      [
+        "foundation",
+        "project"
+      ],
+      "num_users",
+      null,
+      null
     ]
   ]
 }

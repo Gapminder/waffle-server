@@ -6,23 +6,67 @@
   "rows": [
     [
       [
-        "company",
-        "anno"
+        "anno",
+        "company"
       ],
       "company_size"
     ],
     [
       [
-        "company",
-        "anno"
+        "anno",
+        "english_speaking"
+      ],
+      "company_size"
+    ],
+    [
+      [
+        "anno",
+        "foundation"
+      ],
+      "company_size"
+    ],
+    [
+      [
+        "anno",
+        "company"
       ],
       "lines_of_code"
     ],
     [
       [
+        "anno",
+        "english_speaking"
+      ],
+      "lines_of_code"
+    ],
+    [
+      [
+        "anno",
+        "foundation"
+      ],
+      "lines_of_code"
+    ],
+    [
+      [
+        "anno",
         "company",
-        "project",
-        "anno"
+        "project"
+      ],
+      "lines_of_code"
+    ],
+    [
+      [
+        "anno",
+        "english_speaking",
+        "project"
+      ],
+      "lines_of_code"
+    ],
+    [
+      [
+        "anno",
+        "foundation",
+        "project"
       ],
       "lines_of_code"
     ],
@@ -31,11 +75,18 @@
         "company",
         "project"
       ],
-      "latitude"
+      "lines_of_code"
     ],
     [
       [
-        "company",
+        "english_speaking",
+        "project"
+      ],
+      "lines_of_code"
+    ],
+    [
+      [
+        "foundation",
         "project"
       ],
       "lines_of_code"
@@ -49,7 +100,56 @@
     ],
     [
       [
+        "english_speaking",
+        "project"
+      ],
+      "longitude"
+    ],
+    [
+      [
         "company",
+        "project"
+      ],
+      "latitude"
+    ],
+    [
+      [
+        "english_speaking",
+        "project"
+      ],
+      "latitude"
+    ],
+    [
+      [
+        "company",
+        "project"
+      ],
+      "num_users"
+    ],
+    [
+      [
+        "english_speaking",
+        "project"
+      ],
+      "num_users"
+    ],
+    [
+      [
+        "foundation",
+        "project"
+      ],
+      "longitude"
+    ],
+    [
+      [
+        "foundation",
+        "project"
+      ],
+      "latitude"
+    ],
+    [
+      [
+        "foundation",
         "project"
       ],
       "num_users"

@@ -8,31 +8,59 @@
   "rows": [
     [
       [
-        "company",
-        "anno"
+        "anno",
+        "company"
       ],
       "company_scale",
-      "large",
-      "small"
+      null,
+      null
     ],
     [
       [
-        "company",
-        "anno"
+        "anno",
+        "english_speaking"
       ],
-      "lines_of_code",
-      31111,
-      531062
+      "company_scale",
+      null,
+      null
     ],
     [
       [
-        "company",
-        "project",
-        "anno"
+        "anno",
+        "company"
       ],
       "lines_of_code",
-      11111,
-      479679
+      null,
+      null
+    ],
+    [
+      [
+        "anno",
+        "english_speaking"
+      ],
+      "lines_of_code",
+      null,
+      null
+    ],
+    [
+      [
+        "anno",
+        "company",
+        "project"
+      ],
+      "lines_of_code",
+      null,
+      null
+    ],
+    [
+      [
+        "anno",
+        "english_speaking",
+        "project"
+      ],
+      "lines_of_code",
+      null,
+      null
     ],
     [
       [
@@ -40,8 +68,17 @@
         "project"
       ],
       "lines_of_code",
-      4857,
-      4893993
+      null,
+      null
+    ],
+    [
+      [
+        "english_speaking",
+        "project"
+      ],
+      "lines_of_code",
+      null,
+      null
     ]
   ]
 }
