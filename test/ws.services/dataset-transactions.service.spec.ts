@@ -732,7 +732,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should fail when error happened while failed transaction removing', done => {
+    it('should fail when error happened while failed transaction removing', (done: Function) => {
       const removeById = (failedTransactionId, onTransactionRemoved) => {
         expect(failedTransactionId).to.be.equal(expectedTransaction._id);
 

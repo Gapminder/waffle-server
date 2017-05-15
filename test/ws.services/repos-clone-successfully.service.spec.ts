@@ -16,7 +16,7 @@ import { config } from '../../ws.config/config';
 const reposServicePath = '../../ws.services/repos.service';
 const assert = sinon.assert;
 
-describe('should clone repo successfully', () => {
+describe('repos service 2', () => {
   const resetStub = sinon.stub();
   const checkoutStub = sinon.stub();
   const pullStub = sinon.stub();
@@ -54,7 +54,7 @@ describe('should clone repo successfully', () => {
     debugStub.restore();
   });
 
-  it('when destination dir was not created and commit was given', (done: Function): void => {
+  it('should clone repo successfully when destination dir was not created and commit was given', (done: Function): void => {
     const ddfRepoName = 'ddf--gapminder--systema_globalis';
     const ddfRepoCommitHash = 'bla1234';
 
@@ -113,7 +113,7 @@ describe('should clone repo successfully', () => {
     });
   });
 
-  it('when destination dir was created but is empty and commit was given', (done: Function): void => {
+  it('should clone repo successfully when destination dir was created but is empty and commit was given', (done: Function): void => {
     const ddfRepoName = 'ddf--gapminder--systema_globalis';
     const ddfRepoCommitHash = 'bla1234';
 
@@ -172,7 +172,7 @@ describe('should clone repo successfully', () => {
     });
   });
 
-  it('when destination dir was created but isn\'t empty and commit was given', (done: Function): void => {
+  it('should clone repo successfully when destination dir was created but isn\'t empty and commit was given', (done: Function): void => {
     const ddfRepoName = 'ddf--gapminder--systema_globalis';
     const ddfRepoCommitHash = 'bla1234';
 
@@ -231,7 +231,7 @@ describe('should clone repo successfully', () => {
     });
   });
 
-  it('when destination dir was not created and commit wasn\'t given', (done: Function): void => {
+  it('should clone repo successfully when destination dir was not created and commit wasn\'t given', (done: Function): void => {
     const ddfRepoName = 'ddf--gapminder--systema_globalis';
     const ddfRepoCommitHash = null;
 
@@ -290,7 +290,7 @@ describe('should clone repo successfully', () => {
     });
   });
 
-  it('when destination dir was created but is empty and commit wasn\'t given', (done: Function): void => {
+  it('should clone repo successfully when destination dir was created but is empty and commit wasn\'t given', (done: Function): void => {
     const ddfRepoName = 'ddf--gapminder--systema_globalis';
     const ddfRepoCommitHash = null;
 
@@ -349,7 +349,7 @@ describe('should clone repo successfully', () => {
     });
   });
 
-  it('when destination dir was created but isn\'t empty and commit wasn\'t given', (done: Function): void => {
+  it('should clone repo successfully when destination dir was created but isn\'t empty and commit wasn\'t given', (done: Function): void => {
     const ddfRepoName = 'ddf--gapminder--systema_globalis';
     const ddfRepoCommitHash = null;
 
