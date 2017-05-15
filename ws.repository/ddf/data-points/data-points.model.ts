@@ -8,6 +8,9 @@ const DataPoints: any = new Schema({
 
   isNumeric: {type: Boolean, required: true},
   measure: {type: Schema.Types.ObjectId, required: true},
+
+  indicators: {type: Schema.Types.Mixed, 'default': {}},
+
   dimensions: [{type: Schema.Types.ObjectId}],
   dimensionsConcepts: [{type: Schema.Types.ObjectId}],
   properties: {type: Schema.Types.Mixed, 'default': {}},

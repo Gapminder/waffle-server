@@ -20,6 +20,8 @@ export {
 };
 
 function saveDatapointsAndEntitiesFoundInThem(saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) {
+  const alreadyFoundDimentionsPairs = new Set();
+
   return datapointsFoundEntitiesStream
     .compact()
     .batch(ddfImportUtils.DEFAULT_CHUNK_SIZE)
@@ -29,7 +31,7 @@ function saveDatapointsAndEntitiesFoundInThem(saveEntitiesFoundInDatapoints, ext
 
       return hi(
         saveEntitiesFoundInDatapoints(entitiesFoundInDatapoints)
-          .then(saveDatapoints(datapointsByFilename, externalContextFrozen))
+          .then(saveDatapoints(datapointsByFilename, alreadyFoundDimentionsPairs, externalContextFrozen))
       );
     });
 }
@@ -67,17 +69,19 @@ function flattenDimensions(dimensions) {
   return Array.from(flatDimensionsSet.values());
 }
 
-function saveDatapoints(datapointsByFilename, externalContextFrozen) {
+function saveDatapoints(datapointsByFilename, alreadyFoundDimentionsPairs, externalContextFrozen) {
+
   return entitiesFoundInDatapointsByGid => {
     return Promise.all(_.map(datapointsByFilename, (datapointsFromSameFile: any) => {
       datapointsFromSameFile.context.segregatedEntities.foundInDatapointsByGid = entitiesFoundInDatapointsByGid;
+      datapointsFromSameFile.context.alreadyFoundDimentionsPairs = alreadyFoundDimentionsPairs;
       return mapAndStoreDatapointsToDb(datapointsFromSameFile, externalContextFrozen);
     }));
   };
 }
 
 function mapAndStoreDatapointsToDb(datapointsFromSameFile, externalContext) {
-  const {measures, filename, dimensions, dimensionsConcepts, context: {segregatedEntities: entities}} = datapointsFromSameFile;
+  const {measures, filename, dimensions, dimensionsConcepts, context: {segregatedEntities: entities, alreadyFoundDimentionsPairs}} = datapointsFromSameFile;
 
   const {dataset: {_id: datasetId}, transaction: {createdAt: version}, concepts} = externalContext;
 
@@ -97,7 +101,7 @@ function mapAndStoreDatapointsToDb(datapointsFromSameFile, externalContext) {
   });
 
   logger.debug('Store datapoints to database. Amount: ', _.size(wsDatapoints));
-  return DatapointsRepositoryFactory.versionAgnostic().create(wsDatapoints);
+  return DatapointsRepositoryFactory.versionAgnostic().create(wsDatapoints, alreadyFoundDimentionsPairs);
 }
 
 function findAllEntities(externalContext) {

@@ -3,7 +3,7 @@ services:
   mongodb:
     image: "mongo:3.4.1"
     ports:
-       - "27017"
+       - "27777:27017"
     volumes:
       - ~/waffle-server/mongodata:/data/db
   redis:
