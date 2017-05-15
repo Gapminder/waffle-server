@@ -24,7 +24,7 @@ function startDatapointsCreation(externalContext, done) {
     'timeConcepts',
     'transaction',
     'previousTransaction',
-    'dataset',
+    'dataset'
   ]));
 
   const datapointsUpdateStream = updateDatapoints(externalContextFrozen);

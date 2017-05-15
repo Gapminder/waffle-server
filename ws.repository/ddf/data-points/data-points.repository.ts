@@ -20,12 +20,23 @@ class DataPointsRepository extends VersionedModelRepository {
     return DataPoints;
   }
 
-  public create(documents: any, onCreated?: Function): any {
+  public create(documents: any, alreadyFoundDimentionsPairs: any, onCreated?: Function): any {
     const documentsForStoring = Array.isArray(documents) ? documents : [documents];
 
     const executeDatapointsBulk = new Promise((resolve, reject) => {
       const bulk = mongoose.connection.collection('datapoints').initializeUnorderedBulkOp();
-      documentsForStoring.forEach((document: any) => bulk.insert(this.setSingleDocumentId(document)));
+      documentsForStoring.forEach((document: any) => {
+        const sortedDimentions = _.map(document.dimensions, (dim) => dim.toString()).sort();
+        if (alreadyFoundDimentionsPairs.has(sortedDimentions)) {
+          // this.setSingleDocumentId(document)
+
+          const key = `indicators.${document.measure}`;
+          const valueToUpdate = { [key]:  document.value };
+          bulk.find({dimensions: document.dimensions}).updateOne({ $set : valueToUpdate });
+        } else {
+          alreadyFoundDimentionsPairs.add(sortedDimentions.join(''));
+        }
+      });
       bulk.execute((error, response) => {
         if (error) {
           return reject(error);
@@ -167,7 +178,7 @@ class DataPointsRepository extends VersionedModelRepository {
         $size: dimensionsSize,
         $not: {$elemMatch: {$nin: dimensionsEntityOriginIds}}
       }
-    }
+    };
   }
 }
 
