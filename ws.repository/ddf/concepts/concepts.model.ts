@@ -9,8 +9,8 @@ const Concepts: any = new Schema({
 
   type: {
     type: String,
-    'enum': [... constants.DEFAULT_ENTITY_GROUP_TYPES, 'string', 'measure'],
-    'default': 'string',
+    enum: [... constants.DEFAULT_ENTITY_GROUP_TYPES, 'string', 'measure'],
+    default: 'string',
     required: true
   },
   sources: [{type: String, required: true}],
@@ -23,7 +23,7 @@ const Concepts: any = new Schema({
   subsetOf: [{type: Schema.Types.ObjectId}],
 
   from: {type: Number, required: true},
-  to: {type: Number, required: true, 'default': constants.MAX_VERSION},
+  to: {type: Number, required: true, default: constants.MAX_VERSION},
   dataset: {type: Schema.Types.ObjectId, ref: 'Datasets', required: true},
 }, {strict: false, minimize: false});
 
@@ -46,11 +46,9 @@ Concepts.plugin(OriginIdPlugin, {
   originId: 'Concepts'
 });
 
+Concepts.index({originId: 1, dataset: 1, from: 1, to: 1});
+Concepts.index({gid: 1, dataset: 1, from: 1, to: 1});
 Concepts.index({dataset: 1, from: 1, to: 1});
-Concepts.index({dataset: 1, from: 1, to: 1, originId: 1});
-Concepts.index({dataset: 1, from: 1, to: 1, gid: 1});
-Concepts.index({from: 1});
-Concepts.index({to: 1});
-Concepts.index({originId: 1});
+Concepts.index({dataset: 1, to: 1});
 
 export default model('Concepts', Concepts);
