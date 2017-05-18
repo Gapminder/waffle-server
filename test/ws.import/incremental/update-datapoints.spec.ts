@@ -329,7 +329,7 @@ describe('Datapoints incremental update flow', () => {
     };
 
     this.stub(DatapointsRepositoryFactory, 'latestExceptCurrentVersion').returns({
-      closeDatapointByMeasureAndDimensionsAndValue: (options, callback) => {
+      closeDatapointByMeasureAndDimensions: (options, callback) => {
         callback(null, measureToDatapoint[options.measureOriginId]);
       }
     });
@@ -447,7 +447,7 @@ describe('Datapoints incremental update flow', () => {
     });
 
     this.stub(DatapointsRepositoryFactory, 'latestExceptCurrentVersion').returns({
-      closeDatapointByMeasureAndDimensionsAndValue: (options, callback) => {
+      closeDatapointByMeasureAndDimensions: (options, callback) => {
         callback();
       }
     });
@@ -503,7 +503,7 @@ describe('Datapoints incremental update flow', () => {
     const expectedError = 'Boo!';
 
     this.stub(DatapointsRepositoryFactory, 'latestExceptCurrentVersion').returns({
-      closeDatapointByMeasureAndDimensionsAndValue: (options, callback) => {
+      closeDatapointByMeasureAndDimensions: (options, callback) => {
         callback(expectedError);
       }
     });
@@ -545,9 +545,9 @@ describe('Datapoints incremental update flow', () => {
         });
     });
 
-    const closeDatapointByMeasureAndDimensionsAndValueStub = this.stub().callsArgWithAsync(1, null, {});
+    const closeDatapointByMeasureAndDimensionsStub = this.stub().callsArgWithAsync(1, null, {});
     this.stub(DatapointsRepositoryFactory, 'latestExceptCurrentVersion').returns({
-      closeDatapointByMeasureAndDimensionsAndValue: closeDatapointByMeasureAndDimensionsAndValueStub
+      closeDatapointByMeasureAndDimensions: closeDatapointByMeasureAndDimensionsStub
     });
 
     const loggerInfoStub = this.stub(logger, 'info');
@@ -557,8 +557,8 @@ describe('Datapoints incremental update flow', () => {
       expect(externalContext).to.equal(context);
       expect(collectedDatapoints).to.deep.equal([undefined], 'Here we have "undefined" cause deleted datapoints should not be pushed down the stream after removal');
 
-      sinon.assert.calledThrice(closeDatapointByMeasureAndDimensionsAndValueStub);
-      sinon.assert.calledWith(closeDatapointByMeasureAndDimensionsAndValueStub, {
+      sinon.assert.calledThrice(closeDatapointByMeasureAndDimensionsStub);
+      sinon.assert.calledWith(closeDatapointByMeasureAndDimensionsStub, {
         "measureOriginId": "longitude",
         "dimensionsSize": 2,
         "dimensionsEntityOriginIds": [
@@ -568,7 +568,7 @@ describe('Datapoints incremental update flow', () => {
         "datapointValue": "90"
       });
 
-      sinon.assert.calledWith(closeDatapointByMeasureAndDimensionsAndValueStub, {
+      sinon.assert.calledWith(closeDatapointByMeasureAndDimensionsStub, {
         "measureOriginId": "latitude",
         "dimensionsSize": 2,
         "dimensionsEntityOriginIds": [
@@ -578,7 +578,7 @@ describe('Datapoints incremental update flow', () => {
         "datapointValue": "44.1"
       });
 
-      sinon.assert.calledWith(closeDatapointByMeasureAndDimensionsAndValueStub, {
+      sinon.assert.calledWith(closeDatapointByMeasureAndDimensionsStub, {
         "measureOriginId": "num_users",
         "dimensionsSize": 2,
         "dimensionsEntityOriginIds": [
@@ -619,9 +619,9 @@ describe('Datapoints incremental update flow', () => {
         });
     });
 
-    const closeDatapointByMeasureAndDimensionsAndValueStub = this.stub().callsArgWithAsync(1, null, null);
+    const closeDatapointByMeasureAndDimensionsStub = this.stub().callsArgWithAsync(1, null, null);
     this.stub(DatapointsRepositoryFactory, 'latestExceptCurrentVersion').returns({
-      closeDatapointByMeasureAndDimensionsAndValue: closeDatapointByMeasureAndDimensionsAndValueStub
+      closeDatapointByMeasureAndDimensions: closeDatapointByMeasureAndDimensionsStub
     });
 
     const loggerErrorStub = this.stub(logger, 'error');
@@ -666,9 +666,9 @@ describe('Datapoints incremental update flow', () => {
     });
 
     const expectedError = 'Boo!';
-    const closeDatapointByMeasureAndDimensionsAndValueStub = this.stub().callsArgWithAsync(1, expectedError);
+    const closeDatapointByMeasureAndDimensionsStub = this.stub().callsArgWithAsync(1, expectedError);
     this.stub(DatapointsRepositoryFactory, 'latestExceptCurrentVersion').returns({
-      closeDatapointByMeasureAndDimensionsAndValue: closeDatapointByMeasureAndDimensionsAndValueStub
+      closeDatapointByMeasureAndDimensions: closeDatapointByMeasureAndDimensionsStub
     });
 
     const loggerInfoStub = this.stub(logger, 'info');

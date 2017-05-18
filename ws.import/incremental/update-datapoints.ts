@@ -210,7 +210,7 @@ function closeDatapointsPerMeasure(rawDatapoint, externalContext, onDatapointsFo
       };
 
       return DatapointsRepositoryFactory.latestExceptCurrentVersion(externalContext.datasetId, externalContext.version)
-        .closeDatapointByMeasureAndDimensionsAndValue(options, (error, closedDatapoint) => {
+        .closeDatapointByMeasureAndDimensions(options, (error, closedDatapoint) => {
           if (error) {
             return onDatapointClosed(error);
           }

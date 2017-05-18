@@ -80,7 +80,7 @@ class DataPointsRepository extends VersionedModelRepository {
     return DataPoints.find(query).lean().exec(onDatapointsFound);
   }
 
-  public closeDatapointByMeasureAndDimensionsAndValue(options, onDatapointClosed) {
+  public closeDatapointByMeasureAndDimensions(options, onDatapointClosed) {
     const numericDatapointValue = ddfImportUtils.toNumeric(options.datapointValue);
     const byDimensionsAndMeasureAndValueQuery = _.extend(DataPointsRepository.toByDimensionsAndMeasureQuery(options), {
       value: _.isNil(numericDatapointValue) ? options.datapointValue : numericDatapointValue
@@ -122,33 +122,6 @@ class DataPointsRepository extends VersionedModelRepository {
     };
 
     return DataPoints.update(query, updateQuery, {multi: true}).exec(done);
-  }
-
-  public findStats({measureId, dimensionsSize, dimensionsConceptsIds}, onDatapointsFound) {
-    const query = this._composeQuery({
-      measure: measureId,
-      dimensions: {
-        $size: dimensionsSize
-      },
-      dimensionsConcepts: {
-        $all: dimensionsConceptsIds
-      }
-    });
-
-    return DataPoints.aggregate()
-      .match(query)
-      .group({
-        _id: '$measure',
-        min: {$min: '$value'},
-        max: {$max: '$value'},
-        avg: {$avg: '$value'}
-      }).exec((error, stats) => {
-        if (error) {
-          return onDatapointsFound(error);
-        }
-
-        return onDatapointsFound(null, _.omit(_.head(stats), '_id'));
-      });
   }
 
   private _closeOneByQuery(closingQuery, done) {

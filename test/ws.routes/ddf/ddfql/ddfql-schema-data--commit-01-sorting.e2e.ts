@@ -129,7 +129,7 @@ describe("Initial State, Version 1 (1st commit) - Sorting in DDFQL", function() 
   });
 
   describe("Datapoints sorting", function() {
-    it('should sort datapoints by key:company:asc', done => {
+    it('should sort datapoints by key:company:asc and key:anno:asc', done => {
       const ddfql = {
         "select": {
           "key": ["company", "anno"],
@@ -138,13 +138,13 @@ describe("Initial State, Version 1 (1st commit) - Sorting in DDFQL", function() 
           ]
         },
         "from": "datapoints",
-        "order_by": [{"company": "asc"}]
+        "order_by": [{"company": "asc"}, {"anno": "asc"}]
       };
 
       e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDatapointsSortingCompanyAsc, done, {sort: false});
     });
 
-    it('should sort datapoints by key:company:asc - simplified notion', done => {
+    it('should sort datapoints by key:company:asc and key:anno:asc - simplified notion', done => {
       const ddfql = {
         "select": {
           "key": ["company", "anno"],
@@ -153,7 +153,7 @@ describe("Initial State, Version 1 (1st commit) - Sorting in DDFQL", function() 
           ]
         },
         "from": "datapoints",
-        "order_by": ["company"]
+        "order_by": ["company", "anno"]
       };
 
       e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDatapointsSortingCompanyAsc, done, {sort: false});

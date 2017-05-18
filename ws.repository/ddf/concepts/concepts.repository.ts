@@ -77,11 +77,11 @@ export class ConceptsRepository extends VersionedModelRepository {
   }
 
   public rollback(transaction, onRolledback) {
-    const {createdAt: versionToRollback} = transaction;
+    const {createdAt: versionToRollback, dataset} = transaction;
 
     return async.parallelLimit([
-      done => Concepts.update({to: versionToRollback}, {$set: {to: constants.MAX_VERSION}}, {multi: true}).lean().exec(done),
-      done => Concepts.remove({from: versionToRollback}, done)
+      done => Concepts.update({dataset, to: versionToRollback}, {$set: {to: constants.MAX_VERSION}}, {multi: true}).lean().exec(done),
+      done => Concepts.remove({dataset, from: versionToRollback}, done)
     ], constants.LIMIT_NUMBER_PROCESS, onRolledback);
   };
 

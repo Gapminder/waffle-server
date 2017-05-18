@@ -26,10 +26,11 @@ DataPoints.plugin(OriginIdPlugin, {
   originId: 'DataPoints'
 });
 
-DataPoints.index({dataset: 1, from: 1, to: 1, measure: 1, dimensions: 1, value: 1});
-DataPoints.index({dataset: 1, from: 1, to: 1, dimensionsConcepts: 1});
-DataPoints.index({from: 1});
-DataPoints.index({to: 1});
+DataPoints.index({dimensions: 1, measure: 1, dataset: 1, from: 1, to: 1});
+DataPoints.index({dimensionsConcepts: 1, measure: 1, dataset: 1, from: 1, to: 1});
+DataPoints.index({sources: 1, dataset: 1, from: 1, to: 1});
+DataPoints.index({dataset: 1, from: 1, to: 1});
+DataPoints.index({dataset: 1, to: 1});
 DataPoints.index({originId: 1});
 
 export default model('DataPoints', DataPoints);
