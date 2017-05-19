@@ -12,10 +12,10 @@ import { ValidateQueryModel } from '../../ws.ddfql/ddf-query-validator';
 import { EntitiesRepositoryFactory } from '../../ws.repository/ddf/entities/entities.repository';
 import * as entitiesService from '../../ws.services/entities.service';
 
-const test = sinonTest.configureTest(sinon);
+const sandbox = sinonTest.configureTest(sinon);
 
 describe('Entities service', () => {
-  it('cannot get entities: database error', test(function (done) {
+  it('cannot get entities: database error', sandbox(function (done: Function) {
 
     const expectedError = '[DB]: query execution error';
 
@@ -37,7 +37,7 @@ describe('Entities service', () => {
     });
   }));
 
-  it('gets entities', test(function (done) {
+  it('gets entities', sandbox(function (done: Function) {
     const context = {
       dataset: {
         _id: 'dsId'
@@ -70,7 +70,7 @@ describe('Entities service', () => {
     });
   }));
 
-  it('cannot collect entities by ddfql: error while querying for an appropriate concepts', test(function (done) {
+  it('cannot collect entities by ddfql: error while querying for an appropriate concepts', sandbox(function (done: Function) {
     const expectedError = '[Error]: concepts querying error';
 
     const context = {};
@@ -86,7 +86,7 @@ describe('Entities service', () => {
     });
   }));
 
-  it('cannot collect entities by ddfql: concepts were not found', test(function (done) {
+  it('cannot collect entities by ddfql: concepts were not found', sandbox(function (done: Function) {
     const expectedError = 'Concepts are not found';
 
     const context = {};
@@ -102,7 +102,7 @@ describe('Entities service', () => {
     });
   }));
 
-  it('cannot collect entities by ddfql: generated mongo query is invalid in join clause', test(function (done) {
+  it('cannot collect entities by ddfql: generated mongo query is invalid in join clause', sandbox(function (done: Function) {
     const expectedError = 'generated mongo query is invalid in join clause';
     const validationResult = {
       valid: false,
@@ -181,7 +181,7 @@ describe('Entities service', () => {
     });
   }));
 
-  it('cannot collect entities by ddfql: fails querying entities for join clause', test(function (done) {
+  it('cannot collect entities by ddfql: fails querying entities for join clause', sandbox(function (done: Function) {
     const expectedError = '[Error] findEntityPropertiesByQuery has failed in join clause';
     const validationResult = {
       valid: true,
@@ -256,7 +256,7 @@ describe('Entities service', () => {
     });
   }));
 
-  it('cannot collect entities by ddfql: final mongo query generated from ddfql is invalid', test(function (done) {
+  it('cannot collect entities by ddfql: final mongo query generated from ddfql is invalid', sandbox(function (done: Function) {
     const expectedError = 'final generated mongo query is invalid';
     const validationResult = {
       valid: false,
@@ -360,7 +360,7 @@ describe('Entities service', () => {
     });
   }));
 
-  it('cannot collect entities by ddfql: fails while querying entities by final query', test(function (done) {
+  it('cannot collect entities by ddfql: fails while querying entities by final query', sandbox(function (done: Function) {
     const expectedError = '[DB]: entities query execution has failed';
     const validationResult = {
       valid: true
@@ -453,7 +453,7 @@ describe('Entities service', () => {
     });
   }));
 
-  it('collects entities by ddfql', test(function (done) {
+  it('collects entities by ddfql', sandbox(function (done: Function) {
     const validationResult = {
       valid: true
     };

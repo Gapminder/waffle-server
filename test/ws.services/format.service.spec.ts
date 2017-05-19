@@ -11,7 +11,7 @@ import * as wsJsonFormatter from '../../ws.routes/data-post-processors/format/fo
 import * as formatService from '../../ws.services/format.service';
 import {constants} from '../../ws.utils/constants';
 
-const test = sinonTest.configureTest(sinon);
+const sandbox = sinonTest.configureTest(sinon);
 
 describe('Format Service', () => {
 
@@ -20,7 +20,7 @@ describe('Format Service', () => {
     expect(formatService.wsJson).to.equal(formatService.default);
   });
 
-  it('should format datapoints data in WsJson', test(function (done) {
+  it('should format datapoints data in WsJson', sandbox(function (done: Function) {
     const data = {
       rawDdf: {
         dataset: {
@@ -50,7 +50,7 @@ describe('Format Service', () => {
     });
   }));
 
-  it('should format concepts data in WsJson', test(function (done) {
+  it('should format concepts data in WsJson', sandbox(function (done: Function) {
     const data = {
       rawDdf: {
         dataset: {
@@ -80,7 +80,7 @@ describe('Format Service', () => {
     });
   }));
 
-  it('should format entities data in WsJson', test(function (done) {
+  it('should format entities data in WsJson', sandbox(function (done: Function) {
     const data = {
       rawDdf: {
         dataset: {
@@ -109,7 +109,7 @@ describe('Format Service', () => {
     });
   }));
 
-  it('should format schema data in WsJson', test(function (done) {
+  it('should format schema data in WsJson', sandbox(function (done: Function) {
     const data = {
       rawDdf: {
         dataset: {
@@ -138,7 +138,7 @@ describe('Format Service', () => {
     });
   }));
 
-  it('should respond with an empty object if data type is unknown', test(function (done) {
+  it('should respond with an empty object if data type is unknown', sandbox(function (done: Function) {
     const data = {
       rawDdf: {
         dataset: {
@@ -158,7 +158,7 @@ describe('Format Service', () => {
     });
   }));
 
-  it('should format with empty object by default if data was not given', test(function (done) {
+  it('should format with empty object by default if data was not given', sandbox(function (done: Function) {
     const data = {
       type: constants.SCHEMA
     };
@@ -176,7 +176,7 @@ describe('Format Service', () => {
     });
   }));
 
-  it('should format datapoints data as CSV', test(function (done) {
+  it('should format datapoints data as CSV', sandbox(function (done: Function) {
     const data = {
       rawDdf: {
         dataset: {

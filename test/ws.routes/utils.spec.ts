@@ -17,11 +17,11 @@ import {config} from '../../ws.config/config';
 import * as routeUtils from '../../ws.routes/utils';
 import {RecentDdfqlQueriesRepository} from '../../ws.repository/ddf/recent-ddfql-queries/recent-ddfql-queries.repository';
 
-const test = sinonTest.configureTest(sinon);
+const sandbox = sinonTest.configureTest(sinon);
 
 describe('Routes utils', () => {
   describe('Dataset accessibility check', () => {
-    it('should send unsuccessful response with an error happened during dataset searching', test(function (done) {
+    it('should send unsuccessful response with an error happened during dataset searching', sandbox(function (done: Function) {
       const errorMessage = 'Searching error!';
       const expectedDatasetName = 'fake/dataset';
 
@@ -375,7 +375,7 @@ describe('Routes utils', () => {
   });
 
   describe('Parse query from url and populate request body with a result', () => {
-    it('should parse query as json if "query" param given in url', test(function (done) {
+    it('should parse query as json if "query" param given in url', sandbox(function (done: Function) {
       const routeUtils = proxyquire('../../ws.routes/utils.js', {});
 
       const ddfql = {
@@ -411,7 +411,7 @@ describe('Routes utils', () => {
       routeUtils.bodyFromUrlQuery(req, res, next);
     }));
 
-    it('should respond with an error when it is impossible to parse json', test(function (done) {
+    it('should respond with an error when it is impossible to parse json', sandbox(function (done: Function) {
       const routeUtils = proxyquire('../../ws.routes/utils.js', {});
 
       const req = {
@@ -440,7 +440,7 @@ describe('Routes utils', () => {
       routeUtils.bodyFromUrlQuery(req, res, next);
     }));
 
-    it('should parse query as urlon if "query" param is not given in url', test(function (done) {
+    it('should parse query as urlon if "query" param is not given in url', sandbox(function (done: Function) {
       const routeUtils = proxyquire('../../ws.routes/utils.js', {});
 
       const ddfql = {
@@ -473,7 +473,7 @@ describe('Routes utils', () => {
       routeUtils.bodyFromUrlQuery(req, res, next);
     }));
 
-    it('should respond with an error when it is impossible to parse urlon', test(function (done) {
+    it('should respond with an error when it is impossible to parse urlon', sandbox(function (done: Function) {
       const routeUtils = proxyquire('../../ws.routes/utils.js', {});
 
       const req = {
@@ -502,7 +502,7 @@ describe('Routes utils', () => {
       routeUtils.bodyFromUrlQuery(req, res, next);
     }));
 
-    it('assumes that dataset passed in urlon ddfql is encoded with encodeURIComponent', test(function (done) {
+    it('assumes that dataset passed in urlon ddfql is encoded with encodeURIComponent', sandbox(function (done: Function) {
       const ddfql = {
         "from": "entities",
         "dataset": 'VS-work%2Fddf--ws-testing%23master-twin-for-e2e',
@@ -532,7 +532,7 @@ describe('Routes utils', () => {
       routeUtils.bodyFromUrlQuery(req, res as express.Response, next);
     }));
 
-    it('assumes that dataset passed in urlon ddfql is encoded with encodeURIComponent: dataset value is coerced to string', test(function (done) {
+    it('assumes that dataset passed in urlon ddfql is encoded with encodeURIComponent: dataset value is coerced to string', sandbox(function (done: Function) {
       const ddfql = {
         "from": "entities",
         "dataset": 42,
@@ -562,7 +562,7 @@ describe('Routes utils', () => {
       routeUtils.bodyFromUrlQuery(req, res as express.Response, next);
     }));
 
-    it('should respond with an error when it is impossible to decode dataset in urlon query with decodeURIComponent', test(function (done) {
+    it('should respond with an error when it is impossible to decode dataset in urlon query with decodeURIComponent', sandbox(function (done: Function) {
       const req = {
         query: {},
         url: '/api/ddf/ql/?_from=entities&dataset=%&select_key@=company'
@@ -591,7 +591,7 @@ describe('Routes utils', () => {
   });
 
   describe('RouteUtils.respondWithRawDdf', () => {
-    it('should flush redis cache if error occured', test(function () {
+    it('should flush redis cache if error occured', sandbox(function () {
       const expectedError = 'Boo!';
       const expectedErrorResponse = {success: false, error: 'Boo!'};
 
@@ -623,7 +623,7 @@ describe('Routes utils', () => {
       sinon.assert.calledWithExactly(loggerStub, expectedError);
     }));
 
-    it('should respond with raw data (data that came from db)', test(function () {
+    it('should respond with raw data (data that came from db)', sandbox(function () {
       const anyQuery = {};
 
       const req: any = {
@@ -650,7 +650,7 @@ describe('Routes utils', () => {
       expect(req.rawData.rawDdf).to.equal(rawDdfData);
     }));
 
-    it('should store query for which data will be returned in db (for the subsequernt warmups)', test(function () {
+    it('should store query for which data will be returned in db (for the subsequernt warmups)', sandbox(function () {
       const ddfQuery = {
         rawDdfQuery: {
           queryRaw: {
@@ -693,7 +693,7 @@ describe('Routes utils', () => {
       expect(req.rawData.rawDdf).to.equal(rawDdfData);
     }));
 
-    it('should log error if it is happened while sroring warmup query', test(function () {
+    it('should log error if it is happened while sroring warmup query', sandbox(function () {
       const expectedError = 'Boo!';
 
       const ddfQuery = {
@@ -729,7 +729,7 @@ describe('Routes utils', () => {
       sinon.assert.calledOnce(nextSpy);
     }));
 
-    it('should not store warmup query if it was sent with dataset property', test(function () {
+    it('should not store warmup query if it was sent with dataset property', sandbox(function () {
       const ddfQuery = {
         dataset: 'dataset',
         rawDdfQuery: {}
@@ -762,7 +762,7 @@ describe('Routes utils', () => {
       expect(req.rawData.rawDdf).to.equal(rawDdfData);
     }));
 
-    it('should not store warmup query if it was sent with version property', test(function () {
+    it('should not store warmup query if it was sent with version property', sandbox(function () {
       const routeUtils = proxyquire('../../ws.routes/utils.js', {});
 
       const ddfQuery = {
@@ -797,7 +797,7 @@ describe('Routes utils', () => {
       expect(req.rawData.rawDdf).to.equal(rawDdfData);
     }));
 
-    it('should not store warmup query if it was sent with format property', test(function () {
+    it('should not store warmup query if it was sent with format property', sandbox(function () {
       const ddfQuery = {
         rawDdfQuery: {},
         format: 'format'
@@ -833,7 +833,7 @@ describe('Routes utils', () => {
   });
 
   describe('Token authentication', () => {
-    it('should return token authentication middleware', test(function () {
+    it('should return token authentication middleware', sandbox(function () {
       const req = {} as express.Request;
       const res = {} as express.Response;
       const next = () => {
@@ -859,7 +859,7 @@ describe('Routes utils', () => {
   });
 
   describe('Response types', () => {
-    it('should produce error response from string', test(function () {
+    it('should produce error response from string', sandbox(function () {
 
       const loggerErrorStub = this.stub(logger, 'error');
 
@@ -873,7 +873,7 @@ describe('Routes utils', () => {
       sinon.assert.calledWithExactly(loggerErrorStub, expectedError);
     }));
 
-    it('should produce error response from Error', test(function () {
+    it('should produce error response from Error', sandbox(function () {
       const loggerErrorStub = this.stub(logger, 'error');
 
       const expectedError = Error('Boo!');
@@ -904,7 +904,7 @@ describe('Routes utils', () => {
   });
 
   describe('Ensure WS-CLI that speaks to WS has supported version', () => {
-    it('checks that requests from CLI with unsupported version are invalid', test(function () {
+    it('checks that requests from CLI with unsupported version are invalid', sandbox(function () {
       const header = this.stub().returns('2.5.24');
       const req: any = {
         header
@@ -926,7 +926,7 @@ describe('Routes utils', () => {
       sinon.assert.calledWith(json, {success: false, error: `Please, change your WS-CLI version from 2.5.24 to 2.5.23`});
     }));
 
-    it('checks that requests from CLI with invalid version are invalid', test(function () {
+    it('checks that requests from CLI with invalid version are invalid', sandbox(function () {
       const header = this.stub().returns('bla');
       const req: any = {
         header
@@ -948,7 +948,7 @@ describe('Routes utils', () => {
       sinon.assert.calledWith(json, {success: false, error: `Please, change your WS-CLI version from bla to 2.5.23`});
     }));
 
-    it('responds with an error when WS-CLI version from client is not given', test(function () {
+    it('responds with an error when WS-CLI version from client is not given', sandbox(function () {
       const header = this.stub().returns(undefined);
       const req: any = {
         header
@@ -970,7 +970,7 @@ describe('Routes utils', () => {
       sinon.assert.calledWith(json, {success: false, error: 'This url can be accessed only from WS-CLI'});
     }));
 
-    it('checks that requests from CLI with supported version are valid', test(function () {
+    it('checks that requests from CLI with supported version are valid', sandbox(function () {
       const header = this.stub().returns('2.5.24');
       const req: any = {
         header

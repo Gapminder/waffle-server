@@ -13,10 +13,10 @@ import * as createDatasetSchemaModule from '../../ws.import/import-dataset-schem
 
 import { importDdf } from '../../ws.import/import-ddf';
 
-const test = sinonTest.configureTest(sinon);
+const sandbox = sinonTest.configureTest(sinon);
 
 describe('Import ddf dataset from git repository', () => {
-  it('should import dataset successfully', test(function (done) {
+  it('should import dataset successfully', sandbox(function (done: Function) {
     const context = {
       isDatasetPrivate: false,
       github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git',
@@ -77,7 +77,7 @@ describe('Import ddf dataset from git repository', () => {
     });
   }));
 
-  it('should fail if error occurred during import', test(function (done) {
+  it('should fail if error occurred during import', sandbox(function (done: Function) {
     const context = {
       isDatasetPrivate: false,
       github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git',
@@ -104,7 +104,7 @@ describe('Import ddf dataset from git repository', () => {
     });
   }));
 
-  it('should fail with transaction id if it was already created when error had happened', test(function (done) {
+  it('should fail with transaction id if it was already created when error had happened', sandbox(function (done: Function) {
     const context = {
       isDatasetPrivate: false,
       github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git',
@@ -142,7 +142,7 @@ describe('Import ddf dataset from git repository', () => {
     });
   }));
 
-  it('should not fail when error has happened and transaction is not yet created', test(function (done) {
+  it('should not fail when error has happened and transaction is not yet created', sandbox(function (done: Function) {
     const context = {
       isDatasetPrivate: false,
       github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git',

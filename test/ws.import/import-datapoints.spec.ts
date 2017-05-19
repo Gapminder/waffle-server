@@ -12,10 +12,10 @@ import * as datapoints from './fixtures/datapoints.json';
 import * as allEntities from './fixtures/allEntities.json';
 import { logger } from '../../ws.config/log';
 
-const test = sinonTest.configureTest(sinon);
+const sandbox = sinonTest.configureTest(sinon);
 
 describe('datapoints import', function() {
-  it('should not be any error', test(function(done) {
+  it('should not be any error', sandbox(function(done: Function) {
     const dimensions = {
       geo: {gid: 'geo', properties: {}},
       time: {gid: 'time', properties: {}}

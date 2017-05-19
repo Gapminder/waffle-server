@@ -9,7 +9,7 @@ import { createDatasetSchema } from '../../ws.import/import-dataset-schema';
 const datasetId = 'datasetId';
 const transactionId = 'transactionId';
 
-const test = sinonTest.configureTest(sinon);
+const sandbox = sinonTest.configureTest(sinon);
 
 const externalContext = {
   transaction: {
@@ -21,7 +21,7 @@ const externalContext = {
 };
 
 describe('Import dataset schema', () => {
-  it('imports schema for concepts', test(function (done) {
+  it('imports schema for concepts', sandbox(function (done: Function) {
     const conceptsContext = Object.assign({}, externalContext, {
       datapackage: {
         ddfSchema: {

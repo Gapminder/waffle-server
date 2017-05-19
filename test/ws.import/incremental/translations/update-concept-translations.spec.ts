@@ -10,7 +10,7 @@ import { updateConceptsTranslations } from '../../../../ws.import/incremental/tr
 import * as ddfMappers from '../../../../ws.import/utils/ddf-mappers';
 import { ConceptsRepositoryFactory } from '../../../../ws.repository/ddf/concepts/concepts.repository';
 
-const test = sinonTest.configureTest(sinon);
+const sandbox = sinonTest.configureTest(sinon);
 
 const externalContext = {
   transaction: {
@@ -24,7 +24,7 @@ const externalContext = {
 };
 
 describe('Concepts Translations Update Plugin', () => {
-  it('creates a proper context for the plugin', test(function (done) {
+  it('creates a proper context for the plugin', sandbox(function (done: Function) {
     this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
       expect(Object.isFrozen(externalContextFrozen)).to.equal(true, 'context should be frozen');
 
@@ -41,7 +41,7 @@ describe('Concepts Translations Update Plugin', () => {
     });
   }));
 
-  it('creates a proper plugin', test(function (done) {
+  it('creates a proper plugin', sandbox(function (done: Function) {
     this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
       expect(plugin.dataType).to.equal(constants.CONCEPTS);
       expect(plugin.repositoryFactory).to.equal(ConceptsRepositoryFactory);
@@ -57,7 +57,7 @@ describe('Concepts Translations Update Plugin', () => {
     });
   }));
 
-  it('makes a query to fetch translation target', test(function (done) {
+  it('makes a query to fetch translation target', sandbox(function (done: Function) {
     const changesDescriptor = {
       gid: 'gid'
     };
@@ -74,7 +74,7 @@ describe('Concepts Translations Update Plugin', () => {
     });
   }));
 
-  it('processes translation before update', test(function (done) {
+  it('processes translation before update', sandbox(function (done: Function) {
     const translationToProcess = {
       prop: 'value'
     };
@@ -96,7 +96,7 @@ describe('Concepts Translations Update Plugin', () => {
     });
   }));
 
-  it('makes translation target based on its closed version', test(function (done) {
+  it('makes translation target based on its closed version', sandbox(function (done: Function) {
     const closedTarget = {
       originId: 'originId',
       domain: 'domain',

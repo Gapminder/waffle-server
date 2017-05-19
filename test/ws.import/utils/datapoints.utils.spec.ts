@@ -10,7 +10,7 @@ import {DatapointsRepositoryFactory} from '../../../ws.repository/ddf/data-point
 import {EntitiesRepositoryFactory} from '../../../ws.repository/ddf/entities/entities.repository';
 import * as ddfMappers from '../../../ws.import/utils/ddf-mappers';
 
-const test = sinonTest.configureTest(sinon);
+const sandbox = sinonTest.configureTest(sinon);
 
 const externalContext = {
   dataset: {
@@ -115,7 +115,7 @@ const datapointsWithFoundEntities = [
 ];
 
 describe('Datapoints Utils', () => {
-  it('it should save datapoints and entities found in them', test(function (done) {
+  it('it should save datapoints and entities found in them', sandbox(function (done: Function) {
     const entitiesFoundInDatapoints = {
       '1912': {},
       '1905': {}
@@ -281,7 +281,7 @@ describe('Datapoints Utils', () => {
     expect(error.message).to.equal(`Dimensions were not found for dimensions: ${resource.dimensions} from resource ${resource.path}`);
   });
 
-  it('should find all entities', test(function() {
+  it('should find all entities', sandbox(function() {
     const thenSegregateEntitiesStub = this.spy();
 
     const findAllStub = this.stub().returns({then: thenSegregateEntitiesStub});
@@ -302,7 +302,7 @@ describe('Datapoints Utils', () => {
     sinon.assert.calledWith(thenSegregateEntitiesStub, datapointsUtils.segregateEntities);
   }));
 
-  it('should find all previous entities', test(function() {
+  it('should find all previous entities', sandbox(function() {
     const thenSegregateEntitiesStub = this.spy();
 
     const findAllStub = this.stub().returns({then: thenSegregateEntitiesStub});
@@ -436,7 +436,7 @@ describe('Datapoints Utils', () => {
     });
   });
 
-  it('should find entities in datapoint: concept as domain', test(function() {
+  it('should find entities in datapoint: concept as domain', sandbox(function() {
     const context = {
       segregatedEntities: {
         byGid: {
@@ -489,7 +489,7 @@ describe('Datapoints Utils', () => {
     expect(entities[0]).to.equal(stubEntity);
   }));
 
-  it('should find entities in datapoint', test(function() {
+  it('should find entities in datapoint', sandbox(function() {
     const context = {
       segregatedEntities: {
         byGid: {
@@ -545,7 +545,7 @@ describe('Datapoints Utils', () => {
     expect(entities[0]).to.equal(stubEntity);
   }));
 
-  it('should find entities in datapoint: existed entity should not be found', test(function() {
+  it('should find entities in datapoint: existed entity should not be found', sandbox(function() {
     const context = {
       segregatedEntities: {
         byGid: {
@@ -592,7 +592,7 @@ describe('Datapoints Utils', () => {
     expect(entities.length).to.equal(0);
   }));
 
-  it('should create entities found in datapoints and cache already created ones', test(function () {
+  it('should create entities found in datapoints and cache already created ones', sandbox(function () {
     const entities = [
       {
         gid: '1882'

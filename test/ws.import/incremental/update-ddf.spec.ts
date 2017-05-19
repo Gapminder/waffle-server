@@ -14,10 +14,10 @@ import { updateDdf } from '../../../ws.import/incremental/update-ddf';
 import * as updateEntities from '../../../ws.import/incremental/update-entities';
 import * as ddfImportUtils from '../../../ws.import/utils/import-ddf.utils';
 
-const test = sinonTest.configureTest(sinon);
+const sandbox = sinonTest.configureTest(sinon);
 
 describe('Dataset incremental update', () => {
-  it('should update dataset', test(function (done) {
+  it('should update dataset', sandbox(function (done: Function) {
     // *** Prepared Data
     const options = {
       user: {
@@ -154,7 +154,7 @@ describe('Dataset incremental update', () => {
     updateDdf(options, onDatasetUpdatedSpy);
   }));
 
-  it('should respond with an error when smth went wrong during the process of establishing transaction for dataset', test(function (done) {
+  it('should respond with an error when smth went wrong during the process of establishing transaction for dataset', sandbox(function (done: Function) {
     // *** Prepared Data
     const options = {
       user: {
@@ -260,7 +260,7 @@ describe('Dataset incremental update', () => {
     updateDdf(options, onDatasetUpdatedSpy);
   }));
 
-  it('should respond with an error when smth went wrong during the process of creating transaction', test(function (done) {
+  it('should respond with an error when smth went wrong during the process of creating transaction', sandbox(function (done: Function) {
     // *** Prepared Data
     const options = {
       user: {
@@ -348,7 +348,7 @@ describe('Dataset incremental update', () => {
     updateDdf(options, onDatasetUpdatedSpy);
   }));
 
-  it('should not fail when error has happened and transaction is not yet created', test(function (done) {
+  it('should not fail when error has happened and transaction is not yet created', sandbox(function (done: Function) {
     const context = {
       isDatasetPrivate: false,
       github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git',

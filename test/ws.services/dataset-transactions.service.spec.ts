@@ -27,7 +27,7 @@ const datapointsRepositoryPath = '../ws.repository/ddf/data-points/data-points.r
 
 const shouldNotCall = () => expect.fail(null, null, 'This function should not be called');
 
-const test = sinonTest.configureTest(sinon);
+const sandbox = sinonTest.configureTest(sinon);
 
 describe('Dataset Transactions Service', () => {
 
@@ -712,7 +712,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should fail when error happened while documents removing in dataset index collection', function(done) {
+    it('should fail when error happened while documents removing in dataset index collection', function(done: Function) {
       const rollback = (failedTransaction, onRolledback) => {
         expect(failedTransaction).to.be.equal(expectedTransaction);
 
@@ -1113,7 +1113,7 @@ describe('Dataset Transactions Service', () => {
     });
   });
 
-  it('should set last error', test(function () {
+  it('should set last error', sandbox(function () {
     const setLastErrorSpy = this.spy(DatasetTransactionsRepository, 'setLastError');
 
     const transactionId = 'txId';
@@ -1125,7 +1125,7 @@ describe('Dataset Transactions Service', () => {
     sinon.assert.calledWith(setLastErrorSpy, transactionId, lastErrorMessage, onErrorSet);
   }));
 
-  it('should get latest transaction status by dataset name', test(function (done) {
+  it('should get latest transaction status by dataset name', sandbox(function (done: Function) {
     const externalContext = {
       datasetId: 'dsId',
       datasetName: 'dsName'
@@ -1198,7 +1198,7 @@ describe('Dataset Transactions Service', () => {
     });
   }));
 
-  it('should determine transaction progress', test(function (done) {
+  it('should determine transaction progress', sandbox(function (done: Function) {
     const externalContext = {
       datasetId: 'dsId',
       datasetName: 'dsName'
@@ -1247,7 +1247,7 @@ describe('Dataset Transactions Service', () => {
     });
   }));
 
-  it('shouldn\'t get latest transaction status by dataset name: fail because of dataset ownership check', test(function (done) {
+  it('shouldn\'t get latest transaction status by dataset name: fail because of dataset ownership check', sandbox(function (done: Function) {
     const expectedError = 'Ownership check failed';
     this.stub(datasetsService, 'findDatasetByNameAndValidateOwnership').callsArgWith(1, expectedError);
 
@@ -1257,7 +1257,7 @@ describe('Dataset Transactions Service', () => {
     });
   }));
 
-  it('shouldn\'t get latest transaction status by dataset name: fail finding latest transaction', test(function (done) {
+  it('shouldn\'t get latest transaction status by dataset name: fail finding latest transaction', sandbox(function (done: Function) {
     const expectedError = 'Latest transaction search failed';
     this.stub(datasetsService, 'findDatasetByNameAndValidateOwnership').callsArgWith(1, null, {});
     this.stub(DatasetTransactionsRepository, 'findLatestByDataset').callsArgWithAsync(1, expectedError);
@@ -1268,7 +1268,7 @@ describe('Dataset Transactions Service', () => {
     });
   }));
 
-  it('shouldn\'t get latest transaction status by dataset name: fail cause there is no latest transaction', test(function (done) {
+  it('shouldn\'t get latest transaction status by dataset name: fail cause there is no latest transaction', sandbox(function (done: Function) {
     const expectedError = `Transaction is absent for dataset: sg`;
     this.stub(datasetsService, 'findDatasetByNameAndValidateOwnership').callsArgWith(1, null, {datasetName: 'sg'});
     this.stub(DatasetTransactionsRepository, 'findLatestByDataset').callsArgWithAsync(1, null);
@@ -1280,7 +1280,7 @@ describe('Dataset Transactions Service', () => {
   }));
 
 
-  it('shouldn\'t get latest transaction status by dataset name: fail cause was not able to count amount of changed objects', test(function (done) {
+  it('shouldn\'t get latest transaction status by dataset name: fail cause was not able to count amount of changed objects', sandbox(function (done: Function) {
     const externalContext = {
       datasetId: 'dsId',
       datasetName: 'dsName'

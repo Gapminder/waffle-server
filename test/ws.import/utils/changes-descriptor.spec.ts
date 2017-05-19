@@ -4,10 +4,10 @@ import * as sinonTest from 'sinon-test';
 import { expect } from 'chai';
 import { ChangesDescriptor } from '../../../ws.import/utils/changes-descriptor';
 
-const test = sinonTest.configureTest(sinon);
+const sandbox = sinonTest.configureTest(sinon);
 
 describe('Changes descriptor', () => {
-  it('should get gid', test(function () {
+  it('should get gid', sandbox(function () {
     const descriptor = new ChangesDescriptor({
       object: {
         gid: 'foundation',
@@ -22,7 +22,7 @@ describe('Changes descriptor', () => {
     expect(descriptor.gid).to.equal('xsoft');
   }));
 
-  it('should get concept of changed object', test(function () {
+  it('should get concept of changed object', sandbox(function () {
     const descriptor = new ChangesDescriptor({
       object: {
         gid: 'foundation',
@@ -37,7 +37,7 @@ describe('Changes descriptor', () => {
     expect(descriptor.concept).to.equal('foundation');
   }));
 
-  it('should seek for a concept in primaryKey in case of object creation', test(function () {
+  it('should seek for a concept in primaryKey in case of object creation', sandbox(function () {
     const descriptor = new ChangesDescriptor({
       object: {
         gid: 'NOT_USED',
@@ -72,7 +72,7 @@ describe('Changes descriptor', () => {
     expect(descriptor.concept).to.equal('foundation');
   }));
 
-  it('extracts original object (state before changes): object is being updated', test(function () {
+  it('extracts original object (state before changes): object is being updated', sandbox(function () {
     const descriptor = new ChangesDescriptor({
       object: {
         gid: 'foundation',
@@ -116,7 +116,7 @@ describe('Changes descriptor', () => {
     });
   }));
 
-  it('extracts original object (state before changes): entity is being removed', test(function () {
+  it('extracts original object (state before changes): entity is being removed', sandbox(function () {
     const descriptor = new ChangesDescriptor({
       object: {
         gid: 'foundation',
@@ -160,7 +160,7 @@ describe('Changes descriptor', () => {
     });
   }));
 
-  it('extracts original object (state before changes): create action does not use data-origin property', test(function () {
+  it('extracts original object (state before changes): create action does not use data-origin property', sandbox(function () {
 
     const changes = {
       object: {

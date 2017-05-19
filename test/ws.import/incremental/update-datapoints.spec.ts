@@ -11,7 +11,7 @@ import { updateDatapoints } from '../../../ws.import/incremental/update-datapoin
 import { logger } from '../../../ws.config/log';
 import { DatapointsRepositoryFactory } from '../../../ws.repository/ddf/data-points/data-points.repository';
 
-const test = sinonTest.configureTest(sinon);
+const sandbox = sinonTest.configureTest(sinon);
 
 const context = {
   pathToDatasetDiff: path.resolve(__dirname, './fixtures/result--VS-work--ddf--ws-testing--master--output.txt'),
@@ -144,7 +144,7 @@ describe('Datapoints incremental update flow', () => {
     readTextFileByLineAsJsonStreamOriginal = fileUtils.readTextFileByLineAsJsonStream.bind(fileUtils);
   });
 
-  it('creates newly added datapoints', test(function (done) {
+  it('creates newly added datapoints', sandbox(function (done: Function) {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
 
@@ -293,7 +293,7 @@ describe('Datapoints incremental update flow', () => {
     });
   }));
 
-  it('updates existing datapoints', test(function (done) {
+  it('updates existing datapoints', sandbox(function (done: Function) {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
 
@@ -426,7 +426,7 @@ describe('Datapoints incremental update flow', () => {
     });
   }));
 
-  it('updates existing datapoints: datapoint to close was not found - this should be logged', test(function (done) {
+  it('updates existing datapoints: datapoint to close was not found - this should be logged', sandbox(function (done: Function) {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
 
@@ -480,7 +480,7 @@ describe('Datapoints incremental update flow', () => {
     });
   }));
 
-  it('updates existing datapoints: error had happened while closing datapoint', test(function (done) {
+  it('updates existing datapoints: error had happened while closing datapoint', sandbox(function (done: Function) {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
 
@@ -525,7 +525,7 @@ describe('Datapoints incremental update flow', () => {
     });
   }));
 
-  it('remove existing datapoints', test(function (done) {
+  it('remove existing datapoints', sandbox(function (done: Function) {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
 
@@ -599,7 +599,7 @@ describe('Datapoints incremental update flow', () => {
     });
   }));
 
-  it('remove existing datapoints: datapoint to close was not found - this should be logged', test(function (done) {
+  it('remove existing datapoints: datapoint to close was not found - this should be logged', sandbox(function (done: Function) {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
 
@@ -645,7 +645,7 @@ describe('Datapoints incremental update flow', () => {
     });
   }));
 
-  it('remove existing datapoints: error had happened while closing datapoint', test(function (done) {
+  it('remove existing datapoints: error had happened while closing datapoint', sandbox(function (done: Function) {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
 

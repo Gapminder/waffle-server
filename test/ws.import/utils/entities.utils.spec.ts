@@ -6,10 +6,10 @@ import { expect } from 'chai';
 
 import * as entitiesUtils from '../../../ws.import/utils/entities.utils';
 
-const test = sinonTest.configureTest(sinon);
+const sandbox = sinonTest.configureTest(sinon);
 
 describe('Entities utils', () => {
-  it('it should correctly detect entity sets and domain', test(function () {
+  it('it should correctly detect entity sets and domain', sandbox(function () {
     const resource = {
       concept: 'foundation',
       entitySets: ['foundation']
@@ -40,7 +40,7 @@ describe('Entities utils', () => {
     expect(setsAndDomainWithBigTrue).to.deep.equal(expectedSetsAndDomain);
   }));
 
-  it('it should correctly detect entity sets and domain: concepts might be taken from prev versions', test(function () {
+  it('it should correctly detect entity sets and domain: concepts might be taken from prev versions', sandbox(function () {
     const resource = {
       concept: 'foundation',
       entitySets: ['foundation']
@@ -69,7 +69,7 @@ describe('Entities utils', () => {
     expect(setsAndDomain).to.deep.equal(expectedSetsAndDomain);
   }));
 
-  it('it should correctly detect entity sets and domain: concepts might be taken from both prev and current versions', test(function () {
+  it('it should correctly detect entity sets and domain: concepts might be taken from both prev and current versions', sandbox(function () {
     const resource = {
       concept: 'foundation',
       entitySets: ['foundation', 'english_speaking']
@@ -105,7 +105,7 @@ describe('Entities utils', () => {
     expect(setsAndDomain).to.deep.equal(expectedSetsAndDomain);
   }));
 
-  it('it should correctly detect entity sets and domain: entity might not have entity_set', test(function () {
+  it('it should correctly detect entity sets and domain: entity might not have entity_set', sandbox(function () {
     const resource = {
       concept: 'foundation',
       entitySets: []
@@ -130,7 +130,7 @@ describe('Entities utils', () => {
     expect(setsAndDomain).to.deep.equal(expectedSetsAndDomain);
   }));
 
-  it('it should not take into account set which is disabled by "is--" operator', test(function () {
+  it('it should not take into account set which is disabled by "is--" operator', sandbox(function () {
     const resource = {
       concept: 'foundation',
       entitySets: ['foundation']
@@ -161,7 +161,7 @@ describe('Entities utils', () => {
     expect(setsAndDomainWithBigTrue).to.deep.equal(expectedSetsAndDomain);
   }));
 
-  it('it should correctly detect entity sets and domain: entity_domain and entity_set are taken from the resource\'s concept', test(function () {
+  it('it should correctly detect entity sets and domain: entity_domain and entity_set are taken from the resource\'s concept', sandbox(function () {
     const resource = {
       concept: 'company',
       entitySets: ['foundation', 'english_speaking']

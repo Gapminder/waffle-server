@@ -10,10 +10,10 @@ import * as ddfQueryValidator from '../../ws.ddfql/ddf-query-validator';
 import * as schemaQueryNormalizer from '../../ws.ddfql/ddf-schema-query-normalizer';
 import { DatasetSchemaRepository } from '../../ws.repository/ddf/dataset-index/dataset-index.repository';
 
-const test = sinonTest.configureTest(sinon);
+const sandbox = sinonTest.configureTest(sinon);
 
 describe('Schema service', () => {
-  it('cannot find schema: generated mongo query is invalid', test(function (done) {
+  it('cannot find schema: generated mongo query is invalid', sandbox(function (done: Function) {
     const expectedError = '[Error]: mongo query is not valid';
 
     const context = {
@@ -47,7 +47,7 @@ describe('Schema service', () => {
     });
   }));
 
-  it('cannot find schema: fails while schema items searching', test(function (done) {
+  it('cannot find schema: fails while schema items searching', sandbox(function (done: Function) {
     const expectedError = '[Error]: fails while schema items searching';
 
     const context = {
@@ -82,7 +82,7 @@ describe('Schema service', () => {
     });
   }));
 
-  it('cannot find schema: fails while schema items searching', test(function (done) {
+  it('cannot find schema: fails while schema items searching', sandbox(function (done: Function) {
     const context: any = {
       query: {
         select: {key: ['key', 'value'], value: ['min(population)']},

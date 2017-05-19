@@ -12,7 +12,7 @@ import * as ddfMappers from '../../../../ws.import/utils/ddf-mappers';
 import { EntitiesRepositoryFactory } from '../../../../ws.repository/ddf/entities/entities.repository';
 import { ChangesDescriptor } from '../../../../ws.import/utils/changes-descriptor';
 
-const test = sinonTest.configureTest(sinon);
+const sandbox = sinonTest.configureTest(sinon);
 
 const externalContext = {
   transaction: {
@@ -36,7 +36,7 @@ const externalContext = {
 };
 
 describe('Entities Translations Update Plugin', () => {
-  it('creates a proper context for the plugin', test(function (done) {
+  it('creates a proper context for the plugin', sandbox(function (done: Function) {
     this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
       expect(Object.isFrozen(externalContextFrozen)).to.equal(true, 'context should be frozen');
 
@@ -54,7 +54,7 @@ describe('Entities Translations Update Plugin', () => {
     });
   }));
 
-  it('creates a proper plugin', test(function (done) {
+  it('creates a proper plugin', sandbox(function (done: Function) {
     this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
       expect(plugin.dataType).to.equal(constants.ENTITIES);
       expect(plugin.repositoryFactory).to.equal(EntitiesRepositoryFactory);
@@ -71,7 +71,7 @@ describe('Entities Translations Update Plugin', () => {
     });
   }));
 
-  it('makes query to fetch a translation target', test(function (done) {
+  it('makes query to fetch a translation target', sandbox(function (done: Function) {
     const changesDescriptor = {
       gid: 'gid'
     };
@@ -102,7 +102,7 @@ describe('Entities Translations Update Plugin', () => {
     });
   }));
 
-  it('enriches a context', test(function (done) {
+  it('enriches a context', sandbox(function (done: Function) {
     const contextFake = {
       foo: 'bar'
     };
@@ -155,7 +155,7 @@ describe('Entities Translations Update Plugin', () => {
     });
   }));
 
-  it('makes a translation based on its closed version', test(function (done) {
+  it('makes a translation based on its closed version', sandbox(function (done: Function) {
     const contextFake = {
       foo: 'bar'
     };
@@ -187,7 +187,7 @@ describe('Entities Translations Update Plugin', () => {
     });
   }));
 
-  it('processes translation before update', test(function (done) {
+  it('processes translation before update', sandbox(function (done: Function) {
     const context = {
       concepts: {
         gini: {}

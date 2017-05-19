@@ -10,13 +10,13 @@ import {constants} from '../../../../ws.utils/constants';
 import * as routesUtils from '../../../../ws.routes/utils';
 import {logger} from '../../../../ws.config/log';
 
-const test = sinonTest.configureTest(sinon);
+const sandbox = sinonTest.configureTest(sinon);
 
 const indexFormatProcessorPath = '../../../../ws.routes/data-post-processors/format';
 const formatProcessorPath = './format.processor';
 
 describe('Format Post Processor', () => {
-  it('should respond with an error if formatting failed', test(function () {
+  it('should respond with an error if formatting failed', sandbox(function () {
 
     const expectedError = 'Boo!';
     const expectedErrorResponse = {success: false, error: expectedError};
@@ -63,7 +63,7 @@ describe('Format Post Processor', () => {
     sinon.assert.calledWith(toErrorResponseSpy, expectedError);
   }));
 
-  it('should send response as data with Content-Type set according to given formatType: csv', test(function () {
+  it('should send response as data with Content-Type set according to given formatType: csv', sandbox(function () {
     const sendSpy = this.spy();
     const setSpy = this.spy();
 
@@ -103,7 +103,7 @@ describe('Format Post Processor', () => {
     sinon.assert.calledWith(sendSpy, expectedFormattedData);
   }));
 
-  it('should send response as data with Content-Type set according to given formatType: wsJson', test(function () {
+  it('should send response as data with Content-Type set according to given formatType: wsJson', sandbox(function () {
     const sendSpy = this.spy();
     const setSpy = this.spy();
 
@@ -143,7 +143,7 @@ describe('Format Post Processor', () => {
     sinon.assert.calledWith(sendSpy, expectedFormattedData);
   }));
 
-  it('should send response as data with default Content-Type if formatType was not given explicitly', test(function () {
+  it('should send response as data with default Content-Type if formatType was not given explicitly', sandbox(function () {
     const sendSpy = this.spy();
     const setSpy = this.spy();
 
@@ -183,7 +183,7 @@ describe('Format Post Processor', () => {
     sinon.assert.calledWith(sendSpy, expectedFormattedData);
   }));
 
-  it('should stream response if formatter returned data as stream', test(function () {
+  it('should stream response if formatter returned data as stream', sandbox(function () {
     const setSpy = this.spy();
 
     const expectedMimeType = 'application/json; charset=utf-8';
@@ -227,7 +227,7 @@ describe('Format Post Processor', () => {
     sinon.assert.calledWith(pipeSpy, res);
   }));
 
-  it('should hi.stream response if formatter returned data as hi.stream', test(function () {
+  it('should hi.stream response if formatter returned data as hi.stream', sandbox(function () {
     const expectedMimeType = 'application/json; charset=utf-8';
     const expectedObject = {};
 
@@ -266,7 +266,7 @@ describe('Format Post Processor', () => {
 
   }));
 
-  it('should hi.stream response if formatter returned data as hi.stream', test(function () {
+  it('should hi.stream response if formatter returned data as hi.stream', sandbox(function () {
     const expectedMimeType = 'application/json; charset=utf-8';
     const expectedObject = {};
     const expectedErrorMessage = 'ALARM!!!';

@@ -18,7 +18,7 @@ import { logger } from '../../ws.config/log';
 import { config } from '../../ws.config/config';
 import * as reposService from '../../ws.services/repos.service';
 
-const test = sinonTest.configureTest(sinon);
+const sandbox = sinonTest.configureTest(sinon);
 const reposServicePath = '../../ws.services/repos.service';
 
 describe('repos service', () => {
@@ -239,7 +239,7 @@ describe('repos service', () => {
     });
   });
 
-  it('should clone repo successfully (when no commit given to checkout - HEAD is used instead)', test(function (done: Function) {
+  it('should clone repo successfully (when no commit given to checkout - HEAD is used instead)', sandbox(function (done: Function) {
     const accountName = 'open-numbers';
     const expectedDdfRepoName = 'ddf--gapminder--systema_globalis';
     const expectedGithubUrl = `git@github.com:${accountName}/${expectedDdfRepoName}.git`;
@@ -329,7 +329,7 @@ describe('repos service', () => {
     });
   });
 
-  it('should fail removing files in destination dir, when it\'s not git repo', sinon.test(function (done: Function): void {
+  it('should fail removing files in destination dir, when it\'s not git repo', sandbox(function (done: Function): void {
     const accountName = 'open-numbers';
     const expectedDdfRepoName = 'ddf--gapminder--systema_globalis';
     const expectedGithubUrl = `git@github.com:${accountName}/${expectedDdfRepoName}.git`;
@@ -452,7 +452,7 @@ describe('repos service', () => {
     });
   });
 
-  it('should handle pulling error during checkout to given commit', test(function (done: Function): void {
+  it('should handle pulling error during checkout to given commit', sandbox(function (done: Function): void {
     const expectedError = 'Boo!';
     const existsStub = this.stub(fs, 'exists').callsArgWithAsync(1, true);
 
@@ -497,7 +497,7 @@ describe('repos service', () => {
     });
   }));
 
-  it('should handle reset error during checkout', test(function (done: Function): void {
+  it('should handle reset error during checkout', sandbox(function (done: Function): void {
     const expectedError = 'Boo!';
     const existsStub = this.stub(fs, 'exists').callsArgWithAsync(1, true);
 
@@ -542,7 +542,7 @@ describe('repos service', () => {
     });
   }));
 
-  it('should handle cleaning error during checkout', sinon.test(function (done: Function): void {
+  it('should handle cleaning error during checkout', sandbox(function (done: Function): void {
     const expectedError = 'Boo!';
     const existsStub = this.stub(fs, 'exists').callsArgWithAsync(1, true);
 
@@ -587,7 +587,7 @@ describe('repos service', () => {
     });
   }));
 
-  it('should handle error during checkout', test(function (done: Function): void {
+  it('should handle error during checkout', sandbox(function (done: Function): void {
     const expectedError = 'Boo!';
     const existsStub = this.stub(fs, 'exists').callsArgWithAsync(1, true);
 
@@ -632,7 +632,7 @@ describe('repos service', () => {
     });
   }));
 
-  it('should handle pulling error on second call for some branch name during checkout to given commit', test(function (done: Function): void {
+  it('should handle pulling error on second call for some branch name during checkout to given commit', sandbox(function (done: Function): void {
     const expectedError = 'Boo!';
     const branch = 'branch';
     const existsStub = this.stub(fs, 'exists').callsArgWithAsync(1, true);

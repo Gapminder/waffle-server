@@ -12,11 +12,11 @@ import * as datasetTransactionService from '../../../ws.services/dataset-transac
 import {logger} from '../../../ws.config/log';
 import * as populateDocumentsService from '../../../ws.routes/populate-documents/populate-documents.service';
 
-const test = sinonTest.configureTest(sinon);
+const sandbox = sinonTest.configureTest(sinon);
 
 describe('Populate documents service testing', () => {
 
-  it('should return an error: Error was happened during getting dataset and transaction documents', test(function (done) {
+  it('should return an error: Error was happened during getting dataset and transaction documents', sandbox(function (done: Function) {
     const context = {datasetName: 'datasetName', commit: 'commit'};
     const expectedError = 'Boo!';
     const findDefaultDatasetAndTransactionStub = this.stub(datasetTransactionService, 'findDefaultDatasetAndTransaction', (datasetName, commit, onFound) => {
@@ -34,7 +34,7 @@ describe('Populate documents service testing', () => {
     });
   }));
 
-  it('should return an error: Dataset and Transaction were not found', test(function (done) {
+  it('should return an error: Dataset and Transaction were not found', sandbox(function (done: Function) {
     const context = {datasetName: 'datasetName', commit: 'commit'};
     const expectedError = 'Dataset and Transaction were not found.';
     const findDefaultDatasetAndTransactionStub = this.stub(datasetTransactionService, 'findDefaultDatasetAndTransaction', (datasetName, commit, onFound) => {
@@ -52,7 +52,7 @@ describe('Populate documents service testing', () => {
     });
   }));
 
-  it('should return an error: Dataset was not found', test(function (done) {
+  it('should return an error: Dataset was not found', sandbox(function (done: Function) {
     const context = {datasetName: 'datasetName', commit: 'commit'};
     const expectedError = 'Dataset was not found.';
     const findDefaultDatasetAndTransactionStub = this.stub(datasetTransactionService, 'findDefaultDatasetAndTransaction', (datasetName, commit, onFound) => {
@@ -70,7 +70,7 @@ describe('Populate documents service testing', () => {
     });
   }));
 
-  it('should return an error: Transaction was not found', test(function (done) {
+  it('should return an error: Transaction was not found', sandbox(function (done: Function) {
     const context = {datasetName: 'datasetName', commit: 'commit'};
     const expectedError = 'Transaction was not found.';
     const findDefaultDatasetAndTransactionStub = this.stub(datasetTransactionService, 'findDefaultDatasetAndTransaction', (datasetName, commit, onFound) => {
@@ -88,7 +88,7 @@ describe('Populate documents service testing', () => {
     });
   }));
 
-  it('should return an error: Error was happened during getting documents from concepts repository by query', test(function (done) {
+  it('should return an error: Error was happened during getting documents from concepts repository by query', sandbox(function (done: Function) {
     const dataset = {_id: 'AAA'};
     const transaction = {createdAt: 123};
     const context = {datasetName: 'datasetName', commit: 'commit', collection: 'concepts', query: {}};
@@ -119,7 +119,7 @@ describe('Populate documents service testing', () => {
     });
   }));
 
-  it('should return an error: Error was happened during getting documents from entities repository by query', test(function (done) {
+  it('should return an error: Error was happened during getting documents from entities repository by query', sandbox(function (done: Function) {
     const dataset = {_id: 'AAA'};
     const transaction = {createdAt: 123};
     const context = {datasetName: 'datasetName', commit: 'commit', collection: 'entities', query: {}};
@@ -150,7 +150,7 @@ describe('Populate documents service testing', () => {
     });
   }));
 
-  it('should return an error: Error was happened during getting documents from datapoints repository by query', test(function (done) {
+  it('should return an error: Error was happened during getting documents from datapoints repository by query', sandbox(function (done: Function) {
     const dataset = {_id: 'AAA'};
     const transaction = {createdAt: 123};
     const context = {datasetName: 'datasetName', commit: 'commit', collection: 'datapoints', query: {}};
@@ -181,7 +181,7 @@ describe('Populate documents service testing', () => {
     });
   }));
 
-  it('should return an empty array: Concepts were not found by query', test(function (done) {
+  it('should return an empty array: Concepts were not found by query', sandbox(function (done: Function) {
     const dataset = {_id: 'AAA'};
     const transaction = {createdAt: 123};
     const context = {datasetName: 'datasetName', commit: 'commit', collection: 'concepts', query: {}};
@@ -212,7 +212,7 @@ describe('Populate documents service testing', () => {
     });
   }));
 
-  it('should return an error: Error was happened during getting documents from concepts repository by subquery', test(function (done) {
+  it('should return an error: Error was happened during getting documents from concepts repository by subquery', sandbox(function (done: Function) {
     const dataset = {_id: 'AAA'};
     const transaction = {createdAt: 123};
     const context = {datasetName: 'datasetName', commit: 'commit', collection: 'concepts', query: {}};
@@ -254,7 +254,7 @@ describe('Populate documents service testing', () => {
     });
   }));
 
-  it('should return an error: Original document has reference to a document which wasn\'t found', test(function (done) {
+  it('should return an error: Original document has reference to a document which wasn\'t found', sandbox(function (done: Function) {
     const dataset = {_id: 'AAA'};
     const transaction = {createdAt: 123};
     const context = {datasetName: 'datasetName', commit: 'commit', collection: 'concepts', query: {}};
@@ -300,7 +300,7 @@ describe('Populate documents service testing', () => {
     });
   }));
 
-  it('should return an error: Original document has only one value, but returns from db more than one', test(function (done) {
+  it('should return an error: Original document has only one value, but returns from db more than one', sandbox(function (done: Function) {
     const dataset = {_id: 'AAA'};
     const transaction = {createdAt: 123};
     const context = {datasetName: 'datasetName', commit: 'commit', collection: 'concepts', query: {}};
@@ -346,7 +346,7 @@ describe('Populate documents service testing', () => {
     });
   }));
 
-  it('should return an array of documents: Concepts were populated successfully', test(function (done) {
+  it('should return an array of documents: Concepts were populated successfully', sandbox(function (done: Function) {
     const dataset = {_id: 'AAA'};
     const transaction = {createdAt: 123};
     const context = {datasetName: 'datasetName', commit: 'commit', collection: 'concepts', query: {}};
@@ -391,7 +391,7 @@ describe('Populate documents service testing', () => {
     });
   }));
 
-  it('should return an array of documents: Entities were populated successfully', test(function (done) {
+  it('should return an array of documents: Entities were populated successfully', sandbox(function (done: Function) {
     const dataset = {_id: 'AAA'};
     const transaction = {createdAt: 123};
     const context = {datasetName: 'datasetName', commit: 'commit', collection: 'entities', query: {}};
@@ -448,7 +448,7 @@ describe('Populate documents service testing', () => {
   }));
 
   //TODO
-  xit('should return an array of documents: Datapoints were populated successfully', test(function (done) {
+  xit('should return an array of documents: Datapoints were populated successfully', sandbox(function (done: Function) {
     const dataset = {_id: 'AAA'};
     const transaction = {createdAt: 123};
     const context = {datasetName: 'datasetName', commit: 'commit', collection: 'concepts', query: {}};

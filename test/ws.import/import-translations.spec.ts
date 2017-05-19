@@ -16,7 +16,7 @@ import { ConceptsRepositoryFactory } from '../../ws.repository/ddf/concepts/conc
 import { EntitiesRepositoryFactory } from '../../ws.repository/ddf/entities/entities.repository';
 import { DatapointsRepositoryFactory } from '../../ws.repository/ddf/data-points/data-points.repository';
 
-const test = sinonTest.configureTest(sinon);
+const sandbox = sinonTest.configureTest(sinon);
 
 const language = {
   "id": "nl-nl",
@@ -72,7 +72,7 @@ describe('Import translations', () => {
     });
 
 
-    it('should import translations for concept', test(function (done) {
+    it('should import translations for concept', sandbox(function (done: Function) {
       const addTranslationsForGivenPropertiesSpy = this.stub().returns(Promise.resolve());
       const allOpenedInGivenVersionStub = this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties:  addTranslationsForGivenPropertiesSpy});
 
@@ -101,7 +101,7 @@ describe('Import translations', () => {
     }));
 
 
-    it('should import translations for concept: translation properties are transformed by ddf mapper', test(function (done) {
+    it('should import translations for concept: translation properties are transformed by ddf mapper', sandbox(function (done: Function) {
       const transformedTranslation = {hello: 'world'};
       const transformConceptPropertiesStub = this.stub(ddfMappers, 'transformConceptProperties').returns(transformedTranslation);
 
@@ -126,7 +126,7 @@ describe('Import translations', () => {
       });
     }));
 
-    it('should not import translations for concept if it is impossible to read a file with them', test(function (done) {
+    it('should not import translations for concept if it is impossible to read a file with them', sandbox(function (done: Function) {
       const addTranslationsForGivenPropertiesSpy = this.stub().returns(Promise.resolve());
       const allOpenedInGivenVersionStub = this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties:  addTranslationsForGivenPropertiesSpy});
 
@@ -184,7 +184,7 @@ describe('Import translations', () => {
       datapackageStub.resources = [];
     });
 
-    it('should import translations for entity', test(function (done) {
+    it('should import translations for entity', sandbox(function (done: Function) {
       const addTranslationsForGivenPropertiesSpy = this.stub().returns(Promise.resolve());
       const allOpenedInGivenVersionStub = this.stub(EntitiesRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties:  addTranslationsForGivenPropertiesSpy});
 
@@ -226,7 +226,7 @@ describe('Import translations', () => {
       });
     }));
 
-    it('should not import translations for entity if it is impossible to read a file with them', test(function (done) {
+    it('should not import translations for entity if it is impossible to read a file with them', sandbox(function (done: Function) {
       const addTranslationsForGivenPropertiesSpy = this.stub().returns(Promise.resolve());
       const allOpenedInGivenVersionStub = this.stub(EntitiesRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties:  addTranslationsForGivenPropertiesSpy});
 
@@ -281,7 +281,7 @@ describe('Import translations', () => {
       datapackageStub.resources = [];
     });
 
-    it('should import translations for datapoint', test(function (done) {
+    it('should import translations for datapoint', sandbox(function (done: Function) {
       const addTranslationsForGivenPropertiesSpy = this.stub().returns(Promise.resolve());
       const allOpenedInGivenVersionStub = this.stub(DatapointsRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties:  addTranslationsForGivenPropertiesSpy});
 
@@ -313,7 +313,7 @@ describe('Import translations', () => {
       });
     }));
 
-    it('should not import translations for datapoint if it is impossible to read a file with them', test(function (done) {
+    it('should not import translations for datapoint if it is impossible to read a file with them', sandbox(function (done: Function) {
       const addTranslationsForGivenPropertiesSpy = this.stub().returns(Promise.resolve());
       const allOpenedInGivenVersionStub = this.stub(DatapointsRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties:  addTranslationsForGivenPropertiesSpy});
 

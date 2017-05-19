@@ -15,10 +15,10 @@ import { ConceptsRepositoryFactory } from '../../../ws.repository/ddf/concepts/c
 import { DatasetTransactionsRepository } from '../../../ws.repository/ddf/dataset-transactions/dataset-transactions.repository';
 import { DatasetsRepository } from '../../../ws.repository/ddf/datasets/datasets.repository';
 
-const test = sinonTest.configureTest(sinon);
+const sandbox = sinonTest.configureTest(sinon);
 
 describe('Ddf import utils', () => {
-  it('gets all concepts', test(function (done) {
+  it('gets all concepts', sandbox(function (done: Function) {
     const context = {
       dataset: {
         _id: 'dsId'
@@ -108,7 +108,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('cannot get all concepts: error while db access', test(function (done) {
+  it('cannot get all concepts: error while db access', sandbox(function (done: Function) {
     const context = {
       dataset: {
         _id: 'dsId'
@@ -129,7 +129,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('gets all previous concepts', test(function (done) {
+  it('gets all previous concepts', sandbox(function (done: Function) {
     const context = {
       dataset: {
         _id: 'dsId'
@@ -179,7 +179,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('cannot get all previous concepts: fails while accessing db', test(function (done) {
+  it('cannot get all previous concepts: fails while accessing db', sandbox(function (done: Function) {
     const context = {
       dataset: {
         _id: 'dsId'
@@ -200,7 +200,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('clones ddf repo', test(function (done) {
+  it('clones ddf repo', sandbox(function (done: Function) {
     const context = {
       github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git',
       commit: 'fafafaf'
@@ -222,7 +222,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('fails while cloning ddf repo', test(function (done) {
+  it('fails while cloning ddf repo', sandbox(function (done: Function) {
     const expectedError = '[Error]: repo cloning error';
 
     const context = {
@@ -238,7 +238,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('fails while generating diff for dataset update: diff error has happened', test(function (done) {
+  it('fails while generating diff for dataset update: diff error has happened', sandbox(function (done: Function) {
     const expectedError = '[Error]: diff error';
 
     const context = {
@@ -255,7 +255,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('generates diff for dataset update', test(function (done) {
+  it('generates diff for dataset update', sandbox(function (done: Function) {
     const context = {
       github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git',
       hashFrom: 'fafafaf',
@@ -290,7 +290,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('resolves path to ddf folder asynchronously', test(function(done) {
+  it('resolves path to ddf folder asynchronously', sandbox(function(done: Function) {
     const context = {
       datasetName: 'dsName'
     };
@@ -307,7 +307,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('fails parsing datapackage.json', test(function(done) {
+  it('fails parsing datapackage.json', sandbox(function(done: Function) {
     const expectedError = '[Error]: datapackage parsing has failed';
 
     const context = {
@@ -324,7 +324,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('fails parsing datapackage.json', test(function(done) {
+  it('fails parsing datapackage.json', sandbox(function(done: Function) {
     const context = {
       datasetName: 'dsName'
     };
@@ -345,7 +345,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('fails searching for a previous transaction', test(function(done) {
+  it('fails searching for a previous transaction', sandbox(function(done: Function) {
     const expectedError = '[Error]: failed while searching transaction';
 
     const context = {
@@ -363,7 +363,7 @@ describe('Ddf import utils', () => {
   }));
 
 
-  it('finds previous transaction', test(function(done) {
+  it('finds previous transaction', sandbox(function(done: Function) {
     const previousTransaction = {_id: 'txId'};
 
     const context = {
@@ -384,7 +384,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('fails creating a transaction', test(function(done) {
+  it('fails creating a transaction', sandbox(function(done: Function) {
     const expectedError = '[Error]: fails creating a transaction';
 
     const context = {
@@ -402,7 +402,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('creates a transaction', test(function(done) {
+  it('creates a transaction', sandbox(function(done: Function) {
     const createdTransaction = {_id: 'txId'};
 
     const context = {
@@ -431,7 +431,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('fails closing a transaction', test(function(done) {
+  it('fails closing a transaction', sandbox(function(done: Function) {
     const expectedError = '[Error]: fails closing a transaction';
 
     const context = {
@@ -449,7 +449,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('closes a transaction', test(function(done) {
+  it('closes a transaction', sandbox(function(done: Function) {
     const context = {
       transaction: {
         _id: 'txId',
@@ -471,7 +471,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('fails creating dataset because of db error', test(function(done) {
+  it('fails creating dataset because of db error', sandbox(function(done: Function) {
     const expectedError = '[Error]: fails creating dataset because of db error';
 
     const context = {
@@ -495,7 +495,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('fails creating dataset because empty result was returned', test(function(done) {
+  it('fails creating dataset because empty result was returned', sandbox(function(done: Function) {
     const expectedError = 'Dataset was not created due to some issues';
 
     const context = {
@@ -519,7 +519,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('fails creating dataset because empty result was returned', test(function(done) {
+  it('fails creating dataset because empty result was returned', sandbox(function(done: Function) {
     const context = {
       datasetName: 'dsName',
       github: 'github:...',
@@ -547,7 +547,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('fails while searching for a dataset: db error has occurred', test(function (done) {
+  it('fails while searching for a dataset: db error has occurred', sandbox(function (done: Function) {
     const expectedError = '[Error] db error has occurred';
 
     const context = {};
@@ -559,7 +559,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('fails while searching for a dataset: was not found', test(function (done) {
+  it('fails while searching for a dataset: was not found', sandbox(function (done: Function) {
     const expectedError = 'Dataset was not found';
 
     const context = {};
@@ -571,7 +571,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('finds a dataset by name', test(function (done) {
+  it('finds a dataset by name', sandbox(function (done: Function) {
     const context = {
       datasetName: 'dsName'
     };
@@ -590,7 +590,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('fails establishing transaction for a dataset', test(function (done) {
+  it('fails establishing transaction for a dataset', sandbox(function (done: Function) {
     const expectedError = '[Error] transaction establishment error';
 
     const context = {
@@ -610,7 +610,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('establishes a transaction for a dataset', test(function (done) {
+  it('establishes a transaction for a dataset', sandbox(function (done: Function) {
     const context = {
       transaction: {
         _id: 'txId'
@@ -634,7 +634,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('fails updating transaction languages', test(function (done) {
+  it('fails updating transaction languages', sandbox(function (done: Function) {
     const expectedError = '[Error] fails updating transaction languages';
 
     const context = {
@@ -656,7 +656,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('fails updating transaction languages', test(function (done) {
+  it('fails updating transaction languages', sandbox(function (done: Function) {
     const context = {
       transaction: {
         _id: 'txId'
