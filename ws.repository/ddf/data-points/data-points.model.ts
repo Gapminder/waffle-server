@@ -26,7 +26,7 @@ DataPoints.plugin(OriginIdPlugin, {
   originId: 'DataPoints'
 });
 
-DataPoints.index({dimensions: 1, measure: 1, dataset: 1, from: 1, to: 1});
+DataPoints.index({dataset: 1, measure: 1, dimensions: 1, from: 1, to: 1});
 DataPoints.index({dimensionsConcepts: 1, measure: 1, dataset: 1, from: 1, to: 1});
 DataPoints.index({sources: 1, dataset: 1, from: 1, to: 1});
 DataPoints.index({dataset: 1, from: 1, to: 1});
