@@ -2,6 +2,7 @@ import 'mocha';
 
 import {expect} from 'chai';
 import * as sinon from 'sinon';
+import * as sinonTest from 'sinon-test';
 import * as hi from 'highland';
 
 import '../../ws.repository';
@@ -10,6 +11,8 @@ import * as wsJsonFormatter from '../../ws.routes/data-post-processors/format/fo
 import * as formatService from '../../ws.services/format.service';
 import {constants} from '../../ws.utils/constants';
 
+const test = sinonTest.configureTest(sinon);
+
 describe('Format Service', () => {
 
   it('should use WsJson formatter as the default one', function () {
@@ -17,7 +20,7 @@ describe('Format Service', () => {
     expect(formatService.wsJson).to.equal(formatService.default);
   });
 
-  it('should format datapoints data in WsJson', sinon.test(function (done) {
+  it('should format datapoints data in WsJson', test(function (done) {
     const data = {
       rawDdf: {
         dataset: {
@@ -47,7 +50,7 @@ describe('Format Service', () => {
     });
   }));
 
-  it('should format concepts data in WsJson', sinon.test(function (done) {
+  it('should format concepts data in WsJson', test(function (done) {
     const data = {
       rawDdf: {
         dataset: {
@@ -77,7 +80,7 @@ describe('Format Service', () => {
     });
   }));
 
-  it('should format entities data in WsJson', sinon.test(function (done) {
+  it('should format entities data in WsJson', test(function (done) {
     const data = {
       rawDdf: {
         dataset: {
@@ -106,7 +109,7 @@ describe('Format Service', () => {
     });
   }));
 
-  it('should format schema data in WsJson', sinon.test(function (done) {
+  it('should format schema data in WsJson', test(function (done) {
     const data = {
       rawDdf: {
         dataset: {
@@ -135,7 +138,7 @@ describe('Format Service', () => {
     });
   }));
 
-  it('should respond with an empty object if data type is unknown', sinon.test(function (done) {
+  it('should respond with an empty object if data type is unknown', test(function (done) {
     const data = {
       rawDdf: {
         dataset: {
@@ -155,7 +158,7 @@ describe('Format Service', () => {
     });
   }));
 
-  it('should format with empty object by default if data was not given', sinon.test(function (done) {
+  it('should format with empty object by default if data was not given', test(function (done) {
     const data = {
       type: constants.SCHEMA
     };
@@ -173,7 +176,7 @@ describe('Format Service', () => {
     });
   }));
 
-  it('should format datapoints data as CSV', sinon.test(function (done) {
+  it('should format datapoints data as CSV', test(function (done) {
     const data = {
       rawDdf: {
         dataset: {

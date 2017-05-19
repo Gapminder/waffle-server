@@ -2,6 +2,7 @@ import '../../../../ws.repository';
 
 import { expect } from 'chai';
 import * as sinon from 'sinon';
+import * as sinonTest from 'sinon-test';
 import {
   mapConcepts,
   mapEntities,
@@ -11,9 +12,11 @@ import {
 
 import * as commonService from '../../../../ws.services/common.service';
 
+const test = sinonTest.configureTest(sinon);
+
 describe('Format WS Processor', () => {
   describe('Datapoints formatting', () => {
-    it('should invoke map an empty array of datapoints by format-ws processor', sinon.test(function (done) {
+    it('should invoke map an empty array of datapoints by format-ws processor', test(function (done) {
       const data = {
         concepts: [],
         entities: [],
@@ -35,7 +38,7 @@ describe('Format WS Processor', () => {
       });
     }));
 
-    it('should invoke mapping a few datapoints by format-ws processor', sinon.test(function (done) {
+    it('should invoke mapping a few datapoints by format-ws processor', test(function (done) {
       const data = {
         concepts: [
           {gid: 'population', originId: 'C1'},
@@ -94,7 +97,7 @@ describe('Format WS Processor', () => {
       });
     }));
 
-    it('should invoke map a few datapoints by format-ws processor with ordering', sinon.test(function (done) {
+    it('should invoke map a few datapoints by format-ws processor with ordering', test(function (done) {
       const data = {
         concepts: [
           {gid: 'population', originId: 'C1'},
@@ -155,7 +158,7 @@ describe('Format WS Processor', () => {
       });
     }));
 
-    it('should invoke map a few datapoints by format-ws processor with translations', sinon.test(function (done) {
+    it('should invoke map a few datapoints by format-ws processor with translations', test(function (done) {
       const data = {
         concepts: [
           {gid: 'population', originId: 'C1'},
@@ -234,7 +237,7 @@ describe('Format WS Processor', () => {
       });
     });
 
-    it('should format concept in WS-JSON', sinon.test(function () {
+    it('should format concept in WS-JSON', test(function () {
       const concept1 = {
         gid: 'name',
         properties: {
@@ -289,7 +292,7 @@ describe('Format WS Processor', () => {
       expect(result).to.deep.equal(expectedResponse);
     }));
 
-    it('should format concept in WS-JSON: should translate given concepts according to given lang', sinon.test(function () {
+    it('should format concept in WS-JSON: should translate given concepts according to given lang', test(function () {
       const translateDocumentStub = this.stub(commonService, 'translateDocument', (concept, lang) => {
         return concept.properties;
       });
@@ -421,7 +424,7 @@ describe('Format WS Processor', () => {
       expect(result).to.deep.equal(expectedResponse);
     });
 
-    it('should format concept in WS-JSON: response should have ordered data according to the provided ordering', sinon.test(function () {
+    it('should format concept in WS-JSON: response should have ordered data according to the provided ordering', test(function () {
       const concept1 = {
         gid: 'name',
         properties: {
@@ -591,7 +594,7 @@ describe('Format WS Processor', () => {
       expect(result).to.deep.equal(expectedResponse);
     });
 
-    it('should format entities in WS-JSON: entity should be translated', sinon.test(function() {
+    it('should format entities in WS-JSON: entity should be translated', test(function() {
       const translateDocumentStub = this.stub(commonService, 'translateDocument', (entity, lang) => {
         return entity.properties;
       });

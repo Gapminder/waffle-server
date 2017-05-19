@@ -4,11 +4,14 @@ import * as hi from 'highland';
 import * as _ from 'lodash';
 import * as path from 'path';
 import * as sinon from 'sinon';
+import * as sinonTest from 'sinon-test';
 import {logger} from '../../../ws.config/log';
 
 import * as updateService from '../../../ws.import/incremental/update-concepts';
 import {ConceptsRepositoryFactory} from '../../../ws.repository/ddf/concepts/concepts.repository';
 import * as fileUtils from '../../../ws.utils/file';
+
+const test = sinonTest.configureTest(sinon);
 
 const datasetId = 'DATASETID';
 const version = 1111111;
@@ -75,7 +78,7 @@ const expectedCreatedConcepts = [
 ];
 
 describe('Update Concepts', function () {
-  it('should create new and remove old concepts from fixture', sinon.test(function (done) {
+  it('should create new and remove old concepts from fixture', test(function (done) {
     const originExternalContext = _.defaults({pathToDatasetDiff: path.resolve(__dirname, './fixtures/full-diff-concepts.txt')}, externalContextFixture);
     const expectedError = null;
     const expectedCloseByGidCallCount = 5;
@@ -178,7 +181,7 @@ describe('Update Concepts', function () {
     });
   }));
 
-  it('should finish main updating process if there is no concepts in file', sinon.test(function (done) {
+  it('should finish main updating process if there is no concepts in file', test(function (done) {
     const expectedError = null;
     const originExternalContext = _.defaults({
       pathToDatasetDiff: path.resolve(__dirname, './fixtures/empty-concepts.txt')
@@ -215,7 +218,7 @@ describe('Update Concepts', function () {
     })
   }));
 
-  it('should interrupt preliminary process if error happens during reading test file by line as json stream', sinon.test(function (done) {
+  it('should interrupt preliminary process if error happens during reading test file by line as json stream', test(function (done) {
     const originExternalContext = _.defaults({pathToDatasetDiff: path.resolve(__dirname, './fixtures/full-diff-concepts.txt')}, externalContextFixture);
     const expectedError = new Error('Boo!');
 
@@ -235,7 +238,7 @@ describe('Update Concepts', function () {
     })
   }));
 
-  it('should interrupt removing concepts process if error happens during closing concept', sinon.test(function (done) {
+  it('should interrupt removing concepts process if error happens during closing concept', test(function (done) {
     const originExternalContext = _.defaults({pathToDatasetDiff: path.resolve(__dirname, './fixtures/full-diff-concepts.txt')}, externalContextFixture);
     const expectedError = new Error('Boo!');
 
@@ -259,7 +262,7 @@ describe('Update Concepts', function () {
     })
   }));
 
-  it('should interrupt creating concepts process when trying create concept with duplicated gid', sinon.test(function (done) {
+  it('should interrupt creating concepts process when trying create concept with duplicated gid', test(function (done) {
     const originExternalContext = _.defaults({
       pathToDatasetDiff: path.resolve(__dirname, './fixtures/create-duplicated-concepts.txt')
     }, externalContextFixture);
@@ -286,7 +289,7 @@ describe('Update Concepts', function () {
     })
   }));
 
-  it('should interrupt updating concepts process if error happens during searching drillups', sinon.test(function(done) {
+  it('should interrupt updating concepts process if error happens during searching drillups', test(function(done) {
     const originExternalContext = _.defaults({
       pathToDatasetDiff: path.resolve(__dirname, './fixtures/changed-concepts.txt')
     }, externalContextFixture);
@@ -321,7 +324,7 @@ describe('Update Concepts', function () {
     })
   }));
 
-  it('should interrupt updating concepts process if error happens during searching domains', sinon.test(function(done) {
+  it('should interrupt updating concepts process if error happens during searching domains', test(function(done) {
     const originExternalContext = _.defaults({
       pathToDatasetDiff: path.resolve(__dirname, './fixtures/changed-concepts.txt')
     }, externalContextFixture);
@@ -356,7 +359,7 @@ describe('Update Concepts', function () {
     })
   }));
 
-  it('should interrupt updating concepts process if error happens during closing concepts in applying changes to concept flow', sinon.test(function(done) {
+  it('should interrupt updating concepts process if error happens during closing concepts in applying changes to concept flow', test(function(done) {
     const originExternalContext = _.defaults({
       pathToDatasetDiff: path.resolve(__dirname, './fixtures/changed-concepts.txt')
     }, externalContextFixture);
@@ -400,7 +403,7 @@ describe('Update Concepts', function () {
     })
   }));
 
-  it('should log warn message if no concept was found during closing original concept in applying changes to concept flow', sinon.test(function(done) {
+  it('should log warn message if no concept was found during closing original concept in applying changes to concept flow', test(function(done) {
     const originExternalContext = _.defaults({
       pathToDatasetDiff: path.resolve(__dirname, './fixtures/changed-concepts.txt')
     }, externalContextFixture);
@@ -447,7 +450,7 @@ describe('Update Concepts', function () {
     })
   }));
 
-  it('should create new concepts versions during applying changes to concept flow', sinon.test(function(done) {
+  it('should create new concepts versions during applying changes to concept flow', test(function(done) {
     const originExternalContext = _.defaults({
       pathToDatasetDiff: path.resolve(__dirname, './fixtures/changed-concepts.txt')
     }, externalContextFixture);
@@ -613,7 +616,7 @@ describe('Update Concepts', function () {
     })
   }));
 
-  it('should interrupt updating concepts process if error happens during finding all concepts in applying updates to concept flow', sinon.test(function(done) {
+  it('should interrupt updating concepts process if error happens during finding all concepts in applying updates to concept flow', test(function(done) {
     const originExternalContext = _.defaults({
       pathToDatasetDiff: path.resolve(__dirname, './fixtures/updated-concepts.txt')
     }, externalContextFixture);
@@ -659,7 +662,7 @@ describe('Update Concepts', function () {
     })
   }));
 
-  it('should interrupt updating concepts process if error happens during closing concepts in applying updates to concept flow', sinon.test(function(done) {
+  it('should interrupt updating concepts process if error happens during closing concepts in applying updates to concept flow', test(function(done) {
     const originExternalContext = _.defaults({
       pathToDatasetDiff: path.resolve(__dirname, './fixtures/only-columns-removed-concepts.txt')
     }, externalContextFixture);
@@ -755,7 +758,7 @@ describe('Update Concepts', function () {
     })
   }));
 
-  it('should finish main updating process when concept changes were apllied successfully', sinon.test(function(done) {
+  it('should finish main updating process when concept changes were apllied successfully', test(function(done) {
     const originExternalContext = _.defaults({
       pathToDatasetDiff: path.resolve(__dirname, './fixtures/only-columns-removed-concepts.txt')
     }, externalContextFixture);

@@ -1,9 +1,11 @@
 import * as _ from 'lodash';
 import * as fs from 'fs';
-import * as path from 'path';
 import * as sinon from 'sinon';
+import * as sinonTest from 'sinon-test';
 import {expect} from 'chai';
 import * as datapackageParser from '../../../ws.import/utils/datapackage.parser';
+
+const test = sinonTest.configureTest(sinon);
 
 const entitiesResource = {
   "path": "ddf--entities--company--company_scale.csv",
@@ -114,7 +116,7 @@ const datapackageStub = {
 };
 
 describe('Datapackage Parser', () => {
-  it('should respond with an error if file cannot be read', sinon.test(function () {
+  it('should respond with an error if file cannot be read', test(function () {
     const expectedError = 'Boo!';
 
     const readFileStub = this.stub(fs, 'readFile', (pathToDatapackage, encoding, done) => {
@@ -127,7 +129,7 @@ describe('Datapackage Parser', () => {
     });
   }));
 
-  it('should parse datapackage resources', sinon.test(function () {
+  it('should parse datapackage resources', test(function () {
     const expectedResources = [
       {
         "path": "ddf--concepts.csv",

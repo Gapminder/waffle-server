@@ -2,6 +2,7 @@ import '../../../ws.config/db.config';
 import '../../../ws.repository';
 import * as _ from 'lodash';
 import * as sinon from 'sinon';
+import * as sinonTest from 'sinon-test';
 import { expect } from 'chai';
 import * as createDatasetSchema from '../../../ws.import/import-dataset-schema';
 import * as updateConceptsTranslations from '../../../ws.import/incremental/translations/update-concept-translations';
@@ -13,8 +14,10 @@ import { updateDdf } from '../../../ws.import/incremental/update-ddf';
 import * as updateEntities from '../../../ws.import/incremental/update-entities';
 import * as ddfImportUtils from '../../../ws.import/utils/import-ddf.utils';
 
+const test = sinonTest.configureTest(sinon);
+
 describe('Dataset incremental update', () => {
-  it('should update dataset', sinon.test(function (done) {
+  it('should update dataset', test(function (done) {
     // *** Prepared Data
     const options = {
       user: {
@@ -151,7 +154,7 @@ describe('Dataset incremental update', () => {
     updateDdf(options, onDatasetUpdatedSpy);
   }));
 
-  it('should respond with an error when smth went wrong during the process of establishing transaction for dataset', sinon.test(function (done) {
+  it('should respond with an error when smth went wrong during the process of establishing transaction for dataset', test(function (done) {
     // *** Prepared Data
     const options = {
       user: {
@@ -257,7 +260,7 @@ describe('Dataset incremental update', () => {
     updateDdf(options, onDatasetUpdatedSpy);
   }));
 
-  it('should respond with an error when smth went wrong during the process of creating transaction', sinon.test(function (done) {
+  it('should respond with an error when smth went wrong during the process of creating transaction', test(function (done) {
     // *** Prepared Data
     const options = {
       user: {
@@ -345,7 +348,7 @@ describe('Dataset incremental update', () => {
     updateDdf(options, onDatasetUpdatedSpy);
   }));
 
-  it('should not fail when error has happened and transaction is not yet created', sinon.test(function (done) {
+  it('should not fail when error has happened and transaction is not yet created', test(function (done) {
     const context = {
       isDatasetPrivate: false,
       github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git',

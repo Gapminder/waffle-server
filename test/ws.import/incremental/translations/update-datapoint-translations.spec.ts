@@ -2,6 +2,7 @@ import '../../../../ws.repository';
 import * as hi from 'highland';
 import { ChangesDescriptor } from '../../../../ws.import/utils/changes-descriptor';
 import * as sinon from 'sinon';
+import * as sinonTest from 'sinon-test';
 import { expect } from 'chai';
 import { constants } from '../../../../ws.utils/constants';
 import {logger} from '../../../../ws.config/log';
@@ -9,6 +10,8 @@ import * as datapointsUtils from '../../../../ws.import/utils/datapoints.utils';
 import * as UpdateTranslationsFlow from '../../../../ws.import/incremental/translations/update-translations-flow';
 import * as UpdateDatapointTranslations from '../../../../ws.import/incremental/translations/update-datapoint-translations';
 import { DatapointsRepositoryFactory } from '../../../../ws.repository/ddf/data-points/data-points.repository';
+
+const test = sinonTest.configureTest(sinon);
 
 const entities = {
   segregatedEntities: {
@@ -48,7 +51,7 @@ const externalContext = {
 };
 
 describe('Datapoints Translations Update Plugin', () => {
-  it('creates a proper context for the plugin', sinon.test(function (done) {
+  it('creates a proper context for the plugin', test(function (done) {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
@@ -72,7 +75,7 @@ describe('Datapoints Translations Update Plugin', () => {
     });
   }));
 
-  it('creates a proper plugin', sinon.test(function (done) {
+  it('creates a proper plugin', test(function (done) {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
@@ -95,7 +98,7 @@ describe('Datapoints Translations Update Plugin', () => {
     });
   }));
 
-  it('inferres measures and dimensions for context enrichment', sinon.test(function (done) {
+  it('inferres measures and dimensions for context enrichment', test(function (done) {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
@@ -130,7 +133,7 @@ describe('Datapoints Translations Update Plugin', () => {
     });
   }));
 
-  it('transforms stream before translation update actions are segregated: should produce removal ChangeDescriptors for each removed indicator column along with updated indicator values', sinon.test(function (done) {
+  it('transforms stream before translation update actions are segregated: should produce removal ChangeDescriptors for each removed indicator column along with updated indicator values', test(function (done) {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
@@ -199,7 +202,7 @@ describe('Datapoints Translations Update Plugin', () => {
     });
   }));
 
-  it('transforms stream before translation update actions are segregated: should produce only removal ChangeDescriptors if the only change done is indicator column removal in datapoint row', sinon.test(function (done) {
+  it('transforms stream before translation update actions are segregated: should produce only removal ChangeDescriptors if the only change done is indicator column removal in datapoint row', test(function (done) {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
@@ -256,7 +259,7 @@ describe('Datapoints Translations Update Plugin', () => {
     });
   }));
 
-  it('transforms stream before translation update actions are segregated: if indicator given in removedColumns is not known and only columns were removed - no changes descriptors generated', sinon.test(function (done) {
+  it('transforms stream before translation update actions are segregated: if indicator given in removedColumns is not known and only columns were removed - no changes descriptors generated', test(function (done) {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
@@ -308,7 +311,7 @@ describe('Datapoints Translations Update Plugin', () => {
     });
   }));
 
-  it('transforms stream before translation update actions are segregated: if coming action is not UPDATE action - then just path changes descriptor through', sinon.test(function (done) {
+  it('transforms stream before translation update actions are segregated: if coming action is not UPDATE action - then just path changes descriptor through', test(function (done) {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
@@ -357,7 +360,7 @@ describe('Datapoints Translations Update Plugin', () => {
     });
   }));
 
-  it('makes a new translation target based on its closed version', sinon.test(function (done) {
+  it('makes a new translation target based on its closed version', test(function (done) {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
@@ -380,7 +383,7 @@ describe('Datapoints Translations Update Plugin', () => {
     });
   }));
 
-  it('makes a query to fetch translation target based on giving context and changes descriptor', sinon.test(function (done) {
+  it('makes a query to fetch translation target based on giving context and changes descriptor', test(function (done) {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
@@ -428,7 +431,7 @@ describe('Datapoints Translations Update Plugin', () => {
     });
   }));
 
-  it('makes a query to fetch translation target based on giving context and changes descriptor: if no indicator origin is is found - logs this fact', sinon.test(function (done) {
+  it('makes a query to fetch translation target based on giving context and changes descriptor: if no indicator origin is is found - logs this fact', test(function (done) {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
@@ -462,7 +465,7 @@ describe('Datapoints Translations Update Plugin', () => {
     });
   }));
 
-  it('transforms stream before changes are actually applied: streams comes in form of changesDescriptor --> context pairs', sinon.test(function (done) {
+  it('transforms stream before changes are actually applied: streams comes in form of changesDescriptor --> context pairs', test(function (done) {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
@@ -506,7 +509,7 @@ describe('Datapoints Translations Update Plugin', () => {
     });
   }));
 
-  it('transforms stream before changes are actually applied: if no indicators in context can be mapped to changes - nothign should be changed', sinon.test(function (done) {
+  it('transforms stream before changes are actually applied: if no indicators in context can be mapped to changes - nothign should be changed', test(function (done) {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 

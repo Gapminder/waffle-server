@@ -1,4 +1,5 @@
 import * as sinon from 'sinon';
+import * as sinonTest from 'sinon-test';
 import { expect } from 'chai';
 
 import '../../ws.repository';
@@ -8,8 +9,10 @@ import * as ddfQueryValidator from '../../ws.ddfql/ddf-query-validator';
 import * as ddfQueryNormalizer from '../../ws.ddfql/ddf-concepts-query-normalizer';
 import * as commonService from '../../ws.services/common.service';
 
+const test = sinonTest.configureTest(sinon);
+
 describe('Concepts service', () => {
-  it('fails when cannot find requested properties for concepts', sinon.test(function (done) {
+  it('fails when cannot find requested properties for concepts', test(function (done) {
     const context = {
       dataset: {
         id: 'dsId'
@@ -38,7 +41,7 @@ describe('Concepts service', () => {
     });
   }));
 
-  it('gets concepts from db', sinon.test(function (done) {
+  it('gets concepts from db', test(function (done) {
     const context = {
       dataset: {
         _id: 'dsId'
@@ -75,7 +78,7 @@ describe('Concepts service', () => {
     });
   }));
 
-  it('fails when cannot search for concepts', sinon.test(function(done) {
+  it('fails when cannot search for concepts', test(function(done) {
     const expectedError = '[Error]: fails while searching for concepts';
 
     const context = {
@@ -111,7 +114,7 @@ describe('Concepts service', () => {
     });
   }));
 
-  it('fails when tries to collect concepts from invalid query', sinon.test(function(done) {
+  it('fails when tries to collect concepts from invalid query', test(function(done) {
     const expectedError = '[Error]: mongo query is not valid';
     const queryValidationResult = {
       valid: false,
@@ -150,7 +153,7 @@ describe('Concepts service', () => {
     });
   }));
 
-  it('collects concepts by ddfql', sinon.test(function(done) {
+  it('collects concepts by ddfql', test(function(done) {
     const queryValidationResult = {
       valid: true
     };
@@ -218,7 +221,7 @@ describe('Concepts service', () => {
   }));
 
 
-  it('collects concepts by ddfql: fails cause is not able to collect concepts using normalized query', sinon.test(function(done) {
+  it('collects concepts by ddfql: fails cause is not able to collect concepts using normalized query', test(function(done) {
     const expectedError = 'Boo!';
 
     const queryValidationResult = {

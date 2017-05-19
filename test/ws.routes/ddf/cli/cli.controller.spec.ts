@@ -1,6 +1,7 @@
 import '../../../../ws.repository';
 import {expect} from 'chai';
 import * as sinon from 'sinon';
+import * as sinonTest from 'sinon-test';
 import {setTimeout} from 'timers';
 import {logger} from '../../../../ws.config/log';
 import * as cliController from '../../../../ws.routes/ddf/cli/cli.controller';
@@ -13,10 +14,12 @@ import * as reposService from '../../../../ws.services/repos.service';
 import * as cacheUtils from '../../../../ws.utils/cache-warmup';
 import * as cliApi from 'waffle-server-import-cli';
 
+const test = sinonTest.configureTest(sinon);
+
 describe('WS-CLI controller', () => {
 
   describe('Import Dataset', function() {
-    it('should respond with an error when error happened during import and server didn\'t send response yet', sinon.test(function () {
+    it('should respond with an error when error happened during import and server didn\'t send response yet', test(function () {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = {message: 'Boo!'};
       const expectedResponse = {success: false, error: 'Boo!'};
@@ -48,7 +51,7 @@ describe('WS-CLI controller', () => {
 
     }));
 
-    it('should log an error when it occurred during import and server did send response already', sinon.test(function () {
+    it('should log an error when it occurred during import and server did send response already', test(function () {
       const expectedError = {message: 'Boo!'};
 
       const loggerStub = this.stub(logger, 'error');
@@ -72,7 +75,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWith(loggerStub, expectedError);
     }));
 
-    it('should log that import succeeded', sinon.test(function () {
+    it('should log that import succeeded', test(function () {
       const loggerStub = this.stub(logger, 'info');
       const resJsonSpy = this.spy();
 
@@ -110,7 +113,7 @@ describe('WS-CLI controller', () => {
       expect(params.lifecycleHooks.onTransactionCreated).to.be.instanceof(Function);
     }));
 
-    it('should release connection once transaction was created for import process', sinon.test(function() {
+    it('should release connection once transaction was created for import process', test(function() {
       const toMessageResponseSpy = this.spy(routeUtils, 'toMessageResponse');
       const expectedMessage = 'Dataset importing is in progress ...';
       const expectedResponse = {success: true, message: expectedMessage};
@@ -138,7 +141,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toMessageResponseSpy, expectedMessage);
     }));
 
-    it('should do nothing if response was already sent and transaction was created after', sinon.test(function () {
+    it('should do nothing if response was already sent and transaction was created after', test(function () {
       const toMessageResponseSpy = this.spy(routeUtils, 'toMessageResponse');
 
       const resJsonSpy = this.spy();
@@ -164,7 +167,7 @@ describe('WS-CLI controller', () => {
   });
 
   describe('Clean cache', function() {
-    it('should clean cache', sinon.test(function () {
+    it('should clean cache', test(function () {
       const toMessageResponseSpy = this.spy(routeUtils, 'toMessageResponse');
       const expectedMessage = 'Cache is clean';
       const expectedResponse = {success: true, message: expectedMessage};
@@ -191,7 +194,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toMessageResponseSpy, expectedMessage);
     }));
 
-    it('should not clean cache cause user is not authenticated', sinon.test(function () {
+    it('should not clean cache cause user is not authenticated', test(function () {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'There is no authenticated user to get its datasets';
       const expectedResponse = {success: false, error: expectedError};
@@ -216,7 +219,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should respond with an error if cache clean failed', sinon.test(function () {
+    it('should respond with an error if cache clean failed', test(function () {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
       const expectedResponse = {success: false, error: expectedError};
@@ -248,7 +251,7 @@ describe('WS-CLI controller', () => {
   });
 
   describe('Clean repos folder', function() {
-    it('should clean without errors', sinon.test(function () {
+    it('should clean without errors', test(function () {
       const toMessageResponseSpy = this.spy(routeUtils, 'toMessageResponse');
       const expectedMessage = 'Repos folder was cleaned';
       const expectedResponse = {success: true, message: expectedMessage};
@@ -275,7 +278,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toMessageResponseSpy, expectedMessage);
     }));
 
-    it('should not clean repos folder cause user is not authenticated', sinon.test(function () {
+    it('should not clean repos folder cause user is not authenticated', test(function () {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'There is no authenticated user to make this action';
       const expectedResponse = {success: false, error: expectedError};
@@ -300,7 +303,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should respond with an error if repos folder cleaning was failed', sinon.test(function () {
+    it('should respond with an error if repos folder cleaning was failed', test(function () {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
       const expectedResponse = {success: false, error: expectedError};
@@ -332,7 +335,7 @@ describe('WS-CLI controller', () => {
   });
 
   describe('Authenticate user', function() {
-    it('should log an error when email is absent in req.body', sinon.test(function() {
+    it('should log an error when email is absent in req.body', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Email was not provided';
       const expectedResponse = {success: false, error: expectedError};
@@ -358,7 +361,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should log an error when password is absent in req.body', sinon.test(function() {
+    it('should log an error when password is absent in req.body', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Password was not provided';
       const expectedResponse = {success: false, error: expectedError};
@@ -386,7 +389,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should log an error when throw error during authenticating user', sinon.test(function() {
+    it('should log an error when throw error during authenticating user', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
       const expectedResponse = {success: false, error: expectedError};
@@ -420,7 +423,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should authenticate user', sinon.test(function() {
+    it('should authenticate user', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const toDataResponseStub = this.spy(routeUtils, 'toDataResponse');
       const expectedData = '111';
@@ -455,7 +458,7 @@ describe('WS-CLI controller', () => {
   });
 
   describe('Get state of the latest Transaction', function() {
-    it('should log an error when unauthenticated user request state of the latest transaction', sinon.test(function() {
+    it('should log an error when unauthenticated user request state of the latest transaction', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Unauthenticated user cannot perform CLI operations';
       const expectedResponse = {success: false, error: expectedError};
@@ -480,7 +483,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should log an error when dataset name is absent in req.query', sinon.test(function() {
+    it('should log an error when dataset name is absent in req.query', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'No dataset name was given';
       const expectedResponse = {success: false, error: expectedError};
@@ -510,7 +513,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should log an error when transaction service coulnd\'t get status of the latest transaction', sinon.test(function() {
+    it('should log an error when transaction service coulnd\'t get status of the latest transaction', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
       const expectedResponse = {success: false, error: expectedError};
@@ -547,7 +550,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should get state of the latest transaction', sinon.test(function() {
+    it('should get state of the latest transaction', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const toDataResponseStub = this.spy(routeUtils, 'toDataResponse');
       const expectedData = 'Complete';
@@ -585,7 +588,7 @@ describe('WS-CLI controller', () => {
   });
 
   describe('Activate rollback', function() {
-    it('should log an error when unauthenticated user request activation rollback of the latest transaction', sinon.test(function() {
+    it('should log an error when unauthenticated user request activation rollback of the latest transaction', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Unauthenticated user cannot perform CLI operations';
       const expectedResponse = {success: false, error: expectedError};
@@ -610,7 +613,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should log an error when dataset name is absent in req.body', sinon.test(function() {
+    it('should log an error when dataset name is absent in req.body', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'No dataset name was given';
       const expectedResponse = {success: false, error: expectedError};
@@ -640,7 +643,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should log an error when transaction service coulnd\'t activate rollback of the latest transaction', sinon.test(function() {
+    it('should log an error when transaction service coulnd\'t activate rollback of the latest transaction', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
       const expectedResponse = {success: false, error: expectedError};
@@ -677,7 +680,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should activate rollback of the latest transaction', sinon.test(function() {
+    it('should activate rollback of the latest transaction', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const toMessageResponseStub = this.spy(routeUtils, 'toMessageResponse');
       const expectedMessage = 'Rollback completed successfully';
@@ -715,7 +718,7 @@ describe('WS-CLI controller', () => {
   });
 
   describe('Removal Dataset Controller', function() {
-    it('should log an error when unauthenticated user request remove dataset', sinon.test(function() {
+    it('should log an error when unauthenticated user request remove dataset', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'There is no authenticated user to remove dataset';
       const expectedResponse = {success: false, error: expectedError};
@@ -740,7 +743,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should log an error when dataset name is absent in req.body', sinon.test(function() {
+    it('should log an error when dataset name is absent in req.body', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'No dataset name was given';
       const expectedResponse = {success: false, error: expectedError};
@@ -770,7 +773,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should log an error when dataset service coulnd\'t remove choosen dataset', sinon.test(function() {
+    it('should log an error when dataset service coulnd\'t remove choosen dataset', test(function() {
       const toMessageResponseSpy = this.spy(routeUtils, 'toMessageResponse');
       const expectedError = 'Boo!';
       const expectedMessage = 'Dataset is being deleted ...';
@@ -808,7 +811,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toMessageResponseSpy, expectedMessage);
     }));
 
-    it('should remove dataset', sinon.test(function(done) {
+    it('should remove dataset', test(function(done) {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const toMessageResponseSpy = this.spy(routeUtils, 'toMessageResponse');
       const expectedInfoMessage = 'Dataset has been deleted successfully';
@@ -854,7 +857,7 @@ describe('WS-CLI controller', () => {
   });
 
   describe('Get available Datasets and Versions', function() {
-    it('should log an error when unauthenticated user request activation rollback of the latest transaction', sinon.test(function() {
+    it('should log an error when unauthenticated user request activation rollback of the latest transaction', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'There is no authenticated user to get its datasets';
       const expectedResponse = {success: false, error: expectedError};
@@ -879,7 +882,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should log an error when cli service coulnd\'t activate rollback of the latest transaction', sinon.test(function() {
+    it('should log an error when cli service coulnd\'t activate rollback of the latest transaction', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
       const expectedResponse = {success: false, error: expectedError};
@@ -913,7 +916,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should get available datasets and versions', sinon.test(function() {
+    it('should get available datasets and versions', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const toDataResponseStub = this.spy(routeUtils, 'toDataResponse');
       const expectedMessage = `finished getting available datasets and versions`;
@@ -955,7 +958,7 @@ describe('WS-CLI controller', () => {
   });
 
   describe('Update Dataset incrementally', function() {
-    it('should log an error when unauthenticated user tries to update dataset incrementally', sinon.test(function() {
+    it('should log an error when unauthenticated user tries to update dataset incrementally', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Unauthenticated user cannot perform CLI operations';
       const expectedResponse = {success: false, error: expectedError};
@@ -981,7 +984,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should log an error when hashFrom url is absent in req.body', sinon.test(function() {
+    it('should log an error when hashFrom url is absent in req.body', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Start commit for update was not given';
       const expectedResponse = {success: false, error: expectedError};
@@ -1011,7 +1014,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should log an error when hashTo url is absent in req.body', sinon.test(function() {
+    it('should log an error when hashTo url is absent in req.body', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'End commit for update was not given';
       const expectedResponse = {success: false, error: expectedError};
@@ -1043,7 +1046,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should log an error when github url is absent in req.body', sinon.test(function() {
+    it('should log an error when github url is absent in req.body', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Repository github url was not given';
       const expectedResponse = {success: false, error: expectedError};
@@ -1076,7 +1079,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should log an error when cli service coulnd\'t update dataset incrementally and response header was not sent', sinon.test(function() {
+    it('should log an error when cli service coulnd\'t update dataset incrementally and response header was not sent', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedGithubUrl = 'git@github.com:Gapminder/waffle-server.git#stage';
       const expectedError = 'Boo!';
@@ -1125,7 +1128,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should log an error when cli service coulnd\'t update dataset incrementally and response header was sent', sinon.test(function() {
+    it('should log an error when cli service coulnd\'t update dataset incrementally and response header was sent', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedGithubUrl = 'git@github.com:Gapminder/waffle-server.git#stage';
       const expectedError = 'Boo!';
@@ -1171,7 +1174,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.notCalled(toErrorResponseSpy);
     }));
 
-    it('should get commit of latest dataset version', sinon.test(function() {
+    it('should get commit of latest dataset version', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
       const expectedGithubUrl = 'git@github.com:Gapminder/waffle-server.git#stage';
@@ -1222,7 +1225,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.notCalled(toDataResponseSpy);
     }));
 
-    it('should get commit of latest dataset version', sinon.test(function() {
+    it('should get commit of latest dataset version', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
       const toMessageResponseSpy = this.spy(routeUtils, 'toMessageResponse');
@@ -1281,7 +1284,7 @@ describe('WS-CLI controller', () => {
   });
 
   describe('Get commit of the latest Dataset Version', function() {
-    it('should log an error when unauthenticated user request commit of the latest dataset version', sinon.test(function() {
+    it('should log an error when unauthenticated user request commit of the latest dataset version', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Unauthenticated user cannot perform CLI operations';
       const expectedResponse = {success: false, error: expectedError};
@@ -1307,7 +1310,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should log an error when github url is absent in req.query', sinon.test(function() {
+    it('should log an error when github url is absent in req.query', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Repository github url was not given';
       const expectedResponse = {success: false, error: expectedError};
@@ -1337,7 +1340,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should log an error when cli service coulnd\'t get commit of the latest dataset version', sinon.test(function() {
+    it('should log an error when cli service coulnd\'t get commit of the latest dataset version', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedGithubUrl = 'github:url';
       const expectedError = 'Boo!';
@@ -1375,7 +1378,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should get commit of latest dataset version', sinon.test(function() {
+    it('should get commit of latest dataset version', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const toDataResponseStub = this.spy(routeUtils, 'toDataResponse');
       const expectedGithubUrl = 'github:url';
@@ -1436,7 +1439,7 @@ describe('WS-CLI controller', () => {
   });
 
   describe('Set default Dataset', function() {
-    it('should log an error when unauthenticated user tries to set default dataset', sinon.test(function() {
+    it('should log an error when unauthenticated user tries to set default dataset', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'There is no authenticated user to get its datasets';
       const expectedResponse = {success: false, error: expectedError};
@@ -1462,7 +1465,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should log an error when dataset name is absent in req.body', sinon.test(function() {
+    it('should log an error when dataset name is absent in req.body', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Dataset name was not provided';
       const expectedResponse = {success: false, error: expectedError};
@@ -1492,7 +1495,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should log an error when hash commit is absent in req.body', sinon.test(function() {
+    it('should log an error when hash commit is absent in req.body', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Transaction commit was not provided';
       const expectedResponse = {success: false, error: expectedError};
@@ -1524,7 +1527,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should respond an error when cli service coulnd\'t set transaction as default one', sinon.test(function() {
+    it('should respond an error when cli service coulnd\'t set transaction as default one', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
       const expectedResponse = {success: false, error: expectedError};
@@ -1562,7 +1565,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should respond an error when cli service coulnd\'t clean redis cache', sinon.test(function() {
+    it('should respond an error when cli service coulnd\'t clean redis cache', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
       const expectedResponse = {success: false, error: expectedError};
@@ -1604,7 +1607,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should log an error when cli service coulnd\'t warm up cache', sinon.test(function() {
+    it('should log an error when cli service coulnd\'t warm up cache', test(function() {
       const toDataResponse = this.spy(routeUtils, 'toDataResponse');
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
@@ -1655,7 +1658,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toDataResponse, expectedData);
     }));
 
-    it('should set default transaction for public dataset', sinon.test(function() {
+    it('should set default transaction for public dataset', test(function() {
       const toDataResponse = this.spy(routeUtils, 'toDataResponse');
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Cache is warmed up.';
@@ -1709,7 +1712,7 @@ describe('WS-CLI controller', () => {
   });
 
   describe('Get Datasets', function() {
-    it('should get the list of available datasets for authenticated user', sinon.test(function () {
+    it('should get the list of available datasets for authenticated user', test(function () {
       const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
       const expectedData = [];
       const expectedResponse = {success: true, data: expectedData};
@@ -1737,7 +1740,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toDataResponseSpy, expectedData);
     }));
 
-    it('should respond with an error if user is not authenticated', sinon.test(function () {
+    it('should respond with an error if user is not authenticated', test(function () {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'There is no authenticated user to get its datasets';
       const expectedResponse = {success: false, error: expectedError};
@@ -1762,7 +1765,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should respond with an error if receiving available datasets got failed', sinon.test(function () {
+    it('should respond with an error if receiving available datasets got failed', test(function () {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
       const expectedResponse = {success: false, error: expectedError};
@@ -1795,7 +1798,7 @@ describe('WS-CLI controller', () => {
   });
 
   describe('Get state of Dataset removal', function() {
-    it('should fetch removal state of dataset that is being removed', sinon.test(function (done) {
+    it('should fetch removal state of dataset that is being removed', test(function (done) {
       const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
 
@@ -1834,7 +1837,7 @@ describe('WS-CLI controller', () => {
       cliController.getStateOfDatasetRemoval(req, res);
     }));
 
-    it('should respond with an error if smth went wrong during status fetching', sinon.test(function (done) {
+    it('should respond with an error if smth went wrong during status fetching', test(function (done) {
       const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
 
@@ -1872,7 +1875,7 @@ describe('WS-CLI controller', () => {
       cliController.getStateOfDatasetRemoval(req, res);
     }));
 
-    it('should respond with an error if dataset name was not provided in request', sinon.test(function (done) {
+    it('should respond with an error if dataset name was not provided in request', test(function (done) {
       const loggerStub = this.stub(logger, 'error');
       const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
@@ -1903,7 +1906,7 @@ describe('WS-CLI controller', () => {
       cliController.getStateOfDatasetRemoval(req, res);
     }));
 
-    it('should respond with an error if user is not authenticated', sinon.test(function (done) {
+    it('should respond with an error if user is not authenticated', test(function (done) {
       const loggerStub = this.stub(logger, 'error');
       const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
@@ -1930,7 +1933,7 @@ describe('WS-CLI controller', () => {
   });
 
   describe('Get removable Datasets', function() {
-    it('should get the list of removable datasets for authenticated user', sinon.test(function () {
+    it('should get the list of removable datasets for authenticated user', test(function () {
       const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
       const expectedInfoMessage = `finished getting removable datasets`;
       const expectedData = [];
@@ -1962,7 +1965,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toDataResponseSpy, expectedData);
     }));
 
-    it('should respond with an error if user is not authenticated', sinon.test(function () {
+    it('should respond with an error if user is not authenticated', test(function () {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'There is no authenticated user to get its datasets';
       const expectedResponse = {success: false, error: expectedError};
@@ -1987,7 +1990,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should respond with an error if receiving removable datasets got failed', sinon.test(function () {
+    it('should respond with an error if receiving removable datasets got failed', test(function () {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
       const expectedResponse = {success: false, error: expectedError};
@@ -2020,7 +2023,7 @@ describe('WS-CLI controller', () => {
   });
 
   describe('Get private Datasets', function() {
-    it('should get the list of private datasets for authenticated user', sinon.test(function () {
+    it('should get the list of private datasets for authenticated user', test(function () {
       const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
       const expectedInfoMessage = `finished getting private datasets`;
       const expectedData = [];
@@ -2052,7 +2055,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toDataResponseSpy, expectedData);
     }));
 
-    it('should respond with an error if user is not authenticated', sinon.test(function () {
+    it('should respond with an error if user is not authenticated', test(function () {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'There is no authenticated user to get its datasets';
       const expectedResponse = {success: false, error: expectedError};
@@ -2077,7 +2080,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should respond with an error if receiving private datasets got failed', sinon.test(function () {
+    it('should respond with an error if receiving private datasets got failed', test(function () {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
       const expectedResponse = {success: false, error: expectedError};
@@ -2110,7 +2113,7 @@ describe('WS-CLI controller', () => {
   });
 
   describe('Generate Dataset access token', function() {
-    it('should respond with an error when unauthenticated user request to generate dataset access token', sinon.test(function() {
+    it('should respond with an error when unauthenticated user request to generate dataset access token', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Unauthenticated user cannot perform CLI operations';
       const expectedResponse = {success: false, error: expectedError};
@@ -2135,7 +2138,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should respond with an error when dataset name is absent in req.body', sinon.test(function() {
+    it('should respond with an error when dataset name is absent in req.body', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'No dataset name was given';
       const expectedResponse = {success: false, error: expectedError};
@@ -2165,7 +2168,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should respond with an error when cli service coulnd\'t set access token for given dataset', sinon.test(function() {
+    it('should respond with an error when cli service coulnd\'t set access token for given dataset', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
       const expectedResponse = {success: false, error: expectedError};
@@ -2202,7 +2205,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should respond with an error when cli service couln\'t find dataset', sinon.test(function() {
+    it('should respond with an error when cli service couln\'t find dataset', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Cannot generate access token for given dataset';
       const expectedResponse = {success: false, error: expectedError};
@@ -2244,7 +2247,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
     }));
 
-    it('should generate dataset access token', sinon.test(function() {
+    it('should generate dataset access token', test(function() {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
       const expectedData = {
@@ -2290,7 +2293,7 @@ describe('WS-CLI controller', () => {
   });
 
   describe('Get Datasets in progress', function() {
-    it('should not fetch datasets in progress cause user is not authenticated', sinon.test(function () {
+    it('should not fetch datasets in progress cause user is not authenticated', test(function () {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedMessage = 'There is no authenticated user to get its datasets';
       const expectedResponse = {success: false, error: expectedMessage};
@@ -2315,7 +2318,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedMessage);
     }));
 
-    it('should fetch datasets that are currently in progress (being deleted, updated or imported)', sinon.test(function () {
+    it('should fetch datasets that are currently in progress (being deleted, updated or imported)', test(function () {
       const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
       const expectedData = [{
         name: 'dataset.name',
@@ -2354,7 +2357,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(toDataResponseSpy, expectedData);
     }));
 
-    it('should respond with an error if trying to get datasets in progress got the error', sinon.test(function () {
+    it('should respond with an error if trying to get datasets in progress got the error', test(function () {
       const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const expectedMessage = 'Boo!';

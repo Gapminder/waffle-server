@@ -1,6 +1,7 @@
 import '../../ws.repository';
 
 import * as sinon from 'sinon';
+import * as sinonTest from 'sinon-test';
 import { expect } from 'chai';
 
 import * as ddfImportUtils from '../../ws.import/utils/import-ddf.utils';
@@ -12,8 +13,10 @@ import * as createDatasetSchemaModule from '../../ws.import/import-dataset-schem
 
 import { importDdf } from '../../ws.import/import-ddf';
 
+const test = sinonTest.configureTest(sinon);
+
 describe('Import ddf dataset from git repository', () => {
-  it('should import dataset successfully', sinon.test(function (done) {
+  it('should import dataset successfully', test(function (done) {
     const context = {
       isDatasetPrivate: false,
       github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git',
@@ -74,7 +77,7 @@ describe('Import ddf dataset from git repository', () => {
     });
   }));
 
-  it('should fail if error occurred during import', sinon.test(function (done) {
+  it('should fail if error occurred during import', test(function (done) {
     const context = {
       isDatasetPrivate: false,
       github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git',
@@ -101,7 +104,7 @@ describe('Import ddf dataset from git repository', () => {
     });
   }));
 
-  it('should fail with transaction id if it was already created when error had happened', sinon.test(function (done) {
+  it('should fail with transaction id if it was already created when error had happened', test(function (done) {
     const context = {
       isDatasetPrivate: false,
       github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git',
@@ -139,7 +142,7 @@ describe('Import ddf dataset from git repository', () => {
     });
   }));
 
-  it('should not fail when error has happened and transaction is not yet created', sinon.test(function (done) {
+  it('should not fail when error has happened and transaction is not yet created', test(function (done) {
     const context = {
       isDatasetPrivate: false,
       github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git',

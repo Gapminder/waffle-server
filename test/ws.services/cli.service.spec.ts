@@ -6,6 +6,7 @@ import { expect } from 'chai';
 import * as _ from 'lodash';
 import * as proxyquire from 'proxyquire';
 import * as sinon from 'sinon';
+import * as sinonTest from 'sinon-test';
 import * as crypto from 'crypto';
 
 import * as securityUtils from '../../ws.utils/security';
@@ -18,6 +19,8 @@ import { DatasetTransactionsRepository } from '../../ws.repository/ddf/dataset-t
 import { constants } from '../../ws.utils/constants';
 import { UsersRepository } from "../../ws.repository/ddf/users/users.repository";
 
+const test = sinonTest.configureTest(sinon);
+
 const cliServicePath = '../../ws.services/cli.service';
 
 const cachePath = '../ws.utils/redis-cache';
@@ -29,7 +32,7 @@ const datasetTransactionsServicePath = './dataset-transactions.service';
 
 describe('WS-CLI service', () => {
 
-  it('should store last happened error in transaction if it was created at that moment', sinon.test(function (done) {
+  it('should store last happened error in transaction if it was created at that moment', test(function (done) {
 
     const params = {
       commit: '8ad3096185b5b17bc80ae582870fb956f00019fd',
@@ -104,7 +107,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('should successfully execute dataset importing flow', sinon.test(function (done) {
+  it('should successfully execute dataset importing flow', test(function (done) {
 
     const params = {
       commit: '8ad3096185b5b17bc80ae582870fb956f00019fd',
@@ -190,7 +193,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('should yield an error cause dataset was not locked by the end of the importing', sinon.test(function (done) {
+  it('should yield an error cause dataset was not locked by the end of the importing', test(function (done) {
 
     const params = {
       commit: '8ad3096185b5b17bc80ae582870fb956f00019fd',
@@ -262,7 +265,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('should be impossible to import same dataset twice', sinon.test(function (done) {
+  it('should be impossible to import same dataset twice', test(function (done) {
 
     const params = {
       commit: '8ad3096185b5b17bc80ae582870fb956f00019fd',
@@ -316,7 +319,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('should yield error when during dataset importing error occurred while searching for user', sinon.test(function (done) {
+  it('should yield error when during dataset importing error occurred while searching for user', test(function (done) {
 
     const params = {
       commit: '8ad3096185b5b17bc80ae582870fb956f00019fd',
@@ -346,7 +349,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('should yield error when during dataset importing user was not found', sinon.test(function (done) {
+  it('should yield error when during dataset importing user was not found', test(function (done) {
 
     const params = {
       commit: '8ad3096185b5b17bc80ae582870fb956f00019fd',
@@ -376,7 +379,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('should yield error when during dataset importing error occurred while searching for dataset', sinon.test(function (done) {
+  it('should yield error when during dataset importing error occurred while searching for dataset', test(function (done) {
 
     const params = {
       commit: '8ad3096185b5b17bc80ae582870fb956f00019fd',
@@ -414,7 +417,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('should find datasets in progress', sinon.test(function (done) {
+  it('should find datasets in progress', test(function (done) {
 
     const expectedUserId = 'userId';
 
@@ -440,7 +443,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('should find datasets in progress: error happened', sinon.test(function (done) {
+  it('should find datasets in progress: error happened', test(function (done) {
 
     const expectedUserId = 'userId';
     const expectedError = 'Boo!';
@@ -462,7 +465,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('should not update dataset incrementally: fail searching user', sinon.test(function (done) {
+  it('should not update dataset incrementally: fail searching user', test(function (done) {
     const expectedError = 'User searching error';
 
     this.stub(UsersRepository, 'findUserByEmail').callsArgWithAsync(1, expectedError);
@@ -474,7 +477,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('should not update dataset incrementally: fail cause user is not found', sinon.test(function (done) {
+  it('should not update dataset incrementally: fail cause user is not found', test(function (done) {
     const expectedError = 'User that tries to initiate import was not found';
 
     this.stub(UsersRepository, 'findUserByEmail').callsArgWithAsync(1, null, null);
@@ -486,7 +489,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('should not update dataset incrementally: fail searching dataset', sinon.test(function (done) {
+  it('should not update dataset incrementally: fail searching dataset', test(function (done) {
     const user = {
       email: 'dev@gapminder.org'
     };
@@ -507,7 +510,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('should not update dataset incrementally: fail cause dataset did not pass validation', sinon.test(function (done) {
+  it('should not update dataset incrementally: fail cause dataset did not pass validation', test(function (done) {
     const user = {
       email: 'dev@gapminder.org'
     };
@@ -531,7 +534,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('should not update dataset incrementally: fail while transaction searching', sinon.test(function (done) {
+  it('should not update dataset incrementally: fail while transaction searching', test(function (done) {
     const user = {
       email: 'dev@gapminder.org'
     };
@@ -562,7 +565,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('should not update dataset incrementally: fail when user is trying to apply same version twice', sinon.test(function (done) {
+  it('should not update dataset incrementally: fail when user is trying to apply same version twice', test(function (done) {
     const user = {
       email: 'dev@gapminder.org'
     };
@@ -595,7 +598,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('should update dataset incrementally', sinon.test(function (done) {
+  it('should update dataset incrementally', test(function (done) {
     const user = {
       email: 'dev@gapminder.org'
     };
@@ -673,7 +676,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('should update dataset incrementally: should save error if update has failed', sinon.test(function (done) {
+  it('should update dataset incrementally: should save error if update has failed', test(function (done) {
     const user = {
       email: 'dev@gapminder.org'
     };
@@ -719,7 +722,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('should respond with an error when it occurred while searching for private datasets', sinon.test(function (done) {
+  it('should respond with an error when it occurred while searching for private datasets', test(function (done) {
     const expectedError = 'Private datasets search has failed';
 
     this.stub(DatasetsRepository, 'findPrivateByUser').callsArgWithAsync(1, expectedError);
@@ -730,7 +733,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('should serve private datasets', sinon.test(function (done) {
+  it('should serve private datasets', test(function (done) {
     const datasets = [
       {
         name: 'ds1',
@@ -762,7 +765,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('should collect available datasets and versions', sinon.test(function (done) {
+  it('should collect available datasets and versions', test(function (done) {
     const datasetsWithVersions = [
       {
         id: 'ds1Id',
@@ -832,7 +835,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('should respond with an error if it occurred while searching for available datasets and versions', sinon.test(function (done) {
+  it('should respond with an error if it occurred while searching for available datasets and versions', test(function (done) {
     const expectedError = '[Error] datasets and versions search';
     this.stub(datasetsService, 'findDatasetsWithVersions').callsArgWithAsync(1, expectedError);
 
@@ -843,7 +846,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('gets removable datasets: fail if error occurred', sinon.test(function (done) {
+  it('gets removable datasets: fail if error occurred', test(function (done) {
     const expectedError = '[Error] removalbe datasets';
     this.stub(datasetsService, 'findDatasetsWithVersions').callsArgWithAsync(1, expectedError);
 
@@ -854,7 +857,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('gets removable datasets', sinon.test(function (done) {
+  it('gets removable datasets', test(function (done) {
     const datasetsWithVersions = [
       {
         id: 'ds1Id',
@@ -899,7 +902,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('gets commit of latest dataset version: fail on dataset not found error', sinon.test(function (done) {
+  it('gets commit of latest dataset version: fail on dataset not found error', test(function (done) {
     const expectedError = '[Error] dataset was not found';
 
     this.stub(DatasetsRepository, 'findByGithubUrl').callsArgWithAsync(1, expectedError);
@@ -910,7 +913,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('gets commit of latest dataset version: validation failed on dataset not found', sinon.test(function (done) {
+  it('gets commit of latest dataset version: validation failed on dataset not found', test(function (done) {
     const expectedError = 'Dataset was not found, hence hash commit of it\'s latest version cannot be acquired';
 
     const user = {
@@ -933,7 +936,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('gets commit of latest dataset version: validation failed cause dataset is locked', sinon.test(function (done) {
+  it('gets commit of latest dataset version: validation failed cause dataset is locked', test(function (done) {
     const expectedError = 'Dataset was locked. Please, start rollback process.';
 
     const user = {
@@ -959,7 +962,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('gets commit of latest dataset version: fails if transaction searching results in error', sinon.test(function (done) {
+  it('gets commit of latest dataset version: fails if transaction searching results in error', test(function (done) {
     const expectedError = 'Transaction search has failed';
 
     const user = {
@@ -984,7 +987,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('gets commit of latest dataset version', sinon.test(function (done) {
+  it('gets commit of latest dataset version', test(function (done) {
     const user = {
       email: 'dev@gapminder.org'
     };
@@ -1013,7 +1016,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('searches for dataset with its versions', sinon.test(function (done) {
+  it('searches for dataset with its versions', test(function (done) {
     const userId = 'user';
     const result = {};
     const findDatasetsWithVersionsStub = this.stub(datasetsService, 'findDatasetsWithVersions').callsArgWithAsync(1, null, result);
@@ -1027,7 +1030,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('searches for dataset with its versions: error has happened', sinon.test(function (done) {
+  it('searches for dataset with its versions: error has happened', test(function (done) {
     const expectedError = 'Boo!';
     this.stub(datasetsService, 'findDatasetsWithVersions').callsArgWithAsync(1, expectedError);
 
@@ -1037,7 +1040,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('sets transaction as default: error has happened', sinon.test(function (done) {
+  it('sets transaction as default: error has happened', test(function (done) {
     const expectedError = 'Boo!';
     this.stub(datasetTransactionsService, 'setTransactionAsDefault').callsArgWithAsync(3, expectedError);
 
@@ -1047,7 +1050,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('sets transaction as default', sinon.test(function (done) {
+  it('sets transaction as default', test(function (done) {
     const userId = 'uId';
     const datasetName = 'ds';
     const transactionCommit = 'aaaaaaa';
@@ -1062,7 +1065,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('cleans DDF redis cache', sinon.test(function (done) {
+  it('cleans DDF redis cache', test(function (done) {
     const delStub = this.stub().callsArgWithAsync(1, null);
 
     const cliService = proxyquire(cliServicePath, {
@@ -1082,7 +1085,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('sets access token for dataset: fails in case of token generation error', sinon.test(function (done) {
+  it('sets access token for dataset: fails in case of token generation error', test(function (done) {
     const expectedError = 'Boo!';
     this.stub(crypto, 'randomBytes').callsArgWithAsync(1, expectedError);
 
@@ -1092,7 +1095,7 @@ describe('WS-CLI service', () => {
     });
   }));
 
-  it('sets access token for dataset', sinon.test(function (done) {
+  it('sets access token for dataset', test(function (done) {
     const datasetName = 'ds';
     const userId = 'uId';
 

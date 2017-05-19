@@ -6,6 +6,7 @@ import '../../ws.config/db.config';
 import {expect} from 'chai';
 import * as _ from 'lodash';
 import * as sinon from 'sinon';
+import * as sinonTest from 'sinon-test';
 import * as proxyquire from 'proxyquire';
 
 import {DatasetsRepository} from '../../ws.repository/ddf/datasets/datasets.repository';
@@ -25,6 +26,8 @@ import * as datasetService from '../../ws.services/datasets.service';
 import set = Reflect.set;
 
 const shouldNotCall = () => expect.fail(null, null, 'This function should not be called');
+
+const test = sinonTest.configureTest(sinon);
 
 const datasetsRepositoryPath = '../ws.repository/ddf/datasets/datasets.repository';
 const transactionsRepositoryPath = '../ws.repository/ddf/dataset-transactions/dataset-transactions.repository';
@@ -94,7 +97,7 @@ describe('Remove Dataset Service', function() {
     sinon.restore(logger);
   });
 
-  it('should return error when something went wrong during trying to find dataset', sinon.test(function (done) {
+  it('should return error when something went wrong during trying to find dataset', test(function (done) {
     const findByNameStub = this.stub(DatasetsRepository, 'findByName').callsArgWithAsync(1, expectedError);
 
     const lockStub = this.stub(DatasetsRepository, 'lock');
@@ -121,7 +124,7 @@ describe('Remove Dataset Service', function() {
     });
   }));
 
-  it('should return error when remove non-existed dataset', sinon.test(function (done) {
+  it('should return error when remove non-existed dataset', test(function (done) {
     const findByNameStub = this.stub(DatasetsRepository, 'findByName').callsArgWithAsync(1, null, null);
 
     const lockStub = this.stub(DatasetsRepository, 'lock');
@@ -148,7 +151,7 @@ describe('Remove Dataset Service', function() {
     });
   }));
 
-  it('should return error when not owner tries to remove dataset', sinon.test(function (done) {
+  it('should return error when not owner tries to remove dataset', test(function (done) {
     const findByNameStub = this.stub(DatasetsRepository, 'findByName').callsArgWithAsync(1, null, expectedRemovableDataset);
 
     const lockStub = this.stub(DatasetsRepository, 'lock');
@@ -332,7 +335,7 @@ describe('Remove Dataset Service', function() {
     });
   });
 
-  it('should return error when something went wrong during trying to remove all documents from collection datasetindexes', sinon.test(function (done) {
+  it('should return error when something went wrong during trying to remove all documents from collection datasetindexes', test(function (done) {
     this.timeout(20000);
 
     const lockStub = this.stub(DatasetsRepository, 'lock').callsArgWithAsync(1, null, expectedRemovableDataset);
@@ -378,7 +381,7 @@ describe('Remove Dataset Service', function() {
     });
   }));
 
-  it('should return error when something went wrong during trying to remove all transactions for current dataset', sinon.test(function (done) {
+  it('should return error when something went wrong during trying to remove all transactions for current dataset', test(function (done) {
     const lockedDataset = _.defaults({isLocked: true}, expectedRemovableDataset);
 
     const lockStub = this.stub(DatasetsRepository, 'lock').callsArgWithAsync(1, null, lockedDataset);
@@ -456,7 +459,7 @@ describe('Remove Dataset Service', function() {
     });
   }));
 
-  it('should return error when something went wrong during trying to remove dataset', sinon.test(function (done) {
+  it('should return error when something went wrong during trying to remove dataset', test(function (done) {
     const removeById = (datasetId: string, onDatasetRemoved: Function) => {
       expect(datasetId).to.deep.equal(expectedRemovableDataset._id);
       return onDatasetRemoved(expectedError);
@@ -481,7 +484,7 @@ describe('Remove Dataset Service', function() {
     });
   }));
 
-  it('should remove dataset without errors', sinon.test(function (done) {
+  it('should remove dataset without errors', test(function (done) {
     const datasetsService = proxyquire('../../ws.services/datasets.service', {
       [datasetsRepositoryPath]: {DatasetsRepository: datasetsRepository},
       [transactionsRepositoryPath]: {DatasetTransactionsRepository: transactionsRepository}
@@ -495,7 +498,7 @@ describe('Remove Dataset Service', function() {
     });
   }));
 
-  it('should fail removing datapoints on error', sinon.test(function (done) {
+  it('should fail removing datapoints on error', test(function (done) {
 
     const expectedError = 'Boo!';
 
@@ -563,7 +566,7 @@ describe('Remove Dataset Service', function() {
     });
   }));
 
-  it('should consider datapoints removal successful if no more datapoints returned from db', sinon.test(function (done) {
+  it('should consider datapoints removal successful if no more datapoints returned from db', test(function (done) {
 
     const lockStub = this.stub(DatasetsRepository, 'lock', datasetsRepository.lock);
     const unlockStub = this.stub(DatasetsRepository, 'unlock', datasetsRepository.unlock);
@@ -634,7 +637,7 @@ describe('Remove Dataset Service', function() {
     });
   }));
 
-  it('should respond with an error if it has happened during datapoints removal', sinon.test(function (done) {
+  it('should respond with an error if it has happened during datapoints removal', test(function (done) {
 
     const expectedError = 'Boo!';
     const expectedFoundDatapointsIds = ['1', '2'];
@@ -710,7 +713,7 @@ describe('Remove Dataset Service', function() {
     });
   }));
 
-  it('should respond with an error if it happens during concepts removal', sinon.test(function (done) {
+  it('should respond with an error if it happens during concepts removal', test(function (done) {
     const expectedError = 'Concepts boo!';
 
     const lockStub = this.stub(DatasetsRepository, 'lock', datasetsRepository.lock);
@@ -743,7 +746,7 @@ describe('Remove Dataset Service', function() {
     });
   }));
 
-  it('should respond with an error if it happens during entities removal', sinon.test(function (done) {
+  it('should respond with an error if it happens during entities removal', test(function (done) {
     const expectedError = 'Entities boo!';
 
     const lockStub = this.stub(DatasetsRepository, 'lock', datasetsRepository.lock);
@@ -774,7 +777,7 @@ describe('Remove Dataset Service', function() {
     });
   }));
 
-  it('should remove datapoints recursively', sinon.test(function (done) {
+  it('should remove datapoints recursively', test(function (done) {
     const expectedFoundDatapointsIds = ['1', '2'];
 
     const lockStub = this.stub(DatasetsRepository, 'lock', datasetsRepository.lock);
@@ -843,7 +846,7 @@ describe('Remove Dataset Service', function() {
     });
   }));
 
-  it('should track dataset removal statistics', sinon.test(function (done) {
+  it('should track dataset removal statistics', test(function (done) {
     const expectedFoundDatapointsIds = ['1', '2'];
 
     const lockStub = this.stub(DatasetsRepository, 'lock', datasetsRepository.lock);
@@ -921,7 +924,7 @@ describe('Remove Dataset Service', function() {
     });
   }));
 
-  it('should grab information about dataset removal process', sinon.test(function (done) {
+  it('should grab information about dataset removal process', test(function (done) {
     const datasetName = 'datasetName';
     const user = {
       _id: 'user42'
@@ -949,7 +952,7 @@ describe('Remove Dataset Service', function() {
     });
   }));
 
-  it('should respond with an error if it has happened while grabbing information about dataset removal process', sinon.test(function (done) {
+  it('should respond with an error if it has happened while grabbing information about dataset removal process', test(function (done) {
     const datasetName = 'datasetName';
     const user = {
       _id: 'user42'
@@ -970,7 +973,7 @@ describe('Remove Dataset Service', function() {
     });
   }));
 
-  it(`shouldn't find dataset with versions: error while user searching`, sinon.test(function(done) {
+  it(`shouldn't find dataset with versions: error while user searching`, test(function(done) {
     const expectedError = 'User search has failed';
     this.stub(DatasetsRepository, 'findByUser').callsArgWithAsync(1, expectedError);
 
@@ -980,7 +983,7 @@ describe('Remove Dataset Service', function() {
     });
   }));
 
-  it(`shouldn't find dataset with versions: error while completed transactions searching`, sinon.test(function(done) {
+  it(`shouldn't find dataset with versions: error while completed transactions searching`, test(function(done) {
     const datasets = [
       {_id: 'ds1'},
       {_id: 'ds2'}
@@ -997,7 +1000,7 @@ describe('Remove Dataset Service', function() {
     });
   }));
 
-  it(`should find dataset with versions`, sinon.test(function (done) {
+  it(`should find dataset with versions`, test(function (done) {
     const datasets = [
       {
         _id: 'ds1',

@@ -6,13 +6,16 @@ import * as hi from 'highland';
 import * as proxyquire from 'proxyquire';
 import {expect} from 'chai';
 import * as sinon from 'sinon';
+import * as sinonTest from 'sinon-test';
 import {constants} from '../../ws.utils/constants';
 import * as datapoints from './fixtures/datapoints.json';
 import * as allEntities from './fixtures/allEntities.json';
 import { logger } from '../../ws.config/log';
 
+const test = sinonTest.configureTest(sinon);
+
 describe('datapoints import', function() {
-  it('should not be any error', sinon.test(function(done) {
+  it('should not be any error', test(function(done) {
     const dimensions = {
       geo: {gid: 'geo', properties: {}},
       time: {gid: 'time', properties: {}}
