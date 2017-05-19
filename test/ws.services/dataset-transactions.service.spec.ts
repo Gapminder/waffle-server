@@ -6,6 +6,7 @@ import '../../ws.config/db.config';
 import * as _ from 'lodash';
 import {expect} from 'chai';
 import * as sinon from 'sinon';
+import * as sinonTest from 'sinon-test';
 import * as proxyquire from 'proxyquire';
 
 import * as datasetTransactionsService from '../../ws.services/dataset-transactions.service';
@@ -25,6 +26,8 @@ const entitiesRepositoryPath = '../ws.repository/ddf/entities/entities.repositor
 const datapointsRepositoryPath = '../ws.repository/ddf/data-points/data-points.repository';
 
 const shouldNotCall = () => expect.fail(null, null, 'This function should not be called');
+
+const sandbox = sinonTest.configureTest(sinon);
 
 describe('Dataset Transactions Service', () => {
 
@@ -709,7 +712,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should fail when error happened while documents removing in dataset index collection', function(done) {
+    it('should fail when error happened while documents removing in dataset index collection', function(done: Function) {
       const rollback = (failedTransaction, onRolledback) => {
         expect(failedTransaction).to.be.equal(expectedTransaction);
 
@@ -732,7 +735,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should fail when error happened while failed transaction removing', (done: Function) => {
+    it('should fail when error happened while failed transaction removing', done => {
       const removeById = (failedTransactionId, onTransactionRemoved) => {
         expect(failedTransactionId).to.be.equal(expectedTransaction._id);
 
@@ -1110,7 +1113,7 @@ describe('Dataset Transactions Service', () => {
     });
   });
 
-  it('should set last error', sinon.test(function () {
+  it('should set last error', sandbox(function () {
     const setLastErrorSpy = this.spy(DatasetTransactionsRepository, 'setLastError');
 
     const transactionId = 'txId';
@@ -1122,7 +1125,7 @@ describe('Dataset Transactions Service', () => {
     sinon.assert.calledWith(setLastErrorSpy, transactionId, lastErrorMessage, onErrorSet);
   }));
 
-  it('should get latest transaction status by dataset name', sinon.test(function (done) {
+  it('should get latest transaction status by dataset name', sandbox(function (done: Function) {
     const externalContext = {
       datasetId: 'dsId',
       datasetName: 'dsName'
@@ -1195,7 +1198,7 @@ describe('Dataset Transactions Service', () => {
     });
   }));
 
-  it('should determine transaction progress', sinon.test(function (done) {
+  it('should determine transaction progress', sandbox(function (done: Function) {
     const externalContext = {
       datasetId: 'dsId',
       datasetName: 'dsName'
@@ -1244,7 +1247,7 @@ describe('Dataset Transactions Service', () => {
     });
   }));
 
-  it('shouldn\'t get latest transaction status by dataset name: fail because of dataset ownership check', sinon.test(function (done) {
+  it('shouldn\'t get latest transaction status by dataset name: fail because of dataset ownership check', sandbox(function (done: Function) {
     const expectedError = 'Ownership check failed';
     this.stub(datasetsService, 'findDatasetByNameAndValidateOwnership').callsArgWith(1, expectedError);
 
@@ -1254,7 +1257,7 @@ describe('Dataset Transactions Service', () => {
     });
   }));
 
-  it('shouldn\'t get latest transaction status by dataset name: fail finding latest transaction', sinon.test(function (done) {
+  it('shouldn\'t get latest transaction status by dataset name: fail finding latest transaction', sandbox(function (done: Function) {
     const expectedError = 'Latest transaction search failed';
     this.stub(datasetsService, 'findDatasetByNameAndValidateOwnership').callsArgWith(1, null, {});
     this.stub(DatasetTransactionsRepository, 'findLatestByDataset').callsArgWithAsync(1, expectedError);
@@ -1265,7 +1268,7 @@ describe('Dataset Transactions Service', () => {
     });
   }));
 
-  it('shouldn\'t get latest transaction status by dataset name: fail cause there is no latest transaction', sinon.test(function (done) {
+  it('shouldn\'t get latest transaction status by dataset name: fail cause there is no latest transaction', sandbox(function (done: Function) {
     const expectedError = `Transaction is absent for dataset: sg`;
     this.stub(datasetsService, 'findDatasetByNameAndValidateOwnership').callsArgWith(1, null, {datasetName: 'sg'});
     this.stub(DatasetTransactionsRepository, 'findLatestByDataset').callsArgWithAsync(1, null);
@@ -1277,7 +1280,7 @@ describe('Dataset Transactions Service', () => {
   }));
 
 
-  it('shouldn\'t get latest transaction status by dataset name: fail cause was not able to count amount of changed objects', sinon.test(function (done) {
+  it('shouldn\'t get latest transaction status by dataset name: fail cause was not able to count amount of changed objects', sandbox(function (done: Function) {
     const externalContext = {
       datasetId: 'dsId',
       datasetName: 'dsName'

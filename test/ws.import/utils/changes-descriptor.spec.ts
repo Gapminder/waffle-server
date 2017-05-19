@@ -1,10 +1,13 @@
 import '../../../ws.repository';
 import * as sinon from 'sinon';
+import * as sinonTest from 'sinon-test';
 import { expect } from 'chai';
 import { ChangesDescriptor } from '../../../ws.import/utils/changes-descriptor';
 
+const sandbox = sinonTest.configureTest(sinon);
+
 describe('Changes descriptor', () => {
-  it('should get gid', sinon.test(function () {
+  it('should get gid', sandbox(function () {
     const descriptor = new ChangesDescriptor({
       object: {
         gid: 'foundation',
@@ -19,7 +22,7 @@ describe('Changes descriptor', () => {
     expect(descriptor.gid).to.equal('xsoft');
   }));
 
-  it('should get concept of changed object', sinon.test(function () {
+  it('should get concept of changed object', sandbox(function () {
     const descriptor = new ChangesDescriptor({
       object: {
         gid: 'foundation',
@@ -34,7 +37,7 @@ describe('Changes descriptor', () => {
     expect(descriptor.concept).to.equal('foundation');
   }));
 
-  it('should seek for a concept in primaryKey in case of object creation', sinon.test(function () {
+  it('should seek for a concept in primaryKey in case of object creation', sandbox(function () {
     const descriptor = new ChangesDescriptor({
       object: {
         gid: 'NOT_USED',
@@ -69,7 +72,7 @@ describe('Changes descriptor', () => {
     expect(descriptor.concept).to.equal('foundation');
   }));
 
-  it('extracts original object (state before changes): object is being updated', sinon.test(function () {
+  it('extracts original object (state before changes): object is being updated', sandbox(function () {
     const descriptor = new ChangesDescriptor({
       object: {
         gid: 'foundation',
@@ -113,7 +116,7 @@ describe('Changes descriptor', () => {
     });
   }));
 
-  it('extracts original object (state before changes): entity is being removed', sinon.test(function () {
+  it('extracts original object (state before changes): entity is being removed', sandbox(function () {
     const descriptor = new ChangesDescriptor({
       object: {
         gid: 'foundation',
@@ -157,7 +160,7 @@ describe('Changes descriptor', () => {
     });
   }));
 
-  it('extracts original object (state before changes): create action does not use data-origin property', sinon.test(function () {
+  it('extracts original object (state before changes): create action does not use data-origin property', sandbox(function () {
 
     const changes = {
       object: {

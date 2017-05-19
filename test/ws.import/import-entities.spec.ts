@@ -8,10 +8,13 @@ import * as proxyquire from 'proxyquire';
 import {expect} from 'chai';
 import * as entities from './fixtures/entities.json';
 import * as sinon from 'sinon';
+import * as sinonTest from 'sinon-test';
 import { logger } from '../../ws.config/log';
 
+const sandbox = sinonTest.configureTest(sinon);
+
 describe('entities import', function() {
-  it('should not be any error', sinon.test(function(done) {
+  it('should not be any error', sandbox(function(done: Function) {
     const entitySetsOriginIds = ["583eb88d7fc6e74f7b4c3ce7", "583eb88d7fc6e74f7b4c3ce8"];
     const sets = {country: {gid: 'country', originId: entitySetsOriginIds[0]}, city: {gid: 'city', originId: entitySetsOriginIds[1]}};
     const domain = {gid: 'geo', originId: "583eb88d7fc6e74f7b4c3ce6"};

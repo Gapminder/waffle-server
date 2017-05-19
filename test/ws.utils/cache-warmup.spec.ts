@@ -1,5 +1,6 @@
 import {expect} from 'chai';
 import * as sinon from 'sinon';
+import * as sinonTest from 'sinon-test';
 import * as proxyquire from 'proxyquire';
 
 import { logger } from '../../ws.config/log';
@@ -9,12 +10,13 @@ import '../../ws.config/db.config';
 
 import {config} from '../../ws.config/config';
 
+const sandbox = sinonTest.configureTest(sinon);
 const recentDdfqlQueriesRepositoryPath = '../ws.repository/ddf/recent-ddfql-queries/recent-ddfql-queries.repository';
 const loggerPath = './../ws.config/log';
 const fetchPath = 'node-fetch';
 
 describe('Cache Warm up', () => {
-  it('should warm up cache using URLON stringified ddfql query', sinon.test(function(done) {
+  it('should warm up cache using URLON stringified ddfql query', sandbox(function(done: Function) {
     const queryResponse = {
       success: true,
       message: 'Completed !:)'
@@ -60,7 +62,7 @@ describe('Cache Warm up', () => {
     });
   }));
 
-  it('should warm up cache using JSON stringified ddfql query', sinon.test(function(done) {
+  it('should warm up cache using JSON stringified ddfql query', sandbox(function(done: Function) {
     const queryResponse = {
       success: true,
       message: 'Completed! :)'
@@ -106,7 +108,7 @@ describe('Cache Warm up', () => {
     });
   }));
 
-  it('should generate an error when warm up request was unsuccessful', sinon.test(function(done) {
+  it('should generate an error when warm up request was unsuccessful', sandbox(function(done: Function) {
     const recentQuery = {
       queryRaw: "_select_key@=concept;&value@=concept/_type&=domain&=indicator/_url&=color&=scales&=interpolation&=tags&=name&=unit&=description;;&from=concepts&where_;&language=en",
       type: "URLON",
@@ -133,7 +135,7 @@ describe('Cache Warm up', () => {
     });
   }));
 
-  it('should not warm up cache when recent queries are absent', sinon.test(function(done) {
+  it('should not warm up cache when recent queries are absent', sandbox(function(done: Function) {
     const fetchFunc = sinon.spy();
 
     const warmUp = proxyquire('../../ws.utils/cache-warmup', {
