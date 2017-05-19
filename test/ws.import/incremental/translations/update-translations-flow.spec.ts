@@ -1,6 +1,7 @@
 import * as _ from 'lodash';
 import * as path from 'path';
 import * as sinon from 'sinon';
+import * as sinonTest from 'sinon-test';
 import { expect } from 'chai';
 import { logger } from '../../../../ws.config/log';
 
@@ -9,6 +10,8 @@ import * as fileUtils from '../../../../ws.utils/file';
 import { constants } from '../../../../ws.utils/constants';
 
 import { createTranslationsUpdater } from '../../../../ws.import/incremental/translations/update-translations-flow';
+
+const sandbox = sinonTest.configureTest(sinon);
 
 const externalContext: any = {
   pathToLangDiff: path.resolve(__dirname, './fixtures/translations-diff.txt'),
@@ -56,7 +59,7 @@ const translations: any = {
 };
 
 describe('Translations processing (common flow for entities, datapoints and concepts)', () => {
-  it('should create new translations for an entity that was updated in scope of current transaction', sinon.test(function (done) {
+  it('should create new translations for an entity that was updated in scope of current transaction', sandbox(function (done: Function) {
     const translationTarget: any = {
       _id: '_id',
       originId: 'originId',
@@ -139,7 +142,7 @@ describe('Translations processing (common flow for entities, datapoints and conc
     });
   }));
 
-  it('should create new translations for an entity that was not changed in scope of the current transaction (only translations for it were updated)', sinon.test(function (done) {
+  it('should create new translations for an entity that was not changed in scope of the current transaction (only translations for it were updated)', sandbox(function (done: Function) {
     const translationTarget: any = {
       _id: '_id',
       originId: 'originId',
@@ -219,7 +222,7 @@ describe('Translations processing (common flow for entities, datapoints and conc
     });
   }));
 
-  it('stops translations processing if error occurred while creating new version of translations target with translations added', sinon.test(function (done) {
+  it('stops translations processing if error occurred while creating new version of translations target with translations added', sandbox(function (done: Function) {
     const translationTarget: any = {
       _id: '_id',
       originId: 'originId',
@@ -263,7 +266,7 @@ describe('Translations processing (common flow for entities, datapoints and conc
     });
   }));
 
-  it('stops translations processing translation target was not found, simply because we cannot translate NON EXISTENT THING', sinon.test(function (done) {
+  it('stops translations processing translation target was not found, simply because we cannot translate NON EXISTENT THING', sandbox(function (done: Function) {
     const translationTarget: any = {
       _id: '_id',
       originId: 'originId',
@@ -314,7 +317,7 @@ describe('Translations processing (common flow for entities, datapoints and conc
     });
   }));
 
-  it('stops translations processing when error occurred during translation target search', sinon.test(function (done) {
+  it('stops translations processing when error occurred during translation target search', sandbox(function (done: Function) {
     const expectedError = 'Boo!';
 
     const repoStub: any = {
@@ -358,7 +361,7 @@ describe('Translations processing (common flow for entities, datapoints and conc
     });
   }));
 
-  it('stops translations processing if it is impossible to find a translation target', sinon.test(function (done) {
+  it('stops translations processing if it is impossible to find a translation target', sandbox(function (done: Function) {
     const repoStub: any = {
       findTargetForTranslation: this.stub().callsArgWithAsync(1, null, null),
       create: this.spy(),
@@ -400,7 +403,7 @@ describe('Translations processing (common flow for entities, datapoints and conc
     });
   }));
 
-  it('should remove translations for an entity that was removed in scope of current transaction', sinon.test(function (done) {
+  it('should remove translations for an entity that was removed in scope of current transaction', sandbox(function (done: Function) {
     const translationTarget: any = {
       _id: '_id',
       originId: 'originId',
@@ -475,7 +478,7 @@ describe('Translations processing (common flow for entities, datapoints and conc
     });
   }));
 
-  it('should remove translations for an entity that was removed not in scope of the current transaction', sinon.test(function (done) {
+  it('should remove translations for an entity that was removed not in scope of the current transaction', sandbox(function (done: Function) {
     const translationTarget: any = {
       _id: '_id',
       originId: 'originId',
@@ -557,7 +560,7 @@ describe('Translations processing (common flow for entities, datapoints and conc
     });
   }));
 
-  it('should not remove translations from target when error occurred during target searching', sinon.test(function (done) {
+  it('should not remove translations from target when error occurred during target searching', sandbox(function (done: Function) {
     const translationTarget: any = {
       _id: '_id',
       originId: 'originId',
@@ -612,7 +615,7 @@ describe('Translations processing (common flow for entities, datapoints and conc
     });
   }));
 
-  it('should stops removing translation if translation target was not found', sinon.test(function (done) {
+  it('should stops removing translation if translation target was not found', sandbox(function (done: Function) {
     const translationTarget: any = {
       _id: '_id',
       originId: 'originId',
@@ -672,7 +675,7 @@ describe('Translations processing (common flow for entities, datapoints and conc
 });
 
 describe('Translations processing: handle "change" events', () => {
-  it('should update existing translations on targets', sinon.test(function (done) {
+  it('should update existing translations on targets', sandbox(function (done: Function) {
     const translationTarget: any = {
       _id: '_id',
       originId: 'originId',

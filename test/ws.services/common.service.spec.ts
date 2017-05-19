@@ -1,27 +1,30 @@
 import '../../ws.repository';
 
 import * as sinon from 'sinon';
+import * as sinonTest from 'sinon-test';
 import { expect } from 'chai';
 
 import * as commonService from '../../ws.services/common.service';
 import * as datasetTransactionsService from '../../ws.services/dataset-transactions.service';
 
+const sandbox = sinonTest.configureTest(sinon);
+
 describe('Common Service', function () {
-  it('should not translate document when language not given', sinon.test(function () {
+  it('should not translate document when language not given', sandbox(function () {
     const doc = {
       properties: {}
     };
     expect(commonService.translateDocument(doc, null)).to.equal(doc.properties);
   }));
 
-  it('should not translate doc when it does not have a translation for given lang', sinon.test(function () {
+  it('should not translate doc when it does not have a translation for given lang', sandbox(function () {
     const doc = {
       properties: {}
     };
     expect(commonService.translateDocument(doc, 'en')).to.equal(doc.properties);
   }));
 
-  it('should not translate doc when it does not have a translation for given lang', sinon.test(function () {
+  it('should not translate doc when it does not have a translation for given lang', sandbox(function () {
     const lang = 'en';
 
     const doc = {
@@ -41,7 +44,7 @@ describe('Common Service', function () {
     });
   }));
 
-  it('should not find default dataset and transaction: error happened during search', sinon.test(function (done) {
+  it('should not find default dataset and transaction: error happened during search', sandbox(function (done: Function) {
     const expectedError = '[Error]: findDefaultDatasetAndTransaction';
     this.stub(datasetTransactionsService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(2, expectedError);
 
@@ -51,7 +54,7 @@ describe('Common Service', function () {
     });
   }));
 
-  it('should not find default dataset and transaction: there is no dataset', sinon.test(function (done) {
+  it('should not find default dataset and transaction: there is no dataset', sandbox(function (done: Function) {
     const expectedError = 'Dataset isn\'t present in db.';
     this.stub(datasetTransactionsService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(2, null, {});
 
@@ -61,7 +64,7 @@ describe('Common Service', function () {
     });
   }));
 
-  it('should not find default dataset and transaction: there is no transaction', sinon.test(function (done) {
+  it('should not find default dataset and transaction: there is no transaction', sandbox(function (done: Function) {
     const expectedError = 'Transaction isn\'t present in db.';
     this.stub(datasetTransactionsService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(2, null, {dataset: {}});
 
@@ -71,7 +74,7 @@ describe('Common Service', function () {
     });
   }));
 
-  it('should find default dataset and transaction', sinon.test(function (done) {
+  it('should find default dataset and transaction', sandbox(function (done: Function) {
     const datasetAndTransaction = {
       dataset: {
         _id: 'dsId'

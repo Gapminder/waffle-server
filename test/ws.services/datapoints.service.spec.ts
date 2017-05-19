@@ -1,4 +1,5 @@
 import * as sinon from 'sinon';
+import * as sinonTest from 'sinon-test';
 import { expect } from 'chai';
 
 import '../../ws.repository';
@@ -12,8 +13,10 @@ import * as conceptsService from '../../ws.services/concepts.service';
 import * as entitiesService from '../../ws.services/entities.service';
 import { getConcepts } from '../../ws.services/concepts.service';
 
+const sandbox = sinonTest.configureTest(sinon);
+
 describe('Datapoints service', () => {
-  it('cannot collect datapoints by ddfql: concepts not found', sinon.test(function (done) {
+  it('cannot collect datapoints by ddfql: concepts not found', sandbox(function (done: Function) {
     const expectedError = '[Error]: concepts not found';
 
     const context = {
@@ -40,7 +43,7 @@ describe('Datapoints service', () => {
     });
   }));
 
-  it('cannot collect datapoints by ddfql: there is no projection in query', sinon.test(function (done) {
+  it('cannot collect datapoints by ddfql: there is no projection in query', sandbox(function (done: Function) {
     const expectedError = `You didn't select any column`;
 
     const context = {
@@ -70,7 +73,7 @@ describe('Datapoints service', () => {
     });
   }));
 
-  it('cannot collect datapoints by ddfql: not existing columns requested in value projection', sinon.test(function (done) {
+  it('cannot collect datapoints by ddfql: not existing columns requested in value projection', sandbox(function (done: Function) {
     const expectedError = `You choose select column(s) 'population' which aren't present in choosen dataset`;
 
     const context = {
@@ -102,7 +105,7 @@ describe('Datapoints service', () => {
     });
   }));
 
-  it('cannot collect datapoints by ddfql: not existing columns requested in key projection', sinon.test(function (done) {
+  it('cannot collect datapoints by ddfql: not existing columns requested in key projection', sandbox(function (done: Function) {
     const expectedError = `Your choose key column(s) 'year, age' which aren't present in choosen dataset`;
 
     const context = {
@@ -135,7 +138,7 @@ describe('Datapoints service', () => {
     });
   }));
 
-  it('cannot collect datapoints by ddfql: fails while searching entities by concepts', sinon.test(function (done) {
+  it('cannot collect datapoints by ddfql: fails while searching entities by concepts', sandbox(function (done: Function) {
     const expectedError = 'Boo!';
 
     const context = {
@@ -188,7 +191,7 @@ describe('Datapoints service', () => {
     });
   }));
 
-  it('cannot collect datapoints by ddfql: fails cause no measures were found for datapoints', sinon.test(function (done) {
+  it('cannot collect datapoints by ddfql: fails cause no measures were found for datapoints', sandbox(function (done: Function) {
     const expectedError = 'Measure should present in select property';
 
     const context = {
@@ -247,7 +250,7 @@ describe('Datapoints service', () => {
     });
   }));
 
-  it('cannot collect datapoints by ddfql: fails searching entities for join clause', sinon.test(function (done) {
+  it('cannot collect datapoints by ddfql: fails searching entities for join clause', sandbox(function (done: Function) {
     const expectedError = '[Error]: entities projection';
 
     const context = {
@@ -310,7 +313,7 @@ describe('Datapoints service', () => {
     });
   }));
 
-  it('cannot collect datapoints by ddfql: mongo query generated from the join clause is invalid', sinon.test(function (done) {
+  it('cannot collect datapoints by ddfql: mongo query generated from the join clause is invalid', sandbox(function (done: Function) {
     const expectedError = '[Error]: generated mongo query is not valid';
 
     const queryValidationResult = {
@@ -376,7 +379,7 @@ describe('Datapoints service', () => {
     });
   }));
 
-  it('cannot collect datapoints by ddfql: final mongo query generated from the whole ddfql query is invalid', sinon.test(function (done) {
+  it('cannot collect datapoints by ddfql: final mongo query generated from the whole ddfql query is invalid', sandbox(function (done: Function) {
     const expectedError = '[Error]: generated mongo query is not valid';
 
     const queryValidationResult = {
@@ -449,7 +452,7 @@ describe('Datapoints service', () => {
     });
   }));
 
-  it('cannot collect datapoints by ddfql: fails searching for datapoints', sinon.test(function (done) {
+  it('cannot collect datapoints by ddfql: fails searching for datapoints', sandbox(function (done: Function) {
     const expectedError = '[Error]: cannot find datapoints';
 
     const context = {
@@ -517,7 +520,7 @@ describe('Datapoints service', () => {
     });
   }));
 
-  it('collects datapoints by ddfql', sinon.test(function (done) {
+  it('collects datapoints by ddfql', sandbox(function (done: Function) {
     const context = {
       user: {},
       select: ['population'],

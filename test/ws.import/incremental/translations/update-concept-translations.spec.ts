@@ -1,6 +1,7 @@
 import '../../../../ws.repository';
 
 import * as sinon from 'sinon';
+import * as sinonTest from 'sinon-test';
 import { expect } from 'chai';
 
 import { constants } from '../../../../ws.utils/constants';
@@ -8,6 +9,8 @@ import * as UpdateTranslationsFlow from '../../../../ws.import/incremental/trans
 import { updateConceptsTranslations } from '../../../../ws.import/incremental/translations/update-concept-translations';
 import * as ddfMappers from '../../../../ws.import/utils/ddf-mappers';
 import { ConceptsRepositoryFactory } from '../../../../ws.repository/ddf/concepts/concepts.repository';
+
+const sandbox = sinonTest.configureTest(sinon);
 
 const externalContext = {
   transaction: {
@@ -21,7 +24,7 @@ const externalContext = {
 };
 
 describe('Concepts Translations Update Plugin', () => {
-  it('creates a proper context for the plugin', sinon.test(function (done) {
+  it('creates a proper context for the plugin', sandbox(function (done: Function) {
     this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
       expect(Object.isFrozen(externalContextFrozen)).to.equal(true, 'context should be frozen');
 
@@ -38,7 +41,7 @@ describe('Concepts Translations Update Plugin', () => {
     });
   }));
 
-  it('creates a proper plugin', sinon.test(function (done) {
+  it('creates a proper plugin', sandbox(function (done: Function) {
     this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
       expect(plugin.dataType).to.equal(constants.CONCEPTS);
       expect(plugin.repositoryFactory).to.equal(ConceptsRepositoryFactory);
@@ -54,7 +57,7 @@ describe('Concepts Translations Update Plugin', () => {
     });
   }));
 
-  it('makes a query to fetch translation target', sinon.test(function (done) {
+  it('makes a query to fetch translation target', sandbox(function (done: Function) {
     const changesDescriptor = {
       gid: 'gid'
     };
@@ -71,7 +74,7 @@ describe('Concepts Translations Update Plugin', () => {
     });
   }));
 
-  it('processes translation before update', sinon.test(function (done) {
+  it('processes translation before update', sandbox(function (done: Function) {
     const translationToProcess = {
       prop: 'value'
     };
@@ -93,7 +96,7 @@ describe('Concepts Translations Update Plugin', () => {
     });
   }));
 
-  it('makes translation target based on its closed version', sinon.test(function (done) {
+  it('makes translation target based on its closed version', sandbox(function (done: Function) {
     const closedTarget = {
       originId: 'originId',
       domain: 'domain',

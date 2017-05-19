@@ -1,8 +1,11 @@
 import 'mocha';
 
 import * as _ from 'lodash';
-import {expect} from 'chai';
+import { expect } from 'chai';
 import * as sinon from 'sinon';
+import * as sinonTest from 'sinon-test';
+
+const sandbox = sinonTest.configureTest(sinon);
 
 import * as conceptUtils from '../../ws.import/utils/concepts.utils';
 import * as ddfQueryUtils from '../../ws.ddfql/ddf-query-utils';
@@ -33,7 +36,7 @@ const options = Object.freeze({
 });
 
 describe('ddf datapoints query normalizer - queries simplification', () => {
-  it('should normalize where and join clauses for full example', sinon.test(function() {
+  it('should normalize where and join clauses for full example', sandbox(function() {
     const ddfql = {
       "select": {
         "key": ["geo", "time"],
@@ -216,7 +219,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options)).to.deep.equal(normalizedDdfql);
   }));
 
-  it('should create links in join section for entities filter', sinon.test(function() {
+  it('should create links in join section for entities filter', sandbox(function() {
     const ddfql = {
       "select": {
         "key": ["geo", "quarter"],
@@ -328,7 +331,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     expect(actualDdfql).to.deep.equal(normalizedDdfql);
   }));
 
-  it('should normalize query without where and join clauses', sinon.test(function() {
+  it('should normalize query without where and join clauses', sandbox(function() {
     const ddfql = {
       "from": "datapoints",
       "select": {
@@ -369,7 +372,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     expect(actualDdfql).to.deep.equal(normalizedDdfql);
   }));
 
-  it('should parse `{"join": "where": {"is--country": true}}` in where clause', sinon.test(function() {
+  it('should parse `{"join": "where": {"is--country": true}}` in where clause', sandbox(function() {
     const ddfql = {
       "from": "datapoints",
       "select": {
@@ -465,7 +468,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     expect(actualDdfql).to.deep.equal(normalizedDdfql);
   }));
 
-  it('should parse `{"join": "where": {"geo.is--country": true}}` in where clause', sinon.test(function() {
+  it('should parse `{"join": "where": {"geo.is--country": true}}` in where clause', sandbox(function() {
     const ddfql = {
       "from": "datapoints",
       "select": {
@@ -561,7 +564,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     expect(actualDdfql).to.deep.equal(normalizedDdfql);
   }));
 
-  it('should parse and normalize query with geo and time domains', sinon.test(function() {
+  it('should parse and normalize query with geo and time domains', sandbox(function() {
     const ddfql = {
       "from": "datapoints",
       "select": {
@@ -642,7 +645,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     expect(actualDdfql).to.deep.equal(normalizedDdfql);
   }));
 
-  it('should parse and normalize query with project and company domains', sinon.test(function() {
+  it('should parse and normalize query with project and company domains', sandbox(function() {
     const ddfql = {
       "select": {
         "key": ["company", "project"],
@@ -724,7 +727,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
 });
 
 describe('ddf datapoints query normalizer - different time types', () => {
-  it('should be parsed QUARTER time type', sinon.test(function() {
+  it('should be parsed QUARTER time type', sandbox(function() {
     const ddfql = {
       "select": {
         "key": ["geo", "time"],
@@ -806,7 +809,7 @@ describe('ddf datapoints query normalizer - different time types', () => {
     expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options)).to.deep.equal(normalizedDdfql);
   }));
 
-  it('should be parsed YEAR time type', sinon.test(function() {
+  it('should be parsed YEAR time type', sandbox(function() {
     const ddfql = {
       "select": {
         "key": ["geo", "time"],
@@ -888,7 +891,7 @@ describe('ddf datapoints query normalizer - different time types', () => {
     expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options)).to.deep.equal(normalizedDdfql);
   }));
 
-  it('should be parsed WEEK time type', sinon.test(function() {
+  it('should be parsed WEEK time type', sandbox(function() {
     const ddfql = {
       "select": {
         "key": ["geo", "time"],
@@ -980,7 +983,7 @@ describe('ddf datapoints query normalizer - different time types', () => {
     expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options)).to.deep.equal(normalizedDdfql);
   }));
 
-  it('should be parsed DATE time type', sinon.test(function() {
+  it('should be parsed DATE time type', sandbox(function() {
     const ddfql = {
       "select": {
         "key": ["geo", "time"],
@@ -1075,7 +1078,7 @@ describe('ddf datapoints query normalizer - different time types', () => {
     expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options)).to.deep.equal(normalizedDdfql);
   }));
 
-  it('should normalized queries for quarters range', sinon.test(function() {
+  it('should normalized queries for quarters range', sandbox(function() {
     const ddfql = {
       "select": {
         "key": ["geo", "quarter"],
@@ -1153,7 +1156,7 @@ describe('ddf datapoints query normalizer - different time types', () => {
 });
 
 describe('ddf datapoints query normalizer - substitute links', () => {
-  it('should substitute concept placeholders with ids', sinon.test(function() {
+  it('should substitute concept placeholders with ids', sandbox(function() {
     const normalizedDdfql = {
       "select": {
         "key": ["geo", "time"],
@@ -1281,7 +1284,7 @@ describe('ddf datapoints query normalizer - substitute links', () => {
     expect(ddfQueryNormalizer.substituteDatapointConceptsWithIds(normalizedDdfql, options)).to.deep.equal(normalizedDdfqlWithSubstitutedConcepts);
   }));
 
-  it('should substitute join link in where clause', sinon.test(function() {
+  it('should substitute join link in where clause', sandbox(function() {
     const linksInJoinToValues = {
       $geo: [
         "27a3470d3a8c9b37009b9bf9",

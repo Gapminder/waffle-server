@@ -1,4 +1,5 @@
 import * as sinon from 'sinon';
+import * as sinonTest from 'sinon-test';
 import { expect } from 'chai';
 
 import '../../ws.repository';
@@ -7,6 +8,8 @@ import { createDatasetSchema } from '../../ws.import/import-dataset-schema';
 
 const datasetId = 'datasetId';
 const transactionId = 'transactionId';
+
+const sandbox = sinonTest.configureTest(sinon);
 
 const externalContext = {
   transaction: {
@@ -18,7 +21,7 @@ const externalContext = {
 };
 
 describe('Import dataset schema', () => {
-  it('imports schema for concepts', sinon.test(function (done) {
+  it('imports schema for concepts', sandbox(function (done: Function) {
     const conceptsContext = Object.assign({}, externalContext, {
       datapackage: {
         ddfSchema: {
