@@ -31,8 +31,9 @@ Entities.plugin(OriginIdPlugin, {
 // This index exists only for entities of type "time"
 Entities.index({dataset: 1, 'parsedProperties.time.timeType': 1, from: 1, to: 1, 'parsedProperties.time.millis': 1}, {sparse: true});
 Entities.index({dataset: 1, from: 1, to: 1, domain: 1, sets: 1});
-Entities.index({originId: 1, dataset: 1, from: 1, to: 1});
+Entities.index({dataset: 1, originId: 1, from: 1, to: 1});
 Entities.index({dataset: 1, gid: 1, 'properties.concept_type': 1, from: 1, to: 1});
 Entities.index({dataset: 1, to: 1});
+Entities.index({originId: 1});
 
 export default model('Entities', Entities);

@@ -68,7 +68,7 @@ class DataPointsRepository extends VersionedModelRepository {
   public findIdsByDatasetAndLimit(datasetId, limit, onDatapointsFound) {
     const query = this._composeQuery({dataset: datasetId});
 
-    logger.debug({obj: query}, 'Datapoints query');
+    logger.debug({mongo: query}, 'Datapoints query');
     return DataPoints.find(query, {_id: 1}).limit(limit).lean().exec(onDatapointsFound);
   }
 
@@ -76,7 +76,7 @@ class DataPointsRepository extends VersionedModelRepository {
   public findByQuery(subDatapointQuery, onDatapointsFound) {
     const query = this._composeQuery(subDatapointQuery);
 
-    logger.debug({obj: query}, 'Datapoints query');
+    logger.debug({mongo: query}, 'Datapoints query');
     return DataPoints.find(query).lean().exec(onDatapointsFound);
   }
 

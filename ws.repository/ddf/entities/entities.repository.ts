@@ -58,7 +58,7 @@ class EntitiesRepository extends VersionedModelRepository {
 
   public findEntityPropertiesByQuery(entitiesQuery, onPropertiesFound) {
     const composedQuery = this._composeQuery(entitiesQuery);
-    logger.debug({obj: composedQuery}, 'Query to get entities according to ddfql');
+    logger.debug({mongo: composedQuery}, 'Query to get entities according to ddfql');
     return Entities.find(composedQuery).lean().exec(onPropertiesFound);
   }
 
