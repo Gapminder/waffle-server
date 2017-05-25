@@ -25,11 +25,11 @@ class EntitiesRepository extends VersionedModelRepository {
   }
 
   public rollback(transaction, onRolledback) {
-    const {createdAt: versionToRollback} = transaction;
+    const {createdAt: versionToRollback, dataset} = transaction;
 
     return async.parallelLimit([
-      done => Entities.update({to: versionToRollback}, {$set: {to: constants.MAX_VERSION}}, {multi: true}).lean().exec(done),
-      done => Entities.remove({from: versionToRollback}, done)
+      done => Entities.update({dataset, to: versionToRollback}, {$set: {to: constants.MAX_VERSION}}, {multi: true}).lean().exec(done),
+      done => Entities.remove({dataset, from: versionToRollback}, done)
     ], constants.LIMIT_NUMBER_PROCESS, onRolledback);
   }
 
@@ -40,12 +40,6 @@ class EntitiesRepository extends VersionedModelRepository {
   public closeOneByQuery(closeQuery, done) {
     const query = this._composeQuery(closeQuery);
     return Entities.findOneAndUpdate(query, {$set: {to: this.version}}, {'new': true}).lean().exec(done);
-  }
-
-  public findOneByDomainAndSetsAndGid(params, done) {
-    const {domain, sets, gid} = params;
-    const query = this._composeQuery({domain, sets, gid});
-    return Entities.findOne(query).lean().exec(done);
   }
 
   public findTargetForTranslation(params, done) {
@@ -64,7 +58,7 @@ class EntitiesRepository extends VersionedModelRepository {
 
   public findEntityPropertiesByQuery(entitiesQuery, onPropertiesFound) {
     const composedQuery = this._composeQuery(entitiesQuery);
-    logger.debug({obj: composedQuery}, 'Query to get entities according to ddfql');
+    logger.debug({mongo: composedQuery}, 'Query to get entities according to ddfql');
     return Entities.find(composedQuery).lean().exec(onPropertiesFound);
   }
 

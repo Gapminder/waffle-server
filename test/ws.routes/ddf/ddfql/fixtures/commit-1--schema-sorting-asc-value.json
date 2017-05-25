@@ -7,8 +7,24 @@
   "rows": [
     [
       [
-        "company",
-        "anno"
+        "anno",
+        "company"
+      ],
+      "company_size",
+      null
+    ],
+    [
+      [
+        "anno",
+        "english_speaking"
+      ],
+      "company_size",
+      null
+    ],
+    [
+      [
+        "anno",
+        "foundation"
       ],
       "company_size",
       null
@@ -19,24 +35,74 @@
         "project"
       ],
       "latitude",
-      49.86333
+      null
     ],
     [
       [
-        "company",
-        "anno"
+        "english_speaking",
+        "project"
       ],
-      "lines_of_code",
-      284920.75
+      "latitude",
+      null
     ],
     [
       [
-        "company",
-        "project",
-        "anno"
+        "foundation",
+        "project"
+      ],
+      "latitude",
+      null
+    ],
+    [
+      [
+        "anno",
+        "company"
       ],
       "lines_of_code",
-      149053.375
+      null
+    ],
+    [
+      [
+        "anno",
+        "english_speaking"
+      ],
+      "lines_of_code",
+      null
+    ],
+    [
+      [
+        "anno",
+        "foundation"
+      ],
+      "lines_of_code",
+      null
+    ],
+    [
+      [
+        "anno",
+        "company",
+        "project"
+      ],
+      "lines_of_code",
+      null
+    ],
+    [
+      [
+        "anno",
+        "english_speaking",
+        "project"
+      ],
+      "lines_of_code",
+      null
+    ],
+    [
+      [
+        "anno",
+        "foundation",
+        "project"
+      ],
+      "lines_of_code",
+      null
     ],
     [
       [
@@ -44,7 +110,23 @@
         "project"
       ],
       "lines_of_code",
-      1702551.33333
+      null
+    ],
+    [
+      [
+        "english_speaking",
+        "project"
+      ],
+      "lines_of_code",
+      null
+    ],
+    [
+      [
+        "foundation",
+        "project"
+      ],
+      "lines_of_code",
+      null
     ],
     [
       [
@@ -52,7 +134,23 @@
         "project"
       ],
       "longitude",
-      56.055
+      null
+    ],
+    [
+      [
+        "english_speaking",
+        "project"
+      ],
+      "longitude",
+      null
+    ],
+    [
+      [
+        "foundation",
+        "project"
+      ],
+      "longitude",
+      null
     ],
     [
       [
@@ -60,7 +158,23 @@
         "project"
       ],
       "num_users",
-      11448.33333
+      null
+    ],
+    [
+      [
+        "english_speaking",
+        "project"
+      ],
+      "num_users",
+      null
+    ],
+    [
+      [
+        "foundation",
+        "project"
+      ],
+      "num_users",
+      null
     ]
   ]
 }

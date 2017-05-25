@@ -72,6 +72,7 @@ function mapDdfDataPointToWsModel(entry, context) {
 
           isNumeric: !_.isNil(datapointValueAsNumber),
           from: context.version,
+          to: constants.MAX_VERSION,
           dataset: context.datasetId,
           sources: [context.filename]
         };

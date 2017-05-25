@@ -6,13 +6,43 @@
   "rows": [
     [
       [
+        "company"
+      ],
+      "full_name_changed"
+    ],
+    [
+      [
         "company_scale"
       ],
       "full_name_changed"
     ],
     [
       [
+        "company"
+      ],
+      "is--company_scale"
+    ],
+    [
+      [
+        "company_scale"
+      ],
+      "is--company_scale"
+    ],
+    [
+      [
+        "company"
+      ],
+      "is--english_speaking"
+    ],
+    [
+      [
         "english_speaking"
+      ],
+      "is--english_speaking"
+    ],
+    [
+      [
+        "company"
       ],
       "name"
     ],
@@ -20,25 +50,19 @@
       [
         "english_speaking"
       ],
-      "additional_column"
-    ],
-    [
-      [
-        "company"
-      ],
-      "additional_column"
-    ],
-    [
-      [
-        "company"
-      ],
-      "full_name_changed"
-    ],
-    [
-      [
-        "company"
-      ],
       "name"
+    ],
+    [
+      [
+        "company"
+      ],
+      "additional_column"
+    ],
+    [
+      [
+        "english_speaking"
+      ],
+      "additional_column"
     ],
     [
       [
@@ -48,7 +72,19 @@
     ],
     [
       [
+        "english_speaking"
+      ],
+      "country"
+    ],
+    [
+      [
         "company"
+      ],
+      "region"
+    ],
+    [
+      [
+        "english_speaking"
       ],
       "region"
     ],

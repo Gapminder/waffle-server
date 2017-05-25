@@ -3,8 +3,7 @@ import * as e2eUtils from '../../../e2e.utils';
 import { e2eEnv } from '../../../e2e.env';
 
 import * as fixtureSchemaSortingValueAsc from './fixtures/commit-1--schema-sorting-asc-value.json';
-import * as fixtureSchemaSortingValueDescAvg from './fixtures/commit-1--schema-sorting-desc-avg.json';
-import * as fixtureSchemaSortingValueAscAndAvgDesc from './fixtures/commit-1--schema-sorting-asc-value-and-desc-avg.json';
+import * as fixtureSchemaSortingValueDesc from './fixtures/commit-1--schema-sorting-desc.json';
 
 import * as fixtureConceptsSortingConceptAsc from './fixtures/commit-1--concepts-sorting-asc-concept.json';
 import * as fixtureConceptsSortingConceptAscAndConceptTypeDesc from './fixtures/commit-1--concepts-sorting-asc-concept-and-desc-concept_type.json';
@@ -68,23 +67,10 @@ describe("Initial State, Version 1 (1st commit) - Sorting in DDFQL", function() 
           "value": ["avg(value)"]
         },
         "from": "datapoints.schema",
-        "order_by": [{"avg(value)": "desc"}]
+        "order_by": [{"value": "desc"}]
       };
 
-      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureSchemaSortingValueDescAvg, done, {sort: false});
-    });
-
-    it('should sort schema data by select:value:asc and select:key:value:desc', done => {
-      const ddfql = {
-        "select": {
-          "key": ["key", "value"],
-          "value": ["avg(value)"]
-        },
-        "from": "datapoints.schema",
-        "order_by": [{"value": "asc"}, {"avg(value)": "desc"}]
-      };
-
-      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureSchemaSortingValueAscAndAvgDesc, done, {sort: false});
+      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureSchemaSortingValueDesc, done, {sort: false});
     });
   });
 
@@ -143,7 +129,7 @@ describe("Initial State, Version 1 (1st commit) - Sorting in DDFQL", function() 
   });
 
   describe("Datapoints sorting", function() {
-    it('should sort datapoints by key:company:asc', done => {
+    it('should sort datapoints by key:company:asc and key:anno:asc', done => {
       const ddfql = {
         "select": {
           "key": ["company", "anno"],
@@ -152,13 +138,13 @@ describe("Initial State, Version 1 (1st commit) - Sorting in DDFQL", function() 
           ]
         },
         "from": "datapoints",
-        "order_by": [{"company": "asc"}]
+        "order_by": [{"company": "asc"}, {"anno": "asc"}]
       };
 
       e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDatapointsSortingCompanyAsc, done, {sort: false});
     });
 
-    it('should sort datapoints by key:company:asc - simplified notion', done => {
+    it('should sort datapoints by key:company:asc and key:anno:asc - simplified notion', done => {
       const ddfql = {
         "select": {
           "key": ["company", "anno"],
@@ -167,7 +153,7 @@ describe("Initial State, Version 1 (1st commit) - Sorting in DDFQL", function() 
           ]
         },
         "from": "datapoints",
-        "order_by": ["company"]
+        "order_by": ["company", "anno"]
       };
 
       e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDatapointsSortingCompanyAsc, done, {sort: false});

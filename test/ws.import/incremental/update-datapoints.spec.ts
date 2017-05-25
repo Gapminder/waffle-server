@@ -2,6 +2,7 @@ import '../../../ws.repository';
 
 import * as path from 'path';
 import * as sinon from 'sinon';
+import * as sinonTest from 'sinon-test';
 import { expect } from 'chai';
 
 import * as fileUtils from '../../../ws.utils/file';
@@ -9,6 +10,8 @@ import * as datapointsUtils from '../../../ws.import/utils/datapoints.utils';
 import { updateDatapoints } from '../../../ws.import/incremental/update-datapoints';
 import { logger } from '../../../ws.config/log';
 import { DatapointsRepositoryFactory } from '../../../ws.repository/ddf/data-points/data-points.repository';
+
+const sandbox = sinonTest.configureTest(sinon);
 
 const context = {
   pathToDatasetDiff: path.resolve(__dirname, './fixtures/result--VS-work--ddf--ws-testing--master--output.txt'),
@@ -141,7 +144,7 @@ describe('Datapoints incremental update flow', () => {
     readTextFileByLineAsJsonStreamOriginal = fileUtils.readTextFileByLineAsJsonStream.bind(fileUtils);
   });
 
-  it('creates newly added datapoints', sinon.test(function (done) {
+  it('creates newly added datapoints', sandbox(function (done: Function) {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
 
@@ -290,7 +293,7 @@ describe('Datapoints incremental update flow', () => {
     });
   }));
 
-  it('updates existing datapoints', sinon.test(function (done) {
+  it('updates existing datapoints', sandbox(function (done: Function) {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
 
@@ -329,7 +332,7 @@ describe('Datapoints incremental update flow', () => {
     };
 
     this.stub(DatapointsRepositoryFactory, 'latestExceptCurrentVersion').returns({
-      closeDatapointByMeasureAndDimensionsAndValue: (options, callback) => {
+      closeDatapointByMeasureAndDimensions: (options, callback) => {
         callback(null, measureToDatapoint[options.measureOriginId]);
       }
     });
@@ -423,7 +426,7 @@ describe('Datapoints incremental update flow', () => {
     });
   }));
 
-  it('updates existing datapoints: datapoint to close was not found - this should be logged', sinon.test(function (done) {
+  it('updates existing datapoints: datapoint to close was not found - this should be logged', sandbox(function (done: Function) {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
 
@@ -447,7 +450,7 @@ describe('Datapoints incremental update flow', () => {
     });
 
     this.stub(DatapointsRepositoryFactory, 'latestExceptCurrentVersion').returns({
-      closeDatapointByMeasureAndDimensionsAndValue: (options, callback) => {
+      closeDatapointByMeasureAndDimensions: (options, callback) => {
         callback();
       }
     });
@@ -477,7 +480,7 @@ describe('Datapoints incremental update flow', () => {
     });
   }));
 
-  it('updates existing datapoints: error had happened while closing datapoint', sinon.test(function (done) {
+  it('updates existing datapoints: error had happened while closing datapoint', sandbox(function (done: Function) {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
 
@@ -503,7 +506,7 @@ describe('Datapoints incremental update flow', () => {
     const expectedError = 'Boo!';
 
     this.stub(DatapointsRepositoryFactory, 'latestExceptCurrentVersion').returns({
-      closeDatapointByMeasureAndDimensionsAndValue: (options, callback) => {
+      closeDatapointByMeasureAndDimensions: (options, callback) => {
         callback(expectedError);
       }
     });
@@ -522,7 +525,7 @@ describe('Datapoints incremental update flow', () => {
     });
   }));
 
-  it('remove existing datapoints', sinon.test(function (done) {
+  it('remove existing datapoints', sandbox(function (done: Function) {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
 
@@ -545,9 +548,9 @@ describe('Datapoints incremental update flow', () => {
         });
     });
 
-    const closeDatapointByMeasureAndDimensionsAndValueStub = this.stub().callsArgWithAsync(1, null, {});
+    const closeDatapointByMeasureAndDimensionsStub = this.stub().callsArgWithAsync(1, null, {});
     this.stub(DatapointsRepositoryFactory, 'latestExceptCurrentVersion').returns({
-      closeDatapointByMeasureAndDimensionsAndValue: closeDatapointByMeasureAndDimensionsAndValueStub
+      closeDatapointByMeasureAndDimensions: closeDatapointByMeasureAndDimensionsStub
     });
 
     const loggerInfoStub = this.stub(logger, 'info');
@@ -557,8 +560,8 @@ describe('Datapoints incremental update flow', () => {
       expect(externalContext).to.equal(context);
       expect(collectedDatapoints).to.deep.equal([undefined], 'Here we have "undefined" cause deleted datapoints should not be pushed down the stream after removal');
 
-      sinon.assert.calledThrice(closeDatapointByMeasureAndDimensionsAndValueStub);
-      sinon.assert.calledWith(closeDatapointByMeasureAndDimensionsAndValueStub, {
+      sinon.assert.calledThrice(closeDatapointByMeasureAndDimensionsStub);
+      sinon.assert.calledWith(closeDatapointByMeasureAndDimensionsStub, {
         "measureOriginId": "longitude",
         "dimensionsSize": 2,
         "dimensionsEntityOriginIds": [
@@ -568,7 +571,7 @@ describe('Datapoints incremental update flow', () => {
         "datapointValue": "90"
       });
 
-      sinon.assert.calledWith(closeDatapointByMeasureAndDimensionsAndValueStub, {
+      sinon.assert.calledWith(closeDatapointByMeasureAndDimensionsStub, {
         "measureOriginId": "latitude",
         "dimensionsSize": 2,
         "dimensionsEntityOriginIds": [
@@ -578,7 +581,7 @@ describe('Datapoints incremental update flow', () => {
         "datapointValue": "44.1"
       });
 
-      sinon.assert.calledWith(closeDatapointByMeasureAndDimensionsAndValueStub, {
+      sinon.assert.calledWith(closeDatapointByMeasureAndDimensionsStub, {
         "measureOriginId": "num_users",
         "dimensionsSize": 2,
         "dimensionsEntityOriginIds": [
@@ -596,7 +599,7 @@ describe('Datapoints incremental update flow', () => {
     });
   }));
 
-  it('remove existing datapoints: datapoint to close was not found - this should be logged', sinon.test(function (done) {
+  it('remove existing datapoints: datapoint to close was not found - this should be logged', sandbox(function (done: Function) {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
 
@@ -619,9 +622,9 @@ describe('Datapoints incremental update flow', () => {
         });
     });
 
-    const closeDatapointByMeasureAndDimensionsAndValueStub = this.stub().callsArgWithAsync(1, null, null);
+    const closeDatapointByMeasureAndDimensionsStub = this.stub().callsArgWithAsync(1, null, null);
     this.stub(DatapointsRepositoryFactory, 'latestExceptCurrentVersion').returns({
-      closeDatapointByMeasureAndDimensionsAndValue: closeDatapointByMeasureAndDimensionsAndValueStub
+      closeDatapointByMeasureAndDimensions: closeDatapointByMeasureAndDimensionsStub
     });
 
     const loggerErrorStub = this.stub(logger, 'error');
@@ -642,7 +645,7 @@ describe('Datapoints incremental update flow', () => {
     });
   }));
 
-  it('remove existing datapoints: error had happened while closing datapoint', sinon.test(function (done) {
+  it('remove existing datapoints: error had happened while closing datapoint', sandbox(function (done: Function) {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
 
@@ -666,9 +669,9 @@ describe('Datapoints incremental update flow', () => {
     });
 
     const expectedError = 'Boo!';
-    const closeDatapointByMeasureAndDimensionsAndValueStub = this.stub().callsArgWithAsync(1, expectedError);
+    const closeDatapointByMeasureAndDimensionsStub = this.stub().callsArgWithAsync(1, expectedError);
     this.stub(DatapointsRepositoryFactory, 'latestExceptCurrentVersion').returns({
-      closeDatapointByMeasureAndDimensionsAndValue: closeDatapointByMeasureAndDimensionsAndValueStub
+      closeDatapointByMeasureAndDimensions: closeDatapointByMeasureAndDimensionsStub
     });
 
     const loggerInfoStub = this.stub(logger, 'info');

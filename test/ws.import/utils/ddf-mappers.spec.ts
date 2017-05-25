@@ -3,6 +3,7 @@ import { expect } from 'chai';
 
 import '../../../ws.repository';
 import * as ddfMappers from '../../../ws.import/utils/ddf-mappers';
+import { constants } from '../../../ws.utils/constants';
 
 describe('DDF mappers', () => {
   it('transforms concept properties', () => {
@@ -152,6 +153,7 @@ describe('DDF mappers', () => {
           "yearOriginId"
         ],
         "from": 1111111,
+        "to": constants.MAX_VERSION,
         "isNumeric": true,
         "languages": {},
         "measure": "popOriginId",
@@ -179,6 +181,7 @@ describe('DDF mappers', () => {
           "yearOriginId"
         ],
         "from": 1111111,
+        "to": constants.MAX_VERSION,
         "isNumeric": true,
         "languages": {},
         "measure": "incomeOriginId",
@@ -259,6 +262,7 @@ describe('DDF mappers', () => {
           "yearOriginId"
         ],
         "from": 1111111,
+        "to": constants.MAX_VERSION,
         "isNumeric": false,
         "languages": {},
         "measure": "popOriginId",
@@ -338,6 +342,7 @@ describe('DDF mappers', () => {
           "yearOriginId"
         ],
         "from": 1111111,
+        "to": constants.MAX_VERSION,
         "isNumeric": false,
         "languages": {},
         "measure": "popOriginId",
@@ -417,6 +422,7 @@ describe('DDF mappers', () => {
           "yearOriginId"
         ],
         "from": 1111111,
+        "to": constants.MAX_VERSION,
         "isNumeric": false,
         "languages": {},
         "measure": "popOriginId",
@@ -497,6 +503,7 @@ describe('DDF mappers', () => {
           "yearOriginId"
         ],
         "from": 1111111,
+        "to": constants.MAX_VERSION,
         "isNumeric": false,
         "languages": {},
         "measure": "popOriginId",

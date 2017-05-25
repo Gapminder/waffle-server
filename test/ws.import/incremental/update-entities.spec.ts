@@ -3,6 +3,7 @@ import {expect} from 'chai';
 import * as _ from 'lodash';
 import * as path from 'path';
 import * as sinon from 'sinon';
+import * as sinonTest from 'sinon-test';
 import {logger} from '../../../ws.config/log';
 
 import * as updateService from '../../../ws.import/incremental/update-entities';
@@ -10,6 +11,8 @@ import {EntitiesRepositoryFactory} from '../../../ws.repository/ddf/entities/ent
 
 const datasetId = 'DATASETID';
 const version = 1111111;
+
+const sandbox = sinonTest.configureTest(sinon);
 
 const domain = {
   _id: 'DOMAINID',
@@ -170,7 +173,7 @@ const entitiesRepository = {
 };
 
 describe('Update Entities', function () {
-  it('should create new and remove old entities from fixture', sinon.test(function (done) {
+  it('should create new and remove old entities from fixture', sandbox(function (done: Function) {
     const originExternalContext = _.defaults({pathToDatasetDiff: path.resolve(__dirname, './fixtures/full-diff-entities.txt')}, externalContextFixture);
     const expectedError = null;
     const expectedCloseOneByQueryCallCount = 3;
@@ -256,7 +259,7 @@ describe('Update Entities', function () {
     });
   }));
 
-  it('should interrupt with error when entity was not found for closing', sinon.test(function(done) {
+  it('should interrupt with error when entity was not found for closing', sandbox(function(done: Function) {
     const originExternalContext = _.defaults({pathToDatasetDiff: path.resolve(__dirname, './fixtures/full-diff-entities.txt')}, externalContextFixture);
     const expectedError = 'Boo!';
     const expectedloggerDebugCallCount = 6;
@@ -340,7 +343,7 @@ describe('Update Entities', function () {
     });
   }));
 
-  it('should log message when entity was closed without errors', sinon.test(function(done) {
+  it('should log message when entity was closed without errors', sandbox(function(done: Function) {
     const originExternalContext = _.defaults({pathToDatasetDiff: path.resolve(__dirname, './fixtures/full-diff-entities.txt')}, externalContextFixture);
     const expectedError = null;
     const expectedEntity = {_id: 'ENTITYID', originId: 'ENTITYID'};
@@ -436,7 +439,7 @@ describe('Update Entities', function () {
     });
   }));
 
-  it('should update entities without errors', sinon.test(function(done) {
+  it('should update entities without errors', sandbox(function(done: Function) {
     const originExternalContext = _.defaults({pathToDatasetDiff: path.resolve(__dirname, './fixtures/updated-entities.txt')}, externalContextFixture);
     const expectedEntity = {
       _id: 'ENTITYID',

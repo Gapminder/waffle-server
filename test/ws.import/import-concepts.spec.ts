@@ -1,8 +1,9 @@
-import '../../ws.repository/'
+import '../../ws.repository/';
 
 import * as hi from 'highland';
 import * as _ from 'lodash';
 import * as sinon from 'sinon';
+import * as sinonTest from 'sinon-test';
 import { expect } from 'chai';
 
 import * as ddfImportUtils from '../../ws.import/utils/import-ddf.utils';
@@ -11,6 +12,8 @@ import * as ddfMappers from '../../ws.import/utils/ddf-mappers';
 import { ConceptsRepositoryFactory } from '../../ws.repository/ddf/concepts/concepts.repository';
 import { createConcepts } from '../../ws.import/import-concepts';
 import { constants } from '../../ws.utils/constants';
+
+const sandbox = sinonTest.configureTest(sinon);
 
 const conceptsResource = {
   path: 'ddf--concepts.csv',
@@ -41,7 +44,7 @@ const datapackageStub = {
 };
 
 describe('Import ddf concepts', () => {
-  it('should import concepts', sinon.test(function (done) {
+  it('should import concepts', sandbox(function (done: Function) {
     const rawConcept = {
       concept: 'company',
       name: 'Company',
@@ -123,7 +126,7 @@ describe('Import ddf concepts', () => {
     });
   }));
 
-  it('should not import concepts: error raised on csv file reading', sinon.test(function (done) {
+  it('should not import concepts: error raised on csv file reading', sandbox(function (done: Function) {
     const context = {
       pathToDdfFolder: 'some/path',
       transaction: {
@@ -150,7 +153,7 @@ describe('Import ddf concepts', () => {
     });
   }));
 
-  it('should import concepts: error raised when concept was being saved to mongo', sinon.test(function (done) {
+  it('should import concepts: error raised when concept was being saved to mongo', sandbox(function (done: Function) {
     const rawConcept = {
       concept: 'company',
       name: 'Company',
@@ -184,7 +187,7 @@ describe('Import ddf concepts', () => {
     });
   }));
 
-  it('should import concepts: subsets are calculated', sinon.test(function (done) {
+  it('should import concepts: subsets are calculated', sandbox(function (done: Function) {
     const rawConcept = {
       concept: 'company',
       name: 'Company',
@@ -283,7 +286,7 @@ describe('Import ddf concepts', () => {
     });
   }));
 
-  it('should import concepts: subsets are calculated aand parent concept is not found', sinon.test(function (done) {
+  it('should import concepts: subsets are calculated aand parent concept is not found', sandbox(function (done: Function) {
     const rawConcept = {
       concept: 'company',
       name: 'Company',
@@ -381,7 +384,7 @@ describe('Import ddf concepts', () => {
   }));
 
 
-  it('should import concepts: domains are calculated', sinon.test(function (done) {
+  it('should import concepts: domains are calculated', sandbox(function (done: Function) {
     const rawConcept = {
       concept: 'company',
       name: 'Company',
@@ -476,7 +479,7 @@ describe('Import ddf concepts', () => {
     });
   }));
 
-  it('should import concepts: domains are calculated and domain concept was not found', sinon.test(function (done) {
+  it('should import concepts: domains are calculated and domain concept was not found', sandbox(function (done: Function) {
     const rawConcept = {
       concept: 'company',
       name: 'Company',
