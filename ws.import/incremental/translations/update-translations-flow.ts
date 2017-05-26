@@ -10,15 +10,15 @@ export {
   createTranslationsUpdater
 };
 
-function createTranslationsUpdater(plugin, externalContext, done) {
+function createTranslationsUpdater(plugin: any, externalContext: any, done: Function): void {
   logger.info('Start translations updating process for:', plugin.dataType);
 
   const translationsDiffStream = createTranslationsDiffStream(plugin, externalContext);
 
-  //This stream should be duplicated YES! Don't be smart and don't try to substitute with the definition above
+  // This stream should be duplicated YES! Don't be smart and don't try to substitute with the definition above
   const translationsDiffStreamForRemovals = createTranslationsDiffStream(plugin, externalContext);
 
-  //Streams order is IMPORTANT HERE - DO NOT TOUCH!
+  // Streams order is IMPORTANT HERE - DO NOT TOUCH!
   const translationsDiffProcessingStream = hi([
     toRemovedTranslationsStream(translationsDiffStreamForRemovals, plugin, externalContext),
     hi([
@@ -30,24 +30,24 @@ function createTranslationsUpdater(plugin, externalContext, done) {
   return ddfImportUtils.startStreamProcessing(translationsDiffProcessingStream, externalContext, done);
 }
 
-function createTranslationsDiffStream(plugin, externalContext) {
+function createTranslationsDiffStream(plugin: any, externalContext: any): void {
   return fileUtils
     .readTextFileByLineAsJsonStream(externalContext.pathToLangDiff)
-    .map(changes => new ChangesDescriptor(changes))
-    .filter(changesDescriptor => changesDescriptor.describes(plugin.dataType))
+    .map((changes: ChangesDescriptor) => new ChangesDescriptor(changes))
+    .filter((changesDescriptor: ChangesDescriptor) => changesDescriptor.describes(plugin.dataType))
     .through(_.bind(plugin.transformStreamBeforeActionSegregation || _.identity, plugin))
-    .map(changesDescriptor => ({context: externalContext, changesDescriptor}));
+    .map((changesDescriptor: ChangesDescriptor) => ({context: externalContext, changesDescriptor}));
 }
 
-function toUpdatedTranslationsStream(translationsDiffStream, plugin, externalContext) {
+function toUpdatedTranslationsStream(translationsDiffStream: any, plugin: any, externalContext: any): void {
   const latestVersionRepository = plugin.repositoryFactory.latestVersion(externalContext.datasetId, externalContext.version);
 
   const translationApiPlugin = getTranslationApiFromPlugin(plugin);
   const translationApiRepository = getTranslationApiFromRepository(latestVersionRepository);
 
   const translationApiBase = {
-    isApplicable: changesDescriptor => changesDescriptor.isUpdateAction(),
-    getResource: changesDescriptor => changesDescriptor.currentResource,
+    isApplicable: (changesDescriptor: ChangesDescriptor) => changesDescriptor.isUpdateAction(),
+    getResource: (changesDescriptor: ChangesDescriptor) => changesDescriptor.currentResource,
     makeTranslation: makeTranslationForUpdateAction,
     translationChangeHandler: updateTranslation
   };
@@ -56,15 +56,15 @@ function toUpdatedTranslationsStream(translationsDiffStream, plugin, externalCon
   return toApplyTranslationChangesStream(translationsDiffStream, translationsApi);
 }
 
-function toCreatedTranslationsStream(translationsDiffStream, plugin, externalContext) {
+function toCreatedTranslationsStream(translationsDiffStream: any, plugin: any, externalContext: any): void {
   const latestVersionRepository = plugin.repositoryFactory.latestVersion(externalContext.datasetId, externalContext.version);
 
   const translationApiPlugin = getTranslationApiFromPlugin(plugin);
   const translationApiRepository = getTranslationApiFromRepository(latestVersionRepository);
 
   const translationApiBase = {
-    isApplicable: changesDescriptor => changesDescriptor.isCreateAction(),
-    getResource: changesDescriptor => changesDescriptor.currentResource,
+    isApplicable: (changesDescriptor: ChangesDescriptor) => changesDescriptor.isCreateAction(),
+    getResource: (changesDescriptor: ChangesDescriptor) => changesDescriptor.currentResource,
     makeTranslation: makeTranslationForCreateAction,
     translationChangeHandler: updateTranslation
   };
@@ -73,7 +73,7 @@ function toCreatedTranslationsStream(translationsDiffStream, plugin, externalCon
   return toApplyTranslationChangesStream(translationsDiffStream, translationsApi);
 }
 
-function toRemovedTranslationsStream(translationsDiffStream, plugin, externalContext) {
+function toRemovedTranslationsStream(translationsDiffStream: any, plugin: any, externalContext: any): void {
   const fetchingRepository = plugin.repositoryFactory.currentVersion(externalContext.datasetId, externalContext.version);
   const updatingRepository = plugin.repositoryFactory.latestVersion(externalContext.datasetId, externalContext.version);
 
@@ -81,40 +81,40 @@ function toRemovedTranslationsStream(translationsDiffStream, plugin, externalCon
   const translationApiRepository = getTranslationApiFromRepository(fetchingRepository, updatingRepository);
 
   const translationApiBase = {
-    isApplicable: changesDescriptor => changesDescriptor.isRemoveAction(),
-    getResource: changesDescriptor => changesDescriptor.oldResource,
-    translationChangeHandler: removeTranslationFromTarget,
+    isApplicable: (changesDescriptor: ChangesDescriptor) => changesDescriptor.isRemoveAction(),
+    getResource: (changesDescriptor: ChangesDescriptor) => changesDescriptor.oldResource,
+    translationChangeHandler: removeTranslationFromTarget
   };
 
   const translationsApi = _.extend(translationApiBase, translationApiPlugin, translationApiRepository);
   return toApplyTranslationChangesStream(translationsDiffStream, translationsApi);
 }
 
-function toApplyTranslationChangesStream(translationsDiffStream, translationsApi) {
+function toApplyTranslationChangesStream(translationsDiffStream: any, translationsApi: any): any {
   return translationsDiffStream.fork()
-    .filter(({changesDescriptor}) => {
+    .filter(({changesDescriptor}: any) => {
       return translationsApi.isApplicable(changesDescriptor);
     })
-    .map(({changesDescriptor, context}) => {
+    .map(({changesDescriptor, context}: any) => {
       const resource = translationsApi.getResource(changesDescriptor);
       const additionsToContext = translationsApi.enrichContext(resource, changesDescriptor, context);
       const enrichedContext = _.extend(additionsToContext, context);
       return {changesDescriptor, context: enrichedContext};
     })
     .through(translationsApi.transformStreamBeforeChangesApplied)
-    .map(changesAndContext => {
+    .map((changesAndContext: any) => {
       return hi.wrapCallback(applyTranslationChanges)(changesAndContext, translationsApi);
     })
     .parallel(constants.LIMIT_NUMBER_PROCESS);
 }
 
-function applyTranslationChanges({changesDescriptor, context}, translationsApi, onChangesApplied) {
+function applyTranslationChanges({changesDescriptor, context}: any, translationsApi: any, onChangesApplied: Function): any {
   const fetchTranslationTargetQuery = translationsApi.makeQueryToFetchTranslationTarget(changesDescriptor, context);
 
   logger.debug('Applied operation: ', translationsApi.translationChangeHandler.name);
   logger.debug({obj: fetchTranslationTargetQuery});
 
-  return translationsApi.findTargetForTranslation(fetchTranslationTargetQuery, (error, foundTarget) => {
+  return translationsApi.findTargetForTranslation(fetchTranslationTargetQuery, (error: string, foundTarget: any) => {
     if (error) {
       return onChangesApplied(error);
     }
@@ -131,7 +131,7 @@ function applyTranslationChanges({changesDescriptor, context}, translationsApi, 
   });
 }
 
-function removeTranslationFromTarget(translationsApi, options, onTranslationRemoved) {
+function removeTranslationFromTarget(translationsApi: any, options: any, onTranslationRemoved: Function): void {
   const {changesDescriptor, context, foundTarget} = options;
 
   logger.debug('Translation will be removed for the next target: ', foundTarget);
@@ -144,7 +144,7 @@ function removeTranslationFromTarget(translationsApi, options, onTranslationRemo
     }, onTranslationRemoved);
   }
 
-  return translationsApi.closeOneByQuery({originId: foundTarget.originId}, (error, closedTarget) => {
+  return translationsApi.closeOneByQuery({originId: foundTarget.originId}, (error: string, closedTarget: any) => {
     if (error) {
       return onTranslationRemoved(error);
     }
@@ -163,7 +163,7 @@ function removeTranslationFromTarget(translationsApi, options, onTranslationRemo
   });
 }
 
-function updateTranslation(translationsApi, options, onTranslationAdded) {
+function updateTranslation(translationsApi: any, options: any, onTranslationAdded: Function): void {
   const {changesDescriptor, context, foundTarget, fetchTranslationTargetQuery} = options;
 
   const newTranslation = translationsApi.makeTranslation(changesDescriptor, foundTarget);
@@ -177,7 +177,7 @@ function updateTranslation(translationsApi, options, onTranslationAdded) {
     }, onTranslationAdded);
   }
 
-  return translationsApi.closeOneByQuery(fetchTranslationTargetQuery, (error, closedTarget) => {
+  return translationsApi.closeOneByQuery(fetchTranslationTargetQuery, (error: string, closedTarget: any) => {
     if (error) {
       return onTranslationAdded(error);
     }
@@ -194,11 +194,11 @@ function updateTranslation(translationsApi, options, onTranslationAdded) {
   });
 }
 
-function makeTranslationForCreateAction(changesDescriptor) {
+function makeTranslationForCreateAction(changesDescriptor: ChangesDescriptor): void {
   return changesDescriptor.changes;
 }
 
-function makeTranslationForUpdateAction(changesDescriptor, foundTarget) {
+function makeTranslationForUpdateAction(changesDescriptor: ChangesDescriptor, foundTarget: any): void {
   return _.chain(foundTarget.languages)
     .get<any>(changesDescriptor.language)
     .omit(changesDescriptor.removedColumns)
@@ -206,7 +206,7 @@ function makeTranslationForUpdateAction(changesDescriptor, foundTarget) {
     .value();
 }
 
-function getTranslationApiFromRepository(fetchingRepository, updatingRepository = fetchingRepository) {
+function getTranslationApiFromRepository(fetchingRepository: any, updatingRepository: any = fetchingRepository): any {
   return {
     findTargetForTranslation: _.bind(fetchingRepository.findTargetForTranslation, fetchingRepository),
     create: _.bind(updatingRepository.create, updatingRepository),
@@ -216,7 +216,7 @@ function getTranslationApiFromRepository(fetchingRepository, updatingRepository 
   };
 }
 
-function getTranslationApiFromPlugin(plugin) {
+function getTranslationApiFromPlugin(plugin: any): any {
   return {
     transformStreamBeforeChangesApplied: _.bind(plugin.transformStreamBeforeChangesApplied || _.identity, plugin),
     enrichContext: _.bind(plugin.enrichContext || _.noop, plugin),

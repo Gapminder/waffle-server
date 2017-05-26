@@ -1,10 +1,10 @@
-import * as _ from "lodash";
+import * as _ from 'lodash';
 
 export {
   extrapolate
 };
 
-function extrapolate(rows, measureValueColumnIndexes?, options?) {
+function extrapolate(rows: any, measureValueColumnIndexes?: any, options?: any): any {
   options = options || {};
   const numOfYearsToExtrapolate = options.numOfYearsToExtrapolate || 1;
   const geoColumnIndex = _.isNumber(options.geoColumnIndex) ? options.geoColumnIndex : 0;
@@ -19,8 +19,8 @@ function extrapolate(rows, measureValueColumnIndexes?, options?) {
   }
 
   return _.chain(rows)
-    .groupBy(row => row[geoColumnIndex])
-    .map((geoGroup) => {
+    .groupBy((row: any) => row[geoColumnIndex])
+    .map((geoGroup: any) => {
       const geoSpecificRowsContainer: any = {};
       geoSpecificRowsContainer.rows = _.sortBy(geoGroup, yearColumnIndex);
       geoSpecificRowsContainer.tasks = createExtrapolationTasks(geoSpecificRowsContainer.rows);
@@ -33,8 +33,8 @@ function extrapolate(rows, measureValueColumnIndexes?, options?) {
     .flatten()
     .value();
 
-  function createExtrapolationTasks(specificGeoRows) {
-    return _.reduce(measureValueColumnIndexes, (tasks, measureValueColumn: string) => {
+  function createExtrapolationTasks(specificGeoRows: any): any {
+    return _.reduce(measureValueColumnIndexes, (tasks: any, measureValueColumn: string) => {
       const leftEnd = _.findIndex(specificGeoRows, nonEmpty(measureValueColumn));
       if (notFound(leftEnd)) {
         return tasks;
@@ -45,9 +45,9 @@ function extrapolate(rows, measureValueColumnIndexes?, options?) {
       tasks[measureValueColumn] = {
         leftValue: specificGeoRows[leftEnd][measureValueColumn],
         leftStart: leftEnd - numOfYearsToExtrapolate,
-        leftEnd: leftEnd,
+        leftEnd,
         rightValue: specificGeoRows[rightStart][measureValueColumn],
-        rightStart: rightStart,
+        rightStart,
         rightEnd: rightStart + numOfYearsToExtrapolate
       };
 
@@ -55,9 +55,9 @@ function extrapolate(rows, measureValueColumnIndexes?, options?) {
     }, []);
   }
 
-  function extrapolateMeasureValues(geoSpecificRowsContainer) {
-    return _.map(geoSpecificRowsContainer.rows, (row: string, rowIndex) => {
-      return _.map(row, (cell, measureValueColumn) => {
+  function extrapolateMeasureValues(geoSpecificRowsContainer: any): any {
+    return _.map(geoSpecificRowsContainer.rows, (row: string, rowIndex: any) => {
+      return _.map(row, (cell: any, measureValueColumn: any): void => {
         const currentTask = geoSpecificRowsContainer.tasks[measureValueColumn];
         if (!currentTask) {
           return cell;
@@ -76,11 +76,11 @@ function extrapolate(rows, measureValueColumnIndexes?, options?) {
     });
   }
 
-  function nonEmpty(column) {
-    return cell => cell[column] !== null && cell[column] !== undefined;
+  function nonEmpty(column: any): any {
+    return (cell: any) => cell[column] !== null && cell[column] !== undefined;
   }
 
-  function notFound(index) {
+  function notFound(index: any): boolean {
     return index === -1;
   }
 }

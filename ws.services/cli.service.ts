@@ -45,7 +45,7 @@ interface VersionModel {
 }
 
 function _findCurrentUser(pipe: any, done: Function): void {
-  UsersRepository.findUserByEmail(constants.DEFAULT_USER_EMAIL, (error: any, user: any) => {
+  UsersRepository.findUserByEmail(constants.DEFAULT_USER_EMAIL, (error: string, user: any) => {
     if (error) {
       return done(error);
     }
@@ -76,7 +76,7 @@ function importDataset(params: any, onDatasetImported: Function): void {
 }
 
 function _findDataset(pipe: any, done: Function): void {
-  return DatasetsRepository.findByGithubUrl(pipe.github, (error: any, dataset: any) => {
+  return DatasetsRepository.findByGithubUrl(pipe.github, (error: string, dataset: any) => {
     if (error) {
       return done(error);
     }
@@ -131,7 +131,7 @@ function updateIncrementally(externalContext: any, onDatasetUpdated: Function): 
 }
 
 function _checkTransaction(pipe: any, done: Function): void {
-  return DatasetTransactionsRepository.findByDatasetAndCommit(pipe.dataset._id, pipe.commit, (error: any, transaction: any) => {
+  return DatasetTransactionsRepository.findByDatasetAndCommit(pipe.dataset._id, pipe.commit, (error: string, transaction: any) => {
     if (error) {
       return done(error);
     }
@@ -159,7 +159,7 @@ function _runIncrementalUpdate(pipe: any, onDatasetUpdated: Function): void {
 }
 
 function getPrivateDatasets(userId: any, done: Function): void {
-  return DatasetsRepository.findPrivateByUser(userId, (error: any, datasets: any[]) => {
+  return DatasetsRepository.findPrivateByUser(userId, (error: string, datasets: any[]) => {
     if (error) {
       return done(error);
     }
@@ -171,7 +171,7 @@ function getPrivateDatasets(userId: any, done: Function): void {
 }
 
 function getDatasetsInProgress(userId: any, done: Function): void {
-  return DatasetsRepository.findDatasetsInProgressByUser(userId, (error: any, datasets: any) => {
+  return DatasetsRepository.findDatasetsInProgressByUser(userId, (error: string, datasets: any) => {
     if (error) {
       return done(error);
     }
@@ -198,14 +198,14 @@ function getAvailableDatasetsAndVersions(userId: any, onQueriesGot: Function): v
           isDefault: version.isDefault
         });
       }, onDatasetsAndVersionsFound);
-    }, (error: any, result: any) => {
+    }, (error: string, result: any) => {
       return onQueriesGot(null, _.flattenDeep(result));
     });
   });
 }
 
 function getRemovableDatasets(userId: any, done: Function): void {
-  return getAvailableDatasetsAndVersions(userId, (error: any, availableDatasetsAndVersions: any) => {
+  return getAvailableDatasetsAndVersions(userId, (error: string, availableDatasetsAndVersions: any) => {
     if (error) {
       return done(error);
     }
@@ -246,14 +246,14 @@ function _validateDatasetBeforeIncrementalUpdate(pipe: any, done: Function): voi
   return _handleAsynchronously(null, pipe, done);
 }
 
-function _handleAsynchronously(error: any, result: any, done: Function): void {
+function _handleAsynchronously(error: string, result: any, done: Function): void {
   return async.setImmediate(() => {
     return done(error, result);
   });
 }
 
 function _findTransaction(pipe: any, done: Function): void {
-  return DatasetTransactionsRepository.findLatestByDataset(pipe.dataset._id, (error: any, transaction: any) => {
+  return DatasetTransactionsRepository.findLatestByDataset(pipe.dataset._id, (error: string, transaction: any) => {
     if (error) {
       return done(error);
     }

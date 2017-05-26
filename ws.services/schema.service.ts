@@ -27,7 +27,7 @@ function _findSchemaByDdfql(pipe: any, done: Function): void {
     return done(validateQuery.log, pipe);
   }
 
-  return DatasetSchemaRepository.findByDdfql(normalizedQuery, (error: any, schemaData: any) => {
+  return DatasetSchemaRepository.findByDdfql(normalizedQuery, (error: string, schemaData: any) => {
     if (error) {
       return done(error);
     }

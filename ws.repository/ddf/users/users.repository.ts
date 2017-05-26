@@ -3,18 +3,19 @@ import {constants} from '../../../ws.utils/constants';
 
 const Users = model('Users');
 
-function UsersRepository() {
+/* tslint:disable-next-line:no-empty */
+function UsersRepository(): void {
 }
 
-UsersRepository.prototype.findById = function (id, onFound) {
+UsersRepository.prototype.findById = function (id: any, onFound: Function): any {
   return Users.findOne({_id: id}).lean().exec(onFound);
 };
 
-UsersRepository.prototype.findUserByEmail = (email, onFound) => {
+UsersRepository.prototype.findUserByEmail = (email: any, onFound: Function) => {
   return Users.findOne({email}).exec(onFound);
 };
 
-UsersRepository.prototype.findUserByUniqueTokenAndProlongSession = function (uniqueToken, onFound) {
+UsersRepository.prototype.findUserByUniqueTokenAndProlongSession = function (uniqueToken: any, onFound: Function): Promise<object> {
   const now = Date.now();
 
   const notExpiredUserQuery = {
@@ -28,11 +29,11 @@ UsersRepository.prototype.findUserByUniqueTokenAndProlongSession = function (uni
     }
   };
 
-  return Users.findOneAndUpdate(notExpiredUserQuery, updateExpireTokenQuery, {'new': true}).lean().exec(onFound);
+  return Users.findOneAndUpdate(notExpiredUserQuery, updateExpireTokenQuery, {new: true}).lean().exec(onFound);
 };
 
-UsersRepository.prototype.setUpToken = function (email, uniqueToken, expireToken, onFound) {
-  return Users.findOne({email}).exec((error, user: any) => {
+UsersRepository.prototype.setUpToken = function (email: string, uniqueToken: string, expireToken: string, onFound: Function): any {
+  return Users.findOne({email}).exec((error: string, user: any) => {
     if (error) {
       return onFound(error);
     }
@@ -45,17 +46,17 @@ UsersRepository.prototype.setUpToken = function (email, uniqueToken, expireToken
       user.uniqueToken = uniqueToken;
     }
 
-    return user.save(error => {
-      if (error) {
-        return onFound(error);
+    return user.save((err: any) => {
+      if (err) {
+        return onFound(err);
       }
       return onFound(null, user);
     });
   });
 };
 
-UsersRepository.prototype.createUser = function (user, done) {
-  return Users.findOne({email: user.email}).lean().exec((error, existingUser) => {
+UsersRepository.prototype.createUser = function (user: any, done: Function): Promise<Object> {
+  return Users.findOne({email: user.email}).lean().exec((error: string, existingUser: any) => {
     if (error) {
       return done(`Error occurred during user creation`);
     }
@@ -68,9 +69,9 @@ UsersRepository.prototype.createUser = function (user, done) {
   });
 };
 
-function calculateNewTokenExpirationDate(now) {
+function calculateNewTokenExpirationDate(now: any): void {
   return now + constants.VALID_TOKEN_PERIOD_IN_MILLIS;
 }
 
 const repository = new UsersRepository();
-export {repository as UsersRepository}
+export {repository as UsersRepository};

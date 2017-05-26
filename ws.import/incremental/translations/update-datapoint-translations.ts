@@ -6,12 +6,13 @@ import * as datapointsUtils from '../../utils/datapoints.utils';
 import {ChangesDescriptor} from '../../utils/changes-descriptor';
 import {createTranslationsUpdater} from './update-translations-flow';
 import {DatapointsRepositoryFactory} from '../../../ws.repository/ddf/data-points/data-points.repository';
+import {Stream} from "stream";
 
 export {
   updateDatapointsTranslations
 };
 
-function updateDatapointsTranslations(externalContext, done) {
+function updateDatapointsTranslations(externalContext: any, done: Function): void {
 
   const plugin = {
     dataType: constants.DATAPOINTS,
@@ -24,14 +25,14 @@ function updateDatapointsTranslations(externalContext, done) {
   };
 
   const segregatedEntitiesPromise = datapointsUtils.findAllEntities(externalContext)
-    .then(segregatedEntities => ({segregatedEntities}));
+    .then((segregatedEntities: any) => ({segregatedEntities}));
 
   const segregatedPreviousEntitiesPromise = datapointsUtils.findAllPreviousEntities(externalContext)
-    .then(segregatedPreviousEntities => ({segregatedPreviousEntities}));
+    .then((segregatedPreviousEntities: any) => ({segregatedPreviousEntities}));
 
   Promise.all([segregatedEntitiesPromise, segregatedPreviousEntitiesPromise])
-    .then(result => _.extend({}, _.first(result), _.last(result)))
-    .then(previousAndCurrentSegregatedEntities => {
+    .then((result: any) => _.extend({}, _.first(result), _.last(result)))
+    .then((previousAndCurrentSegregatedEntities: any) => {
 
       const externalContextFrozen = Object.freeze(_.extend({
         datasetId: externalContext.dataset._id,
@@ -41,22 +42,22 @@ function updateDatapointsTranslations(externalContext, done) {
         previousTransaction: externalContext.previousTransaction,
         pathToLangDiff: externalContext.pathToLangDiff,
         concepts: externalContext.concepts,
-        previousConcepts: externalContext.previousConcepts,
+        previousConcepts: externalContext.previousConcepts
       }, previousAndCurrentSegregatedEntities));
 
-      return createTranslationsUpdater(plugin, externalContextFrozen, error => {
+      return createTranslationsUpdater(plugin, externalContextFrozen, (error: string) => {
         done(error, externalContext);
       });
     });
 }
 
-function enrichContext(resource, changesDescriptor, externalContext) {
+function enrichContext(resource: any, changesDescriptor: ChangesDescriptor, externalContext: any): void {
   return datapointsUtils.getDimensionsAndMeasures(resource, externalContext);
 }
 
-function transformStreamBeforeActionSegregation(changesStream) {
+function transformStreamBeforeActionSegregation(changesStream: any): void {
   return changesStream
-    .flatMap(changesDescriptorForUpdate => {
+    .flatMap((changesDescriptorForUpdate: ChangesDescriptor) => {
       if (changesDescriptorForUpdate.isUpdateAction() && !_.isEmpty(changesDescriptorForUpdate.removedColumns)) {
         const descriptors = _makeChangesDescriptorsForRemoveFrom(changesDescriptorForUpdate);
         if (!changesDescriptorForUpdate.onlyColumnsRemoved) {
@@ -69,13 +70,13 @@ function transformStreamBeforeActionSegregation(changesStream) {
     });
 }
 
-function transformStreamBeforeChangesApplied(changesStream) {
+function transformStreamBeforeChangesApplied(changesStream: any): void {
   return changesStream
-    .flatMap(({changesDescriptor, context}) => {
+    .flatMap(({changesDescriptor, context}: any) => {
       const changesInDatapoint = changesDescriptor.changes;
 
       // each ChangesDescriptor should carry changes only for single indicator
-      const datapointChangesDescriptorPerIndicator = _.reduce(context.measures, (result, indicator: any) => {
+      const datapointChangesDescriptorPerIndicator = _.reduce(context.measures, (result: any, indicator: any) => {
 
         // we should care only about indicators that were updated
         if (_.has(changesInDatapoint, indicator.gid)) {
@@ -89,7 +90,7 @@ function transformStreamBeforeChangesApplied(changesStream) {
     });
 }
 
-function makeQueryToFetchTranslationTarget(changesDescriptor, externalContext) {
+function makeQueryToFetchTranslationTarget(changesDescriptor: ChangesDescriptor, externalContext: any): any {
   const indicatorOriginId = _.get(externalContext.indicator, 'originId');
 
   if(!indicatorOriginId) {
@@ -101,22 +102,22 @@ function makeQueryToFetchTranslationTarget(changesDescriptor, externalContext) {
   return {
     measureOriginId: indicatorOriginId,
     dimensionsSize: _.size(externalContext.dimensions),
-    dimensionsEntityOriginIds,
+    dimensionsEntityOriginIds
   };
 }
 
-function makeTranslationTargetBasedOnItsClosedVersion(closedTarget, externalContext) {
+function makeTranslationTargetBasedOnItsClosedVersion(closedTarget: any, externalContext: any): any {
   closedTarget.from = externalContext.version;
   closedTarget.to = constants.MAX_VERSION;
   return _.omit(closedTarget, constants.MONGO_SPECIAL_FIELDS);
 }
 
-function _makeChangesDescriptorsForRemoveFrom(changesDescriptor) {
+function _makeChangesDescriptorsForRemoveFrom(changesDescriptor: ChangesDescriptor): any[] {
   const original = changesDescriptor.original;
   const language = changesDescriptor.language;
   const oldResource = changesDescriptor.oldResource;
 
-  return _.reduce(changesDescriptor.removedColumns, (descriptors, removedColumn) => {
+  return _.reduce(changesDescriptor.removedColumns, (descriptors: ChangesDescriptor[], removedColumn: any) => {
     if (_.includes(oldResource.indicators, removedColumn)) {
       const changes = {
         object: _.pick(original, [removedColumn, ...oldResource.dimensions]),

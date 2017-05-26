@@ -9,16 +9,16 @@ export {
   isTimeConceptType
 };
 
-function getTimeConceptGids(concepts) {
+function getTimeConceptGids(concepts: any): any[] {
   return _.map(getTimeConcepts(concepts), constants.GID);
 }
 
-function getTimeConcepts(concepts) {
+function getTimeConcepts(concepts: any): any[] {
   return _.chain(concepts)
-    .filter(concept => isTimeConceptType(_.get(concept, 'properties.concept_type')))
+    .filter((concept: any) => isTimeConceptType(_.get(concept, 'properties.concept_type')))
     .value();
 }
 
-function isTimeConceptType(conceptType) {
+function isTimeConceptType(conceptType: any): boolean {
   return TIME_CONCEPT_TYPES.has(conceptType);
 }

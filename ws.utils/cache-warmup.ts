@@ -25,7 +25,7 @@ function warmUpCache(done: Function): void {
       logger.info(`Cache warm up attempt. Status:  ${status}. Success: ${success}. DDFQL raw: `, queryRaw);
     });
 
-  return ddfImportUtils.startStreamProcessing(cacheWarmUpStream, null, (error: any) => done(error, warmedQueriesAmount));
+  return ddfImportUtils.startStreamProcessing(cacheWarmUpStream, null, (error: string) => done(error, warmedQueriesAmount));
 }
 
 function executeDdfql(logRecord: any): any {

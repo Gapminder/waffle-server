@@ -13,7 +13,7 @@ export {
   startConceptsCreation as updateConcepts
 };
 
-function startConceptsCreation(externalContext, done) {
+function startConceptsCreation(externalContext: any, done: Function): void {
 
   logger.info('start process of updating concepts');
 
@@ -23,28 +23,28 @@ function startConceptsCreation(externalContext, done) {
     'dataset'
   ]));
 
-  return updateConcepts(externalContextFrozen, (error) => {
+  return updateConcepts(externalContextFrozen, (error: string) => {
     return done(error, externalContext);
   });
 }
 
-function updateConcepts(externalContext, done) {
+function updateConcepts(externalContext: any, done: Function): void {
   let removedProperties;
 
   return fileUtils.readTextFileByLineAsJsonStream(externalContext.pathToDatasetDiff)
-    .map(changes => new ChangesDescriptor(changes))
-    .filter(changesDescriptor => changesDescriptor.describes(constants.CONCEPTS))
-    .map(changesDescriptor => {
+    .map((changes: any) => new ChangesDescriptor(changes))
+    .filter((changesDescriptor: ChangesDescriptor) => changesDescriptor.describes(constants.CONCEPTS))
+    .map((changesDescriptor: ChangesDescriptor) => {
       if (!removedProperties) {
         removedProperties = changesDescriptor.removedColumns;
       }
       return changesDescriptor;
     })
-    .group(changesDescriptor => changesDescriptor.action)
-    .stopOnError(error => {
+    .group((changesDescriptor: ChangesDescriptor) => changesDescriptor.action)
+    .stopOnError((error: string) => {
       return done(error);
     })
-    .toCallback((err, allChanges) => {
+    .toCallback((err: string, allChanges: any) => {
       const remove = _.map(allChanges.remove, '_object');
       const create = _.map(allChanges.create, '_object');
       const change = _.map(allChanges.change, '_object');
@@ -55,12 +55,12 @@ function updateConcepts(externalContext, done) {
         processRemovedConcepts(remove),
         processCreatedConcepts(create),
         processUpdatedConcepts(mergeConceptModifications(change, update), removedProperties)
-      ], err => done(err, externalContext));
+      ], (error: string) => done(error, externalContext));
     });
 }
 
-function processRemovedConcepts(removedConcepts) {
-  return (pipe, done) => {
+function processRemovedConcepts(removedConcepts: any): any {
+  return (pipe: any, done: Function) => {
     if (_.isEmpty(removedConcepts)) {
       return done(null, pipe);
     }
@@ -70,16 +70,16 @@ function processRemovedConcepts(removedConcepts) {
       pipe.external.transaction.createdAt
     );
 
-    return async.eachLimit(removedConcepts, constants.LIMIT_NUMBER_PROCESS, (removedConcept, onConceptClosed) => {
+    return async.eachLimit(removedConcepts, constants.LIMIT_NUMBER_PROCESS, (removedConcept: any, onConceptClosed: any) => {
       return conceptsRepository.closeByGid(getGid(removedConcept), onConceptClosed);
-    }, error => {
+    }, (error: string) => {
       return done(error, pipe);
     });
   };
 }
 
-function processCreatedConcepts(createdConcepts) {
-  return (pipe, done) => {
+function processCreatedConcepts(createdConcepts: any): any {
+  return (pipe: any, done: Function) => {
     return async.waterfall([
         async.constant(pipe),
         createConcepts(createdConcepts),
@@ -89,14 +89,14 @@ function processCreatedConcepts(createdConcepts) {
         getDomainsOfChangedConcepts(),
         populateConceptsDomains()
       ],
-      error => {
+      (error: string) => {
         return done(error, pipe);
       });
   };
 }
 
-function processUpdatedConcepts(updatedConcepts, removedProperties) {
-  return (externalContext, done) => {
+function processUpdatedConcepts(updatedConcepts: any, removedProperties: any): any {
+  return (externalContext: any, done: Function) => {
     if (_.isEmpty(updatedConcepts) && _.isEmpty(removedProperties)) {
       return done(null, externalContext);
     }
@@ -119,14 +119,14 @@ function processUpdatedConcepts(updatedConcepts, removedProperties) {
         getDomainsOfChangedConcepts(),
         populateConceptsDomains()
       ],
-      error => {
+      (error: string) => {
         return done(error, externalContext);
       });
   };
 }
 
-function createConcepts(conceptChanges) {
-  return (pipe, done) => {
+function createConcepts(conceptChanges: any): any {
+  return (pipe: any, done: Function) => {
     if (_.isEmpty(conceptChanges)) {
       return done(null, pipe);
     }
@@ -134,7 +134,7 @@ function createConcepts(conceptChanges) {
     const datasetId = _.get(pipe, 'external.dataset._id', null);
     const version = _.get(pipe, 'external.transaction.createdAt', null);
 
-    const concepts = _.map(conceptChanges, conceptChange => {
+    const concepts = _.map(conceptChanges, (conceptChange: any) => {
       return ddfMappers.mapDdfConceptsToWsModel(conceptChange, {datasetId, version});
     });
 
@@ -149,19 +149,19 @@ function createConcepts(conceptChanges) {
     const conceptsRepository = ConceptsRepositoryFactory.versionAgnostic();
 
     return async.eachLimit(_.chunk(concepts, chunkSize), constants.LIMIT_NUMBER_PROCESS,
-      (chunk, onConceptsChunkCreated) => {
+      (chunk: any, onConceptsChunkCreated: Function) => {
         return conceptsRepository.create(chunk, onConceptsChunkCreated);
-      }, error => {
+      }, (error: string) => {
         return done(error, pipe);
       });
   };
 }
 
-function getDrillupsOfChangedConcepts() {
-  return (pipe, done) => {
+function getDrillupsOfChangedConcepts(): any {
+  return (pipe: any, done: Function) => {
     ConceptsRepositoryFactory
       .allOpenedInGivenVersion(pipe.external.dataset._id, pipe.external.transaction.createdAt)
-      .findDistinctDrillups((error, drillUps) => {
+      .findDistinctDrillups((error: string, drillUps: any) => {
         if (error) {
           return done(error);
         }
@@ -172,11 +172,11 @@ function getDrillupsOfChangedConcepts() {
   };
 }
 
-function getDomainsOfChangedConcepts() {
-  return (pipe, done) => {
+function getDomainsOfChangedConcepts(): any {
+  return (pipe: any, done: Function) => {
     return ConceptsRepositoryFactory
       .allOpenedInGivenVersion(pipe.external.dataset._id, pipe.external.transaction.createdAt)
-      .findDistinctDomains((error, domains) => {
+      .findDistinctDomains((error: string, domains: any) => {
         if (error) {
           return done(error);
         }
@@ -187,13 +187,13 @@ function getDomainsOfChangedConcepts() {
   };
 }
 
-function applyChangesToConcepts(changedConcepts) {
-  return (pipe, done) => {
+function applyChangesToConcepts(changedConcepts: any): any {
+  return (pipe: any, done: Function) => {
     const conceptsRepository = ConceptsRepositoryFactory
       .latestExceptCurrentVersion(pipe.external.dataset._id, pipe.external.transaction.createdAt);
 
-    return async.forEachOfLimit(changedConcepts, constants.LIMIT_NUMBER_PROCESS, (changesToConcept, gid, onChangesApplied) => {
-      conceptsRepository.closeByGid(gid, (error, originalConcept) => {
+    return async.forEachOfLimit(changedConcepts, constants.LIMIT_NUMBER_PROCESS, (changesToConcept: any, gid: any, onChangesApplied: Function) => {
+      conceptsRepository.closeByGid(gid, (error: string, originalConcept: any) => {
         if (error) {
           return onChangesApplied(error);
         }
@@ -206,26 +206,26 @@ function applyChangesToConcepts(changedConcepts) {
         const updatedConcept = mergeConcepts(originalConcept, changesToConcept, pipe.external.transaction);
         return conceptsRepository.create(updatedConcept, onChangesApplied);
       });
-    }, error => {
+    }, (error: string) => {
       return done(error, pipe);
     });
   };
 }
 
-function applyUpdatesToConcepts(changedConcepts, removedProperties) {
-  return (pipe, done) => {
+function applyUpdatesToConcepts(changedConcepts: any, removedProperties: any): any {
+  return (pipe: any, done: Function) => {
     const conceptsRepository = ConceptsRepositoryFactory
       .latestExceptCurrentVersion(pipe.external.dataset._id, pipe.external.transaction.createdAt);
 
-    return conceptsRepository.findAll((error, originalConcepts) => {
+    return conceptsRepository.findAll((error: string, originalConcepts: any) => {
       if (error) {
         return done(error);
       }
 
-      return async.eachLimit(originalConcepts, constants.LIMIT_NUMBER_PROCESS, (originalConcept: any, onUpdateApplied) => {
-        conceptsRepository.closeById(originalConcept._id, (error, closedOriginalConcept) => {
-          if (error) {
-            return onUpdateApplied(error);
+      return async.eachLimit(originalConcepts, constants.LIMIT_NUMBER_PROCESS, (originalConcept: any, onUpdateApplied: any) => {
+        conceptsRepository.closeById(originalConcept._id, (err: string, closedOriginalConcept: any) => {
+          if (err) {
+            return onUpdateApplied(err);
           }
 
           const updates = changedConcepts[closedOriginalConcept.gid];
@@ -236,30 +236,30 @@ function applyUpdatesToConcepts(changedConcepts, removedProperties) {
 
           return conceptsRepository.create(updatedConcept, onUpdateApplied);
         });
-      }, error => {
-        return done(error, pipe);
+      }, (err: string) => {
+        return done(err, pipe);
       });
     });
   };
 }
 
-function getAllConcepts() {
-  return (pipe, done) => {
+function getAllConcepts(): any {
+  return (pipe: any, done: Function) => {
     return ConceptsRepositoryFactory.latestVersion(pipe.external.dataset._id, pipe.external.transaction.createdAt)
-      .findAll((error, res) => {
+      .findAll((error: string, res: any) => {
         pipe.internal.concepts = _.keyBy(res, 'gid');
         return done(error, pipe);
       });
   };
 }
 
-function populateConceptsDrillups() {
-  return (pipe, done) => {
+function populateConceptsDrillups(): any {
+  return (pipe: any, done: Function) => {
 
     const conceptsRepository = ConceptsRepositoryFactory
       .allOpenedInGivenVersion(pipe.external.dataset._id, pipe.external.transaction.createdAt);
 
-    return async.eachLimit(pipe.internal.drillUps, constants.LIMIT_NUMBER_PROCESS, (gid: string, onDrillupsPopulated) => {
+    return async.eachLimit(pipe.internal.drillUps, constants.LIMIT_NUMBER_PROCESS, (gid: string, onDrillupsPopulated: any) => {
       let concept = pipe.internal.concepts[gid];
 
       if (!concept) {
@@ -267,18 +267,18 @@ function populateConceptsDrillups() {
       }
 
       return conceptsRepository.addSubsetOfByGid({gid, parentConceptId: concept.originId}, onDrillupsPopulated);
-    }, error => {
+    }, (error: string) => {
       return done(error, pipe);
     });
   };
 }
 
-function populateConceptsDomains() {
-  return (pipe, done) => {
+function populateConceptsDomains(): any {
+  return (pipe: any, done: Function) => {
     const conceptsRepository = ConceptsRepositoryFactory
       .allOpenedInGivenVersion(pipe.external.dataset._id, pipe.external.transaction.createdAt);
 
-    return async.eachLimit(pipe.internal.domains, constants.LIMIT_NUMBER_PROCESS, (gid: string, onDomainPopulated) => {
+    return async.eachLimit(pipe.internal.domains, constants.LIMIT_NUMBER_PROCESS, (gid: string, onDomainPopulated: Function) => {
       let concept = pipe.internal.concepts[gid];
 
       if (!concept) {
@@ -286,7 +286,7 @@ function populateConceptsDomains() {
       }
 
       return conceptsRepository.setDomainByGid({gid, domainConceptId: concept.originId}, onDomainPopulated);
-    }, error => {
+    }, (error: string) => {
       return done(error, pipe);
     });
   };
@@ -294,13 +294,13 @@ function populateConceptsDomains() {
 
 // HELPERS -------------------------------------------------------------------------------------------------------------
 
-function getGid(conceptChange) {
+function getGid(conceptChange: any): any {
   return conceptChange[conceptChange.gid];
 }
 
-function mergeConcepts(originalConcept, changesToConcept, currentTransaction) {
+function mergeConcepts(originalConcept: any, changesToConcept: any, currentTransaction: any): any {
   const originalConceptKeys = _.keys(originalConcept);
-  let updatedConcept = _.mergeWith(originalConcept, changesToConcept, (originalValue, changedValue, property) => {
+  let updatedConcept = _.mergeWith(originalConcept, changesToConcept, (originalValue: any, changedValue: any, property: any) => {
     if (property === 'concept') {
       originalConcept.gid = changedValue;
     }
@@ -335,14 +335,14 @@ function mergeConcepts(originalConcept, changesToConcept, currentTransaction) {
  * @param conceptUpdates - structural changes in ddf--concept.csv - e.g. new column was added, etc.
  * @returns {Object} object keys of which are concept gids and values are objects with updated properties (cells)
  */
-function mergeConceptModifications(conceptChanges, conceptUpdates) {
-  return _.mapValues(_.groupBy(_.concat(conceptChanges, conceptUpdates), getGid), values => {
-    return _.merge.apply(null, _.flatMap(values, value => value['data-update']));
+function mergeConceptModifications(conceptChanges: any, conceptUpdates: any): any {
+  return _.mapValues(_.groupBy(_.concat(conceptChanges, conceptUpdates), getGid), (values: any) => {
+    return _.merge.apply(null, _.flatMap(values, (value: any) => value['data-update']));
   });
 }
 
-function omitRemovedProperties(concept, removedProperties) {
-  return _.omitBy(concept, (value, property) => {
+function omitRemovedProperties(concept: any, removedProperties: any): any {
+  return _.omitBy(concept, (value: any, property: any) => {
     return _.includes(removedProperties, property) && !ddfImportUtils.isPropertyReserved(property);
   });
 }

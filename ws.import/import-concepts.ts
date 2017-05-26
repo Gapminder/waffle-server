@@ -53,7 +53,7 @@ function _loadConcepts(pipe: any, done: Function): void {
         .map((rawConcept: any) => ({filename: resource.path, object: rawConcept}));
     })
     .collect()
-    .toCallback((error: any, rawConcepts: any) => {
+    .toCallback((error: string, rawConcepts: any) => {
       const concepts = _.map(rawConcepts, (rawConcept: any) => {
         const context = {datasetId, version, filename: rawConcept.filename};
         return ddfMappers.mapDdfConceptsToWsModel(rawConcept.object, context);
