@@ -12,7 +12,18 @@ import { constants } from '../../../ws.utils/constants';
 const DataPoints = mongoose.model('DataPoints');
 
 class DataPointsRepository extends VersionedModelRepository {
-  public constructor(versionQueryFragment, datasetId?, version?) {
+  private static toByDimensionsAndMeasureQuery(options: any): any {
+    const {measureOriginId, dimensionsSize, dimensionsEntityOriginIds} = options;
+    return {
+      measure: measureOriginId,
+      dimensions: {
+        $size: dimensionsSize,
+        $not: {$elemMatch: {$nin: dimensionsEntityOriginIds}}
+      }
+    };
+  }
+
+  public constructor(versionQueryFragment: any, datasetId?: any, version?: any) {
     super(versionQueryFragment, datasetId, version);
   }
 
@@ -23,10 +34,10 @@ class DataPointsRepository extends VersionedModelRepository {
   public create(documents: any, onCreated?: Function): any {
     const documentsForStoring = Array.isArray(documents) ? documents : [documents];
 
-    const executeDatapointsBulk = new Promise((resolve, reject) => {
+    const executeDatapointsBulk = new Promise((resolve: any, reject: any) => {
       const bulk = mongoose.connection.collection('datapoints').initializeUnorderedBulkOp();
       documentsForStoring.forEach((document: any) => bulk.insert(this.setSingleDocumentId(document)));
-      bulk.execute((error, response) => {
+      bulk.execute((error: string, response: any) => {
         if (error) {
           return reject(error);
         }
@@ -37,50 +48,49 @@ class DataPointsRepository extends VersionedModelRepository {
     if (onCreated) {
       return executeDatapointsBulk
         .then((response: any) => onCreated(null, response))
-        .catch((error: any) => onCreated(error));
+        .catch((error: string) => onCreated(error));
     }
     return executeDatapointsBulk;
   }
 
-  public count(onCounted) {
+  public count(onCounted: any): any {
     const countQuery = this._composeQuery();
     return DataPoints.count(countQuery, onCounted);
   }
 
-  public rollback(transaction, onRolledback) {
+  public rollback(transaction: any, onRolledback: any): void {
     const {createdAt: versionToRollback} = transaction;
 
     return async.parallelLimit([
-      done => DataPoints.update({to: versionToRollback}, {$set: {to: constants.MAX_VERSION}}, {multi: true}).lean().exec(done),
-      done => DataPoints.remove({from: versionToRollback}, done)
+      (done: Function) => DataPoints.update({to: versionToRollback}, {$set: {to: constants.MAX_VERSION}}, {multi: true}).lean().exec(done),
+      (done: any) => DataPoints.remove({from: versionToRollback}, done)
     ], constants.LIMIT_NUMBER_PROCESS, onRolledback);
   }
 
-  public removeByDataset(datasetId, onRemove) {
+  public removeByDataset(datasetId: any, onRemove: any): any {
     return DataPoints.remove({dataset: datasetId}, onRemove);
   }
 
-
-  public removeByIds(ids, onRemove) {
+  public removeByIds(ids: any, onRemove: any): any {
     return DataPoints.remove({_id: {$in: ids}}, onRemove);
   }
 
-  public findIdsByDatasetAndLimit(datasetId, limit, onDatapointsFound) {
+  public findIdsByDatasetAndLimit(datasetId: any, limit: any, onDatapointsFound: any): Promise<Object> {
     const query = this._composeQuery({dataset: datasetId});
 
     logger.debug({mongo: query}, 'Datapoints query');
     return DataPoints.find(query, {_id: 1}).limit(limit).lean().exec(onDatapointsFound);
   }
 
-  //FIXME: This should be used only for queries that came from normalizer!!!
-  public findByQuery(subDatapointQuery, onDatapointsFound) {
+  // FIXME: This should be used only for queries that came from normalizer!!!
+  public findByQuery(subDatapointQuery: any, onDatapointsFound: any): Promise<Object> {
     const query = this._composeQuery(subDatapointQuery);
 
     logger.debug({mongo: query}, 'Datapoints query');
     return DataPoints.find(query).lean().exec(onDatapointsFound);
   }
 
-  public closeDatapointByMeasureAndDimensions(options, onDatapointClosed) {
+  public closeDatapointByMeasureAndDimensions(options: any, onDatapointClosed: any): Promise<Object> {
     const numericDatapointValue = ddfImportUtils.toNumeric(options.datapointValue);
     const byDimensionsAndMeasureAndValueQuery = _.extend(DataPointsRepository.toByDimensionsAndMeasureQuery(options), {
       value: _.isNil(numericDatapointValue) ? options.datapointValue : numericDatapointValue
@@ -89,25 +99,25 @@ class DataPointsRepository extends VersionedModelRepository {
     return this._closeOneByQuery(byDimensionsAndMeasureAndValueQuery, onDatapointClosed);
   }
 
-  public closeOneByQuery(options, done) {
+  public closeOneByQuery(options: any, done: Function): Promise<Object> {
     const closingQuery = 'dimensionsEntityOriginIds' in options ? DataPointsRepository.toByDimensionsAndMeasureQuery(options) : options;
     return this._closeOneByQuery(closingQuery, done);
   }
 
-  public findTargetForTranslation(options, done) {
+  public findTargetForTranslation(options: any, done: Function): Promise<Object> {
     const query = this._composeQuery(DataPointsRepository.toByDimensionsAndMeasureQuery(options));
     return DataPoints.findOne(query).lean().exec(done);
   }
 
-  public removeTranslation({originId, language}, done) {
-    return DataPoints.findOneAndUpdate({originId}, {$unset: {[`languages.${language}`]: 1}}, {'new': true}, done);
+  public removeTranslation({originId, language}: any, done: any): any {
+    return DataPoints.findOneAndUpdate({originId}, {$unset: {[`languages.${language}`]: 1}}, {new: true}, done);
   }
 
-  public addTranslation({id, language, translation}, done) {
-    return DataPoints.findOneAndUpdate({_id: id}, {$set: {[`languages.${language}`]: translation}}, {'new': true}, done);
+  public addTranslation({id, language, translation}: any, done: any): any {
+    return DataPoints.findOneAndUpdate({_id: id}, {$set: {[`languages.${language}`]: translation}}, {new: true}, done);
   }
 
-  public addTranslationsForGivenProperties(properties, externalContext, done?) {
+  public addTranslationsForGivenProperties(properties: any, externalContext: any, done?: any): Promise<any> {
     const {source, language, resolvedProperties} = externalContext;
 
     const subDatapointQuery = _.extend({sources: source}, resolvedProperties);
@@ -124,26 +134,16 @@ class DataPointsRepository extends VersionedModelRepository {
     return DataPoints.update(query, updateQuery, {multi: true}).exec(done);
   }
 
-  private _closeOneByQuery(closingQuery, done) {
+  private _closeOneByQuery(closingQuery: any, done: Function): Promise<Object> {
     const query = this._composeQuery(closingQuery);
     return DataPoints
-      .findOneAndUpdate(query, {$set: {to: this.version}}, {'new': true})
+      .findOneAndUpdate(query, {$set: {to: this.version}}, {new: true})
       .lean()
       .exec(done);
   }
-
-  private static toByDimensionsAndMeasureQuery(options) {
-    const {measureOriginId, dimensionsSize, dimensionsEntityOriginIds} = options;
-    return {
-      measure: measureOriginId,
-      dimensions: {
-        $size: dimensionsSize,
-        $not: {$elemMatch: {$nin: dimensionsEntityOriginIds}}
-      }
-    }
-  }
 }
 
+/* tslint:disable-next-line:max-classes-per-file */
 class DatapointsRepositoryFactory extends VersionedModelRepositoryFactory<DataPointsRepository> {
   public constructor() {
     super(DataPointsRepository);

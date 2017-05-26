@@ -63,7 +63,7 @@ function setUpEnvironmentVariables(): void {
 function sendDdfqlRequestAndVerifyResponse(ddfql: any, expectedResponse: any, done: Function, options: any = {}): void {
   const {sort = true} = options;
 
-  sendDdfqlRequest(ddfql, (error: any, response: any) => {
+  sendDdfqlRequest(ddfql, (error: string, response: any) => {
     if (response.body.success === false) {
       throw Error(`DDFQL response contains an error: ${response.body.error}`);
     }

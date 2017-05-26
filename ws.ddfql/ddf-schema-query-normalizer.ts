@@ -1,6 +1,7 @@
 import * as _ from 'lodash';
 import * as ddfQueryUtils from './ddf-query-utils';
-import {constants} from '../ws.utils/constants';
+import { constants } from '../ws.utils/constants';
+import { logger } from '../ws.config/log';
 
 const FUNCTION_OPERATORS = ['min', 'max', 'avg'];
 
@@ -15,7 +16,7 @@ export function normalize(query: any, options?: any): any {
     case 'datapoints.schema':
       return normalizeDatapointsSchema(safeQuery, options);
     default:
-      console.error(`Schema given in a "from" clause does not exist: ${safeQuery.from}`);
+      logger.error(`Schema given in a "from" clause does not exist: ${safeQuery.from}`);
       return safeQuery;
   }
 }
@@ -84,7 +85,7 @@ function toSchemaType(from: string): string {
     case 'datapoints.schema':
       return constants.DATAPOINTS;
     default:
-      console.error(`Cannot detect schema type based on given "from": ${from}`);
+      logger.error(`Cannot detect schema type based on given "from": ${from}`);
       return from;
   }
 }

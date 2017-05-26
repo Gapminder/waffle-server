@@ -1,10 +1,10 @@
-import * as _ from "lodash";
+import * as _ from 'lodash';
 
 export {
   interpolate
 };
 
-function interpolate(dataToInterpolate, measureValueColumnIndexes?, options?) {
+function interpolate(dataToInterpolate: any, measureValueColumnIndexes?: any, options?: any): any {
   if (_.isEmpty(dataToInterpolate)) {
     return dataToInterpolate;
   }
@@ -14,10 +14,10 @@ function interpolate(dataToInterpolate, measureValueColumnIndexes?, options?) {
   let yearColumnIndex = _.isNumber(options.yearColumnIndex) ? options.yearColumnIndex : 1;
 
   return _.chain(dataToInterpolate)
-    .groupBy(row => row[geoColumnIndex])
-    .map(GeoGroup => {
+    .groupBy((row: any) => row[geoColumnIndex])
+    .map((GeoGroup: any) => {
       let sortedByYearGeoGroup = _.sortBy(GeoGroup, yearColumnIndex);
-      _.forEach(measureValueColumnIndexes, measureValueColumn => {
+      _.forEach(measureValueColumnIndexes, (measureValueColumn: any) => {
         interpolate(sortedByYearGeoGroup, measureValueColumn);
       });
       return sortedByYearGeoGroup;
@@ -25,10 +25,10 @@ function interpolate(dataToInterpolate, measureValueColumnIndexes?, options?) {
     .flatten()
     .value();
 
-  function interpolate(sortedByYearGeoGroup, measureValueColumn) {
+  function interpolate(sortedByYearGeoGroup: any, measureValueColumn: any): void {
     const rangesOfYearsToInterpolate = detectRangesOfYearsToInterpolate(sortedByYearGeoGroup, measureValueColumn);
 
-    _.forEach(rangesOfYearsToInterpolate, range => {
+    _.forEach(rangesOfYearsToInterpolate, (range: any) => {
       let startRangeIndex = range[0];
       let finishRangeIndex = range[1];
 
@@ -52,11 +52,11 @@ function interpolate(dataToInterpolate, measureValueColumnIndexes?, options?) {
     });
   }
 
-  function detectRangesOfYearsToInterpolate(sortedByYearGeoGroup, measureValueColumn) {
+  function detectRangesOfYearsToInterpolate(sortedByYearGeoGroup: any, measureValueColumn: any): any {
     let rangesOfYearsToInterpolate = [];
 
     _.chain(sortedByYearGeoGroup)
-      .map((row, idx) => {
+      .map((row: any, idx: any) => {
         if (nonEmpty(row[measureValueColumn])) {
           return idx;
         }
@@ -74,8 +74,8 @@ function interpolate(dataToInterpolate, measureValueColumnIndexes?, options?) {
     return rangesOfYearsToInterpolate;
   }
 
-  //TODO: plug different interpolation strategies
-  function interpolateMeasureValue(yearMeasureValueFirst, yearMeasureValueLast, yearAtWhichMeasureValueIsUnknown) {
+  // TODO: plug different interpolation strategies
+  function interpolateMeasureValue(yearMeasureValueFirst: any, yearMeasureValueLast: any, yearAtWhichMeasureValueIsUnknown: any): any {
     let interpolatedValue =
       yearMeasureValueFirst.measureValue
       + (yearMeasureValueLast.measureValue - yearMeasureValueFirst.measureValue)
@@ -85,7 +85,7 @@ function interpolate(dataToInterpolate, measureValueColumnIndexes?, options?) {
     return _.round(interpolatedValue, 1);
   }
 
-  function nonEmpty(val) {
+  function nonEmpty(val: any): any {
     return !_.isUndefined(val) && !_.isNull(val);
   }
 }

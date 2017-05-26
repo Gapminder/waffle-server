@@ -27,7 +27,7 @@ export {
 };
 
 function runDatasetImport(options: ImportOptions, onIncrementalUpdateDone: Function): void {
-  async.series(_.map(options.repos, (repo: Repo) => _.curry(_runDatasetImport)(repo)), (error: any) => {
+  async.series(_.map(options.repos, (repo: Repo) => _.curry(_runDatasetImport)(repo)), (error: string) => {
     return onIncrementalUpdateDone(error);
   });
 }
@@ -37,7 +37,7 @@ function _runDatasetImport(repo: Repo, onIncrementalUpdateDone: Function): void 
 
   const commitIndexToStartImport = repo.commitIndexToStartImport || 0;
 
-  return getCommitsByGithubUrl(repo.url, (error: any, commits: string[]) => {
+  return getCommitsByGithubUrl(repo.url, (error: string, commits: string[]) => {
     if (error) {
       return onIncrementalUpdateDone(error);
     }
@@ -62,7 +62,7 @@ function setDefaultCommit(commit: string, options?: any, done?: any): void {
   }
 
   options = _.defaults(options, DEFAULT_WS_CLI_OPTIONS, {commit});
-  wsCli.setDefault(options, (error: any) => {
+  wsCli.setDefault(options, (error: string) => {
     if (error) {
       return done(error);
     }
@@ -72,7 +72,7 @@ function setDefaultCommit(commit: string, options?: any, done?: any): void {
 }
 
 function getCommitByGithubUrl(githubUrl: string, index: number, done: Function): void {
-  return getCommitsByGithubUrl(githubUrl, (error: any, commits: string[]) => {
+  return getCommitsByGithubUrl(githubUrl, (error: string, commits: string[]) => {
     if (error) {
       return done(error);
     }
@@ -84,11 +84,11 @@ function getCommitByGithubUrl(githubUrl: string, index: number, done: Function):
 function getCommitsByGithubUrl(githubUrl: string, done: Function): void {
   const githubUrlObj = { githubUrl };
 
-  if (CACHED_COMMITS.has(githubUrl)) {
+  if (CACHED_COMMITS.has(githubUrlObj)) {
     return done(null, CACHED_COMMITS.get(githubUrlObj));
   }
 
-  wsCli.getCommitListByGithubUrl(githubUrl, (error: any, commits: string[]) => {
+  wsCli.getCommitListByGithubUrl(githubUrl, (error: string, commits: string[]) => {
     if (error) {
       return done(error);
     }

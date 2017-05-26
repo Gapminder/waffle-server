@@ -15,7 +15,7 @@ export {
   updateDdf
 };
 
-function updateDdf(options, done) {
+function updateDdf(options: any, done: Function): void {
   const pipe = _.pick(options, [
     'user',
     'github',
@@ -49,17 +49,17 @@ function updateDdf(options, done) {
     updateDatapointsTranslations,
     createDatasetSchema,
     ddfImportUtils.closeTransaction
-  ], (updateError, pipe: any) => {
+  ], (updateError: Function, piping: any) => {
     console.timeEnd(DATASET_INCREMENTAL_UPDATE_LABEL);
 
-    if (updateError && _.get(pipe, 'transaction')) {
-      return done(updateError, {transactionId: pipe.transaction._id});
+    if (updateError && _.get(piping, 'transaction')) {
+      return done(updateError, {transactionId: piping.transaction._id});
     }
 
     return done(updateError, {
-      datasetName: _.get(pipe, 'dataset.name'),
-      version: _.get(pipe, 'transaction.createdAt'),
-      transactionId: _.get(pipe, 'transaction._id')
+      datasetName: _.get(piping, 'dataset.name'),
+      version: _.get(piping, 'transaction.createdAt'),
+      transactionId: _.get(piping, 'transaction._id')
     });
   });
 }

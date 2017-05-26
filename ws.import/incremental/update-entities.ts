@@ -15,7 +15,7 @@ export {
   startEntitiesUpdate as updateEntities
 };
 
-function startEntitiesUpdate(externalContext, done) {
+function startEntitiesUpdate(externalContext: any, done: Function): void {
   logger.debug('Start process of entities update');
 
   const externalContextFrozen = Object.freeze({
@@ -33,12 +33,12 @@ function startEntitiesUpdate(externalContext, done) {
   ddfImportUtils.startStreamProcessing(entitiesUpdateStream, externalContext, done);
 }
 
-function updateEntities(externalContextFrozen) {
+function updateEntities(externalContextFrozen: any): void {
   const entityChangesStream =
     fileUtils.readTextFileByLineAsJsonStream(externalContextFrozen.pathToDatasetDiff)
-    .map(changes => new ChangesDescriptor(changes))
-    .filter(changesDescriptor => changesDescriptor.describes(constants.ENTITIES))
-    .map(changesDescriptor => {
+    .map((changes: any) => new ChangesDescriptor(changes))
+    .filter((changesDescriptor: ChangesDescriptor) => changesDescriptor.describes(constants.ENTITIES))
+    .map((changesDescriptor: ChangesDescriptor) => {
       return {changesDescriptor, context: _.extend(externalContextFrozen)};
     });
 
@@ -49,27 +49,27 @@ function updateEntities(externalContextFrozen) {
   ]).parallel(3);
 }
 
-function toCreatedEntitiesStream(entityChangesStream) {
+function toCreatedEntitiesStream(entityChangesStream: any): void {
   logger.info('Start creating entities');
   return entityChangesStream.fork()
-    .filter(({changesDescriptor}) => changesDescriptor.isCreateAction())
-    .map(({changesDescriptor, context}) => {
+    .filter(({changesDescriptor}: any) => changesDescriptor.isCreateAction())
+    .map(({changesDescriptor, context}: any) => {
       const currentResource = changesDescriptor.currentResource;
       const setsAndDomain = entitiesUtils.getSetsAndDomain(currentResource, context, changesDescriptor.changes);
       return ddfMappers.mapDdfEntityToWsModel(changesDescriptor.changes, _.extend({filename: currentResource.path}, setsAndDomain, context));
     })
     .batch(ddfImportUtils.DEFAULT_CHUNK_SIZE)
-    .flatMap(entitiesBatch => {
+    .flatMap((entitiesBatch: any) => {
       logger.debug('Saving batch of created entities. Amount: ', _.size(entitiesBatch));
       return hi.wrapCallback(storeEntitiesToDb)(entitiesBatch);
     });
 }
 
-function toUpdatedEntitiesStream(entityChangesStream, externalContextFrozen) {
+function toUpdatedEntitiesStream(entityChangesStream: any, externalContextFrozen: any): void {
   logger.info('Start updating entities');
   return entityChangesStream.fork()
-    .filter(({changesDescriptor}) => changesDescriptor.isUpdateAction())
-    .map(({changesDescriptor, context}) => {
+    .filter(({changesDescriptor}: any) => changesDescriptor.isUpdateAction())
+    .map(({changesDescriptor, context}: any) => {
       const currentResource = changesDescriptor.currentResource;
       const setsAndDomain = entitiesUtils.getSetsAndDomain(currentResource, externalContextFrozen, changesDescriptor.changedObject);
 
@@ -84,7 +84,7 @@ function toUpdatedEntitiesStream(entityChangesStream, externalContextFrozen) {
       return {changesDescriptor, context: _.extend({filename: _.get(currentResource, 'path'), oldFilename: _.get(oldResource, 'path')}, setsAndDomain, oldSetsAndDomain, context)};
     })
     .batch(ddfImportUtils.DEFAULT_CHUNK_SIZE)
-    .flatMap(updatedEntitiesBatch => {
+    .flatMap((updatedEntitiesBatch: any) => {
       logger.debug('Updating batch of entities. Amount: ', _.size(updatedEntitiesBatch));
       return hi.wrapCallback(closeEntities)({
         entityChangesBatch: updatedEntitiesBatch,
@@ -94,11 +94,11 @@ function toUpdatedEntitiesStream(entityChangesStream, externalContextFrozen) {
     });
 }
 
-function toRemovedEntitiesStream(entityChangesStream, externalContextFrozen) {
+function toRemovedEntitiesStream(entityChangesStream: any, externalContextFrozen: any): void {
   logger.info('Start removing entities');
   return entityChangesStream.fork()
-    .filter(({changesDescriptor}) => changesDescriptor.isRemoveAction())
-    .map(({changesDescriptor, context}) => {
+    .filter(({changesDescriptor}: any) => changesDescriptor.isRemoveAction())
+    .map(({changesDescriptor, context}: any) => {
 
       const {
         entitySet: oldEntitySet,
@@ -111,7 +111,7 @@ function toRemovedEntitiesStream(entityChangesStream, externalContextFrozen) {
       return {changesDescriptor, context: _.extend({oldFilename: _.get(changesDescriptor.oldResource, 'path')}, oldSetsAndDomain, context)};
     })
     .batch(ddfImportUtils.DEFAULT_CHUNK_SIZE)
-    .flatMap((removedEntitiesBatch) => {
+    .flatMap((removedEntitiesBatch: any) => {
       logger.debug('Removing batch of entities. Amount: ', _.size(removedEntitiesBatch));
       return hi.wrapCallback(closeEntities)({
         entityChangesBatch: removedEntitiesBatch,
@@ -120,15 +120,15 @@ function toRemovedEntitiesStream(entityChangesStream, externalContextFrozen) {
     });
 }
 
-function storeEntitiesToDb(createdEntities, onEntitiesCreated) {
+function storeEntitiesToDb(createdEntities: any, onEntitiesCreated: any): any {
   return EntitiesRepositoryFactory.versionAgnostic().create(createdEntities, onEntitiesCreated);
 }
 
-function closeEntities({entityChangesBatch, externalContext, handleClosedEntity}, onAllEntitiesClosed) {
+function closeEntities({entityChangesBatch, externalContext, handleClosedEntity}: any, onAllEntitiesClosed: any): void {
   const entitiesRepository = EntitiesRepositoryFactory
     .latestVersion(externalContext.dataset._id, externalContext.transaction.createdAt);
 
-  return async.eachLimit(entityChangesBatch, constants.LIMIT_NUMBER_PROCESS, ({changesDescriptor, context}, onEntityClosed) => {
+  return async.eachLimit(entityChangesBatch, constants.LIMIT_NUMBER_PROCESS, ({changesDescriptor, context}: any, onEntityClosed: any): Promise<Object> => {
     const query = {
       domain: context.oldEntityDomain.originId,
       sets: context.oldEntitySetsOriginIds,
@@ -137,7 +137,7 @@ function closeEntities({entityChangesBatch, externalContext, handleClosedEntity}
     };
 
     logger.debug('Closing entity by query: ', query);
-    return entitiesRepository.closeOneByQuery(query, (error, closedEntity) => {
+    return entitiesRepository.closeOneByQuery(query, (error: string, closedEntity: any) => {
       if (error) {
         return onEntityClosed(error);
       }
@@ -158,7 +158,7 @@ function closeEntities({entityChangesBatch, externalContext, handleClosedEntity}
   }, onAllEntitiesClosed);
 }
 
-function createUpdatedEntity({changesDescriptor, context}, closedEntity, done) {
+function createUpdatedEntity({changesDescriptor, context}: any, closedEntity: any, done: Function): void {
   logger.debug('Creating updated entity based on its closed version');
 
   const entityPropertiesWithoutRemovedColumns = _.omit(closedEntity.properties, changesDescriptor.removedColumns);

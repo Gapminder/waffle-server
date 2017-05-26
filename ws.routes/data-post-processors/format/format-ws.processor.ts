@@ -14,8 +14,8 @@ export {
   mapSchemaToWsJson as mapSchema
 };
 
-function mapSchemaToWsJson(data) {
-  const rows = _.map(data.schema, schemaDoc => _.reduce(data.headers, (schemaRow, header: string) => {
+function mapSchemaToWsJson(data: any): any {
+  const rows = _.map(data.schema, (schemaDoc: any) => _.reduce(data.headers, (schemaRow: any, header: string) => {
     schemaRow.push(schemaDoc[header]);
     return schemaRow;
   }, []));
@@ -24,15 +24,15 @@ function mapSchemaToWsJson(data) {
   return { dataset: data.datasetName, version: data.datasetVersionCommit, headers, rows: sortRows(rows, data.query, headers)};
 }
 
-function mapConceptToWsJson(data) {
+function mapConceptToWsJson(data: any): any {
   const uniqConceptProperties = _.chain(data.concepts)
-    .flatMap(concept => _.keys(concept.properties))
+    .flatMap((concept: any) => _.keys(concept.properties))
     .uniq()
     .value();
 
   const select = _.isEmpty(data.headers) ? uniqConceptProperties : data.headers;
 
-  const rows = _.map(data.concepts, concept => {
+  const rows = _.map(data.concepts, (concept: any) => {
     return _mapConceptPropertiesToWsJson(select, concept, data.language);
   });
 
@@ -50,22 +50,22 @@ function mapConceptToWsJson(data) {
   return result;
 }
 
-function _mapConceptPropertiesToWsJson(select, concept, language) {
+function _mapConceptPropertiesToWsJson(select: any, concept: any, language: string): any {
   const translatedConceptProperties = commonService.translateDocument(concept, language);
   return _.map(select, (property: string) => {
     return translatedConceptProperties[property];
   });
 }
 
-function mapEntitiesToWsJson(data) {
+function mapEntitiesToWsJson(data: any): any {
   const uniqEntityProperties = _.chain(data.entities)
-    .flatMap(entity => _.keys(entity.properties))
+    .flatMap((entity: any) => _.keys(entity.properties))
     .uniq()
     .value();
 
   const select = _.isEmpty(data.headers) ? uniqEntityProperties : data.headers;
 
-  const rows = _.map(data.entities, (entity) => {
+  const rows = _.map(data.entities, (entity: any) => {
     return _mapEntitiesPropertiesToWsJson(data.domainGid, select, entity, data.language);
   });
 
@@ -83,7 +83,7 @@ function mapEntitiesToWsJson(data) {
   return result;
 }
 
-function _mapEntitiesPropertiesToWsJson(entityDomainGid, select, entity, language) {
+function _mapEntitiesPropertiesToWsJson(entityDomainGid: any, select: any, entity: any, language: string): any {
   const flattenedEntity = _.extend({[entityDomainGid]: entity.gid}, commonService.translateDocument(entity, language));
 
   return _.map(select, (property: string) => {
@@ -91,7 +91,7 @@ function _mapEntitiesPropertiesToWsJson(entityDomainGid, select, entity, languag
   });
 }
 
-function mapDatapointsToWsJson(data) {
+function mapDatapointsToWsJson(data: any): any {
   const selectedConceptsByOriginId = _.chain(data.concepts)
     .keyBy(constants.GID)
     .pick(data.headers)
@@ -116,16 +116,16 @@ function mapDatapointsToWsJson(data) {
 
   const dimensionsDictionary = new Map();
 
-  const headerConceptsDictionary = _.reduce(data.headers, (dictionary, header, index) => {
+  const headerConceptsDictionary = _.reduce(data.headers, (dictionary: any, header: any, index: any) => {
     dictionary.set(header, index);
     return dictionary;
   }, new Map());
 
   return hi(data.datapoints)
-    .reduce(result, (result, datapoint: any) => {
-      const rows = result.rows;
+    .reduce(result, (outcome: any, datapoint: any) => {
+      const rows = outcome.rows;
       const sortedDimensions = _.chain(datapoint.dimensions)
-        .sortBy((value) => value.toString())
+        .sortBy((value: any) => value.toString())
         .join('.')
         .value();
       if (!dimensionsDictionary.has(sortedDimensions)) {
@@ -149,16 +149,16 @@ function mapDatapointsToWsJson(data) {
 
       return result;
     })
-    .map((result) => {
-      return _.extend(result, {rows: sortRows(result.rows, data.query, result.headers)});
+    .map((outcome: any) => {
+      return _.extend(outcome, {rows: sortRows(outcome.rows, data.query, outcome.headers)});
     });
 }
 
-function createNewDatapointsRow(datapoint, externalContext) {
+function createNewDatapointsRow(datapoint: any, externalContext: any): any {
   const {entitiesByOriginId, selectedConceptsByOriginId, selectedConceptsOriginIds, headerConceptsDictionary, headers} = externalContext;
   const rowTemplate = _.times(headers.length, () => null);
 
-  return _.reduce(datapoint.dimensions, (row, dimension: any) => {
+  return _.reduce(datapoint.dimensions, (row: any, dimension: any) => {
     const originEntity = entitiesByOriginId[dimension];
     const domainGid = _getGidOfSelectedConceptByEntity(selectedConceptsByOriginId, selectedConceptsOriginIds, originEntity);
     const domainIndex = headerConceptsDictionary.get(domainGid);
@@ -167,18 +167,18 @@ function createNewDatapointsRow(datapoint, externalContext) {
   }, rowTemplate);
 }
 
-function _getGidOfSelectedConceptByEntity(selectedConceptsByOriginId, selectedConceptsOriginIds, entity): string {
+function _getGidOfSelectedConceptByEntity(selectedConceptsByOriginId: any, selectedConceptsOriginIds: any, entity: any): string {
   const conceptOriginIds = _.map(_.concat(entity.domain, entity.sets), _.toString);
-  const originIdOfSelectedConcept = _.find(selectedConceptsOriginIds, originId => _.includes(conceptOriginIds, originId)) as string;
+  const originIdOfSelectedConcept = _.find(selectedConceptsOriginIds, (originId: any) => _.includes(conceptOriginIds, originId)) as string;
   return _.get(selectedConceptsByOriginId[originIdOfSelectedConcept], constants.GID) as string;
 }
 
-function coerceValue(datapointValue) {
+function coerceValue(datapointValue: any): any {
   const value = ddfImportUtils.toNumeric(datapointValue) || ddfImportUtils.toBoolean(datapointValue) || datapointValue;
   return _.isNil(value) ? null : value;
 }
 
-function sortRows(rows, query, headers) {
+function sortRows(rows: any, query: any, headers: any): any {
   const ordering = ddfQueryUtils.convertOrderByForWsJson(_.get(query, 'order_by', []), headers);
   return _.isEmpty(ordering.columnsToSort) ? rows : _.orderBy(rows, ordering.columnsToSort, ordering.columnsSortDirections);
 }

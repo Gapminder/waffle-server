@@ -13,6 +13,8 @@ import * as datasetsService from '../../../../ws.services/datasets.service';
 import * as reposService from '../../../../ws.services/repos.service';
 import * as cacheUtils from '../../../../ws.utils/cache-warmup';
 import * as cliApi from 'waffle-server-import-cli';
+import {Request, Response} from 'express';
+import {json} from "body-parser";
 
 const sandbox = sinonTest.configureTest(sinon);
 
@@ -343,11 +345,11 @@ describe('WS-CLI controller', () => {
       const loggerStub = this.stub(logger, 'error');
       const resJsonSpy = this.spy();
 
-      const req = {
+      const req: any = {
         body: {}
       };
 
-      const res = {
+      const res: any = {
         json: resJsonSpy
       };
 
@@ -369,13 +371,13 @@ describe('WS-CLI controller', () => {
       const loggerStub = this.stub(logger, 'error');
       const resJsonSpy = this.spy();
 
-      const req = {
+      const req: any = {
         body: {
           email: 'test'
         }
       };
 
-      const res = {
+      const res: any = {
         json: resJsonSpy
       };
 
@@ -400,14 +402,14 @@ describe('WS-CLI controller', () => {
         return onAuthenticated(expectedError);
       });
 
-      const req = {
+      const req: any = {
         body: {
           email: 'test',
           password: '123'
         }
       };
 
-      const res = {
+      const res: any = {
         json: resJsonSpy
       };
 
@@ -434,14 +436,14 @@ describe('WS-CLI controller', () => {
         return onAuthenticated(null, expectedData);
       });
 
-      const req = {
+      const req: any = {
         body: {
           email: 'test',
           password: '123'
         }
       };
 
-      const res = {
+      const res: any = {
         json: resJsonSpy
       };
 

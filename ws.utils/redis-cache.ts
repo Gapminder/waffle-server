@@ -8,7 +8,7 @@ const cache = expressRedisCache({
   port: config.REDIS_PORT
 });
 
-cache.on('error', (error: any) => {
+cache.on('error', (error: string) => {
   logger.error(error);
 });
 

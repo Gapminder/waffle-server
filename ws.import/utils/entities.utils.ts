@@ -7,7 +7,7 @@ export {
   makeEntityBasedOnItsClosedVersion
 };
 
-function getSetsAndDomain(resource, context, entity) {
+function getSetsAndDomain(resource: any, context: any, entity: any): any {
   const entitySet = context.concepts[resource.concept] || context.previousConcepts[resource.concept];
   const entityDomain = entitySet.type === 'entity_domain' ? entitySet : entitySet.domain;
 
@@ -22,7 +22,7 @@ function getSetsAndDomain(resource, context, entity) {
   return {entitySet, entityDomain, entitySetsOriginIds: _.values(entitySets)};
 }
 
-function makeEntityBasedOnItsClosedVersion(properties, closedEntity, externalContext) {
+function makeEntityBasedOnItsClosedVersion(properties: any, closedEntity: any, externalContext: any): any {
   const {
     entitySet,
     concepts,
