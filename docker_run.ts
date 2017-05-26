@@ -14,7 +14,7 @@ const THRASHING_MACHINE = process.env.THRASHING_MACHINE;
 const LOGS_SYNC_DISABLED = process.env.LOGS_SYNC_DISABLED;
 
 const runWaffleServerCommand = '/usr/bin/forever -o logs/out.log -e logs/err.log start -c \"/usr/bin/node --stack_trace_limit=0 --max_old_space_size=3000\" -m 10 --minUptime 500 --spinSleepTime 600 server.js';
-const runWaffleServerThrashingMachineCommand = 'INNER_PORT=80 /usr/bin/node --max_old_space_size=10000 server.js';
+const runWaffleServerThrashingMachineCommand = 'INNER_PORT=80 /usr/bin/node --stack_trace_limit=0 --max_old_space_size=10000 server.js';
 
 if (!REDIS_HOST) {
   logger.info('-- ERROR: REDIS_HOST is not set. Exit.');
