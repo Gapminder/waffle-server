@@ -9,7 +9,18 @@ import { constants } from '../../../ws.utils/constants';
 const Concepts = model('Concepts');
 
 export class ConceptsRepository extends VersionedModelRepository {
-  public constructor(versionQueryFragment, datasetId?, version?) {
+
+  // TODO: Move this in utils that should be common across all repositories
+  private static makePositiveProjectionFor(properties: any): any {
+    const positiveProjectionValues = _.fill(new Array(_.size(properties)), 1);
+    return ConceptsRepository.prefixWithProperties(_.zipObject(properties, positiveProjectionValues));
+  }
+
+  private static prefixWithProperties(object: any): any {
+    return _.mapKeys(object, (value: any, property: any) => `properties.${property}`);
+  }
+
+  public constructor(versionQueryFragment: any, datasetId?: any, version?: any) {
     super(versionQueryFragment, datasetId, version);
   }
 
@@ -17,12 +28,12 @@ export class ConceptsRepository extends VersionedModelRepository {
     return Concepts;
   }
 
-  public findConceptsByQuery(conceptsQuery, onPropertiesFound) {
+  public findConceptsByQuery(conceptsQuery: any, onPropertiesFound: Function): Promise<Object> {
     const composedQuery = this._composeQuery(conceptsQuery);
     return Concepts.find(composedQuery).lean().exec(onPropertiesFound);
   }
 
-  public findConceptProperties(select, where, onPropertiesFound) {
+  public findConceptProperties(select: any, where: any, onPropertiesFound: Function): Promise<Object> {
     const projection = ConceptsRepository.makePositiveProjectionFor(select);
     if (!_.isEmpty(projection)) {
       projection.gid = 1;
@@ -36,60 +47,60 @@ export class ConceptsRepository extends VersionedModelRepository {
     return Concepts.find(conceptQuery, projection).lean().exec(onPropertiesFound);
   }
 
-  public addSubsetOfByGid({gid, parentConceptId}, done) {
+  public addSubsetOfByGid({gid, parentConceptId}: any, done: Function): any {
     const query = this._composeQuery({'properties.drill_up': gid});
-    return Concepts.update(query, {$addToSet: {'subsetOf': parentConceptId}}, {multi: true}, done);
+    return Concepts.update(query, {$addToSet: {subsetOf: parentConceptId}}, {multi: true}, done as any);
   }
 
-  public setDomainByGid({gid, domainConceptId}, done) {
+  public setDomainByGid({gid, domainConceptId}: any, done: Function): any {
     const query = this._composeQuery({'properties.domain': gid});
-    return Concepts.update(query, {$set: {'domain': domainConceptId}}, {multi: true}, done);
+    return Concepts.update(query, {$set: {domain: domainConceptId}}, {multi: true}, done as any);
   }
 
-  public findDistinctDrillups(done) {
+  public findDistinctDrillups(done: Function): Promise<Object> {
     const query = this._composeQuery();
     return Concepts.distinct('properties.drill_up', query).lean().exec(done);
   }
 
-  public findDistinctDomains(done) {
+  public findDistinctDomains(done: Function): Promise<Object> {
     const query = this._composeQuery();
     return Concepts.distinct('properties.domain', query).lean().exec(done);
   }
 
-  public closeByGid(gid, onClosed) {
+  public closeByGid(gid: any, onClosed: Function): any {
     const query = this._composeQuery({gid});
-    return Concepts.findOneAndUpdate(query, {$set: {to: this.version}}, {'new': false}).lean().exec(onClosed);
+    return Concepts.findOneAndUpdate(query, {$set: {to: this.version}}, {new: false}).lean().exec(onClosed);
   }
 
-  public closeOneByQuery(closingQuery, onClosed) {
+  public closeOneByQuery(closingQuery: any, onClosed: Function): Promise<Object> {
     const query = this._composeQuery(closingQuery);
-    return Concepts.findOneAndUpdate(query, {$set: {to: this.version}}, {'new': false}).lean().exec(onClosed);
+    return Concepts.findOneAndUpdate(query, {$set: {to: this.version}}, {new: false}).lean().exec(onClosed);
   }
 
-  public closeById(conceptId, onClosed) {
+  public closeById(conceptId: any, onClosed: Function): Promise<Object> {
     const query = this._composeQuery({_id: conceptId});
-    return Concepts.findOneAndUpdate(query, {$set: {to: this.version}}, {'new': false}).lean().exec(onClosed);
+    return Concepts.findOneAndUpdate(query, {$set: {to: this.version}}, {new: false}).lean().exec(onClosed);
   }
 
-  public count(onCounted) {
+  public count(onCounted: Function): any {
     const countQuery = this._composeQuery();
-    return Concepts.count(countQuery, onCounted);
+    return Concepts.count(countQuery, onCounted as any);
   }
 
-  public rollback(transaction, onRolledback) {
+  public rollback(transaction: any, onRolledback: Function): any {
     const {createdAt: versionToRollback, dataset} = transaction;
 
     return async.parallelLimit([
-      done => Concepts.update({dataset, to: versionToRollback}, {$set: {to: constants.MAX_VERSION}}, {multi: true}).lean().exec(done),
-      done => Concepts.remove({dataset, from: versionToRollback}, done)
-    ], constants.LIMIT_NUMBER_PROCESS, onRolledback);
-  };
-
-  public removeByDataset(datasetId, onRemove) {
-    return Concepts.remove({dataset: datasetId}, onRemove);
+      (done: Function) => Concepts.update({dataset, to: versionToRollback}, {$set: {to: constants.MAX_VERSION}}, {multi: true}).lean().exec(done),
+      (done: Function) => Concepts.remove({dataset, from: versionToRollback}, done as any)
+    ], constants.LIMIT_NUMBER_PROCESS, onRolledback as any);
   }
 
-  public findAllPopulated(done) {
+  public removeByDataset(datasetId: any, onRemove: Function): any {
+    return Concepts.remove({dataset: datasetId}, onRemove as any);
+  }
+
+  public findAllPopulated(done: Function): any {
     const composedQuery = this._composeQuery();
     return Concepts.find(composedQuery, null, {
       join: {
@@ -106,29 +117,29 @@ export class ConceptsRepository extends VersionedModelRepository {
       .exec(done);
   }
 
-  public findAll(onFound) {
+  public findAll(onFound: Function): Promise<Object> {
     const countQuery = this._composeQuery();
     return Concepts.find(countQuery).lean().exec(onFound);
   }
 
-  public findByGid(gid, onFound) {
+  public findByGid(gid: any, onFound: Function): Promise<Object> {
     const query = this._composeQuery({gid});
     return Concepts.findOne(query).lean().exec(onFound);
   }
 
-  public findTargetForTranslation(params, done) {
+  public findTargetForTranslation(params: any, done: Function): Promise<Object> {
     return this.findByGid(params.gid, done);
   }
 
-  public removeTranslation({originId, language}, done) {
-    return Concepts.findOneAndUpdate({originId}, {$unset: {[`languages.${language}`]: 1}}, {'new': true}, done);
+  public removeTranslation({originId, language}: any, done: Function): any {
+    return Concepts.findOneAndUpdate({originId}, {$unset: {[`languages.${language}`]: 1}}, {new: true}, done as any);
   }
 
-  public addTranslation({id, language, translation}, done) {
-    return Concepts.findOneAndUpdate({_id: id}, {$set: {[`languages.${language}`]: translation}}, {'new': true}, done);
+  public addTranslation({id, language, translation}: any, done: Function): any {
+    return Concepts.findOneAndUpdate({_id: id}, {$set: {[`languages.${language}`]: translation}}, {new: true}, done as any);
   }
 
-  public addTranslationsForGivenProperties(properties, externalContext, done?) {
+  public addTranslationsForGivenProperties(properties: any, externalContext: any, done?: Function): Promise<Object> {
     const {language} = externalContext;
 
     const subEntityQuery = {
@@ -146,18 +157,9 @@ export class ConceptsRepository extends VersionedModelRepository {
 
     return Concepts.update(query, updateQuery).exec(done);
   }
-
-  //TODO: Move this in utils that should be common across all repositories
-  private static makePositiveProjectionFor(properties): any {
-    const positiveProjectionValues = _.fill(new Array(_.size(properties)), 1);
-    return ConceptsRepository.prefixWithProperties(_.zipObject(properties, positiveProjectionValues));
-  }
-
-  private static prefixWithProperties(object) {
-    return _.mapKeys(object, (value, property) => `properties.${property}`);
-  }
 }
 
+/* tslint:disable-next-line:max-classes-per-file */
 class ConceptsRepositoryFactory extends VersionedModelRepositoryFactory<ConceptsRepository> {
   public constructor() {
     super(ConceptsRepository);

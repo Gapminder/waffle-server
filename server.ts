@@ -7,7 +7,7 @@ const app: express.Application = express();
 import { config } from './ws.config/config';
 import { logger } from './ws.config/log';
 
-process.on('uncaughtException', function(err) {
+process.on('uncaughtException', function(err: string): void {
   logger.error(err);
 });
 
@@ -29,13 +29,13 @@ import {makeDefaultUser} from './make-default-user';
 import * as Cache from './ws.utils/cache-warmup';
 
 app.listen(config.INNER_PORT, () => {
-  console.log('\nExpress server listening on port %d in %s mode', config.INNER_PORT, app.settings.env);
+  logger.info('\nExpress server listening on port %d in %s mode', config.INNER_PORT, app.settings.env);
 
   makeDefaultUser();
 
   if(config.THRASHING_MACHINE) {
 
-    Cache.warmUpCache((error, warmedQueriesAmount)=> {
+    Cache.warmUpCache((error: string, warmedQueriesAmount: any) => {
       if(error) {
         return logger.error(error, 'Cache warm up failed.');
       }

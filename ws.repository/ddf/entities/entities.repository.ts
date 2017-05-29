@@ -11,7 +11,17 @@ const Entities = model('Entities');
 const Concepts = model('Concepts');
 
 class EntitiesRepository extends VersionedModelRepository {
-  public constructor(versionQueryFragment, datasetId?, version?) {
+
+  private static makePositiveProjectionFor(properties: any): any {
+    const positiveProjectionValues = _.fill(new Array(_.size(properties)), 1);
+    return EntitiesRepository.toPropertiesDotNotation(_.chain(properties).zipObject(positiveProjectionValues).value());
+  }
+
+  private static toPropertiesDotNotation(object: any): Dictionary<{}> {
+    return _.mapKeys(object, (value: any, property: string) => property === 'gid' ? property : `properties.${property}`);
+  }
+
+  public constructor(versionQueryFragment: any, datasetId?: any, version?: any) {
     super(versionQueryFragment, datasetId, version);
   }
 
@@ -19,61 +29,61 @@ class EntitiesRepository extends VersionedModelRepository {
     return Entities;
   }
 
-  public count(onCounted) {
+  public count(onCounted: Function): any {
     const countQuery = this._composeQuery();
-    return Entities.count(countQuery, onCounted);
+    return Entities.count(countQuery, onCounted as any);
   }
 
-  public rollback(transaction, onRolledback) {
+  public rollback(transaction: any, onRolledback: Function): void {
     const {createdAt: versionToRollback, dataset} = transaction;
 
     return async.parallelLimit([
-      done => Entities.update({dataset, to: versionToRollback}, {$set: {to: constants.MAX_VERSION}}, {multi: true}).lean().exec(done),
-      done => Entities.remove({dataset, from: versionToRollback}, done)
-    ], constants.LIMIT_NUMBER_PROCESS, onRolledback);
+      (done: Function) => Entities.update({dataset, to: versionToRollback}, {$set: {to: constants.MAX_VERSION}}, {multi: true}).lean().exec(done),
+      (done: Function) => Entities.remove({dataset, from: versionToRollback}, done as any)
+    ], constants.LIMIT_NUMBER_PROCESS, onRolledback as any);
   }
 
-  public removeByDataset(datasetId, onRemove) {
+  public removeByDataset(datasetId: any, onRemove: any): any {
     return Entities.remove({dataset: datasetId}, onRemove);
   }
 
-  public closeOneByQuery(closeQuery, done) {
+  public closeOneByQuery(closeQuery: any, done: Function): any {
     const query = this._composeQuery(closeQuery);
-    return Entities.findOneAndUpdate(query, {$set: {to: this.version}}, {'new': true}).lean().exec(done);
+    return Entities.findOneAndUpdate(query, {$set: {to: this.version}}, {new: true}).lean().exec(done);
   }
 
-  public findTargetForTranslation(params, done) {
+  public findTargetForTranslation(params: any, done: Function): Promise<Object> {
     const {domain, sets, gid, sources} = params;
     const query = this._composeQuery({domain, sets, gid, sources});
     return Entities.findOne(query).lean().exec(done);
   }
 
-  public removeTranslation({originId, language}, done) {
-    return Entities.findOneAndUpdate({originId}, {$unset: {[`languages.${language}`]: 1}}, {'new': true}, done);
+  public removeTranslation({originId, language}: any, done: Function): any {
+    return Entities.findOneAndUpdate({originId}, {$unset: {[`languages.${language}`]: 1}}, {new: true}, done as any);
   }
 
-  public addTranslation({id, language, translation}, done) {
-    return Entities.findOneAndUpdate({_id: id}, {$set: {[`languages.${language}`]: translation}}, {'new': true}, done);
+  public addTranslation({id, language, translation}: any, done: Function): any {
+    return Entities.findOneAndUpdate({_id: id}, {$set: {[`languages.${language}`]: translation}}, {new: true}, done as any);
   }
 
-  public findEntityPropertiesByQuery(entitiesQuery, onPropertiesFound) {
+  public findEntityPropertiesByQuery(entitiesQuery: any, onPropertiesFound: Function): Promise<Object> {
     const composedQuery = this._composeQuery(entitiesQuery);
     logger.debug({mongo: composedQuery}, 'Query to get entities according to ddfql');
     return Entities.find(composedQuery).lean().exec(onPropertiesFound);
   }
 
-  public findAll(done?) {
+  public findAll(done?: Function): Promise<Object> {
     const composedQuery = this._composeQuery();
     return Entities.find(composedQuery).lean().exec(done);
   }
 
-  public findEntityProperties(entityDomainGid, select, where, onPropertiesFound) {
+  public findEntityProperties(entityDomainGid: any, select: any, where: any, onPropertiesFound: Function): Promise<Object> {
     const conceptQuery = this._composeQuery({
       gid: entityDomainGid,
       'properties.concept_type': {$in: constants.DEFAULT_ENTITY_GROUP_TYPES}
     });
 
-    return Concepts.findOne(conceptQuery).lean().exec((error, concept: any) => {
+    return Concepts.findOne(conceptQuery).lean().exec((error: string, concept: any) => {
       if (error || !concept) {
         return onPropertiesFound(error || `There is no entity domain '${entityDomainGid}'`);
       }
@@ -89,7 +99,7 @@ class EntitiesRepository extends VersionedModelRepository {
       }
 
       const normalizedWhereClause = this._normalizeWhereClause(where);
-      const whereClauseWithSubstitutedGid = _.mapKeys(normalizedWhereClause, (value, key: string) => {
+      const whereClauseWithSubstitutedGid = _.mapKeys(normalizedWhereClause, (value: any, key: string) => {
         if (entityDomainGid === key) {
           return 'gid';
         }
@@ -104,7 +114,7 @@ class EntitiesRepository extends VersionedModelRepository {
     });
   }
 
-  public addTranslationsForGivenProperties(properties, externalContext, done?) {
+  public addTranslationsForGivenProperties(properties: any, externalContext: any, done?: Function): Promise<any> {
     const {source, language, resolvedProperties} = externalContext;
 
     const subEntityQuery = _.extend({sources: source}, resolvedProperties);
@@ -121,15 +131,6 @@ class EntitiesRepository extends VersionedModelRepository {
     logger.debug('[Import:Entities] Add translations', query);
 
     return Entities.update(query, updateQuery).exec(done);
-  }
-
-  private static makePositiveProjectionFor(properties): any {
-    const positiveProjectionValues = _.fill(new Array(_.size(properties)), 1);
-    return EntitiesRepository.toPropertiesDotNotation(_.chain(properties).zipObject(positiveProjectionValues).value());
-  }
-
-  private static toPropertiesDotNotation(object) {
-    return _.mapKeys(object, (value, property: string) => property === 'gid' ? property : `properties.${property}`);
   }
 }
 

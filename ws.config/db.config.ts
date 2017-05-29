@@ -1,5 +1,6 @@
 import * as mongoose from 'mongoose';
 import { config } from './config';
+import { logger } from './log';
 
 const db = mongoose.connection;
 mongoose.set('debug', config.MONGOOSE_DEBUG);
@@ -22,20 +23,20 @@ if (config.THRASHING_MACHINE) {
 }
 
 db.on('error', function (err: any): void {
-  console.log('db connect error', err);
+  logger.info('db connect error', err);
 });
 
 db.once('open', function (): void {
-  console.log('db connect good');
+  logger.info('db connect good');
 });
 
 db.once('close', function (): void {
-  console.log('db connect close');
+  logger.info('db connect close');
 });
 
 const gracefulExit = () => {
   db.close(() => {
-    console.log('Mongoose default connection with DB is disconnected through app termination');
+    logger.info('Mongoose default connection with DB is disconnected through app termination');
     process.exit(0);
   });
 };

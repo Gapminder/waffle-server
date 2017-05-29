@@ -2,7 +2,7 @@ import * as passport from 'passport';
 import  { Strategy as LocalStrategy } from 'passport-local';
 import  * as PassportUniqueTokenStrategy from 'passport-unique-token';
 
-import {UsersRepository} from '../ws.repository/ddf/users/users.repository';
+import { UsersRepository } from '../ws.repository/ddf/users/users.repository';
 
 const UniqueTokenStrategy = PassportUniqueTokenStrategy.Strategy;
 
@@ -27,7 +27,7 @@ function enableUniqueTokenStrategy(): void {
   };
 
   passport.use(new UniqueTokenStrategy(strategyOptions, (token: string, done: Function) => {
-    UsersRepository.findUserByUniqueTokenAndProlongSession(token, (error: any, user: any) => {
+    UsersRepository.findUserByUniqueTokenAndProlongSession(token, (error: string, user: any) => {
       if (error) {
         return done(error);
       }
@@ -43,7 +43,7 @@ function enableUniqueTokenStrategy(): void {
 
 function enableLocalStrategy(): void {
   passport.use(new LocalStrategy((username: string, password: string, done: Function) => {
-      return UsersRepository.findUserByEmail(username, (error: any, user: any) => {
+      return UsersRepository.findUserByEmail(username, (error: string, user: any) => {
         if (error) {
           return done(error);
         }

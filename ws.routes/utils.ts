@@ -42,7 +42,7 @@ function bodyFromUrlQuery(req: express.Request, res: express.Response, next: exp
     ? {parse: parseJsonAsync, query, queryType: 'JSON'}
     : {parse: parseUrlonAsync, query: url.parse(req.url).query, queryType: 'URLON'};
 
-  parser.parse(parser.query, (error: any, parsedQuery: any) => {
+  parser.parse(parser.query, (error: string, parsedQuery: any) => {
     logger.info({ddfqlRaw: parser.query});
     if (error) {
       res.json(toErrorResponse('Query was sent in incorrect format'));
@@ -75,7 +75,7 @@ function ensureAuthenticatedViaToken(req: express.Request, res: express.Response
 }
 
 function respondWithRawDdf(query: any, req: express.Request, res: express.Response, next: express.NextFunction): Function {
-  return (error: any, result: any) => {
+  return (error: string, result: any) => {
     if (error) {
       logger.error(error);
       (res as any).use_express_redis_cache = false;
@@ -101,7 +101,7 @@ function _storeWarmUpQueryForDefaultDataset(query: any): void {
     return;
   }
 
-  RecentDdfqlQueriesRepository.create(rawDdfQuery, (error: any) => {
+  RecentDdfqlQueriesRepository.create(rawDdfQuery, (error: string) => {
     if (error) {
       logger.debug(error);
     } else {
@@ -146,7 +146,7 @@ function checkDatasetAccessibility(req: express.Request, res: express.Response, 
     return next();
   }
 
-  return DatasetsRepository.findByName(datasetName, (error: any, dataset: any) => {
+  return DatasetsRepository.findByName(datasetName, (error: string, dataset: any) => {
     if (error) {
       logger.error(error);
       return res.json({success: false, error});

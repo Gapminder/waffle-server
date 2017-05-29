@@ -14,7 +14,7 @@ export {
   startDatapointsCreation as updateDatapoints
 };
 
-function startDatapointsCreation(externalContext, done) {
+function startDatapointsCreation(externalContext: any, done: Function): void {
   logger.info('Start process of datapoints update');
 
   const externalContextFrozen = Object.freeze(_.pick(externalContext, [
@@ -24,14 +24,14 @@ function startDatapointsCreation(externalContext, done) {
     'timeConcepts',
     'transaction',
     'previousTransaction',
-    'dataset',
+    'dataset'
   ]));
 
   const datapointsUpdateStream = updateDatapoints(externalContextFrozen);
   ddfImportUtils.startStreamProcessing(datapointsUpdateStream, externalContext, done);
 }
 
-function updateDatapoints(externalContextFrozen) {
+function updateDatapoints(externalContextFrozen: any): void {
   const findAllEntitiesMemoized = _.memoize(datapointsUtils.findAllEntities);
   const findAllPreviousEntitiesMemoized = _.memoize(datapointsUtils.findAllPreviousEntities);
   const saveEntitiesFoundInDatapoints = datapointsUtils.createEntitiesFoundInDatapointsSaverWithCache();
@@ -43,9 +43,9 @@ function updateDatapoints(externalContextFrozen) {
 
   const datapointsChangesWithContextStream =
     fileUtils.readTextFileByLineAsJsonStream(externalContextFrozen.pathToDatasetDiff)
-    .map(changes => new ChangesDescriptor(changes))
-    .filter(changesDescriptor => changesDescriptor.describes(constants.DATAPOINTS))
-    .flatMap(changesDescriptor => {
+    .map((changes: any) => new ChangesDescriptor(changes))
+    .filter((changesDescriptor: ChangesDescriptor) => changesDescriptor.describes(constants.DATAPOINTS))
+    .flatMap((changesDescriptor: ChangesDescriptor) => {
       const allEntitiesPromise = findAllEntitiesMemoized(externalContextFrozen);
       const allPreviousEntitiesPromise = findAllPreviousEntitiesMemoized(externalContextFrozen);
 
@@ -66,19 +66,19 @@ function updateDatapoints(externalContextFrozen) {
   return saveDatapointsAndEntitiesFoundInThem(datapointsWithFoundEntitiesStream);
 }
 
-function enrichDatapointChangesWithContextStream(changesDescriptor, allEntitiesPromise, allPreviousEntitiesPromise, externalContext) {
+function enrichDatapointChangesWithContextStream(changesDescriptor: ChangesDescriptor, allEntitiesPromise: Promise<Object>, allPreviousEntitiesPromise: Promise<Object>, externalContext: any): void {
   const segregatedEntitiesPromise = allEntitiesPromise
-    .then(segregatedEntities => ({segregatedEntities}));
+    .then((segregatedEntities: any) => ({segregatedEntities}));
 
   const segregatedPreviousEntitiesPromise = allPreviousEntitiesPromise
-    .then(segregatedPreviousEntities => ({segregatedPreviousEntities}));
+    .then((segregatedPreviousEntities: any) => ({segregatedPreviousEntities}));
 
   const previousAndCurrentSegregatedEntitiesPromise =
     Promise.all([segregatedEntitiesPromise, segregatedPreviousEntitiesPromise])
-    .then(result => _.extend({}, _.first(result), _.last(result)));
+    .then((result: any) => _.extend({}, _.first(result), _.last(result)));
 
   return hi(previousAndCurrentSegregatedEntitiesPromise)
-    .map(previousAndCurrentSegregatedEntities => {
+    .map((previousAndCurrentSegregatedEntities: any) => {
 
       const resource =
         changesDescriptor.isRemoveAction()
@@ -90,37 +90,37 @@ function enrichDatapointChangesWithContextStream(changesDescriptor, allEntitiesP
     });
 }
 
-function toRemovedDatapointsStream(datapointsChangesWithContextStream) {
+function toRemovedDatapointsStream(datapointsChangesWithContextStream: any): void {
   return datapointsChangesWithContextStream.fork()
-    .filter(({changesDescriptor}) => changesDescriptor.isRemoveAction())
-    .map(({changesDescriptor, context}) => {
+    .filter(({changesDescriptor}: any) => changesDescriptor.isRemoveAction())
+    .map(({changesDescriptor, context}: any) => {
       const {measures, dimensions} = datapointsUtils.getDimensionsAndMeasures(changesDescriptor.oldResource, context);
       return {changesDescriptor, context: _.extend({}, context, {measures, dimensions})};
     })
     .batch(ddfImportUtils.DEFAULT_CHUNK_SIZE)
-    .flatMap(context => {
+    .flatMap((context: any) => {
       return hi.wrapCallback(closeRemovedDatapoints)(context);
     });
 }
 
-function toCreatedDatapointsStream(datapointsChangesWithContextStream) {
+function toCreatedDatapointsStream(datapointsChangesWithContextStream: any): void {
   return datapointsChangesWithContextStream.fork()
-    .filter(({changesDescriptor}) => changesDescriptor.isCreateAction())
-    .map(({changesDescriptor, context}) => {
+    .filter(({changesDescriptor}: any) => changesDescriptor.isCreateAction())
+    .map(({changesDescriptor, context}: any) => {
       const {measures, dimensions} = datapointsUtils.getDimensionsAndMeasures(changesDescriptor.currentResource, context);
 
       return {changesDescriptor, context: _.extend({}, context, {measures, dimensions})};
     })
-    .map(({changesDescriptor, context}) => {
+    .map(({changesDescriptor, context}: any) => {
       const entitiesFoundInDatapoint = datapointsUtils.findEntitiesInDatapoint(changesDescriptor.changes, context, context);
       return {datapoint: changesDescriptor.changes, entitiesFoundInDatapoint, context};
     });
 }
 
-function toUpdatedDatapointsStream(datapointsChangesWithContextStream) {
+function toUpdatedDatapointsStream(datapointsChangesWithContextStream: any): void {
   return datapointsChangesWithContextStream.fork()
-    .filter(({changesDescriptor}) => changesDescriptor.isUpdateAction())
-    .map(({changesDescriptor, context}) => {
+    .filter(({changesDescriptor}: any) => changesDescriptor.isUpdateAction())
+    .map(({changesDescriptor, context}: any) => {
       const {measures, dimensions} = datapointsUtils
         .getDimensionsAndMeasures(changesDescriptor.currentResource, context);
 
@@ -129,23 +129,23 @@ function toUpdatedDatapointsStream(datapointsChangesWithContextStream) {
 
       return {changesDescriptor, context: _.extend({}, context, {measures, measuresOld, dimensions, dimensionsOld})};
     })
-    .map(({changesDescriptor, context}) => {
+    .map(({changesDescriptor, context}: any) => {
       const entitiesFoundInDatapoint = datapointsUtils.findEntitiesInDatapoint(changesDescriptor.changes, context, context);
 
       return {changesDescriptor, entitiesFoundInDatapoint, context};
     })
     .batch(ddfImportUtils.DEFAULT_CHUNK_SIZE)
-    .flatMap(datapointsEntitiesAndContext => {
+    .flatMap((datapointsEntitiesAndContext: any) => {
       return hi.wrapCallback(closeDatapointsOfPreviousVersion)(datapointsEntitiesAndContext);
     })
-    .flatMap(datapointsAndFoundEntitiesAndContext => hi(datapointsAndFoundEntitiesAndContext));
+    .flatMap((datapointsAndFoundEntitiesAndContext: any) => hi(datapointsAndFoundEntitiesAndContext));
 }
 
-function closeRemovedDatapoints(removedDataPoints, onAllRemovedDatapointsClosed) {
+function closeRemovedDatapoints(removedDataPoints: any, onAllRemovedDatapointsClosed: ErrorCallback<{}>): void {
   logger.info('Closing removed datapoints');
 
   return async.eachLimit(removedDataPoints, constants.LIMIT_NUMBER_PROCESS,
-    ({changesDescriptor, context: externalContext}, onDatapointsForGivenMeasuresClosed) => {
+    ({changesDescriptor, context: externalContext}: any, onDatapointsForGivenMeasuresClosed: Function) => {
       const context = {
         dimensions: externalContext.dimensions,
         segregatedEntities: externalContext.segregatedEntities,
@@ -159,11 +159,11 @@ function closeRemovedDatapoints(removedDataPoints, onAllRemovedDatapointsClosed)
   }, onAllRemovedDatapointsClosed);
 }
 
-function closeDatapointsOfPreviousVersion(changedDataPoints, onDatapointsOfPreviousVersionClosed) {
+function closeDatapointsOfPreviousVersion(changedDataPoints: any, onDatapointsOfPreviousVersionClosed: Function): void {
   logger.info('Closing updated datapoints');
   return async.mapLimit(changedDataPoints, constants.LIMIT_NUMBER_PROCESS,
-    ({changesDescriptor, entitiesFoundInDatapoint, context: externalContext}, onDatapointsForGivenMeasuresClosed) => {
-      const makeDatapointBasedOnItsClosedVersion = (closedDatapoint, closingMeasure) => {
+    ({changesDescriptor, entitiesFoundInDatapoint, context: externalContext}: any, onDatapointsForGivenMeasuresClosed: Function) => {
+      const makeDatapointBasedOnItsClosedVersion = (closedDatapoint: any, closingMeasure: any) => {
         logger.debug('Create new datapoint based on closed one. OriginId: ', closedDatapoint.originId);
 
         const newRawDatapoint = omitNotClosingMeasures({
@@ -187,16 +187,16 @@ function closeDatapointsOfPreviousVersion(changedDataPoints, onDatapointsOfPrevi
       };
 
       return closeDatapointsPerMeasure(changesDescriptor.original, context, onDatapointsForGivenMeasuresClosed);
-  }, (error, datapointsToCreate) => {
+  }, (error: string, datapointsToCreate: any) => {
     return onDatapointsOfPreviousVersionClosed(error, _.flatten(datapointsToCreate));
   });
 }
 
-function closeDatapointsPerMeasure(rawDatapoint, externalContext, onDatapointsForGivenMeasuresClosed) {
+function closeDatapointsPerMeasure(rawDatapoint: any, externalContext: any, onDatapointsForGivenMeasuresClosed: Function): void {
   const dimensionsEntityOriginIds = datapointsUtils.getDimensionsAsEntityOriginIds(rawDatapoint, {
     dimensions: externalContext.dimensions,
     segregatedEntities: externalContext.segregatedEntities,
-    segregatedPreviousEntities: externalContext.segregatedPreviousEntities,
+    segregatedPreviousEntities: externalContext.segregatedPreviousEntities
   });
 
   return async.mapLimit(externalContext.measures, constants.LIMIT_NUMBER_PROCESS, (measure: any, onDatapointClosed: Function) => {
@@ -210,7 +210,7 @@ function closeDatapointsPerMeasure(rawDatapoint, externalContext, onDatapointsFo
       };
 
       return DatapointsRepositoryFactory.latestExceptCurrentVersion(externalContext.datasetId, externalContext.version)
-        .closeDatapointByMeasureAndDimensions(options, (error, closedDatapoint) => {
+        .closeDatapointByMeasureAndDimensions(options, (error: string, closedDatapoint: any) => {
           if (error) {
             return onDatapointClosed(error);
           }
@@ -224,13 +224,13 @@ function closeDatapointsPerMeasure(rawDatapoint, externalContext, onDatapointsFo
 
           return onDatapointClosed(error, handleClosedDatapoint(closedDatapoint, measure));
         });
-  }, (error, datapointsToCreate) => {
+  }, (error: string, datapointsToCreate: any) => {
     return onDatapointsForGivenMeasuresClosed(error, _.values(datapointsToCreate));
   });
 }
 
-function omitNotClosingMeasures(options) {
-  const notClosingMeasureGids = _.reduce(options.measuresToOmit, (result, measure: any) => {
+function omitNotClosingMeasures(options: any): any {
+  const notClosingMeasureGids = _.reduce(options.measuresToOmit, (result: any, measure: any) => {
     if (measure.gid !== options.measureToPreserve.gid) {
       result.push(measure.gid);
     }

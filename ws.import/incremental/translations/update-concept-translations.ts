@@ -3,18 +3,19 @@ import { constants } from '../../../ws.utils/constants';
 import * as ddfMappers from '../../utils/ddf-mappers';
 import {createTranslationsUpdater} from './update-translations-flow';
 import { ConceptsRepositoryFactory } from '../../../ws.repository/ddf/concepts/concepts.repository';
+import {ChangesDescriptor} from '../../utils/changes-descriptor';
 
 export {
   updateConceptsTranslations
 };
 
-function updateConceptsTranslations(externalContext, done) {
+function updateConceptsTranslations(externalContext: any, done: Function): void {
 
   const externalContextFrozen = Object.freeze({
     transaction: externalContext.transaction,
     datasetId: externalContext.dataset._id,
     version: externalContext.transaction.createdAt,
-    pathToLangDiff: externalContext.pathToLangDiff,
+    pathToLangDiff: externalContext.pathToLangDiff
   });
 
   const plugin = {
@@ -25,18 +26,18 @@ function updateConceptsTranslations(externalContext, done) {
     makeQueryToFetchTranslationTarget
   };
 
-  return createTranslationsUpdater(plugin, externalContextFrozen, error => {
+  return createTranslationsUpdater(plugin, externalContextFrozen, (error: string) => {
     done(error, externalContext);
   });
 }
 
-function makeQueryToFetchTranslationTarget(changesDescriptor, context) {
+function makeQueryToFetchTranslationTarget(changesDescriptor: ChangesDescriptor, context: any): any {
   return {
     gid: changesDescriptor.gid
   };
 }
 
-function makeTranslationTargetBasedOnItsClosedVersion(closedTarget, context) {
+function makeTranslationTargetBasedOnItsClosedVersion(closedTarget: any, context: any): void {
   return ddfMappers.mapDdfConceptsToWsModel(closedTarget.properties, _.extend({
     domain: closedTarget.domain,
     languages: closedTarget.languages,
@@ -44,6 +45,6 @@ function makeTranslationTargetBasedOnItsClosedVersion(closedTarget, context) {
   }, context));
 }
 
-function processTranslationBeforeUpdate(translation) {
+function processTranslationBeforeUpdate(translation: any): void {
   return ddfMappers.transformConceptProperties(translation);
 }

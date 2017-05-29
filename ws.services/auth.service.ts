@@ -10,7 +10,7 @@ function authenticate(credentials: Credentials, onAuthenticated: Function): void
   const email = credentials.email;
   const password = credentials.password;
 
-  return UsersRepository.findUserByEmail(email, (error: any, user: any) => {
+  return UsersRepository.findUserByEmail(email, (error: string, user: any) => {
     if (error) {
       return onAuthenticated('Error was happened during credentials verification');
     }

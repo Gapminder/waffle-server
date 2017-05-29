@@ -73,7 +73,7 @@ describe('Multiple datasets in WS', function() {
 
 function getCommitForGivenIndex(index: number, repo: string): Promise<string> {
   return new Promise((resolve: Function, reject: Function) => {
-    cliUtils.getCommitByGithubUrl(repo, index, (error: any, commit: string) => {
+    cliUtils.getCommitByGithubUrl(repo, index, (error: string, commit: string) => {
       if (error) return reject(error);
       resolve(commit);
     });
