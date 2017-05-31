@@ -63,7 +63,7 @@ class DataPointsRepository extends VersionedModelRepository {
 
     return async.parallelLimit([
       (done: Function) => DataPoints.update({to: versionToRollback}, {$set: {to: constants.MAX_VERSION}}, {multi: true}).lean().exec(done),
-      (done: Function) => DataPoints.remove({from: versionToRollback}, done as any)
+      (done: (err: any) => void) => DataPoints.remove({from: versionToRollback}, done)
     ], constants.LIMIT_NUMBER_PROCESS, onRolledback as any);
   }
 
@@ -71,7 +71,7 @@ class DataPointsRepository extends VersionedModelRepository {
     return DataPoints.remove({dataset: datasetId}, onRemove as any);
   }
 
-  public removeByIds(ids: any, onRemove: any): any {
+  public removeByIds(ids: any, onRemove: (err: any) => void): any {
     return DataPoints.remove({_id: {$in: ids}}, onRemove);
   }
 
@@ -109,15 +109,15 @@ class DataPointsRepository extends VersionedModelRepository {
     return DataPoints.findOne(query).lean().exec(done);
   }
 
-  public removeTranslation({originId, language}: any, done: Function): any {
-    return DataPoints.findOneAndUpdate({originId}, {$unset: {[`languages.${language}`]: 1}}, {new: true}, done as any);
+  public removeTranslation({originId, language}: any, done: (err: any) => void): any {
+    return DataPoints.findOneAndUpdate({originId}, {$unset: {[`languages.${language}`]: 1}}, {new: true}, done);
   }
 
-  public addTranslation({id, language, translation}: any, done: Function): any {
-    return DataPoints.findOneAndUpdate({_id: id}, {$set: {[`languages.${language}`]: translation}}, {new: true}, done as any);
+  public addTranslation({id, language, translation}: any, done: (err: any) => void): any {
+    return DataPoints.findOneAndUpdate({_id: id}, {$set: {[`languages.${language}`]: translation}}, {new: true}, done);
   }
 
-  public addTranslationsForGivenProperties(properties: any, externalContext: any, done?: any): Promise<any> {
+  public addTranslationsForGivenProperties(properties: any, externalContext: any, done?: Function): Promise<any> {
     const {source, language, resolvedProperties} = externalContext;
 
     const subDatapointQuery = _.extend({sources: source}, resolvedProperties);

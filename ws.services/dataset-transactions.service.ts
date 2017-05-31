@@ -221,7 +221,7 @@ function _createTasksForCountingObjectsModifiedInGivenVersion(datasetId: any, ve
   const datapointsRepository = DatapointsRepositoryFactory.closedOrOpenedInGivenVersion(datasetId, version);
 
   return {
-    concepts: (done: Function) => conceptsRepository.count(done),
+    concepts: (done: (err: any, count: number) => void) => conceptsRepository.count(done),
     entities: (done: Function) => entitiesRepository.count(done),
     datapoints: (done: Function) => datapointsRepository.count(done)
   };

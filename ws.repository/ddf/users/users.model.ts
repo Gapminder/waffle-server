@@ -1,5 +1,6 @@
 import { model, Schema } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
+import {NextFunction} from 'express';
 
 const SALT_WORK_FACTOR = 10;
 
@@ -13,7 +14,7 @@ const Users: any = new Schema({
   expireToken: {type: Number}
 });
 
-Users.pre('save', function(next: any): void {
+Users.pre('save', function(next: NextFunction): void {
   // tslint:disable-next-line
   const user = this;
 

@@ -52,7 +52,7 @@ function getDocumentsByQuery(externalContext: any, onFound: Function): void {
   });
 }
 
-function getDatasetAndTransaction(externalContext: any, onDatasetAndTransactionFound: any): void {
+function getDatasetAndTransaction(externalContext: any, onDatasetAndTransactionFound: Function): void {
   const {datasetName, commit} = externalContext;
 
   return datasetTransactionService
@@ -82,7 +82,7 @@ function getDatasetAndTransaction(externalContext: any, onDatasetAndTransactionF
     });
 }
 
-function getDocuments(externalContext: any, onDocumentsFound: any): void {
+function getDocuments(externalContext: any, onDocumentsFound: Function): void {
   const {datasetId, version, query, collection} = externalContext;
 
   return repositoriesByCollection[collection].repo
@@ -98,7 +98,7 @@ function getDocuments(externalContext: any, onDocumentsFound: any): void {
     });
 }
 
-function populateDocuments(externalContext: any, onDocumentsPopulated: any): void {
+function populateDocuments(externalContext: any, onDocumentsPopulated: Function): void {
   const {documents} = externalContext;
 
   return async.mapSeries(documents, (document: any, onPopulatedDocument: AsyncResultArrayCallback<any, any>) => {

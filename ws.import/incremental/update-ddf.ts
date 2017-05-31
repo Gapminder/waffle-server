@@ -49,17 +49,17 @@ function updateDdf(options: any, done: Function): void {
     updateDatapointsTranslations,
     createDatasetSchema,
     ddfImportUtils.closeTransaction
-  ], (updateError: Function, piping: any) => {
+  ], (updateError: Function, _pipe: any) => {
     console.timeEnd(DATASET_INCREMENTAL_UPDATE_LABEL);
 
-    if (updateError && _.get(piping, 'transaction')) {
-      return done(updateError, {transactionId: piping.transaction._id});
+    if (updateError && _.get(_pipe, 'transaction')) {
+      return done(updateError, {transactionId: _pipe.transaction._id});
     }
 
     return done(updateError, {
-      datasetName: _.get(piping, 'dataset.name'),
-      version: _.get(piping, 'transaction.createdAt'),
-      transactionId: _.get(piping, 'transaction._id')
+      datasetName: _.get(_pipe, 'dataset.name'),
+      version: _.get(_pipe, 'transaction.createdAt'),
+      transactionId: _.get(_pipe, 'transaction._id')
     });
   });
 }

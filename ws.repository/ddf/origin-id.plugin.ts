@@ -1,9 +1,10 @@
 import { model } from 'mongoose';
 import * as async from 'async';
 import { logger } from '../../ws.config/log';
+import {NextFunction} from 'express';
 
 function lastModifiedPlugin (schema: any, settings: any): void {
-  schema.post('save', function (doc: any, next: any): void {
+  schema.post('save', function (doc: any, next: Function): void {
     logger.debug('Extra query to set up originId for newly created document', settings.modelName);
     if (!doc.originId) {
       doc.originId = doc._id;
@@ -15,7 +16,7 @@ function lastModifiedPlugin (schema: any, settings: any): void {
     }
   });
 
-  schema.post('find', function(result: any, next: any): void {
+  schema.post('find', function(result: any, next: NextFunction): void {
     // tslint:disable-next-line
     const self = this;
     if (self.options && self.options.join) {

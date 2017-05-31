@@ -124,11 +124,11 @@ function storeEntitiesToDb(createdEntities: any, onEntitiesCreated: Function): a
   return EntitiesRepositoryFactory.versionAgnostic().create(createdEntities, onEntitiesCreated);
 }
 
-function closeEntities({entityChangesBatch, externalContext, handleClosedEntity}: any, onAllEntitiesClosed: Function): void {
+function closeEntities({entityChangesBatch, externalContext, handleClosedEntity}: any, onAllEntitiesClosed: ErrorCallback<Error>): void {
   const entitiesRepository = EntitiesRepositoryFactory
     .latestVersion(externalContext.dataset._id, externalContext.transaction.createdAt);
 
-  return async.eachLimit(entityChangesBatch, constants.LIMIT_NUMBER_PROCESS, ({changesDescriptor, context}: any, onEntityClosed: any): Promise<Object> => {
+  return async.eachLimit(entityChangesBatch, constants.LIMIT_NUMBER_PROCESS, ({changesDescriptor, context}: any, onEntityClosed: Function): Promise<Object> => {
     const query = {
       domain: context.oldEntityDomain.originId,
       sets: context.oldEntitySetsOriginIds,
@@ -155,7 +155,7 @@ function closeEntities({entityChangesBatch, externalContext, handleClosedEntity}
 
       return handleClosedEntity({changesDescriptor, context}, closedEntity, onEntityClosed);
     });
-  }, onAllEntitiesClosed as any);
+  }, onAllEntitiesClosed);
 }
 
 function createUpdatedEntity({changesDescriptor, context}: any, closedEntity: any, done: Function): void {

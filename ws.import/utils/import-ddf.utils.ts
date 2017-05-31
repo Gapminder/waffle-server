@@ -159,7 +159,7 @@ function cloneDdfRepo(pipe: any, done: Function): void {
 function validateDdfRepo(pipe: any, onDdfRepoValidated: Function): void {
   logger.info('Start ddf dataset validation process: ', _.get(pipe.repoInfo, 'pathToRepo'));
   const simpleDdfValidator = new SimpleDdfValidator(pipe.repoInfo.pathToRepo, ddfValidationConfig);
-  simpleDdfValidator.on('finish', (error: string, isDatasetCorrect: any) => {
+  simpleDdfValidator.on('finish', (error: string, isDatasetCorrect: boolean) => {
     if (error) {
       return onDdfRepoValidated(error);
     }

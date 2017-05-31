@@ -7,8 +7,8 @@ const KeyValue = model('KeyValue');
 function KeyValueRepository(): void {
 }
 
-KeyValueRepository.prototype.set = function (key: any, value: any, onSet: Function): any {
-  return KeyValue.update({key}, {$set: {value}}, {upsert: true}, onSet as any);
+KeyValueRepository.prototype.set = function (key: any, value: any, onSet: (err: any) => void): any {
+  return KeyValue.update({key}, {$set: {value}}, {upsert: true}, onSet);
 };
 
 KeyValueRepository.prototype.get = function (key: any, defaultValue: any, onGot: Function): any {

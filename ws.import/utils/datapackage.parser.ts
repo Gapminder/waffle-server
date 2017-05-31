@@ -2,10 +2,9 @@ import * as _ from 'lodash';
 import * as fs from 'fs';
 import * as path from 'path';
 import { constants } from '../../ws.utils/constants';
-import ErrnoException = NodeJS.ErrnoException;
 
 function loadDatapackage({folder, file = 'datapackage.json'}: any, done: Function): void {
-  return fs.readFile(path.join(folder, file), 'utf-8', (error: ErrnoException, data: any) => {
+  return fs.readFile(path.join(folder, file), 'utf-8', (error: Error, data: any) => {
     if (error) {
       return done(error);
     }

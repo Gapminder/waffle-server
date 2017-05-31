@@ -60,8 +60,8 @@ DatasetsRepository.prototype.removeById = function (datasetId: any, done: Functi
   return Datasets.findOneAndRemove({_id: datasetId}, done);
 };
 
-DatasetsRepository.prototype.setAccessTokenForPrivateDataset = function ({datasetName, userId, accessToken}: any, done: Function): any {
-  return Datasets.findOneAndUpdate({name: datasetName, createdBy: userId, private: true}, {accessToken}, {new: true}, done as any);
+DatasetsRepository.prototype.setAccessTokenForPrivateDataset = function ({datasetName, userId, accessToken}: any, done: (err: any) => void): any {
+  return Datasets.findOneAndUpdate({name: datasetName, createdBy: userId, private: true}, {accessToken}, {new: true}, done);
 };
 
 const repository = new DatasetsRepository();

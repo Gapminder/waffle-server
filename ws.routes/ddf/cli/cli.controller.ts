@@ -72,12 +72,12 @@ function setDefaultDataset(req: any, res: any): void {
       return res.json(routeUtils.toErrorResponse(error));
     }
 
-    return cliService.cleanDdfRedisCache((cacheCleanError: any) => {
+    return cliService.cleanDdfRedisCache((cacheCleanError: string) => {
       if (cacheCleanError) {
         return res.json(routeUtils.toErrorResponse(cacheCleanError));
       }
 
-      cacheUtils.warmUpCache((cacheWarmUpError: any) => {
+      cacheUtils.warmUpCache((cacheWarmUpError: string) => {
         if (cacheWarmUpError) {
           return logger.error('Cache warm up error. ', cacheWarmUpError);
         }
@@ -113,7 +113,7 @@ function getStateOfLatestTransaction(req: any, res: any): void {
     return res.json(routeUtils.toErrorResponse('No dataset name was given'));
   }
 
-  return transactionsService.getStatusOfLatestTransactionByDatasetName(datasetName, req.user, (statusError: any, status: any) => {
+  return transactionsService.getStatusOfLatestTransactionByDatasetName(datasetName, req.user, (statusError: string, status: any) => {
     if (statusError) {
       return res.json(routeUtils.toErrorResponse(statusError));
     }
@@ -132,7 +132,7 @@ function getStateOfDatasetRemoval(req: any, res: any): void {
     return res.json(routeUtils.toErrorResponse('No dataset name was given'));
   }
 
-  return datasetsService.getRemovalStateForDataset(datasetName, req.user, (statusError: any, status: any) => {
+  return datasetsService.getRemovalStateForDataset(datasetName, req.user, (statusError: string, status: any) => {
     if (statusError) {
       return res.json(routeUtils.toErrorResponse(statusError));
     }
@@ -151,7 +151,7 @@ function activateRollback(req: any, res: any): void {
     return res.json(routeUtils.toErrorResponse('No dataset name was given'));
   }
 
-  return transactionsService.rollbackFailedTransactionFor(datasetName, req.user, (rollbackError: any) => {
+  return transactionsService.rollbackFailedTransactionFor(datasetName, req.user, (rollbackError: string) => {
     if (rollbackError) {
       return res.json(routeUtils.toErrorResponse(rollbackError));
     }
@@ -173,7 +173,7 @@ function removeDataset(req: any, res: any): void {
 
   const user = req.user;
 
-  datasetsService.removeDatasetData(datasetName, user, (removeError: any) => {
+  datasetsService.removeDatasetData(datasetName, user, (removeError: string) => {
     if (removeError) {
       return logger.error(removeError);
     }
@@ -264,7 +264,7 @@ function updateIncrementally(req: any, res: any): void {
     }
   };
 
-  cliService.updateIncrementally(options, (updateError: any) => {
+  cliService.updateIncrementally(options, (updateError: string) => {
     if (updateError && !res.headersSent) {
       return res.json(routeUtils.toErrorResponse(updateError));
     }
@@ -288,7 +288,7 @@ function importDataset(req: any, res: any): void {
     }
   };
 
-  return cliService.importDataset(params, (importError: any) => {
+  return cliService.importDataset(params, (importError: string) => {
     if (importError && !res.headersSent) {
       return res.json(routeUtils.toErrorResponse(importError));
     }
@@ -356,7 +356,7 @@ function cleanCache(req: any, res: any): void {
     return res.json(routeUtils.toErrorResponse('There is no authenticated user to get its datasets'));
   }
 
-  return cliService.cleanDdfRedisCache((cacheCleanError: any) => {
+  return cliService.cleanDdfRedisCache((cacheCleanError: string) => {
     if (cacheCleanError) {
       return res.json(routeUtils.toErrorResponse(cacheCleanError));
     }
@@ -369,7 +369,7 @@ function cleanRepos(req: any, res: any): void {
     return res.json(routeUtils.toErrorResponse('There is no authenticated user to make this action'));
   }
 
-  return cliApiCleanRepos(config.PATH_TO_DDF_REPOSITORIES, (reposCleanError: any) => {
+  return cliApiCleanRepos(config.PATH_TO_DDF_REPOSITORIES, (reposCleanError: string) => {
     if (reposCleanError) {
       return res.json(routeUtils.toErrorResponse(reposCleanError));
     }

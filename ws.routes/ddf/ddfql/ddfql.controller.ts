@@ -12,7 +12,7 @@ import {cache} from '../../../ws.utils/redis-cache';
 import {logger} from '../../../ws.config/log';
 import * as routeUtils from '../../utils';
 import {ServiceLocator} from '../../../ws.service-locator/index';
-import {Application} from 'express';
+import {Application, NextFunction} from 'express';
 
 function createDdfqlController(serviceLocator: ServiceLocator): Application {
   const app = serviceLocator.getApplication();
@@ -46,7 +46,7 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
 
   return app.use(router);
 
-  function getDdfStats(req: any, res: any, next: any): void {
+  function getDdfStats(req: any, res: any, next: NextFunction): void {
     logger.info({req}, 'DDFQL URL');
     logger.info({obj: req.body}, 'DDFQL');
 

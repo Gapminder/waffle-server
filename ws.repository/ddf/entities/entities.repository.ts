@@ -39,11 +39,11 @@ class EntitiesRepository extends VersionedModelRepository {
 
     return async.parallelLimit([
       (done: Function) => Entities.update({dataset, to: versionToRollback}, {$set: {to: constants.MAX_VERSION}}, {multi: true}).lean().exec(done),
-      (done: Function) => Entities.remove({dataset, from: versionToRollback}, done as any)
+      (done: (err: any) => void) => Entities.remove({dataset, from: versionToRollback}, done)
     ], constants.LIMIT_NUMBER_PROCESS, onRolledback as any);
   }
 
-  public removeByDataset(datasetId: any, onRemove: any): any {
+  public removeByDataset(datasetId: any, onRemove: AsyncResultArrayCallback<string, any>): any {
     return Entities.remove({dataset: datasetId}, onRemove);
   }
 
@@ -58,12 +58,12 @@ class EntitiesRepository extends VersionedModelRepository {
     return Entities.findOne(query).lean().exec(done);
   }
 
-  public removeTranslation({originId, language}: any, done: Function): any {
-    return Entities.findOneAndUpdate({originId}, {$unset: {[`languages.${language}`]: 1}}, {new: true}, done as any);
+  public removeTranslation({originId, language}: any, done: (err: any) => void): any {
+    return Entities.findOneAndUpdate({originId}, {$unset: {[`languages.${language}`]: 1}}, {new: true}, done);
   }
 
-  public addTranslation({id, language, translation}: any, done: Function): any {
-    return Entities.findOneAndUpdate({_id: id}, {$set: {[`languages.${language}`]: translation}}, {new: true}, done as any);
+  public addTranslation({id, language, translation}: any, done: (err: any) => void): any {
+    return Entities.findOneAndUpdate({_id: id}, {$set: {[`languages.${language}`]: translation}}, {new: true}, done);
   }
 
   public findEntityPropertiesByQuery(entitiesQuery: any, onPropertiesFound: Function): Promise<Object> {

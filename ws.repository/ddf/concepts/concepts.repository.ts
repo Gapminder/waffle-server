@@ -47,14 +47,14 @@ export class ConceptsRepository extends VersionedModelRepository {
     return Concepts.find(conceptQuery, projection).lean().exec(onPropertiesFound);
   }
 
-  public addSubsetOfByGid({gid, parentConceptId}: any, done: Function): any {
+  public addSubsetOfByGid({gid, parentConceptId}: any, done: (err: any) => void): any {
     const query = this._composeQuery({'properties.drill_up': gid});
-    return Concepts.update(query, {$addToSet: {subsetOf: parentConceptId}}, {multi: true}, done as any);
+    return Concepts.update(query, {$addToSet: {subsetOf: parentConceptId}}, {multi: true}, done);
   }
 
-  public setDomainByGid({gid, domainConceptId}: any, done: Function): any {
+  public setDomainByGid({gid, domainConceptId}: any, done: (err: any) => void): any {
     const query = this._composeQuery({'properties.domain': gid});
-    return Concepts.update(query, {$set: {domain: domainConceptId}}, {multi: true}, done as any);
+    return Concepts.update(query, {$set: {domain: domainConceptId}}, {multi: true}, done);
   }
 
   public findDistinctDrillups(done: Function): Promise<Object> {
@@ -82,22 +82,22 @@ export class ConceptsRepository extends VersionedModelRepository {
     return Concepts.findOneAndUpdate(query, {$set: {to: this.version}}, {new: false}).lean().exec(onClosed);
   }
 
-  public count(onCounted: Function): any {
+  public count(onCounted: (err: any, count: number) => void): any {
     const countQuery = this._composeQuery();
-    return Concepts.count(countQuery, onCounted as any);
+    return Concepts.count(countQuery, onCounted);
   }
 
-  public rollback(transaction: any, onRolledback: Function): any {
+  public rollback(transaction: any, onRolledback: (err: any) => void): any {
     const {createdAt: versionToRollback, dataset} = transaction;
 
     return async.parallelLimit([
       (done: Function) => Concepts.update({dataset, to: versionToRollback}, {$set: {to: constants.MAX_VERSION}}, {multi: true}).lean().exec(done),
-      (done: Function) => Concepts.remove({dataset, from: versionToRollback}, done as any)
-    ], constants.LIMIT_NUMBER_PROCESS, onRolledback as any);
+      (done: (err: any) => void) => Concepts.remove({dataset, from: versionToRollback}, done)
+    ], constants.LIMIT_NUMBER_PROCESS, onRolledback);
   }
 
-  public removeByDataset(datasetId: any, onRemove: Function): any {
-    return Concepts.remove({dataset: datasetId}, onRemove as any);
+  public removeByDataset(datasetId: any, onRemove: AsyncResultArrayCallback<string, any>): any {
+    return Concepts.remove({dataset: datasetId}, onRemove);
   }
 
   public findAllPopulated(done: Function): any {
@@ -131,12 +131,12 @@ export class ConceptsRepository extends VersionedModelRepository {
     return this.findByGid(params.gid, done);
   }
 
-  public removeTranslation({originId, language}: any, done: Function): any {
-    return Concepts.findOneAndUpdate({originId}, {$unset: {[`languages.${language}`]: 1}}, {new: true}, done as any);
+  public removeTranslation({originId, language}: any, done: (err: any) => void): any {
+    return Concepts.findOneAndUpdate({originId}, {$unset: {[`languages.${language}`]: 1}}, {new: true}, done);
   }
 
-  public addTranslation({id, language, translation}: any, done: Function): any {
-    return Concepts.findOneAndUpdate({_id: id}, {$set: {[`languages.${language}`]: translation}}, {new: true}, done as any);
+  public addTranslation({id, language, translation}: any, done: (err: any) => void): any {
+    return Concepts.findOneAndUpdate({_id: id}, {$set: {[`languages.${language}`]: translation}}, {new: true}, done);
   }
 
   public addTranslationsForGivenProperties(properties: any, externalContext: any, done?: Function): Promise<Object> {

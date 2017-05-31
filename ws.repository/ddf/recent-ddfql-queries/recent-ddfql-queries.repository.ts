@@ -10,8 +10,8 @@ RecentDdfqlQueriesRepository.prototype.findAllAsStream = function (): any {
   return RecentDdfqlQueries.find().cursor();
 };
 
-RecentDdfqlQueriesRepository.prototype.create = function (query: any, done: Function): any {
-  return RecentDdfqlQueries.findOneAndUpdate({queryRaw: query.queryRaw}, query, {upsert: true}, done as any);
+RecentDdfqlQueriesRepository.prototype.create = function (query: any, done: (err: any) => void): any {
+  return RecentDdfqlQueries.findOneAndUpdate({queryRaw: query.queryRaw}, query, {upsert: true}, done);
 };
 
 const repository = new RecentDdfqlQueriesRepository();

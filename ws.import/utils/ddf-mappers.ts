@@ -155,7 +155,7 @@ function transformEntityProperties(object: any, concepts: any): any {
   }, {});
 }
 
-function transformConceptProperties(object: {}): any {
+function transformConceptProperties(object: Object): any {
   return _.transform(object, (result: any, value: any, key: any) => {
     if (_.isNil(value) || value === '') {
       result[key] = null;

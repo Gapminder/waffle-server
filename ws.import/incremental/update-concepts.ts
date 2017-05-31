@@ -222,7 +222,7 @@ function applyUpdatesToConcepts(changedConcepts: any, removedProperties: any): a
         return done(error);
       }
 
-      return async.eachLimit(originalConcepts, constants.LIMIT_NUMBER_PROCESS, (originalConcept: any, onUpdateApplied: any) => {
+      return async.eachLimit(originalConcepts, constants.LIMIT_NUMBER_PROCESS, (originalConcept: any, onUpdateApplied: Function) => {
         conceptsRepository.closeById(originalConcept._id, (err: string, closedOriginalConcept: any) => {
           if (err) {
             return onUpdateApplied(err);
@@ -259,7 +259,7 @@ function populateConceptsDrillups(): any {
     const conceptsRepository = ConceptsRepositoryFactory
       .allOpenedInGivenVersion(pipe.external.dataset._id, pipe.external.transaction.createdAt);
 
-    return async.eachLimit(pipe.internal.drillUps, constants.LIMIT_NUMBER_PROCESS, (gid: string, onDrillupsPopulated: any) => {
+    return async.eachLimit(pipe.internal.drillUps, constants.LIMIT_NUMBER_PROCESS, (gid: string, onDrillupsPopulated: (err: any) => void) => {
       let concept = pipe.internal.concepts[gid];
 
       if (!concept) {
@@ -278,7 +278,7 @@ function populateConceptsDomains(): any {
     const conceptsRepository = ConceptsRepositoryFactory
       .allOpenedInGivenVersion(pipe.external.dataset._id, pipe.external.transaction.createdAt);
 
-    return async.eachLimit(pipe.internal.domains, constants.LIMIT_NUMBER_PROCESS, (gid: string, onDomainPopulated: Function) => {
+    return async.eachLimit(pipe.internal.domains, constants.LIMIT_NUMBER_PROCESS, (gid: string, onDomainPopulated: (err: any) => void) => {
       let concept = pipe.internal.concepts[gid];
 
       if (!concept) {

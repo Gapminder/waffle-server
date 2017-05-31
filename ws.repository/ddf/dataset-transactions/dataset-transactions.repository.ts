@@ -42,8 +42,8 @@ DatasetTransactionsRepository.prototype.removeById = function (transactionId: an
   return DatasetTransactions.findOneAndRemove({_id: transactionId}, done);
 };
 
-DatasetTransactionsRepository.prototype.removeAllByDataset = function (datasetId: any, done: Function): any {
-  return DatasetTransactions.remove({dataset: datasetId}, done as any);
+DatasetTransactionsRepository.prototype.removeAllByDataset = function (datasetId: any, done: (err: any) => void): any {
+  return DatasetTransactions.remove({dataset: datasetId}, done);
 };
 
 DatasetTransactionsRepository.prototype.findAllCompletedByDataset = function (datasetId: any, done: Function): any {
@@ -54,8 +54,8 @@ DatasetTransactionsRepository.prototype.findAllByDataset = function (datasetId: 
   return DatasetTransactions.find({dataset: datasetId}).lean().exec(done);
 };
 
-DatasetTransactionsRepository.prototype.setLastError = function (transactionId: any, lastErrorMessage: string, done: Function): any {
-  return DatasetTransactions.findOneAndUpdate({_id: transactionId}, {$set: {lastError: lastErrorMessage}}, {new: true}, done as any);
+DatasetTransactionsRepository.prototype.setLastError = function (transactionId: any, lastErrorMessage: string, done: (err: any) => void): any {
+  return DatasetTransactions.findOneAndUpdate({_id: transactionId}, {$set: {lastError: lastErrorMessage}}, {new: true}, done);
 };
 
 DatasetTransactionsRepository.prototype.create = function (transaction: any, onCreated: Function): any {
@@ -67,7 +67,7 @@ DatasetTransactionsRepository.prototype.create = function (transaction: any, onC
   });
 };
 
-DatasetTransactionsRepository.prototype.countByDataset = function (datasetId: any, onCounted: any): any {
+DatasetTransactionsRepository.prototype.countByDataset = function (datasetId: any, onCounted: (err: any, count: number) => void): any {
   return DatasetTransactions.count({dataset: datasetId}, onCounted);
 };
 
@@ -84,7 +84,7 @@ DatasetTransactionsRepository.prototype.closeTransaction = function ({transactio
   return DatasetTransactions.findOneAndUpdate({_id: transactionId}, {$set: properties}, onClosed);
 };
 
-DatasetTransactionsRepository.prototype.setLanguages = function ({transactionId, languages}: any, onLanguagesSet: any): Promise<any> {
+DatasetTransactionsRepository.prototype.setLanguages = function ({transactionId, languages}: any, onLanguagesSet: Function): Promise<any> {
   return DatasetTransactions.update({_id: transactionId}, {$set: {languages}}).exec(onLanguagesSet);
 };
 
@@ -130,7 +130,7 @@ DatasetTransactionsRepository.prototype.findDefault = function (options: any, on
 DatasetTransactionsRepository.prototype.setAsDefault = function (userId: any, datasetId: any, transactionId: any, onSetAsDefault: Function): any {
   const currentDefaultTxQuery = {createdBy: userId, isDefault: true};
 
-  return DatasetTransactions.findOneAndUpdate(currentDefaultTxQuery, {$set: {isDefault: false}}, {new: true}, (resetDefaultTransactionError: any) => {
+  return DatasetTransactions.findOneAndUpdate(currentDefaultTxQuery, {$set: {isDefault: false}}, {new: true}, (resetDefaultTransactionError: string) => {
     if (resetDefaultTransactionError) {
       return onSetAsDefault(resetDefaultTransactionError);
     }
