@@ -45,4 +45,4 @@ const constants: any = {
   VALID_TOKEN_PERIOD_IN_MILLIS: 60 * 60 * 1000 // one hour
 };
 
-export { constants }
+export { constants };

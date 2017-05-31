@@ -15,8 +15,8 @@ const Concepts: any = new Schema({
   },
   sources: [{type: String, required: true}],
 
-  properties: {type: Schema.Types.Mixed, 'default': {}},
-  languages: {type: Schema.Types.Mixed, 'default': {}},
+  properties: {type: Schema.Types.Mixed, default: {}},
+  languages: {type: Schema.Types.Mixed, default: {}},
 
   isNumeric: {type: Boolean, index: true, sparse: true},
   domain: {type: Schema.Types.ObjectId, sparse: true},
@@ -24,13 +24,13 @@ const Concepts: any = new Schema({
 
   from: {type: Number, required: true},
   to: {type: Number, required: true, default: constants.MAX_VERSION},
-  dataset: {type: Schema.Types.ObjectId, ref: 'Datasets', required: true},
+  dataset: {type: Schema.Types.ObjectId, ref: 'Datasets', required: true}
 }, {strict: false, minimize: false});
 
-Concepts.post('save', function (doc: any, next: (error?: any, result?: any) => void) {
+Concepts.post('save', function (doc: any, next: (error?: any, result?: any) => void): void {
   if (!doc.originId) {
     doc.originId = doc._id;
-    model('Concepts').update({ _id: doc._id }, { $set: { originId: doc._id } }, (error, result) => {
+    model('Concepts').update({ _id: doc._id }, { $set: { originId: doc._id } }, (error: string, result: any) => {
       next(error, result);
     });
   } else {

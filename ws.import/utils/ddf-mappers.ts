@@ -14,7 +14,7 @@ export {
   transformConceptProperties
 };
 
-function mapDdfEntityToWsModel(entry, context) {
+function mapDdfEntityToWsModel(entry: any, context: any): any {
     const transformedEntry = transformEntityProperties(entry, context.concepts);
     const gid = transformedEntry[context.entitySet.gid];
 
@@ -24,13 +24,13 @@ function mapDdfEntityToWsModel(entry, context) {
     const combinedSources = _.union(context.sources, newSource);
 
     return {
-      gid: gid,
+      gid,
       sources: combinedSources,
       properties: transformedEntry,
       parsedProperties: ddfImportUtils.parseProperties(context.entityDomain, gid, transformedEntry, context.timeConcepts),
 
       originId: _.get(context, 'originId', null),
-      languages: transformTranslations(context.languages, translation => transformEntityProperties(translation, context.concepts)),
+      languages: transformTranslations(context.languages, (translation: any) => transformEntityProperties(translation, context.concepts)),
 
       domain: domainOriginId,
       sets: context.entitySetsOriginIds,
@@ -40,10 +40,10 @@ function mapDdfEntityToWsModel(entry, context) {
     };
 }
 
-function mapDdfDataPointToWsModel(entry, context) {
+function mapDdfDataPointToWsModel(entry: any, context: any): any {
     const dimensions = _.chain(entry)
       .pick(_.keys(context.dimensions))
-      .reduce((result, entityGid: string, conceptGid) => {
+      .reduce((result: any, entityGid: string, conceptGid: any) => {
         const key = `${entityGid}-${context.concepts[conceptGid].originId}`;
         const entity =
           context.entities.byDomain[key]
@@ -58,12 +58,12 @@ function mapDdfDataPointToWsModel(entry, context) {
 
     return _.chain(entry)
       .pick(_.keys(context.measures))
-      .map((datapointValue, measureGid) => {
+      .map((datapointValue: any, measureGid: any) => {
         const datapointValueAsNumber = ddfImportUtils.toNumeric(datapointValue);
         return {
           value: _.isNil(datapointValueAsNumber) ? datapointValue : datapointValueAsNumber,
           measure: context.measures[measureGid].originId,
-          dimensions: dimensions,
+          dimensions,
           dimensionsConcepts: context.dimensionsConcepts,
 
           properties: entry,
@@ -80,7 +80,7 @@ function mapDdfDataPointToWsModel(entry, context) {
       .value();
 }
 
-function mapDdfEntityFoundInDatapointToWsModel(datapoint, context) {
+function mapDdfEntityFoundInDatapointToWsModel(datapoint: any, context: any): any {
   const gid = datapoint[context.concept.gid];
   return {
     gid: String(gid),
@@ -97,7 +97,7 @@ function mapDdfEntityFoundInDatapointToWsModel(datapoint, context) {
   };
 }
 
-function mapDdfConceptsToWsModel(entry, context: any) {
+function mapDdfConceptsToWsModel(entry: any, context: any): void {
   const transformedEntry = transformConceptProperties(entry);
 
   const concept: any = {
@@ -127,15 +127,15 @@ function mapDdfConceptsToWsModel(entry, context: any) {
   return concept;
 }
 
-function transformTranslations(translationsByLang, transform) {
-  return _.reduce(translationsByLang, (result, translation, lang) => {
+function transformTranslations(translationsByLang: any, transform: any): any {
+  return _.reduce(translationsByLang, (result: any, translation: any, lang: string) => {
     result[lang] = transform(translation);
     return result;
   }, {});
 }
 
-function transformEntityProperties(object, concepts) {
-  return _.transform(object, (result, value, key) => {
+function transformEntityProperties(object: any, concepts: any): any {
+  return _.transform(object, (result: any, value: any, key: any) => {
     const ddfBool = ddfImportUtils.toBoolean(value);
     if (!_.isNil(ddfBool)) {
       result[key] = ddfBool;
@@ -155,8 +155,8 @@ function transformEntityProperties(object, concepts) {
   }, {});
 }
 
-function transformConceptProperties(object): any {
-  return _.transform(object, (result, value, key) => {
+function transformConceptProperties(object: Object): any {
+  return _.transform(object, (result: any, value: any, key: any) => {
     if (_.isNil(value) || value === '') {
       result[key] = null;
     } else if (isJsonColumn(key) && _.isString(value)) {
@@ -169,6 +169,6 @@ function transformConceptProperties(object): any {
   }, {});
 }
 
-function isJsonColumn(column) {
+function isJsonColumn(column: any): boolean {
   return _.includes(JSON_COLUMNS, column);
 }

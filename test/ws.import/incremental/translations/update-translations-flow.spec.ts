@@ -257,7 +257,7 @@ describe('Translations processing (common flow for entities, datapoints and conc
 
     const loggerInfoStub = this.stub(logger, 'info');
 
-    createTranslationsUpdater(entitiesPlugin, externalContext, (error: any, context: any) => {
+    createTranslationsUpdater(entitiesPlugin, externalContext, (error: string, context: any) => {
       expect(error).to.deep.equal([expectedError]);
       expect(context).to.equal(externalContext);
       sinon.assert.calledOnce(loggerInfoStub);
@@ -300,7 +300,7 @@ describe('Translations processing (common flow for entities, datapoints and conc
     const loggerInfoStub = this.stub(logger, 'info');
     const loggerWarnStub = this.stub(logger, 'warn');
 
-    createTranslationsUpdater(entitiesPlugin, externalContext, (error: any, context: any) => {
+    createTranslationsUpdater(entitiesPlugin, externalContext, (error: string, context: any) => {
       expect(error).to.not.exist;
       expect(context).to.equal(externalContext);
 
@@ -346,7 +346,7 @@ describe('Translations processing (common flow for entities, datapoints and conc
 
     const loggerInfoStub = this.stub(logger, 'info');
 
-    createTranslationsUpdater(entitiesPlugin, externalContext, (error: any, context: any) => {
+    createTranslationsUpdater(entitiesPlugin, externalContext, (error: string, context: any) => {
       expect(error).to.deep.equal([expectedError]);
       expect(context).to.equal(externalContext);
 
@@ -388,7 +388,7 @@ describe('Translations processing (common flow for entities, datapoints and conc
 
     const loggerInfoStub = this.stub(logger, 'info');
 
-    createTranslationsUpdater(entitiesPlugin, externalContext, (error: any, context: any) => {
+    createTranslationsUpdater(entitiesPlugin, externalContext, (error: string, context: any) => {
       expect(error).to.not.exist;
       expect(context).to.equal(externalContext);
 

@@ -8,6 +8,7 @@ import * as cacheUtils from '../../../ws.utils/cache-warmup';
 import * as routeUtils from '../../utils';
 import {cleanRepos as cliApiCleanRepos} from 'waffle-server-import-cli';
 import {config} from '../../../ws.config/config';
+import {Request, Response} from 'express';
 
 export {
   getToken,
@@ -29,7 +30,7 @@ export {
   cleanRepos
 };
 
-function getToken(req, res) {
+function getToken(req: Request, res: Response): Response | void {
   const email = req.body.email;
   const password = req.body.password;
 
@@ -41,7 +42,7 @@ function getToken(req, res) {
     return res.json(routeUtils.toErrorResponse('Password was not provided'));
   }
 
-  return authService.authenticate({email, password}, (error, token) => {
+  return authService.authenticate({email, password}, (error: string, token: any) => {
     if (error) {
       return res.json(routeUtils.toErrorResponse(error));
     }
@@ -50,7 +51,7 @@ function getToken(req, res) {
   });
 }
 
-function setDefaultDataset(req, res) {
+function setDefaultDataset(req: any, res: any): void {
   const datasetName = req.body.datasetName;
   const transactionCommit = req.body.commit;
 
@@ -66,17 +67,17 @@ function setDefaultDataset(req, res) {
     return res.json(routeUtils.toErrorResponse('Transaction commit was not provided'));
   }
 
-  cliService.setTransactionAsDefault(req.user._id, datasetName, transactionCommit, (error, defaultDatasetAndCommit) => {
+  cliService.setTransactionAsDefault(req.user._id, datasetName, transactionCommit, (error: string, defaultDatasetAndCommit: any) => {
     if (error) {
       return res.json(routeUtils.toErrorResponse(error));
     }
 
-    return cliService.cleanDdfRedisCache(cacheCleanError => {
+    return cliService.cleanDdfRedisCache((cacheCleanError: string) => {
       if (cacheCleanError) {
         return res.json(routeUtils.toErrorResponse(cacheCleanError));
       }
 
-      cacheUtils.warmUpCache(cacheWarmUpError => {
+      cacheUtils.warmUpCache((cacheWarmUpError: string) => {
         if (cacheWarmUpError) {
           return logger.error('Cache warm up error. ', cacheWarmUpError);
         }
@@ -88,12 +89,12 @@ function setDefaultDataset(req, res) {
   });
 }
 
-function getDatasets(req, res) {
+function getDatasets(req: any, res: any): void {
   if (!req.user) {
     return res.json(routeUtils.toErrorResponse('There is no authenticated user to get its datasets'));
   }
 
-  return cliService.findDatasetsWithVersions(req.user._id, (error, datasetsWithVersions) => {
+  return cliService.findDatasetsWithVersions(req.user._id, (error: string, datasetsWithVersions: any) => {
     if (error) {
       return res.json(routeUtils.toErrorResponse(error));
     }
@@ -102,7 +103,7 @@ function getDatasets(req, res) {
   });
 }
 
-function getStateOfLatestTransaction(req, res) {
+function getStateOfLatestTransaction(req: any, res: any): void {
   if (!req.user) {
     return res.json(routeUtils.toErrorResponse('Unauthenticated user cannot perform CLI operations'));
   }
@@ -112,7 +113,7 @@ function getStateOfLatestTransaction(req, res) {
     return res.json(routeUtils.toErrorResponse('No dataset name was given'));
   }
 
-  return transactionsService.getStatusOfLatestTransactionByDatasetName(datasetName, req.user, (statusError, status) => {
+  return transactionsService.getStatusOfLatestTransactionByDatasetName(datasetName, req.user, (statusError: string, status: any) => {
     if (statusError) {
       return res.json(routeUtils.toErrorResponse(statusError));
     }
@@ -121,7 +122,7 @@ function getStateOfLatestTransaction(req, res) {
   });
 }
 
-function getStateOfDatasetRemoval(req, res) {
+function getStateOfDatasetRemoval(req: any, res: any): void {
   if (!req.user) {
     return res.json(routeUtils.toErrorResponse('Unauthenticated user cannot perform CLI operations'));
   }
@@ -131,7 +132,7 @@ function getStateOfDatasetRemoval(req, res) {
     return res.json(routeUtils.toErrorResponse('No dataset name was given'));
   }
 
-  return datasetsService.getRemovalStateForDataset(datasetName, req.user, (statusError, status) => {
+  return datasetsService.getRemovalStateForDataset(datasetName, req.user, (statusError: string, status: any) => {
     if (statusError) {
       return res.json(routeUtils.toErrorResponse(statusError));
     }
@@ -140,7 +141,7 @@ function getStateOfDatasetRemoval(req, res) {
   });
 }
 
-function activateRollback(req, res) {
+function activateRollback(req: any, res: any): void {
   if (!req.user) {
     return res.json(routeUtils.toErrorResponse('Unauthenticated user cannot perform CLI operations'));
   }
@@ -150,7 +151,7 @@ function activateRollback(req, res) {
     return res.json(routeUtils.toErrorResponse('No dataset name was given'));
   }
 
-  return transactionsService.rollbackFailedTransactionFor(datasetName, req.user, rollbackError => {
+  return transactionsService.rollbackFailedTransactionFor(datasetName, req.user, (rollbackError: string) => {
     if (rollbackError) {
       return res.json(routeUtils.toErrorResponse(rollbackError));
     }
@@ -159,7 +160,7 @@ function activateRollback(req, res) {
   });
 }
 
-function removeDataset(req, res) {
+function removeDataset(req: any, res: any): void {
   if (!req.user) {
     return res.json(routeUtils.toErrorResponse('There is no authenticated user to remove dataset'));
   }
@@ -172,7 +173,7 @@ function removeDataset(req, res) {
 
   const user = req.user;
 
-  datasetsService.removeDatasetData(datasetName, user, removeError => {
+  datasetsService.removeDatasetData(datasetName, user, (removeError: string) => {
     if (removeError) {
       return logger.error(removeError);
     }
@@ -182,12 +183,12 @@ function removeDataset(req, res) {
   return res.json(routeUtils.toMessageResponse('Dataset is being deleted ...'));
 }
 
-function getAvailableDatasetsAndVersions(req, res) {
+function getAvailableDatasetsAndVersions(req: any, res: any): void {
   if (!req.user) {
     return res.json(routeUtils.toErrorResponse('There is no authenticated user to get its datasets'));
   }
 
-  cliService.getAvailableDatasetsAndVersions (req.user._id, (error, datasetsAndVersions) => {
+  cliService.getAvailableDatasetsAndVersions (req.user._id, (error: string, datasetsAndVersions: any) => {
     if (error) {
       return res.json(routeUtils.toErrorResponse(error));
     }
@@ -198,12 +199,12 @@ function getAvailableDatasetsAndVersions(req, res) {
   });
 }
 
-function getRemovableDatasets(req, res) {
+function getRemovableDatasets(req: any, res: any): void {
   if (!req.user) {
     return res.json(routeUtils.toErrorResponse('There is no authenticated user to get its datasets'));
   }
 
-  cliService.getRemovableDatasets (req.user._id, (error, removableDatasets) => {
+  cliService.getRemovableDatasets (req.user._id, (error: string, removableDatasets: any) => {
     if (error) {
       return res.json(routeUtils.toErrorResponse(error));
     }
@@ -213,12 +214,12 @@ function getRemovableDatasets(req, res) {
   });
 }
 
-function getPrivateDatasets(req, res) {
+function getPrivateDatasets(req: any, res: any): void {
   if (!req.user) {
     return res.json(routeUtils.toErrorResponse('There is no authenticated user to get its datasets'));
   }
 
-  cliService.getPrivateDatasets(req.user._id, (error, privateDatasets) => {
+  cliService.getPrivateDatasets(req.user._id, (error: string, privateDatasets: any) => {
     if (error) {
       return res.json(routeUtils.toErrorResponse(error));
     }
@@ -229,7 +230,7 @@ function getPrivateDatasets(req, res) {
   });
 }
 
-function updateIncrementally(req, res) {
+function updateIncrementally(req: any, res: any): void {
   if (!req.user) {
     return res.json(routeUtils.toErrorResponse('Unauthenticated user cannot perform CLI operations'));
   }
@@ -263,7 +264,7 @@ function updateIncrementally(req, res) {
     }
   };
 
-  cliService.updateIncrementally(options, updateError => {
+  cliService.updateIncrementally(options, (updateError: string) => {
     if (updateError && !res.headersSent) {
       return res.json(routeUtils.toErrorResponse(updateError));
     }
@@ -276,7 +277,7 @@ function updateIncrementally(req, res) {
   });
 }
 
-function importDataset(req, res) {
+function importDataset(req: any, res: any): void {
   const params = req.body;
 
   params.lifecycleHooks = {
@@ -287,7 +288,7 @@ function importDataset(req, res) {
     }
   };
 
-  return cliService.importDataset(params, importError => {
+  return cliService.importDataset(params, (importError: string) => {
     if (importError && !res.headersSent) {
       return res.json(routeUtils.toErrorResponse(importError));
     }
@@ -300,7 +301,7 @@ function importDataset(req, res) {
   });
 }
 
-function getCommitOfLatestDatasetVersion(req, res) {
+function getCommitOfLatestDatasetVersion(req: any, res: any): void {
   if (!req.user) {
     return res.json(routeUtils.toErrorResponse('Unauthenticated user cannot perform CLI operations'));
   }
@@ -311,7 +312,7 @@ function getCommitOfLatestDatasetVersion(req, res) {
     return res.json(routeUtils.toErrorResponse('Repository github url was not given'));
   }
 
-  cliService.getCommitOfLatestDatasetVersion(github, req.user, (error, result) => {
+  cliService.getCommitOfLatestDatasetVersion(github, req.user, (error: string, result: any) => {
     if (error) {
       return res.json(routeUtils.toErrorResponse(error));
     }
@@ -326,7 +327,7 @@ function getCommitOfLatestDatasetVersion(req, res) {
   });
 }
 
-function generateDatasetAccessToken(req, res) {
+function generateDatasetAccessToken(req: any, res: any): void {
   if (!req.user) {
     return res.json(routeUtils.toErrorResponse('Unauthenticated user cannot perform CLI operations'));
   }
@@ -336,7 +337,7 @@ function generateDatasetAccessToken(req, res) {
     return res.json(routeUtils.toErrorResponse('No dataset name was given'));
   }
 
-  return cliService.setAccessTokenForDataset(datasetName, req.user._id, (error, dataset) => {
+  return cliService.setAccessTokenForDataset(datasetName, req.user._id, (error: string, dataset: any) => {
     if (error) {
       return res.json(routeUtils.toErrorResponse(error));
     }
@@ -350,12 +351,12 @@ function generateDatasetAccessToken(req, res) {
   });
 }
 
-function cleanCache(req, res) {
+function cleanCache(req: any, res: any): void {
   if (!req.user) {
     return res.json(routeUtils.toErrorResponse('There is no authenticated user to get its datasets'));
   }
 
-  return cliService.cleanDdfRedisCache(cacheCleanError => {
+  return cliService.cleanDdfRedisCache((cacheCleanError: string) => {
     if (cacheCleanError) {
       return res.json(routeUtils.toErrorResponse(cacheCleanError));
     }
@@ -363,12 +364,12 @@ function cleanCache(req, res) {
   });
 }
 
-function cleanRepos(req, res) {
+function cleanRepos(req: any, res: any): void {
   if (!req.user) {
     return res.json(routeUtils.toErrorResponse('There is no authenticated user to make this action'));
   }
 
-  return cliApiCleanRepos(config.PATH_TO_DDF_REPOSITORIES, reposCleanError => {
+  return cliApiCleanRepos(config.PATH_TO_DDF_REPOSITORIES, (reposCleanError: string) => {
     if (reposCleanError) {
       return res.json(routeUtils.toErrorResponse(reposCleanError));
     }
@@ -377,13 +378,12 @@ function cleanRepos(req, res) {
   });
 }
 
-
-function getDatasetsInProgress(req, res) {
+function getDatasetsInProgress(req: any, res: any): void {
   if (!req.user) {
     return res.json(routeUtils.toErrorResponse('There is no authenticated user to get its datasets'));
   }
 
-  cliService.getDatasetsInProgress(req.user._id, (error, datasetsInProgress) => {
+  cliService.getDatasetsInProgress(req.user._id, (error: string, datasetsInProgress: any) => {
     if (error) {
       return res.json(routeUtils.toErrorResponse(error));
     }

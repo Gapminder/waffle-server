@@ -24,19 +24,19 @@ export class ServiceLocator {
     this.application.set(this.namePrefix + name, instance);
     this.servicesList.push(name);
     return this;
-  };
+  }
 
   public get(name: string): any {
     return this.application.get(this.namePrefix + name);
-  };
+  }
 
   public list(): string[] {
     return this.servicesList;
-  };
+  }
 
   public getApplication(): express.Application {
     return this.application;
-  };
+  }
 
   private constructor(namePrefix: string, application: express.Application) {
     this.application = application;

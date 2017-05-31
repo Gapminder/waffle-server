@@ -4,7 +4,7 @@
   "description": "Server for keeping and serving ddf data",
   "main": "server.js",
   "scripts": {
-    "lint": "tslint -e node_modules -e test **/*.ts",
+    "lint": "tslint --type-check --exclude=./node_modules/** --exclude=./test/** --project tsconfig.json --config tslint.json ./**/*.ts",
     "test": "npm run tsc && npm run spec && npm run e2e",
     "spec": "mocha --reporter mochawesome --reporter-options reportDir=specReports,reportFilename=specReport --timeout 10000 --compilers ts:ts-node/register 'test/**/*.spec.ts'",
     "spec:coverage": "rm -rf specReports && istanbul --include-all-sources cover _mocha -- -R spec --timeout 10000 --compilers ts:ts-node/register 'test/**/*.spec.ts' && remap-istanbul -i coverage/coverage.json -e node_modules,coverage,'ws.import/repos' -t html -o coverage/remap-istanbul",
@@ -108,7 +108,7 @@
     "sinon-test": "1.0.2",
     "sinon-chai-in-order": "0.1.0",
     "supertest": "3.0.0",
-    "tslint": "4.5.1"
+    "tslint": "5.2.0"
   },
   "repository": {
     "type": "git",

@@ -14,7 +14,7 @@ import {DatapointsRepositoryFactory} from '../ws.repository/ddf/data-points/data
 
 export {
   importTranslations as createTranslations
-}
+};
 
 function importTranslations(externalContext: any, done: Function): void {
   logger.info('start process creating translations');
@@ -133,7 +133,7 @@ function storeDatapointsTranslationsToDb(externalContext: any): any {
 
 function existTranslationFilepathStream(resolvedFilepath: string, resource: any): any {
   return hi.wrapCallback((path: string, mode: number, done: Function) => {
-    fs.access(path, mode, (error: any) => {
+    fs.access(path, mode, (error: Error) => {
       done(null, _.isNil(error));
     });
   })(resolvedFilepath, fs.constants.R_OK)

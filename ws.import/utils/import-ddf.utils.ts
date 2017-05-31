@@ -48,12 +48,12 @@ export {
   validateDdfRepo,
   cloneDdfRepo,
   generateDiffForDatasetUpdate,
-  startStreamProcessing,
+  startStreamProcessing
 };
 
-function getAllConcepts(externalContext, done) {
+function getAllConcepts(externalContext: any, done: Function): void {
   return ConceptsRepositoryFactory.latestVersion(externalContext.dataset._id, externalContext.transaction.createdAt)
-    .findAllPopulated((err, concepts) => {
+    .findAllPopulated((err: string, concepts: any) => {
       if (err) {
         return done(err);
       }
@@ -64,9 +64,9 @@ function getAllConcepts(externalContext, done) {
     });
 }
 
-function getAllPreviousConcepts(externalContext, done) {
+function getAllPreviousConcepts(externalContext: any, done: Function): void {
   return ConceptsRepositoryFactory.currentVersion(externalContext.dataset._id, externalContext.previousTransaction.createdAt)
-    .findAllPopulated((err, concepts) => {
+    .findAllPopulated((err: string, concepts: any) => {
       if (err) {
         return done(err);
       }
@@ -76,10 +76,10 @@ function getAllPreviousConcepts(externalContext, done) {
     });
 }
 
-function activateLifecycleHook(hookName) {
+function activateLifecycleHook(hookName: any): any {
   logger.info('Trying to activate lifecycle hook: ', hookName);
   const actualParameters = [].slice.call(arguments, 1);
-  return (pipe, done) => {
+  return (pipe: any, done: Function) => {
     return async.setImmediate(() => {
       if (pipe.lifecycleHooks && pipe.lifecycleHooks[hookName]) {
         pipe.lifecycleHooks[hookName](actualParameters);
@@ -89,26 +89,26 @@ function activateLifecycleHook(hookName) {
   };
 }
 
-function isPropertyReserved(property) {
+function isPropertyReserved(property: any): boolean {
   return _.includes(RESERVED_PROPERTIES, property);
 }
 
-function isJson(value) {
+function isJson(value: any): boolean {
   return isJsonLike(value) && validator.isJSON(value);
 }
 
-function isJsonLike(value) {
+function isJsonLike(value: any): boolean {
   return /^\[.*\]$|^{.*}$/g.test(value);
 }
 
-function parseProperties(concept, entityGid, entityProperties, timeConcepts) {
+function parseProperties(concept: any, entityGid: any, entityProperties: any, timeConcepts: any): any {
   if (_.isEmpty(timeConcepts)) {
     return {};
   }
 
   let parsedProperties =
     _.chain(entityProperties)
-      .pickBy((propValue, prop) => timeConcepts[prop])
+      .pickBy((propValue: any, prop: any) => timeConcepts[prop])
       .mapValues(toInternalTimeForm)
       .value();
 
@@ -118,7 +118,7 @@ function parseProperties(concept, entityGid, entityProperties, timeConcepts) {
   return parsedProperties;
 }
 
-function toInternalTimeForm(value) {
+function toInternalTimeForm(value: any): any {
   const timeDescriptor = ddfTimeUtils.parseTime(value);
   return {
     millis: _.get(timeDescriptor, 'time'),
@@ -126,12 +126,12 @@ function toInternalTimeForm(value) {
   };
 }
 
-function toNumeric(value) {
+function toNumeric(value: any): any {
   const numericValue = value && _.toNumber(value);
   return !_.isNaN(numericValue) && _.isNumber(numericValue) ? numericValue : null;
 }
 
-function toBoolean(value) {
+function toBoolean(value: any): boolean {
   if (value === 'TRUE' || value === 'FALSE') {
     return value === 'TRUE';
   }
@@ -143,9 +143,9 @@ function toBoolean(value) {
   return null;
 }
 
-function cloneDdfRepo(pipe, done) {
+function cloneDdfRepo(pipe: any, done: Function): void {
   logger.info('Clone ddf repo: ', pipe.github, pipe.commit);
-  return reposService.cloneRepo(pipe.github, pipe.commit, (error, repoInfo) => {
+  return reposService.cloneRepo(pipe.github, pipe.commit, (error: string, repoInfo: any) => {
     if (error) {
       return done(error, pipe);
     }
@@ -156,10 +156,10 @@ function cloneDdfRepo(pipe, done) {
   });
 }
 
-function validateDdfRepo(pipe, onDdfRepoValidated) {
+function validateDdfRepo(pipe: any, onDdfRepoValidated: Function): void {
   logger.info('Start ddf dataset validation process: ', _.get(pipe.repoInfo, 'pathToRepo'));
   const simpleDdfValidator = new SimpleDdfValidator(pipe.repoInfo.pathToRepo, ddfValidationConfig);
-  simpleDdfValidator.on('finish', (error, isDatasetCorrect) => {
+  simpleDdfValidator.on('finish', (error: string, isDatasetCorrect: boolean) => {
     if (error) {
       return onDdfRepoValidated(error);
     }
@@ -173,10 +173,10 @@ function validateDdfRepo(pipe, onDdfRepoValidated) {
   return ddfValidation.validate(simpleDdfValidator);
 }
 
-function generateDiffForDatasetUpdate(context, done) {
+function generateDiffForDatasetUpdate(context: any, done: Function): void {
   logger.info('Generating diff for dataset update');
   const {hashFrom, hashTo, github} = context;
-  return wsCli.generateDiff({hashFrom, hashTo, github, resultPath: config.PATH_TO_DIFF_DDF_RESULT_FILE}, (error, diffPaths) => {
+  return wsCli.generateDiff({hashFrom, hashTo, github, resultPath: config.PATH_TO_DIFF_DDF_RESULT_FILE}, (error: string, diffPaths: any) => {
     if (error) {
       return done(error);
     }
@@ -189,18 +189,18 @@ function generateDiffForDatasetUpdate(context, done) {
   });
 }
 
-function resolvePathToDdfFolder(pipe, done) {
+function resolvePathToDdfFolder(pipe: any, done: Function): void {
   const pathToDdfFolder = reposService.getPathToRepo(pipe.datasetName);
   pipe.pathToDdfFolder = pathToDdfFolder;
 
   return async.setImmediate(() => done(null, pipe));
 }
 
-function getDatapackage(context, done) {
+function getDatapackage(context: any, done: Function): void {
   logger.info('Loading datapackage.json');
 
   const pathToDdfRepo = reposService.getPathToRepo(context.datasetName);
-  return datapackageParser.loadDatapackage({folder: pathToDdfRepo}, (error, datapackage) => {
+  return datapackageParser.loadDatapackage({folder: pathToDdfRepo}, (error: string, datapackage: any) => {
     if (error) {
       logger.error('Datapackage was not loaded');
       return done(error);
@@ -211,10 +211,10 @@ function getDatapackage(context, done) {
   });
 }
 
-function findPreviousTransaction(pipe, done) {
+function findPreviousTransaction(pipe: any, done: Function): void {
   logger.info('Find latest successful transaction');
 
-  DatasetTransactionsRepository.findLatestCompletedByDataset(pipe.dataset._id, (err, latestTransaction) => {
+  DatasetTransactionsRepository.findLatestCompletedByDataset(pipe.dataset._id, (err: string, latestTransaction: any) => {
     if (err) {
       return done(err);
     }
@@ -224,7 +224,7 @@ function findPreviousTransaction(pipe, done) {
   });
 }
 
-function createTransaction(pipe, done) {
+function createTransaction(pipe: any, done: Function): void {
   logger.info('create transaction');
 
   const transaction = {
@@ -233,7 +233,7 @@ function createTransaction(pipe, done) {
     commit: pipe.commit
   };
 
-  DatasetTransactionsRepository.create(transaction, (err, createdTransaction) => {
+  DatasetTransactionsRepository.create(transaction, (err: string, createdTransaction: any) => {
     if (err) {
       return done(err, pipe);
     }
@@ -243,7 +243,7 @@ function createTransaction(pipe, done) {
   });
 }
 
-function closeTransaction(pipe, done) {
+function closeTransaction(pipe: any, done: Function): void {
   logger.info('close transaction');
 
   const options = {
@@ -251,12 +251,12 @@ function closeTransaction(pipe, done) {
     transactionStartTime: pipe.transaction.createdAt
   };
 
-  DatasetTransactionsRepository.closeTransaction(options, err => {
+  DatasetTransactionsRepository.closeTransaction(options, (err: string) => {
     return done(err, pipe);
   });
 }
 
-function createDataset(pipe, done) {
+function createDataset(pipe: any, done: Function): void {
   logger.info('create data set');
 
   const dataset = {
@@ -267,7 +267,7 @@ function createDataset(pipe, done) {
     private: pipe.isDatasetPrivate
   };
 
-  DatasetsRepository.create(dataset ,(err, createdDataset) => {
+  DatasetsRepository.create(dataset ,(err: string, createdDataset: any) => {
     if (err) {
       return done(err);
     }
@@ -281,10 +281,10 @@ function createDataset(pipe, done) {
   });
 }
 
-function findDataset(pipe, done) {
+function findDataset(pipe: any, done: Function): void {
   logger.info('Searching for existing dataset: ', pipe.datasetName);
 
-  return DatasetsRepository.findByName(pipe.datasetName, (err, dataset) => {
+  return DatasetsRepository.findByName(pipe.datasetName, (err: string, dataset: any) => {
     if (err) {
       return done(err);
     }
@@ -300,7 +300,7 @@ function findDataset(pipe, done) {
   });
 }
 
-function establishTransactionForDataset(pipe, done) {
+function establishTransactionForDataset(pipe: any, done: Function): void {
   logger.info('Establishing current transaction for dataset');
 
   const options = {
@@ -308,10 +308,10 @@ function establishTransactionForDataset(pipe, done) {
     datasetId: pipe.dataset._id
   };
 
-  DatasetTransactionsRepository.establishForDataset(options, err => done(err, pipe));
+  DatasetTransactionsRepository.establishForDataset(options, (err: string) => done(err, pipe));
 }
 
-function updateTransactionLanguages(pipe, done) {
+function updateTransactionLanguages(pipe: any, done: Function): void {
   logger.info('update transaction languages');
 
   const options = {
@@ -319,12 +319,12 @@ function updateTransactionLanguages(pipe, done) {
     languages: _.map(pipe.datapackage.translations, 'id')
   };
 
-  DatasetTransactionsRepository.updateLanguages(options, err => done(err, pipe));
+  DatasetTransactionsRepository.updateLanguages(options, (err: string) => done(err, pipe));
 }
 
-function startStreamProcessing(stream, externalContext, done) {
+function startStreamProcessing(stream: any, externalContext: any, done: Function): void {
   const errors = [];
-  return stream.stopOnError(error => {
+  return stream.stopOnError((error: string) => {
       errors.push(error);
     })
     .done(() => {

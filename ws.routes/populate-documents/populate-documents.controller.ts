@@ -4,8 +4,9 @@ import {logger} from '../../ws.config/log';
 
 import * as routeUtils from '../../ws.routes/utils';
 import * as populateDocumentService from './populate-documents.service';
+import {ServiceLocator} from '../../ws.service-locator/index';
 
-function createPopulateDocumentsController(serviceLocator) {
+function createPopulateDocumentsController(serviceLocator: ServiceLocator): any {
   if (!config.CAN_POPULATE_DOCUMENTS) {
     return;
   }
@@ -20,7 +21,7 @@ function createPopulateDocumentsController(serviceLocator) {
 
   return app.use(router);
 
-  function getDocumentByQuery(req, res) {
+  function getDocumentByQuery(req: any, res: any): void {
     const datasetName = req.body.dataset;
     const commit = req.body.version;
     const collection = req.body.collection;
@@ -33,7 +34,7 @@ function createPopulateDocumentsController(serviceLocator) {
       query
     };
 
-    return populateDocumentService.getDocumentsByQuery(externalContext, (error, documents) => {
+    return populateDocumentService.getDocumentsByQuery(externalContext, (error: string, documents: any) => {
       if (error) {
         logger.error({req}, 'POPULATE DOCUMENTS: Bad request');
         return res.json(routeUtils.toErrorResponse('POPULATE DOCUMENTS: Bad request'));

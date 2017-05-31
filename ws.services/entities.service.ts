@@ -10,7 +10,7 @@ import {EntitiesRepositoryFactory} from '../ws.repository/ddf/entities/entities.
 
 export {
   getEntities,
-  collectEntitiesByDdfql,
+  collectEntitiesByDdfql
 };
 
 function collectEntitiesByDdfql(options: any, cb: AsyncResultCallback<any, any>): void {
@@ -23,7 +23,7 @@ function collectEntitiesByDdfql(options: any, cb: AsyncResultCallback<any, any>)
     commonService.findDefaultDatasetAndTransaction,
     getConcepts,
     normalizeQueriesToEntitiesByDdfql
-  ],  (error: any, result: any) => {
+  ],  (error: string, result: any) => {
     console.timeEnd('finish Entities stats');
 
     return cb(error, result);
@@ -41,7 +41,7 @@ function normalizeQueriesToEntitiesByDdfql(pipe: any, cb: Function): void {
       return cb(validateQuery.log, pipe);
     }
     return entitiesRepository
-      .findEntityPropertiesByQuery(item, (error: any, entities: any) => {
+      .findEntityPropertiesByQuery(item, (error: string, entities: any) => {
         return mcb(error, _.map(entities, 'gid'));
       });
   }, (err: any, substituteJoinLinks: any) => {
@@ -54,7 +54,7 @@ function normalizeQueriesToEntitiesByDdfql(pipe: any, cb: Function): void {
     }
 
     return entitiesRepository
-      .findEntityPropertiesByQuery(subEntityQuery, (error: any, entities: any) => {
+      .findEntityPropertiesByQuery(subEntityQuery, (error: string, entities: any) => {
         if (error) {
           return cb(error);
         }
@@ -70,7 +70,7 @@ function getEntities(pipe: any, cb: Function): void {
   const entitiesRepository = EntitiesRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version);
 
   entitiesRepository
-    .findEntityProperties(pipe.domainGid, pipe.headers, pipe.where, (error: any, entities: any) => {
+    .findEntityProperties(pipe.domainGid, pipe.headers, pipe.where, (error: string, entities: any) => {
       if (error) {
         return cb(error);
       }

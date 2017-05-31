@@ -2,37 +2,38 @@ import * as _ from 'lodash';
 import * as datapackageParser from './datapackage.parser';
 import * as ddfImportUtils from './import-ddf.utils';
 import {constants} from '../../ws.utils/constants';
+import {DatapackageResource, ParsedConceptResource} from './datapackage.parser';
 
 export class ChangesDescriptor {
-  _object: any;
-  _metadata: any;
-  _cachedOldResource: any = null;
-  _cachedCurrentResource: any = null;
+  private _object: any;
+  private _metadata: any;
+  private _cachedOldResource: any = null;
+  private _cachedCurrentResource: any = null;
 
-  constructor(rawChangesDescriptor) {
+  public constructor(rawChangesDescriptor: any) {
     this._object = _.get(rawChangesDescriptor, 'object', {});
     this._metadata = _.get(rawChangesDescriptor, 'metadata', {});
   }
 
-  get gid() {
+  public get gid(): any {
     return this._object[this.concept];
   }
 
-  get concept() {
+  public get concept(): any {
     if (this.isCreateAction()) {
       return _.head(_.get(this.currentResource, 'primaryKey') as any[]);
     }
     return this._object.gid;
   }
 
-  get changes() {
+  public get changes(): any {
     if (this.isUpdateAction()) {
       return this._object['data-update'];
     }
     return this._object;
   }
 
-  get original() {
+  public get original(): any {
     const isObjectBeingUpdated = this.isUpdateAction() && this._object['data-origin'];
     const isEntityBeingRemoved = this.isRemoveAction() && this.describes(constants.ENTITIES);
 
@@ -42,65 +43,65 @@ export class ChangesDescriptor {
     return this._object;
   }
 
-  get changedObject() {
+  public get changedObject(): any {
     return _.omit(_.extend({}, this.original, this.changes), this.removedColumns);
   }
 
-  get language() {
+  public get language(): any {
     return this._metadata.lang;
   }
 
-  get oldResource() {
+  public get oldResource(): any {
     if (!this._cachedOldResource) {
       this._cachedOldResource = this._parseResource(this.oldResourceRaw);
     }
     return this._cachedOldResource;
   }
 
-  get oldResourceRaw() {
+  public get oldResourceRaw(): any {
     return _.get(this._metadata.file, 'old');
   }
 
-  get currentResource() {
+  public get currentResource(): any {
     if (!this._cachedCurrentResource) {
       this._cachedCurrentResource = this._parseResource(this.currentResourceRaw);
     }
     return this._cachedCurrentResource;
   }
 
-  get currentResourceRaw() {
+  public get currentResourceRaw(): any {
     return _.get(this._metadata.file, 'new');
   }
 
-  get removedColumns() {
+  public get removedColumns(): any {
     return this._metadata.removedColumns || [];
   }
 
-  get onlyColumnsRemoved() {
+  public get onlyColumnsRemoved(): any {
     return this._metadata.onlyColumnsRemoved;
   }
 
-  get action(): string {
+  public get action(): string {
     return _.get(this._metadata, 'action') as string;
   }
 
-  describes(dataType) {
+  public describes(dataType: any): boolean {
     return this._metadata.type === dataType;
   }
 
-  isCreateAction() {
+  public isCreateAction(): boolean {
     return this.action === 'create';
   }
 
-  isRemoveAction() {
+  public isRemoveAction(): boolean {
     return this.action === ChangesDescriptor.REMOVE_ACTION_NAME;
   }
 
-  isUpdateAction() {
+  public isUpdateAction(): boolean {
     return ddfImportUtils.UPDATE_ACTIONS.has(this.action);
   }
 
-  _parseResource(resource) {
+  private _parseResource(resource: DatapackageResource): ParsedConceptResource {
     if (this.describes(constants.CONCEPTS)) {
       return datapackageParser.parseConceptsResource(resource);
     }
@@ -112,7 +113,7 @@ export class ChangesDescriptor {
     return datapackageParser.parseDatapointsResource(resource);
   }
 
-  static get REMOVE_ACTION_NAME() {
+  public static get REMOVE_ACTION_NAME(): string {
     return 'remove';
   }
 }
