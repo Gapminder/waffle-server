@@ -1,12 +1,11 @@
-import '../../../../ws.repository';
-
-import { expect } from 'chai';
+import {expect} from 'chai';
 import * as sinon from 'sinon';
 import * as sinonTest from 'sinon-test';
+import '../../../../ws.repository';
 import {
   mapConcepts,
-  mapEntities,
   mapDatapoints,
+  mapEntities,
   mapSchema
 } from '../../../../ws.routes/data-post-processors/format/format-ws.processor';
 
@@ -45,7 +44,7 @@ describe('Format WS Processor', () => {
           {gid: 'time', originId: 'C2'},
           {gid: 'geo', originId: 'C3'},
           {gid: 'country', domain: 'C3', originId: 'C4'},
-          {gid: 'population2', originId: 'C5'},
+          {gid: 'population2', originId: 'C5'}
         ],
         entities: [
           {gid: 'usa', originId: 'E1', domain: 'C3', sets: ['C4']},
@@ -59,19 +58,14 @@ describe('Format WS Processor', () => {
         datasetVersionCommit: 'Version',
         headers: ['population', 'country', 'time', 'population2'],
         datapoints: [
-          {properties: {population: '123'}, measure: 'C1', dimensions: ['E2', 'E3']},
-          {properties: {population: '234'}, measure: 'C1', dimensions: ['E3', 'E1']},
-          {properties: {population: '345'}, measure: 'C1', dimensions: ['E2', 'E4']},
-          {properties: {population: '456'}, measure: 'C1', dimensions: ['E1', 'E4']},
-          {properties: {population: '567'}, measure: 'C1', dimensions: ['E5', 'E1']},
-          {properties: {population: '678'}, measure: 'C1', dimensions: ['E5', 'E2']},
-
-          {properties: {population2: '456'}, measure: 'C5', dimensions: ['E1', 'E4']},
-          {properties: {population2: '567'}, measure: 'C5', dimensions: ['E5', 'E1']},
-          {properties: {population2: '234'}, measure: 'C5', dimensions: ['E3', 'E1']},
-          {properties: {population2: '345'}, measure: 'C5', dimensions: ['E2', 'E4']},
-          {properties: {population2: '678'}, measure: 'C5', dimensions: ['E6', 'E2']},
-          {properties: {population2: '678'}, measure: 'C5', dimensions: ['E6', 'E1']},
+          {indicators: [{properties: {population: '123'}, measure: 'C1'}], _id: ['E2', 'E3']},
+          {indicators: [{properties: {population: '234'}, measure: 'C1'}, {properties: {population2: '234'}, measure: 'C5'}], _id: ['E3', 'E1']},
+          {indicators: [{properties: {population: '345'}, measure: 'C1'}, {properties: {population2: '345'}, measure: 'C5'}], _id: ['E2', 'E4']},
+          {indicators: [{properties: {population: '456'}, measure: 'C1'}, {properties: {population2: '456'}, measure: 'C5'}], _id: ['E1', 'E4']},
+          {indicators: [{properties: {population2: '567'}, measure: 'C5'}, {properties: {population: '567'}, measure: 'C1'}], _id: ['E5', 'E1']},
+          {indicators: [{properties: {population: '678'}, measure: 'C1'}], _id: ['E5', 'E2']},
+          {indicators: [{properties: {population2: '678'}, measure: 'C5'}], _id: ['E6', 'E2']},
+          {indicators: [{properties: {population2: '678'}, measure: 'C5'}], _id: ['E6', 'E1']}
         ],
         query: {}
       };
@@ -87,7 +81,7 @@ describe('Format WS Processor', () => {
           [567, 'usa', '1900', 567],
           [678, 'ukraine', '1900', null],
           [null, 'ukraine', '2100', 678],
-          [null, 'usa', '2100', 678],
+          [null, 'usa', '2100', 678]
         ]
       };
 
@@ -104,7 +98,7 @@ describe('Format WS Processor', () => {
           {gid: 'time', originId: 'C2'},
           {gid: 'geo', originId: 'C3'},
           {gid: 'country', domain: 'C3', originId: 'C4'},
-          {gid: 'population2', originId: 'C5'},
+          {gid: 'population2', originId: 'C5'}
         ],
         entities: [
           {gid: 'usa', originId: 'E1', domain: 'C3', sets: ['C4']},
@@ -118,22 +112,17 @@ describe('Format WS Processor', () => {
         datasetVersionCommit: 'Version',
         headers: ['population', 'country', 'time', 'population2'],
         datapoints: [
-          {properties: {population: '123'}, measure: 'C1', dimensions: ['E2', 'E3']},
-          {properties: {population: '234'}, measure: 'C1', dimensions: ['E3', 'E1']},
-          {properties: {population: '345'}, measure: 'C1', dimensions: ['E2', 'E4']},
-          {properties: {population: '456'}, measure: 'C1', dimensions: ['E1', 'E4']},
-          {properties: {population: '567'}, measure: 'C1', dimensions: ['E5', 'E1']},
-          {properties: {population: '678'}, measure: 'C1', dimensions: ['E5', 'E2']},
-
-          {properties: {population2: '456'}, measure: 'C5', dimensions: ['E1', 'E4']},
-          {properties: {population2: '567'}, measure: 'C5', dimensions: ['E5', 'E1']},
-          {properties: {population2: '234'}, measure: 'C5', dimensions: ['E3', 'E1']},
-          {properties: {population2: '345'}, measure: 'C5', dimensions: ['E2', 'E4']},
-          {properties: {population2: '678'}, measure: 'C5', dimensions: ['E6', 'E2']},
-          {properties: {population2: '678'}, measure: 'C5', dimensions: ['E6', 'E1']},
+          {indicators: [{properties: {population: '123'}, measure: 'C1'}], _id: ['E2', 'E3']},
+          {indicators: [{properties: {population2: '234'}, measure: 'C5'}, {properties: {population: '234'}, measure: 'C1'}], _id: ['E3', 'E1']},
+          {indicators: [{properties: {population2: '345'}, measure: 'C5'}, {properties: {population: '345'}, measure: 'C1'}], _id: ['E2', 'E4']},
+          {indicators: [{properties: {population2: '456'}, measure: 'C5'}, {properties: {population: '456'}, measure: 'C1'}], _id: ['E1', 'E4']},
+          {indicators: [{properties: {population: '567'}, measure: 'C1'}, {properties: {population2: '567'}, measure: 'C5'}], _id: ['E5', 'E1']},
+          {indicators: [{properties: {population: '678'}, measure: 'C1'}], _id: ['E5', 'E2']},
+          {indicators: [{properties: {population2: '678'}, measure: 'C5'}], _id: ['E6', 'E2']},
+          {indicators: [{properties: {population2: '678'}, measure: 'C5'}], _id: ['E6', 'E1']}
         ],
         query: {
-          order_by: [{"country": "asc"}, {"time": "desc"}]
+          order_by: [{country: 'asc'}, {time: 'desc'}]
         }
       };
       const expectedData = {
@@ -181,17 +170,12 @@ describe('Format WS Processor', () => {
         datasetVersionCommit: 'Version',
         headers: ['population', 'country', 'time', 'name'],
         datapoints: [
-          {properties: {population: '123'}, measure: 'C1', dimensions: ['E2', 'E3']},
-          {properties: {population: '234'}, measure: 'C1', dimensions: ['E3', 'E1']},
-          {properties: {population: '345'}, measure: 'C1', dimensions: ['E2', 'E4']},
-          {properties: {population: '456'}, measure: 'C1', dimensions: ['E1', 'E4']},
-          {properties: {population: '567'}, measure: 'C1', dimensions: ['E5', 'E1']},
-          {properties: {population: '678'}, measure: 'C1', dimensions: ['E5', 'E2']},
-
-        {properties: {name: 'Population'}, measure: 'C6', dimensions: ['E2', 'E3'], languages: {'nl-nl': {name: 'Bevolking'}}},
-        {properties: {name: 'Population'}, measure: 'C6', dimensions: ['E3', 'E1'], languages: {'nl-nl': {name: 'Bevolking'}}},
-        {properties: {name: 'Dimensions'}, measure: 'C6', dimensions: ['E2', 'E4'], languages: {'nl-nl': {name: 'Dimensies'}}},
-          {properties: {name: null}, measure: 'C6', dimensions: ['E1', 'E4']},
+          {indicators: [{properties: {population: '123'}, measure: 'C1'}, {properties: { name: 'Population' }, measure: 'C6', languages: {'nl-nl': {name: 'Bevolking'}}}], _id: ['E2', 'E3']},
+          {indicators: [{properties: { name: 'Population' }, measure: 'C6', languages: {'nl-nl': {name: 'Bevolking'}}}, {properties: {population: '234'}, measure: 'C1'}], _id: ['E3', 'E1']},
+          {indicators: [{properties: {population: '345'}, measure: 'C1'}, {properties: { name: 'Dimensions' }, measure: 'C6', languages: {'nl-nl': {name: 'Dimensies'}}}], _id: ['E2', 'E4']},
+          {indicators: [{properties: { name: null }, measure: 'C6'}, {properties: {population: '456'}, measure: 'C1'}], _id: ['E1', 'E4']},
+          {indicators: [{properties: {population: '567'}, measure: 'C1'}], _id: ['E5', 'E1']},
+          {indicators: [{properties: {population: '678'}, measure: 'C1'}], _id: ['E5', 'E2']}
         ],
         query: {}
       };
@@ -206,7 +190,7 @@ describe('Format WS Processor', () => {
           [345, 'ukraine', '1800', 'Dimensies'],
           [456, 'usa', '1800', null],
           [567, 'usa', '1900', null],
-          [678, 'ukraine', '1900', null],
+          [678, 'ukraine', '1900', null]
         ],
         language: 'nl-nl'
       };
@@ -237,7 +221,7 @@ describe('Format WS Processor', () => {
       });
     });
 
-    it('should format concept in WS-JSON', sandbox(function () {
+    it('should format concept in WS-JSON', sandbox(function (): void {
       const concept1 = {
         gid: 'name',
         properties: {
@@ -286,13 +270,13 @@ describe('Format WS Processor', () => {
             'https://geo...'
           ]
         ],
-        version: '',
+        version: ''
       };
 
       expect(result).to.deep.equal(expectedResponse);
     }));
 
-    it('should format concept in WS-JSON: should translate given concepts according to given lang', sandbox(function () {
+    it('should format concept in WS-JSON: should translate given concepts according to given lang', sandbox(function (): void {
       const translateDocumentStub = this.stub(commonService, 'translateDocument', (concept, lang) => {
         return concept.properties;
       });
@@ -384,7 +368,7 @@ describe('Format WS Processor', () => {
       const result = mapConcepts({
         concepts: [],
         headers: ['name', 'description', 'url'],
-        language: 'ar-SA',
+        language: 'ar-SA'
       });
 
       const expectedResponse = {
@@ -406,7 +390,7 @@ describe('Format WS Processor', () => {
       const result = mapConcepts({
         concepts: [],
         headers: ['name', 'description', 'url'],
-        language: 'ar-SA',
+        language: 'ar-SA'
       });
 
       const expectedResponse = {
@@ -475,7 +459,7 @@ describe('Format WS Processor', () => {
             'https://...'
           ]
         ],
-        version: '',
+        version: ''
       };
 
       expect(result).to.deep.equal(expectedResponse);
@@ -521,7 +505,7 @@ describe('Format WS Processor', () => {
         ],
         headers: ['world_4region', 'country'],
         datasetName: 'bla/bla',
-        datasetVersionCommit: '1a1a1a1',
+        datasetVersionCommit: '1a1a1a1'
       });
 
       const expectedResponse = {
@@ -566,7 +550,7 @@ describe('Format WS Processor', () => {
           }
         ],
         datasetName: 'bla/bla',
-        datasetVersionCommit: '1a1a1a1',
+        datasetVersionCommit: '1a1a1a1'
       });
 
       const expectedResponse = {
@@ -594,7 +578,7 @@ describe('Format WS Processor', () => {
       expect(result).to.deep.equal(expectedResponse);
     });
 
-    it('should format entities in WS-JSON: entity should be translated', sandbox(function() {
+    it('should format entities in WS-JSON: entity should be translated', sandbox(function () {
       const translateDocumentStub = this.stub(commonService, 'translateDocument', (entity, lang) => {
         return entity.properties;
       });
@@ -620,7 +604,7 @@ describe('Format WS Processor', () => {
         headers: ['world_4region', 'country'],
         language: 'ar-SA',
         datasetName: 'bla/bla',
-        datasetVersionCommit: '1a1a1a1',
+        datasetVersionCommit: '1a1a1a1'
       });
 
       const expectedResponse = {
@@ -671,7 +655,7 @@ describe('Format WS Processor', () => {
         language: 'ar-SA',
         datasetName: 'bla/bla',
         domainGid: 'geo',
-        datasetVersionCommit: '1a1a1a1',
+        datasetVersionCommit: '1a1a1a1'
       });
 
       const expectedResponse = {
@@ -754,7 +738,7 @@ describe('Format WS Processor', () => {
         query: '',
         aliases: {},
         headers: [],
-        schema: [],
+        schema: []
       };
 
       const expectedResponse = {
@@ -783,7 +767,7 @@ describe('Format WS Processor', () => {
             key: ['geo', 'year', 'age'],
             value: 'population'
           }
-        ],
+        ]
       };
 
       const expectedResponse = {
@@ -821,7 +805,7 @@ describe('Format WS Processor', () => {
             value: 'population',
             min: 100500
           }
-        ],
+        ]
       };
 
       const expectedResponse = {
@@ -862,7 +846,7 @@ describe('Format WS Processor', () => {
             value: 'population',
             min: 100500
           }
-        ],
+        ]
       };
 
       const expectedResponse = {

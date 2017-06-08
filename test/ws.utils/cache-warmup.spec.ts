@@ -149,6 +149,7 @@ describe('Cache Warm up', () => {
       expect(error).to.not.exist;
       expect(warmedQueriesAmount).to.equal(0);
       expect(fetchFunc.callCount).to.equal(0);
+
       done();
     });
   }));

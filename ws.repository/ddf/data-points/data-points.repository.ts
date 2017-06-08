@@ -3,11 +3,14 @@ import * as async from 'async';
 import { logger } from '../../../ws.config/log';
 
 import * as mongoose from 'mongoose';
+import {AggregationCursor, MongoCallback, MongoError} from 'mongodb';
 
 import * as ddfImportUtils from '../../../ws.import/utils/import-ddf.utils';
 import { VersionedModelRepositoryFactory } from '../../versioned-model-repository-factory';
 import { VersionedModelRepository } from '../../versioned-model-repository';
 import { constants } from '../../../ws.utils/constants';
+import { config } from '../../../ws.config/config';
+import * as hi from 'highland';
 
 const DataPoints = mongoose.model('DataPoints');
 
@@ -83,11 +86,26 @@ class DataPointsRepository extends VersionedModelRepository {
   }
 
   // FIXME: This should be used only for queries that came from normalizer!!!
-  public findByQuery(subDatapointQuery: any, onDatapointsFound: Function): Promise<Object> {
+  public findByQuery(subDatapointQuery: any, onDatapointsFound: MongoCallback<any[]>): void {
     const query = this._composeQuery(subDatapointQuery);
 
     logger.debug({mongo: query}, 'Datapoints query');
-    return DataPoints.find(query).lean().exec(onDatapointsFound);
+
+    return DataPoints.collection
+      .aggregate([{$match: query}], {allowDiskUse: constants.MONGODB_ALLOW_DISK_USE, maxTimeMS: constants.DEFAULT_DATAPOINTS_QUERY_TIMEOUT_MS})
+      .group({
+        _id: '$dimensions',
+        indicators: {$push: {
+          measure: '$measure',
+          properties: '$properties',
+          value: '$value',
+          languages: '$languages'
+        }}
+      })
+      .limit(constants.DEFAULT_DATAPOINTS_QUERY_LIMIT)
+      .toArray((error: MongoError, datapoints: any[]) => {
+        return onDatapointsFound(error, datapoints);
+      });
   }
 
   public closeDatapointByMeasureAndDimensions(options: any, onDatapointClosed: Function): Promise<Object> {

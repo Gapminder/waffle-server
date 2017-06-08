@@ -42,7 +42,11 @@ const constants: any = {
   TIME_CONCEPT_TYPES,
   GID_REGEXP: /^[a-z0-9_]*$/,
 
-  VALID_TOKEN_PERIOD_IN_MILLIS: 60 * 60 * 1000 // one hour
+  VALID_TOKEN_PERIOD_IN_MILLIS: 60 * 60 * 1000, // one hour
+
+  DEFAULT_DATAPOINTS_QUERY_TIMEOUT_MS: 20000,
+  DEFAULT_DATAPOINTS_QUERY_LIMIT: 1000000,
+  MONGODB_ALLOW_DISK_USE: true
 };
 
 export { constants };

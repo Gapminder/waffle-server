@@ -735,8 +735,8 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should fail when error happened while failed transaction removing', done => {
-      const removeById = (failedTransactionId, onTransactionRemoved) => {
+    it('should fail when error happened while failed transaction removing', (done: Function) => {
+      const removeById = (failedTransactionId: string, onTransactionRemoved: Function) => {
         expect(failedTransactionId).to.be.equal(expectedTransaction._id);
 
         return onTransactionRemoved(expectedError);
@@ -752,13 +752,13 @@ describe('Dataset Transactions Service', () => {
         [datapointsRepositoryPath]: datapointsRepository
       });
 
-      datasetTransactionsService.rollbackFailedTransactionFor(expectedDatasetName, expectedUser, (error) => {
+      return datasetTransactionsService.rollbackFailedTransactionFor(expectedDatasetName, expectedUser, (error: string) => {
         expect(error).to.equal(expectedError);
-        done();
+        return done();
       });
     });
 
-    it('should fail when error happened while dataset force unlocking', done => {
+    it('should fail when error happened while dataset force unlocking', (done: Function) => {
       const forceUnlock = (datasetName, onDatasetUnlocked) => {
         expect(datasetName).to.be.equal(expectedDatasetName);
 
@@ -781,7 +781,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should fail when error happened while getting transactions count by datasetId', done => {
+    it('should fail when error happened while getting transactions count by datasetId', (done: Function) => {
       const countByDataset = (datasetId, onTransactionsCounted) => {
         expect(datasetId).to.be.equal(expectedDatasetId);
         return onTransactionsCounted(expectedError);
@@ -803,7 +803,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should skip removing dataset step because it has transactions', done => {
+    it('should skip removing dataset step because it has transactions', (done: Function) => {
       const countByDataset = (datasetId, onTransactionsCounted) => {
         expect(datasetId).to.be.equal(expectedDatasetId);
         return onTransactionsCounted(null, 1);
@@ -825,7 +825,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should fail when error happened while dataset without any transaction removing', done => {
+    it('should fail when error happened while dataset without any transaction removing', (done: Function) => {
       const removeById = (datasetId, onDatasetRemoved) => {
         expect(datasetId).to.be.equal(expectedDatasetId);
 
@@ -848,7 +848,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should remove dataset if after rollback it hasn\'t any transaction', done => {
+    it('should remove dataset if after rollback it hasn\'t any transaction', (done: Function) => {
       const datasetTransactionsService = proxyquire(datasetTransactionsServicePath, {
         [transactionsRepositoryPath]: {DatasetTransactionsRepository: transactionRepository},
         [datasetServicePath]: datasetService,

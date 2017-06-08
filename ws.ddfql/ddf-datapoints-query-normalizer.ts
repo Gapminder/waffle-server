@@ -2,7 +2,6 @@ import * as _ from 'lodash';
 import * as traverse from 'traverse';
 import * as ddfQueryUtils from './ddf-query-utils';
 import * as conceptUtils from '../ws.import/utils/concepts.utils';
-import {constants} from '../ws.utils/constants';
 
 export {
   normalizeDatapoints,
@@ -197,11 +196,10 @@ function __substituteWhereClause(query: any, options: any): void {
       if (_.isArray(concept)) {
         id = _.chain(concept)
           .filter((conceptGid: string) => !!options.conceptOriginIdsByGids[conceptGid])
-          .map((conceptGid: string) => options.conceptOriginIdsByGids[conceptGid].toString())
+          .map((conceptGid: string) => options.conceptOriginIdsByGids[conceptGid])
           .value();
       } else {
         id = _.get(options.conceptOriginIdsByGids, concept, false);
-        id = id ? id.toString() : id;
       }
 
       this.update(id ? id : concept);
