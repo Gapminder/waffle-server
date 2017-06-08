@@ -11,7 +11,9 @@ import { registerRoutes } from './ws.routes';
 import { makeDefaultUser } from './make-default-user';
 import * as Cache from './ws.utils/cache-warmup';
 import * as importUtils from './ws.import/utils/import-ddf.utils';
+import {reposService} from 'waffle-server-repo-service';
 
+reposService.logger = logger;
 const app: express.Application = express();
 
 process.on('uncaughtException', function (err: string): void {

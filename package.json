@@ -78,14 +78,14 @@
     "passport-unique-token": "0.1.4",
     "semver": "5.3.0",
     "shelljs": "0.7.8",
-    "simple-git": "1.72.0",
     "synchronize": "2.0.0",
     "traverse": "0.6.6",
     "ts-node": "3.0.6",
     "typescript": "2.3.4",
     "urlon": "2.0.1",
     "validator": "6.2.1",
-    "waffle-server-import-cli": "~2.6.6"
+    "waffle-server-import-cli": "~2.6.11",
+    "waffle-server-repo-service": "1.0.6"
   },
   "devDependencies": {
     "@types/chai": "3.4.35",
