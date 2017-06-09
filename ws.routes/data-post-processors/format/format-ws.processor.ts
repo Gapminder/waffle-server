@@ -4,6 +4,7 @@ import {constants} from '../../../ws.utils/constants';
 import * as ddfQueryUtils from '../../../ws.ddfql/ddf-query-utils';
 import * as commonService from '../../../ws.services/common.service';
 import * as ddfImportUtils from '../../../ws.import/utils/import-ddf.utils';
+import {logger} from '../../../ws.config/log';
 
 const DATAPOINT_KEY_SEPARATOR = ':';
 
@@ -21,7 +22,12 @@ function mapSchemaToWsJson(data: any): any {
   }, []));
 
   const headers = _.map(data.headers, (header: string) => data.aliases[header] ? data.aliases[header] : header);
-  return { dataset: data.datasetName, version: data.datasetVersionCommit, headers, rows: sortRows(rows, data.query, headers)};
+  return {
+    dataset: data.datasetName,
+    version: data.datasetVersionCommit,
+    headers,
+    rows: sortRows(rows, data.query, headers)
+  };
 }
 
 function mapConceptToWsJson(data: any): any {
@@ -114,43 +120,37 @@ function mapDatapointsToWsJson(data: any): any {
     _.extend(result, {language: data.language});
   }
 
-  const dimensionsDictionary = new Map();
-
   const headerConceptsDictionary = _.reduce(data.headers, (dictionary: any, header: any, index: any) => {
     dictionary.set(header, index);
     return dictionary;
   }, new Map());
 
   return hi(data.datapoints)
-    .reduce(result, (outcome: any, datapoint: any) => {
-      const rows = outcome.rows;
-      const sortedDimensions = _.chain(datapoint.dimensions)
-        .sortBy((value: any) => value.toString())
-        .join('.')
-        .value();
-      if (!dimensionsDictionary.has(sortedDimensions)) {
-        dimensionsDictionary.set(sortedDimensions, rows.length);
-      }
+    .map((datapoint: any) => {
+      const context = {
+        entitiesByOriginId,
+        selectedConceptsByOriginId,
+        selectedConceptsOriginIds,
+        headerConceptsDictionary,
+        headers: data.headers
+      };
 
-      const rowIndex = dimensionsDictionary.get(sortedDimensions);
-      const translatedDatapointProperties = commonService.translateDocument(datapoint, data.language);
+      const newRow = createNewDatapointsRow({dimensions: datapoint._id}, context);
 
-      if (!Array.isArray(rows[rowIndex])) {
-        const context = {entitiesByOriginId, selectedConceptsByOriginId, selectedConceptsOriginIds, headerConceptsDictionary, headers: data.headers};
-        const newRow = createNewDatapointsRow(datapoint, context);
-        rows.push(newRow);
-      }
+      _.each(datapoint.indicators, (indicator: any) => {
+        const measureGid = conceptsByOriginId[indicator.measure][constants.GID];
+        const measureIndex = headerConceptsDictionary.get(measureGid);
+        const translatedDatapointProperties = commonService.translateDocument(indicator, data.language);
+        const datapointValue = _.get(translatedDatapointProperties, measureGid);
 
-      const measureGid = conceptsByOriginId[datapoint.measure][constants.GID];
-      const measureIndex = headerConceptsDictionary.get(measureGid);
-      const datapointValue = _.get(translatedDatapointProperties, measureGid);
+        newRow[measureIndex] = coerceValue(datapointValue);
+      });
 
-      rows[rowIndex][measureIndex] = coerceValue(datapointValue);
-
-      return result;
+      return newRow;
     })
-    .map((outcome: any) => {
-      return _.extend(outcome, {rows: sortRows(outcome.rows, data.query, outcome.headers)});
+    .collect()
+    .map((unsortedRows: any[]) => {
+      return _.extend(result, {rows: sortRows(unsortedRows, data.query, data.headers)});
     });
 }
 
@@ -162,7 +162,9 @@ function createNewDatapointsRow(datapoint: any, externalContext: any): any {
     const originEntity = entitiesByOriginId[dimension];
     const domainGid = _getGidOfSelectedConceptByEntity(selectedConceptsByOriginId, selectedConceptsOriginIds, originEntity);
     const domainIndex = headerConceptsDictionary.get(domainGid);
+
     row[domainIndex] = originEntity[constants.GID];
+
     return row;
   }, rowTemplate);
 }

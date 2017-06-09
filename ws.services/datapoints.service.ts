@@ -10,6 +10,7 @@ import * as ddfQueryValidator from '../ws.ddfql/ddf-query-validator';
 import {EntitiesRepositoryFactory} from '../ws.repository/ddf/entities/entities.repository';
 import {DatapointsRepositoryFactory} from '../ws.repository/ddf/data-points/data-points.repository';
 import {ValidateQueryModel} from '../ws.ddfql/ddf-query-validator';
+import {MongoError} from 'mongodb';
 
 export {
   collectDatapointsByDdfql
@@ -124,10 +125,10 @@ function normalizeQueriesToDatapointsByDdfql(pipe: any, cb: Function): void {
   });
 }
 
-function queryDatapointsByDdfql(pipe: any, subDatapointQuery: any, cb: Function): Promise<any> {
+function queryDatapointsByDdfql(pipe: any, subDatapointQuery: any, cb: Function): void {
   return DatapointsRepositoryFactory
     .currentVersion(pipe.dataset._id, pipe.version)
-    .findByQuery(subDatapointQuery, (error: string, datapoints: any) => {
+    .findByQuery(subDatapointQuery, (error: MongoError, datapoints: any) => {
       if (error) {
         return cb(error);
       }
