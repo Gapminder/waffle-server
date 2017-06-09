@@ -13,34 +13,19 @@ export {
 function warmUpCache(done: Function): void {
   let warmedQueriesAmount = 0;
   const cacheWarmUpStream = hi(RecentDdfqlQueriesRepository.findAllAsStream())
-    .map((logRecord: any) => {
-      return hi(executeDdfql(logRecord));
-    })
-    .sequence()
-    .tap(({queryRaw, status, success}: any) => {
-      if (success !== false) {
-        warmedQueriesAmount++;
-      }
-
-      logger.info(`Cache warm up attempt. Status:  ${status}. Success: ${success}. DDFQL raw: `, queryRaw);
+    .through(executeDdfql)
+    .tap((queryRaw: any) => {
+      warmedQueriesAmount++;
+      logger.info(`Warm cache up using DDFQL query: `, queryRaw);
     });
 
   return ddfImportUtils.startStreamProcessing(cacheWarmUpStream, null, (error: string) => done(error, warmedQueriesAmount));
 }
 
-function executeDdfql(logRecord: any): any {
-  const url = `http://localhost:${config.INNER_PORT}/api/ddf/ql/?${logRecord.type === 'URLON' ? logRecord.queryRaw : 'query=' + logRecord.queryRaw}`;
-  logger.debug('Cache is going to be warmed up from url: ', url);
-
-  return fetch(url)
-    .then((response: any) => {
-      return response.json();
-    })
-    .then((response: any) => {
-      return {
-        queryRaw: logRecord.queryRaw,
-        success: response.success,
-        status: response.error || response.message
-      };
-    });
+function executeDdfql(s: any): any {
+  return s.flatMap((logRecord: any) => {
+    const url = `http://localhost:${config.INNER_PORT}/api/ddf/ql/?${logRecord.type === 'URLON' ? logRecord.queryRaw : 'query=' + logRecord.queryRaw}`;
+    logger.debug('Cache is going to be warmed up from url: ', url);
+    return hi(fetch(url, {method: 'HEAD'}).then(() => ({queryRaw: logRecord.queryRaw})));
+  });
 }

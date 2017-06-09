@@ -56,7 +56,7 @@
     "cors": "2.8.3",
     "csvtojson": "1.1.6",
     "ddf-time-utils": "0.1.7",
-    "ddf-validation": "~1.5.21",
+    "ddf-validation": "~1.6.0",
     "entities": "1.1.1",
     "express": "4.15.3",
     "express-redis-cache": "0.5.1",

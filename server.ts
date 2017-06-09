@@ -33,19 +33,18 @@ app.listen(config.INNER_PORT, () => {
 
   makeDefaultUser();
 
-  // FIXME: Disabled due to memory leak
-  // if(config.THRASHING_MACHINE) {
-  //
-  //   Cache.warmUpCache((error: string, warmedQueriesAmount: any) => {
-  //     if(error) {
-  //       return logger.error(error, 'Cache warm up failed.');
-  //     }
-  //
-  //     if (warmedQueriesAmount) {
-  //       return logger.info(`Cache is warm. Amount of warmed queries: ${warmedQueriesAmount}`);
-  //     }
-  //
-  //     return logger.info(`There are no queries to warm up cache OR queries were executed with no success`);
-  //   });
-  // }
+  if(config.THRASHING_MACHINE) {
+
+    Cache.warmUpCache((error: string, warmedQueriesAmount: any) => {
+      if(error) {
+        return logger.error(error, 'Cache warm up failed.');
+      }
+
+      if (warmedQueriesAmount) {
+        return logger.info(`Cache is warm. Amount of warmed queries: ${warmedQueriesAmount}`);
+      }
+
+      return logger.info(`There are no queries to warm up cache OR queries were executed with no success`);
+    });
+  }
 });

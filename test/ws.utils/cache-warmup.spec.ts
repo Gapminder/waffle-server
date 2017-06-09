@@ -40,11 +40,12 @@ describe('Cache Warm up', () => {
           }
         }
       },
-      [fetchPath]: url => {
+      [fetchPath]: (url, options) => {
         expect(url).to.equal(expectedUrl);
-        return Promise.resolve({
-          json: () => Promise.resolve(queryResponse)
-        });
+        expect(options.method).to.equal('HEAD');
+        return {
+          then: () => [recentQuery.queryRaw]
+        };
       }
     });
 
@@ -53,7 +54,7 @@ describe('Cache Warm up', () => {
       expect(warmedQueriesAmount).to.equal(1);
 
       sinon.assert.calledOnce(loggerInfoStub);
-      sinon.assert.calledWithExactly(loggerInfoStub, `Cache warm up attempt. Status:  ${queryResponse.message}. Success: ${queryResponse.success}. DDFQL raw: `, recentQuery.queryRaw);
+      sinon.assert.calledWithExactly(loggerInfoStub, `Warm cache up using DDFQL query: `, recentQuery.queryRaw);
 
       sinon.assert.calledOnce(loggerDebugStub);
       sinon.assert.calledWithExactly(loggerDebugStub, 'Cache is going to be warmed up from url: ', expectedUrl);
@@ -85,9 +86,9 @@ describe('Cache Warm up', () => {
       },
       [fetchPath]: url => {
         expect(url).to.equal(expectedUrl);
-        return Promise.resolve({
-          json: () => Promise.resolve(queryResponse)
-        });
+        return {
+          then: () => [recentQuery.queryRaw]
+        };
       }
     });
 
@@ -99,7 +100,7 @@ describe('Cache Warm up', () => {
       expect(warmedQueriesAmount).to.equal(1);
 
       sinon.assert.calledOnce(loggerInfoStub);
-      sinon.assert.calledWithExactly(loggerInfoStub, `Cache warm up attempt. Status:  ${queryResponse.message}. Success: ${queryResponse.success}. DDFQL raw: `, recentQuery.queryRaw);
+      sinon.assert.calledWithExactly(loggerInfoStub, `Warm cache up using DDFQL query: `, recentQuery.queryRaw);
 
       sinon.assert.calledOnce(loggerDebugStub);
       sinon.assert.calledWithExactly(loggerDebugStub, 'Cache is going to be warmed up from url: ', expectedUrl);
@@ -123,7 +124,11 @@ describe('Cache Warm up', () => {
         }
       },
       [fetchPath]: () => {
-        return Promise.reject('Boom!');
+        return {
+          then: () => {
+            throw 'Boom!';
+          }
+        };
       }
     });
 
