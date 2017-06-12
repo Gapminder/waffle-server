@@ -16,7 +16,7 @@ const loggerPath = './../ws.config/log';
 const fetchPath = 'node-fetch';
 
 describe('Cache Warm up', () => {
-  it('should warm up cache using URLON stringified ddfql query', sandbox(function(done: Function) {
+  it('should warm up cache using URLON stringified ddfql query', sandbox(function(done: Function): void {
     const queryResponse = {
       success: true,
       message: 'Completed !:)'
@@ -49,7 +49,7 @@ describe('Cache Warm up', () => {
       }
     });
 
-    warmUp.warmUpCache((error, warmedQueriesAmount) => {
+    warmUp.warmUpCache((error: string, warmedQueriesAmount: number) => {
       expect(error).to.not.exist;
       expect(warmedQueriesAmount).to.equal(1);
 
@@ -63,7 +63,7 @@ describe('Cache Warm up', () => {
     });
   }));
 
-  it('should warm up cache using JSON stringified ddfql query', sandbox(function(done: Function) {
+  it('should warm up cache using JSON stringified ddfql query', sandbox(function(done: Function): void {
     const queryResponse = {
       success: true,
       message: 'Completed! :)'
@@ -95,7 +95,7 @@ describe('Cache Warm up', () => {
     const loggerInfoStub = this.stub(logger, 'info');
     const loggerDebugStub = this.stub(logger, 'debug');
 
-    warmUp.warmUpCache((error, warmedQueriesAmount) => {
+    warmUp.warmUpCache((error: string, warmedQueriesAmount: number) => {
       expect(error).to.not.exist;
       expect(warmedQueriesAmount).to.equal(1);
 
@@ -109,7 +109,7 @@ describe('Cache Warm up', () => {
     });
   }));
 
-  it('should generate an error when warm up request was unsuccessful', sandbox(function(done: Function) {
+  it('should generate an error when warm up request was unsuccessful', sandbox(function(done: Function): void {
     const recentQuery = {
       queryRaw: "_select_key@=concept;&value@=concept/_type&=domain&=indicator/_url&=color&=scales&=interpolation&=tags&=name&=unit&=description;;&from=concepts&where_;&language=en",
       type: "URLON",
@@ -132,7 +132,7 @@ describe('Cache Warm up', () => {
       }
     });
 
-    warmUp.warmUpCache((error, warmedQueriesAmount) => {
+    warmUp.warmUpCache((error: string, warmedQueriesAmount: number) => {
       expect(error).to.have.lengthOf(1);
       expect(error[0]).to.equal('Boom!');
       expect(warmedQueriesAmount).to.equal(warmedQueriesAmount);
@@ -140,20 +140,23 @@ describe('Cache Warm up', () => {
     });
   }));
 
-  it('should not warm up cache when recent queries are absent', sandbox(function(done: Function) {
-    const fetchFunc = sinon.spy();
+  it('should not warm up cache when recent queries are absent', sandbox(function(done: Function): void {
+    const fetchFunc = this.stub();
 
     const warmUp = proxyquire('../../ws.utils/cache-warmup', {
       [recentDdfqlQueriesRepositoryPath]: {
-        findAllAsStream: () => []
+        RecentDdfqlQueriesRepository: {
+          findAllAsStream: () => []
+        }
       },
       [fetchPath]: fetchFunc
     });
 
-    warmUp.warmUpCache((error, warmedQueriesAmount) => {
+    warmUp.warmUpCache((error: string, warmedQueriesAmount: number) => {
       expect(error).to.not.exist;
-      expect(warmedQueriesAmount).to.equal(0);
+
       expect(fetchFunc.callCount).to.equal(0);
+      expect(warmedQueriesAmount).to.equal(0);
 
       done();
     });

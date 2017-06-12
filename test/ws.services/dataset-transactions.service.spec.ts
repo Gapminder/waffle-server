@@ -724,9 +724,9 @@ describe('Dataset Transactions Service', () => {
         [datasetServicePath]: datasetService,
         [datasetRepositoryPath]: {DatasetsRepository: _.defaults({removeById: shouldNotCall, forceUnlock: shouldNotCall}, datasetRepository)},
         [datasetIndexRepositoryPath]: {DatasetSchemaRepository: _.defaults({rollback}, datasetIndexRepository)},
-        [conceptsRepositoryPath]: conceptsRepository,
-        [entitiesRepositoryPath]: entitiesRepository,
-        [datapointsRepositoryPath]: datapointsRepository
+        [conceptsRepositoryPath]: {ConceptsRepositoryFactory: conceptsRepository},
+        [entitiesRepositoryPath]: {EntitiesRepositoryFactory: entitiesRepository},
+        [datapointsRepositoryPath]: {DatapointsRepositoryFactory: datapointsRepository}
       });
 
       return datasetTransactionsService.rollbackFailedTransactionFor(expectedDatasetName, expectedUser, (error) => {
@@ -747,9 +747,9 @@ describe('Dataset Transactions Service', () => {
         [datasetServicePath]: datasetService,
         [datasetRepositoryPath]: {DatasetsRepository: _.defaults({removeById: shouldNotCall, forceUnlock: shouldNotCall}, datasetRepository)},
         [datasetIndexRepositoryPath]: {DatasetSchemaRepository: datasetIndexRepository},
-        [conceptsRepositoryPath]: conceptsRepository,
-        [entitiesRepositoryPath]: entitiesRepository,
-        [datapointsRepositoryPath]: datapointsRepository
+        [conceptsRepositoryPath]: {ConceptsRepositoryFactory: conceptsRepository},
+        [entitiesRepositoryPath]: {EntitiesRepositoryFactory: entitiesRepository},
+        [datapointsRepositoryPath]: {DatapointsRepositoryFactory: datapointsRepository}
       });
 
       return datasetTransactionsService.rollbackFailedTransactionFor(expectedDatasetName, expectedUser, (error: string) => {
@@ -770,9 +770,9 @@ describe('Dataset Transactions Service', () => {
         [datasetServicePath]: datasetService,
         [datasetRepositoryPath]: {DatasetsRepository: _.defaults({removeById: shouldNotCall, forceUnlock}, datasetRepository)},
         [datasetIndexRepositoryPath]: {DatasetSchemaRepository: datasetIndexRepository},
-        [conceptsRepositoryPath]: conceptsRepository,
-        [entitiesRepositoryPath]: entitiesRepository,
-        [datapointsRepositoryPath]: datapointsRepository
+        [conceptsRepositoryPath]: {ConceptsRepositoryFactory: conceptsRepository},
+        [entitiesRepositoryPath]: {EntitiesRepositoryFactory: entitiesRepository},
+        [datapointsRepositoryPath]: {DatapointsRepositoryFactory: datapointsRepository}
       });
 
       datasetTransactionsService.rollbackFailedTransactionFor(expectedDatasetName, expectedUser, (error) => {
@@ -792,9 +792,9 @@ describe('Dataset Transactions Service', () => {
         [datasetServicePath]: datasetService,
         [datasetRepositoryPath]: {DatasetsRepository: _.defaults({removeById: shouldNotCall}, datasetRepository)},
         [datasetIndexRepositoryPath]: {DatasetSchemaRepository: datasetIndexRepository},
-        [conceptsRepositoryPath]: conceptsRepository,
-        [entitiesRepositoryPath]: entitiesRepository,
-        [datapointsRepositoryPath]: datapointsRepository
+        [conceptsRepositoryPath]: {ConceptsRepositoryFactory: conceptsRepository},
+        [entitiesRepositoryPath]: {EntitiesRepositoryFactory: entitiesRepository},
+        [datapointsRepositoryPath]: {DatapointsRepositoryFactory: datapointsRepository}
       });
 
       datasetTransactionsService.rollbackFailedTransactionFor(expectedDatasetName, expectedUser, (error) => {
@@ -814,9 +814,9 @@ describe('Dataset Transactions Service', () => {
         [datasetServicePath]: datasetService,
         [datasetRepositoryPath]: {DatasetsRepository: _.defaults({removeById: shouldNotCall}, datasetRepository)},
         [datasetIndexRepositoryPath]: {DatasetSchemaRepository: datasetIndexRepository},
-        [conceptsRepositoryPath]: conceptsRepository,
-        [entitiesRepositoryPath]: entitiesRepository,
-        [datapointsRepositoryPath]: datapointsRepository
+        [conceptsRepositoryPath]: {ConceptsRepositoryFactory: conceptsRepository},
+        [entitiesRepositoryPath]: {EntitiesRepositoryFactory: entitiesRepository},
+        [datapointsRepositoryPath]: {DatapointsRepositoryFactory: datapointsRepository}
       });
 
       return datasetTransactionsService.rollbackFailedTransactionFor(expectedDatasetName, expectedUser, (error) => {
@@ -837,9 +837,9 @@ describe('Dataset Transactions Service', () => {
         [datasetServicePath]: datasetService,
         [datasetRepositoryPath]: {DatasetsRepository: _.defaults({removeById}, datasetRepository)},
         [datasetIndexRepositoryPath]: {DatasetSchemaRepository: datasetIndexRepository},
-        [conceptsRepositoryPath]: conceptsRepository,
-        [entitiesRepositoryPath]: entitiesRepository,
-        [datapointsRepositoryPath]: datapointsRepository
+        [conceptsRepositoryPath]: {ConceptsRepositoryFactory: conceptsRepository},
+        [entitiesRepositoryPath]: {EntitiesRepositoryFactory: entitiesRepository},
+        [datapointsRepositoryPath]: {DatapointsRepositoryFactory: datapointsRepository}
       });
 
       return datasetTransactionsService.rollbackFailedTransactionFor(expectedDatasetName, expectedUser, (error) => {
@@ -854,9 +854,9 @@ describe('Dataset Transactions Service', () => {
         [datasetServicePath]: datasetService,
         [datasetRepositoryPath]: {DatasetsRepository: datasetRepository},
         [datasetIndexRepositoryPath]: {DatasetSchemaRepository: datasetIndexRepository},
-        [conceptsRepositoryPath]: conceptsRepository,
-        [entitiesRepositoryPath]: entitiesRepository,
-        [datapointsRepositoryPath]: datapointsRepository
+        [conceptsRepositoryPath]: {ConceptsRepositoryFactory: conceptsRepository},
+        [entitiesRepositoryPath]: {EntitiesRepositoryFactory: entitiesRepository},
+        [datapointsRepositoryPath]: {DatapointsRepositoryFactory: datapointsRepository}
       });
 
       return datasetTransactionsService.rollbackFailedTransactionFor(expectedDatasetName, expectedUser, (error) => {
