@@ -3,15 +3,16 @@ FROM ubuntu:16.04
 RUN apt-get update
 RUN apt-get install -y sudo git python build-essential libssl-dev openssh-server curl redis-tools nfs-common rsyslog libkrb5-dev
 
-RUN curl -sL https://deb.nodesource.com/setup_7.x | sudo -E bash -
-
 COPY ./deployment/rsys_conf/rsyslog.conf /etc/rsyslog.conf
 COPY ./deployment/rsys_conf/ws.conf /etc/rsyslog.d/ws.conf
 
+RUN curl -sL https://deb.nodesource.com/setup_7.x | sudo -E bash -
 RUN apt-get install -y nodejs
-
 RUN npm i -g forever
 RUN npm i -g shelljs
+
+RUN wget -O /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.0/dumb-init_1.2.0_amd64
+RUN chmod +x /usr/local/bin/dumb-init
 
 #Add ssh-key for Git
 RUN mkdir -p /root/.ssh
@@ -27,11 +28,9 @@ WORKDIR /home/waffle-server
 
 RUN mkdir /home/waffle-server/ddf
 VOLUME /home/waffle-server/ddf
-COPY ./ ./
 
+COPY package.json .
 RUN npm i
-RUN npm run tsc
-RUN chmod +x docker_run.js
 
 EXPOSE 3000
 EXPOSE 80
@@ -45,10 +44,8 @@ ENV MONGODB_URL ${MONGODB_URL}
 ARG DEFAULT_USER_PASSWORD
 ENV DEFAULT_USER_PASSWORD ${DEFAULT_USER_PASSWORD}
 
-
 ARG PATH_TO_DDF_REPOSITORIES
 ENV PATH_TO_DDF_REPOSITORIES ${PATH_TO_DDF_REPOSITORIES}
-
 
 ARG NEW_RELIC_LICENSE_KEY
 ENV NEW_RELIC_LICENSE_KEY ${NEW_RELIC_LICENSE_KEY}
@@ -64,5 +61,9 @@ ENV LOGS_SYNC_DISABLED ${LOGS_SYNC_DISABLED}
 
 ENV TERM xterm-256color
 
-ENTRYPOINT ["/usr/bin/ssh-agent"]
+COPY . .
+RUN npm run tsc
+RUN chmod +x docker_run.js
+
+ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
 CMD ["/home/waffle-server/docker_run.js"]

@@ -1,13 +1,13 @@
 version: "3"
 services:
   mongodb:
-    image: "mongo:3.4.1"
+    image: "mongo:3.4.4"
     ports:
-       - "27017"
+       - "27000:27017"
     volumes:
       - ~/waffle-server/mongodata:/data/db
   redis:
-    image: "redis:3.2.7"
+    image: "redis:3.2.9"
     command: redis-server --appendonly yes
     volumes:
       - ~/waffle-server/redisdata:/data
