@@ -63,9 +63,9 @@ describe('Format Post Processor', () => {
     sinon.assert.calledWith(toErrorResponseSpy, expectedError);
   }));
 
-  it('should send response as data with Content-Type set according to given formatType: csv', sandbox(function () {
+  it('should send response as data with Content-Type and Content-Disposition set according to given formatType: csv', sandbox(function () {
     const sendSpy = this.spy();
-    const setSpy = this.spy();
+    const setHeaderSpy = this.spy();
 
     const expectedMimeType = 'application/csv';
     const expectedFormattedData = [];
@@ -80,12 +80,12 @@ describe('Format Post Processor', () => {
 
     const res = {
       send: sendSpy,
-      set: setSpy
+      setHeader: setHeaderSpy
     };
 
     const formatter = proxyquire(indexFormatProcessorPath, {
       [formatProcessorPath]: {
-        format: (data, formatType, onFormatted) => {
+        format: (data: any, formatType: string, onFormatted: Function) => {
           expect(data).to.equal(req.rawData);
           expect(formatType).to.equal(req.query.format);
 
@@ -96,14 +96,15 @@ describe('Format Post Processor', () => {
 
     formatter(req, res);
 
-    sinon.assert.calledOnce(setSpy);
-    sinon.assert.calledWith(setSpy, 'Content-Type', expectedMimeType);
+    sinon.assert.calledTwice(setHeaderSpy);
+    sinon.assert.calledWith(setHeaderSpy, 'Content-Disposition', 'attachment; filename=export.csv');
+    sinon.assert.calledWith(setHeaderSpy, 'Content-Type', expectedMimeType);
 
     sinon.assert.calledOnce(sendSpy);
     sinon.assert.calledWith(sendSpy, expectedFormattedData);
   }));
 
-  it('should send response as data with Content-Type set according to given formatType: wsJson', sandbox(function () {
+  it('should send response as data with Content-Type and Content-Disposition set according to given formatType: wsJson', sandbox(function () {
     const sendSpy = this.spy();
     const setSpy = this.spy();
 
@@ -120,12 +121,12 @@ describe('Format Post Processor', () => {
 
     const res = {
       send: sendSpy,
-      set: setSpy
+      setHeader: setSpy
     };
 
     const formatter = proxyquire(indexFormatProcessorPath, {
       [formatProcessorPath]: {
-        format: (data, formatType, onFormatted) => {
+        format: (data: any, formatType: string, onFormatted: Function) => {
           expect(data).to.equal(req.rawData);
           expect(formatType).to.equal(req.query.format);
 
@@ -160,7 +161,7 @@ describe('Format Post Processor', () => {
 
     const res = {
       send: sendSpy,
-      set: setSpy
+      setHeader: setSpy
     };
 
     const formatter = proxyquire(indexFormatProcessorPath, {
@@ -184,7 +185,7 @@ describe('Format Post Processor', () => {
   }));
 
   it('should stream response if formatter returned data as stream', sandbox(function () {
-    const setSpy = this.spy();
+    const setHeaderSpy = this.spy();
 
     const expectedMimeType = 'application/json; charset=utf-8';
 
@@ -204,7 +205,7 @@ describe('Format Post Processor', () => {
     };
 
     const res = {
-      set: setSpy
+      setHeader: setHeaderSpy
     };
 
     const formatter = proxyquire(indexFormatProcessorPath, {
@@ -220,8 +221,8 @@ describe('Format Post Processor', () => {
 
     formatter(req, res);
 
-    sinon.assert.calledOnce(setSpy);
-    sinon.assert.calledWith(setSpy, 'Content-Type', expectedMimeType);
+    sinon.assert.calledOnce(setHeaderSpy);
+    sinon.assert.calledWith(setHeaderSpy, 'Content-Type', expectedMimeType);
 
     sinon.assert.calledOnce(pipeSpy);
     sinon.assert.calledWith(pipeSpy, res);
@@ -238,11 +239,11 @@ describe('Format Post Processor', () => {
     };
 
     const jsonSpy = this.spy();
-    const setSpy = this.spy();
+    const setHeaderSpy = this.spy();
 
     const res = {
       json: jsonSpy,
-      set: setSpy
+      setHeader: setHeaderSpy
     };
 
     const formatter = proxyquire(indexFormatProcessorPath, {
@@ -261,8 +262,8 @@ describe('Format Post Processor', () => {
     sinon.assert.calledOnce(jsonSpy);
     sinon.assert.calledWith(jsonSpy, expectedObject);
 
-    sinon.assert.calledOnce(setSpy);
-    sinon.assert.calledWith(setSpy, 'Content-Type', expectedMimeType);
+    sinon.assert.calledOnce(setHeaderSpy);
+    sinon.assert.calledWith(setHeaderSpy, 'Content-Type', expectedMimeType);
 
   }));
 
@@ -282,11 +283,11 @@ describe('Format Post Processor', () => {
     };
 
     const jsonSpy = this.spy();
-    const setSpy = this.spy();
+    const setHeaderSpy = this.spy();
 
     const res = {
       json: jsonSpy,
-      set: setSpy
+      setHeader: setHeaderSpy
     };
 
     const loggerStub = this.stub(logger, 'error');
@@ -309,8 +310,8 @@ describe('Format Post Processor', () => {
     sinon.assert.calledOnce(jsonSpy);
     sinon.assert.calledWith(jsonSpy, expectedResponse);
 
-    sinon.assert.calledOnce(setSpy);
-    sinon.assert.calledWith(setSpy, 'Content-Type', expectedMimeType);
+    sinon.assert.calledOnce(setHeaderSpy);
+    sinon.assert.calledWith(setHeaderSpy, 'Content-Type', expectedMimeType);
 
     sinon.assert.calledOnce(loggerStub);
     sinon.assert.calledWith(loggerStub, expectedErrorMessage);

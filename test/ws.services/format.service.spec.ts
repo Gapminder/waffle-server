@@ -192,10 +192,10 @@ describe('Format Service', () => {
     const wsJsonFormattedData = hi([{headers: ['anno', 'population'], rows: [['1900', 20000], ['1901', 30000], ['1902', 40000]]}]);
     this.stub(wsJsonFormatter, 'mapDatapoints').returns(wsJsonFormattedData);
 
-    formatService.csv(data, (error, formattedData) => {
+    formatService.csv(data, (error: any, formattedData: any) => {
       expect(error).to.not.exist;
 
-      hi(formattedData).toArray(csv => {
+      hi(formattedData).toArray((csv: any) => {
         const header = Buffer.from(csv[0]).toString();
         const row1 = Buffer.from(csv[1]).toString();
         const row2 = Buffer.from(csv[2]).toString();
@@ -209,5 +209,4 @@ describe('Format Service', () => {
       });
     });
   }));
-
 });
