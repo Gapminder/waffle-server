@@ -1,12 +1,9 @@
 import * as _ from 'lodash';
 import * as hi from 'highland';
-import {constants} from '../../../ws.utils/constants';
+import { constants } from '../../../ws.utils/constants';
 import * as ddfQueryUtils from '../../../ws.ddfql/ddf-query-utils';
 import * as commonService from '../../../ws.services/common.service';
 import * as ddfImportUtils from '../../../ws.import/utils/import-ddf.utils';
-import {logger} from '../../../ws.config/log';
-
-const DATAPOINT_KEY_SEPARATOR = ':';
 
 export {
   mapConceptToWsJson as mapConcepts,

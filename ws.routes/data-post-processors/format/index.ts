@@ -29,7 +29,10 @@ function formatMiddleware(req: any, res: any): void {
       return res.json(routesUtils.toErrorResponse(err));
     }
 
-    res.set('Content-Type', MIME_TYPE_MAPPINGS[formatType] || DEFAULT_MIME_TYPE);
+    if (MIME_TYPE_MAPPINGS[formatType] === MIME_TYPE_MAPPINGS.csv) {
+      res.setHeader('Content-Disposition', 'attachment; filename=export.csv');
+    }
+    res.setHeader('Content-Type', MIME_TYPE_MAPPINGS[formatType] || DEFAULT_MIME_TYPE);
 
     return streamOrSend(packedData, res);
   });
