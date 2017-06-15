@@ -46,7 +46,12 @@ const constants: any = {
 
   DEFAULT_DATAPOINTS_QUERY_TIMEOUT_MS: 20000,
   DEFAULT_DATAPOINTS_QUERY_LIMIT: 1000000,
-  MONGODB_ALLOW_DISK_USE: true
+  MONGODB_ALLOW_DISK_USE: true,
+
+  ASSETS_CACHE_CONTROL_MAX_AGE_IN_MILLIS: (7 * 24 * 60) * 60 * 1000, // one week
+
+  ASSETS_ROUTE_BASE_PATH: '/api/ddf/assets',
+  ASSETS_EXPECTED_DIR: 'assets'
 };
 
 export { constants };

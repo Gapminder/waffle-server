@@ -67,7 +67,7 @@ describe('repos service', () => {
 
     const accountName = 'open-numbers';
     const githubUrl = `git@github.com:${accountName}/${ddfRepoName}.git`;
-    const expectedPathToRepo = path.resolve(process.cwd(), config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName, 'master');
+    const expectedPathToRepo = path.resolve(config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName, 'master');
 
     return stubbedReposService.cloneRepo(githubUrl, ddfRepoCommitHash, (error, cloneResult) => {
       expect(cloneResult.pathToRepo).to.equal(expectedPathToRepo);
@@ -143,7 +143,7 @@ describe('repos service', () => {
     const ddfRepoName = 'ddf--gapminder--systema_globalis';
     const expectedGithubUrl = `git@github.com:open-numbers/${ddfRepoName}.git`;
     const accountName = 'open-numbers';
-    const expectedPathToRepo = path.resolve(process.cwd(), config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName, 'master');
+    const expectedPathToRepo = path.resolve(config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName, 'master');
 
     const infoStub = sinon.stub(logger, 'info');
     const errorStub = sinon.stub(logger, 'error');
@@ -187,7 +187,7 @@ describe('repos service', () => {
     const ddfRepoName = 'ddf--gapminder--systema_globalis';
     const expectedGithubUrl = `git@github.com:open-numbers/${ddfRepoName}.git`;
     const accountName = 'open-numbers';
-    const expectedPathToRepo = path.resolve(process.cwd(), config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName, 'master');
+    const expectedPathToRepo = path.resolve(config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName, 'master');
 
     const infoStub = sinon.stub(logger, 'info');
     const errorStub = sinon.stub(logger, 'error');
@@ -243,7 +243,7 @@ describe('repos service', () => {
     const accountName = 'open-numbers';
     const expectedDdfRepoName = 'ddf--gapminder--systema_globalis';
     const expectedGithubUrl = `git@github.com:${accountName}/${expectedDdfRepoName}.git`;
-    const expectedPathToRepo = path.resolve(process.cwd(), config.PATH_TO_DDF_REPOSITORIES, accountName, expectedDdfRepoName, 'master');
+    const expectedPathToRepo = path.resolve(config.PATH_TO_DDF_REPOSITORIES, accountName, expectedDdfRepoName, 'master');
 
     const resetStub = sinon.stub();
     resetStub.callsArgWithAsync(1, null);
@@ -333,7 +333,7 @@ describe('repos service', () => {
     const accountName = 'open-numbers';
     const expectedDdfRepoName = 'ddf--gapminder--systema_globalis';
     const expectedGithubUrl = `git@github.com:${accountName}/${expectedDdfRepoName}.git`;
-    const expectedPathToRepo = path.resolve(process.cwd(), config.PATH_TO_DDF_REPOSITORIES, accountName, expectedDdfRepoName, 'master');
+    const expectedPathToRepo = path.resolve(config.PATH_TO_DDF_REPOSITORIES, accountName, expectedDdfRepoName, 'master');
 
     const expectedCode = 1;
     const expectedStdout = 'Stdout';
@@ -434,7 +434,7 @@ describe('repos service', () => {
     const ddfRepoName = 'ddf--gapminder--systema_globalis';
     const accountName = 'open-numbers';
 
-    const expectedPathToRepo = path.resolve(process.cwd(), config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName, 'master');
+    const expectedPathToRepo = path.resolve(config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName, 'master');
     const actualPathToRepo = reposService.getPathToRepo(`git@github.com:${accountName}/${ddfRepoName}`);
 
     expect(actualPathToRepo).to.equal(expectedPathToRepo);

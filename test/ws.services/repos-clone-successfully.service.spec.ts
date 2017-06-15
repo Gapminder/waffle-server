@@ -87,7 +87,7 @@ describe('repos service 2', () => {
 
     const accountName = 'open-numbers';
     const githubUrl = `git@github.com:${accountName}/${ddfRepoName}.git`;
-    const expectedPathToRepo = path.resolve(process.cwd(), config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName, 'master');
+    const expectedPathToRepo = path.resolve(config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName, 'master');
 
     return stubbedReposService.cloneRepo(githubUrl, ddfRepoCommitHash, (error: string, cloneResult: any) => {
       expect(error).to.not.exist;
@@ -146,7 +146,7 @@ describe('repos service 2', () => {
 
     const accountName = 'open-numbers';
     const githubUrl = `git@github.com:${accountName}/${ddfRepoName}.git`;
-    const expectedPathToRepo = path.resolve(process.cwd(), config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName, 'master');
+    const expectedPathToRepo = path.resolve(config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName, 'master');
 
     return stubbedReposService.cloneRepo(githubUrl, ddfRepoCommitHash, (error: string, cloneResult: any) => {
       expect(error).to.not.exist;
@@ -205,7 +205,7 @@ describe('repos service 2', () => {
 
     const accountName = 'open-numbers';
     const githubUrl = `git@github.com:${accountName}/${ddfRepoName}.git`;
-    const expectedPathToRepo = path.resolve(process.cwd(), config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName, 'master');
+    const expectedPathToRepo = path.resolve(config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName, 'master');
 
     return stubbedReposService.cloneRepo(githubUrl, ddfRepoCommitHash, (error: string, cloneResult: any) => {
       expect(error).to.not.exist;
@@ -264,7 +264,7 @@ describe('repos service 2', () => {
 
     const accountName = 'open-numbers';
     const githubUrl = `git@github.com:${accountName}/${ddfRepoName}.git`;
-    const expectedPathToRepo = path.resolve(process.cwd(), config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName, 'master');
+    const expectedPathToRepo = path.resolve(config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName, 'master');
 
     return stubbedReposService.cloneRepo(githubUrl, ddfRepoCommitHash, (error: string, cloneResult: any) => {
       expect(error).to.not.exist;
@@ -323,7 +323,7 @@ describe('repos service 2', () => {
 
     const accountName = 'open-numbers';
     const githubUrl = `git@github.com:${accountName}/${ddfRepoName}.git`;
-    const expectedPathToRepo = path.resolve(process.cwd(), config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName, 'master');
+    const expectedPathToRepo = path.resolve(config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName, 'master');
 
     return stubbedReposService.cloneRepo(githubUrl, ddfRepoCommitHash, (error: string, cloneResult: any) => {
       expect(error).to.not.exist;
@@ -382,7 +382,7 @@ describe('repos service 2', () => {
 
     const accountName = 'open-numbers';
     const githubUrl = `git@github.com:${accountName}/${ddfRepoName}.git`;
-    const expectedPathToRepo = path.resolve(process.cwd(), config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName, 'master');
+    const expectedPathToRepo = path.resolve(config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName, 'master');
 
     return stubbedReposService.cloneRepo(githubUrl, ddfRepoCommitHash, (error: string, cloneResult: any) => {
       expect(error).to.not.exist;

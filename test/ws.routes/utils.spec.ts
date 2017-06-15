@@ -7,19 +7,31 @@ import * as express from 'express';
 
 import * as sinon from 'sinon';
 import * as sinonTest from 'sinon-test';
-import {expect} from 'chai';
+import { expect } from 'chai';
 import * as proxyquire from 'proxyquire';
 
 import '../../ws.config/db.config';
 import '../../ws.repository';
-import {logger} from '../../ws.config/log';
-import {config} from '../../ws.config/config';
+import { logger } from '../../ws.config/log';
+import { config } from '../../ws.config/config';
 import * as routeUtils from '../../ws.routes/utils';
-import {RecentDdfqlQueriesRepository} from '../../ws.repository/ddf/recent-ddfql-queries/recent-ddfql-queries.repository';
+import { RecentDdfqlQueriesRepository } from '../../ws.repository/ddf/recent-ddfql-queries/recent-ddfql-queries.repository';
+import { constants } from '../../ws.utils/constants';
+
+import * as commonService from '../../ws.services/common.service';
 
 const sandbox = sinonTest.configureTest(sinon);
 
 describe('Routes utils', () => {
+  const ORIGINAL_PATH_TO_DDF_REPOSITORIES = config.PATH_TO_DDF_REPOSITORIES;
+  before(() => {
+    config.PATH_TO_DDF_REPOSITORIES = '/home/anonymous/repos';
+  });
+
+  after(() => {
+    config.PATH_TO_DDF_REPOSITORIES = ORIGINAL_PATH_TO_DDF_REPOSITORIES;
+  });
+
   describe('Dataset accessibility check', () => {
     it('should send unsuccessful response with an error happened during dataset searching', sandbox(function (done: Function) {
       const errorMessage = 'Searching error!';
@@ -62,11 +74,9 @@ describe('Routes utils', () => {
 
 
     it('should call next middleware if no dataset name was found', done => {
-      const routeUtils = proxyquire('../../ws.routes/utils.js', {});
+      const req: any = {};
 
-      const req = {};
-
-      const res = 'any';
+      const res: any = 'any';
 
       const next = () => {
         done(); // At this point test is finished
@@ -297,12 +307,10 @@ describe('Routes utils', () => {
 
   describe('Cache config', () => {
     it('should generate correct cache key', done => {
-      const routeUtils = proxyquire('../../ws.routes/utils.js', {});
-
       const expectedCachePrefix = 'MyPrefix';
       const expectedMethod = 'GET';
 
-      const req = {
+      const req: any = {
         query: {},
         body: {bla: 42},
         method: expectedMethod,
@@ -313,7 +321,7 @@ describe('Routes utils', () => {
       const md5Payload = crypto.createHash('md5').update(parsedUrl.query + JSON.stringify(req.body)).digest('hex');
       const expectedCacheKey = `${expectedCachePrefix}-${req.method}-${parsedUrl.pathname}-${md5Payload}`;
 
-      const res = {
+      const res: any = {
         express_redis_cache_name: null
       };
 
@@ -326,12 +334,10 @@ describe('Routes utils', () => {
     });
 
     it('should use default cache key prefix if it was not provided', done => {
-      const routeUtils = proxyquire('../../ws.routes/utils.js', {});
-
       const expectedCachePrefix = 'PREFIX_NOT_SET';
       const expectedMethod = 'GET';
 
-      const req = {
+      const req: any = {
         query: {},
         body: {bla: 42},
         method: expectedMethod,
@@ -342,7 +348,7 @@ describe('Routes utils', () => {
       const md5Payload = crypto.createHash('md5').update(parsedUrl.query + JSON.stringify(req.body)).digest('hex');
       const expectedCacheKey = `${expectedCachePrefix}-${req.method}-${parsedUrl.pathname}-${md5Payload}`;
 
-      const res = {
+      const res: any = {
         express_redis_cache_name: null
       };
 
@@ -355,13 +361,11 @@ describe('Routes utils', () => {
     });
 
     it('should invalidate redis cache if force option is provided', done => {
-      const routeUtils = proxyquire('../../ws.routes/utils.js', {});
-
-      const req = {
+      const req: any = {
         query: {force: 'true'},
       };
 
-      const res = {
+      const res: any = {
         use_express_redis_cache: null
       };
 
@@ -376,8 +380,6 @@ describe('Routes utils', () => {
 
   describe('Parse query from url and populate request body with a result', () => {
     it('should parse query as json if "query" param given in url', sandbox(function (done: Function) {
-      const routeUtils = proxyquire('../../ws.routes/utils.js', {});
-
       const ddfql = {
         "from": "entities",
         "select": {
@@ -393,7 +395,7 @@ describe('Routes utils', () => {
         },
       };
 
-      const res = {};
+      const res: any = {};
 
       const loggerInfoStub = this.stub(logger, 'info');
 
@@ -412,9 +414,7 @@ describe('Routes utils', () => {
     }));
 
     it('should respond with an error when it is impossible to parse json', sandbox(function (done: Function) {
-      const routeUtils = proxyquire('../../ws.routes/utils.js', {});
-
-      const req = {
+      const req: any = {
         query: {
           query: "bla"
         },
@@ -422,8 +422,8 @@ describe('Routes utils', () => {
 
       const loggerInfoStub = this.stub(logger, 'info');
 
-      const res = {
-        json: response => {
+      const res: any = {
+        json: (response: any) => {
           expect(response.success).to.be.false;
           expect(response.error).to.equal('Query was sent in incorrect format');
           sinon.assert.calledOnce(loggerInfoStub);
@@ -441,8 +441,6 @@ describe('Routes utils', () => {
     }));
 
     it('should parse query as urlon if "query" param is not given in url', sandbox(function (done: Function) {
-      const routeUtils = proxyquire('../../ws.routes/utils.js', {});
-
       const ddfql = {
         "from": "entities",
         "select": {
@@ -457,7 +455,7 @@ describe('Routes utils', () => {
         url: `/api/ddf/ql/?${queryRaw}`
       };
 
-      const res = {};
+      const res: any = {};
 
       const loggerInfoStub = this.stub(logger, 'info');
 
@@ -474,9 +472,7 @@ describe('Routes utils', () => {
     }));
 
     it('should respond with an error when it is impossible to parse urlon', sandbox(function (done: Function) {
-      const routeUtils = proxyquire('../../ws.routes/utils.js', {});
-
-      const req = {
+      const req: any = {
         query: {},
         url: '/api/ddf/ql/?%20%'
       };
@@ -485,8 +481,8 @@ describe('Routes utils', () => {
 
       const loggerInfoStub = this.stub(logger, 'info');
 
-      const res = {
-        json: response => {
+      const res: any = {
+        json: (response: any) => {
           expect(response.success).to.be.false;
           expect(response.error).to.equal('Query was sent in incorrect format');
           sinon.assert.calledOnce(loggerInfoStub);
@@ -763,8 +759,6 @@ describe('Routes utils', () => {
     }));
 
     it('should not store warmup query if it was sent with version property', sandbox(function () {
-      const routeUtils = proxyquire('../../ws.routes/utils.js', {});
-
       const ddfQuery = {
         rawDdfQuery: {},
         version: 'version'
@@ -778,7 +772,7 @@ describe('Routes utils', () => {
       const jsonSpy = this.spy();
       const nextSpy = this.spy();
 
-      const res = {
+      const res: any = {
         use_express_redis_cache: true,
         json: jsonSpy
       };
@@ -797,7 +791,7 @@ describe('Routes utils', () => {
       expect(req.rawData.rawDdf).to.equal(rawDdfData);
     }));
 
-    it('should not store warmup query if it was sent with format property', sandbox(function () {
+    it('should not store warmup query if it was sent with format property', sandbox(function (): void {
       const ddfQuery = {
         rawDdfQuery: {},
         format: 'format'
@@ -923,7 +917,10 @@ describe('Routes utils', () => {
 
       sinon.assert.notCalled(next);
       sinon.assert.calledOnce(json);
-      sinon.assert.calledWith(json, {success: false, error: `Please, change your WS-CLI version from 2.5.24 to 2.5.23`});
+      sinon.assert.calledWith(json, {
+        success: false,
+        error: `Please, change your WS-CLI version from 2.5.24 to 2.5.23`
+      });
     }));
 
     it('checks that requests from CLI with invalid version are invalid', sandbox(function () {
@@ -989,6 +986,215 @@ describe('Routes utils', () => {
 
       sinon.assert.notCalled(json);
       sinon.assert.calledOnce(next);
+    }));
+  });
+
+  describe('bodyFromUrlAssets - Parses a request body based asset url requested. Populates the body with a dataset and a dataset_access_token', () => {
+    it(`doesn't handles routes that start not with ${constants.ASSETS_ROUTE_BASE_PATH}`, sandbox(function (done: Function): any {
+      const req: any = {
+        baseUrl: 'foo'
+      };
+      const res: any = {};
+
+      routeUtils.bodyFromUrlAssets(req, res, () => {
+        expect(_.size(req)).to.equal(1);
+        expect(req.baseUrl).to.equal('foo');
+        expect(res).to.deep.equal({});
+        done();
+      });
+    }));
+
+    it(`fails when malformed url was given to the "assets" endpoint`, sandbox(function (): any {
+      const jsonSpy = this.spy();
+      const nextSpy = this.spy();
+
+      const req: any = {
+        originalUrl: `${constants.ASSETS_ROUTE_BASE_PATH}/%E0%A4%A`,
+        baseUrl: constants.ASSETS_ROUTE_BASE_PATH
+      };
+      const res: any = {
+        _status: -1,
+        status(code: number): any {
+          this._status = code;
+          return this;
+        },
+        json: jsonSpy
+      };
+
+      routeUtils.bodyFromUrlAssets(req, res, nextSpy);
+
+      expect(res._status).to.equal(400);
+      sinon.assert.calledWith(jsonSpy, {success: false, error: 'Malformed url was given'});
+      sinon.assert.notCalled(nextSpy);
+    }));
+
+    it(`fails when given url contains relative path segments like "." or ".."`, sandbox(function (): any {
+      const jsonSpy = this.spy();
+      const nextSpy = this.spy();
+
+      const req: any = {
+        originalUrl: `${constants.ASSETS_ROUTE_BASE_PATH}/../foo/./bar/../baz.json`,
+        baseUrl: constants.ASSETS_ROUTE_BASE_PATH
+      };
+      const res: any = {
+        _status: -1,
+        status(code: number): any {
+          this._status = code;
+          return this;
+        },
+        json: jsonSpy
+      };
+
+      routeUtils.bodyFromUrlAssets(req, res, nextSpy);
+
+      expect(res._status).to.equal(400);
+      sinon.assert.calledWith(jsonSpy, {
+        success: false,
+        error: 'You cannot use relative path constraints like "." or ".." in the asset path'
+      });
+      sinon.assert.notCalled(nextSpy);
+    }));
+
+    it(`fails when asset was requested for the default dataset and dataset was not found`, sandbox(function (done: Function): any {
+      const expectedError = 'Default dataset not found';
+
+      const nextSpy = this.spy();
+
+      this.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, expectedError);
+
+      const req: any = {
+        originalUrl: `${constants.ASSETS_ROUTE_BASE_PATH}/default/assets/foo.json`,
+        baseUrl: constants.ASSETS_ROUTE_BASE_PATH
+      };
+      const res: any = {
+        _status: -1,
+        status(code: number): any {
+          this._status = code;
+          return this;
+        },
+        json(body: any): any {
+          // Assert
+          expect(this._status).to.equal(500);
+          expect(body).to.deep.equal({
+            success: false,
+            error: 'Default dataset couldn\'t be found'
+          });
+          sinon.assert.notCalled(nextSpy);
+          done();
+        }
+      };
+
+      routeUtils.bodyFromUrlAssets(req, res, nextSpy);
+    }));
+
+    it(`fails when client is trying to access an asset under directory other then "assets"`, sandbox(function (done: Function): any {
+      const expectedError = `You cannot access directories other than "${constants.ASSETS_EXPECTED_DIR}"`;
+
+      const nextSpy = this.spy();
+
+      const defaultDataset: any = {
+        name: 'open-numbers/globalis#development'
+      };
+
+      this.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, {dataset: defaultDataset});
+
+      const req: any = {
+        originalUrl: `${constants.ASSETS_ROUTE_BASE_PATH}/default/SECURED/foo.json`,
+        baseUrl: constants.ASSETS_ROUTE_BASE_PATH
+      };
+      const res: any = {
+        _status: -1,
+        status(code: number): any {
+          this._status = code;
+          return this;
+        },
+        json(body: any): any {
+          // Assert
+          expect(this._status).to.equal(403);
+          expect(body).to.deep.equal({
+            success: false,
+            error: expectedError
+          });
+          sinon.assert.notCalled(nextSpy);
+          done();
+        }
+      };
+
+      routeUtils.bodyFromUrlAssets(req, res, nextSpy);
+    }));
+
+    it(`parses an asset request url in order to get an asset descriptor: default dataset on master branch has been requested`, sandbox(function (done: Function): any {
+      const defaultDataset: any = {
+        name: 'open-numbers/globalis'
+      };
+
+      this.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, {dataset: defaultDataset});
+
+      const req: any = {
+        query: {
+          dataset_access_token: 'foobar'
+        },
+        body: {},
+        originalUrl: `${constants.ASSETS_ROUTE_BASE_PATH}/default/assets/foo.json`,
+        baseUrl: constants.ASSETS_ROUTE_BASE_PATH
+      };
+      const res: any = {
+        _status: -1,
+        status(code: number): any {
+          this._status = code;
+          return this;
+        }
+      };
+
+      routeUtils.bodyFromUrlAssets(req, res, () => {
+        // Assert
+        expect(res._status).to.equal(-1);
+        expect(req.body.dataset).to.equal('open-numbers/globalis#master');
+        expect(req.body.dataset_access_token).to.equal('foobar');
+        expect(req.body.assetPathDescriptor).to.deep.equal({
+          assetName: 'foo.json',
+          assetsDir: 'assets',
+          dataset: 'open-numbers/globalis#master',
+          path: '/home/anonymous/repos/open-numbers/globalis/master/assets/foo.json'
+        });
+
+        done();
+      });
+    }));
+
+    it(`parses an asset request url in order to get an asset descriptor: custom dataset has been requested`, sandbox(function (done: Function): any {
+      this.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, 'don\'t care what kind of error is here in case of non default dataset asset request');
+
+      const req: any = {
+        query: {
+          dataset_access_token: 'foobar'
+        },
+        body: {},
+        originalUrl: `${constants.ASSETS_ROUTE_BASE_PATH}/myAccountOnGithub/my-custom-dataset/branch/assets/foo2.json`,
+        baseUrl: constants.ASSETS_ROUTE_BASE_PATH
+      };
+      const res: any = {
+        _status: -1,
+        status(code: number): any {
+          this._status = code;
+          return this;
+        }
+      };
+
+      routeUtils.bodyFromUrlAssets(req, res, () => {
+        // Assert
+        expect(res._status).to.equal(-1);
+        expect(req.body.dataset).to.equal('myAccountOnGithub/my-custom-dataset#branch');
+        expect(req.body.dataset_access_token).to.equal('foobar');
+        expect(req.body.assetPathDescriptor).to.deep.equal({
+          assetName: 'foo2.json',
+          assetsDir: 'assets',
+          dataset: 'myAccountOnGithub/my-custom-dataset#branch',
+          path: '/home/anonymous/repos/myAccountOnGithub/my-custom-dataset/branch/assets/foo2.json'
+        });
+
+        done();
+      });
     }));
   });
 });
