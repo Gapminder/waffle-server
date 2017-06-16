@@ -50,7 +50,7 @@ const environment = Object.freeze({
   MONGOOSE_DEBUG: false,
   CLEAR_MONGO_DB_COLLECTIONS: false,
 
-  PATH_TO_DDF_REPOSITORIES: './ws.import/repos',
+  PATH_TO_DDF_REPOSITORIES: path.join(__dirname, '../ws.import/repos'),
   PATH_TO_DIFF_DDF_RESULT_FILE: path.join(__dirname, '../ws.import/diffs'),
 
   CLEAN_EXPORT: false
