@@ -4,14 +4,15 @@ import * as ddfValidation from 'ddf-validation';
 import * as _ from 'lodash';
 import * as validator from 'validator';
 import * as wsCli from 'waffle-server-import-cli';
-import {config} from '../../ws.config/config';
-import {logger} from '../../ws.config/log';
-import {ConceptsRepositoryFactory} from '../../ws.repository/ddf/concepts/concepts.repository';
-import {DatasetTransactionsRepository} from '../../ws.repository/ddf/dataset-transactions/dataset-transactions.repository';
-import {DatasetsRepository} from '../../ws.repository/ddf/datasets/datasets.repository';
+import { config } from '../../ws.config/config';
+import { logger } from '../../ws.config/log';
+import { ConceptsRepositoryFactory } from '../../ws.repository/ddf/concepts/concepts.repository';
+import { DatasetTransactionsRepository } from '../../ws.repository/ddf/dataset-transactions/dataset-transactions.repository';
+import { DatasetsRepository } from '../../ws.repository/ddf/datasets/datasets.repository';
 import * as reposService from '../../ws.services/repos.service';
 import * as conceptsUtils from './concepts.utils';
 import * as datapackageParser from './datapackage.parser';
+import * as os from 'os';
 
 const SimpleDdfValidator = ddfValidation.SimpleValidator;
 
@@ -48,7 +49,8 @@ export {
   validateDdfRepo,
   cloneDdfRepo,
   generateDiffForDatasetUpdate,
-  startStreamProcessing
+  startStreamProcessing,
+  cloneImportedDdfRepos
 };
 
 function getAllConcepts(externalContext: any, done: Function): void {
@@ -156,6 +158,24 @@ function cloneDdfRepo(pipe: any, done: Function): void {
   });
 }
 
+async function cloneImportedDdfRepos(): Promise<any> {
+  if (!config.THRASHING_MACHINE) {
+    return Promise.resolve();
+  }
+
+  const datasets = await DatasetsRepository.findAll();
+  return new Promise((resolve: Function) => {
+    async.eachLimit(datasets, os.cpus().length, (dataset: any, onDownloaded: Function) => {
+      cloneDdfRepo({github: dataset.path}, (error: any) => {
+        if (error) {
+          logger.error(error);
+        }
+        onDownloaded();
+      });
+    }, () => resolve());
+  });
+}
+
 function validateDdfRepo(pipe: any, onDdfRepoValidated: Function): void {
   logger.info('Start ddf dataset validation process: ', _.get(pipe.repoInfo, 'pathToRepo'));
   const simpleDdfValidator = new SimpleDdfValidator(pipe.repoInfo.pathToRepo, ddfValidationConfig);
@@ -176,7 +196,12 @@ function validateDdfRepo(pipe: any, onDdfRepoValidated: Function): void {
 function generateDiffForDatasetUpdate(context: any, done: Function): void {
   logger.info('Generating diff for dataset update');
   const {hashFrom, hashTo, github} = context;
-  return wsCli.generateDiff({hashFrom, hashTo, github, resultPath: config.PATH_TO_DIFF_DDF_RESULT_FILE}, (error: string, diffPaths: any) => {
+  return wsCli.generateDiff({
+    hashFrom,
+    hashTo,
+    github,
+    resultPath: config.PATH_TO_DIFF_DDF_RESULT_FILE
+  }, (error: string, diffPaths: any) => {
     if (error) {
       return done(error);
     }
@@ -267,7 +292,7 @@ function createDataset(pipe: any, done: Function): void {
     private: pipe.isDatasetPrivate
   };
 
-  DatasetsRepository.create(dataset ,(err: string, createdDataset: any) => {
+  DatasetsRepository.create(dataset, (err: string, createdDataset: any) => {
     if (err) {
       return done(err);
     }
@@ -281,7 +306,7 @@ function createDataset(pipe: any, done: Function): void {
   });
 }
 
-function findDataset(pipe: any, done: Function): void {
+function findDataset(pipe: any, done: Function): any {
   logger.info('Searching for existing dataset: ', pipe.datasetName);
 
   return DatasetsRepository.findByName(pipe.datasetName, (err: string, dataset: any) => {
@@ -324,13 +349,12 @@ function updateTransactionLanguages(pipe: any, done: Function): void {
 
 function startStreamProcessing(stream: any, externalContext: any, done: Function): void {
   const errors = [];
-  return stream.stopOnError((error: string) => {
-      errors.push(error);
-    })
-    .done(() => {
-      if (!_.isEmpty(errors)) {
-        return done(errors, externalContext);
-      }
-      return done(null, externalContext);
-    });
+  return stream
+  .stopOnError((error: string) => errors.push(error))
+  .done(() => {
+    if (!_.isEmpty(errors)) {
+      return done(errors, externalContext);
+    }
+    return done(null, externalContext);
+  });
 }

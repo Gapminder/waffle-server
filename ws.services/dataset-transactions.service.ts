@@ -39,7 +39,7 @@ function setTransactionAsDefault(userId: any, datasetName: string, transactionCo
   ], onSetAsDefault);
 }
 
-function _findDatasetByNameAndUser(externalContext: any, done: Function): void {
+function _findDatasetByNameAndUser(externalContext: any, done: Function): any {
   return DatasetsRepository.findByNameAndUser(externalContext.datasetName, externalContext.userId, (error: string, dataset: any) => {
     if (error || !dataset) {
       return done(error || `Given dataset was not found: '${externalContext.datasetName}'`);
@@ -108,7 +108,7 @@ function _findLatestFailedTransactionByDataset(externalContext: any, onFailedTra
   });
 }
 
-function _forceDatasetLock(externalContext: any, onDatasetLocked: Function): void {
+function _forceDatasetLock(externalContext: any, onDatasetLocked: Function): any {
   return DatasetsRepository.forceLock(externalContext.datasetName, (forceLockError: any) => {
     if (forceLockError) {
       return onDatasetLocked(forceLockError);
@@ -147,7 +147,7 @@ function _removeFailedTransaction(externalContext: any, onTransactionRemoved: Fu
   });
 }
 
-function _forceDatasetUnlock(externalContext: any, onDatasetUnlocked: Function): void {
+function _forceDatasetUnlock(externalContext: any, onDatasetUnlocked: Function): any {
   return DatasetsRepository.forceUnlock(externalContext.datasetName, (forceUnlockError: any) => {
     if (forceUnlockError) {
       return onDatasetUnlocked(forceUnlockError);
@@ -252,7 +252,7 @@ function _findDefaultDatasetAndTransactionByDatasetNameAndCommit(datasetName: st
   ], onFound);
 }
 
-function _findDatasetByName(externalContext: any, done: Function): void {
+function _findDatasetByName(externalContext: any, done: Function): any {
   return DatasetsRepository.findByName(externalContext.datasetName, (error: string, dataset: any) => {
     if (error || !dataset) {
       return done(error || `Dataset was not found: ${externalContext.datasetName}`);

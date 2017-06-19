@@ -53,7 +53,7 @@ function removeDatasetData(datasetName: string, user: any, onRemovedDataset: Asy
   });
 }
 
-function findDatasetByNameAndValidateOwnership(externalContext: any, onDatasetValidated: Function): void {
+function findDatasetByNameAndValidateOwnership(externalContext: any, onDatasetValidated: Function): any {
   return DatasetsRepository.findByName(externalContext.datasetName, (datasetSearchError: any, dataset: any) => {
     if (datasetSearchError || !dataset) {
       return onDatasetValidated(datasetSearchError || `Dataset was not found for the given name: ${externalContext.datasetName}`);
@@ -71,7 +71,7 @@ function findDatasetByNameAndValidateOwnership(externalContext: any, onDatasetVa
   });
 }
 
-function lockDataset(externalContext: any, onDatasetLocked: Function): void {
+function lockDataset(externalContext: any, onDatasetLocked: Function): any {
   const datasetName = _.get(externalContext, 'dataset.name', externalContext.datasetName);
   return DatasetsRepository.lock(datasetName, (datasetLockError: any, dataset: any) => {
     if (datasetLockError) {
@@ -86,7 +86,7 @@ function lockDataset(externalContext: any, onDatasetLocked: Function): void {
   });
 }
 
-function unlockDataset(externalContext: any, done: Function): void {
+function unlockDataset(externalContext: any, done: Function): any {
   return DatasetsRepository.unlock(externalContext.datasetName, (err: any, dataset: any) => {
     if (!dataset) {
       return done(`Version of dataset "${externalContext.datasetName}" wasn't locked`);
@@ -200,7 +200,7 @@ function _removeDataset(pipe: any, onDatasetRemoved: Function): void {
   return DatasetsRepository.removeById(pipe.datasetId, onDatasetRemoved);
 }
 
-function _findDatasetsByUser(pipe: any, done: Function): void {
+function _findDatasetsByUser(pipe: any, done: Function): any {
   return DatasetsRepository.findByUser(pipe.userId, (datasetSearchError: any, datasets: any[]) => {
     if (datasetSearchError) {
       return done(datasetSearchError);

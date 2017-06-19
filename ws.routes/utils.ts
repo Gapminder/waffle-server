@@ -244,7 +244,7 @@ function ensureVersionsEquality(clientVersion: string, serverVersion: string): b
   }
 }
 
-function checkDatasetAccessibility(req: express.Request, res: express.Response, next: express.NextFunction): void {
+function checkDatasetAccessibility(req: express.Request, res: express.Response, next: express.NextFunction): any {
   const datasetName = _.get(req, 'body.dataset', null);
   if (!datasetName) {
     return next();

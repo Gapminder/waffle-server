@@ -75,7 +75,7 @@ function importDataset(params: any, onDatasetImported: Function): void {
   });
 }
 
-function _findDataset(pipe: any, done: Function): void {
+function _findDataset(pipe: any, done: Function): any {
   return DatasetsRepository.findByGithubUrl(pipe.github, (error: string, dataset: any) => {
     if (error) {
       return done(error);
@@ -158,7 +158,7 @@ function _runIncrementalUpdate(pipe: any, onDatasetUpdated: Function): void {
   return incrementalUpdateService.updateDdf(options, onDatasetUpdated);
 }
 
-function getPrivateDatasets(userId: any, done: Function): void {
+function getPrivateDatasets(userId: any, done: Function): any {
   return DatasetsRepository.findPrivateByUser(userId, (error: string, datasets: any[]) => {
     if (error) {
       return done(error);
@@ -170,7 +170,7 @@ function getPrivateDatasets(userId: any, done: Function): void {
   });
 }
 
-function getDatasetsInProgress(userId: any, done: Function): void {
+function getDatasetsInProgress(userId: any, done: Function): any {
   return DatasetsRepository.findDatasetsInProgressByUser(userId, (error: string, datasets: any) => {
     if (error) {
       return done(error);

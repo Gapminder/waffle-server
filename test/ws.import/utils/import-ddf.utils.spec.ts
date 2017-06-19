@@ -1,10 +1,7 @@
 import '../../../ws.repository';
-
-import * as proxyqire from 'proxyquire';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import * as sinonTest from 'sinon-test';
-import { constants } from '../../../ws.utils/constants';
 import { config } from '../../../ws.config/config';
 import * as ddfImportUtils from '../../../ws.import/utils/import-ddf.utils';
 import * as reposService from '../../../ws.services/repos.service';
@@ -14,6 +11,7 @@ import * as wsCli from 'waffle-server-import-cli';
 import { ConceptsRepositoryFactory } from '../../../ws.repository/ddf/concepts/concepts.repository';
 import { DatasetTransactionsRepository } from '../../../ws.repository/ddf/dataset-transactions/dataset-transactions.repository';
 import { DatasetsRepository } from '../../../ws.repository/ddf/datasets/datasets.repository';
+import { logger } from '../../../ws.config/log';
 
 const sandbox = sinonTest.configureTest(sinon);
 
@@ -206,7 +204,7 @@ describe('Ddf import utils', () => {
       commit: 'fafafaf'
     };
 
-    const repoInfo = { pathToRepo: '/path/to/repo' };
+    const repoInfo = {pathToRepo: '/path/to/repo'};
 
     const expectedContext = Object.assign({}, context, {repoInfo});
 
@@ -290,7 +288,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('resolves path to ddf folder asynchronously', sandbox(function(done: Function) {
+  it('resolves path to ddf folder asynchronously', sandbox(function (done: Function) {
     const context = {
       datasetName: 'dsName'
     };
@@ -307,7 +305,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('fails parsing datapackage.json', sandbox(function(done: Function) {
+  it('fails parsing datapackage.json', sandbox(function (done: Function) {
     const expectedError = '[Error]: datapackage parsing has failed';
 
     const context = {
@@ -320,11 +318,11 @@ describe('Ddf import utils', () => {
 
     ddfImportUtils.getDatapackage(context, (error, externalContext) => {
       expect(error).to.equal(expectedError);
-       done();
+      done();
     });
   }));
 
-  it('fails parsing datapackage.json', sandbox(function(done: Function) {
+  it('fails parsing datapackage.json', sandbox(function (done: Function) {
     const context = {
       datasetName: 'dsName'
     };
@@ -345,7 +343,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('fails searching for a previous transaction', sandbox(function(done: Function) {
+  it('fails searching for a previous transaction', sandbox(function (done: Function) {
     const expectedError = '[Error]: failed while searching transaction';
 
     const context = {
@@ -362,8 +360,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-
-  it('finds previous transaction', sandbox(function(done: Function) {
+  it('finds previous transaction', sandbox(function (done: Function) {
     const previousTransaction = {_id: 'txId'};
 
     const context = {
@@ -384,7 +381,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('fails creating a transaction', sandbox(function(done: Function) {
+  it('fails creating a transaction', sandbox(function (done: Function) {
     const expectedError = '[Error]: fails creating a transaction';
 
     const context = {
@@ -402,7 +399,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('creates a transaction', sandbox(function(done: Function) {
+  it('creates a transaction', sandbox(function (done: Function) {
     const createdTransaction = {_id: 'txId'};
 
     const context = {
@@ -431,7 +428,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('fails closing a transaction', sandbox(function(done: Function) {
+  it('fails closing a transaction', sandbox(function (done: Function) {
     const expectedError = '[Error]: fails closing a transaction';
 
     const context = {
@@ -449,7 +446,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('closes a transaction', sandbox(function(done: Function) {
+  it('closes a transaction', sandbox(function (done: Function) {
     const context = {
       transaction: {
         _id: 'txId',
@@ -471,7 +468,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('fails creating dataset because of db error', sandbox(function(done: Function) {
+  it('fails creating dataset because of db error', sandbox(function (done: Function) {
     const expectedError = '[Error]: fails creating dataset because of db error';
 
     const context = {
@@ -495,7 +492,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('fails creating dataset because empty result was returned', sandbox(function(done: Function) {
+  it('fails creating dataset because empty result was returned', sandbox(function (done: Function) {
     const expectedError = 'Dataset was not created due to some issues';
 
     const context = {
@@ -519,7 +516,7 @@ describe('Ddf import utils', () => {
     });
   }));
 
-  it('fails creating dataset because empty result was returned', sandbox(function(done: Function) {
+  it('fails creating dataset because empty result was returned', sandbox(function (done: Function) {
     const context = {
       datasetName: 'dsName',
       github: 'github:...',
@@ -627,7 +624,7 @@ describe('Ddf import utils', () => {
 
       sinon.assert.calledOnce(establishForDatasetStub);
 
-      const options = { transactionId: context.transaction._id, datasetId: context.dataset._id };
+      const options = {transactionId: context.transaction._id, datasetId: context.dataset._id};
       sinon.assert.calledWithExactly(establishForDatasetStub, options, sinon.match.func);
 
       done();
@@ -673,10 +670,84 @@ describe('Ddf import utils', () => {
     ddfImportUtils.updateTransactionLanguages(context, (error) => {
       expect(error).to.not.exist;
 
-      const options = { transactionId: context.transaction._id, languages: ['nl-nl'] };
+      const options = {transactionId: context.transaction._id, languages: ['nl-nl']};
       sinon.assert.calledWithExactly(updateLanguagesStub, options, sinon.match.func);
 
       done();
     });
   }));
+
+  describe('cloneImportedDdfRepos', () => {
+    let originalThreshingMachine = config.THRASHING_MACHINE;
+
+    beforeEach(() => {
+      config.THRASHING_MACHINE = true;
+    });
+
+    afterEach(() => {
+      config.THRASHING_MACHINE = originalThreshingMachine;
+    });
+
+    it('should start clone all dataset available in db', sandbox(function (): any {
+      const stubDatasets = [
+        {path: '#1'},
+        {path: '#2'},
+        {path: '#3'}
+      ];
+
+      const findAllStub = this.stub(DatasetsRepository, 'findAll').returns(Promise.resolve(stubDatasets));
+      const cloneRepoStub = this.stub(reposService, 'cloneRepo').callsArgWithAsync(2, null);
+
+      return ddfImportUtils.cloneImportedDdfRepos().then(() => {
+        sinon.assert.calledOnce(findAllStub);
+
+        sinon.assert.calledWith(cloneRepoStub, '#1', undefined, sinon.match.func);
+        sinon.assert.calledWith(cloneRepoStub, '#2', undefined, sinon.match.func);
+        sinon.assert.calledWith(cloneRepoStub, '#3', undefined, sinon.match.func);
+
+        sinon.assert.callCount(cloneRepoStub, stubDatasets.length);
+      });
+    }));
+
+    it('should start clone all dataset available in db', sandbox(function (): any {
+      const stubDatasets = [
+        {path: '#1'},
+        {path: '#2'},
+        {path: '#3'}
+      ];
+
+      const expectedError = 'Cannot clone repo';
+
+      const findAllStub = this.stub(DatasetsRepository, 'findAll').returns(Promise.resolve(stubDatasets));
+      const cloneRepoStub = this.stub(reposService, 'cloneRepo').callsArgWithAsync(2, expectedError);
+
+      const errorStub = this.stub(logger, 'error');
+
+      return ddfImportUtils.cloneImportedDdfRepos().then(() => {
+        sinon.assert.called(errorStub);
+        sinon.assert.calledWith(errorStub, expectedError);
+
+        sinon.assert.called(findAllStub);
+        sinon.assert.called(cloneRepoStub);
+      });
+    }));
+
+    it('should not clone repos on non Threshing machine', sandbox(function (): any {
+      config.THRASHING_MACHINE = false;
+
+      const stubDatasets = [
+        {path: '#1'},
+        {path: '#2'},
+        {path: '#3'}
+      ];
+
+      const findAllStub = this.stub(DatasetsRepository, 'findAll').returns(Promise.resolve(stubDatasets));
+      const cloneRepoStub = this.stub(reposService, 'cloneRepo').callsArgWithAsync(2, null);
+
+      return ddfImportUtils.cloneImportedDdfRepos().then(() => {
+        sinon.assert.notCalled(findAllStub);
+        sinon.assert.notCalled(cloneRepoStub);
+      });
+    }));
+  });
 });
