@@ -53,7 +53,7 @@ function _loadConcepts(pipe: any, done: Function): void {
         .map((rawConcept: any) => ({filename: resource.path, object: rawConcept}));
     })
     .collect()
-    .toCallback((error: any, rawConcepts: any) => {
+    .toCallback((error: string, rawConcepts: any) => {
       const concepts = _.map(rawConcepts, (rawConcept: any) => {
         const context = {datasetId, version, filename: rawConcept.filename};
         return ddfMappers.mapDdfConceptsToWsModel(rawConcept.object, context);
@@ -93,7 +93,7 @@ function _addConceptSubsetOf(pipe: any, done: Function): void {
     return done(err, pipe);
   });
 
-  function __updateConceptSubsetOf(gid: string, escb: Function): any {
+  function __updateConceptSubsetOf(gid: string, escb: (err: any) => void): any {
     let concept = pipe.concepts[gid];
 
     if (!concept) {
@@ -114,7 +114,7 @@ function _addConceptDomains(pipe: any, done: Function): void {
     return done(err, pipe);
   });
 
-  function __updateConceptDomain(gid: string, escb: Function): any {
+  function __updateConceptDomain(gid: string, escb: (err: any) => void): any {
     let concept = pipe.concepts[gid];
 
     if (!concept) {

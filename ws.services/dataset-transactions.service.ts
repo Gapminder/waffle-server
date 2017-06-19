@@ -39,8 +39,8 @@ function setTransactionAsDefault(userId: any, datasetName: string, transactionCo
   ], onSetAsDefault);
 }
 
-function _findDatasetByNameAndUser(externalContext: any, done: Function): void {
-  return DatasetsRepository.findByNameAndUser(externalContext.datasetName, externalContext.userId, (error: any, dataset: any) => {
+function _findDatasetByNameAndUser(externalContext: any, done: Function): any {
+  return DatasetsRepository.findByNameAndUser(externalContext.datasetName, externalContext.userId, (error: string, dataset: any) => {
     if (error || !dataset) {
       return done(error || `Given dataset was not found: '${externalContext.datasetName}'`);
     }
@@ -55,7 +55,7 @@ function _findDatasetByNameAndUser(externalContext: any, done: Function): void {
 }
 
 function _findTransactionByDatasetAndCommit(extrenalContext: any, done: Function): void {
-  return DatasetTransactionsRepository.findByDatasetAndCommit(extrenalContext.dataset._id, extrenalContext.transactionCommit, (error: any, transaction: any) => {
+  return DatasetTransactionsRepository.findByDatasetAndCommit(extrenalContext.dataset._id, extrenalContext.transactionCommit, (error: string, transaction: any) => {
     if (error || !_isTransactionValid(transaction)) {
       return done(error || `Given transaction was not found: '${extrenalContext.transactionCommit}'`);
     }
@@ -66,7 +66,7 @@ function _findTransactionByDatasetAndCommit(extrenalContext: any, done: Function
 }
 
 function _setTransactionAsDefault(externalContext: any, done: Function): void {
-  return DatasetTransactionsRepository.setAsDefault(externalContext.userId, externalContext.dataset._id, externalContext.transaction._id, (error: any) => {
+  return DatasetTransactionsRepository.setAsDefault(externalContext.userId, externalContext.dataset._id, externalContext.transaction._id, (error: string) => {
     if (error) {
       return done(error);
     }
@@ -93,7 +93,7 @@ function rollbackFailedTransactionFor(datasetName: string, user: any, onRollback
 }
 
 function _findLatestFailedTransactionByDataset(externalContext: any, onFailedTransactionFound: Function): void {
-  return DatasetTransactionsRepository.findLatestFailedByDataset(externalContext.datasetId, (error: any, failedTransaction: any) => {
+  return DatasetTransactionsRepository.findLatestFailedByDataset(externalContext.datasetId, (error: string, failedTransaction: any) => {
     if (error) {
       return onFailedTransactionFound(error);
     }
@@ -108,7 +108,7 @@ function _findLatestFailedTransactionByDataset(externalContext: any, onFailedTra
   });
 }
 
-function _forceDatasetLock(externalContext: any, onDatasetLocked: Function): void {
+function _forceDatasetLock(externalContext: any, onDatasetLocked: Function): any {
   return DatasetsRepository.forceLock(externalContext.datasetName, (forceLockError: any) => {
     if (forceLockError) {
       return onDatasetLocked(forceLockError);
@@ -147,7 +147,7 @@ function _removeFailedTransaction(externalContext: any, onTransactionRemoved: Fu
   });
 }
 
-function _forceDatasetUnlock(externalContext: any, onDatasetUnlocked: Function): void {
+function _forceDatasetUnlock(externalContext: any, onDatasetUnlocked: Function): any {
   return DatasetsRepository.forceUnlock(externalContext.datasetName, (forceUnlockError: any) => {
     if (forceUnlockError) {
       return onDatasetUnlocked(forceUnlockError);
@@ -172,7 +172,7 @@ function _removeDatasetWithoutTransactions(externalContext: any, onDatasetRemove
 }
 
 function getStatusOfLatestTransactionByDatasetName(datasetName: string, user: any, done: Function): void {
-  return datasetsService.findDatasetByNameAndValidateOwnership({datasetName, user}, (error: any, externalContext: any)=> {
+  return datasetsService.findDatasetByNameAndValidateOwnership({datasetName, user}, (error: string, externalContext: any)=> {
     if (error) {
       return done(error);
     }
@@ -182,7 +182,7 @@ function getStatusOfLatestTransactionByDatasetName(datasetName: string, user: an
 }
 
 function _findObjectsModifiedDuringLastTransaction(externalContext: any, done: Function): void {
-  return DatasetTransactionsRepository.findLatestByDataset(externalContext.datasetId, (error: any, latestTransaction: any) => {
+  return DatasetTransactionsRepository.findLatestByDataset(externalContext.datasetId, (error: string, latestTransaction: any) => {
     if (error) {
       return done(error);
     }
@@ -221,7 +221,7 @@ function _createTasksForCountingObjectsModifiedInGivenVersion(datasetId: any, ve
   const datapointsRepository = DatapointsRepositoryFactory.closedOrOpenedInGivenVersion(datasetId, version);
 
   return {
-    concepts: (done: Function) => conceptsRepository.count(done),
+    concepts: (done: (err: any, count: number) => void) => conceptsRepository.count(done),
     entities: (done: Function) => entitiesRepository.count(done),
     datapoints: (done: Function) => datapointsRepository.count(done)
   };
@@ -252,8 +252,8 @@ function _findDefaultDatasetAndTransactionByDatasetNameAndCommit(datasetName: st
   ], onFound);
 }
 
-function _findDatasetByName(externalContext: any, done: Function): void {
-  return DatasetsRepository.findByName(externalContext.datasetName, (error: any, dataset: any) => {
+function _findDatasetByName(externalContext: any, done: Function): any {
+  return DatasetsRepository.findByName(externalContext.datasetName, (error: string, dataset: any) => {
     if (error || !dataset) {
       return done(error || `Dataset was not found: ${externalContext.datasetName}`);
     }
@@ -271,7 +271,7 @@ function _findDefaultDatasetAndTransactionByDatasetName(datasetName: string, onF
   ], onFound);
 
   function _findDefaultByDatasetId(externalContext: any, done: Function): void {
-    return DatasetTransactionsRepository.findDefault({datasetId: externalContext.dataset._id}, (error: any, transaction: any) => {
+    return DatasetTransactionsRepository.findDefault({datasetId: externalContext.dataset._id}, (error: string, transaction: any) => {
       if (error) {
         return done(error);
       }
@@ -286,7 +286,7 @@ function _findDefaultDatasetAndTransactionByDatasetName(datasetName: string, onF
       return async.setImmediate(() => done(null, externalContext));
     }
 
-    return DatasetTransactionsRepository.findLatestCompletedByDataset(externalContext.dataset._id, (error: any, transaction: any) => {
+    return DatasetTransactionsRepository.findLatestCompletedByDataset(externalContext.dataset._id, (error: string, transaction: any) => {
       if (error || !_isTransactionValid(transaction)) {
         return done(error || 'No versions were found for the given dataset');
       }
@@ -304,7 +304,7 @@ function _findDefaultDatasetAndTransactionByCommit(transactionCommit: any, onFou
   ], onFound);
 
   function _findDefaultDataset(pipe: any, done: Function): void {
-    return DatasetTransactionsRepository.findDefault({populateDataset: true}, (error: any, transaction: any) => {
+    return DatasetTransactionsRepository.findDefault({populateDataset: true}, (error: string, transaction: any) => {
       if (error || !transaction) {
         return done(error || `Default dataset was not set`);
       }
@@ -316,7 +316,7 @@ function _findDefaultDatasetAndTransactionByCommit(transactionCommit: any, onFou
 }
 
 function _findDefaultPopulatedDatasetAndTransaction(onFound: Function): void {
-  return DatasetTransactionsRepository.findDefault({populateDataset: true}, (error: any, transaction: any) => {
+  return DatasetTransactionsRepository.findDefault({populateDataset: true}, (error: string, transaction: any) => {
     if (error || !transaction) {
       return onFound(error || 'Default dataset was not set');
     }
@@ -329,7 +329,7 @@ function _findDefaultPopulatedDatasetAndTransaction(onFound: Function): void {
 }
 
 function _getDefaultDatasetAndTransaction(options: RequestedParamsModel, tasks: any[], onFound: Function): void {
-  return async.waterfall([async.constant(options)].concat(tasks), (error: any, pipe: ExternalContextModel) => {
+  return async.waterfall([async.constant(options)].concat(tasks), (error: string, pipe: ExternalContextModel) => {
     if (error) {
       return onFound(error);
     }

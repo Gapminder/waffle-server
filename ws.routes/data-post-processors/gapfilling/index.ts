@@ -1,13 +1,13 @@
 import * as _ from 'lodash';
-import {interpolate} from "./interpolation.processor";
-import {extrapolate} from "./extrapolation.processor";
-import {expandYears} from "./yearsExpander.processor";
+import {interpolate} from './interpolation.processor';
+import {extrapolate} from './extrapolation.processor';
+import {expandYears} from './yearsExpander.processor';
 
 export {
   gapfillingMiddleware
 };
 
-function gapfillingMiddleware(req, res, next: Function) {
+function gapfillingMiddleware(req: any, res: any, next: Function): void {
   if (req.wsJson && req.wsJson.rows && req.decodedQuery && req.decodedQuery.gapfilling) {
     let headers = req.wsJson.headers;
     let geoColumnIndex = headers.indexOf('geo');
@@ -17,15 +17,15 @@ function gapfillingMiddleware(req, res, next: Function) {
     let gapfilling = req.decodedQuery.gapfilling;
     let options = {
       numOfYearsToExtrapolate: gapfilling.extrapolation,
-      geoColumnIndex: geoColumnIndex,
-      yearColumnIndex: yearColumnIndex
+      geoColumnIndex,
+      yearColumnIndex
     };
 
     let time = req.decodedQuery.where && req.decodedQuery.where.time ? req.decodedQuery.where.time : [];
 
     req.wsJson.rows = _.chain(time)
       .filter(_.isArray)
-      .reduce((result, range) => {
+      .reduce((result: any, range: any) => {
         return expandYears(result, {from: range[0], to: range[1]});
       }, req.wsJson.rows)
       .value();
@@ -50,8 +50,8 @@ function gapfillingMiddleware(req, res, next: Function) {
   }
 
   return next();
-};
+}
 
-function toNumber(k) {
+function toNumber(k: string): number {
   return parseInt(k, 10);
 }

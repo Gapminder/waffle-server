@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 
-function toPrecision(matrix, columns?, precisionLevel?) {
+function toPrecision(matrix: any, columns?: any, precisionLevel?: any): any {
   let precision: number = parseInt(precisionLevel, 10);
 
   if (!matrix || !matrix.length || _.isNaN(precision)) {
@@ -21,7 +21,6 @@ function toPrecision(matrix, columns?, precisionLevel?) {
     });
   });
 }
-
 
 export {
   toPrecision

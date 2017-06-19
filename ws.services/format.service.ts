@@ -22,8 +22,7 @@ interface RawDdf {
 
 function packToCsv(data: any): any {
   const wsJsonStream: any = packToWsJson(data);
-
-  return hi(wsJsonStream).flatMap((wsJson: any) => {
+  return hi(hi.isStream(wsJsonStream) ? wsJsonStream : [wsJsonStream]).flatMap((wsJson: any) => {
     const rows = _.get(wsJson, 'rows', []);
     const headers = _.get(wsJson, 'headers', []);
 

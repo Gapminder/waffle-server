@@ -10,13 +10,13 @@ const DataPoints: any = new Schema({
   measure: {type: Schema.Types.ObjectId, required: true},
   dimensions: [{type: Schema.Types.ObjectId}],
   dimensionsConcepts: [{type: Schema.Types.ObjectId}],
-  properties: {type: Schema.Types.Mixed, 'default': {}},
-  languages: {type: Schema.Types.Mixed, 'default': {}},
+  properties: {type: Schema.Types.Mixed, default: {}},
+  languages: {type: Schema.Types.Mixed, default: {}},
 
   originId: {type: Schema.Types.ObjectId},
   from: {type: Number, required: true},
-  to: {type: Number, required: true, 'default': constants.MAX_VERSION},
-  dataset: {type: Schema.Types.ObjectId, ref: 'Datasets', required: true},
+  to: {type: Number, required: true, default: constants.MAX_VERSION},
+  dataset: {type: Schema.Types.ObjectId, ref: 'Datasets', required: true}
 }, { strict: false, minimize: false });
 
 DataPoints.plugin(OriginIdPlugin, {

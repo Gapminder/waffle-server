@@ -37,13 +37,13 @@ const repositoriesByCollection = {
   }
 };
 
-function getDocumentsByQuery(externalContext, onFound) {
+function getDocumentsByQuery(externalContext: any, onFound: Function): void {
   return async.waterfall([
     async.constant(externalContext),
     getDatasetAndTransaction,
     getDocuments,
     populateDocuments
-  ], (error, result: any) => {
+  ], (error: string, result: any) => {
     if (error) {
       return onFound(error);
     }
@@ -52,11 +52,11 @@ function getDocumentsByQuery(externalContext, onFound) {
   });
 }
 
-function getDatasetAndTransaction(externalContext, onDatasetAndTransactionFound) {
+function getDatasetAndTransaction(externalContext: any, onDatasetAndTransactionFound: Function): void {
   const {datasetName, commit} = externalContext;
 
   return datasetTransactionService
-    .findDefaultDatasetAndTransaction(datasetName, commit, (error, datasetAndTransaction) => {
+    .findDefaultDatasetAndTransaction(datasetName, commit, (error: string, datasetAndTransaction: any) => {
       if (error) {
         return onDatasetAndTransactionFound(error);
       }
@@ -82,12 +82,12 @@ function getDatasetAndTransaction(externalContext, onDatasetAndTransactionFound)
     });
 }
 
-function getDocuments(externalContext, onDocumentsFound) {
+function getDocuments(externalContext: any, onDocumentsFound: Function): void {
   const {datasetId, version, query, collection} = externalContext;
 
   return repositoriesByCollection[collection].repo
     .currentVersion(datasetId, version)
-    [repositoriesByCollection[collection].queryFn](query, (error, documents) => {
+    [repositoriesByCollection[collection].queryFn](query, (error: string, documents: any) => {
       if (error) {
         return onDocumentsFound(error);
       }
@@ -98,12 +98,12 @@ function getDocuments(externalContext, onDocumentsFound) {
     });
 }
 
-function populateDocuments(externalContext, onDocumentsPopulated) {
+function populateDocuments(externalContext: any, onDocumentsPopulated: Function): void {
   const {documents} = externalContext;
 
-  return async.mapSeries(documents, (document, onPopulatedDocument) => {
+  return async.mapSeries(documents, (document: any, onPopulatedDocument: AsyncResultArrayCallback<any, any>) => {
     return populateDocument(document, externalContext, onPopulatedDocument);
-  }, (error, populatedDocuments) => {
+  }, (error: string, populatedDocuments: any) => {
     if (error) {
       return onDocumentsPopulated(error);
     }
@@ -114,10 +114,10 @@ function populateDocuments(externalContext, onDocumentsPopulated) {
   });
 }
 
-function populateDocument(document, externalContext, onDocumentPopulated) {
+function populateDocument(document: any, externalContext: any, onDocumentPopulated: AsyncResultArrayCallback<any, any>): void {
   const {datasetId, version, collection} = externalContext;
 
-  async.reduce(populatingPropertiesByCollection[collection], document, (memoDocument, [propertyName, subCollection], onPropertyPopulated: Function) => {
+  async.reduce(populatingPropertiesByCollection[collection], document, (memoDocument: any, [propertyName, subCollection]: any, onPropertyPopulated: Function) => {
     const propertyValue = memoDocument[propertyName];
     const originIds = Array.isArray(propertyValue) ? propertyValue : [propertyValue];
     const query = {originId: {$in : originIds}};
@@ -127,7 +127,7 @@ function populateDocument(document, externalContext, onDocumentPopulated) {
       return async.setImmediate(() => onPropertyPopulated(null, memoDocument));
     }
 
-    return getDocuments(context, (error, result) => {
+    return getDocuments(context, (error: string, result: any) => {
       if (error) {
         return onPropertyPopulated(error);
       }

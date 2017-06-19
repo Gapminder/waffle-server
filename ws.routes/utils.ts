@@ -11,6 +11,12 @@ import * as semver from 'semver';
 
 import { DatasetsRepository } from '../ws.repository/ddf/datasets/datasets.repository';
 import { RecentDdfqlQueriesRepository } from '../ws.repository/ddf/recent-ddfql-queries/recent-ddfql-queries.repository';
+import { constants } from '../ws.utils/constants';
+import * as path from 'path';
+
+import * as commonService from '../ws.services/common.service';
+
+const RELATIVE_PATH_REGEX = /\/\.+\/?/;
 
 const parseUrlonAsync: Function = async.asyncify((query: string) => {
   const parsedQuery = URLON.parse(query);
@@ -31,6 +37,7 @@ export {
   respondWithRawDdf,
   checkDatasetAccessibility,
   bodyFromUrlQuery,
+  bodyFromUrlAssets,
   toDataResponse,
   toErrorResponse,
   toMessageResponse
@@ -42,7 +49,7 @@ function bodyFromUrlQuery(req: express.Request, res: express.Response, next: exp
     ? {parse: parseJsonAsync, query, queryType: 'JSON'}
     : {parse: parseUrlonAsync, query: url.parse(req.url).query, queryType: 'URLON'};
 
-  parser.parse(parser.query, (error: any, parsedQuery: any) => {
+  parser.parse(parser.query, (error: string, parsedQuery: any) => {
     logger.info({ddfqlRaw: parser.query});
     if (error) {
       res.json(toErrorResponse('Query was sent in incorrect format'));
@@ -53,7 +60,104 @@ function bodyFromUrlQuery(req: express.Request, res: express.Response, next: exp
   });
 }
 
-function getCacheConfig(prefix: string): express.Handler {
+function bodyFromUrlAssets(req: express.Request, res: express.Response, next: express.NextFunction): void {
+  if (!_.startsWith(req.baseUrl, constants.ASSETS_ROUTE_BASE_PATH)) {
+    return next();
+  }
+
+  const datasetAssetsPathFromUrl = safeDecodeUriComponent(_.last(_.split(req.originalUrl, constants.ASSETS_ROUTE_BASE_PATH + '/')));
+
+  if (datasetAssetsPathFromUrl === null) {
+    res.status(400).json(toErrorResponse('Malformed url was given'));
+    return;
+  }
+
+  if (RELATIVE_PATH_REGEX.test(datasetAssetsPathFromUrl)) {
+    res.status(400).json(toErrorResponse('You cannot use relative path constraints like "." or ".." in the asset path'));
+    return;
+  }
+
+  commonService.findDefaultDatasetAndTransaction({}, (error: any, context: any) => {
+    const defaultDatasetAssetRequested = _.startsWith(req.originalUrl, `${constants.ASSETS_ROUTE_BASE_PATH}/default`);
+
+    if (error && defaultDatasetAssetRequested) {
+      res.status(500).json(toErrorResponse(`Default dataset couldn't be found`));
+      return;
+    }
+
+    const assetPathDescriptor = getAssetPathDescriptor(
+      config.PATH_TO_DDF_REPOSITORIES,
+      datasetAssetsPathFromUrl,
+      defaultDatasetAssetRequested && _.get(context, 'dataset')
+    );
+
+    if (assetPathDescriptor.assetsDir !== constants.ASSETS_EXPECTED_DIR) {
+      res.status(403).json(toErrorResponse(`You cannot access directories other than "${constants.ASSETS_EXPECTED_DIR}"`));
+      return;
+    }
+
+    _.extend(req.body, {
+      dataset: assetPathDescriptor.dataset,
+      dataset_access_token: _.get(req.query, 'dataset_access_token'),
+      assetPathDescriptor
+    });
+
+    return next();
+  });
+}
+
+function getAssetPathDescriptor(pathToDdfRepos: string, datasetAssetPath: string, defaultDataset?: any): any {
+  const splittedDatasetAssetPath = _.split(datasetAssetPath, '/');
+  const defaultDatasetInfo = getRepoInfoFromDataset(defaultDataset);
+
+  const account = defaultDatasetInfo
+    ? defaultDatasetInfo.account
+    : _.nth(splittedDatasetAssetPath, 0);
+
+  const repo = defaultDatasetInfo
+    ? defaultDatasetInfo.repo
+    : _.nth(splittedDatasetAssetPath, 1) || '';
+
+  const branch = defaultDatasetInfo
+    ? defaultDatasetInfo.branch
+    : _.nth(splittedDatasetAssetPath, 2) || '';
+
+  const assetsPathFragments = defaultDatasetInfo
+    ? _.slice(splittedDatasetAssetPath, 1)
+    : _.slice(splittedDatasetAssetPath, 3);
+
+  return {
+    path: path.resolve(pathToDdfRepos, account, repo, branch, _.join(assetsPathFragments, '/')),
+    assetsDir: _.first(assetsPathFragments),
+    assetName: _.last(assetsPathFragments),
+    dataset: `${account}/${repo}#${branch}`
+  };
+}
+
+function getRepoInfoFromDataset(dataset: any): any {
+  if (!dataset) {
+    return null;
+  }
+
+  const [accountAndRepo, branch = 'master'] = _.split(dataset.name, '#');
+  const [account, repo] = _.split(accountAndRepo, '/');
+
+  return {
+    account,
+    repo,
+    branch
+  };
+}
+
+function safeDecodeUriComponent(uri: string): string {
+  try {
+    return decodeURIComponent(uri);
+  } catch (e) {
+    return null;
+  }
+}
+
+function getCacheConfig(prefix?: string): express.Handler {
   return function (req: express.Request, res: express.Response, next: express.NextFunction): void {
     if (String(req.query.force) === 'true' && !config.IS_PRODUCTION) {
       (res as any).use_express_redis_cache = false;
@@ -75,7 +179,7 @@ function ensureAuthenticatedViaToken(req: express.Request, res: express.Response
 }
 
 function respondWithRawDdf(query: any, req: express.Request, res: express.Response, next: express.NextFunction): Function {
-  return (error: any, result: any) => {
+  return (error: string, result: any) => {
     if (error) {
       logger.error(error);
       (res as any).use_express_redis_cache = false;
@@ -101,7 +205,7 @@ function _storeWarmUpQueryForDefaultDataset(query: any): void {
     return;
   }
 
-  RecentDdfqlQueriesRepository.create(rawDdfQuery, (error: any) => {
+  RecentDdfqlQueriesRepository.create(rawDdfQuery, (error: string) => {
     if (error) {
       logger.debug(error);
     } else {
@@ -113,7 +217,7 @@ function _storeWarmUpQueryForDefaultDataset(query: any): void {
 function ensureCliVersion(req: express.Request, res: express.Response, next: express.NextFunction): void {
   const clientWsCliVersion = req.header('X-Gapminder-WSCLI-Version');
 
-  if(!clientWsCliVersion) {
+  if (!clientWsCliVersion) {
     res.json(toErrorResponse('This url can be accessed only from WS-CLI'));
     return;
   }
@@ -140,13 +244,13 @@ function ensureVersionsEquality(clientVersion: string, serverVersion: string): b
   }
 }
 
-function checkDatasetAccessibility(req: express.Request, res: express.Response, next: express.NextFunction): void {
+function checkDatasetAccessibility(req: express.Request, res: express.Response, next: express.NextFunction): any {
   const datasetName = _.get(req, 'body.dataset', null);
   if (!datasetName) {
     return next();
   }
 
-  return DatasetsRepository.findByName(datasetName, (error: any, dataset: any) => {
+  return DatasetsRepository.findByName(datasetName, (error: string, dataset: any) => {
     if (error) {
       logger.error(error);
       return res.json({success: false, error});

@@ -13,7 +13,7 @@ export {
 };
 
 function findDefaultDatasetAndTransaction(pipe: any, done: Function): void {
-  return transactionsService.findDefaultDatasetAndTransaction(pipe.datasetName, pipe.version, (error: any, datasetAndTransaction: DatasetAndTransaction) => {
+  return transactionsService.findDefaultDatasetAndTransaction(pipe.datasetName, pipe.version, (error: string, datasetAndTransaction: DatasetAndTransaction) => {
     if (error) {
       return done(error);
     }

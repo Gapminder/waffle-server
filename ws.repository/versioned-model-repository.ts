@@ -13,7 +13,7 @@ export abstract class VersionedModelRepository {
     this.version = version;
   }
 
-  protected abstract _getModel(): any
+  protected abstract _getModel(): any;
 
   protected _composeQuery(... args: any[]): any {
     return _.merge.bind(_, {}, this.versionQueryFragment).apply(undefined, args);

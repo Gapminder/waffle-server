@@ -3,8 +3,10 @@ import * as cors from 'cors';
 import * as express from 'express';
 import * as routeUtils from '../../utils';
 import * as CliController from './cli.controller';
+import {ServiceLocator} from '../../../ws.service-locator/index';
+import {Application} from 'express';
 
-function registerDdfCliRoutes(serviceLocator) {
+function registerDdfCliRoutes(serviceLocator: ServiceLocator): Application {
   const router = express.Router();
 
   router.use(cors());
@@ -41,4 +43,4 @@ function registerDdfCliRoutes(serviceLocator) {
 
 export {
   registerDdfCliRoutes
-}
+};

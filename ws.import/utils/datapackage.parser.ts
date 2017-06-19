@@ -3,29 +3,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { constants } from '../../ws.utils/constants';
 
-export {
-  loadDatapackage,
-  parseEntitiesResource,
-  parseDatapointsResource,
-  parseConceptsResource,
-  isConceptsResource,
-  isDatapointsResource,
-  isEntitiesResource,
-  ParsedConceptResource,
-  ParsedEntityResource,
-  ParsedDatapointResource,
-  ParsedResource,
-  DdfSchemaItem,
-  SchemaField,
-  ResourceSchema,
-  Datapackage,
-  DatapackageLanguage,
-  DdfSchema,
-  DatapackageResource,
-};
-
-function loadDatapackage({folder, file = 'datapackage.json'}, done) {
-  return fs.readFile(path.join(folder, file), 'utf-8', (error, data) => {
+function loadDatapackage({folder, file = 'datapackage.json'}: any, done: Function): void {
+  return fs.readFile(path.join(folder, file), 'utf-8', (error: Error, data: any) => {
     if (error) {
       return done(error);
     }
@@ -36,7 +15,7 @@ function loadDatapackage({folder, file = 'datapackage.json'}, done) {
   });
 }
 
-function parseResources(resources: DatapackageResource[]) {
+function parseResources(resources: DatapackageResource[]): ParsedResource[] {
   return _.reduce(resources, (parsed: ParsedResource[], resource: DatapackageResource) => {
     const primaryKey = getPrimaryKey(resource.schema);
     if (isDatapointsResource(primaryKey)) {
@@ -59,20 +38,20 @@ function getPrimaryKey(schema: ResourceSchema): string[] {
   return Array.isArray(schema.primaryKey) ? schema.primaryKey : [schema.primaryKey];
 }
 
-function isConceptsResource(primaryKey: string | string[]) {
+function isConceptsResource(primaryKey: string | string[]): boolean {
   return Array.isArray(primaryKey) && primaryKey.length === 1 && _.head(primaryKey) === 'concept';
 }
 
-function isDatapointsResource(primaryKey: string | string[]) {
+function isDatapointsResource(primaryKey: string | string[]): boolean {
   return Array.isArray(primaryKey) && primaryKey.length > 1;
 }
 
-function isEntitiesResource(primaryKey: string | string[]) {
+function isEntitiesResource(primaryKey: string | string[]): boolean {
   return Array.isArray(primaryKey) && primaryKey.length === 1 && _.head(primaryKey) !== 'concept';
 }
 
-function parseEntitiesResource(resource: DatapackageResource, primaryKey = getPrimaryKey(resource.schema)): ParsedEntityResource {
-  const {entitySets, fields} = _.reduce(resource.schema.fields, (result, field: SchemaField) => {
+function parseEntitiesResource(resource: DatapackageResource, primaryKey: string[] = getPrimaryKey(resource.schema)): ParsedEntityResource {
+  const {entitySets, fields} = _.reduce(resource.schema.fields, (result: any, field: SchemaField) => {
     result.fields.push(field.name);
 
     const entitySet = toEntitySet(field.name);
@@ -92,8 +71,8 @@ function parseEntitiesResource(resource: DatapackageResource, primaryKey = getPr
   } as ParsedEntityResource;
 }
 
-function parseDatapointsResource(resource: DatapackageResource, primaryKey = getPrimaryKey(resource.schema)): ParsedDatapointResource {
-  const indicators = _.reduce(resource.schema.fields, (result, field: SchemaField) => {
+function parseDatapointsResource(resource: DatapackageResource, primaryKey: string[] = getPrimaryKey(resource.schema)): ParsedDatapointResource {
+  const indicators = _.reduce(resource.schema.fields, (result: any, field: SchemaField) => {
     if (!_.includes(primaryKey, field.name)) {
       result.push(field.name);
     }
@@ -105,11 +84,11 @@ function parseDatapointsResource(resource: DatapackageResource, primaryKey = get
     primaryKey,
     path: resource.path,
     dimensions: primaryKey,
-    indicators,
+    indicators
   };
 }
 
-function parseConceptsResource(resource: DatapackageResource, primaryKey = getPrimaryKey(resource.schema)): ParsedConceptResource {
+function parseConceptsResource(resource: DatapackageResource, primaryKey: string[] = getPrimaryKey(resource.schema)): ParsedConceptResource {
   return {
     type: constants.CONCEPTS,
     primaryKey,
@@ -117,7 +96,7 @@ function parseConceptsResource(resource: DatapackageResource, primaryKey = getPr
   };
 }
 
-function toEntitySet(fieldName: string) {
+function toEntitySet(fieldName: string): string {
   if (!_.startsWith(fieldName, 'is--')) {
     return null;
   }
@@ -138,7 +117,7 @@ interface ParsedEntityResource {
   path: string;
   fields: string[];
   concept: string;
-  entitySets: string[]
+  entitySets: string[];
 }
 
 interface ParsedDatapointResource {
@@ -192,3 +171,24 @@ interface Datapackage {
   resources: (ParsedConceptResource | ParsedDatapointResource | ParsedEntityResource)[];
   ddfSchema: DdfSchema;
 }
+
+export {
+  loadDatapackage,
+  parseEntitiesResource,
+  parseDatapointsResource,
+  parseConceptsResource,
+  isConceptsResource,
+  isDatapointsResource,
+  isEntitiesResource,
+  ParsedConceptResource,
+  ParsedEntityResource,
+  ParsedDatapointResource,
+  ParsedResource,
+  DdfSchemaItem,
+  SchemaField,
+  ResourceSchema,
+  Datapackage,
+  DatapackageLanguage,
+  DdfSchema,
+  DatapackageResource
+};

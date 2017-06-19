@@ -109,8 +109,6 @@ function _cleanDestinationDirIfExists(externalContext: any, onRemoved: Function)
 
 function _cloneRepoIfDirectoryEmpty(externalContext: any, onCloned: Function): void {
   const {githubUrlDescriptor: {repo, branch, url: githubUrl}, pathToRepo, isGitDir} = externalContext;
-  const absolutePathToRepos = path.resolve(config.PATH_TO_DDF_REPOSITORIES);
-
   if (!repo) {
     return onCloned(`Incorrect github url was given`);
   }
@@ -118,7 +116,7 @@ function _cloneRepoIfDirectoryEmpty(externalContext: any, onCloned: Function): v
   logger.info(`** Start cloning dataset: ${githubUrl}`);
 
   if (!isGitDir) {
-    return git(absolutePathToRepos).clone(githubUrl, pathToRepo, [`-b`, branch], (cloneError: any) => {
+    return git(config.PATH_TO_DDF_REPOSITORIES).clone(githubUrl, pathToRepo, [`-b`, branch], (cloneError: any) => {
       if (cloneError) {
         return onCloned(cloneError);
       }
@@ -178,5 +176,5 @@ function _getGithubUrlDescriptor(githubUrl: string): GithubUrlDescriptor {
 }
 
 function _getPathToRepoFromGithubUrlDescriptor({account, repo, branch}: GithubUrlDescriptor): string {
-  return path.resolve(process.cwd(), config.PATH_TO_DDF_REPOSITORIES, account, repo, branch);
+  return path.resolve(config.PATH_TO_DDF_REPOSITORIES, account, repo, branch);
 }

@@ -19,11 +19,11 @@ export {
   getDimensionsAsEntityOriginIds
 };
 
-function saveDatapointsAndEntitiesFoundInThem(saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) {
+function saveDatapointsAndEntitiesFoundInThem(saveEntitiesFoundInDatapoints: any, externalContextFrozen: any, datapointsFoundEntitiesStream: any): any {
   return datapointsFoundEntitiesStream
     .compact()
     .batch(ddfImportUtils.DEFAULT_CHUNK_SIZE)
-    .flatMap(datapointsBatch => {
+    .flatMap((datapointsBatch: any) => {
       const datapointsByFilename = groupDatapointsByFilename(datapointsBatch);
       const entitiesFoundInDatapoints = _.flatten(_.map(datapointsBatch, 'entitiesFoundInDatapoint'));
 
@@ -34,10 +34,10 @@ function saveDatapointsAndEntitiesFoundInThem(saveEntitiesFoundInDatapoints, ext
     });
 }
 
-function groupDatapointsByFilename(datapointsBatch) {
+function groupDatapointsByFilename(datapointsBatch: any): any {
   return _.chain(datapointsBatch)
     .groupBy('context.filename')
-    .mapValues((datapoints: any[], filename) => {
+    .mapValues((datapoints: any[], filename: any) => {
       const anyDatapoint = _.head(datapoints);
       const dimensions = _.get(anyDatapoint, 'context.dimensions', {});
 
@@ -53,8 +53,8 @@ function groupDatapointsByFilename(datapointsBatch) {
     .value();
 }
 
-function flattenDimensions(dimensions) {
-  const flatDimensionsSet = _.reduce(dimensions, (result, dimension: any) => {
+function flattenDimensions(dimensions: any): any[] {
+  const flatDimensionsSet = _.reduce(dimensions, (result: any, dimension: any) => {
     const domain = _.get(dimension, 'domain');
     if (domain) {
       const domainOriginId = _.get(domain, 'originId', domain);
@@ -67,8 +67,8 @@ function flattenDimensions(dimensions) {
   return Array.from(flatDimensionsSet.values());
 }
 
-function saveDatapoints(datapointsByFilename, externalContextFrozen) {
-  return entitiesFoundInDatapointsByGid => {
+function saveDatapoints(datapointsByFilename: any, externalContextFrozen: any): any {
+  return (entitiesFoundInDatapointsByGid: any) => {
     return Promise.all(_.map(datapointsByFilename, (datapointsFromSameFile: any) => {
       datapointsFromSameFile.context.segregatedEntities.foundInDatapointsByGid = entitiesFoundInDatapointsByGid;
       return mapAndStoreDatapointsToDb(datapointsFromSameFile, externalContextFrozen);
@@ -76,7 +76,7 @@ function saveDatapoints(datapointsByFilename, externalContextFrozen) {
   };
 }
 
-function mapAndStoreDatapointsToDb(datapointsFromSameFile, externalContext) {
+function mapAndStoreDatapointsToDb(datapointsFromSameFile: any, externalContext: any): any {
   const {measures, filename, dimensions, dimensionsConcepts, context: {segregatedEntities: entities}} = datapointsFromSameFile;
 
   const {dataset: {_id: datasetId}, transaction: {createdAt: version}, concepts} = externalContext;
@@ -92,7 +92,7 @@ function mapAndStoreDatapointsToDb(datapointsFromSameFile, externalContext) {
     concepts
   };
 
-  const wsDatapoints = _.flatMap(datapointsFromSameFile.datapoints, datapointWithContext => {
+  const wsDatapoints = _.flatMap(datapointsFromSameFile.datapoints, (datapointWithContext: any) => {
     return ddfMappers.mapDdfDataPointToWsModel(datapointWithContext.datapoint, mappingContext);
   });
 
@@ -100,7 +100,7 @@ function mapAndStoreDatapointsToDb(datapointsFromSameFile, externalContext) {
   return DatapointsRepositoryFactory.versionAgnostic().create(wsDatapoints);
 }
 
-function findAllEntities(externalContext) {
+function findAllEntities(externalContext: any): any {
   const {dataset: {_id: datasetId}, transaction: {createdAt: version}} = externalContext;
 
   return EntitiesRepositoryFactory
@@ -109,7 +109,7 @@ function findAllEntities(externalContext) {
     .then(segregateEntities);
 }
 
-function findAllPreviousEntities(externalContext) {
+function findAllPreviousEntities(externalContext: any): Promise<Object> {
   const {dataset: {_id: datasetId}, previousTransaction: {createdAt: version}} = externalContext;
 
   return EntitiesRepositoryFactory
@@ -118,7 +118,7 @@ function findAllPreviousEntities(externalContext) {
     .then(segregateEntities);
 }
 
-function getDimensionsAndMeasures(resource, externalContext) {
+function getDimensionsAndMeasures(resource: any, externalContext: any): any {
   logger.debug('Processing resource with path: ', resource.path);
   const measures = _.merge(
     _.pick(externalContext.previousConcepts, resource.indicators),
@@ -141,7 +141,7 @@ function getDimensionsAndMeasures(resource, externalContext) {
   return { measures, dimensions };
 }
 
-function getDimensionsAsEntityOriginIds(datapoint, externalContext) {
+function getDimensionsAsEntityOriginIds(datapoint: any, externalContext: any): any[] {
   const entityGids = _.chain(datapoint)
     .pick(_.keys(externalContext.dimensions))
     .values()
@@ -154,9 +154,9 @@ function getDimensionsAsEntityOriginIds(datapoint, externalContext) {
   });
 }
 
-function segregateEntities(entities) {
-  //FIXME: Segregation is a workaround for issue related to having same gid in couple entity files
-  return _.reduce(entities, (result, entity: any) => {
+function segregateEntities(entities: any): any {
+  // FIXME: Segregation is a workaround for issue related to having same gid in couple entity files
+  return _.reduce(entities, (result: any, entity: any) => {
     if (_.isEmpty(entity.sets)) {
       const domain = entity.domain;
       result.byDomain[`${entity.gid}-${_.get(domain, 'originId', domain)}`] = entity;
@@ -173,12 +173,12 @@ function segregateEntities(entities) {
   }, {bySet: {}, byDomain: {}, byGid: {}, groupedByGid: {}});
 }
 
-function findEntitiesInDatapoint(datapoint, context, externalContext) {
+function findEntitiesInDatapoint(datapoint: any, context: any, externalContext: any): any[] {
   const alreadyFoundEntityGids = new Set();
 
   const {transaction: {createdAt: version}, dataset: {_id: datasetId}, timeConcepts} = externalContext;
 
-  return _.reduce(context.dimensions, (entitiesFoundInDatapoint, concept: any) => {
+  return _.reduce(context.dimensions, (entitiesFoundInDatapoint: any, concept: any) => {
     const domain = concept.domain || concept;
     const entityGid = datapoint[concept.gid];
     const existedEntity = context.segregatedEntities.byGid[entityGid];
@@ -203,10 +203,10 @@ function findEntitiesInDatapoint(datapoint, context, externalContext) {
   }, []);
 }
 
-function createEntitiesFoundInDatapointsSaverWithCache() {
+function createEntitiesFoundInDatapointsSaverWithCache(): any {
   const entitiesFoundInDatapointsCache = {};
-  return (entities) => {
-    const notSeenEntities = _.reduce(entities, (result, entity: any) => {
+  return (entities: any) => {
+    const notSeenEntities = _.reduce(entities, (result: any, entity: any) => {
       if (!entitiesFoundInDatapointsCache[entity.gid]) {
         entitiesFoundInDatapointsCache[entity.gid] = entity;
         result.push(entity);
@@ -219,8 +219,8 @@ function createEntitiesFoundInDatapointsSaverWithCache() {
     }
 
     return storeEntitiesToDb(notSeenEntities)
-      .then(entityModels => {
-        return _.reduce(entityModels, (cache, model: MongooseDocument) => {
+      .then((entityModels: any) => {
+        return _.reduce(entityModels, (cache: any, model: MongooseDocument) => {
           const entity: any = model.toObject();
           cache[entity.gid] = entity;
           return cache;
@@ -229,7 +229,7 @@ function createEntitiesFoundInDatapointsSaverWithCache() {
   };
 }
 
-function storeEntitiesToDb(entities) {
+function storeEntitiesToDb(entities: any): any {
   logger.debug(`Store entities found in datapoints to database. Amount: `, _.size(entities));
   return EntitiesRepositoryFactory.versionAgnostic().create(entities);
 }

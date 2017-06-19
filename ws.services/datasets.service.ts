@@ -27,7 +27,7 @@ function findDatasetsWithVersions(userId: any, onFound: AsyncResultCallback<any,
     async.constant({userId}),
     _findDatasetsByUser,
     _collectVersionsForEachDataset
-  ], (error: any, datasetsWithVersions: any) => {
+  ], (error: string, datasetsWithVersions: any) => {
     return onFound(error, datasetsWithVersions);
   });
 }
@@ -53,7 +53,7 @@ function removeDatasetData(datasetName: string, user: any, onRemovedDataset: Asy
   });
 }
 
-function findDatasetByNameAndValidateOwnership(externalContext: any, onDatasetValidated: Function): void {
+function findDatasetByNameAndValidateOwnership(externalContext: any, onDatasetValidated: Function): any {
   return DatasetsRepository.findByName(externalContext.datasetName, (datasetSearchError: any, dataset: any) => {
     if (datasetSearchError || !dataset) {
       return onDatasetValidated(datasetSearchError || `Dataset was not found for the given name: ${externalContext.datasetName}`);
@@ -71,7 +71,7 @@ function findDatasetByNameAndValidateOwnership(externalContext: any, onDatasetVa
   });
 }
 
-function lockDataset(externalContext: any, onDatasetLocked: Function): void {
+function lockDataset(externalContext: any, onDatasetLocked: Function): any {
   const datasetName = _.get(externalContext, 'dataset.name', externalContext.datasetName);
   return DatasetsRepository.lock(datasetName, (datasetLockError: any, dataset: any) => {
     if (datasetLockError) {
@@ -86,7 +86,7 @@ function lockDataset(externalContext: any, onDatasetLocked: Function): void {
   });
 }
 
-function unlockDataset(externalContext: any, done: Function): void {
+function unlockDataset(externalContext: any, done: Function): any {
   return DatasetsRepository.unlock(externalContext.datasetName, (err: any, dataset: any) => {
     if (!dataset) {
       return done(`Version of dataset "${externalContext.datasetName}" wasn't locked`);
@@ -121,7 +121,7 @@ function _removeAllDataByDataset(externalContext: any, onDataRemoved: AsyncResul
   const entitiesRepository = EntitiesRepositoryFactory.versionAgnostic();
 
   return async.parallel([
-    (done: Function) => conceptsRepository.removeByDataset(externalContext.datasetId, (error: any, removeResult: any) => {
+    (done: Function) => conceptsRepository.removeByDataset(externalContext.datasetId, (error: string, removeResult: any) => {
       if (error) {
         return done(error);
       }
@@ -132,7 +132,7 @@ function _removeAllDataByDataset(externalContext: any, onDataRemoved: AsyncResul
 
       return done();
     }),
-    (done: Function) => entitiesRepository.removeByDataset(externalContext.datasetId, (error: any, removeResult: any) => {
+    (done: Function) => entitiesRepository.removeByDataset(externalContext.datasetId, (error: string, removeResult: any) => {
       if (error) {
         return done(error);
       }
@@ -155,7 +155,7 @@ function _removeAllDataByDataset(externalContext: any, onDataRemoved: AsyncResul
 
 function removeDatapointsInChunks({datasetId, datasetName}: any, onRemoved: Function): void {
   const datapointsRepository = DatapointsRepositoryFactory.versionAgnostic();
-  datapointsRepository.findIdsByDatasetAndLimit(datasetId, DATAPOINTS_TO_REMOVE_CHUNK_SIZE, (error: any, datapointIds: any[]) => {
+  datapointsRepository.findIdsByDatasetAndLimit(datasetId, DATAPOINTS_TO_REMOVE_CHUNK_SIZE, (error: string, datapointIds: any[]) => {
     const amountOfDatapointsToRemove = _.size(datapointIds);
     logger.info('Removing datapoints', amountOfDatapointsToRemove);
 
@@ -183,7 +183,7 @@ function removeDatapointsInChunks({datasetId, datasetName}: any, onRemoved: Func
 }
 
 function getRemovalStateForDataset(datasetName: any, user: any, done: Function): any {
-  return findDatasetByNameAndValidateOwnership({datasetName, user}, (error: any, externalContext: any) => {
+  return findDatasetByNameAndValidateOwnership({datasetName, user}, (error: string, externalContext: any) => {
     if (error) {
       return done(error);
     }
@@ -192,15 +192,15 @@ function getRemovalStateForDataset(datasetName: any, user: any, done: Function):
   });
 }
 
-function _removeAllTransactions(pipe: any, onTransactionsRemoved: Function): void {
-  return DatasetTransactionsRepository.removeAllByDataset(pipe.datasetId, (error: any) => onTransactionsRemoved(error, pipe));
+function _removeAllTransactions(pipe: any, onTransactionsRemoved: Function): any {
+  return DatasetTransactionsRepository.removeAllByDataset(pipe.datasetId, (error: string) => onTransactionsRemoved(error, pipe));
 }
 
 function _removeDataset(pipe: any, onDatasetRemoved: Function): void {
   return DatasetsRepository.removeById(pipe.datasetId, onDatasetRemoved);
 }
 
-function _findDatasetsByUser(pipe: any, done: Function): void {
+function _findDatasetsByUser(pipe: any, done: Function): any {
   return DatasetsRepository.findByUser(pipe.userId, (datasetSearchError: any, datasets: any[]) => {
     if (datasetSearchError) {
       return done(datasetSearchError);

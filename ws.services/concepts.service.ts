@@ -22,7 +22,7 @@ function collectConceptsByDdfql(options: any, cb: Function): void {
     commonService.findDefaultDatasetAndTransaction,
     getAllConcepts,
     getConceptsByDdfql
-  ], (error: any, result: any) => {
+  ], (error: string, result: any) => {
     console.timeEnd('finish Concepts stats');
 
     return cb(error, result);
@@ -33,7 +33,7 @@ function getAllConcepts(pipe: any, cb: Function): void {
   const conceptsRepository = ConceptsRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version);
 
   conceptsRepository
-    .findConceptsByQuery({}, (error: any, concepts: any) => {
+    .findConceptsByQuery({}, (error: string, concepts: any) => {
       if (error) {
         return cb(error);
       }
@@ -54,7 +54,7 @@ function getConceptsByDdfql(pipe: any, cb: Function): void {
   }
 
   conceptsRepository
-    .findConceptsByQuery(normalizedQuery.where, (error: any, concepts: any) => {
+    .findConceptsByQuery(normalizedQuery.where, (error: string, concepts: any) => {
       if (error) {
         return cb(error);
       }
@@ -69,7 +69,7 @@ function getConcepts(pipe: any, cb: Function): void {
   const conceptsRepository = ConceptsRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version);
 
   conceptsRepository
-    .findConceptProperties(pipe.headers, pipe.where, (error: any, concepts: any) => {
+    .findConceptProperties(pipe.headers, pipe.where, (error: string, concepts: any) => {
       if (error) {
         return cb(error);
       }
