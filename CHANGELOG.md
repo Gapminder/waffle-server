@@ -1,3 +1,28 @@
+<a name="2.7.0"></a>
+# [2.7.0](https://github.com/Gapminder/waffle-server/compare/v2.6.0...v2.7.0) (2017-06-19)
+
+
+### Bug Fixes
+
+* **data-points.model:** make index more selective ([5aae17a](https://github.com/Gapminder/waffle-server/commit/5aae17a))
+* **datapoints:** add additional index ([f4c6f87](https://github.com/Gapminder/waffle-server/commit/f4c6f87))
+* **docker_run:** set stack_trace_limit to 0 in node in order to avoid memory leaks ([26d610a](https://github.com/Gapminder/waffle-server/commit/26d610a))
+* **format.service:** fix csv format - make it work with data as stream or just an object ([d115928](https://github.com/Gapminder/waffle-server/commit/d115928))
+* **indexes:** change indexes for entities, datapoints and concepts in order to improve performance ([8f91d49](https://github.com/Gapminder/waffle-server/commit/8f91d49))
+* **repos-service:** fix git flow ([701da11](https://github.com/Gapminder/waffle-server/commit/701da11))
+* **unit-tests:** fix unit tests proxiquire error ([67b98a7](https://github.com/Gapminder/waffle-server/commit/67b98a7))
+* **warmup:** do not allow warmup to persist responses grabbed from WS; update ddf-validator ([cc75e84](https://github.com/Gapminder/waffle-server/commit/cc75e84))
+
+
+### Features
+
+* **assets:** clone imported datasets repositories on threshing machine during startup ([20eed02](https://github.com/Gapminder/waffle-server/commit/20eed02))
+* **assets:** serve assets available in ddf datasets under appropriate directory ([c573d3e](https://github.com/Gapminder/waffle-server/commit/c573d3e))
+* **datapoints-repository:** add data limitation for datapoints query ([87f0518](https://github.com/Gapminder/waffle-server/commit/87f0518))
+* **DdfSchema:** rework ddf schema and availability querties according to the new spec ([c936c9b](https://github.com/Gapminder/waffle-server/commit/c936c9b))
+
+
+
 <a name="2.6.0"></a>
 # [2.6.0](https://github.com/Gapminder/waffle-server/compare/v2.5.0...v2.6.0) (2017-04-25)
 
