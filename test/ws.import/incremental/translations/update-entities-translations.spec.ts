@@ -37,7 +37,7 @@ const externalContext = {
 
 describe('Entities Translations Update Plugin', () => {
   it('creates a proper context for the plugin', sandbox(function (done: Function) {
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       expect(Object.isFrozen(externalContextFrozen)).to.equal(true, 'context should be frozen');
 
       expect(externalContextFrozen.datasetId).to.equal(externalContext.dataset._id);
@@ -55,7 +55,7 @@ describe('Entities Translations Update Plugin', () => {
   }));
 
   it('creates a proper plugin', sandbox(function (done: Function) {
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       expect(plugin.dataType).to.equal(constants.ENTITIES);
       expect(plugin.repositoryFactory).to.equal(EntitiesRepositoryFactory);
       expect(plugin.enrichContext).to.be.instanceOf(Function);
@@ -84,7 +84,7 @@ describe('Entities Translations Update Plugin', () => {
       filename: 'path/to/translations-file'
     };
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       const query = plugin.makeQueryToFetchTranslationTarget(changesDescriptor, context);
 
       expect(query).to.deep.equal({
@@ -139,7 +139,7 @@ describe('Entities Translations Update Plugin', () => {
 
     const getSetsAndDomainStub = this.stub(entitiesUtils, 'getSetsAndDomain').returns(setsAndDomainFake);
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       const enrichment = plugin.enrichContext(resourceFake, changesDescriptor, contextFake);
 
       expect(enrichment).to.equal(setsAndDomainFake);
@@ -172,7 +172,7 @@ describe('Entities Translations Update Plugin', () => {
 
     const makeEntityBasedOnItsClosedVersionStub = this.stub(entitiesUtils, 'makeEntityBasedOnItsClosedVersion').returns(newTargetFake);
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       const actualNewTarget = plugin.makeTranslationTargetBasedOnItsClosedVersion(closedTarget, contextFake);
 
       expect(actualNewTarget).to.equal(newTargetFake);
@@ -204,7 +204,7 @@ describe('Entities Translations Update Plugin', () => {
 
     const transformEntityPropertiesStub = this.stub(ddfMappers, 'transformEntityProperties').returns(translationTransformed);
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       const actualTranslationTransformed = plugin.processTranslationBeforeUpdate(translation, context);
 
       expect(actualTranslationTransformed).to.equal(translationTransformed);

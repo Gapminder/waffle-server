@@ -277,7 +277,7 @@ describe('Format WS Processor', () => {
     }));
 
     it('should format concept in WS-JSON: should translate given concepts according to given lang', sandbox(function (): void {
-      const translateDocumentStub = this.stub(commonService, 'translateDocument', (concept, lang) => {
+      const translateDocumentStub = this.stub(commonService, 'translateDocument').callsFake((concept, lang) => {
         return concept.properties;
       });
 
@@ -579,7 +579,7 @@ describe('Format WS Processor', () => {
     });
 
     it('should format entities in WS-JSON: entity should be translated', sandbox(function () {
-      const translateDocumentStub = this.stub(commonService, 'translateDocument', (entity, lang) => {
+      const translateDocumentStub = this.stub(commonService, 'translateDocument').callsFake((entity, lang) => {
         return entity.properties;
       });
 

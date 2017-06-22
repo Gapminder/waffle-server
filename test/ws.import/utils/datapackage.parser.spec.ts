@@ -119,7 +119,7 @@ describe('Datapackage Parser', () => {
   it('should respond with an error if file cannot be read', sandbox(function () {
     const expectedError = 'Boo!';
 
-    const readFileStub = this.stub(fs, 'readFile', (pathToDatapackage, encoding, done) => {
+    const readFileStub = this.stub(fs, 'readFile').callsFake((pathToDatapackage, encoding, done) => {
       done(expectedError);
     });
 
@@ -186,7 +186,7 @@ describe('Datapackage Parser', () => {
       }
     ];
 
-    const readFileStub = this.stub(fs, 'readFile', (pathToDatapackage, encoding, done) => {
+    const readFileStub = this.stub(fs, 'readFile').callsFake((pathToDatapackage, encoding, done) => {
       done(null, JSON.stringify(datapackageStub));
     });
 

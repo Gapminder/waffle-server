@@ -292,8 +292,8 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       },
       "where": {
         "$and": [
-          { "dimensions": {"$size": 2} },
-          { "dimensionsConcepts": {$all: ["17a3470d3a8c9b37009b9bf9", "77a3471d3a8c9b37009b9bf0"]} },
+          {"dimensions": {"$size": 2}},
+          {"dimensionsConcepts": {$all: ["17a3470d3a8c9b37009b9bf9", "77a3471d3a8c9b37009b9bf0"]}},
           {
             "measure": {
               "$in": [
@@ -323,7 +323,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     };
 
     let numParsedLinks = 0;
-    this.stub(_, "random", () => {
+    this.stub(_, "random").callsFake(() => {
       return ++numParsedLinks;
     });
 
@@ -354,17 +354,16 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       "from": "datapoints",
       "where": {
         "$and": [
-          { "dimensions": {"$size": 2} },
-          { "dimensionsConcepts": {$all: ["17a3470d3a8c9b37009b9bf9", "27a3470d3a8c9b37009b9bf9"]} },
+          {"dimensions": {"$size": 2}},
+          {"dimensionsConcepts": {$all: ["17a3470d3a8c9b37009b9bf9", "27a3470d3a8c9b37009b9bf9"]}},
           {"measure": {"$in": ["sg_population"]}},
         ]
       },
-      "join": {
-      }
+      "join": {}
     };
 
     let numParsedLinks = 0;
-    this.stub(_, "random", () => {
+    this.stub(_, "random").callsFake(() => {
       return ++numParsedLinks;
     });
 
@@ -381,8 +380,8 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       },
       "where": {
         "$and": [
-          { "geo": "$geo" },
-          { "time": {"$gte": 1800, "$lte": 2015} }
+          {"geo": "$geo"},
+          {"time": {"$gte": 1800, "$lte": 2015}}
         ]
       },
       "join": {
@@ -436,8 +435,8 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       },
       "where": {
         "$and": [
-          { "dimensions": {"$size": 2} },
-          { "dimensionsConcepts": {$all: ["17a3470d3a8c9b37009b9bf9", "27a3470d3a8c9b37009b9bf9"]} },
+          {"dimensions": {"$size": 2}},
+          {"dimensionsConcepts": {$all: ["17a3470d3a8c9b37009b9bf9", "27a3470d3a8c9b37009b9bf9"]}},
           {
             "measure": {
               "$in": [
@@ -460,7 +459,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     };
 
     let numParsedLinks = 0;
-    this.stub(_, "random", () => {
+    this.stub(_, "random").callsFake(() => {
       return ++numParsedLinks;
     });
 
@@ -532,8 +531,8 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       },
       "where": {
         "$and": [
-          { "dimensions": {"$size": 2} },
-          { "dimensionsConcepts": {$all: ["17a3470d3a8c9b37009b9bf9", "27a3470d3a8c9b37009b9bf9"]} },
+          {"dimensions": {"$size": 2}},
+          {"dimensionsConcepts": {$all: ["17a3470d3a8c9b37009b9bf9", "27a3470d3a8c9b37009b9bf9"]}},
           {
             "measure": {
               "$in": [
@@ -556,7 +555,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     };
 
     let numParsedLinks = 0;
-    this.stub(_, "random", () => {
+    this.stub(_, "random").callsFake(() => {
       return ++numParsedLinks;
     });
 
@@ -577,7 +576,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
         ]
       },
       "where": {
-        "$and":[
+        "$and": [
           {"geo": {"$in": ["dza", "usa", "ukr"]}}
         ]
       },
@@ -616,8 +615,8 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       },
       "where": {
         "$and": [
-          { "dimensions": {"$size": 2} },
-          { "dimensionsConcepts": {$all: ["17a3470d3a8c9b37009b9bf9", "27a3470d3a8c9b37009b9bf9"]} },
+          {"dimensions": {"$size": 2}},
+          {"dimensionsConcepts": {$all: ["17a3470d3a8c9b37009b9bf9", "27a3470d3a8c9b37009b9bf9"]}},
           {
             "measure": {
               "$in": [
@@ -637,7 +636,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     };
 
     let numParsedLinks = 0;
-    this.stub(_, "random", () => {
+    this.stub(_, "random").callsFake(() => {
       return ++numParsedLinks;
     });
 
@@ -654,7 +653,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       "from": "datapoints",
       "where": {
         "$and": [
-          {"project": {"$ne": "xbox", "$nin": ["office"], "$in": ["vizabi","ws","mic"]}}
+          {"project": {"$ne": "xbox", "$nin": ["office"], "$in": ["vizabi", "ws", "mic"]}}
         ]
       },
       "join": {}
@@ -696,8 +695,8 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       },
       "where": {
         "$and": [
-          { "dimensions": {"$size": 2} },
-          { "dimensionsConcepts": {$all: ["17a3470d3a8c9b37429b9bf9", "27a3470d3a8c9b37429b9bf9"]} },
+          {"dimensions": {"$size": 2}},
+          {"dimensionsConcepts": {$all: ["17a3470d3a8c9b37429b9bf9", "27a3470d3a8c9b37429b9bf9"]}},
           {
             "measure": {
               "$in": [
@@ -717,7 +716,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     };
 
     let numParsedLinks = 0;
-    this.stub(_, "random", () => {
+    this.stub(_, "random").callsFake(() => {
       return ++numParsedLinks;
     });
 

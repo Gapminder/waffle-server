@@ -25,7 +25,7 @@ const externalContext = {
 
 describe('Concepts Translations Update Plugin', () => {
   it('creates a proper context for the plugin', sandbox(function (done: Function) {
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       expect(Object.isFrozen(externalContextFrozen)).to.equal(true, 'context should be frozen');
 
       expect(externalContextFrozen.transaction).to.equal(externalContext.transaction);
@@ -42,7 +42,7 @@ describe('Concepts Translations Update Plugin', () => {
   }));
 
   it('creates a proper plugin', sandbox(function (done: Function) {
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       expect(plugin.dataType).to.equal(constants.CONCEPTS);
       expect(plugin.repositoryFactory).to.equal(ConceptsRepositoryFactory);
       expect(plugin.makeTranslationTargetBasedOnItsClosedVersion).to.be.instanceOf(Function);
@@ -62,7 +62,7 @@ describe('Concepts Translations Update Plugin', () => {
       gid: 'gid'
     };
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       const query = plugin.makeQueryToFetchTranslationTarget(changesDescriptor, null);
 
       expect(query).to.deep.equal({gid: changesDescriptor.gid});
@@ -81,7 +81,7 @@ describe('Concepts Translations Update Plugin', () => {
 
     const transformConceptPropertiesStub = this.stub(ddfMappers, 'transformConceptProperties').returns(translationToProcess);
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       const processedTranslation = plugin.processTranslationBeforeUpdate(translationToProcess);
 
       sinon.assert.calledOnce(transformConceptPropertiesStub);
@@ -118,7 +118,7 @@ describe('Concepts Translations Update Plugin', () => {
 
     const mapDdfConceptsToWsModelStub = this.stub(ddfMappers, 'mapDdfConceptsToWsModel').returns(mappedConceptsFake);
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       const newTarget = plugin.makeTranslationTargetBasedOnItsClosedVersion(closedTarget, context);
 
       sinon.assert.calledOnce(mapDdfConceptsToWsModelStub);

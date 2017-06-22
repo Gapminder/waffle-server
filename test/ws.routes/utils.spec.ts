@@ -669,7 +669,7 @@ describe('Routes utils', () => {
       };
 
       const debugStub = this.stub(logger, 'debug');
-      const createWarmpUpQueryStub = this.stub(RecentDdfqlQueriesRepository, 'create', (query, done) => {
+      const createWarmpUpQueryStub = this.stub(RecentDdfqlQueriesRepository, 'create').callsFake((query, done) => {
         done(null, ddfQuery.rawDdfQuery);
       });
 
@@ -713,7 +713,7 @@ describe('Routes utils', () => {
 
       const debugStub = this.stub(logger, 'debug');
 
-      this.stub(RecentDdfqlQueriesRepository, 'create', (query, done) => {
+      this.stub(RecentDdfqlQueriesRepository, 'create').callsFake((query, done) => {
         done(expectedError);
       });
 
@@ -836,7 +836,7 @@ describe('Routes utils', () => {
       };
 
       const tokenAuthSpy = this.stub().returns(middleware);
-      const passportAuthStub = this.stub(passport, 'authenticate', () => {
+      const passportAuthStub = this.stub(passport, 'authenticate').callsFake(() => {
         return tokenAuthSpy;
       });
 

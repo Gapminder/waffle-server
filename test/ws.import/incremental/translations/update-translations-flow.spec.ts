@@ -91,7 +91,7 @@ describe('Translations processing (common flow for entities, datapoints and conc
     };
 
     const originalReadTextFileByLineAsJsonStream = fileUtils.readTextFileByLineAsJsonStream.bind(fileUtils);
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream', pathToFile => {
+    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake(pathToFile => {
       return originalReadTextFileByLineAsJsonStream(pathToFile)
         .filter(obj => obj.metadata.action === 'create');
     });
@@ -180,7 +180,7 @@ describe('Translations processing (common flow for entities, datapoints and conc
 
     const originalReadTextFileByLineAsJsonStream = fileUtils.readTextFileByLineAsJsonStream.bind(fileUtils);
 
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream', pathToFile => {
+    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake(pathToFile => {
       return originalReadTextFileByLineAsJsonStream(pathToFile)
         .filter(obj => obj.metadata.action === 'create');
     });
@@ -250,7 +250,7 @@ describe('Translations processing (common flow for entities, datapoints and conc
     };
 
     const originalReadTextFileByLineAsJsonStream = fileUtils.readTextFileByLineAsJsonStream.bind(fileUtils);
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream', pathToFile => {
+    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake(pathToFile => {
       return originalReadTextFileByLineAsJsonStream(pathToFile)
         .filter(obj => obj.metadata.action === 'create');
     });
@@ -292,7 +292,7 @@ describe('Translations processing (common flow for entities, datapoints and conc
     };
 
     const originalReadTextFileByLineAsJsonStream = fileUtils.readTextFileByLineAsJsonStream.bind(fileUtils);
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream', pathToFile => {
+    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake(pathToFile => {
       return originalReadTextFileByLineAsJsonStream(pathToFile)
         .filter(obj => obj.metadata.action === 'create');
     });
@@ -312,7 +312,7 @@ describe('Translations processing (common flow for entities, datapoints and conc
       sinon.assert.calledWithExactly(loggerInfoStub, `Start translations updating process for:`, entitiesPlugin.dataType);
 
       sinon.assert.callCount(loggerWarnStub, 5);
-      sinon.assert.calledWithExactly(loggerWarnStub,'Translation target was not closed - VERY suspicious at this point of translations update flow!');
+      sinon.assert.calledWithExactly(loggerWarnStub, 'Translation target was not closed - VERY suspicious at this point of translations update flow!');
       done();
     });
   }));
@@ -339,7 +339,7 @@ describe('Translations processing (common flow for entities, datapoints and conc
     };
 
     const originalReadTextFileByLineAsJsonStream = fileUtils.readTextFileByLineAsJsonStream.bind(fileUtils);
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream', pathToFile => {
+    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake(pathToFile => {
       return originalReadTextFileByLineAsJsonStream(pathToFile)
         .filter(obj => obj.metadata.action === 'create');
     });
@@ -381,7 +381,7 @@ describe('Translations processing (common flow for entities, datapoints and conc
     };
 
     const originalReadTextFileByLineAsJsonStream = fileUtils.readTextFileByLineAsJsonStream.bind(fileUtils);
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream', pathToFile => {
+    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake(pathToFile => {
       return originalReadTextFileByLineAsJsonStream(pathToFile)
         .filter(obj => obj.metadata.action === 'create');
     });
@@ -433,7 +433,7 @@ describe('Translations processing (common flow for entities, datapoints and conc
     };
 
     const originalReadTextFileByLineAsJsonStream = fileUtils.readTextFileByLineAsJsonStream.bind(fileUtils);
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream', pathToFile => {
+    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake(pathToFile => {
       return originalReadTextFileByLineAsJsonStream(pathToFile)
         .filter(obj => obj.metadata.action === 'remove');
     });
@@ -515,7 +515,7 @@ describe('Translations processing (common flow for entities, datapoints and conc
     };
 
     const originalReadTextFileByLineAsJsonStream = fileUtils.readTextFileByLineAsJsonStream.bind(fileUtils);
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream', pathToFile => {
+    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake(pathToFile => {
       return originalReadTextFileByLineAsJsonStream(pathToFile)
         .filter(obj => obj.metadata.action === 'remove');
     });
@@ -591,7 +591,7 @@ describe('Translations processing (common flow for entities, datapoints and conc
     };
 
     const originalReadTextFileByLineAsJsonStream = fileUtils.readTextFileByLineAsJsonStream.bind(fileUtils);
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream', pathToFile => {
+    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake(pathToFile => {
       return originalReadTextFileByLineAsJsonStream(pathToFile)
         .filter(obj => obj.metadata.action === 'remove');
     });
@@ -645,7 +645,7 @@ describe('Translations processing (common flow for entities, datapoints and conc
     };
 
     const originalReadTextFileByLineAsJsonStream = fileUtils.readTextFileByLineAsJsonStream.bind(fileUtils);
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream', pathToFile => {
+    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake(pathToFile => {
       return originalReadTextFileByLineAsJsonStream(pathToFile)
         .filter(obj => obj.metadata.action === 'remove');
     });
@@ -668,7 +668,7 @@ describe('Translations processing (common flow for entities, datapoints and conc
       sinon.assert.calledWithExactly(loggerInfoStub, `Start translations updating process for:`, entitiesPlugin.dataType);
 
       sinon.assert.calledOnce(loggerWarnStub);
-      sinon.assert.calledWithExactly(loggerWarnStub,'Translation target was not closed - VERY suspicious at this point of translations update flow!');
+      sinon.assert.calledWithExactly(loggerWarnStub, 'Translation target was not closed - VERY suspicious at this point of translations update flow!');
       done();
     });
   }));
@@ -712,7 +712,7 @@ describe('Translations processing: handle "change" events', () => {
     };
 
     const originalReadTextFileByLineAsJsonStream = fileUtils.readTextFileByLineAsJsonStream.bind(fileUtils);
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream', pathToFile => {
+    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake(pathToFile => {
       return originalReadTextFileByLineAsJsonStream(pathToFile)
         .filter(obj => obj.metadata.action === 'change');
     });
@@ -734,7 +734,11 @@ describe('Translations processing: handle "change" events', () => {
       sinon.assert.calledWith(repoStub.findTargetForTranslation, translationTargetQuery);
 
       const expectedTranslation = _.extend({yahoo: 'was'}, translations.changed[0]);
-      sinon.assert.calledWith(repoStub.addTranslation, {id: translationTarget._id, language: 'nl-nl', translation: expectedTranslation});
+      sinon.assert.calledWith(repoStub.addTranslation, {
+        id: translationTarget._id,
+        language: 'nl-nl',
+        translation: expectedTranslation
+      });
 
       sinon.assert.callOrder(
         datapointsPlugin.transformStreamBeforeActionSegregation,

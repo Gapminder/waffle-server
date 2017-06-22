@@ -85,7 +85,7 @@ describe('Import ddf concepts', () => {
     const conceptCreateStub = this.stub().callsArgWithAsync(1, null);
     this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({create: conceptCreateStub});
 
-    const getAllConceptsStub = this.stub(ddfImportUtils, 'getAllConcepts', (externalContext, done) => {
+    const getAllConceptsStub = this.stub(ddfImportUtils, 'getAllConcepts').callsFake((externalContext, done) => {
       externalContext.concepts = {company: {}, year: {}};
       externalContext.timeConcepts = {year: {}};
       done(null, externalContext);
@@ -267,9 +267,9 @@ describe('Import ddf concepts', () => {
     this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({create: conceptCreateStub});
 
     const addSubsetOfByGidStub = this.stub().callsArgWithAsync(1, null);
-    this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({ addSubsetOfByGid: addSubsetOfByGidStub });
+    this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({addSubsetOfByGid: addSubsetOfByGidStub});
 
-    this.stub(ddfImportUtils, 'getAllConcepts', (externalContext, done) => {
+    this.stub(ddfImportUtils, 'getAllConcepts').callsFake((externalContext, done) => {
       externalContext.concepts = _.keyBy(expectedConceptsToCreate, 'gid');
       externalContext.concepts.company._id = 'companyId';
       externalContext.timeConcepts = {};
@@ -366,9 +366,9 @@ describe('Import ddf concepts', () => {
     this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({create: conceptCreateStub});
 
     const addSubsetOfByGidStub = this.stub().callsArgWithAsync(1, null);
-    this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({ addSubsetOfByGid: addSubsetOfByGidStub });
+    this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({addSubsetOfByGid: addSubsetOfByGidStub});
 
-    this.stub(ddfImportUtils, 'getAllConcepts', (externalContext, done) => {
+    this.stub(ddfImportUtils, 'getAllConcepts').callsFake((externalContext, done) => {
       externalContext.concepts = _.keyBy(expectedConceptsToCreate, 'gid');
       externalContext.concepts.company._id = 'companyId';
       externalContext.timeConcepts = {};
@@ -460,9 +460,9 @@ describe('Import ddf concepts', () => {
     this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({create: conceptCreateStub});
 
     const setDomainByGidStub = this.stub().callsArgWithAsync(1, null);
-    this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({ setDomainByGid: setDomainByGidStub });
+    this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({setDomainByGid: setDomainByGidStub});
 
-    this.stub(ddfImportUtils, 'getAllConcepts', (externalContext, done) => {
+    this.stub(ddfImportUtils, 'getAllConcepts').callsFake((externalContext, done) => {
       externalContext.concepts = _.keyBy(expectedConceptsToCreate, 'gid');
       externalContext.concepts.company._id = 'companyId';
       externalContext.timeConcepts = {};
@@ -555,9 +555,9 @@ describe('Import ddf concepts', () => {
     this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({create: conceptCreateStub});
 
     const setDomainByGidStub = this.stub().callsArgWithAsync(1, null);
-    this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({ setDomainByGid: setDomainByGidStub });
+    this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({setDomainByGid: setDomainByGidStub});
 
-    this.stub(ddfImportUtils, 'getAllConcepts', (externalContext, done) => {
+    this.stub(ddfImportUtils, 'getAllConcepts').callsFake((externalContext, done) => {
       externalContext.concepts = _.keyBy(expectedConceptsToCreate, 'gid');
       externalContext.concepts.company._id = 'companyId';
       externalContext.timeConcepts = {};

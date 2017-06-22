@@ -426,7 +426,7 @@ describe('WS-CLI service', () => {
       path: 'fakePath'
     }];
 
-    const findDatasetsInProgressByUserStub = this.stub(DatasetsRepository, 'findDatasetsInProgressByUser', (userId, onFound) => {
+    const findDatasetsInProgressByUserStub = this.stub(DatasetsRepository, 'findDatasetsInProgressByUser').callsFake((userId, onFound) => {
       onFound(null, foundDatasets);
     });
 
@@ -448,7 +448,7 @@ describe('WS-CLI service', () => {
     const expectedUserId = 'userId';
     const expectedError = 'Boo!';
 
-    const findDatasetsInProgressByUserStub = this.stub(DatasetsRepository, 'findDatasetsInProgressByUser', (userId, onFound) => {
+    const findDatasetsInProgressByUserStub = this.stub(DatasetsRepository, 'findDatasetsInProgressByUser').callsFake((userId, onFound) => {
       onFound(expectedError);
     });
 

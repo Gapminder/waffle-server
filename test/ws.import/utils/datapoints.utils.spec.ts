@@ -156,7 +156,7 @@ describe('Datapoints Utils', () => {
     const mapDdfDataPointToWsModelStub = this.stub(ddfMappers, 'mapDdfDataPointToWsModel').returns(wsDatapoints);
 
     const datapointsCreateStub = this.spy();
-    this.stub(DatapointsRepositoryFactory, 'versionAgnostic', () => ({ create: datapointsCreateStub}));
+    this.stub(DatapointsRepositoryFactory, 'versionAgnostic').callsFake(() => ({create: datapointsCreateStub}));
 
     const saveEntitiesFoundInDatapoints = this.stub().returns(Promise.resolve(entitiesFoundInDatapoints));
 
@@ -285,7 +285,7 @@ describe('Datapoints Utils', () => {
     const thenSegregateEntitiesStub = this.spy();
 
     const findAllStub = this.stub().returns({then: thenSegregateEntitiesStub});
-    const latestVersionStub = this.stub(EntitiesRepositoryFactory, 'latestVersion', () => {
+    const latestVersionStub = this.stub(EntitiesRepositoryFactory, 'latestVersion').callsFake(() => {
       return {
         findAll: findAllStub
       };
@@ -306,7 +306,7 @@ describe('Datapoints Utils', () => {
     const thenSegregateEntitiesStub = this.spy();
 
     const findAllStub = this.stub().returns({then: thenSegregateEntitiesStub});
-    const currentVersionStub = this.stub(EntitiesRepositoryFactory, 'currentVersion', () => {
+    const currentVersionStub = this.stub(EntitiesRepositoryFactory, 'currentVersion').callsFake(() => {
       return {
         findAll: findAllStub
       };
@@ -607,9 +607,9 @@ describe('Datapoints Utils', () => {
 
     const entitiesByGid = _.keyBy(entities, 'gid');
 
-    const createStub = this.stub().returns(Promise.resolve(_.map(entities, entity => ({ toObject: () => entity }))));
+    const createStub = this.stub().returns(Promise.resolve(_.map(entities, entity => ({toObject: () => entity}))));
 
-    this.stub(EntitiesRepositoryFactory, 'versionAgnostic', () => {
+    this.stub(EntitiesRepositoryFactory, 'versionAgnostic').callsFake(() => {
       return {
         create: createStub
       };
