@@ -94,7 +94,7 @@ const context = {
   },
   dataset: {
     _id: 'datasetId'
-  },
+  }
 };
 
 const segregatedEntities = {
@@ -155,14 +155,14 @@ describe('Datapoints incremental update flow', () => {
         });
     });
 
-    const createEntitiesFoundInDatapointsSaverWithCacheStub = this.stub(datapointsUtils, 'createEntitiesFoundInDatapointsSaverWithCache').returns(datapoints => {
+    const createEntitiesFoundInDatapointsSaverWithCacheStub = this.stub(datapointsUtils, 'createEntitiesFoundInDatapointsSaverWithCache').returns((datapoints) => {
       return Promise.resolve(datapoints);
     });
 
     const collectedDatapoints = [];
     const saveDatapointsAndEntitiesFoundInThemStub = this.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem').callsFake((saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
       return datapointsFoundEntitiesStream
-        .tap(datapointsWithFoundEntities => {
+        .tap((datapointsWithFoundEntities) => {
           collectedDatapoints.push(datapointsWithFoundEntities);
         });
     });
@@ -184,29 +184,29 @@ describe('Datapoints incremental update flow', () => {
       // FIRST CREATED DATAPOINT ASSERTION -----------------------------------------------------------------------------
       const datapoint1 = collectedDatapoints[0];
       expect(datapoint1.datapoint).to.deep.equal({
-        "company": "mcrsft",
-        "anno": "2010",
-        "lines_of_code": "31111"
+        company: 'mcrsft',
+        anno: '2010',
+        lines_of_code: '31111'
       });
 
       const expectedContext1 = Object.assign({
         segregatedEntities,
         segregatedPreviousEntities,
         filename: 'ddf--datapoints--lines_of_code--by--company--anno.csv',
-        "measures": {
-          "lines_of_code": {
-            "gid": "lines_of_code",
-            "originId": "lines_of_code"
+        measures: {
+          lines_of_code: {
+            gid: 'lines_of_code',
+            originId: 'lines_of_code'
           }
         },
-        "dimensions": {
-          "company": {
-            "gid": "company",
-            "originId": "company"
+        dimensions: {
+          company: {
+            gid: 'company',
+            originId: 'company'
           },
-          "anno": {
-            "gid": "anno",
-            "originId": "anno"
+          anno: {
+            gid: 'anno',
+            originId: 'anno'
           }
         }
       }, context);
@@ -221,48 +221,48 @@ describe('Datapoints incremental update flow', () => {
       expect(foundEntityInDatapoint1.dataset).to.equal(context.dataset._id);
       expect(foundEntityInDatapoint1.sources).to.deep.equal(['ddf--datapoints--lines_of_code--by--company--anno.csv']);
       expect(foundEntityInDatapoint1.parsedProperties).to.deep.equal({
-        "anno": {
-          "millis": 1262304000000,
-          "timeType": "YEAR_TYPE"
+        anno: {
+          millis: 1262304000000,
+          timeType: 'YEAR_TYPE'
         }
       });
       expect(foundEntityInDatapoint1.properties).to.deep.equal({
-        "company": "mcrsft",
-        "anno": "2010",
-        "lines_of_code": "31111"
+        company: 'mcrsft',
+        anno: '2010',
+        lines_of_code: '31111'
       });
 
       // SECOND CREATED DATAPOINT ASSERTION -----------------------------------------------------------------------------
       const datapoint2 = collectedDatapoints[1];
       expect(datapoint2.datapoint).to.deep.equal({
-        "company": "gap",
-        "project": "ws",
-        "anno": "2014",
-        "lines_of_code": "52111"
+        company: 'gap',
+        project: 'ws',
+        anno: '2014',
+        lines_of_code: '52111'
       });
 
       const expectedContext2 = Object.assign({
         segregatedEntities,
         segregatedPreviousEntities,
         filename: 'ddf--datapoints--lines_of_code--by--company--project--anno.csv',
-        "measures": {
-          "lines_of_code": {
-            "gid": "lines_of_code",
-            "originId": "lines_of_code"
+        measures: {
+          lines_of_code: {
+            gid: 'lines_of_code',
+            originId: 'lines_of_code'
           }
         },
-        "dimensions": {
-          "company": {
-            "gid": "company",
-            "originId": "company"
+        dimensions: {
+          company: {
+            gid: 'company',
+            originId: 'company'
           },
-          "project": {
-            "gid": "project",
-            "originId": "project"
+          project: {
+            gid: 'project',
+            originId: 'project'
           },
-          "anno": {
-            "gid": "anno",
-            "originId": "anno"
+          anno: {
+            gid: 'anno',
+            originId: 'anno'
           }
         }
       }, context);
@@ -275,18 +275,18 @@ describe('Datapoints incremental update flow', () => {
       expect(foundEntityInDatapoint2.domain).to.equal('anno');
       expect(foundEntityInDatapoint2.from).to.equal(context.transaction.createdAt);
       expect(foundEntityInDatapoint2.dataset).to.equal(context.dataset._id);
-      expect(foundEntityInDatapoint2.sources).to.deep.equal(["ddf--datapoints--lines_of_code--by--company--project--anno.csv"]);
+      expect(foundEntityInDatapoint2.sources).to.deep.equal(['ddf--datapoints--lines_of_code--by--company--project--anno.csv']);
       expect(foundEntityInDatapoint2.parsedProperties).to.deep.equal({
-        "anno": {
-          "millis": 1388534400000,
-          "timeType": "YEAR_TYPE"
+        anno: {
+          millis: 1388534400000,
+          timeType: 'YEAR_TYPE'
         }
       });
       expect(foundEntityInDatapoint2.properties).to.deep.equal({
-        "company": "gap",
-        "project": "ws",
-        "anno": "2014",
-        "lines_of_code": "52111"
+        company: 'gap',
+        project: 'ws',
+        anno: '2014',
+        lines_of_code: '52111'
       });
 
       done();
@@ -304,31 +304,31 @@ describe('Datapoints incremental update flow', () => {
         });
     });
 
-    this.stub(datapointsUtils, 'createEntitiesFoundInDatapointsSaverWithCache').returns(datapoints => {
+    this.stub(datapointsUtils, 'createEntitiesFoundInDatapointsSaverWithCache').returns((datapoints) => {
       return Promise.resolve(datapoints);
     });
 
     const collectedDatapoints = [];
     this.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem').callsFake((saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
       return datapointsFoundEntitiesStream
-        .tap(datapointsWithFoundEntities => {
+        .tap((datapointsWithFoundEntities) => {
           collectedDatapoints.push(datapointsWithFoundEntities);
         });
     });
 
     const measureToDatapoint = {
       company_size: {
-        originId: "company_sizeDatapointOriginId",
+        originId: 'company_sizeDatapointOriginId'
       },
       longitude: {
-        originId: "longitudeDatapointOriginId",
+        originId: 'longitudeDatapointOriginId'
       },
       latitude: {
-        originId: "latitudeDatapointOriginId",
+        originId: 'latitudeDatapointOriginId'
       },
       num_users: {
-        originId: "num_usersDatapointOriginId",
-      },
+        originId: 'num_usersDatapointOriginId'
+      }
     };
 
     this.stub(DatapointsRepositoryFactory, 'latestExceptCurrentVersion').returns({
@@ -344,78 +344,78 @@ describe('Datapoints incremental update flow', () => {
       expect(externalContext).to.equal(context);
 
       expect(collectedDatapoints[0].datapoint).to.deep.equal({
-        "originId": "company_sizeDatapointOriginId",
-        "company": "mcrsft",
-        "anno": "1975",
-        "company_size": "small"
+        originId: 'company_sizeDatapointOriginId',
+        company: 'mcrsft',
+        anno: '1975',
+        company_size: 'small'
       });
 
       expect(collectedDatapoints[1].datapoint).to.deep.equal({
-        "originId": "longitudeDatapointOriginId",
-        "company": "mcrsft",
-        "project": "office",
-        "longitude": "34"
+        originId: 'longitudeDatapointOriginId',
+        company: 'mcrsft',
+        project: 'office',
+        longitude: '34'
       });
 
       expect(collectedDatapoints[1].entitiesFoundInDatapoint).to.deep.equal([{
-        "gid": "office",
-        "sources": [
-          "ddf--datapoints--num_users--by--company--project.csv"
+        gid: 'office',
+        sources: [
+          'ddf--datapoints--num_users--by--company--project.csv'
         ],
-        "properties": {
-          "company": "mcrsft",
-          "project": "office",
-          "longitude": "34",
-          "latitude": "74.32",
-          "num_users": "333"
+        properties: {
+          company: 'mcrsft',
+          project: 'office',
+          longitude: '34',
+          latitude: '74.32',
+          num_users: '333'
         },
-        "parsedProperties": {},
-        "domain": "project",
-        "sets": [],
-        "drillups": [],
-        "from": 2222222,
-        "dataset": "datasetId"
+        parsedProperties: {},
+        domain: 'project',
+        sets: [],
+        drillups: [],
+        from: 2222222,
+        dataset: 'datasetId'
       }]);
 
       expect(collectedDatapoints[1].context.filename).to.equal('ddf--datapoints--num_users--by--company--project.csv');
       expect(collectedDatapoints[1].context.dimensions).to.deep.equal({
-        "company": {
-          "gid": "company",
-          "originId": "company"
+        company: {
+          gid: 'company',
+          originId: 'company'
         },
-        "project": {
-          "gid": "project",
-          "originId": "project"
+        project: {
+          gid: 'project',
+          originId: 'project'
         }
       });
       expect(collectedDatapoints[1].context.measures).to.deep.equal({
-        "longitude": {
-          "gid": "longitude",
-          "originId": "longitude"
+        longitude: {
+          gid: 'longitude',
+          originId: 'longitude'
         },
-        "latitude": {
-          "gid": "latitude",
-          "originId": "latitude"
+        latitude: {
+          gid: 'latitude',
+          originId: 'latitude'
         },
-        "num_users": {
-          "gid": "num_users",
-          "originId": "num_users"
+        num_users: {
+          gid: 'num_users',
+          originId: 'num_users'
         }
       });
       expect(collectedDatapoints[1].context.segregatedEntities).to.equal(segregatedEntities);
 
       expect(collectedDatapoints[2].datapoint).to.deep.equal({
-        "originId": "latitudeDatapointOriginId",
-        "company": "mcrsft",
-        "project": "office",
-        "latitude": "74.32"
+        originId: 'latitudeDatapointOriginId',
+        company: 'mcrsft',
+        project: 'office',
+        latitude: '74.32'
       });
 
       expect(collectedDatapoints[3].datapoint).to.deep.equal({
-        "originId": "num_usersDatapointOriginId",
-        "company": "mcrsft",
-        "project": "office",
-        "num_users": "333"
+        originId: 'num_usersDatapointOriginId',
+        company: 'mcrsft',
+        project: 'office',
+        num_users: '333'
       });
 
       sinon.assert.calledTwice(loggerInfoStub);
@@ -437,14 +437,14 @@ describe('Datapoints incremental update flow', () => {
         });
     });
 
-    this.stub(datapointsUtils, 'createEntitiesFoundInDatapointsSaverWithCache').returns(datapoints => {
+    this.stub(datapointsUtils, 'createEntitiesFoundInDatapointsSaverWithCache').returns((datapoints) => {
       return Promise.resolve(datapoints);
     });
 
     const collectedDatapoints = [];
     this.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem').callsFake((saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
       return datapointsFoundEntitiesStream
-        .tap(datapointsWithFoundEntities => {
+        .tap((datapointsWithFoundEntities) => {
           collectedDatapoints.push(datapointsWithFoundEntities);
         });
     });
@@ -466,7 +466,7 @@ describe('Datapoints incremental update flow', () => {
         undefined,
         undefined,
         undefined,
-        undefined,
+        undefined
       ]);
 
       sinon.assert.callCount(loggerErrorStub, 4);
@@ -491,14 +491,14 @@ describe('Datapoints incremental update flow', () => {
         });
     });
 
-    this.stub(datapointsUtils, 'createEntitiesFoundInDatapointsSaverWithCache').returns(datapoints => {
+    this.stub(datapointsUtils, 'createEntitiesFoundInDatapointsSaverWithCache').returns((datapoints) => {
       return Promise.resolve(datapoints);
     });
 
     const collectedDatapoints = [];
     this.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem').callsFake((saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
       return datapointsFoundEntitiesStream
-        .tap(datapointsWithFoundEntities => {
+        .tap((datapointsWithFoundEntities) => {
           collectedDatapoints.push(datapointsWithFoundEntities);
         });
     });
@@ -536,14 +536,14 @@ describe('Datapoints incremental update flow', () => {
         });
     });
 
-    this.stub(datapointsUtils, 'createEntitiesFoundInDatapointsSaverWithCache').returns(datapoints => {
+    this.stub(datapointsUtils, 'createEntitiesFoundInDatapointsSaverWithCache').returns((datapoints) => {
       return Promise.resolve(datapoints);
     });
 
     const collectedDatapoints = [];
     this.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem').callsFake((saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
       return datapointsFoundEntitiesStream
-        .tap(datapointsWithFoundEntities => {
+        .tap((datapointsWithFoundEntities) => {
           collectedDatapoints.push(datapointsWithFoundEntities);
         });
     });
@@ -562,33 +562,33 @@ describe('Datapoints incremental update flow', () => {
 
       sinon.assert.calledThrice(closeDatapointByMeasureAndDimensionsStub);
       sinon.assert.calledWith(closeDatapointByMeasureAndDimensionsStub, {
-        "measureOriginId": "longitude",
-        "dimensionsSize": 2,
-        "dimensionsEntityOriginIds": [
-          "mcrsftOriginId",
-          "windowsOriginId"
+        measureOriginId: 'longitude',
+        dimensionsSize: 2,
+        dimensionsEntityOriginIds: [
+          'mcrsftOriginId',
+          'windowsOriginId'
         ],
-        "datapointValue": "90"
+        datapointValue: '90'
       });
 
       sinon.assert.calledWith(closeDatapointByMeasureAndDimensionsStub, {
-        "measureOriginId": "latitude",
-        "dimensionsSize": 2,
-        "dimensionsEntityOriginIds": [
-          "mcrsftOriginId",
-          "windowsOriginId"
+        measureOriginId: 'latitude',
+        dimensionsSize: 2,
+        dimensionsEntityOriginIds: [
+          'mcrsftOriginId',
+          'windowsOriginId'
         ],
-        "datapointValue": "44.1"
+        datapointValue: '44.1'
       });
 
       sinon.assert.calledWith(closeDatapointByMeasureAndDimensionsStub, {
-        "measureOriginId": "num_users",
-        "dimensionsSize": 2,
-        "dimensionsEntityOriginIds": [
-          "mcrsftOriginId",
-          "windowsOriginId"
+        measureOriginId: 'num_users',
+        dimensionsSize: 2,
+        dimensionsEntityOriginIds: [
+          'mcrsftOriginId',
+          'windowsOriginId'
         ],
-        "datapointValue": "4"
+        datapointValue: '4'
       });
 
       sinon.assert.calledTwice(loggerInfoStub);
@@ -610,14 +610,14 @@ describe('Datapoints incremental update flow', () => {
         });
     });
 
-    this.stub(datapointsUtils, 'createEntitiesFoundInDatapointsSaverWithCache').returns(datapoints => {
+    this.stub(datapointsUtils, 'createEntitiesFoundInDatapointsSaverWithCache').returns((datapoints) => {
       return Promise.resolve(datapoints);
     });
 
     const collectedDatapoints = [];
     this.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem').callsFake((saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
       return datapointsFoundEntitiesStream
-        .tap(datapointsWithFoundEntities => {
+        .tap((datapointsWithFoundEntities) => {
           collectedDatapoints.push(datapointsWithFoundEntities);
         });
     });
@@ -656,14 +656,14 @@ describe('Datapoints incremental update flow', () => {
         });
     });
 
-    this.stub(datapointsUtils, 'createEntitiesFoundInDatapointsSaverWithCache').returns(datapoints => {
+    this.stub(datapointsUtils, 'createEntitiesFoundInDatapointsSaverWithCache').returns((datapoints) => {
       return Promise.resolve(datapoints);
     });
 
     const collectedDatapoints = [];
     this.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem').callsFake((saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
       return datapointsFoundEntitiesStream
-        .tap(datapointsWithFoundEntities => {
+        .tap((datapointsWithFoundEntities) => {
           collectedDatapoints.push(datapointsWithFoundEntities);
         });
     });

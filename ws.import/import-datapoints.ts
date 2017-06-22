@@ -1,8 +1,8 @@
 import * as _ from 'lodash';
 import * as hi from 'highland';
-import {logger} from '../ws.config/log';
+import { logger } from '../ws.config/log';
 import * as ddfImportUtils from './utils/import-ddf.utils';
-import {constants} from '../ws.utils/constants';
+import { constants } from '../ws.utils/constants';
 import * as fileUtils from '../ws.utils/file';
 import * as datapointsUtils from './utils/datapoints.utils';
 
@@ -27,7 +27,7 @@ function startDatapointsCreation(externalContext: any, done: Function): void {
 }
 
 function createDatapoints(externalContextFrozen: any): any {
-  const {pathToDdfFolder, datapackage: {resources}} = externalContextFrozen;
+  const { pathToDdfFolder, datapackage: { resources } } = externalContextFrozen;
   const findAllEntitiesMemoized = _.memoize(datapointsUtils.findAllEntities);
 
   const saveEntitiesFoundInDatapoints = datapointsUtils.createEntitiesFoundInDatapointsSaverWithCache();
@@ -40,18 +40,18 @@ function createDatapoints(externalContextFrozen: any): any {
   const datapointsAndFoundEntitiesStream = hi(resources)
     .filter((resource: any) => resource.type === constants.DATAPOINTS)
     .flatMap((resource: any) => {
-      const {measures, dimensions} = datapointsUtils.getDimensionsAndMeasures(resource, externalContextFrozen);
+      const { measures, dimensions } = datapointsUtils.getDimensionsAndMeasures(resource, externalContextFrozen);
       return hi(findAllEntitiesMemoized(externalContextFrozen))
-        .map((segregatedEntities: any) => ({filename: resource.path, measures, dimensions, segregatedEntities}));
+        .map((segregatedEntities: any) => ({ filename: resource.path, measures, dimensions, segregatedEntities }));
     })
     .map((context: any) => {
       return fileUtils.readCsvFileAsStream(pathToDdfFolder, context.filename)
-        .map((datapoint: any) => ({datapoint, context}));
+        .map((datapoint: any) => ({ datapoint, context }));
     })
     .parallel(ddfImportUtils.MONGODB_DOC_CREATION_THREADS_AMOUNT)
-    .map(({datapoint, context}: any) => {
+    .map(({ datapoint, context }: any) => {
       const entitiesFoundInDatapoint = datapointsUtils.findEntitiesInDatapoint(datapoint, context, externalContextFrozen);
-      return {datapoint, entitiesFoundInDatapoint, context};
+      return { datapoint, entitiesFoundInDatapoint, context };
     });
 
   return saveDatapointsAndEntitiesFoundInThem(datapointsAndFoundEntitiesStream);

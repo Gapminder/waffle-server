@@ -5,10 +5,6 @@ import { expect } from 'chai';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as sinonTest from 'sinon-test';
-
-const assert = sinon.assert;
-const match = sinon.match;
-
 import * as fs from 'fs';
 import * as proxyquire from 'proxyquire';
 import * as git from 'simple-git';
@@ -17,6 +13,9 @@ import * as shell from 'shelljs';
 import { logger } from '../../ws.config/log';
 import { config } from '../../ws.config/config';
 import * as reposService from '../../ws.services/repos.service';
+
+const assert = sinon.assert;
+const match = sinon.match;
 
 const sandbox = sinonTest.configureTest(sinon);
 const reposServicePath = '../../ws.services/repos.service';
@@ -57,7 +56,7 @@ describe('repos service', () => {
           clone: cloneStub
         };
       },
-      'fs': {
+      fs: {
         exists: (pathTeRepo, done) => {
           const wasClonedBefore = true;
           done(wasClonedBefore);
@@ -113,7 +112,7 @@ describe('repos service', () => {
         debug: debugStub,
         error: errorStub
       },
-      'fs': {
+      fs: {
         exists: (pathTeRepo, done) => {
           const wasClonedBefore = false;
           done(wasClonedBefore);
@@ -121,7 +120,7 @@ describe('repos service', () => {
       }
     });
 
-    return stubbedReposService.cloneRepo('fake repo', 'any commit', error => {
+    return stubbedReposService.cloneRepo('fake repo', 'any commit', (error) => {
       expect(error).to.equal('Incorrect github url was given (repo url: fake repo)');
 
       assert.notCalled(infoStub);
@@ -150,7 +149,7 @@ describe('repos service', () => {
     const debugStub = sinon.stub(logger, 'debug');
 
     const stubbedReposService = proxyquire(reposServicePath, {
-      'fs': {
+      fs: {
         exists: (pathTeRepo, done) => {
           const wasClonedBefore = false;
           done(wasClonedBefore);
@@ -167,7 +166,7 @@ describe('repos service', () => {
       }
     });
 
-    return stubbedReposService.cloneRepo(expectedGithubUrl, 'any commit', error => {
+    return stubbedReposService.cloneRepo(expectedGithubUrl, 'any commit', (error) => {
       expect(error).to.equal(`${expectedError} (repo url: ${expectedGithubUrl})`);
 
       assert.notCalled(infoStub);
@@ -208,7 +207,7 @@ describe('repos service', () => {
           }
         };
       },
-      'fs': {
+      fs: {
         exists: (pathTeRepo, done) => {
           const wasClonedBefore = false;
           done(wasClonedBefore);
@@ -221,7 +220,7 @@ describe('repos service', () => {
       }
     });
 
-    return stubbedReposService.cloneRepo(expectedGithubUrl, null, error => {
+    return stubbedReposService.cloneRepo(expectedGithubUrl, null, (error) => {
       expect(error).to.equal(`some error (repo url: ${expectedGithubUrl})`);
 
       assert.calledOnce(infoStub);
@@ -272,7 +271,7 @@ describe('repos service', () => {
           clone: cloneStub
         };
       },
-      'fs': {
+      fs: {
         exists: (pathTeRepo, done) => {
           const wasClonedBefore = false;
           done(wasClonedBefore);
@@ -323,7 +322,7 @@ describe('repos service', () => {
   it('should fail cloning if github url to ddf repo was not given', (done: Function) => {
     const noGithubUrl = null;
 
-    reposService.cloneRepo(noGithubUrl, 'any commit', error => {
+    reposService.cloneRepo(noGithubUrl, 'any commit', (error) => {
       expect(error).to.equal('Github url was not given');
       done();
     });
@@ -347,10 +346,10 @@ describe('repos service', () => {
     const debugStub = this.stub(logger, 'debug');
 
     const stubbedReposService = proxyquire(reposServicePath, {
-      'shell': {
+      shell: {
         exec: execStub
       },
-      'fs': {
+      fs: {
         exists: existsStub
       },
       '../ws.config/log': {
@@ -447,7 +446,7 @@ describe('repos service', () => {
       undefined
     ];
 
-    falsyInputs.forEach(falsyInput => {
+    falsyInputs.forEach((falsyInput) => {
       expect(reposService.getPathToRepo(falsyInput)).to.equal(falsyInput);
     });
   });

@@ -11,7 +11,7 @@ describe('Changes descriptor', () => {
     const descriptor = new ChangesDescriptor({
       object: {
         gid: 'foundation',
-        foundation: 'xsoft',
+        foundation: 'xsoft'
       },
       metadata: {
         action: 'remove',
@@ -26,7 +26,7 @@ describe('Changes descriptor', () => {
     const descriptor = new ChangesDescriptor({
       object: {
         gid: 'foundation',
-        foundation: 'xsoft',
+        foundation: 'xsoft'
       },
       metadata: {
         action: 'remove',
@@ -41,28 +41,28 @@ describe('Changes descriptor', () => {
     const descriptor = new ChangesDescriptor({
       object: {
         gid: 'NOT_USED',
-        foundation: 'xsoft',
+        foundation: 'xsoft'
       },
       metadata: {
         file: {
-          'new': {
-            "path": "ddf--entities--company--foundation.csv",
-            "name": "ddf--entities--company--foundation",
-            "schema": {
-              "fields": [
+          new: {
+            path: 'ddf--entities--company--foundation.csv',
+            name: 'ddf--entities--company--foundation',
+            schema: {
+              fields: [
                 {
-                  "name": "foundation"
+                  name: 'foundation'
                 },
                 {
-                  "name": "full_name_changed"
+                  name: 'full_name_changed'
                 },
                 {
-                  "name": "is--foundation"
+                  name: 'is--foundation'
                 }
               ],
-              "primaryKey": "foundation"
+              primaryKey: 'foundation'
             }
-          },
+          }
         },
         action: 'create',
         type: 'entities'
@@ -85,24 +85,24 @@ describe('Changes descriptor', () => {
       },
       metadata: {
         file: {
-          'new': {
-            "path": "ddf--entities--company--foundation.csv",
-            "name": "ddf--entities--company--foundation",
-            "schema": {
-              "fields": [
+          new: {
+            path: 'ddf--entities--company--foundation.csv',
+            name: 'ddf--entities--company--foundation',
+            schema: {
+              fields: [
                 {
-                  "name": "foundation"
+                  name: 'foundation'
                 },
                 {
-                  "name": "full_name_changed"
+                  name: 'full_name_changed'
                 },
                 {
-                  "name": "is--foundation"
+                  name: 'is--foundation'
                 }
               ],
-              "primaryKey": "foundation"
+              primaryKey: 'foundation'
             }
-          },
+          }
         },
         action: 'update',
         type: 'entities'
@@ -129,24 +129,24 @@ describe('Changes descriptor', () => {
       },
       metadata: {
         file: {
-          'new': {
-            "path": "ddf--entities--company--foundation.csv",
-            "name": "ddf--entities--company--foundation",
-            "schema": {
-              "fields": [
+          new: {
+            path: 'ddf--entities--company--foundation.csv',
+            name: 'ddf--entities--company--foundation',
+            schema: {
+              fields: [
                 {
-                  "name": "foundation"
+                  name: 'foundation'
                 },
                 {
-                  "name": "full_name_changed"
+                  name: 'full_name_changed'
                 },
                 {
-                  "name": "is--foundation"
+                  name: 'is--foundation'
                 }
               ],
-              "primaryKey": "foundation"
+              primaryKey: 'foundation'
             }
-          },
+          }
         },
         action: 'update',
         type: 'entities'
@@ -165,28 +165,28 @@ describe('Changes descriptor', () => {
     const changes = {
       object: {
         gid: 'foundation',
-        foundation: 'xsoft',
+        foundation: 'xsoft'
       },
       metadata: {
         file: {
-          'new': {
-            "path": "ddf--entities--company--foundation.csv",
-            "name": "ddf--entities--company--foundation",
-            "schema": {
-              "fields": [
+          new: {
+            path: 'ddf--entities--company--foundation.csv',
+            name: 'ddf--entities--company--foundation',
+            schema: {
+              fields: [
                 {
-                  "name": "foundation"
+                  name: 'foundation'
                 },
                 {
-                  "name": "full_name_changed"
+                  name: 'full_name_changed'
                 },
                 {
-                  "name": "is--foundation"
+                  name: 'is--foundation'
                 }
               ],
-              "primaryKey": "foundation"
+              primaryKey: 'foundation'
             }
-          },
+          }
         },
         action: 'create',
         type: 'entities'

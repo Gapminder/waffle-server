@@ -17,7 +17,7 @@ import * as incrementalUpdateService from '../../ws.import/incremental/update-dd
 import { DatasetsRepository } from '../../ws.repository/ddf/datasets/datasets.repository';
 import { DatasetTransactionsRepository } from '../../ws.repository/ddf/dataset-transactions/dataset-transactions.repository';
 import { constants } from '../../ws.utils/constants';
-import { UsersRepository } from "../../ws.repository/ddf/users/users.repository";
+import { UsersRepository } from '../../ws.repository/ddf/users/users.repository';
 
 const sandbox = sinonTest.configureTest(sinon);
 
@@ -52,7 +52,7 @@ describe('WS-CLI service', () => {
     };
 
     const expectedTransactionId = 'txId';
-    const expectedError = {toString: () => 'Boo!'};
+    const expectedError = { toString: () => 'Boo!' };
 
     const flowStepCounterSpy = this.spy();
 
@@ -127,12 +127,12 @@ describe('WS-CLI service', () => {
     };
 
     const importServiceExpectedOptions = {
-      "commit": params.commit,
-      "datasetName": expectedDataset.name,
-      "github": params.github,
-      "isDatasetPrivate": false,
-      "lifecycleHooks": params.lifecycleHooks,
-      "user": expectedUser
+      commit: params.commit,
+      datasetName: expectedDataset.name,
+      github: params.github,
+      isDatasetPrivate: false,
+      lifecycleHooks: params.lifecycleHooks,
+      user: expectedUser
     };
 
     const flowStepCounterSpy = this.spy();
@@ -154,7 +154,7 @@ describe('WS-CLI service', () => {
             expect(githubUrl).to.equal(params.github);
             // Playing scenario where dataset doesn't exist
             onFound(null, null);
-          },
+          }
         }
       },
       [datasetsServicePath]: {
@@ -172,7 +172,7 @@ describe('WS-CLI service', () => {
         importDdf: (options, onImported) => {
           flowStepCounterSpy('importService');
           expect(options).to.deep.equal(importServiceExpectedOptions);
-          onImported(null, {dataset: expectedDataset, datasetName: expectedDataset.name});
+          onImported(null, { dataset: expectedDataset, datasetName: expectedDataset.name });
         }
       }
     });
@@ -186,7 +186,7 @@ describe('WS-CLI service', () => {
       expect(flowStepCounterSpy.withArgs('importService').calledOnce).to.be.true;
 
       expect(context).to.deep.equal({
-        dataset: _.defaults({isLocked: false}, expectedDataset),
+        dataset: _.defaults({ isLocked: false }, expectedDataset),
         datasetName: expectedDataset.name
       });
       done();
@@ -246,7 +246,7 @@ describe('WS-CLI service', () => {
       [importDdfServicePath]: {
         importDdf: (options, onImported) => {
           flowStepCounterSpy('importService');
-          onImported(null, {dataset: expectedDataset, datasetName: expectedDataset.name});
+          onImported(null, { dataset: expectedDataset, datasetName: expectedDataset.name });
         }
       }
     });
@@ -309,7 +309,7 @@ describe('WS-CLI service', () => {
       }
     });
 
-    cliService.importDataset(params, error => {
+    cliService.importDataset(params, (error) => {
       expect(error).to.exist;
       expect(error).to.equal(expectedError);
 
@@ -342,7 +342,7 @@ describe('WS-CLI service', () => {
       }
     });
 
-    cliService.importDataset(params, error => {
+    cliService.importDataset(params, (error) => {
       expect(error).to.exist;
       expect(error).to.equal(expectedError);
       done();
@@ -372,7 +372,7 @@ describe('WS-CLI service', () => {
       }
     });
 
-    cliService.importDataset(params, error => {
+    cliService.importDataset(params, (error) => {
       expect(error).to.exist;
       expect(error).to.equal(expectedError);
       done();
@@ -410,7 +410,7 @@ describe('WS-CLI service', () => {
       }
     });
 
-    cliService.importDataset(params, error => {
+    cliService.importDataset(params, (error) => {
       expect(error).to.exist;
       expect(error).to.equal(expectedError);
       done();
@@ -434,7 +434,7 @@ describe('WS-CLI service', () => {
 
     cliService.getDatasetsInProgress(expectedUserId, (error, datasets) => {
       expect(error).to.not.exist;
-      expect(datasets).to.deep.equal([{name: 'fake', githubUrl: 'fakePath'}]);
+      expect(datasets).to.deep.equal([{ name: 'fake', githubUrl: 'fakePath' }]);
 
       sinon.assert.calledOnce(findDatasetsInProgressByUserStub);
       sinon.assert.calledWith(findDatasetsInProgressByUserStub, expectedUserId);
@@ -580,7 +580,7 @@ describe('WS-CLI service', () => {
       github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git'
     };
 
-    const transaction = {commit: 'aaaaaaa'};
+    const transaction = { commit: 'aaaaaaa' };
 
     const expectedError = `Version of dataset "${context.github}" with commit: "${transaction.commit}" was already applied`;
 
@@ -742,7 +742,7 @@ describe('WS-CLI service', () => {
       {
         name: 'ds2',
         path: 'path2'
-      },
+      }
     ];
 
     this.stub(DatasetsRepository, 'findPrivateByUser').callsArgWithAsync(1, null, datasets);
@@ -896,7 +896,7 @@ describe('WS-CLI service', () => {
 
     cliService.getRemovableDatasets(userId, (error, available) => {
       expect(error).to.not.exist;
-      expect(available).to.deep.equal([{name: 'ds2', githubUrl: 'dsPath2'}]);
+      expect(available).to.deep.equal([{ name: 'ds2', githubUrl: 'dsPath2' }]);
 
       done();
     });
@@ -1011,7 +1011,7 @@ describe('WS-CLI service', () => {
     cliService.getCommitOfLatestDatasetVersion(github, user, (error, externalContext) => {
       expect(error).to.not.exist;
 
-      expect(externalContext).to.deep.equal(Object.assign({}, context, {transaction}));
+      expect(externalContext).to.deep.equal(Object.assign({}, context, { transaction }));
       done();
     });
   }));
@@ -1110,11 +1110,15 @@ describe('WS-CLI service', () => {
     cliService.setAccessTokenForDataset(datasetName, userId, (error) => {
       expect(error).to.not.exist;
 
-      sinon.assert.calledOnce(stringifiedBuffer,);
+      sinon.assert.calledOnce(stringifiedBuffer);
       sinon.assert.calledWith(stringifiedBuffer, 'hex');
 
       sinon.assert.calledOnce(setAccessTokenForPrivateDatasetStub);
-      sinon.assert.calledWithExactly(setAccessTokenForPrivateDatasetStub, {userId, datasetName, accessToken: 'hexed'}, sinon.match.func);
+      sinon.assert.calledWithExactly(setAccessTokenForPrivateDatasetStub, {
+        userId,
+        datasetName,
+        accessToken: 'hexed'
+      }, sinon.match.func);
 
       done();
     });

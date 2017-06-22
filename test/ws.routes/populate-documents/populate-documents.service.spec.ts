@@ -99,7 +99,7 @@ describe('Populate documents service testing', () => {
     const findConceptsByQueryStub = this.stub();
     findConceptsByQueryStub.withArgs(context.query).onFirstCall().callsArgWith(1, expectedError);
     const currentVersionStub = this.stub(ConceptsRepositoryFactory, 'currentVersion').callsFake(() => {
-      return {findConceptsByQuery: findConceptsByQueryStub}
+      return {findConceptsByQuery: findConceptsByQueryStub};
     });
 
     populateDocumentsService.getDocumentsByQuery(context, (error, documents) => {
@@ -130,7 +130,7 @@ describe('Populate documents service testing', () => {
     const findEntityPropertiesByQueryStub = this.stub();
     findEntityPropertiesByQueryStub.withArgs(context.query).onFirstCall().callsArgWith(1, expectedError);
     const currentVersionStub = this.stub(EntitiesRepositoryFactory, 'currentVersion').callsFake(() => {
-      return {findEntityPropertiesByQuery: findEntityPropertiesByQueryStub}
+      return {findEntityPropertiesByQuery: findEntityPropertiesByQueryStub};
     });
 
     populateDocumentsService.getDocumentsByQuery(context, (error, documents) => {
@@ -161,7 +161,7 @@ describe('Populate documents service testing', () => {
     const findByQueryStub = this.stub();
     findByQueryStub.withArgs(context.query).onFirstCall().callsArgWith(1, expectedError);
     const currentVersionStub = this.stub(DatapointsRepositoryFactory, 'currentVersion').callsFake(() => {
-      return {findByQuery: findByQueryStub}
+      return {findByQuery: findByQueryStub};
     });
 
     populateDocumentsService.getDocumentsByQuery(context, (error, documents) => {
@@ -494,4 +494,3 @@ describe('Populate documents service testing', () => {
   }));
 
 });
-

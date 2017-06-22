@@ -4,10 +4,10 @@ import * as async from 'async';
 import * as git from 'simple-git';
 import * as path from 'path';
 import * as mkdirp from 'mkdirp';
-import {config} from '../ws.config/config';
-import {logger} from '../ws.config/log';
+import { config } from '../ws.config/config';
+import { logger } from '../ws.config/log';
 import * as shell from 'shelljs';
-import {ChildProcess} from 'child_process';
+import { ChildProcess } from 'child_process';
 
 export {
   cloneRepo,
@@ -23,7 +23,7 @@ interface GithubUrlDescriptor {
 }
 
 function getRepoNameForDataset(githubUrl: string): string {
-  const {account, repo, branch} = _getGithubUrlDescriptor(githubUrl);
+  const { account, repo, branch } = _getGithubUrlDescriptor(githubUrl);
 
   if (!account || !repo) {
     return null;
@@ -51,7 +51,7 @@ function cloneRepo(githubUrl: string, commit: string, onCloned: Function): void 
   const pathToGitDir = path.resolve(pathToRepo, '.git');
 
   return async.waterfall([
-    async.constant({pathToRepo, githubUrlDescriptor, commit}),
+    async.constant({ pathToRepo, githubUrlDescriptor, commit }),
     async.apply(_checkIfDirExists, pathToRepo, 'isDestinationDir'),
     _createDestinationDirIfDoesntExist,
     async.apply(_checkIfDirExists, pathToGitDir, 'isGitDir'),
@@ -64,7 +64,7 @@ function cloneRepo(githubUrl: string, commit: string, onCloned: Function): void 
       return onCloned(`${error} (repo url: ${githubUrl})`);
     }
 
-    return onCloned(null, {pathToRepo});
+    return onCloned(null, { pathToRepo });
   });
 }
 
@@ -78,7 +78,7 @@ function _checkIfDirExists(pathToCheck: string, property: string, externalContex
 }
 
 function _createDestinationDirIfDoesntExist(externalContext: any, onCreated: Function): void {
-  const {pathToRepo, isDestinationDir} = externalContext;
+  const { pathToRepo, isDestinationDir } = externalContext;
 
   if (!isDestinationDir) {
     return mkdirp(pathToRepo, (createReposDirError: any) => onCreated(createReposDirError, externalContext));
@@ -88,7 +88,7 @@ function _createDestinationDirIfDoesntExist(externalContext: any, onCreated: Fun
 }
 
 function _cleanDestinationDirIfExists(externalContext: any, onRemoved: Function): ChildProcess | void {
-  const {pathToRepo, isGitDir} = externalContext;
+  const { pathToRepo, isGitDir } = externalContext;
 
   if (!isGitDir) {
     return shell.exec(`rm -rf ${pathToRepo}`, (code: number, stdout: string, stderr: string) => {
@@ -108,7 +108,7 @@ function _cleanDestinationDirIfExists(externalContext: any, onRemoved: Function)
 }
 
 function _cloneRepoIfDirectoryEmpty(externalContext: any, onCloned: Function): void {
-  const {githubUrlDescriptor: {repo, branch, url: githubUrl}, pathToRepo, isGitDir} = externalContext;
+  const { githubUrlDescriptor: { repo, branch, url: githubUrl }, pathToRepo, isGitDir } = externalContext;
   if (!repo) {
     return onCloned(`Incorrect github url was given`);
   }
@@ -130,7 +130,7 @@ function _cloneRepoIfDirectoryEmpty(externalContext: any, onCloned: Function): v
 }
 
 function _checkoutToGivenCommit(externalContext: any, onCheckedOut: Function): void {
-  const {githubUrlDescriptor: {branch, url: githubUrl}, pathToRepo, commit} = externalContext;
+  const { githubUrlDescriptor: { branch, url: githubUrl }, pathToRepo, commit } = externalContext;
 
   const gitRepo = git(pathToRepo);
 
@@ -150,7 +150,7 @@ function _checkoutToGivenCommit(externalContext: any, onCheckedOut: Function): v
     }
 
     logger.info(`** Dataset commit has been got: ${githubUrl}`);
-    return onCheckedOut(null, {pathToRepo});
+    return onCheckedOut(null, { pathToRepo });
   });
 }
 
@@ -175,6 +175,6 @@ function _getGithubUrlDescriptor(githubUrl: string): GithubUrlDescriptor {
   };
 }
 
-function _getPathToRepoFromGithubUrlDescriptor({account, repo, branch}: GithubUrlDescriptor): string {
+function _getPathToRepoFromGithubUrlDescriptor({ account, repo, branch }: GithubUrlDescriptor): string {
   return path.resolve(config.PATH_TO_DDF_REPOSITORIES, account, repo, branch);
 }

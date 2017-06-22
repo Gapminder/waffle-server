@@ -10,7 +10,7 @@ describe('Complex queries for Entities, Datapoints: JOIN', function() {
     return;
   }
 
-  before(done => {
+  before((done) => {
     cliUtils.getCommitByGithubUrl(e2eEnv.repo, INDEX_OF_INITIAL_COMMIT, (error, commit) => {
       if (error) return done(error);
 
@@ -21,86 +21,86 @@ describe('Complex queries for Entities, Datapoints: JOIN', function() {
   describe('Entities complex queries', () => {
     it('should find entities by matching them using constraints on related entity - related entity conditions specified via JOIN', (done) => {
         const ddfql = {
-        "select": {
-          "key": ["company"],
-          "value": [
-            "name",
-            "country",
-            "region"
+        select: {
+          key: ['company'],
+          value: [
+            'name',
+            'country',
+            'region'
           ]
         },
-        "from": "entities",
-        "where": {
-          "$and": [
-            {"region": "$region"},
+        from: 'entities',
+        where: {
+          $and: [
+            {region: '$region'},
             {
-              "$or": [
-                {"name": "Microsoft"},
-                {"name": "Gapminder"}
+              $or: [
+                {name: 'Microsoft'},
+                {name: 'Gapminder'}
               ]
             }
           ]
         },
-        "join": {
-          "$region": {
-            "key": "region",
-            "where": {
-              "full_name_changed": "The Americas, including north, south and central america"
+        join: {
+          $region: {
+            key: 'region',
+            where: {
+              full_name_changed: 'The Americas, including north, south and central america'
             }
           }
         }
       };
 
-      const expectedResponse = {
+        const expectedResponse = {
         headers: ['company', 'name', 'country', 'region'],
         rows: [
           [
-            "mcrsft",
-            "Microsoft",
-            "United States of America",
-            "america"
-          ],
+            'mcrsft',
+            'Microsoft',
+            'United States of America',
+            'america'
+          ]
         ]
       };
 
-      e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, expectedResponse, done);
+        e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, expectedResponse, done);
     });
   });
 
   describe('Datapoints complex queries', () => {
     it('should fetch datapoint with dimensions constraints specified in JOIN', (done) => {
       const ddfql = {
-        "select": {
-          "key": ["company", "project"],
-          "value": [
-            "lines_of_code"
+        select: {
+          key: ['company', 'project'],
+          value: [
+            'lines_of_code'
           ]
         },
-        "from": "datapoints",
-        "where": {
-          "$and": [
-            {"company": "$company"},
-            {"project": "$project"},
-            {"lines_of_code": {"$gte": 848547}}
+        from: 'datapoints',
+        where: {
+          $and: [
+            {company: '$company'},
+            {project: '$project'},
+            {lines_of_code: {$gte: 848547}}
           ]
         },
-        "join": {
-          "$company": {
-            "key": "company",
-            "where": {
-              "$and": [
-                {"company": {"$in": ["mcrsft", "gap"]}}
+        join: {
+          $company: {
+            key: 'company',
+            where: {
+              $and: [
+                {company: {$in: ['mcrsft', 'gap']}}
               ]
             }
           },
-          "$project": {
-            "key": "project",
-            "where": {
-              "project": {"$in": ["xbox", "ws", "vizabi"]}
+          $project: {
+            key: 'project',
+            where: {
+              project: {$in: ['xbox', 'ws', 'vizabi']}
             }
           }
         },
-        "order_by": [{"lines_of_code": "asc"}]
+        order_by: [{lines_of_code: 'asc'}]
       };
 
       const expectedResponse = {
@@ -118,19 +118,19 @@ describe('Complex queries for Entities, Datapoints: JOIN', function() {
   describe('Concepts complex queries', () => {
     it('should fetch concepts using conditions specified in where', (done) => {
       const ddfql = {
-        "select": {
-          "key": ["concept"],
-          "value": [
-            "concept_type", "additional_column"
+        select: {
+          key: ['concept'],
+          value: [
+            'concept_type', 'additional_column'
           ]
         },
-        "from": "concepts",
-        "where": {
-          "$and": [
-            {"additional_column": {"$in": ["new value and change concept", "new row and column"]}},
+        from: 'concepts',
+        where: {
+          $and: [
+            {additional_column: {$in: ['new value and change concept', 'new row and column']}}
           ]
         },
-        "order_by": ["concept"]
+        order_by: ['concept']
       };
 
       const expectedResponse = {

@@ -20,12 +20,12 @@ import * as fixtureEntitiesSortingRegionAscAndFullNameDesc from './fixtures/comm
 const INDEX_OF_INITIAL_COMMIT = 0;
 const COMMIT_INDEX_TO_IMPORT = process.env.COMMIT_INDEX_TO_IMPORT || 0;
 
-describe("Initial State, Version 1 (1st commit) - Sorting in DDFQL", function() {
+describe('Initial State, Version 1 (1st commit) - Sorting in DDFQL', function() {
   if (COMMIT_INDEX_TO_IMPORT > INDEX_OF_INITIAL_COMMIT) {
     return;
   }
 
-  before(done => {
+  before((done) => {
     cliUtils.getCommitByGithubUrl(e2eEnv.repo, INDEX_OF_INITIAL_COMMIT, (error, commit) => {
       if (error) return done(error);
 
@@ -33,211 +33,211 @@ describe("Initial State, Version 1 (1st commit) - Sorting in DDFQL", function() 
     });
   });
 
-  describe("Schema sorting", function() {
-    it('should sort schema data by key:value:asc', done => {
+  describe('Schema sorting', function() {
+    it('should sort schema data by key:value:asc', (done) => {
       const ddfql = {
-        "select": {
-          "key": ["key", "value"],
-          "value": ["avg(value)"]
+        select: {
+          key: ['key', 'value'],
+          value: ['avg(value)']
         },
-        "from": "datapoints.schema",
-        "order_by": [{"value": "asc"}]
+        from: 'datapoints.schema',
+        order_by: [{value: 'asc'}]
       };
 
       e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureSchemaSortingValueAsc, done, {sort: false});
     });
 
-    it('should sort schema data by key:value:asc - simplified notion', done => {
+    it('should sort schema data by key:value:asc - simplified notion', (done) => {
       const ddfql = {
-        "select": {
-          "key": ["key", "value"],
-          "value": ["avg(value)"]
+        select: {
+          key: ['key', 'value'],
+          value: ['avg(value)']
         },
-        "from": "datapoints.schema",
-        "order_by": ["value"]
+        from: 'datapoints.schema',
+        order_by: ['value']
       };
 
       e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureSchemaSortingValueAsc, done, {sort: false});
     });
 
-    it('should sort schema data by select:value:desc', done => {
+    it('should sort schema data by select:value:desc', (done) => {
       const ddfql = {
-        "select": {
-          "key": ["key", "value"],
-          "value": ["avg(value)"]
+        select: {
+          key: ['key', 'value'],
+          value: ['avg(value)']
         },
-        "from": "datapoints.schema",
-        "order_by": [{"value": "desc"}]
+        from: 'datapoints.schema',
+        order_by: [{value: 'desc'}]
       };
 
       e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureSchemaSortingValueDesc, done, {sort: false});
     });
   });
 
-  describe("Concepts sorting", function() {
-    it('should sort concepts by key', done => {
+  describe('Concepts sorting', function() {
+    it('should sort concepts by key', (done) => {
       const ddfql = {
-        "select": {
-          "key": ["concept"],
-          "value": ["concept_type"]
+        select: {
+          key: ['concept'],
+          value: ['concept_type']
         },
-        "from": "concepts",
-        "order_by": [{"concept": "asc"}]
+        from: 'concepts',
+        order_by: [{concept: 'asc'}]
       };
 
       e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureConceptsSortingConceptAsc, done, {sort: false});
     });
 
-    it('should sort concepts by key: simplified notion', done => {
+    it('should sort concepts by key: simplified notion', (done) => {
       const ddfql = {
-        "select": {
-          "key": ["concept"],
-          "value": ["concept_type"]
+        select: {
+          key: ['concept'],
+          value: ['concept_type']
         },
-        "from": "concepts",
-        "order_by": ["concept"]
+        from: 'concepts',
+        order_by: ['concept']
       };
 
       e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureConceptsSortingConceptAsc, done, {sort: false});
     });
 
-    it('should sort concepts by key:asc and value:desc', done => {
+    it('should sort concepts by key:asc and value:desc', (done) => {
       const ddfql = {
-        "select": {
-          "key": ["concept"],
-          "value": ["concept_type"]
+        select: {
+          key: ['concept'],
+          value: ['concept_type']
         },
-        "from": "concepts",
-        "order_by": [{"concept": "asc"}, {"concept_type": "desc"}]
+        from: 'concepts',
+        order_by: [{concept: 'asc'}, {concept_type: 'desc'}]
       };
 
       e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureConceptsSortingConceptAscAndConceptTypeDesc, done, {sort: false});
     });
 
-    it('should sort concepts by value:desc', done => {
+    it('should sort concepts by value:desc', (done) => {
       const ddfql = {
-        "select": {
-          "key": ["concept"],
-          "value": ["concept_type"]
+        select: {
+          key: ['concept'],
+          value: ['concept_type']
         },
-        "from": "concepts",
-        "order_by": [{"concept_type": "desc"}]
+        from: 'concepts',
+        order_by: [{concept_type: 'desc'}]
       };
 
       e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureConceptsSortingConceptTypeDesc, done, {sort: false});
     });
   });
 
-  describe("Datapoints sorting", function() {
-    it('should sort datapoints by key:company:asc and key:anno:asc', done => {
+  describe('Datapoints sorting', function() {
+    it('should sort datapoints by key:company:asc and key:anno:asc', (done) => {
       const ddfql = {
-        "select": {
-          "key": ["company", "anno"],
-          "value": [
-            "company_size"
+        select: {
+          key: ['company', 'anno'],
+          value: [
+            'company_size'
           ]
         },
-        "from": "datapoints",
-        "order_by": [{"company": "asc"}, {"anno": "asc"}]
+        from: 'datapoints',
+        order_by: [{company: 'asc'}, {anno: 'asc'}]
       };
 
       e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDatapointsSortingCompanyAsc, done, {sort: false});
     });
 
-    it('should sort datapoints by key:company:asc and key:anno:asc - simplified notion', done => {
+    it('should sort datapoints by key:company:asc and key:anno:asc - simplified notion', (done) => {
       const ddfql = {
-        "select": {
-          "key": ["company", "anno"],
-          "value": [
-            "company_size"
+        select: {
+          key: ['company', 'anno'],
+          value: [
+            'company_size'
           ]
         },
-        "from": "datapoints",
-        "order_by": ["company", "anno"]
+        from: 'datapoints',
+        order_by: ['company', 'anno']
       };
 
       e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDatapointsSortingCompanyAsc, done, {sort: false});
     });
 
-    it('should sort datapoints by value:company_size:desc and key:anno:asc', done => {
+    it('should sort datapoints by value:company_size:desc and key:anno:asc', (done) => {
       const ddfql = {
-        "select": {
-          "key": ["company", "anno"],
-          "value": [
-            "company_size"
+        select: {
+          key: ['company', 'anno'],
+          value: [
+            'company_size'
           ]
         },
-        "from": "datapoints",
-        "order_by": [{"company_size": "desc"}, "anno"]
+        from: 'datapoints',
+        order_by: [{company_size: 'desc'}, 'anno']
       };
 
       e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDatapointsSortingCompanySizeDesc, done, {sort: false});
     });
 
-    it('should sort datapoints by key:anno:desc and value:company_size:asc', done => {
+    it('should sort datapoints by key:anno:desc and value:company_size:asc', (done) => {
       const ddfql = {
-        "select": {
-          "key": ["company", "anno"],
-          "value": [
-            "company_size"
+        select: {
+          key: ['company', 'anno'],
+          value: [
+            'company_size'
           ]
         },
-        "from": "datapoints",
-        "order_by": [{"anno": "desc"}, "company_size"]
+        from: 'datapoints',
+        order_by: [{anno: 'desc'}, 'company_size']
       };
 
       e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDatapointsSortingAnnoDescAndCompanySizeAsc, done, {sort: false});
     });
   });
 
-  describe("Entities sorting", function() {
-    it('should sort entities by select:key:region:asc', done => {
+  describe('Entities sorting', function() {
+    it('should sort entities by select:key:region:asc', (done) => {
       const ddfql = {
-        "select": {
-          "key": ["region"],
-          "value": ["full_name"]
+        select: {
+          key: ['region'],
+          value: ['full_name']
         },
-        "from": "entities",
-        "order_by": [{"region": "asc"}]
+        from: 'entities',
+        order_by: [{region: 'asc'}]
       };
 
       e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureEntitiesSortingRegionAsc, done, {sort: false});
     });
 
-    it('should sort entities by select:key:region:asc - simplified notion', done => {
+    it('should sort entities by select:key:region:asc - simplified notion', (done) => {
       const ddfql = {
-        "select": {
-          "key": ["region"],
-          "value": ["full_name"]
+        select: {
+          key: ['region'],
+          value: ['full_name']
         },
-        "from": "entities",
-        "order_by": ["region"]
+        from: 'entities',
+        order_by: ['region']
       };
 
       e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureEntitiesSortingRegionAsc, done, {sort: false});
     });
 
-    it('should sort entities by select:key:region:desc', done => {
+    it('should sort entities by select:key:region:desc', (done) => {
       const ddfql = {
-        "select": {
-          "key": ["region"],
-          "value": ["full_name"]
+        select: {
+          key: ['region'],
+          value: ['full_name']
         },
-        "from": "entities",
-        "order_by": [{"region": "desc"}]
+        from: 'entities',
+        order_by: [{region: 'desc'}]
       };
 
       e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureEntitiesSortingRegionDesc, done, {sort: false});
     });
 
-    it('should sort entities by select:key:region:asc and select:key:full_name:desc', done => {
+    it('should sort entities by select:key:region:asc and select:key:full_name:desc', (done) => {
       const ddfql = {
-        "select": {
-          "key": ["region"],
-          "value": ["full_name"]
+        select: {
+          key: ['region'],
+          value: ['full_name']
         },
-        "from": "entities",
-        "order_by": [{"region": "asc"}, {"full_name": "desc"}]
+        from: 'entities',
+        order_by: [{region: 'asc'}, {full_name: 'desc'}]
       };
 
       e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureEntitiesSortingRegionAscAndFullNameDesc, done, {sort: false});

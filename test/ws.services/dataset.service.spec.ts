@@ -580,7 +580,7 @@ describe('Remove Dataset Service', () => {
 
     const loggerErrorStub = this.stub(logger, 'error');
 
-    datasetsService.removeDatasetData(expectedDatasetName, expectedOwnerUser, error => {
+    datasetsService.removeDatasetData(expectedDatasetName, expectedOwnerUser, (error) => {
       expect(error).to.equal(expectedError);
 
       sinon.assert.calledOnce(lockStub);
@@ -648,7 +648,7 @@ describe('Remove Dataset Service', () => {
 
     const removeByDatasetStub = this.stub(DatasetSchemaRepository, 'removeByDataset').callsArgWithAsync(1, null);
 
-    datasetsService.removeDatasetData(expectedDatasetName, expectedOwnerUser, error => {
+    datasetsService.removeDatasetData(expectedDatasetName, expectedOwnerUser, (error) => {
       expect(error).to.not.exist;
 
       sinon.assert.calledOnce(findIdsByDatasetAndLimitStub);
@@ -718,7 +718,7 @@ describe('Remove Dataset Service', () => {
       findIdsByDatasetAndLimit: () => {
       },
       removeByIds: () => {
-      },
+      }
     };
 
     const removeByIdsStub = this.stub(datapointsRepository, 'removeByIds').callsArgWithAsync(1, expectedError);
@@ -728,7 +728,7 @@ describe('Remove Dataset Service', () => {
       return datapointsRepository;
     });
 
-    datasetsService.removeDatasetData(expectedDatasetName, expectedOwnerUser, error => {
+    datasetsService.removeDatasetData(expectedDatasetName, expectedOwnerUser, (error) => {
       expect(error).to.equal(expectedError);
 
       sinon.assert.calledOnce(lockStub);
@@ -849,7 +849,7 @@ describe('Remove Dataset Service', () => {
       findIdsByDatasetAndLimit: () => {
       },
       removeByIds: () => {
-      },
+      }
     };
 
     const removeByIdsStub = this.stub(datapointsRepository, 'removeByIds').callsArgWithAsync(1);
@@ -874,7 +874,6 @@ describe('Remove Dataset Service', () => {
 
       sinon.assert.calledOnce(lockStub);
       sinon.assert.calledWith(lockStub, expectedDatasetName);
-
 
       sinon.assert.calledOnce(findByNameStub);
       sinon.assert.calledWith(findByNameStub, expectedDatasetName);
@@ -919,7 +918,7 @@ describe('Remove Dataset Service', () => {
       findIdsByDatasetAndLimit: () => {
       },
       removeByIds: () => {
-      },
+      }
     };
 
     this.stub(datapointsRepository, 'removeByIds').callsArgWithAsync(1);
@@ -1100,33 +1099,33 @@ describe('Remove Dataset Service', () => {
       expect(error).to.not.exist;
       expect(datasetWithVersions).to.deep.equal([
         {
-          "id": "ds1",
-          "isDefault": false,
-          "name": "ds1Name",
-          "path": "ds1Path",
-          "versions": [
+          id: 'ds1',
+          isDefault: false,
+          name: 'ds1Name',
+          path: 'ds1Path',
+          versions: [
             {
-              "commit": "bbbbbbb",
-              "createdAt": new Date(currentTimeMillis),
-              "isDefault": false
+              commit: 'bbbbbbb',
+              createdAt: new Date(currentTimeMillis),
+              isDefault: false
             },
             {
-              "commit": "ccccccc",
-              "createdAt": new Date(currentTimeMillis),
-              "isDefault": false
+              commit: 'ccccccc',
+              createdAt: new Date(currentTimeMillis),
+              isDefault: false
             }
           ]
         },
         {
-          "id": "ds2",
-          "isDefault": true,
-          "name": "ds2Name",
-          "path": "ds2Path",
-          "versions": [
+          id: 'ds2',
+          isDefault: true,
+          name: 'ds2Name',
+          path: 'ds2Path',
+          versions: [
             {
-              "commit": "aaaaaaa",
-              "createdAt": new Date(currentTimeMillis),
-              "isDefault": true
+              commit: 'aaaaaaa',
+              createdAt: new Date(currentTimeMillis),
+              isDefault: true
             }
           ]
         }

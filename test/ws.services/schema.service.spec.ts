@@ -21,7 +21,7 @@ describe('Schema service', () => {
         select: {},
         where: {}
       },
-      transaction: {},
+      transaction: {}
     };
 
     const normalizedWhere = {
@@ -55,7 +55,7 @@ describe('Schema service', () => {
         select: {},
         where: {}
       },
-      transaction: {},
+      transaction: {}
     };
 
     const normalizedWhere = {
@@ -88,7 +88,7 @@ describe('Schema service', () => {
         select: {key: ['key', 'value'], value: ['min(population)']},
         where: {}
       },
-      transaction: {},
+      transaction: {}
     };
 
     const normalizedWhere = {
@@ -96,7 +96,7 @@ describe('Schema service', () => {
     };
 
     const normalizedQuery = {
-      select: {'key': 1, 'value': 1, 'min': 1},
+      select: {key: 1, value: 1, min: 1},
       aliases: {
         min: 'min(population)'
       },
@@ -122,30 +122,30 @@ describe('Schema service', () => {
     schemaService.findSchemaByDdfql(context, (error, result) => {
       expect(error).to.not.exist;
       expect(result).to.deep.equal({
-        "aliases": {
-          "min": "min(population)"
+        aliases: {
+          min: 'min(population)'
         },
-        "headers": [
-          "key",
-          "value",
-          "min"
+        headers: [
+          'key',
+          'value',
+          'min'
         ],
-        "query": {
-          "select": {
-            "key": [
-              "key",
-              "value"
+        query: {
+          select: {
+            key: [
+              'key',
+              'value'
             ],
-            "value": [
-              "min(population)"
+            value: [
+              'min(population)'
             ]
           },
-          "where": {}
+          where: {}
         },
-        "schema": [
+        schema: [
           [
-            "a",
-            "b"
+            'a',
+            'b'
           ],
           42
         ]

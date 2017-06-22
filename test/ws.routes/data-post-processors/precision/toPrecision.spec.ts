@@ -19,7 +19,7 @@ describe('data post processors precision middleware', () => {
         ],
         rows: [
           [
-            "usa",
+            'usa',
             2004,
             42
           ]

@@ -18,27 +18,27 @@ describe('data post processors interpolation', () => {
     //arrange
     const input = [
       [
-        "usa",
+        'usa',
         2004,
         71.7
       ],
       [
-        "usa",
+        'usa',
         2005,
         74.0
       ],
       [
-        "usa",
+        'usa',
         2006,
         75.6
       ],
       [
-        "usa",
+        'usa',
         2007,
         81.9
       ],
       [
-        "angola",
+        'angola',
         2007,
         81.9
       ]
@@ -55,27 +55,27 @@ describe('data post processors interpolation', () => {
     //arrange
     const input = [
       [
-        "usa",
+        'usa',
         2004,
         null
       ],
       [
-        "usa",
+        'usa',
         2005,
         null
       ],
       [
-        "usa",
+        'usa',
         2006,
         null
       ],
       [
-        "usa",
+        'usa',
         2007,
         null
       ],
       [
-        "angola",
+        'angola',
         2007,
         null
       ]
@@ -92,42 +92,42 @@ describe('data post processors interpolation', () => {
     //arrange
     const input = [
       [
-        "armenia",
+        'armenia',
         2004,
         null
       ],
       [
-        "armenia",
+        'armenia',
         2005,
         74.0
       ],
       [
-        "armenia",
+        'armenia',
         2006,
         null
       ],
       [
-        "armenia",
+        'armenia',
         2007,
         null
       ],
       [
-        "armenia",
+        'armenia',
         2008,
         null
       ],
       [
-        "armenia",
+        'armenia',
         2009,
         null
       ],
       [
-        "armenia",
+        'armenia',
         2010,
         81.9
       ],
       [
-        "armenia",
+        'armenia',
         2011,
         null
       ]
@@ -135,42 +135,42 @@ describe('data post processors interpolation', () => {
 
     const expected = [
       [
-        "armenia",
+        'armenia',
         2004,
         null
       ],
       [
-        "armenia",
+        'armenia',
         2005,
         74.0
       ],
       [
-        "armenia",
+        'armenia',
         2006,
         75.6
       ],
       [
-        "armenia",
+        'armenia',
         2007,
         77.2
       ],
       [
-        "armenia",
+        'armenia',
         2008,
         78.7
       ],
       [
-        "armenia",
+        'armenia',
         2009,
         80.3
       ],
       [
-        "armenia",
+        'armenia',
         2010,
         81.9
       ],
       [
-        "armenia",
+        'armenia',
         2011,
         null
       ]
@@ -187,57 +187,57 @@ describe('data post processors interpolation', () => {
     //arrange
     const input = [
       [
-        "usa",
+        'usa',
         2000,
         71.7
       ],
       [
-        "usa",
+        'usa',
         2001,
         null
       ],
       [
-        "usa",
+        'usa',
         2002,
         null
       ],
       [
-        "usa",
+        'usa',
         2003,
         null
       ],
       [
-        "usa",
+        'usa',
         2004,
         null
       ],
       [
-        "usa",
+        'usa',
         2005,
         74.0
       ],
       [
-        "usa",
+        'usa',
         2006,
         null
       ],
       [
-        "usa",
+        'usa',
         2007,
         null
       ],
       [
-        "usa",
+        'usa',
         2008,
         null
       ],
       [
-        "usa",
+        'usa',
         2009,
         null
       ],
       [
-        "usa",
+        'usa',
         2010,
         81.9
       ]
@@ -245,57 +245,57 @@ describe('data post processors interpolation', () => {
 
     const expected = [
       [
-        "usa",
+        'usa',
         2000,
         71.7
       ],
       [
-        "usa",
+        'usa',
         2001,
         72.2
       ],
       [
-        "usa",
+        'usa',
         2002,
         72.6
       ],
       [
-        "usa",
+        'usa',
         2003,
         73.1
       ],
       [
-        "usa",
+        'usa',
         2004,
         73.5
       ],
       [
-        "usa",
+        'usa',
         2005,
         74.0
       ],
       [
-        "usa",
+        'usa',
         2006,
         75.6
       ],
       [
-        "usa",
+        'usa',
         2007,
         77.2
       ],
       [
-        "usa",
+        'usa',
         2008,
         78.7
       ],
       [
-        "usa",
+        'usa',
         2009,
         80.3
       ],
       [
-        "usa",
+        'usa',
         2010,
         81.9
       ]
@@ -312,47 +312,47 @@ describe('data post processors interpolation', () => {
     //arrange
     const input = [
       [
-        "usa",
+        'usa',
         2000,
         71.7
       ],
       [
-        "usa",
+        'usa',
         2001,
         null
       ],
       [
-        "usa",
+        'usa',
         2002,
         null
       ],
       [
-        "usa",
+        'usa',
         2003,
         null
       ],
       [
-        "usa",
+        'usa',
         2004,
         null
       ],
       [
-        "usa",
+        'usa',
         2005,
         74
       ],
       [
-        "usa",
+        'usa',
         2006,
         null
       ],
       [
-        "usa",
+        'usa',
         2009,
         null
       ],
       [
-        "usa",
+        'usa',
         2010,
         81.9
       ]
@@ -360,47 +360,47 @@ describe('data post processors interpolation', () => {
 
     const expected = [
       [
-        "usa",
+        'usa',
         2000,
         71.7
       ],
       [
-        "usa",
+        'usa',
         2001,
         72.2
       ],
       [
-        "usa",
+        'usa',
         2002,
         72.6
       ],
       [
-        "usa",
+        'usa',
         2003,
         73.1
       ],
       [
-        "usa",
+        'usa',
         2004,
         73.5
       ],
       [
-        "usa",
+        'usa',
         2005,
         74
       ],
       [
-        "usa",
+        'usa',
         2006,
         75.6
       ],
       [
-        "usa",
+        'usa',
         2009,
         80.3
       ],
       [
-        "usa",
+        'usa',
         2010,
         81.9
       ]
@@ -462,43 +462,43 @@ describe('data post processors interpolation', () => {
     //arrange
     const input = [
       [
-        "usa",
+        'usa',
         2004,
         null,
         68.5
       ],
       [
-        "usa",
+        'usa',
         2005,
         74.0,
         null
       ],
       [
-        "usa",
+        'usa',
         2006,
         null,
         null
       ],
       [
-        "usa",
+        'usa',
         2007,
         null,
         null
       ],
       [
-        "usa",
+        'usa',
         2008,
         null,
         null
       ],
       [
-        "usa",
+        'usa',
         2009,
         null,
         76.6
       ],
       [
-        "usa",
+        'usa',
         2010,
         81.9,
         null
@@ -507,43 +507,43 @@ describe('data post processors interpolation', () => {
 
     const expected = [
       [
-        "usa",
+        'usa',
         2004,
         null,
         68.5
       ],
       [
-        "usa",
+        'usa',
         2005,
         74.0,
         70.1
       ],
       [
-        "usa",
+        'usa',
         2006,
         75.6,
         71.7
       ],
       [
-        "usa",
+        'usa',
         2007,
         77.2,
         73.4
       ],
       [
-        "usa",
+        'usa',
         2008,
         78.7,
         75.0
       ],
       [
-        "usa",
+        'usa',
         2009,
         80.3,
         76.6
       ],
       [
-        "usa",
+        'usa',
         2010,
         81.9,
         null
@@ -561,42 +561,42 @@ describe('data post processors interpolation', () => {
     //arrange
     const input = [
       [
-        "angola",
+        'angola',
         2000,
         74.0
       ],
       [
-        "angola",
+        'angola',
         2001,
         null
       ],
       [
-        "angola",
+        'angola',
         2002,
         null
       ],
       [
-        "angola",
+        'angola',
         2003,
         78.7
       ],
       [
-        "usa",
+        'usa',
         2000,
         71.7
       ],
       [
-        "usa",
+        'usa',
         2005,
         74.0
       ],
       [
-        "usa",
+        'usa',
         2006,
         null
       ],
       [
-        "usa",
+        'usa',
         2010,
         81.9
       ]
@@ -604,42 +604,42 @@ describe('data post processors interpolation', () => {
 
     const expected = [
       [
-        "angola",
+        'angola',
         2000,
         74.0
       ],
       [
-        "angola",
+        'angola',
         2001,
         75.6
       ],
       [
-        "angola",
+        'angola',
         2002,
         77.1
       ],
       [
-        "angola",
+        'angola',
         2003,
         78.7
       ],
       [
-        "usa",
+        'usa',
         2000,
         71.7
       ],
       [
-        "usa",
+        'usa',
         2005,
         74.0
       ],
       [
-        "usa",
+        'usa',
         2006,
         75.6
       ],
       [
-        "usa",
+        'usa',
         2010,
         81.9
       ]

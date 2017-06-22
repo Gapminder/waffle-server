@@ -36,7 +36,7 @@ const domain = {
 const set1 = {
   _id: 'ENTITYSETID',
   dataset: datasetId,
-  domain: domain,
+  domain,
   from: version - 1,
   gid: 'company_size',
   languages: {  },
@@ -55,7 +55,7 @@ const set1 = {
 const set2 = {
   _id: 'ENTITYSETID1',
   dataset: datasetId,
-  domain: domain,
+  domain,
   from: version,
   gid: 'company_scale',
   languages: {  },
@@ -74,7 +74,7 @@ const set2 = {
 const set3 = {
   _id: 'ENTITYSETID2',
   dataset: datasetId,
-  domain: domain,
+  domain,
   from: version,
   gid: 'english_speaking',
   languages: {  },
@@ -164,7 +164,7 @@ const expectedCreatedEntities = [
 const entitiesRepository = {
   closeOneByQuery: _.noop,
   // closeByGid: _.noop,
-  create: _.noop,
+  create: _.noop
   // findAll: _.noop,
   // findDistinctDrillups: _.noop,
   // findDistinctDomains: _.noop,
@@ -204,21 +204,21 @@ describe('Update Entities', function () {
         domain: 'DOMAINID',
         'properties.company_size': 'small',
         sets: ['ENTITYSETID'],
-        "sources": "ddf--entities--company--company_size.csv"
+        sources: 'ddf--entities--company--company_size.csv'
       };
 
       const expectedQuery2 = {
         domain: 'DOMAINID',
         'properties.company_size': 'large',
         sets: ['ENTITYSETID'],
-        "sources": "ddf--entities--company--company_size.csv"
+        sources: 'ddf--entities--company--company_size.csv'
       };
 
       const expectedQuery3 = {
         domain: 'DOMAINID',
         'properties.company_size': 'medium',
         sets: ['ENTITYSETID'],
-        "sources": "ddf--entities--company--company_size.csv"
+        sources: 'ddf--entities--company--company_size.csv'
       };
 
       expect(loggerDebugStub.args[2][0]).to.be.equal('Closing entity by query: ');
@@ -289,21 +289,21 @@ describe('Update Entities', function () {
         domain: 'DOMAINID',
         'properties.company_size': 'small',
         sets: ['ENTITYSETID'],
-        "sources": "ddf--entities--company--company_size.csv"
+        sources: 'ddf--entities--company--company_size.csv'
       };
 
       const expectedQuery2 = {
         domain: 'DOMAINID',
         'properties.company_size': 'large',
         sets: ['ENTITYSETID'],
-        "sources": "ddf--entities--company--company_size.csv"
+        sources: 'ddf--entities--company--company_size.csv'
       };
 
       const expectedQuery3 = {
         domain: 'DOMAINID',
         'properties.company_size': 'medium',
         sets: ['ENTITYSETID'],
-        "sources": "ddf--entities--company--company_size.csv"
+        sources: 'ddf--entities--company--company_size.csv'
       };
 
       expect(loggerDebugStub.args[2][0]).to.be.equal('Closing entity by query: ');
@@ -375,21 +375,21 @@ describe('Update Entities', function () {
         domain: 'DOMAINID',
         'properties.company_size': 'small',
         sets: ['ENTITYSETID'],
-        "sources": "ddf--entities--company--company_size.csv"
+        sources: 'ddf--entities--company--company_size.csv'
       };
 
       const expectedQuery2 = {
         domain: 'DOMAINID',
         'properties.company_size': 'large',
         sets: ['ENTITYSETID'],
-        "sources": "ddf--entities--company--company_size.csv"
+        sources: 'ddf--entities--company--company_size.csv'
       };
 
       const expectedQuery3 = {
         domain: 'DOMAINID',
         'properties.company_size': 'medium',
         sets: ['ENTITYSETID'],
-        "sources": "ddf--entities--company--company_size.csv"
+        sources: 'ddf--entities--company--company_size.csv'
       };
 
       expect(loggerDebugStub.args[2][0]).to.be.equal('Closing entity by query: ');
@@ -457,7 +457,7 @@ describe('Update Entities', function () {
         english_speaking: 'gap',
         'is--english_speaking': true,
         name: 'Gapminder'
-      },
+      }
     });
     const expectedloggerDebugCallCount = 12;
     const expectedVersionAgnosticCallCount = 4;
@@ -491,9 +491,9 @@ describe('Update Entities', function () {
       expect(loggerDebugStub.args[2][1]).to.be.equal(3);
       expect(loggerDebugStub.args[2][2]).to.not.exist;
 
-      const expectedQuery1 = {domain: 'DOMAINID', 'properties.english_speaking': 'gap', sets: ['ENTITYSETID2'], "sources": "ddf--entities--company--english_speaking.csv"};
-      const expectedQuery2 = {domain: 'ENTITYSETID3', 'properties.region': 'america', sets: [], "sources": "ddf--entities--region.csv"};
-      const expectedQuery3 = {domain: 'ENTITYSETID3', 'properties.region': 'europe', sets: [], "sources": "ddf--entities--region.csv"};
+      const expectedQuery1 = {domain: 'DOMAINID', 'properties.english_speaking': 'gap', sets: ['ENTITYSETID2'], sources: 'ddf--entities--company--english_speaking.csv'};
+      const expectedQuery2 = {domain: 'ENTITYSETID3', 'properties.region': 'america', sets: [], sources: 'ddf--entities--region.csv'};
+      const expectedQuery3 = {domain: 'ENTITYSETID3', 'properties.region': 'europe', sets: [], sources: 'ddf--entities--region.csv'};
 
       expect(loggerDebugStub.args[3][0]).to.be.equal('Closing entity by query: ');
       expect(loggerDebugStub.args[3][1]).to.be.deep.equal(expectedQuery1);
@@ -538,7 +538,7 @@ describe('Update Entities', function () {
         sources: [
           'ddf--entities--region.csv'
         ],
-        'properties': {
+        properties: {
           region: 'asia',
           full_name_changed: 'Asia part of Eurasia Updated'
         },
@@ -547,32 +547,32 @@ describe('Update Entities', function () {
         languages: {},
         domain: 'ENTITYSETID3',
         sets: [],
-        "from": version,
-        "dataset": datasetId
+        from: version,
+        dataset: datasetId
       };
       const expectedCreatedEntity2 = {
-        "gid": "gap",
-        "sources": [
-          "ddf--entities--company--company_scale.csv",
-          "ddf--entities--company--english_speaking.csv"
+        gid: 'gap',
+        sources: [
+          'ddf--entities--company--company_scale.csv',
+          'ddf--entities--company--english_speaking.csv'
         ],
-        "properties": {
-          "english_speaking": "gap",
-          "is--english_speaking": true,
-          "name": "Gapminder",
-          "additional_column": "any text 2"
+        properties: {
+          english_speaking: 'gap',
+          'is--english_speaking': true,
+          name: 'Gapminder',
+          additional_column: 'any text 2'
         },
-        "parsedProperties": {},
-        "originId": "ENTITYID",
-        "languages": {
-          "nl-nl": {}
+        parsedProperties: {},
+        originId: 'ENTITYID',
+        languages: {
+          'nl-nl': {}
         },
-        "domain": "DOMAINID",
-        "sets": [
-          "ENTITYSETID2"
+        domain: 'DOMAINID',
+        sets: [
+          'ENTITYSETID2'
         ],
-        "from": version,
-        "dataset": datasetId
+        from: version,
+        dataset: datasetId
       };
       const expectedCreatedEntity3 = {
         gid: 'america',
@@ -591,8 +591,8 @@ describe('Update Entities', function () {
         },
         domain: 'ENTITYSETID3',
         sets: [],
-        "from": version,
-        "dataset": datasetId
+        from: version,
+        dataset: datasetId
       };
       const expectedCreatedEntity4 = {
         gid: 'europe',
@@ -611,8 +611,8 @@ describe('Update Entities', function () {
         },
         domain: 'ENTITYSETID3',
         sets: [],
-        "from": version,
-        "dataset": datasetId
+        from: version,
+        dataset: datasetId
       };
 
       expect(createStub.args[0][0]).to.be.deep.equal([expectedCreatedEntity1]);

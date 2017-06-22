@@ -2,15 +2,15 @@ import * as _ from 'lodash';
 import * as fs from 'fs';
 import * as hi from 'highland';
 import * as path from 'path';
-import {logger} from '../ws.config/log';
-import {constants} from '../ws.utils/constants';
+import { logger } from '../ws.config/log';
+import { constants } from '../ws.utils/constants';
 import * as fileUtils from '../ws.utils/file';
 import * as ddfImportUtils from './utils/import-ddf.utils';
 import * as ddfMappers from './utils/ddf-mappers';
 import * as datapackageParser from './utils/datapackage.parser';
-import {ConceptsRepositoryFactory} from '../ws.repository/ddf/concepts/concepts.repository';
-import {EntitiesRepositoryFactory} from '../ws.repository/ddf/entities/entities.repository';
-import {DatapointsRepositoryFactory} from '../ws.repository/ddf/data-points/data-points.repository';
+import { ConceptsRepositoryFactory } from '../ws.repository/ddf/concepts/concepts.repository';
+import { EntitiesRepositoryFactory } from '../ws.repository/ddf/entities/entities.repository';
+import { DatapointsRepositoryFactory } from '../ws.repository/ddf/data-points/data-points.repository';
 
 export {
   importTranslations as createTranslations
@@ -34,9 +34,9 @@ function importTranslations(externalContext: any, done: Function): void {
 function createTranslations(externalContext: any): any {
   const {
     pathToDdfFolder,
-    datapackage: {resources, translations},
-    dataset: {_id: datasetId},
-    transaction: {createdAt: version},
+    datapackage: { resources, translations },
+    dataset: { _id: datasetId },
+    transaction: { createdAt: version },
     concepts
   } = externalContext;
 
@@ -57,17 +57,17 @@ function createTranslations(externalContext: any): any {
     });
 
   const storeConceptTranslationsStream = loadTranslationsStream.fork()
-    .filter(({resource: {primaryKey}}: any) => datapackageParser.isConceptsResource(primaryKey))
-    .map(({object: properties, resource: {language}}: any) => {
-      const context = {properties, language, datasetId, version};
+    .filter(({ resource: { primaryKey } }: any) => datapackageParser.isConceptsResource(primaryKey))
+    .map(({ object: properties, resource: { language } }: any) => {
+      const context = { properties, language, datasetId, version };
 
       return hi(storeConceptsTranslationsToDb(context));
     })
     .parallel(constants.LIMIT_NUMBER_PROCESS);
 
   const storeEntitiesTranslationsStream = loadTranslationsStream.fork()
-    .filter(({resource: {primaryKey}}: any) => datapackageParser.isEntitiesResource(primaryKey))
-    .map(({object: properties, resource: {language, path: source, primaryKey: [primaryKey]}}: any) => {
+    .filter(({ resource: { primaryKey } }: any) => datapackageParser.isEntitiesResource(primaryKey))
+    .map(({ object: properties, resource: { language, path: source, primaryKey: [primaryKey] } }: any) => {
       const resolvedProperties = _.reduce(properties, (result: any, propertyValue: any, propertyName: string) => {
         if (_.startsWith(propertyName, constants.IS_OPERATOR)) {
           result[`properties.${propertyName}`] = ddfImportUtils.toBoolean(propertyValue);
@@ -77,22 +77,22 @@ function createTranslations(externalContext: any): any {
         }
         return result;
       }, {});
-      const context = {source, properties, language, resolvedProperties, datasetId, version, concepts};
+      const context = { source, properties, language, resolvedProperties, datasetId, version, concepts };
 
       return hi(storeEntitiesTranslationsToDb(context));
     })
     .parallel(constants.LIMIT_NUMBER_PROCESS);
 
   const storeDatapointsTranslationsStream = loadTranslationsStream.fork()
-    .filter(({resource: {primaryKey}}: any) => datapackageParser.isDatapointsResource(primaryKey))
-    .map(({object: properties, resource: {language, path: source, primaryKey}}: any) => {
+    .filter(({ resource: { primaryKey } }: any) => datapackageParser.isDatapointsResource(primaryKey))
+    .map(({ object: properties, resource: { language, path: source, primaryKey } }: any) => {
       const resolvedProperties = _.reduce(properties, (result: any, propertyValue: any, propertyName: string) => {
         if (_.includes(primaryKey, propertyName)) {
           result[`properties.${propertyName}`] = propertyValue;
         }
         return result;
       }, {});
-      const context = {source, properties, language, resolvedProperties, datasetId, version};
+      const context = { source, properties, language, resolvedProperties, datasetId, version };
 
       return hi(storeDatapointsTranslationsToDb(context));
     })
@@ -107,28 +107,28 @@ function createTranslations(externalContext: any): any {
   return hi(translationTasks).parallel(translationTasks.length);
 }
 
-function storeConceptsTranslationsToDb({properties, language, datasetId, version}: any): any {
+function storeConceptsTranslationsToDb({ properties, language, datasetId, version }: any): any {
   const translation = ddfMappers.transformConceptProperties(properties);
 
   return ConceptsRepositoryFactory
     .allOpenedInGivenVersion(datasetId, version)
-    .addTranslationsForGivenProperties(translation, {language});
+    .addTranslationsForGivenProperties(translation, { language });
 }
 
 function storeEntitiesTranslationsToDb(externalContext: any): any {
-  const {source, properties, language, resolvedProperties, datasetId, version, concepts} = externalContext;
+  const { source, properties, language, resolvedProperties, datasetId, version, concepts } = externalContext;
   const translation = ddfMappers.transformEntityProperties(properties, concepts);
 
   return EntitiesRepositoryFactory
     .allOpenedInGivenVersion(datasetId, version)
-    .addTranslationsForGivenProperties(translation, {language, source, resolvedProperties});
+    .addTranslationsForGivenProperties(translation, { language, source, resolvedProperties });
 }
 
 function storeDatapointsTranslationsToDb(externalContext: any): any {
-  const {source, properties, language, resolvedProperties, datasetId, version} = externalContext;
+  const { source, properties, language, resolvedProperties, datasetId, version } = externalContext;
   return DatapointsRepositoryFactory
     .allOpenedInGivenVersion(datasetId, version)
-    .addTranslationsForGivenProperties(properties, {language, source, resolvedProperties});
+    .addTranslationsForGivenProperties(properties, { language, source, resolvedProperties });
 }
 
 function existTranslationFilepathStream(resolvedFilepath: string, resource: any): any {
@@ -138,7 +138,7 @@ function existTranslationFilepathStream(resolvedFilepath: string, resource: any)
     });
   })(resolvedFilepath, fs.constants.R_OK)
     .map((canAccess: boolean) => {
-      return _.extend({canReadTranslations: canAccess}, resource);
+      return _.extend({ canReadTranslations: canAccess }, resource);
     });
 }
 
@@ -146,15 +146,15 @@ function extendTranslationsToResourceStream(translations: any, resource: any): a
   return hi(_.map(translations, (language: any) => {
     const pathToTranslationFile = path.join(constants.DEFAULT_DDF_LANGUAGE_FOLDER, language.id, resource.path);
 
-    return _.extend({language, pathToTranslationFile}, resource);
+    return _.extend({ language, pathToTranslationFile }, resource);
   }));
 }
 
 function loadTranslationsFromCsv(resource: any, externalContext: any): any {
-  const {pathToDdfFolder} = externalContext;
+  const { pathToDdfFolder } = externalContext;
 
   return fileUtils.readCsvFileAsStream(pathToDdfFolder, resource.pathToTranslationFile)
     .map((rawTranslation: any) => {
-      return {object: rawTranslation, resource};
+      return { object: rawTranslation, resource };
     });
 }

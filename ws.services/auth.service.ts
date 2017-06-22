@@ -1,6 +1,6 @@
 import * as crypto from 'crypto';
-import {constants} from '../ws.utils/constants';
-import {UsersRepository} from '../ws.repository/ddf/users/users.repository';
+import { constants } from '../ws.utils/constants';
+import { UsersRepository } from '../ws.repository/ddf/users/users.repository';
 
 export {
   authenticate

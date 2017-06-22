@@ -3,11 +3,10 @@ import * as async from 'async';
 import * as wsCli from 'waffle-server-import-cli';
 import { e2eEnv } from './e2e.env';
 import * as e2eUtils from './e2e.utils';
-
-e2eUtils.setUpEnvironmentVariables();
-
 import '../ws.config/db.config';
 import '../ws.repository';
+
+e2eUtils.setUpEnvironmentVariables();
 
 const CACHED_COMMITS = new WeakMap();
 
@@ -44,7 +43,10 @@ function _runDatasetImport(repo: Repo, onIncrementalUpdateDone: Function): void 
 
     const allowedCommits = _.drop(commits, commitIndexToStartImport);
     const finishCommitIndex = commitIndexToStartImport ? 3 - commitIndexToStartImport : _.size(allowedCommits);
-    const cliOptions = _.extend({from: _.first(allowedCommits), to: _.get(allowedCommits, `${finishCommitIndex}`)}, DEFAULT_WS_CLI_OPTIONS, {repo: repo.url});
+    const cliOptions = _.extend({
+      from: _.first(allowedCommits),
+      to: _.get(allowedCommits, `${finishCommitIndex}`)
+    }, DEFAULT_WS_CLI_OPTIONS, { repo: repo.url });
 
     wsCli.importUpdate(cliOptions, (importUpdateError: any) => {
       if (importUpdateError) {
@@ -61,7 +63,7 @@ function setDefaultCommit(commit: string, options?: any, done?: any): void {
     options = {};
   }
 
-  options = _.defaults(options, DEFAULT_WS_CLI_OPTIONS, {commit});
+  options = _.defaults(options, DEFAULT_WS_CLI_OPTIONS, { commit });
   wsCli.setDefault(options, (error: string) => {
     if (error) {
       return done(error);

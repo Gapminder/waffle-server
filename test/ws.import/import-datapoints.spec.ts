@@ -1,27 +1,27 @@
 import '../../ws.config/db.config';
 import '../../ws.repository/index';
 
-import * as _  from 'lodash';
+import * as _ from 'lodash';
 import * as hi from 'highland';
 import * as proxyquire from 'proxyquire';
-import {expect} from 'chai';
+import { expect } from 'chai';
 import * as sinon from 'sinon';
 import * as sinonTest from 'sinon-test';
-import {constants} from '../../ws.utils/constants';
+import { constants } from '../../ws.utils/constants';
 import * as datapoints from './fixtures/datapoints.json';
 import * as allEntities from './fixtures/allEntities.json';
 import { logger } from '../../ws.config/log';
 
 const sandbox = sinonTest.configureTest(sinon);
 
-describe('datapoints import', function() {
-  it('should not be any error', sandbox(function(done: Function) {
+describe('datapoints import', function () {
+  it('should not be any error', sandbox(function (done: Function) {
     const dimensions = {
-      geo: {gid: 'geo', properties: {}},
-      time: {gid: 'time', properties: {}}
+      geo: { gid: 'geo', properties: {} },
+      time: { gid: 'time', properties: {} }
     };
     const measures = {
-      population: {gid: 'population', properties: {}}
+      population: { gid: 'population', properties: {} }
     };
     const DEFAULT_CHUNK_SIZE = 10;
     const DEFAULT_DATAPOINTS_FILENAME = 'ddf--datapoints--population--by--geo--time.csv';
@@ -30,11 +30,11 @@ describe('datapoints import', function() {
       primaryKey: ['geo', 'time'],
       path: DEFAULT_DATAPOINTS_FILENAME,
       dimensions: ['geo', 'time'],
-      indicators: ['population'],
+      indicators: ['population']
     };
     const context = {
-      'pathToDdfFolder': './fixtures',
-      'datapackage': {
+      pathToDdfFolder: './fixtures',
+      datapackage: {
         resources: [
           DEFAULT_DATAPOINT_RESOURCE,
           {
@@ -52,15 +52,15 @@ describe('datapoints import', function() {
           }
         ]
       },
-      'concepts': {},
-      'timeConcepts': {},
-      'transaction': {},
-      'dataset': {}
+      concepts: {},
+      timeConcepts: {},
+      transaction: {},
+      dataset: {}
     };
 
     const segregatedEntities = {
-      bySet: {'country': [], 'city': []},
-      byDomain: {'geo': allEntities, 'time': []},
+      bySet: { country: [], city: [] },
+      byDomain: { geo: allEntities, time: [] },
       byGid: _.groupBy(allEntities as any, 'gid'),
       groupedByGid: {}
     };
@@ -79,7 +79,7 @@ describe('datapoints import', function() {
 
         return datapointsAndFoundEntitiesStream
           .batch(DEFAULT_CHUNK_SIZE)
-          .flatMap(datapointsBatch => {
+          .flatMap((datapointsBatch) => {
             const entitiesFoundInDatapoints = _.flatten(_.map(datapointsBatch, 'entitiesFoundInDatapoint'));
 
             return hi(saveEntitiesFoundInDatapoints(entitiesFoundInDatapoints));
@@ -89,7 +89,7 @@ describe('datapoints import', function() {
         expect(resource).to.be.equal(DEFAULT_DATAPOINT_RESOURCE);
         expect(externalContextFrozen).to.be.deep.equal(context);
 
-        return {dimensions, measures};
+        return { dimensions, measures };
       },
       findAllEntities: (externalContextFrozen) => {
         expect(externalContextFrozen).to.be.deep.equal(context);
@@ -103,13 +103,13 @@ describe('datapoints import', function() {
         expect(externalContextFrozen).to.be.deep.equal(context);
         expect(_.find(datapoints as any, datapoint)).to.be.ok;
 
-        return [{gid: datapoint.time, properties: datapoint, domain: dimensions.time}];
+        return [{ gid: datapoint.time, properties: datapoint, domain: dimensions.time }];
       }
     };
 
     const ddfImportUtils = {
       MONGODB_DOC_CREATION_THREADS_AMOUNT: 3,
-      DEFAULT_CHUNK_SIZE: DEFAULT_CHUNK_SIZE
+      DEFAULT_CHUNK_SIZE
     };
 
     const fileUtils = {
@@ -118,7 +118,7 @@ describe('datapoints import', function() {
       }
     };
 
-    const importDatapoints  = proxyquire('../../ws.import/import-datapoints', {
+    const importDatapoints = proxyquire('../../ws.import/import-datapoints', {
       './utils/datapoints.utils': datapointsUtils,
       './utils/import-ddf.utils': ddfImportUtils,
       '../ws.utils/file': fileUtils

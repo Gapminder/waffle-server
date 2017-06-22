@@ -25,7 +25,7 @@ function findDefaultDatasetAndTransaction(pipe: any, done: Function): void {
       return done('Transaction isn\'t present in db.');
     }
 
-    const {dataset, transaction} = datasetAndTransaction;
+    const { dataset, transaction } = datasetAndTransaction;
     pipe.dataset = dataset;
     pipe.transaction = transaction;
     pipe.version = transaction.createdAt;

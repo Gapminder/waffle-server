@@ -3,11 +3,11 @@ import * as crypto from 'crypto';
 import * as _ from 'lodash';
 import * as importDdfService from '../ws.import/import-ddf';
 import * as incrementalUpdateService from '../ws.import/incremental/update-ddf';
-import {DatasetTransactionsRepository} from '../ws.repository/ddf/dataset-transactions/dataset-transactions.repository';
-import {DatasetsRepository} from '../ws.repository/ddf/datasets/datasets.repository';
-import {UsersRepository} from '../ws.repository/ddf/users/users.repository';
-import {constants} from '../ws.utils/constants';
-import {cache} from '../ws.utils/redis-cache';
+import { DatasetTransactionsRepository } from '../ws.repository/ddf/dataset-transactions/dataset-transactions.repository';
+import { DatasetsRepository } from '../ws.repository/ddf/datasets/datasets.repository';
+import { UsersRepository } from '../ws.repository/ddf/users/users.repository';
+import { constants } from '../ws.utils/constants';
+import { cache } from '../ws.utils/redis-cache';
 import * as securityUtils from '../ws.utils/security';
 import * as transactionsService from './dataset-transactions.service';
 import * as datasetsService from './datasets.service';
@@ -123,7 +123,7 @@ function updateIncrementally(externalContext: any, onDatasetUpdated: Function): 
         return transactionsService.setLastError(context.transactionId, _.toString(importError), () => onDatasetUpdated(importError));
       }
 
-      return datasetsService.unlockDataset({datasetName: externalContext.datasetName}, (unlockError: any) => onDatasetUpdated(importError));
+      return datasetsService.unlockDataset({ datasetName: externalContext.datasetName }, (unlockError: any) => onDatasetUpdated(importError));
     }
 
     return onDatasetUpdated(importError, context);
@@ -165,7 +165,7 @@ function getPrivateDatasets(userId: any, done: Function): any {
     }
 
     return done(null, _.map(datasets, (dataset: DatasetModel) => {
-      return {name: dataset.name, githubUrl: dataset.path};
+      return { name: dataset.name, githubUrl: dataset.path };
     }));
   });
 }
@@ -177,7 +177,7 @@ function getDatasetsInProgress(userId: any, done: Function): any {
     }
 
     return done(null, _.map(datasets, (dataset: DatasetModel) => {
-      return {name: dataset.name, githubUrl: dataset.path};
+      return { name: dataset.name, githubUrl: dataset.path };
     }));
   });
 }
@@ -189,7 +189,7 @@ function getAvailableDatasetsAndVersions(userId: any, onQueriesGot: Function): v
     }
 
     return async.mapLimit(datasetsWithVersions, 3, (dataset: any, onDatasetsAndVersionsFound: AsyncResultCallback<any, any>) => {
-      return async.mapLimit(dataset.versions, 3, (version:VersionModel, cb: Function) => {
+      return async.mapLimit(dataset.versions, 3, (version: VersionModel, cb: Function) => {
         return cb(null, {
           createdAt: version.createdAt,
           datasetName: dataset.name,
@@ -210,13 +210,13 @@ function getRemovableDatasets(userId: any, done: Function): void {
       return done(error);
     }
 
-    const defaultDatasetName = _.get(_.find(availableDatasetsAndVersions, (dataset:DatasetModel | VersionModel) => _.get(dataset, 'isDefault', false)), 'datasetName');
+    const defaultDatasetName = _.get(_.find(availableDatasetsAndVersions, (dataset: DatasetModel | VersionModel) => _.get(dataset, 'isDefault', false)), 'datasetName');
 
     const removableDatasets = _.chain(availableDatasetsAndVersions)
       .filter((metadata: any) => metadata.datasetName !== defaultDatasetName)
       .uniqBy('datasetName')
       .map((metadata: any) => {
-        return {name: metadata.datasetName, githubUrl: metadata.githubUrl};
+        return { name: metadata.datasetName, githubUrl: metadata.githubUrl };
       })
       .value();
 
@@ -226,7 +226,7 @@ function getRemovableDatasets(userId: any, done: Function): void {
 
 function getCommitOfLatestDatasetVersion(github: string, user: any, cb: AsyncResultCallback<any, any>): void {
   return async.waterfall([
-    async.constant({github, user}),
+    async.constant({ github, user }),
     _findDataset,
     securityUtils.validateDatasetOwner,
     _validateDatasetBeforeIncrementalUpdate,

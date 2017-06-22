@@ -128,7 +128,7 @@ describe('DDF mappers', () => {
       },
       dimensions: {
         geo: {},
-        year: {},
+        year: {}
       },
       measures: {
         pop: {
@@ -142,60 +142,60 @@ describe('DDF mappers', () => {
 
     const expectedDatapoint = [
       {
-        "dataset": "dsId",
-        "dimensions": [
-          "usaOriginId",
-          "1942OriginId"
+        dataset: 'dsId',
+        dimensions: [
+          'usaOriginId',
+          '1942OriginId'
         ],
-        "dimensionsConcepts": [
-          "countryOriginId",
-          "geoOriginId",
-          "yearOriginId"
+        dimensionsConcepts: [
+          'countryOriginId',
+          'geoOriginId',
+          'yearOriginId'
         ],
-        "from": 1111111,
-        "to": constants.MAX_VERSION,
-        "isNumeric": true,
-        "languages": {},
-        "measure": "popOriginId",
-        "originId": undefined,
-        "properties": {
-          "geo": "usa",
-          "income": "200",
-          "pop": 100500,
-          "year": "1942",
+        from: 1111111,
+        to: constants.MAX_VERSION,
+        isNumeric: true,
+        languages: {},
+        measure: 'popOriginId',
+        originId: undefined,
+        properties: {
+          geo: 'usa',
+          income: '200',
+          pop: 100500,
+          year: '1942'
         },
-        "sources": [
-          "datapoints.csv"
+        sources: [
+          'datapoints.csv'
         ],
-        "value": 100500
+        value: 100500
       },
       {
-        "dataset": "dsId",
-        "dimensions": [
-          "usaOriginId",
-          "1942OriginId"
+        dataset: 'dsId',
+        dimensions: [
+          'usaOriginId',
+          '1942OriginId'
         ],
-        "dimensionsConcepts": [
-          "countryOriginId",
-          "geoOriginId",
-          "yearOriginId"
+        dimensionsConcepts: [
+          'countryOriginId',
+          'geoOriginId',
+          'yearOriginId'
         ],
-        "from": 1111111,
-        "to": constants.MAX_VERSION,
-        "isNumeric": true,
-        "languages": {},
-        "measure": "incomeOriginId",
-        "originId": undefined,
-        "properties": {
-          "geo": "usa",
-          "income": "200",
-          "pop": 100500,
-          "year": "1942"
+        from: 1111111,
+        to: constants.MAX_VERSION,
+        isNumeric: true,
+        languages: {},
+        measure: 'incomeOriginId',
+        originId: undefined,
+        properties: {
+          geo: 'usa',
+          income: '200',
+          pop: 100500,
+          year: '1942'
         },
-        "sources": [
-          "datapoints.csv"
+        sources: [
+          'datapoints.csv'
         ],
-        "value": 200
+        value: 200
       }
     ];
 
@@ -207,7 +207,7 @@ describe('DDF mappers', () => {
     const entry = {
       geo: 'usa',
       year: '1942',
-      pop: 'Boo!',
+      pop: 'Boo!'
     };
 
     const context = {
@@ -240,7 +240,7 @@ describe('DDF mappers', () => {
       },
       dimensions: {
         geo: {},
-        year: {},
+        year: {}
       },
       measures: {
         pop: {
@@ -251,31 +251,31 @@ describe('DDF mappers', () => {
 
     const expectedDatapoint = [
       {
-        "dataset": "dsId",
-        "dimensions": [
-          "usaOriginId",
-          "1942OriginId"
+        dataset: 'dsId',
+        dimensions: [
+          'usaOriginId',
+          '1942OriginId'
         ],
-        "dimensionsConcepts": [
-          "countryOriginId",
-          "geoOriginId",
-          "yearOriginId"
+        dimensionsConcepts: [
+          'countryOriginId',
+          'geoOriginId',
+          'yearOriginId'
         ],
-        "from": 1111111,
-        "to": constants.MAX_VERSION,
-        "isNumeric": false,
-        "languages": {},
-        "measure": "popOriginId",
-        "originId": undefined,
-        "properties": {
-          "geo": "usa",
-          "pop": "Boo!",
-          "year": "1942",
+        from: 1111111,
+        to: constants.MAX_VERSION,
+        isNumeric: false,
+        languages: {},
+        measure: 'popOriginId',
+        originId: undefined,
+        properties: {
+          geo: 'usa',
+          pop: 'Boo!',
+          year: '1942'
         },
-        "sources": [
-          "datapoints.csv"
+        sources: [
+          'datapoints.csv'
         ],
-        "value": "Boo!"
+        value: 'Boo!'
       }
     ];
 
@@ -287,7 +287,7 @@ describe('DDF mappers', () => {
     const entry = {
       geo: 'usa',
       year: '1942',
-      pop: 'Boo!',
+      pop: 'Boo!'
     };
 
     const context = {
@@ -320,7 +320,7 @@ describe('DDF mappers', () => {
       },
       dimensions: {
         geo: {},
-        year: {},
+        year: {}
       },
       measures: {
         pop: {
@@ -331,31 +331,31 @@ describe('DDF mappers', () => {
 
     const expectedDatapoint = [
       {
-        "dataset": "dsId",
-        "dimensions": [
-          "usaOriginId",
-          "1942OriginId"
+        dataset: 'dsId',
+        dimensions: [
+          'usaOriginId',
+          '1942OriginId'
         ],
-        "dimensionsConcepts": [
-          "countryOriginId",
-          "geoOriginId",
-          "yearOriginId"
+        dimensionsConcepts: [
+          'countryOriginId',
+          'geoOriginId',
+          'yearOriginId'
         ],
-        "from": 1111111,
-        "to": constants.MAX_VERSION,
-        "isNumeric": false,
-        "languages": {},
-        "measure": "popOriginId",
-        "originId": undefined,
-        "properties": {
-          "geo": "usa",
-          "pop": "Boo!",
-          "year": "1942",
+        from: 1111111,
+        to: constants.MAX_VERSION,
+        isNumeric: false,
+        languages: {},
+        measure: 'popOriginId',
+        originId: undefined,
+        properties: {
+          geo: 'usa',
+          pop: 'Boo!',
+          year: '1942'
         },
-        "sources": [
-          "datapoints.csv"
+        sources: [
+          'datapoints.csv'
         ],
-        "value": "Boo!"
+        value: 'Boo!'
       }
     ];
 
@@ -367,7 +367,7 @@ describe('DDF mappers', () => {
     const entry = {
       geo: 'usa',
       year: '1942',
-      pop: 'Boo!',
+      pop: 'Boo!'
     };
 
     const context = {
@@ -387,11 +387,11 @@ describe('DDF mappers', () => {
         bySet: {},
         byDomain: {},
         byGid: {
-          'usa': {
+          usa: {
             gid: 'usa',
             originId: 'usaOriginId'
           },
-          '1942': {
+          1942: {
             gid: '1942',
             originId: '1942OriginId'
           }
@@ -400,7 +400,7 @@ describe('DDF mappers', () => {
       },
       dimensions: {
         geo: {},
-        year: {},
+        year: {}
       },
       measures: {
         pop: {
@@ -411,31 +411,31 @@ describe('DDF mappers', () => {
 
     const expectedDatapoint = [
       {
-        "dataset": "dsId",
-        "dimensions": [
-          "usaOriginId",
-          "1942OriginId"
+        dataset: 'dsId',
+        dimensions: [
+          'usaOriginId',
+          '1942OriginId'
         ],
-        "dimensionsConcepts": [
-          "countryOriginId",
-          "geoOriginId",
-          "yearOriginId"
+        dimensionsConcepts: [
+          'countryOriginId',
+          'geoOriginId',
+          'yearOriginId'
         ],
-        "from": 1111111,
-        "to": constants.MAX_VERSION,
-        "isNumeric": false,
-        "languages": {},
-        "measure": "popOriginId",
-        "originId": undefined,
-        "properties": {
-          "geo": "usa",
-          "pop": "Boo!",
-          "year": "1942",
+        from: 1111111,
+        to: constants.MAX_VERSION,
+        isNumeric: false,
+        languages: {},
+        measure: 'popOriginId',
+        originId: undefined,
+        properties: {
+          geo: 'usa',
+          pop: 'Boo!',
+          year: '1942'
         },
-        "sources": [
-          "datapoints.csv"
+        sources: [
+          'datapoints.csv'
         ],
-        "value": "Boo!"
+        value: 'Boo!'
       }
     ];
 
@@ -447,7 +447,7 @@ describe('DDF mappers', () => {
     const entry = {
       geo: 'usa',
       year: '1942',
-      pop: 'Boo!',
+      pop: 'Boo!'
     };
 
     const context = {
@@ -467,13 +467,13 @@ describe('DDF mappers', () => {
         bySet: {},
         byDomain: {},
         byGid: {
-          'usa': {
+          usa: {
             gid: 'usa',
             originId: 'usaOriginId'
           }
         },
         foundInDatapointsByGid: {
-          '1942': {
+          1942: {
             gid: '1942',
             originId: '1942OriginId'
           }
@@ -481,7 +481,7 @@ describe('DDF mappers', () => {
       },
       dimensions: {
         geo: {},
-        year: {},
+        year: {}
       },
       measures: {
         pop: {
@@ -492,31 +492,31 @@ describe('DDF mappers', () => {
 
     const expectedDatapoint = [
       {
-        "dataset": "dsId",
-        "dimensions": [
-          "usaOriginId",
-          "1942OriginId"
+        dataset: 'dsId',
+        dimensions: [
+          'usaOriginId',
+          '1942OriginId'
         ],
-        "dimensionsConcepts": [
-          "countryOriginId",
-          "geoOriginId",
-          "yearOriginId"
+        dimensionsConcepts: [
+          'countryOriginId',
+          'geoOriginId',
+          'yearOriginId'
         ],
-        "from": 1111111,
-        "to": constants.MAX_VERSION,
-        "isNumeric": false,
-        "languages": {},
-        "measure": "popOriginId",
-        "originId": undefined,
-        "properties": {
-          "geo": "usa",
-          "pop": "Boo!",
-          "year": "1942",
+        from: 1111111,
+        to: constants.MAX_VERSION,
+        isNumeric: false,
+        languages: {},
+        measure: 'popOriginId',
+        originId: undefined,
+        properties: {
+          geo: 'usa',
+          pop: 'Boo!',
+          year: '1942'
         },
-        "sources": [
-          "datapoints.csv"
+        sources: [
+          'datapoints.csv'
         ],
-        "value": "Boo!"
+        value: 'Boo!'
       }
     ];
 

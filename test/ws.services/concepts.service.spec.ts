@@ -220,7 +220,6 @@ describe('Concepts service', () => {
     });
   }));
 
-
   it('collects concepts by ddfql: fails cause is not able to collect concepts using normalized query', sandbox(function(done: Function) {
     const expectedError = 'Boo!';
 

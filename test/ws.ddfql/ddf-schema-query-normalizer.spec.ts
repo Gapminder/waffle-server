@@ -1,47 +1,47 @@
 import 'mocha';
 
-import {expect} from 'chai';
+import { expect } from 'chai';
 
 import * as schemaQueryNormalizer from '../../ws.ddfql/ddf-schema-query-normalizer';
 
 describe('ddf schema query normalizer', () => {
   it('should normalize schema where clause - For the dimensions geo and year, what indicators are available?', () => {
     const schemaDdfql = {
-      "select": {
-        "key": [
-          "key",
-          "value"
+      select: {
+        key: [
+          'key',
+          'value'
         ]
       },
-      "from": "datapoints.schema",
-      "where": {
-        "key": [
-          "geo",
-          "year"
+      from: 'datapoints.schema',
+      where: {
+        key: [
+          'geo',
+          'year'
         ]
       },
-      "aliases": {}
+      aliases: {}
     };
 
     const normalizedSchemaDdfql = {
-      "select": {
-        "key": 1,
-        "value": 1
+      select: {
+        key: 1,
+        value: 1
       },
-      "from": "datapoints.schema",
-      "where": {
-        "$and": [
-          {"type": "datapoints"},
+      from: 'datapoints.schema',
+      where: {
+        $and: [
+          { type: 'datapoints' },
           {
-            "key": [
-              "geo",
-              "year"
+            key: [
+              'geo',
+              'year'
             ]
           }
         ]
       },
-      "order_by": [],
-      "aliases": {}
+      order_by: [],
+      aliases: {}
     };
 
     const normalizedSchemaQuery = schemaQueryNormalizer.normalize(schemaDdfql);
@@ -50,33 +50,33 @@ describe('ddf schema query normalizer', () => {
 
   it('should normalize schema where clause - In what dimensionality can I get population?', () => {
     const schemaDdfql = {
-      "select": {
-        "key": [
-          "key",
-          "value"
+      select: {
+        key: [
+          'key',
+          'value'
         ]
       },
-      "from": "datapoints.schema",
-      "where": {
-        "value": "population"
+      from: 'datapoints.schema',
+      where: {
+        value: 'population'
       },
-      "aliases": {}
+      aliases: {}
     };
 
     const normalizedSchemaDdfql = {
-      "select": {
-        "key": 1,
-        "value": 1
+      select: {
+        key: 1,
+        value: 1
       },
-      "from": "datapoints.schema",
-      "where": {
-        "$and": [
-          {"type": "datapoints"},
-          {"value": "population"}
+      from: 'datapoints.schema',
+      where: {
+        $and: [
+          { type: 'datapoints' },
+          { value: 'population' }
         ]
       },
-      "order_by": [],
-      "aliases": {}
+      order_by: [],
+      aliases: {}
     };
 
     expect(schemaQueryNormalizer.normalize(schemaDdfql)).to.deep.equal(normalizedSchemaDdfql);
@@ -84,33 +84,33 @@ describe('ddf schema query normalizer', () => {
 
   it('should normalize schema where clause - What entity properties are available for geo?', () => {
     const schemaDdfql = {
-      "select": {
-        "key": [
-          "key",
-          "value"
+      select: {
+        key: [
+          'key',
+          'value'
         ]
       },
-      "from": "entities.schema",
-      "where": {
-        "key": ["geo"]
+      from: 'entities.schema',
+      where: {
+        key: ['geo']
       },
-      "aliases": {}
+      aliases: {}
     };
 
     const normalizedSchemaDdfql = {
-      "select": {
-        "key": 1,
-        "value": 1
+      select: {
+        key: 1,
+        value: 1
       },
-      "from": "entities.schema",
-      "where": {
-        "$and": [
-          {"type": "entities"},
-          {"key": ["geo"]}
+      from: 'entities.schema',
+      where: {
+        $and: [
+          { type: 'entities' },
+          { key: ['geo'] }
         ]
       },
-      "aliases": {},
-      "order_by": []
+      aliases: {},
+      order_by: []
     };
 
     expect(schemaQueryNormalizer.normalize(schemaDdfql)).to.deep.equal(normalizedSchemaDdfql);
@@ -118,29 +118,29 @@ describe('ddf schema query normalizer', () => {
 
   it('should normalize schema where clause - What concept properties are available in the dataset?', () => {
     const schemaDdfql = {
-      "select": {
-        "key": [
-          "key",
-          "value"
+      select: {
+        key: [
+          'key',
+          'value'
         ]
       },
-      "from": "concepts.schema",
-      "aliases": {}
+      from: 'concepts.schema',
+      aliases: {}
     };
 
     const normalizedSchemaDdfql = {
-      "select": {
-        "key": 1,
-        "value": 1
+      select: {
+        key: 1,
+        value: 1
       },
-      "from": "concepts.schema",
-      "where": {
-        "$and": [
-          {"type": "concepts"},
+      from: 'concepts.schema',
+      where: {
+        $and: [
+          { type: 'concepts' }
         ]
       },
-      "aliases": {},
-      "order_by": []
+      aliases: {},
+      order_by: []
     };
 
     expect(schemaQueryNormalizer.normalize(schemaDdfql)).to.deep.equal(normalizedSchemaDdfql);
@@ -148,33 +148,33 @@ describe('ddf schema query normalizer', () => {
 
   it('should normalize schema where clause that contains functions - What datapoints does this dataset have and what are their indicators min and max values?', () => {
     const schemaDdfql = {
-      "select": {
-        "key": [
-          "key",
-          "value"
+      select: {
+        key: [
+          'key',
+          'value'
         ],
-        "value": [
-          "min(value)",
-          "max(value)"
+        value: [
+          'min(value)',
+          'max(value)'
         ]
       },
-      "from": "datapoints.schema",
-      "aliases": {}
+      from: 'datapoints.schema',
+      aliases: {}
     };
 
     const normalizedSchemaDdfql = {
-      "select": {"key": 1, "value": 1, "min": 1, "max": 1},
-      "from": "datapoints.schema",
-      "where": {
-        "$and": [
-          {"type": "datapoints"},
+      select: { key: 1, value: 1, min: 1, max: 1 },
+      from: 'datapoints.schema',
+      where: {
+        $and: [
+          { type: 'datapoints' }
         ]
       },
-      "aliases": {
-        "min": "min(value)",
-        "max": "max(value)"
+      aliases: {
+        min: 'min(value)',
+        max: 'max(value)'
       },
-      "order_by": []
+      order_by: []
     };
 
     expect(schemaQueryNormalizer.normalize(schemaDdfql)).to.deep.equal(normalizedSchemaDdfql);

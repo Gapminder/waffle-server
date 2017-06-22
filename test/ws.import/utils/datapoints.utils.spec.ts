@@ -26,10 +26,10 @@ const externalContext = {
 const threeDimensionsContext = {
   segregatedEntities: {
     entities: {
-      '1925': {},
-      '1926': {},
-      'gapminder': {},
-      'some_value_of_another_dim': {}
+      1925: {},
+      1926: {},
+      gapminder: {},
+      some_value_of_another_dim: {}
     }
   },
   dimensions: {
@@ -58,10 +58,10 @@ const threeDimensionsContext = {
 const twoDimensionsContext = {
   segregatedEntities: {
     entities: {
-      '1925': {},
-      '1926': {},
-      'gapminder': {},
-      'some_value_of_another_dim': {}
+      1925: {},
+      1926: {},
+      gapminder: {},
+      some_value_of_another_dim: {}
     }
   },
   dimensions: {
@@ -117,15 +117,15 @@ const datapointsWithFoundEntities = [
 describe('Datapoints Utils', () => {
   it('it should save datapoints and entities found in them', sandbox(function (done: Function) {
     const entitiesFoundInDatapoints = {
-      '1912': {},
-      '1905': {}
+      1912: {},
+      1905: {}
     };
 
     const expectedMappingContext1 = {
       measures: threeDimensionsContext.measures,
       filename: threeDimensionsContext.filename,
       dimensions: threeDimensionsContext.dimensions,
-      dimensionsConcepts: ["annoOriginId", "domainOfCompanyOriginId", "companyOriginId", "another_dimDomainOriginId", "anotherDimOriginId"],
+      dimensionsConcepts: ['annoOriginId', 'domainOfCompanyOriginId', 'companyOriginId', 'another_dimDomainOriginId', 'anotherDimOriginId'],
       entities: {
         entities: threeDimensionsContext.segregatedEntities.entities,
         foundInDatapointsByGid: entitiesFoundInDatapoints
@@ -139,7 +139,7 @@ describe('Datapoints Utils', () => {
       measures: twoDimensionsContext.measures,
       filename: twoDimensionsContext.filename,
       dimensions: twoDimensionsContext.dimensions,
-      dimensionsConcepts: ["annoOriginId", "domainOfCompanyOriginId", "companyOriginId"],
+      dimensionsConcepts: ['annoOriginId', 'domainOfCompanyOriginId', 'companyOriginId'],
       entities: {
         entities: twoDimensionsContext.segregatedEntities.entities,
         foundInDatapointsByGid: entitiesFoundInDatapoints
@@ -267,7 +267,7 @@ describe('Datapoints Utils', () => {
       concepts: {
         lines_of_code: {
           originId: 'lines_of_code'
-        },
+        }
       }
     };
 
@@ -318,7 +318,7 @@ describe('Datapoints Utils', () => {
       },
       previousTransaction: {
         createdAt: 1484065322122
-      },
+      }
     };
 
     datapointsUtils.findAllPreviousEntities(externalContext);
@@ -340,13 +340,13 @@ describe('Datapoints Utils', () => {
     };
 
     const context = {
-      dimensions: _.extend({'not_existing_dimension': {}}, threeDimensionsContext.dimensions),
+      dimensions: _.extend({not_existing_dimension: {}}, threeDimensionsContext.dimensions),
       segregatedEntities: {
         groupedByGid: {
-          '1905': [{
+          1905: [{
             originId: '1905OriginId'
           }],
-          'gapminder': [{
+          gapminder: [{
             originId: 'gapminderOriginId'
           }]
         }
@@ -383,7 +383,7 @@ describe('Datapoints Utils', () => {
       gid: '12',
       sets: [
         {originId: 'ageEntitySet1'},
-        {originId: 'ageEntitySet2'},
+        {originId: 'ageEntitySet2'}
       ]
     };
 
@@ -422,16 +422,16 @@ describe('Datapoints Utils', () => {
         'usa-countryDomainOriginId': usaEntity
       },
       byGid: {
-        '12': entity12,
-        'gapminder': gapminderEntity,
-        'usa': usaEntity,
-        'ws': ws2Entity,
+        12: entity12,
+        gapminder: gapminderEntity,
+        usa: usaEntity,
+        ws: ws2Entity
       },
       groupedByGid: {
-        '12': [entity12],
-        'gapminder': [gapminderEntity],
-        'usa': [usaEntity],
-        'ws': [wsEntity, ws2Entity],
+        12: [entity12],
+        gapminder: [gapminderEntity],
+        usa: [usaEntity],
+        ws: [wsEntity, ws2Entity]
       }
     });
   });
@@ -440,10 +440,10 @@ describe('Datapoints Utils', () => {
     const context = {
       segregatedEntities: {
         byGid: {
-          '1925': {},
-          '1926': {},
-          'gapminder': {},
-          'some_value_of_another_dim': {}
+          1925: {},
+          1926: {},
+          gapminder: {},
+          some_value_of_another_dim: {}
         }
       },
       dimensions: {
@@ -481,8 +481,8 @@ describe('Datapoints Utils', () => {
       version: externalContext.transaction.createdAt,
       datasetId: externalContext.dataset._id,
       timeConcepts: externalContext.timeConcepts,
-      domain: { originId: "annoOriginId" },
-      concept: { originId: "annoOriginId" },
+      domain: { originId: 'annoOriginId' },
+      concept: { originId: 'annoOriginId' },
       filename: context.filename
     });
     expect(entities.length).to.equal(1);
@@ -493,10 +493,10 @@ describe('Datapoints Utils', () => {
     const context = {
       segregatedEntities: {
         byGid: {
-          '1925': {},
-          '1926': {},
-          'gapminder': {},
-          'some_value_of_another_dim': {}
+          1925: {},
+          1926: {},
+          gapminder: {},
+          some_value_of_another_dim: {}
         }
       },
       dimensions: {
@@ -538,7 +538,7 @@ describe('Datapoints Utils', () => {
       datasetId: externalContext.dataset._id,
       timeConcepts: externalContext.timeConcepts,
       domain: 'timeDomainOriginId',
-      concept: { domain: 'timeDomainOriginId', gid: "anno", originId: "annoOriginId" },
+      concept: { domain: 'timeDomainOriginId', gid: 'anno', originId: 'annoOriginId' },
       filename: context.filename
     });
     expect(entities.length).to.equal(1);
@@ -549,10 +549,10 @@ describe('Datapoints Utils', () => {
     const context = {
       segregatedEntities: {
         byGid: {
-          '1925': {},
-          '1926': {},
-          'gapminder': {},
-          'some_value_of_another_dim': {}
+          1925: {},
+          1926: {},
+          gapminder: {},
+          some_value_of_another_dim: {}
         }
       },
       dimensions: {
@@ -602,12 +602,12 @@ describe('Datapoints Utils', () => {
       },
       {
         gid: '1884'
-      },
+      }
     ];
 
     const entitiesByGid = _.keyBy(entities, 'gid');
 
-    const createStub = this.stub().returns(Promise.resolve(_.map(entities, entity => ({toObject: () => entity}))));
+    const createStub = this.stub().returns(Promise.resolve(_.map(entities, (entity) => ({toObject: () => entity}))));
 
     this.stub(EntitiesRepositoryFactory, 'versionAgnostic').callsFake(() => {
       return {
@@ -619,7 +619,7 @@ describe('Datapoints Utils', () => {
 
     const createdEntities = createEntitiesWithCache(entities);
 
-    createdEntities.then(created => expect(created).to.deep.equal(entitiesByGid));
+    createdEntities.then((created) => expect(created).to.deep.equal(entitiesByGid));
     sinon.assert.calledOnce(createStub);
     sinon.assert.calledWith(createStub, entities);
 
@@ -627,7 +627,7 @@ describe('Datapoints Utils', () => {
 
     const createdEntitiesFromCache = createEntitiesWithCache(entities);
 
-    createdEntitiesFromCache.then(created => expect(created).to.deep.equal(entitiesByGid));
+    createdEntitiesFromCache.then((created) => expect(created).to.deep.equal(entitiesByGid));
     sinon.assert.notCalled(createStub);
   }));
 });

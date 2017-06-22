@@ -1,4 +1,4 @@
-import {constants} from '../ws.utils/constants';
+import { constants } from '../ws.utils/constants';
 
 /* tslint:disable:no-invalid-this */
 const e2eEnv = {
