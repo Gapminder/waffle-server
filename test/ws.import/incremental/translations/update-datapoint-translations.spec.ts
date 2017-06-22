@@ -55,7 +55,7 @@ describe('Datapoints Translations Update Plugin', () => {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       expect(externalContextFrozen.datasetId).to.equal(externalContext.dataset._id);
       expect(externalContextFrozen.version).to.equal(externalContext.transaction.createdAt);
       expect(externalContextFrozen.dataset).to.equal(externalContext.dataset);
@@ -79,7 +79,7 @@ describe('Datapoints Translations Update Plugin', () => {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       expect(Object.isFrozen(externalContextFrozen)).to.be.equal(true, 'context should be frozen');
 
       expect(plugin.dataType).to.equal(constants.DATAPOINTS);
@@ -119,7 +119,7 @@ describe('Datapoints Translations Update Plugin', () => {
       dimensions
     });
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       const enrichment = plugin.enrichContext(fakeResource, null, externalContext);
 
       expect(enrichment).to.deep.equal({measures, dimensions});
@@ -171,7 +171,7 @@ describe('Datapoints Translations Update Plugin', () => {
       }
     };
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
 
       const changes = hi([new ChangesDescriptor(datapointChangeGeneratedByDiff)]);
       plugin.transformStreamBeforeActionSegregation(changes).toArray((result: ChangesDescriptor[]) => {
@@ -240,7 +240,7 @@ describe('Datapoints Translations Update Plugin', () => {
       }
     };
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
 
       const changes = hi([new ChangesDescriptor(datapointChangeGeneratedByDiff)]);
       plugin.transformStreamBeforeActionSegregation(changes).toArray((result: ChangesDescriptor[]) => {
@@ -297,7 +297,7 @@ describe('Datapoints Translations Update Plugin', () => {
       }
     };
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
 
       const changes = hi([new ChangesDescriptor(datapointChangeGeneratedByDiff)]);
       plugin.transformStreamBeforeActionSegregation(changes).toArray((result: ChangesDescriptor[]) => {
@@ -344,7 +344,7 @@ describe('Datapoints Translations Update Plugin', () => {
       }
     };
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
 
       const changesDescriptor = new ChangesDescriptor(datapointChangeGeneratedByDiff);
       const changes = hi([changesDescriptor]);
@@ -364,7 +364,7 @@ describe('Datapoints Translations Update Plugin', () => {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       const closedTarget = constants.MONGO_SPECIAL_FIELDS.reduce((result, field) => Object.assign(result, {[field]: 1}), {});
 
       expect(constants.MONGO_SPECIAL_FIELDS.every(field => field in closedTarget)).to.equal(true);
@@ -412,7 +412,7 @@ describe('Datapoints Translations Update Plugin', () => {
     ];
     const getDimensionsAsEntityOriginIdsStub = this.stub(datapointsUtils, 'getDimensionsAsEntityOriginIds').returns(expectedDimensionsAsOriginIds);
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       const query = plugin.makeQueryToFetchTranslationTarget(changesDescriptor, context);
 
       sinon.assert.calledOnce(getDimensionsAsEntityOriginIdsStub);
@@ -452,7 +452,7 @@ describe('Datapoints Translations Update Plugin', () => {
     this.stub(datapointsUtils, 'getDimensionsAsEntityOriginIds').returns([]);
     const loggerErrorStub = this.stub(logger, 'error');
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       const query = plugin.makeQueryToFetchTranslationTarget(changesDescriptor, context);
 
       sinon.assert.calledOnce(loggerErrorStub);
@@ -489,7 +489,7 @@ describe('Datapoints Translations Update Plugin', () => {
       }
     };
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       const changes = hi([{changesDescriptor, context}]);
 
       plugin.transformStreamBeforeChangesApplied(changes).toArray(result => {
@@ -530,7 +530,7 @@ describe('Datapoints Translations Update Plugin', () => {
       }
     };
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       const changes = hi([{changesDescriptor, context}]);
 
       plugin.transformStreamBeforeChangesApplied(changes).toArray(result => {

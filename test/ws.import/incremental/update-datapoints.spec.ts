@@ -148,7 +148,7 @@ describe('Datapoints incremental update flow', () => {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
 
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream', (pathToDiff: string) => {
+    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToDiff: string) => {
       return readTextFileByLineAsJsonStreamOriginal(pathToDiff)
         .filter(({metadata}) => {
           return metadata.action === 'create';
@@ -160,7 +160,7 @@ describe('Datapoints incremental update flow', () => {
     });
 
     const collectedDatapoints = [];
-    const saveDatapointsAndEntitiesFoundInThemStub = this.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem', (saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
+    const saveDatapointsAndEntitiesFoundInThemStub = this.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem').callsFake((saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
       return datapointsFoundEntitiesStream
         .tap(datapointsWithFoundEntities => {
           collectedDatapoints.push(datapointsWithFoundEntities);
@@ -297,7 +297,7 @@ describe('Datapoints incremental update flow', () => {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
 
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream', (pathToDiff: string) => {
+    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToDiff: string) => {
       return readTextFileByLineAsJsonStreamOriginal(pathToDiff)
         .filter(({metadata}) => {
           return metadata.action === 'change';
@@ -309,7 +309,7 @@ describe('Datapoints incremental update flow', () => {
     });
 
     const collectedDatapoints = [];
-    this.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem', (saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
+    this.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem').callsFake((saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
       return datapointsFoundEntitiesStream
         .tap(datapointsWithFoundEntities => {
           collectedDatapoints.push(datapointsWithFoundEntities);
@@ -430,7 +430,7 @@ describe('Datapoints incremental update flow', () => {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
 
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream', (pathToDiff: string) => {
+    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToDiff: string) => {
       return readTextFileByLineAsJsonStreamOriginal(pathToDiff)
         .filter(({metadata}) => {
           return metadata.action === 'change';
@@ -442,7 +442,7 @@ describe('Datapoints incremental update flow', () => {
     });
 
     const collectedDatapoints = [];
-    this.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem', (saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
+    this.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem').callsFake((saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
       return datapointsFoundEntitiesStream
         .tap(datapointsWithFoundEntities => {
           collectedDatapoints.push(datapointsWithFoundEntities);
@@ -484,7 +484,7 @@ describe('Datapoints incremental update flow', () => {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
 
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream', (pathToDiff: string) => {
+    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToDiff: string) => {
       return readTextFileByLineAsJsonStreamOriginal(pathToDiff)
         .filter(({metadata}) => {
           return metadata.action === 'change';
@@ -496,7 +496,7 @@ describe('Datapoints incremental update flow', () => {
     });
 
     const collectedDatapoints = [];
-    this.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem', (saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
+    this.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem').callsFake((saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
       return datapointsFoundEntitiesStream
         .tap(datapointsWithFoundEntities => {
           collectedDatapoints.push(datapointsWithFoundEntities);
@@ -529,7 +529,7 @@ describe('Datapoints incremental update flow', () => {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
 
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream', (pathToDiff: string) => {
+    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToDiff: string) => {
       return readTextFileByLineAsJsonStreamOriginal(pathToDiff)
         .filter(({metadata}) => {
           return metadata.action === 'remove';
@@ -541,7 +541,7 @@ describe('Datapoints incremental update flow', () => {
     });
 
     const collectedDatapoints = [];
-    this.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem', (saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
+    this.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem').callsFake((saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
       return datapointsFoundEntitiesStream
         .tap(datapointsWithFoundEntities => {
           collectedDatapoints.push(datapointsWithFoundEntities);
@@ -603,7 +603,7 @@ describe('Datapoints incremental update flow', () => {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
 
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream', (pathToDiff: string) => {
+    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToDiff: string) => {
       return readTextFileByLineAsJsonStreamOriginal(pathToDiff)
         .filter(({metadata}) => {
           return metadata.action === 'remove';
@@ -615,7 +615,7 @@ describe('Datapoints incremental update flow', () => {
     });
 
     const collectedDatapoints = [];
-    this.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem', (saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
+    this.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem').callsFake((saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
       return datapointsFoundEntitiesStream
         .tap(datapointsWithFoundEntities => {
           collectedDatapoints.push(datapointsWithFoundEntities);
@@ -649,7 +649,7 @@ describe('Datapoints incremental update flow', () => {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
 
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream', (pathToDiff: string) => {
+    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToDiff: string) => {
       return readTextFileByLineAsJsonStreamOriginal(pathToDiff)
         .filter(({metadata}) => {
           return metadata.action === 'remove';
@@ -661,7 +661,7 @@ describe('Datapoints incremental update flow', () => {
     });
 
     const collectedDatapoints = [];
-    this.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem', (saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
+    this.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem').callsFake((saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
       return datapointsFoundEntitiesStream
         .tap(datapointsWithFoundEntities => {
           collectedDatapoints.push(datapointsWithFoundEntities);
