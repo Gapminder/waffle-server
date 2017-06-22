@@ -19,22 +19,22 @@ import { DatapointsRepositoryFactory } from '../../ws.repository/ddf/data-points
 const sandbox = sinonTest.configureTest(sinon);
 
 const language = {
-  "id": "nl-nl",
-  "name": "nl-nl"
+  id: 'nl-nl',
+  name: 'nl-nl'
 };
 
 const datapackageStub: any = {
-  "name": "ddf--ws-testing",
-  "title": "ddf--ws-testing",
-  "description": "",
-  "version": "0.0.1",
-  "language": {
-    "id": "en",
-    "name": "English"
+  name: 'ddf--ws-testing',
+  title: 'ddf--ws-testing',
+  description: '',
+  version: '0.0.1',
+  language: {
+    id: 'en',
+    name: 'English'
   },
-  "translations": [language],
-  "license": "",
-  "author": ""
+  translations: [language],
+  license: '',
+  author: ''
 };
 
 const context = {
@@ -53,10 +53,10 @@ const context = {
 describe('Import translations', () => {
   describe('Import concepts translations', () => {
     const conceptTranslation = {
-      "concept": "english_speaking",
-      "concept_type": "entity_set",
-      "domain": "company",
-      "additional_column": "Engels sprekende"
+      concept: 'english_speaking',
+      concept_type: 'entity_set',
+      domain: 'company',
+      additional_column: 'Engels sprekende'
     };
 
     before(() => {
@@ -71,10 +71,9 @@ describe('Import translations', () => {
       datapackageStub.resources = [];
     });
 
-
     it('should import translations for concept', sandbox(function (done: Function) {
       const addTranslationsForGivenPropertiesSpy = this.stub().returns(Promise.resolve());
-      const allOpenedInGivenVersionStub = this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties:  addTranslationsForGivenPropertiesSpy});
+      const allOpenedInGivenVersionStub = this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties: addTranslationsForGivenPropertiesSpy });
 
       const fsAccessStub = this.stub(fs, 'access').callsArgWithAsync(2);
 
@@ -85,7 +84,8 @@ describe('Import translations', () => {
         expect(externalContext).to.equal(context);
 
         sinon.assert.calledOnce(fsAccessStub);
-        sinon.assert.calledWith(fsAccessStub, '/some/path/lang/nl-nl/ddf--concepts.csv', fs.constants.R_OK);sinon.assert.calledOnce(fsAccessStub);
+        sinon.assert.calledWith(fsAccessStub, '/some/path/lang/nl-nl/ddf--concepts.csv', fs.constants.R_OK);
+        sinon.assert.calledOnce(fsAccessStub);
 
         sinon.assert.calledOnce(readCsvFileAsStreamStub);
         sinon.assert.calledWith(readCsvFileAsStreamStub, '/some/path', 'lang/nl-nl/ddf--concepts.csv');
@@ -94,19 +94,23 @@ describe('Import translations', () => {
         sinon.assert.calledWith(allOpenedInGivenVersionStub, context.dataset._id, context.transaction.createdAt);
 
         sinon.assert.calledOnce(addTranslationsForGivenPropertiesSpy);
-        sinon.assert.calledWith(addTranslationsForGivenPropertiesSpy, conceptTranslation, {language: {id: 'nl-nl', name: 'nl-nl'}});
+        sinon.assert.calledWith(addTranslationsForGivenPropertiesSpy, conceptTranslation, {
+          language: {
+            id: 'nl-nl',
+            name: 'nl-nl'
+          }
+        });
 
         done();
       });
     }));
 
-
     it('should import translations for concept: translation properties are transformed by ddf mapper', sandbox(function (done: Function) {
-      const transformedTranslation = {hello: 'world'};
+      const transformedTranslation = { hello: 'world' };
       const transformConceptPropertiesStub = this.stub(ddfMappers, 'transformConceptProperties').returns(transformedTranslation);
 
       const addTranslationsForGivenPropertiesSpy = this.stub().returns(Promise.resolve());
-      this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties:  addTranslationsForGivenPropertiesSpy});
+      this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties: addTranslationsForGivenPropertiesSpy });
 
       this.stub(fs, 'access').callsArgWithAsync(2);
 
@@ -128,7 +132,7 @@ describe('Import translations', () => {
 
     it('should not import translations for concept if it is impossible to read a file with them', sandbox(function (done: Function) {
       const addTranslationsForGivenPropertiesSpy = this.stub().returns(Promise.resolve());
-      const allOpenedInGivenVersionStub = this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties:  addTranslationsForGivenPropertiesSpy});
+      const allOpenedInGivenVersionStub = this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties: addTranslationsForGivenPropertiesSpy });
 
       const fsAccessStub = this.stub(fs, 'access').callsArgWithAsync(2, 'Cannot Read File');
 
@@ -139,7 +143,8 @@ describe('Import translations', () => {
         expect(externalContext).to.equal(context);
 
         sinon.assert.calledOnce(fsAccessStub);
-        sinon.assert.calledWith(fsAccessStub, '/some/path/lang/nl-nl/ddf--concepts.csv', fs.constants.R_OK);sinon.assert.calledOnce(fsAccessStub);
+        sinon.assert.calledWith(fsAccessStub, '/some/path/lang/nl-nl/ddf--concepts.csv', fs.constants.R_OK);
+        sinon.assert.calledOnce(fsAccessStub);
 
         sinon.assert.notCalled(readCsvFileAsStreamStub);
         sinon.assert.notCalled(allOpenedInGivenVersionStub);
@@ -156,24 +161,24 @@ describe('Import translations', () => {
       path: 'ddf--entities--company--company_scale.csv',
       fields: [
         {
-          "name": "company_scale"
+          name: 'company_scale'
         },
         {
-          "name": "full_name_changed"
+          name: 'full_name_changed'
         },
         {
-          "name": "is--company_scale"
+          name: 'is--company_scale'
         }
       ],
       concept: 'company_scale',
       entitySets: ['company_scale'],
-      primaryKey: ["company_scale"]
+      primaryKey: ['company_scale']
     };
 
     const entityTranslation = {
-      "company_scale": "large",
-      "full_name_changed": "HEEL GROOT!!!$(#(*#*($",
-      "is--company_scale": "TRUE"
+      company_scale: 'large',
+      full_name_changed: 'HEEL GROOT!!!$(#(*#*($',
+      'is--company_scale': 'TRUE'
     };
 
     before(() => {
@@ -186,7 +191,7 @@ describe('Import translations', () => {
 
     it('should import translations for entity', sandbox(function (done: Function) {
       const addTranslationsForGivenPropertiesSpy = this.stub().returns(Promise.resolve());
-      const allOpenedInGivenVersionStub = this.stub(EntitiesRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties:  addTranslationsForGivenPropertiesSpy});
+      const allOpenedInGivenVersionStub = this.stub(EntitiesRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties: addTranslationsForGivenPropertiesSpy });
 
       const fsAccessStub = this.stub(fs, 'access').callsArgWithAsync(2);
 
@@ -199,8 +204,8 @@ describe('Import translations', () => {
         expect(externalContext).to.equal(context);
 
         const expectedEntityTranslation = {
-          company_scale: "large",
-          full_name_changed: "HEEL GROOT!!!$(#(*#*($",
+          company_scale: 'large',
+          full_name_changed: 'HEEL GROOT!!!$(#(*#*($',
           'is--company_scale': true
         };
 
@@ -219,7 +224,7 @@ describe('Import translations', () => {
         sinon.assert.calledWith(addTranslationsForGivenPropertiesSpy, expectedEntityTranslation, {
           language,
           source: entityResource.path,
-          resolvedProperties: { gid: 'large', 'properties.is--company_scale': true },
+          resolvedProperties: { gid: 'large', 'properties.is--company_scale': true }
         });
 
         done();
@@ -228,7 +233,7 @@ describe('Import translations', () => {
 
     it('should not import translations for entity if it is impossible to read a file with them', sandbox(function (done: Function) {
       const addTranslationsForGivenPropertiesSpy = this.stub().returns(Promise.resolve());
-      const allOpenedInGivenVersionStub = this.stub(EntitiesRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties:  addTranslationsForGivenPropertiesSpy});
+      const allOpenedInGivenVersionStub = this.stub(EntitiesRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties: addTranslationsForGivenPropertiesSpy });
 
       const fsAccessStub = this.stub(fs, 'access').callsArgWithAsync(2, 'Cannot Read File');
 
@@ -239,7 +244,8 @@ describe('Import translations', () => {
         expect(externalContext).to.equal(context);
 
         sinon.assert.calledOnce(fsAccessStub);
-        sinon.assert.calledWith(fsAccessStub, '/some/path/lang/nl-nl/ddf--entities--company--company_scale.csv', fs.constants.R_OK);sinon.assert.calledOnce(fsAccessStub);
+        sinon.assert.calledWith(fsAccessStub, '/some/path/lang/nl-nl/ddf--entities--company--company_scale.csv', fs.constants.R_OK);
+        sinon.assert.calledOnce(fsAccessStub);
 
         sinon.assert.notCalled(readCsvFileAsStreamStub);
         sinon.assert.notCalled(allOpenedInGivenVersionStub);
@@ -253,24 +259,24 @@ describe('Import translations', () => {
   describe('Import datapoints translations', () => {
     const datapointResource = {
       type: constants.DATAPOINTS,
-      path: "ddf--datapoints--company_scale--by--company--anno.csv",
+      path: 'ddf--datapoints--company_scale--by--company--anno.csv',
       indicators: [
-        "company_scale"
+        'company_scale'
       ],
       dimensions: [
-        "company",
-        "anno"
+        'company',
+        'anno'
       ],
       primaryKey: [
-        "company",
-        "anno"
+        'company',
+        'anno'
       ]
     };
 
     const datapointTranslation = {
-      "company": "mcrsft",
-      "anno": 1975,
-      "company_scale": "klein"
+      company: 'mcrsft',
+      anno: 1975,
+      company_scale: 'klein'
     };
 
     before(() => {
@@ -283,7 +289,7 @@ describe('Import translations', () => {
 
     it('should import translations for datapoint', sandbox(function (done: Function) {
       const addTranslationsForGivenPropertiesSpy = this.stub().returns(Promise.resolve());
-      const allOpenedInGivenVersionStub = this.stub(DatapointsRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties:  addTranslationsForGivenPropertiesSpy});
+      const allOpenedInGivenVersionStub = this.stub(DatapointsRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties: addTranslationsForGivenPropertiesSpy });
 
       const fsAccessStub = this.stub(fs, 'access').callsArgWithAsync(2);
 
@@ -306,7 +312,7 @@ describe('Import translations', () => {
         sinon.assert.calledWith(addTranslationsForGivenPropertiesSpy, datapointTranslation, {
           language,
           source: datapointResource.path,
-          resolvedProperties: { 'properties.anno': 1975, 'properties.company': "mcrsft" }
+          resolvedProperties: { 'properties.anno': 1975, 'properties.company': 'mcrsft' }
         });
 
         done();
@@ -315,7 +321,7 @@ describe('Import translations', () => {
 
     it('should not import translations for datapoint if it is impossible to read a file with them', sandbox(function (done: Function) {
       const addTranslationsForGivenPropertiesSpy = this.stub().returns(Promise.resolve());
-      const allOpenedInGivenVersionStub = this.stub(DatapointsRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties:  addTranslationsForGivenPropertiesSpy});
+      const allOpenedInGivenVersionStub = this.stub(DatapointsRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties: addTranslationsForGivenPropertiesSpy });
 
       const fsAccessStub = this.stub(fs, 'access').callsArgWithAsync(2, 'Cannot Read File');
 

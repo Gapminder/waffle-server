@@ -1,6 +1,6 @@
 import 'mocha';
 
-import {expect} from 'chai';
+import { expect } from 'chai';
 import * as sinon from 'sinon';
 import * as sinonTest from 'sinon-test';
 import * as hi from 'highland';
@@ -9,7 +9,7 @@ import '../../ws.repository';
 
 import * as wsJsonFormatter from '../../ws.routes/data-post-processors/format/format-ws.processor';
 import * as formatService from '../../ws.services/format.service';
-import {constants} from '../../ws.utils/constants';
+import { constants } from '../../ws.utils/constants';
 
 const sandbox = sinonTest.configureTest(sinon);
 
@@ -33,7 +33,7 @@ describe('Format Service', () => {
       type: constants.DATAPOINTS
     };
 
-    const expectedDatapointsResponse = {headers: ['name'], rows: ['datapoint']};
+    const expectedDatapointsResponse = { headers: ['name'], rows: ['datapoint'] };
     const mapDatapointsStub = this.stub(wsJsonFormatter, 'mapDatapoints').returns(expectedDatapointsResponse);
 
     formatService.wsJson(data, (error, formattedData) => {
@@ -63,7 +63,7 @@ describe('Format Service', () => {
       type: constants.CONCEPTS
     };
 
-    const expectedResponse = {headers: ['name'], rows: ['concept']};
+    const expectedResponse = { headers: ['name'], rows: ['concept'] };
     const mapConceptsStub = this.stub(wsJsonFormatter, 'mapConcepts').returns(expectedResponse);
 
     formatService.wsJson(data, (error, formattedData) => {
@@ -93,7 +93,7 @@ describe('Format Service', () => {
       type: constants.ENTITIES
     };
 
-    const expectedResponse = {headers: ['name'], rows: ['entity']};
+    const expectedResponse = { headers: ['name'], rows: ['entity'] };
     const mapEntitiesStub = this.stub(wsJsonFormatter, 'mapEntities').returns(expectedResponse);
 
     formatService.wsJson(data, (error, formattedData) => {
@@ -122,7 +122,7 @@ describe('Format Service', () => {
       type: constants.SCHEMA
     };
 
-    const expectedResponse = {headers: ['name'], rows: ['schema']};
+    const expectedResponse = { headers: ['name'], rows: ['schema'] };
     const mapSchemaStub = this.stub(wsJsonFormatter, 'mapSchema').returns(expectedResponse);
 
     formatService.wsJson(data, (error, formattedData) => {
@@ -165,8 +165,7 @@ describe('Format Service', () => {
 
     const mapSchemaStub = this.stub(wsJsonFormatter, 'mapSchema');
 
-
-    formatService.wsJson(data, error => {
+    formatService.wsJson(data, (error) => {
       expect(error).to.not.exist;
 
       sinon.assert.calledOnce(mapSchemaStub);
@@ -189,7 +188,10 @@ describe('Format Service', () => {
       type: constants.DATAPOINTS
     };
 
-    const wsJsonFormattedData = hi([{headers: ['anno', 'population'], rows: [['1900', 20000], ['1901', 30000], ['1902', 40000]]}]);
+    const wsJsonFormattedData = hi([{
+      headers: ['anno', 'population'],
+      rows: [['1900', 20000], ['1901', 30000], ['1902', 40000]]
+    }]);
     this.stub(wsJsonFormatter, 'mapDatapoints').returns(wsJsonFormattedData);
 
     formatService.csv(data, (error: any, formattedData: any) => {
@@ -201,10 +203,10 @@ describe('Format Service', () => {
         const row2 = Buffer.from(csv[2]).toString();
         const row3 = Buffer.from(csv[3]).toString();
 
-        expect(header).to.equal("anno,population");
-        expect(row1).to.equal("\n1900,20000");
-        expect(row2).to.equal("\n1901,30000");
-        expect(row3).to.equal("\n1902,40000");
+        expect(header).to.equal('anno,population');
+        expect(row1).to.equal('\n1900,20000');
+        expect(row2).to.equal('\n1901,30000');
+        expect(row3).to.equal('\n1902,40000');
         done();
       });
     });

@@ -120,7 +120,7 @@ describe('Entities Translations Update Plugin', () => {
         'data-update': {
           foo: 'hello2',
           bar: 'bar'
-        },
+        }
       },
       metadata: {
         action: 'update',

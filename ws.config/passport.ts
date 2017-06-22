@@ -1,6 +1,6 @@
 import * as passport from 'passport';
-import  { Strategy as LocalStrategy } from 'passport-local';
-import  * as PassportUniqueTokenStrategy from 'passport-unique-token';
+import { Strategy as LocalStrategy } from 'passport-local';
+import * as PassportUniqueTokenStrategy from 'passport-unique-token';
 
 import { UsersRepository } from '../ws.repository/ddf/users/users.repository';
 
@@ -49,11 +49,11 @@ function enableLocalStrategy(): void {
         }
 
         if (!user) {
-          return done(null, false, {message: 'Incorrect username or password.'});
+          return done(null, false, { message: 'Incorrect username or password.' });
         }
 
         if (!user.validPassword(password)) {
-          return done(null, false, {message: 'Incorrect username or password.'});
+          return done(null, false, { message: 'Incorrect username or password.' });
         }
 
         return done(null, user);

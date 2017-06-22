@@ -33,7 +33,7 @@ export class VersionedModelRepositoryFactory<REPO extends VersionedModelReposito
     if (!repository) {
       let ttl = FIVE_HOURS;
 
-      if(_.isEmpty(versionQueryFragment)) {
+      if (_.isEmpty(versionQueryFragment)) {
         ttl = FOREVER;
         repository = new (this.Repository as any)({});
       } else {
@@ -51,8 +51,8 @@ export class VersionedModelRepositoryFactory<REPO extends VersionedModelReposito
 
     const versionQueryFragment = {
       dataset: datasetId,
-      from: {$lte: version},
-      to: {$gt: version}
+      from: { $lte: version },
+      to: { $gt: version }
     };
 
     return this.makeRepository('currentVersion', versionQueryFragment, datasetId, version);
@@ -63,7 +63,7 @@ export class VersionedModelRepositoryFactory<REPO extends VersionedModelReposito
 
     const versionQueryFragment = {
       dataset: datasetId,
-      from: {$lte: version},
+      from: { $lte: version },
       to: constants.MAX_VERSION
     };
 
@@ -86,7 +86,7 @@ export class VersionedModelRepositoryFactory<REPO extends VersionedModelReposito
 
     const versionQueryFragment = {
       dataset: datasetId,
-      from: {$lt: version},
+      from: { $lt: version },
       to: constants.MAX_VERSION
     };
 
@@ -96,7 +96,7 @@ export class VersionedModelRepositoryFactory<REPO extends VersionedModelReposito
   public closedOrOpenedInGivenVersion(datasetId: any, version: number): REPO {
     VersionedModelRepositoryFactory.checkPreconditions(datasetId, version);
 
-    const versionQueryFragment = {$or: [{from: version}, {to: version}], dataset: datasetId};
+    const versionQueryFragment = { $or: [{ from: version }, { to: version }], dataset: datasetId };
 
     return this.makeRepository('closedOrOpenedInGivenVersion', versionQueryFragment, datasetId, version);
   }

@@ -111,7 +111,7 @@ describe('Entities service', () => {
 
     const expectedConcepts = [
       {gid: 'geo'},
-      {gid: 'name'},
+      {gid: 'name'}
     ];
 
     const context = {
@@ -184,12 +184,12 @@ describe('Entities service', () => {
   it('cannot collect entities by ddfql: fails querying entities for join clause', sandbox(function (done: Function) {
     const expectedError = '[Error] findEntityPropertiesByQuery has failed in join clause';
     const validationResult = {
-      valid: true,
+      valid: true
     };
 
     const expectedConcepts = [
       {gid: 'geo'},
-      {gid: 'name'},
+      {gid: 'name'}
     ];
 
     const context = {
@@ -265,7 +265,7 @@ describe('Entities service', () => {
 
     const expectedConcepts = [
       {gid: 'geo'},
-      {gid: 'name'},
+      {gid: 'name'}
     ];
 
     const expectedEntities = [
@@ -368,7 +368,7 @@ describe('Entities service', () => {
 
     const expectedConcepts = [
       {gid: 'geo'},
-      {gid: 'name'},
+      {gid: 'name'}
     ];
 
     const expectedEntities = [
@@ -441,8 +441,8 @@ describe('Entities service', () => {
     this.stub(ddfQueryValidator, 'validateMongoQuery').returns(validationResult);
 
     const findEntityPropertiesByQueryStub = this.stub();
-      findEntityPropertiesByQueryStub.onFirstCall().callsArgWithAsync(1, null, expectedEntities);
-      findEntityPropertiesByQueryStub.onSecondCall().callsArgWithAsync(1, expectedError);
+    findEntityPropertiesByQueryStub.onFirstCall().callsArgWithAsync(1, null, expectedEntities);
+    findEntityPropertiesByQueryStub.onSecondCall().callsArgWithAsync(1, expectedError);
 
     this.stub(EntitiesRepositoryFactory, 'currentVersion').returns({findEntityPropertiesByQuery: findEntityPropertiesByQueryStub});
 
@@ -460,7 +460,7 @@ describe('Entities service', () => {
 
     const expectedConcepts = [
       {gid: 'geo'},
-      {gid: 'name'},
+      {gid: 'name'}
     ];
 
     const expectedEntities = [

@@ -1,7 +1,7 @@
 import '../../ws.repository';
 import '../../ws.config/db.config';
 
-import {expect} from 'chai';
+import { expect } from 'chai';
 import * as proxyquire from 'proxyquire';
 
 describe('auth service testing', () => {
@@ -9,14 +9,16 @@ describe('auth service testing', () => {
   it('should return an error: Error was happened during credentials verification', (done) => {
 
     const auth = proxyquire('../../ws.services/auth.service', {
-      '../ws.repository/ddf/users/users.repository': {UsersRepository: {
-        findUserByEmail: (email, done) => {
-          done('Boom!');
+      '../ws.repository/ddf/users/users.repository': {
+        UsersRepository: {
+          findUserByEmail: (email, done) => {
+            done('Boom!');
+          }
         }
-      }}
+      }
     });
 
-    auth.authenticate({email: 'bla', password: 'bla'}, (error) => {
+    auth.authenticate({ email: 'bla', password: 'bla' }, (error) => {
       expect(error).to.equal('Error was happened during credentials verification');
       done();
     });
@@ -25,14 +27,16 @@ describe('auth service testing', () => {
   it('should return an error: User with an email: \'user@mail.com\' was not found', (done) => {
 
     const auth = proxyquire('../../ws.services/auth.service', {
-      '../ws.repository/ddf/users/users.repository': {UsersRepository: {
-        findUserByEmail: (email, done) => {
-          done();
+      '../ws.repository/ddf/users/users.repository': {
+        UsersRepository: {
+          findUserByEmail: (email, done) => {
+            done();
+          }
         }
-      }}
+      }
     });
 
-    auth.authenticate({email: 'user@mail.com', password: 'bla'}, (error) => {
+    auth.authenticate({ email: 'user@mail.com', password: 'bla' }, (error) => {
       expect(error).to.contain('User with an email: \'user@mail.com\' was not found');
       done();
     });
@@ -46,14 +50,16 @@ describe('auth service testing', () => {
       }
     };
     const auth = proxyquire('../../ws.services/auth.service', {
-      '../ws.repository/ddf/users/users.repository': {UsersRepository: {
-        findUserByEmail: (email, done) => {
-          done(null, validUser);
+      '../ws.repository/ddf/users/users.repository': {
+        UsersRepository: {
+          findUserByEmail: (email, done) => {
+            done(null, validUser);
+          }
         }
-      }}
+      }
     });
 
-    auth.authenticate({email: 'user@mail.com', password: 'bla'}, (error) => {
+    auth.authenticate({ email: 'user@mail.com', password: 'bla' }, (error) => {
       expect(error).to.contain('Provided password didn\'t match');
       done();
     });
@@ -67,14 +73,16 @@ describe('auth service testing', () => {
       }
     };
     const auth = proxyquire('../../ws.services/auth.service', {
-      '../ws.repository/ddf/users/users.repository': {UsersRepository: {
-        findUserByEmail: (email, done) => {
-          done(null, validUser);
+      '../ws.repository/ddf/users/users.repository': {
+        UsersRepository: {
+          findUserByEmail: (email, done) => {
+            done(null, validUser);
+          }
         }
-      }}
+      }
     });
 
-    auth.authenticate({email: 'user@mail.com', password: 'bla'}, (error) => {
+    auth.authenticate({ email: 'user@mail.com', password: 'bla' }, (error) => {
       expect(error).to.contain('Error was happened during credentials verification');
       done();
     });
@@ -92,17 +100,19 @@ describe('auth service testing', () => {
     };
 
     const auth = proxyquire('../../ws.services/auth.service', {
-      '../ws.repository/ddf/users/users.repository': {UsersRepository: {
-        findUserByEmail: (email, done) => {
-          done(null, validUser);
-        },
-        setUpToken: (email, uniqueToken, expireToken, done) => {
-          done(null, invalidUser);
+      '../ws.repository/ddf/users/users.repository': {
+        UsersRepository: {
+          findUserByEmail: (email, done) => {
+            done(null, validUser);
+          },
+          setUpToken: (email, uniqueToken, expireToken, done) => {
+            done(null, invalidUser);
+          }
         }
-      }}
+      }
     });
 
-    auth.authenticate({email: 'user@mail.com', password: 'bla'}, (error, uniqueToken) => {
+    auth.authenticate({ email: 'user@mail.com', password: 'bla' }, (error, uniqueToken) => {
       expect(uniqueToken).to.contain('token');
       expect(error).to.be.null;
       done();
@@ -120,17 +130,19 @@ describe('auth service testing', () => {
       uniqueToken: 'token'
     };
     const auth = proxyquire('../../ws.services/auth.service', {
-      '../ws.repository/ddf/users/users.repository': {UsersRepository: {
-        findUserByEmail: (email, done) => {
-          done(null, validUser);
-        },
-        setUpToken: (email, uniqueToken, expireToken, done) => {
-          done(true, invalidUser);
+      '../ws.repository/ddf/users/users.repository': {
+        UsersRepository: {
+          findUserByEmail: (email, done) => {
+            done(null, validUser);
+          },
+          setUpToken: (email, uniqueToken, expireToken, done) => {
+            done(true, invalidUser);
+          }
         }
-      }}
+      }
     });
 
-    auth.authenticate({email: 'user@mail.com', password: 'bla'}, (error) => {
+    auth.authenticate({ email: 'user@mail.com', password: 'bla' }, (error) => {
       expect(error).to.contain('Couldn\'t set up Waffle Server token');
       done();
     });

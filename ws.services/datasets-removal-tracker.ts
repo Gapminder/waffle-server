@@ -1,4 +1,4 @@
-import {constants} from '../ws.utils/constants';
+import { constants } from '../ws.utils/constants';
 
 export type TrackableType = 'datapoints' | 'entities' | 'concepts';
 export interface RemovalState {
@@ -35,7 +35,8 @@ export class DatasetRemovalTracker implements IDatasetRemovalTracker {
   private removedEntitiesAmount: number = 0;
   private removedDatapointsAmount: number = 0;
 
-  private constructor() {}
+  private constructor() {
+  }
 
   public increment(dataType: TrackableType, value: number): void {
     if (dataType === constants.CONCEPTS) {

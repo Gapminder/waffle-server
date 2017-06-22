@@ -65,7 +65,7 @@ describe('Ddf import utils', () => {
           gid: 'time',
           properties: {
             concept_type: 'time'
-          },
+          }
         },
         year: {
           gid: 'year',

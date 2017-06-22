@@ -1,31 +1,29 @@
 import 'newrelic';
 
 import * as express from 'express';
-
-const app: express.Application = express();
-
 import { config } from './ws.config/config';
 import { logger } from './ws.config/log';
+import * as bodyParser from 'body-parser';
+import { ServiceLocator } from './ws.service-locator';
+import './ws.repository';
+import * as Config from './ws.config';
+import { registerRoutes } from './ws.routes';
+import { makeDefaultUser } from './make-default-user';
+import * as Cache from './ws.utils/cache-warmup';
+import * as importUtils from './ws.import/utils/import-ddf.utils';
+
+const app: express.Application = express();
 
 process.on('uncaughtException', function (err: string): void {
   logger.error(err);
 });
 
-import * as bodyParser from 'body-parser';
-app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
-app.use(bodyParser.json({limit: '10mb'}));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+app.use(bodyParser.json({ limit: '10mb' }));
 
-import { ServiceLocator } from './ws.service-locator';
 const serviceLocator = ServiceLocator.create(app);
 
-import './ws.repository';
-import * as Config from './ws.config';
 Config.configureWaffleServer(app);
-
-import { registerRoutes } from './ws.routes';
-import { makeDefaultUser } from './make-default-user';
-import * as Cache from './ws.utils/cache-warmup';
-import * as importUtils from './ws.import/utils/import-ddf.utils';
 
 registerRoutes(serviceLocator);
 

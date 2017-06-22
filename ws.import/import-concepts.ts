@@ -3,10 +3,10 @@ import * as async from 'async';
 import * as hi from 'highland';
 import * as ddfImportUtils from './utils/import-ddf.utils';
 import * as fileUtils from '../ws.utils/file';
-import {logger} from '../ws.config/log';
-import {constants} from '../ws.utils/constants';
+import { logger } from '../ws.config/log';
+import { constants } from '../ws.utils/constants';
 import * as ddfMappers from './utils/ddf-mappers';
-import {ConceptsRepositoryFactory} from '../ws.repository/ddf/concepts/concepts.repository';
+import { ConceptsRepositoryFactory } from '../ws.repository/ddf/concepts/concepts.repository';
 
 export function createConcepts(pipe: any, done: Function): void {
 
@@ -39,9 +39,9 @@ function _loadConcepts(pipe: any, done: Function): void {
 
   const {
     pathToDdfFolder,
-    datapackage: {resources},
-    dataset: {_id: datasetId},
-    transaction: {createdAt: version}
+    datapackage: { resources },
+    dataset: { _id: datasetId },
+    transaction: { createdAt: version }
   } = pipe;
 
   hi(resources)
@@ -50,12 +50,12 @@ function _loadConcepts(pipe: any, done: Function): void {
     .flatMap((resource: any) => {
       return fileUtils
         .readCsvFileAsStream(pathToDdfFolder, resource.path)
-        .map((rawConcept: any) => ({filename: resource.path, object: rawConcept}));
+        .map((rawConcept: any) => ({ filename: resource.path, object: rawConcept }));
     })
     .collect()
     .toCallback((error: string, rawConcepts: any) => {
       const concepts = _.map(rawConcepts, (rawConcept: any) => {
-        const context = {datasetId, version, filename: rawConcept.filename};
+        const context = { datasetId, version, filename: rawConcept.filename };
         return ddfMappers.mapDdfConceptsToWsModel(rawConcept.object, context);
       });
 
@@ -103,7 +103,7 @@ function _addConceptSubsetOf(pipe: any, done: Function): void {
 
     return ConceptsRepositoryFactory
       .allOpenedInGivenVersion(pipe.dataset._id, pipe.transaction.createdAt)
-      .addSubsetOfByGid({gid, parentConceptId: concept._id}, escb);
+      .addSubsetOfByGid({ gid, parentConceptId: concept._id }, escb);
   }
 }
 
@@ -124,7 +124,7 @@ function _addConceptDomains(pipe: any, done: Function): void {
 
     return ConceptsRepositoryFactory
       .allOpenedInGivenVersion(pipe.dataset._id, pipe.transaction.createdAt)
-      .setDomainByGid({gid, domainConceptId: concept._id}, escb);
+      .setDomainByGid({ gid, domainConceptId: concept._id }, escb);
   }
 }
 

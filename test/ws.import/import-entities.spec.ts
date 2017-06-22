@@ -1,11 +1,11 @@
 import '../../ws.config/db.config';
 import '../../ws.repository/index';
 
-import * as _  from 'lodash';
+import * as _ from 'lodash';
 import * as hi from 'highland';
-import {constants} from '../../ws.utils/constants';
+import { constants } from '../../ws.utils/constants';
 import * as proxyquire from 'proxyquire';
-import {expect} from 'chai';
+import { expect } from 'chai';
 import * as entities from './fixtures/entities.json';
 import * as sinon from 'sinon';
 import * as sinonTest from 'sinon-test';
@@ -13,13 +13,16 @@ import { logger } from '../../ws.config/log';
 
 const sandbox = sinonTest.configureTest(sinon);
 
-describe('entities import', function() {
-  it('should not be any error', sandbox(function(done: Function) {
-    const entitySetsOriginIds = ["583eb88d7fc6e74f7b4c3ce7", "583eb88d7fc6e74f7b4c3ce8"];
-    const sets = {country: {gid: 'country', originId: entitySetsOriginIds[0]}, city: {gid: 'city', originId: entitySetsOriginIds[1]}};
-    const domain = {gid: 'geo', originId: "583eb88d7fc6e74f7b4c3ce6"};
-    const timeConcepts = {anno: {gid: 'anno'}, time: {gid: 'time'}};
-    const concepts = _.merge({}, timeConcepts, {geo: domain}, sets);
+describe('entities import', function () {
+  it('should not be any error', sandbox(function (done: Function) {
+    const entitySetsOriginIds = ['583eb88d7fc6e74f7b4c3ce7', '583eb88d7fc6e74f7b4c3ce8'];
+    const sets = {
+      country: { gid: 'country', originId: entitySetsOriginIds[0] },
+      city: { gid: 'city', originId: entitySetsOriginIds[1] }
+    };
+    const domain = { gid: 'geo', originId: '583eb88d7fc6e74f7b4c3ce6' };
+    const timeConcepts = { anno: { gid: 'anno' }, time: { gid: 'time' } };
+    const concepts = _.merge({}, timeConcepts, { geo: domain }, sets);
 
     const DEFAULT_CHUNK_SIZE = 10;
     const DEFAULT_ENTITIES_FILENAME = 'ddf--entities--geo.csv';
@@ -32,17 +35,17 @@ describe('entities import', function() {
       entitySets: ['country', 'city']
     };
     const VERSION = 1480505431403.0;
-    const DATASET_ID = "583eb8577fc6e74f7b4c3ce3";
+    const DATASET_ID = '583eb8577fc6e74f7b4c3ce3';
     const context = {
-      'pathToDdfFolder': './fixtures',
-      'datapackage': {
+      pathToDdfFolder: './fixtures',
+      datapackage: {
         resources: [
           {
             type: constants.DATAPOINTS,
             primaryKey: ['geo', 'time'],
             path: 'ddf--datapoints--population--by--geo--time.csv',
             dimensions: ['geo', 'time'],
-            indicators: ['population'],
+            indicators: ['population']
           },
           DEFAULT_ENTITIES_RESOURCE,
           {
@@ -52,12 +55,12 @@ describe('entities import', function() {
           }
         ]
       },
-      'concepts': concepts,
-      'timeConcepts': timeConcepts,
-      'transaction': {
+      concepts,
+      timeConcepts,
+      transaction: {
         createdAt: VERSION
       },
-      'dataset': {
+      dataset: {
         _id: DATASET_ID
       }
     };
@@ -67,13 +70,13 @@ describe('entities import', function() {
         expect(resource).to.be.equal(DEFAULT_ENTITIES_RESOURCE);
         expect(externalContextFrozen).to.be.deep.equal(context);
 
-        return {entitySet: domain, entityDomain: domain};
+        return { entitySet: domain, entityDomain: domain };
       }
     };
 
     const ddfImportUtils = {
       MONGODB_DOC_CREATION_THREADS_AMOUNT: 3,
-      DEFAULT_CHUNK_SIZE: DEFAULT_CHUNK_SIZE
+      DEFAULT_CHUNK_SIZE
     };
 
     const fileUtils = {
@@ -101,14 +104,16 @@ describe('entities import', function() {
     };
 
     const entitiesRepository = {
-      versionAgnostic: function () { return this; },
+      versionAgnostic: function () {
+        return this;
+      },
       create: (entities) => {
         expect(entities).to.have.length.below(DEFAULT_CHUNK_SIZE + 1);
         return Promise.resolve(entities);
       }
     };
 
-    const importEntities  = proxyquire('../../ws.import/import-entities', {
+    const importEntities = proxyquire('../../ws.import/import-entities', {
       './utils/entities.utils': entitiesUtils,
       './utils/import-ddf.utils': ddfImportUtils,
       '../ws.utils/file': fileUtils,

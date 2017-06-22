@@ -3,9 +3,9 @@ import * as async from 'async';
 
 import * as commonService from './common.service';
 import * as ddfql from '../ws.ddfql/ddf-concepts-query-normalizer';
-import {ConceptsRepositoryFactory} from '../ws.repository/ddf/concepts/concepts.repository';
+import { ConceptsRepositoryFactory } from '../ws.repository/ddf/concepts/concepts.repository';
 import * as ddfQueryValidator from '../ws.ddfql/ddf-query-validator';
-import {ValidateQueryModel} from '../ws.ddfql/ddf-query-validator';
+import { ValidateQueryModel } from '../ws.ddfql/ddf-query-validator';
 
 export {
   getConcepts,
@@ -14,7 +14,7 @@ export {
 
 function collectConceptsByDdfql(options: any, cb: Function): void {
   console.time('finish Concepts stats');
-  const pipe = _.extend(options, {domainGid: _.first(options.domainGids)});
+  const pipe = _.extend(options, { domainGid: _.first(options.domainGids) });
 
   return async.waterfall([
     async.constant(pipe),
@@ -48,8 +48,8 @@ function getConceptsByDdfql(pipe: any, cb: Function): void {
   const conceptsRepository = ConceptsRepositoryFactory.currentVersion(pipe.dataset._id, pipe.version);
   const normalizedQuery = ddfql.normalizeConcepts(pipe.query, pipe.allConcepts);
 
-  const validateQuery:ValidateQueryModel = ddfQueryValidator.validateMongoQuery(normalizedQuery.where);
-  if(!validateQuery.valid) {
+  const validateQuery: ValidateQueryModel = ddfQueryValidator.validateMongoQuery(normalizedQuery.where);
+  if (!validateQuery.valid) {
     return cb(validateQuery.log, pipe);
   }
 

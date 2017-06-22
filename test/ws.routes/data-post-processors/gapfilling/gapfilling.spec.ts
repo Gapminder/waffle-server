@@ -9,37 +9,37 @@ describe('data post processors gapfilling', () => {
     //arrange
     const input = [
       [
-        "usa",
+        'usa',
         2004,
         null
       ],
       [
-        "usa",
+        'usa',
         2005,
         74.0
       ],
       [
-        "usa",
+        'usa',
         2006,
         null
       ],
       [
-        "usa",
+        'usa',
         2007,
         null
       ],
       [
-        "usa",
+        'usa',
         2008,
         null
       ],
       [
-        "usa",
+        'usa',
         2009,
         80.3
       ],
       [
-        "usa",
+        'usa',
         2010,
         null
       ]
@@ -47,37 +47,37 @@ describe('data post processors gapfilling', () => {
 
     const expected = [
       [
-        "usa",
+        'usa',
         2004,
         74.0
       ],
       [
-        "usa",
+        'usa',
         2005,
         74.0
       ],
       [
-        "usa",
+        'usa',
         2006,
         75.6
       ],
       [
-        "usa",
+        'usa',
         2007,
         77.2
       ],
       [
-        "usa",
+        'usa',
         2008,
         78.7
       ],
       [
-        "usa",
+        'usa',
         2009,
         80.3
       ],
       [
-        "usa",
+        'usa',
         2010,
         80.3
       ]
@@ -96,43 +96,43 @@ describe('data post processors gapfilling', () => {
     //arrange
     const input = [
       [
-        "usa",
+        'usa',
         2004,
         null,
         null
       ],
       [
-        "usa",
+        'usa',
         2005,
         74.0,
         null
       ],
       [
-        "usa",
+        'usa',
         2006,
         null,
         null
       ],
       [
-        "usa",
+        'usa',
         2007,
         null,
         42
       ],
       [
-        "usa",
+        'usa',
         2008,
         null,
         null
       ],
       [
-        "usa",
+        'usa',
         2009,
         80.3,
         null
       ],
       [
-        "usa",
+        'usa',
         2010,
         null,
         null
@@ -141,43 +141,43 @@ describe('data post processors gapfilling', () => {
 
     const expected = [
       [
-        "usa",
+        'usa',
         2004,
         74.0,
         null
       ],
       [
-        "usa",
+        'usa',
         2005,
         74.0,
         null
       ],
       [
-        "usa",
+        'usa',
         2006,
         75.6,
         42
       ],
       [
-        "usa",
+        'usa',
         2007,
         77.2,
         42
       ],
       [
-        "usa",
+        'usa',
         2008,
         78.7,
         42
       ],
       [
-        "usa",
+        'usa',
         2009,
         80.3,
         null
       ],
       [
-        "usa",
+        'usa',
         2010,
         80.3,
         null
@@ -197,27 +197,27 @@ describe('data post processors gapfilling', () => {
     //arrange
     const input = [
       [
-        "usa",
+        'usa',
         2004,
         71.7
       ],
       [
-        "usa",
+        'usa',
         2005,
         74.0
       ],
       [
-        "usa",
+        'usa',
         2006,
         75.6
       ],
       [
-        "usa",
+        'usa',
         2007,
         81.9
       ],
       [
-        "angola",
+        'angola',
         2007,
         81.9
       ]
@@ -350,43 +350,43 @@ describe('data post processors gapfilling', () => {
     //arrange
     const input = [
       [
-        "usa",
+        'usa',
         2004,
         null,
         null
       ],
       [
-        "usa",
+        'usa',
         2005,
         74.0,
         null
       ],
       [
-        "usa",
+        'usa',
         2006,
         null,
         null
       ],
       [
-        "usa",
+        'usa',
         2007,
         null,
         42
       ],
       [
-        "usa",
+        'usa',
         2008,
         null,
         null
       ],
       [
-        "usa",
+        'usa',
         2009,
         80.3,
         null
       ],
       [
-        "usa",
+        'usa',
         2010,
         null,
         null
@@ -395,67 +395,67 @@ describe('data post processors gapfilling', () => {
 
     const expected = [
       [
-        "usa",
+        'usa',
         2002,
         null,
         null
       ],
       [
-        "usa",
+        'usa',
         2003,
         null,
         null
       ],
       [
-        "usa",
+        'usa',
         2004,
         74.0,
         null
       ],
       [
-        "usa",
+        'usa',
         2005,
         74.0,
         null
       ],
       [
-        "usa",
+        'usa',
         2006,
         75.6,
         42
       ],
       [
-        "usa",
+        'usa',
         2007,
         77.2,
         42
       ],
       [
-        "usa",
+        'usa',
         2008,
         78.7,
         42
       ],
       [
-        "usa",
+        'usa',
         2009,
         80.3,
         null
       ],
       [
-        "usa",
+        'usa',
         2010,
         80.3,
         null
       ],
       [
-        "usa",
+        'usa',
         2011,
         null,
         null
       ],
       [
-        "usa",
+        'usa',
         2012,
         null,
         null

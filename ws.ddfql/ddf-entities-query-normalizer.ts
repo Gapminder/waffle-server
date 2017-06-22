@@ -1,7 +1,7 @@
 import * as  _ from 'lodash';
 import * as traverse from 'traverse';
 
-import {constants} from '../ws.utils/constants';
+import { constants } from '../ws.utils/constants';
 import * as ddfQueryUtils from './ddf-query-utils';
 import * as conceptUtils from '../ws.import/utils/concepts.utils';
 
@@ -44,7 +44,7 @@ function substituteEntityJoinLinks(query: any, linksInJoinToValues: any): any {
     /* tslint:disable: no-invalid-this */
     if (safeQuery.join.hasOwnProperty(link)) {
       const id = linksInJoinToValues[link];
-      const value = id ? {$in: id} : link;
+      const value = id ? { $in: id } : link;
       _.set(safeQuery.where, this.path, value);
     }
     /* tslint:enable: no-invalid-this */
@@ -123,10 +123,12 @@ function normalizeWhere(query: any, options: any): void {
 
   query.where = {
     $and: [
-      {$or: [
-        {domain: {$in: conceptOriginIds}},
-        {sets: {$in: conceptOriginIds}}
-      ]}
+      {
+        $or: [
+          { domain: { $in: conceptOriginIds } },
+          { sets: { $in: conceptOriginIds } }
+        ]
+      }
     ]
   };
 

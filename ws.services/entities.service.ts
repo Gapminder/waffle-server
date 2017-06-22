@@ -4,9 +4,9 @@ import * as ddfql from '../ws.ddfql/ddf-entities-query-normalizer';
 import * as commonService from './common.service';
 import * as conceptsService from './concepts.service';
 import * as ddfQueryValidator from '../ws.ddfql/ddf-query-validator';
-import {ValidateQueryModel} from '../ws.ddfql/ddf-query-validator';
+import { ValidateQueryModel } from '../ws.ddfql/ddf-query-validator';
 
-import {EntitiesRepositoryFactory} from '../ws.repository/ddf/entities/entities.repository';
+import { EntitiesRepositoryFactory } from '../ws.repository/ddf/entities/entities.repository';
 
 export {
   getEntities,
@@ -15,7 +15,7 @@ export {
 
 function collectEntitiesByDdfql(options: any, cb: AsyncResultCallback<any, any>): void {
   console.time('finish Entities stats');
-  const pipe = _.extend(options, {domainGid: _.first(options.domainGids)});
+  const pipe = _.extend(options, { domainGid: _.first(options.domainGids) });
 
   async.waterfall([
     async.constant(pipe),
@@ -23,7 +23,7 @@ function collectEntitiesByDdfql(options: any, cb: AsyncResultCallback<any, any>)
     commonService.findDefaultDatasetAndTransaction,
     getConcepts,
     normalizeQueriesToEntitiesByDdfql
-  ],  (error: string, result: any) => {
+  ], (error: string, result: any) => {
     console.timeEnd('finish Entities stats');
 
     return cb(error, result);
@@ -37,7 +37,7 @@ function normalizeQueriesToEntitiesByDdfql(pipe: any, cb: Function): void {
 
   return async.mapValuesLimit(normlizedQuery.join, 10, (item: any, link: any, mcb: Function) => {
     const validateQuery: ValidateQueryModel = ddfQueryValidator.validateMongoQuery(item);
-    if(!validateQuery.valid) {
+    if (!validateQuery.valid) {
       return cb(validateQuery.log, pipe);
     }
     return entitiesRepository
@@ -49,7 +49,7 @@ function normalizeQueriesToEntitiesByDdfql(pipe: any, cb: Function): void {
     const subEntityQuery = promotedQuery.where;
 
     const validateQuery: ValidateQueryModel = ddfQueryValidator.validateMongoQuery(subEntityQuery);
-    if(!validateQuery.valid) {
+    if (!validateQuery.valid) {
       return cb(validateQuery.log, pipe);
     }
 

@@ -1,4 +1,4 @@
-import {expect} from 'chai';
+import { expect } from 'chai';
 import * as sinon from 'sinon';
 import * as sinonTest from 'sinon-test';
 import * as proxyquire from 'proxyquire';
@@ -8,7 +8,7 @@ import { logger } from '../../ws.config/log';
 import '../../ws.repository';
 import '../../ws.config/db.config';
 
-import {config} from '../../ws.config/config';
+import { config } from '../../ws.config/config';
 
 const sandbox = sinonTest.configureTest(sinon);
 const recentDdfqlQueriesRepositoryPath = '../ws.repository/ddf/recent-ddfql-queries/recent-ddfql-queries.repository';
@@ -16,15 +16,15 @@ const loggerPath = './../ws.config/log';
 const fetchPath = 'node-fetch';
 
 describe('Cache Warm up', () => {
-  it('should warm up cache using URLON stringified ddfql query', sandbox(function(done: Function): void {
+  it('should warm up cache using URLON stringified ddfql query', sandbox(function (done: Function): void {
     const queryResponse = {
       success: true,
       message: 'Completed !:)'
     };
 
     const recentQuery = {
-      queryRaw: "_select_key@=concept;&value@=concept/_type&=domain&=indicator/_url&=color&=scales&=interpolation&=tags&=name&=unit&=description;;&from=concepts&where_;&language=en",
-      type: "URLON",
+      queryRaw: '_select_key@=concept;&value@=concept/_type&=domain&=indicator/_url&=color&=scales&=interpolation&=tags&=name&=unit&=description;;&from=concepts&where_;&language=en',
+      type: 'URLON'
     };
 
     const expectedUrl = `http://localhost:${config.INNER_PORT}/api/ddf/ql/?_select_key@=concept;&value@=concept/_type&=domain&=indicator/_url&=color&=scales&=interpolation&=tags&=name&=unit&=description;;&from=concepts&where_;&language=en`;
@@ -63,7 +63,7 @@ describe('Cache Warm up', () => {
     });
   }));
 
-  it('should warm up cache using JSON stringified ddfql query', sandbox(function(done: Function): void {
+  it('should warm up cache using JSON stringified ddfql query', sandbox(function (done: Function): void {
     const queryResponse = {
       success: true,
       message: 'Completed! :)'
@@ -71,7 +71,7 @@ describe('Cache Warm up', () => {
 
     const recentQuery = {
       queryRaw: '{"language":"en","from":"entities","animatable":false,"select":{"key":["geo"],"value":["name","rank","shape_lores_svg"]},"where":{},"join":{},"order_by":["rank"]}',
-      type: "JSON",
+      type: 'JSON'
     };
 
     const expectedUrl = `http://localhost:${config.INNER_PORT}/api/ddf/ql/?query={"language":"en","from":"entities","animatable":false,"select":{"key":["geo"],"value":["name","rank","shape_lores_svg"]},"where":{},"join":{},"order_by":["rank"]}`;
@@ -84,7 +84,7 @@ describe('Cache Warm up', () => {
           }
         }
       },
-      [fetchPath]: url => {
+      [fetchPath]: (url) => {
         expect(url).to.equal(expectedUrl);
         return {
           then: () => [recentQuery.queryRaw]
@@ -109,10 +109,10 @@ describe('Cache Warm up', () => {
     });
   }));
 
-  it('should generate an error when warm up request was unsuccessful', sandbox(function(done: Function): void {
+  it('should generate an error when warm up request was unsuccessful', sandbox(function (done: Function): void {
     const recentQuery = {
-      queryRaw: "_select_key@=concept;&value@=concept/_type&=domain&=indicator/_url&=color&=scales&=interpolation&=tags&=name&=unit&=description;;&from=concepts&where_;&language=en",
-      type: "URLON",
+      queryRaw: '_select_key@=concept;&value@=concept/_type&=domain&=indicator/_url&=color&=scales&=interpolation&=tags&=name&=unit&=description;;&from=concepts&where_;&language=en',
+      type: 'URLON'
     };
 
     const warmUp = proxyquire('../../ws.utils/cache-warmup', {
@@ -140,7 +140,7 @@ describe('Cache Warm up', () => {
     });
   }));
 
-  it('should not warm up cache when recent queries are absent', sandbox(function(done: Function): void {
+  it('should not warm up cache when recent queries are absent', sandbox(function (done: Function): void {
     const fetchFunc = this.stub();
 
     const warmUp = proxyquire('../../ws.utils/cache-warmup', {

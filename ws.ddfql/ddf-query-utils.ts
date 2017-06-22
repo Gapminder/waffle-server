@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import * as ddfTimeUtils from 'ddf-time-utils';
-import {constants} from '../ws.utils/constants';
+import { constants } from '../ws.utils/constants';
 import * as traverse from 'traverse';
 
 export {
@@ -91,7 +91,7 @@ function normalizeOrderBy(query: any): void {
       return statement;
     }
 
-    return {[statement]: constants.ASC_SORTING_DIRECTION};
+    return { [statement]: constants.ASC_SORTING_DIRECTION };
   });
 }
 

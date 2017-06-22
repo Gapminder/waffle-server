@@ -3,7 +3,7 @@ import * as async from 'async';
 import * as mingo from 'mingo';
 import * as traverse from 'traverse';
 
-import {constants} from '../ws.utils/constants';
+import { constants } from '../ws.utils/constants';
 
 const AVAILABLE_QUERY_OPERATORS = new Set(['$eq', '$gt', '$gte', '$lt', '$lte', '$ne', '$in', '$nin', '$or', '$and', '$not', '$nor', '$size', '$all', '$elemMatch']);
 const SORT_DIRECTIONS = new Set([constants.ASC_SORTING_DIRECTION, constants.DESC_SORTING_DIRECTION]);
@@ -45,23 +45,23 @@ function validateMongoQuery(query: any): any {
 
   try {
     mQuery = new mingo.Query(query);
-  } catch(error) {
+  } catch (error) {
     errorMessages.push('Invalid DDFQL-query. Validated by Mingo, ' + error.toString());
     return createResponse(errorMessages);
   }
 
   // validate by mingo
-  if(!mQuery) {
+  if (!mQuery) {
     errorMessages.push('Invalid DDFQL-query. Validated by Mingo, Error: Structure');
     return createResponse(errorMessages);
   }
 
   // validate by available operators
-  traverse(query).forEach(function(): void {
+  traverse(query).forEach(function (): void {
     /* tslint:disable: no-invalid-this */
-    if(this.key) {
+    if (this.key) {
       const key = _.toString(this.key);
-      if(isInvalidQueryOperator(key)) {
+      if (isInvalidQueryOperator(key)) {
         errorMessages.push('Invalid DDFQL-query. Validation by Operators, not acceptable: ' + key);
       }
     }
@@ -74,7 +74,7 @@ function validateMongoQuery(query: any): any {
 // where :: not contain '.'
 // join :: all first level properties contain '$'
 
-function validateDdfQuery (query: any): any {
+function validateDdfQuery(query: any): any {
   return applyValidators(query, [
     _validateDdfQueryWhereClause,
     _validateDdfQueryJoinClause,
@@ -98,11 +98,11 @@ function applyValidators(query: any, validators: Function[]): any {
 }
 
 function _validateDdfQueryWhereClause(query: any): any {
-  const errorMessages = traverse(_.get(query, 'where', {})).reduce(function(errors: string[]): string[] {
+  const errorMessages = traverse(_.get(query, 'where', {})).reduce(function (errors: string[]): string[] {
     /* tslint:disable: no-invalid-this */
-    if(this.key) {
+    if (this.key) {
       const key = _.toString(this.key);
-      if(_.includes(key, '.')) {
+      if (_.includes(key, '.')) {
         errors.push('Invalid DDFQL-query. Validation of Where Clause: contain "." in ' + key);
       }
     }
@@ -117,7 +117,7 @@ function _validateDdfQueryWhereClause(query: any): any {
 function _validateDdfQueryJoinClause(query: any): any {
   const errorMessages =
     _.chain(_.get(query, 'join')).keys().reduce((errors: string[], key: string) => {
-      if(!_.startsWith(key, '$')) {
+      if (!_.startsWith(key, '$')) {
         errors.push('Invalid DDFQL-query. Validation of Join Clause: does not contain "$" in ' + key);
       }
       return errors;
@@ -201,8 +201,8 @@ function _validateDdfQueryOrderByClause(query: any): any {
   return createResponse(errorMessages);
 }
 
-function createResponse (errorMessages: string[]): any {
-  if(_.isEmpty(errorMessages)) {
+function createResponse(errorMessages: string[]): any {
+  if (_.isEmpty(errorMessages)) {
     return VALID_RESPONSE;
   }
 

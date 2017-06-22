@@ -14,7 +14,7 @@ import * as reposService from '../../../../ws.services/repos.service';
 import * as cacheUtils from '../../../../ws.utils/cache-warmup';
 import * as cliApi from 'waffle-server-import-cli';
 import {Request, Response} from 'express';
-import {json} from "body-parser";
+import {json} from 'body-parser';
 
 const sandbox = sinonTest.configureTest(sinon);
 
@@ -121,7 +121,7 @@ describe('WS-CLI controller', () => {
       const expectedResponse = {success: true, message: expectedMessage};
 
       const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'importDataset').callsFake(params => {
+      const cliServiceStub = this.stub(cliService, 'importDataset').callsFake((params) => {
         params.lifecycleHooks.onTransactionCreated();
       });
 
@@ -147,7 +147,7 @@ describe('WS-CLI controller', () => {
       const toMessageResponseSpy = this.spy(routeUtils, 'toMessageResponse');
 
       const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'importDataset').callsFake(params => {
+      const cliServiceStub = this.stub(cliService, 'importDataset').callsFake((params) => {
         params.lifecycleHooks.onTransactionCreated();
       });
 
@@ -175,7 +175,7 @@ describe('WS-CLI controller', () => {
       const expectedResponse = {success: true, message: expectedMessage};
 
       const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'cleanDdfRedisCache').callsFake(onCleaned => onCleaned(null));
+      const cliServiceStub = this.stub(cliService, 'cleanDdfRedisCache').callsFake((onCleaned) => onCleaned(null));
 
       const req = {
         user: {
@@ -228,7 +228,7 @@ describe('WS-CLI controller', () => {
 
       const loggerStub = this.stub(logger, 'error');
       const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'cleanDdfRedisCache').callsFake(onCleaned => onCleaned(expectedError));
+      const cliServiceStub = this.stub(cliService, 'cleanDdfRedisCache').callsFake((onCleaned) => onCleaned(expectedError));
 
       const req = {
         user: {
@@ -1807,7 +1807,7 @@ describe('WS-CLI controller', () => {
       const removalStatus = {
         concepts: 42,
         entities: 42,
-        datapoints: 42,
+        datapoints: 42
       };
 
       const getRemovalStateForDatasetStub = this.stub(datasetsService, 'getRemovalStateForDataset');

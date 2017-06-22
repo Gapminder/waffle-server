@@ -2,15 +2,15 @@ import * as _ from 'lodash';
 import * as async from 'async';
 import * as ddfql from '../ws.ddfql/ddf-datapoints-query-normalizer';
 import { logger } from '../ws.config/log';
-import {constants} from '../ws.utils/constants';
+import { constants } from '../ws.utils/constants';
 import * as commonService from './common.service';
 import * as conceptsService from './concepts.service';
 import * as entitiesService from './entities.service';
 import * as ddfQueryValidator from '../ws.ddfql/ddf-query-validator';
-import {EntitiesRepositoryFactory} from '../ws.repository/ddf/entities/entities.repository';
-import {DatapointsRepositoryFactory} from '../ws.repository/ddf/data-points/data-points.repository';
-import {ValidateQueryModel} from '../ws.ddfql/ddf-query-validator';
-import {MongoError} from 'mongodb';
+import { ValidateQueryModel } from '../ws.ddfql/ddf-query-validator';
+import { EntitiesRepositoryFactory } from '../ws.repository/ddf/entities/entities.repository';
+import { DatapointsRepositoryFactory } from '../ws.repository/ddf/data-points/data-points.repository';
+import { MongoError } from 'mongodb';
 
 export {
   collectDatapointsByDdfql
@@ -88,7 +88,7 @@ function normalizeQueriesToDatapointsByDdfql(pipe: any, cb: Function): void {
   return async.mapValuesLimit(normalizedQuery.join, 10, (joinQuery: any, link: any, mcb: Function) => {
     const validateQuery: ValidateQueryModel = ddfQueryValidator.validateMongoQuery(joinQuery);
 
-    if(!validateQuery.valid) {
+    if (!validateQuery.valid) {
       return cb(validateQuery.log, pipe);
     }
 
@@ -108,7 +108,7 @@ function normalizeQueriesToDatapointsByDdfql(pipe: any, cb: Function): void {
     const subDatapointQuery = promotedQuery.where;
     const validateQuery: ValidateQueryModel = ddfQueryValidator.validateMongoQuery(subDatapointQuery);
 
-    if(!validateQuery.valid) {
+    if (!validateQuery.valid) {
       return cb(validateQuery.log, pipe);
     }
 

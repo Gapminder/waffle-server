@@ -13,7 +13,7 @@ const sandbox = sinonTest.configureTest(sinon);
 
 const externalContext = {
   transaction: {
-    _id: transactionId,
+    _id: transactionId
   },
   dataset: {
     _id: datasetId
@@ -27,27 +27,27 @@ describe('Import dataset schema', () => {
         ddfSchema: {
           concepts: [
             {
-              "primaryKey": ["concept"],
-              "value": "name",
-              "resources": ["ddf--concepts"]
+              primaryKey: ['concept'],
+              value: 'name',
+              resources: ['ddf--concepts']
             },
             {
-              "primaryKey": ["concept"],
-              "value": "concept_type",
-              "resources": ["ddf--concepts"]
+              primaryKey: ['concept'],
+              value: 'concept_type',
+              resources: ['ddf--concepts']
             }
           ],
           entities: [
             {
-              "primaryKey": ["country"],
-              "value": "name",
-              "resources": ["ddf--concepts"]
+              primaryKey: ['country'],
+              value: 'name',
+              resources: ['ddf--concepts']
             }
           ],
           datapoints: [{
-            "primaryKey": ["country", "year"],
-            "value": "yearly_co2_emissions_1000_tonnes",
-            "resources": ["ddf--datapoints--yearly_co2_emissions_1000_tonnes--by--country--year"]
+            primaryKey: ['country', 'year'],
+            value: 'yearly_co2_emissions_1000_tonnes',
+            resources: ['ddf--datapoints--yearly_co2_emissions_1000_tonnes--by--country--year']
           }]
         }
       }
@@ -60,37 +60,37 @@ describe('Import dataset schema', () => {
       sinon.assert.calledThrice(createStub);
 
       sinon.assert.calledWith(createStub, [{
-        dataset: "datasetId",
-        key: ["concept"],
-        resources: ["ddf--concepts"],
-        transaction: "transactionId",
-        type: "concepts",
-        value: "name"
+        dataset: 'datasetId',
+        key: ['concept'],
+        resources: ['ddf--concepts'],
+        transaction: 'transactionId',
+        type: 'concepts',
+        value: 'name'
       }, {
-        dataset: "datasetId",
-        key: ["concept"],
-        resources: ["ddf--concepts"],
-        transaction: "transactionId",
-        type: "concepts",
-        value: "concept_type"
+        dataset: 'datasetId',
+        key: ['concept'],
+        resources: ['ddf--concepts'],
+        transaction: 'transactionId',
+        type: 'concepts',
+        value: 'concept_type'
       }]);
 
       sinon.assert.calledWith(createStub, [{
-        dataset: "datasetId",
-        key: ["country"],
-        resources: ["ddf--concepts"],
-        transaction: "transactionId",
-        type: "entities",
-        value: "name"
+        dataset: 'datasetId',
+        key: ['country'],
+        resources: ['ddf--concepts'],
+        transaction: 'transactionId',
+        type: 'entities',
+        value: 'name'
       }]);
 
       sinon.assert.calledWith(createStub, [{
-        dataset: "datasetId",
-        key: ["country", "year"],
-        resources: ["ddf--datapoints--yearly_co2_emissions_1000_tonnes--by--country--year"],
-        transaction: "transactionId",
-        type: "datapoints",
-        value: "yearly_co2_emissions_1000_tonnes"
+        dataset: 'datasetId',
+        key: ['country', 'year'],
+        resources: ['ddf--datapoints--yearly_co2_emissions_1000_tonnes--by--country--year'],
+        transaction: 'transactionId',
+        type: 'datapoints',
+        value: 'yearly_co2_emissions_1000_tonnes'
       }]);
 
       done();
