@@ -23,6 +23,12 @@
   dependencies:
     "@types/node" "*"
 
+"@types/bunyan@1.8.0":
+  version "1.8.0"
+  resolved "https://registry.yarnpkg.com/@types/bunyan/-/bunyan-1.8.0.tgz#913bf718a2f4dd1efa063e808cab76609289c986"
+  dependencies:
+    "@types/node" "*"
+
 "@types/chai@3.4.35":
   version "3.4.35"
   resolved "https://registry.yarnpkg.com/@types/chai/-/chai-3.4.35.tgz#e8d65f83492d2944f816fc620741821c28a8c900"
@@ -30,6 +36,10 @@
 "@types/chalk@0.4.31":
   version "0.4.31"
   resolved "https://registry.yarnpkg.com/@types/chalk/-/chalk-0.4.31.tgz#a31d74241a6b1edbb973cf36d97a2896834a51f9"
+
+"@types/core-js@0.9.41":
+  version "0.9.41"
+  resolved "https://registry.yarnpkg.com/@types/core-js/-/core-js-0.9.41.tgz#cfeceb63c2beaa29f882252c7c18e0e9471ff4e2"
 
 "@types/express-serve-static-core@*":
   version "4.0.48"
@@ -55,6 +65,10 @@
 "@types/lodash@4.14.65":
   version "4.14.65"
   resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.65.tgz#a0f78d71ffcd3c02628d5f616410c98c424326d5"
+
+"@types/lodash@4.14.66":
+  version "4.14.66"
+  resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.66.tgz#3dbb83477becf130611f8fac82a8fdb199805981"
 
 "@types/md5@2.1.32":
   version "2.1.32"
@@ -504,7 +518,7 @@ bunyan-prettystream@0.1.3:
   version "0.1.3"
   resolved "https://registry.yarnpkg.com/bunyan-prettystream/-/bunyan-prettystream-0.1.3.tgz#6c3b713266f6ad32007c7b6ab1e998a245349d98"
 
-bunyan@1.8.10:
+bunyan@1.8.10, bunyan@^1.8.10:
   version "1.8.10"
   resolved "https://registry.yarnpkg.com/bunyan/-/bunyan-1.8.10.tgz#201fedd26c7080b632f416072f53a90b9a52981c"
   optionalDependencies:
@@ -1036,9 +1050,9 @@ ddf-time-utils@0.1.7:
     lodash "4.7.0"
     moment "2.14.1"
 
-ddf-validation@~1.7.4:
-  version "1.7.4"
-  resolved "https://registry.yarnpkg.com/ddf-validation/-/ddf-validation-1.7.4.tgz#3dcc36762bd0719c0ad3122def89917d63bc39a1"
+ddf-validation@~1.7.4, ddf-validation@~1.7.6:
+  version "1.7.6"
+  resolved "https://registry.yarnpkg.com/ddf-validation/-/ddf-validation-1.7.6.tgz#066308e17183af18b7a97e55dbe6eda0cd5bf771"
   dependencies:
     "@types/async" "2.0.40"
     "@types/babyparse" "0.0.30"
@@ -1078,7 +1092,7 @@ debug@2, debug@2.6.8:
   dependencies:
     ms "2.0.0"
 
-debug@2.2.0, debug@^2.2.0, debug@~2.2.0:
+debug@2.2.0, debug@~2.2.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/debug/-/debug-2.2.0.tgz#f87057e995b1a1f6ae6a4960664137bc56f039da"
   dependencies:
@@ -1090,7 +1104,7 @@ debug@2.6.1:
   dependencies:
     ms "0.7.2"
 
-debug@2.6.7:
+debug@2.6.7, debug@^2.2.0:
   version "2.6.7"
   resolved "https://registry.yarnpkg.com/debug/-/debug-2.6.7.tgz#92bad1f6d05bbb6bba22cca88bcd0ec894c2861e"
   dependencies:
@@ -1621,8 +1635,8 @@ get-pixels@^3.3.0:
     through "^2.3.4"
 
 get-pkg-repo@^1.0.0:
-  version "1.3.0"
-  resolved "https://registry.yarnpkg.com/get-pkg-repo/-/get-pkg-repo-1.3.0.tgz#43c6b4c048b75dd604fc5388edecde557f6335df"
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/get-pkg-repo/-/get-pkg-repo-1.4.0.tgz#c73b489c06d80cc5536c2c853f9e05232056972d"
   dependencies:
     hosted-git-info "^2.1.4"
     meow "^3.3.0"
@@ -1855,8 +1869,8 @@ hooks-fixed@2.0.0:
   resolved "https://registry.yarnpkg.com/hooks-fixed/-/hooks-fixed-2.0.0.tgz#a01d894d52ac7f6599bbb1f63dfc9c411df70cba"
 
 hosted-git-info@^2.1.4:
-  version "2.4.2"
-  resolved "https://registry.yarnpkg.com/hosted-git-info/-/hosted-git-info-2.4.2.tgz#0076b9f46a270506ddbaaea56496897460612a67"
+  version "2.5.0"
+  resolved "https://registry.yarnpkg.com/hosted-git-info/-/hosted-git-info-2.5.0.tgz#6d60e34b3abbc8313062c3b798ef8d901a07af3c"
 
 http-errors@~1.6.1:
   version "1.6.1"
@@ -1887,13 +1901,9 @@ i@0.3.x:
   version "0.3.5"
   resolved "https://registry.yarnpkg.com/i/-/i-0.3.5.tgz#1d2b854158ec8169113c6cb7f6b6801e99e211d5"
 
-iconv-lite@0.4.15:
+iconv-lite@0.4.15, iconv-lite@~0.4.13:
   version "0.4.15"
   resolved "https://registry.yarnpkg.com/iconv-lite/-/iconv-lite-0.4.15.tgz#fe265a218ac6a57cfe854927e9d04c19825eddeb"
-
-iconv-lite@~0.4.13:
-  version "0.4.18"
-  resolved "https://registry.yarnpkg.com/iconv-lite/-/iconv-lite-0.4.18.tgz#23d8656b16aae6742ac29732ea8f0336a4789cf2"
 
 indent-string@^2.1.0:
   version "2.1.0"
@@ -2802,8 +2812,8 @@ nopt@^4.0.1:
     osenv "^0.1.4"
 
 normalize-package-data@^2.3.0, normalize-package-data@^2.3.2, normalize-package-data@^2.3.4, normalize-package-data@^2.3.5:
-  version "2.3.8"
-  resolved "https://registry.yarnpkg.com/normalize-package-data/-/normalize-package-data-2.3.8.tgz#d819eda2a9dedbd1ffa563ea4071d936782295bb"
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/normalize-package-data/-/normalize-package-data-2.4.0.tgz#12f95a307d58352075a04907b84ac8be98ac012f"
   dependencies:
     hosted-git-info "^2.1.4"
     is-builtin-module "^1.0.0"
@@ -2817,8 +2827,8 @@ normalize-path@^2.0.1:
     remove-trailing-separator "^1.0.1"
 
 npmlog@^4.0.2:
-  version "4.1.0"
-  resolved "https://registry.yarnpkg.com/npmlog/-/npmlog-4.1.0.tgz#dc59bee85f64f00ed424efb2af0783df25d1c0b5"
+  version "4.1.2"
+  resolved "https://registry.yarnpkg.com/npmlog/-/npmlog-4.1.2.tgz#08a7f2a8bf734604779a9efa4ad5cc717abb954b"
   dependencies:
     are-we-there-yet "~1.1.2"
     console-control-strings "~1.1.0"
@@ -3257,8 +3267,8 @@ readable-stream@^1.1.13, readable-stream@~1.1.9:
     string_decoder "~0.10.x"
 
 readable-stream@^2.0.2, readable-stream@^2.0.5, readable-stream@^2.0.6, readable-stream@^2.1.4, readable-stream@^2.1.5, readable-stream@^2.2.2:
-  version "2.3.1"
-  resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-2.3.1.tgz#84e26965bb9e785535ed256e8d38e92c69f09d10"
+  version "2.3.2"
+  resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-2.3.2.tgz#5a04df05e4f57fe3f0dc68fdd11dc5c97c7e6f4d"
   dependencies:
     core-util-is "~1.0.0"
     inherits "~2.0.3"
@@ -3482,10 +3492,6 @@ safe-buffer@^5.0.1, safe-buffer@~5.1.0:
   version "5.1.1"
   resolved "https://registry.yarnpkg.com/safe-buffer/-/safe-buffer-5.1.1.tgz#893312af69b2123def71f57889001671eeb2c853"
 
-safe-buffer@~5.0.1:
-  version "5.0.1"
-  resolved "https://registry.yarnpkg.com/safe-buffer/-/safe-buffer-5.0.1.tgz#d263ca54696cd8a306b5ca6551e92de57918fbe7"
-
 safe-json-stringify@~1:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/safe-json-stringify/-/safe-json-stringify-1.0.4.tgz#81a098f447e4bbc3ff3312a243521bc060ef5911"
@@ -3581,10 +3587,6 @@ shush@^1.0.0:
 signal-exit@^3.0.0:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/signal-exit/-/signal-exit-3.0.2.tgz#b5fdc08f1287ea1178628e415e25132b73646c6d"
-
-simple-git@1.70.0:
-  version "1.70.0"
-  resolved "https://registry.yarnpkg.com/simple-git/-/simple-git-1.70.0.tgz#62cfd90bb2628a13ff4fe704c840fcef56244a71"
 
 simple-git@1.72.0:
   version "1.72.0"
@@ -3756,10 +3758,10 @@ string_decoder@~0.10.x:
   resolved "https://registry.yarnpkg.com/string_decoder/-/string_decoder-0.10.31.tgz#62e203bc41766c6c28c9fc84301dab1c5310fa94"
 
 string_decoder@~1.0.0:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/string_decoder/-/string_decoder-1.0.2.tgz#b29e1f4e1125fa97a10382b8a533737b7491e179"
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/string_decoder/-/string_decoder-1.0.3.tgz#0fc67d7c141825de94282dd536bec6b9bce860ab"
   dependencies:
-    safe-buffer "~5.0.1"
+    safe-buffer "~5.1.0"
 
 stringstream@~0.0.4:
   version "0.0.5"
@@ -3885,8 +3887,8 @@ tcomb-validation@^3.3.0:
     tcomb "^3.0.0"
 
 tcomb@^3.0.0, tcomb@^3.2.17:
-  version "3.2.20"
-  resolved "https://registry.yarnpkg.com/tcomb/-/tcomb-3.2.20.tgz#823e689dcf3518d82c4b6c890a822aa6916692cd"
+  version "3.2.21"
+  resolved "https://registry.yarnpkg.com/tcomb/-/tcomb-3.2.21.tgz#36c79fe234918d5e2807963137e476166970ff66"
 
 tempfile@^1.1.1:
   version "1.1.1"
@@ -4185,11 +4187,12 @@ vinyl@^0.5.0:
     replace-ext "0.0.1"
 
 waffle-server-import-cli@~2.6.6:
-  version "2.6.6"
-  resolved "https://registry.yarnpkg.com/waffle-server-import-cli/-/waffle-server-import-cli-2.6.6.tgz#2616c9116720cdbf5e2ca00f263b9df7f4783a57"
+  version "2.6.9"
+  resolved "https://registry.yarnpkg.com/waffle-server-import-cli/-/waffle-server-import-cli-2.6.9.tgz#3d1749636b0e91068e6ecdd6b8998a9685e27440"
   dependencies:
     JSONStream "1.3.1"
     async "2.3.0"
+    bunyan "^1.8.10"
     csvtojson "1.1.4"
     ddf-validation "~1.7.4"
     git-csv-diff "1.3.1"
@@ -4200,8 +4203,21 @@ waffle-server-import-cli@~2.6.6:
     moment "2.18.1"
     router "1.3.0"
     shelljs "0.7.7"
-    simple-git "1.70.0"
     superagent "3.5.2"
+    waffle-server-repo-service "1.0.5"
+
+waffle-server-repo-service@1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/waffle-server-repo-service/-/waffle-server-repo-service-1.0.5.tgz#34560b9421677135a9b389ca5047ad8defc6a4d6"
+  dependencies:
+    "@types/bunyan" "1.8.0"
+    "@types/core-js" "0.9.41"
+    "@types/lodash" "4.14.66"
+    "@types/shelljs" "0.7.2"
+    lodash "4.17.4"
+    path "0.12.7"
+    shelljs "0.7.8"
+    typescript "2.3.4"
 
 whatwg-fetch@>=0.10.0:
   version "2.0.3"
