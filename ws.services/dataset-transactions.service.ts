@@ -194,6 +194,26 @@ function _findObjectsModifiedDuringLastTransaction(externalContext: any, done: F
       return done(`Transaction is absent for dataset: ${externalContext.datasetName}`);
     }
 
+    const result = {
+      datasetName: externalContext.datasetName,
+      transaction: {
+        lastError: latestTransaction.lastError,
+        commit: latestTransaction.commit,
+        status: latestTransaction.isClosed ? 'Completed' : 'In progress',
+        createdAt: new Date(latestTransaction.createdAt)
+      },
+      modifiedObjects: {
+        concepts: 0,
+        entities: 0,
+        datapoints: 0
+      }
+    };
+
+    return done(null, result);
+/*
+    // TODO: The strategy for calculating these statistics should be changed. Cause for now it executs quites complex quries
+    // which perform very poorly on huge datasets. Time that is required for execution is bigger than amount of time till
+    // mongo's connection timeout
     const modifiedObjectsTasks =
       _createTasksForCountingObjectsModifiedInGivenVersion(externalContext.datasetId, latestTransaction.createdAt);
 
@@ -213,8 +233,9 @@ function _findObjectsModifiedDuringLastTransaction(externalContext: any, done: F
         modifiedObjects: stats
       };
 
-      return done(countingError, result);
+      return done(null, result);
     });
+*/
   });
 }
 
