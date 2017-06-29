@@ -84,7 +84,7 @@
     "typescript": "2.3.4",
     "urlon": "2.0.1",
     "validator": "6.2.1",
-    "waffle-server-import-cli": "~2.6.11",
+    "waffle-server-import-cli": "~2.6.13",
     "waffle-server-repo-service": "1.0.6"
   },
   "devDependencies": {
