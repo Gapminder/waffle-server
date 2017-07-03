@@ -160,10 +160,18 @@ function __normalizeJoin(query: any, options: any): void {
     }
 
     if (this.key === 'key') {
+      const conceptType = _.get(options, `conceptsByGids.${filterValue}.properties.concept_type`);
       const domainOrSetOriginId = _.get(options, `conceptsByGids.${filterValue}.originId`);
-      normalizedFilter = {
-        $or: [{ domain: domainOrSetOriginId }, { sets: domainOrSetOriginId }]
-      };
+
+      if (conceptType === 'entity_domain' || conceptType !== 'entity_set') {
+        normalizedFilter = {
+          domain: domainOrSetOriginId
+        };
+      } else {
+        normalizedFilter = {
+          sets: domainOrSetOriginId
+        };
+      }
     }
 
     if (normalizedFilter) {

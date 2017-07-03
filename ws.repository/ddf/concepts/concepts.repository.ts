@@ -5,6 +5,7 @@ import { model } from 'mongoose';
 import { VersionedModelRepository } from '../../versioned-model-repository';
 import { VersionedModelRepositoryFactory } from '../../versioned-model-repository-factory';
 import { constants } from '../../../ws.utils/constants';
+import { logger } from '../../../ws.config/log';
 
 const Concepts = model('Concepts');
 
@@ -30,6 +31,8 @@ export class ConceptsRepository extends VersionedModelRepository {
 
   public findConceptsByQuery(conceptsQuery: any, onPropertiesFound: Function): Promise<Object> {
     const composedQuery = this._composeQuery(conceptsQuery);
+
+    logger.debug({mongo: composedQuery});
     return Concepts.find(composedQuery).lean().exec(onPropertiesFound);
   }
 
