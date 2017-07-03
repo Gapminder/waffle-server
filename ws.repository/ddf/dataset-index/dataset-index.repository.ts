@@ -1,4 +1,5 @@
 import { model } from 'mongoose';
+import { logger } from '../../../ws.config/log';
 
 const DatasetIndex = model('DatasetIndex');
 
@@ -7,6 +8,7 @@ function DatasetIndexRepository(): void {
 }
 
 DatasetIndexRepository.prototype.findByDdfql = function (query: any, onFound: Function): Promise<Object> {
+  logger.debug({ mongo: query.where });
   return DatasetIndex.find(query.where, query.select).lean().exec(onFound);
 };
 

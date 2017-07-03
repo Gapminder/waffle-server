@@ -2,7 +2,7 @@
 # yarn lockfile v1
 
 
-"@types/async@2.0.40":
+"@types/async@2.0.40", "@types/async@^2.0.40":
   version "2.0.40"
   resolved "https://registry.yarnpkg.com/@types/async/-/async-2.0.40.tgz#ac02de68e66c004a61b7cb16df8b1db3a254cca9"
 
@@ -85,8 +85,8 @@
   resolved "https://registry.yarnpkg.com/@types/mocha/-/mocha-2.2.40.tgz#9811dd800ece544cd84b5b859917bf584a150c4c"
 
 "@types/mongodb@*":
-  version "2.2.6"
-  resolved "https://registry.yarnpkg.com/@types/mongodb/-/mongodb-2.2.6.tgz#cd7cb4c439219af1dfba5860d302eeaf2b0a13e4"
+  version "2.2.7"
+  resolved "https://registry.yarnpkg.com/@types/mongodb/-/mongodb-2.2.7.tgz#35c04cb60ff06d0c6ab71cc6561e41baf094fa70"
   dependencies:
     "@types/bson" "*"
     "@types/node" "*"
@@ -378,6 +378,12 @@ async@2.3.0:
 async@2.4.1:
   version "2.4.1"
   resolved "https://registry.yarnpkg.com/async/-/async-2.4.1.tgz#62a56b279c98a11d0987096a01cc3eeb8eb7bbd7"
+  dependencies:
+    lodash "^4.14.0"
+
+async@^2.5.0:
+  version "2.5.0"
+  resolved "https://registry.yarnpkg.com/async/-/async-2.5.0.tgz#843190fd6b7357a0b9e1c956edddd5ec8462b54d"
   dependencies:
     lodash "^4.14.0"
 
@@ -1050,7 +1056,7 @@ ddf-time-utils@0.1.7:
     lodash "4.7.0"
     moment "2.14.1"
 
-ddf-validation@~1.7.4, ddf-validation@~1.7.6:
+ddf-validation@~1.7.6:
   version "1.7.6"
   resolved "https://registry.yarnpkg.com/ddf-validation/-/ddf-validation-1.7.6.tgz#066308e17183af18b7a97e55dbe6eda0cd5bf771"
   dependencies:
@@ -2146,8 +2152,8 @@ jpeg-js@^0.1.1:
   resolved "https://registry.yarnpkg.com/jpeg-js/-/jpeg-js-0.1.2.tgz#135b992c0575c985cfa0f494a3227ed238583ece"
 
 js-tokens@^3.0.0:
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/js-tokens/-/js-tokens-3.0.1.tgz#08e9f132484a2c45a30907e9dc4d5567b7f114d7"
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/js-tokens/-/js-tokens-3.0.2.tgz#9866df395102130e38f7f996bceb65443209c25b"
 
 js-yaml@3.x:
   version "3.8.4"
@@ -3267,15 +3273,15 @@ readable-stream@^1.1.13, readable-stream@~1.1.9:
     string_decoder "~0.10.x"
 
 readable-stream@^2.0.2, readable-stream@^2.0.5, readable-stream@^2.0.6, readable-stream@^2.1.4, readable-stream@^2.1.5, readable-stream@^2.2.2:
-  version "2.3.2"
-  resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-2.3.2.tgz#5a04df05e4f57fe3f0dc68fdd11dc5c97c7e6f4d"
+  version "2.3.3"
+  resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-2.3.3.tgz#368f2512d79f9d46fdfc71349ae7878bbc1eb95c"
   dependencies:
     core-util-is "~1.0.0"
     inherits "~2.0.3"
     isarray "~1.0.0"
     process-nextick-args "~1.0.6"
-    safe-buffer "~5.1.0"
-    string_decoder "~1.0.0"
+    safe-buffer "~5.1.1"
+    string_decoder "~1.0.3"
     util-deprecate "~1.0.1"
 
 readable-stream@~2.0.0:
@@ -3488,7 +3494,7 @@ rx@^4.1.0:
   version "4.1.0"
   resolved "https://registry.yarnpkg.com/rx/-/rx-4.1.0.tgz#a5f13ff79ef3b740fe30aa803fb09f98805d4782"
 
-safe-buffer@^5.0.1, safe-buffer@~5.1.0:
+safe-buffer@^5.0.1, safe-buffer@~5.1.0, safe-buffer@~5.1.1:
   version "5.1.1"
   resolved "https://registry.yarnpkg.com/safe-buffer/-/safe-buffer-5.1.1.tgz#893312af69b2123def71f57889001671eeb2c853"
 
@@ -3587,10 +3593,6 @@ shush@^1.0.0:
 signal-exit@^3.0.0:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/signal-exit/-/signal-exit-3.0.2.tgz#b5fdc08f1287ea1178628e415e25132b73646c6d"
-
-simple-git@1.72.0:
-  version "1.72.0"
-  resolved "https://registry.yarnpkg.com/simple-git/-/simple-git-1.72.0.tgz#e462ce8b46d4523f679e340000681582e9e965d2"
 
 sinon-chai-in-order@0.1.0:
   version "0.1.0"
@@ -3739,8 +3741,8 @@ string-extended@0.0.8:
     is-extended "~0.0.3"
 
 string-kit@^0.5.21:
-  version "0.5.24"
-  resolved "https://registry.yarnpkg.com/string-kit/-/string-kit-0.5.24.tgz#9ea37362e6094bad216447bbd3edea5930c320ef"
+  version "0.5.26"
+  resolved "https://registry.yarnpkg.com/string-kit/-/string-kit-0.5.26.tgz#c3dc431cad0a4451e2132c342c47611a92b1c925"
   dependencies:
     tree-kit "^0.5.24"
     xregexp "^3.2.0"
@@ -3757,7 +3759,7 @@ string_decoder@~0.10.x:
   version "0.10.31"
   resolved "https://registry.yarnpkg.com/string_decoder/-/string_decoder-0.10.31.tgz#62e203bc41766c6c28c9fc84301dab1c5310fa94"
 
-string_decoder@~1.0.0:
+string_decoder@~1.0.0, string_decoder@~1.0.3:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/string_decoder/-/string_decoder-1.0.3.tgz#0fc67d7c141825de94282dd536bec6b9bce860ab"
   dependencies:
@@ -4165,8 +4167,8 @@ validator@6.2.1:
   resolved "https://registry.yarnpkg.com/validator/-/validator-6.2.1.tgz#bc575b78d15beb2e338a665ba9530c7f409ef667"
 
 validator@^7.0.0:
-  version "7.1.0"
-  resolved "https://registry.yarnpkg.com/validator/-/validator-7.1.0.tgz#331695afc7e6d72f980bddd68aa296d6b3d6c8b6"
+  version "7.2.0"
+  resolved "https://registry.yarnpkg.com/validator/-/validator-7.2.0.tgz#a63dcbaba51d4350bf8df20988e0d5a54d711791"
 
 vary@^1, vary@~1.1.0, vary@~1.1.1:
   version "1.1.1"
@@ -4186,15 +4188,15 @@ vinyl@^0.5.0:
     clone-stats "^0.0.1"
     replace-ext "0.0.1"
 
-waffle-server-import-cli@~2.6.6:
-  version "2.6.9"
-  resolved "https://registry.yarnpkg.com/waffle-server-import-cli/-/waffle-server-import-cli-2.6.9.tgz#3d1749636b0e91068e6ecdd6b8998a9685e27440"
+waffle-server-import-cli@~2.6.13:
+  version "2.6.13"
+  resolved "https://registry.yarnpkg.com/waffle-server-import-cli/-/waffle-server-import-cli-2.6.13.tgz#12f73908ef1b456b4aa8cbe98e0971152594b410"
   dependencies:
     JSONStream "1.3.1"
     async "2.3.0"
     bunyan "^1.8.10"
     csvtojson "1.1.4"
-    ddf-validation "~1.7.4"
+    ddf-validation "~1.7.6"
     git-csv-diff "1.3.1"
     highland "2.10.5"
     inquirer "1.0.2"
@@ -4204,16 +4206,18 @@ waffle-server-import-cli@~2.6.6:
     router "1.3.0"
     shelljs "0.7.7"
     superagent "3.5.2"
-    waffle-server-repo-service "1.0.5"
+    waffle-server-repo-service "1.0.6"
 
-waffle-server-repo-service@1.0.5:
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/waffle-server-repo-service/-/waffle-server-repo-service-1.0.5.tgz#34560b9421677135a9b389ca5047ad8defc6a4d6"
+waffle-server-repo-service@1.0.6:
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/waffle-server-repo-service/-/waffle-server-repo-service-1.0.6.tgz#50f4a909b7acceaa6ef849638632fc20d43c3a30"
   dependencies:
+    "@types/async" "^2.0.40"
     "@types/bunyan" "1.8.0"
     "@types/core-js" "0.9.41"
     "@types/lodash" "4.14.66"
     "@types/shelljs" "0.7.2"
+    async "^2.5.0"
     lodash "4.17.4"
     path "0.12.7"
     shelljs "0.7.8"

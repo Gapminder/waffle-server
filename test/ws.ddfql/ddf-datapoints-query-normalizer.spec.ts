@@ -14,7 +14,7 @@ const concepts = Object.freeze([
   { gid: 'time', originId: '27a3470d3a8c9b37009b9bf9', properties: { concept_type: 'time' } },
   { gid: 'quarter', originId: '77a3471d3a8c9b37009b9bf0', properties: { concept_type: 'quarter' } },
   { gid: 'geo', originId: '17a3470d3a8c9b37009b9bf9', properties: { concept_type: 'entity_domain' } },
-  { gid: 'country', properties: { concept_type: 'entity_set' } },
+  { gid: 'country', originId: '17a3470d3a8c9b37009b9bf9-country', properties: { concept_type: 'entity_set' } },
   { gid: 'latitude', properties: { concept_type: 'measure' } },
   { gid: 'population', originId: '37a3470d3a8c9b37009b9bf9', properties: { concept_type: 'measure' } },
   { gid: 'life_expectancy', originId: '47a3470d3a8c9b37009b9bf9', properties: { concept_type: 'measure' } },
@@ -98,38 +98,17 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
               }
             }
           ],
-          $or: [
-            {
-              domain: '17a3470d3a8c9b37009b9bf9'
-            },
-            {
-              sets: '17a3470d3a8c9b37009b9bf9'
-            }
-          ]
+          domain: '17a3470d3a8c9b37009b9bf9'
         },
         $time: {
-          $or: [
-            {
-              domain: '27a3470d3a8c9b37009b9bf9'
-            },
-            {
-              sets: '27a3470d3a8c9b37009b9bf9'
-            }
-          ],
+          domain: '27a3470d3a8c9b37009b9bf9',
           'parsedProperties.time.millis': {
             $lt: 1420070400000
           },
           'parsedProperties.time.timeType': 'YEAR_TYPE'
         },
         $time2: {
-          $or: [
-            {
-              domain: '27a3470d3a8c9b37009b9bf9'
-            },
-            {
-              sets: '27a3470d3a8c9b37009b9bf9'
-            }
-          ],
+          domain: '27a3470d3a8c9b37009b9bf9',
           'parsedProperties.time.millis': {
             $eq: -1640995200000
           },
@@ -245,37 +224,16 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       from: 'datapoints',
       join: {
         $parsed_geo_3: {
-          $or: [
-            {
-              domain: '17a3470d3a8c9b37009b9bf9'
-            },
-            {
-              sets: '17a3470d3a8c9b37009b9bf9'
-            }
-          ],
+          domain: '17a3470d3a8c9b37009b9bf9',
           gid: 'dza'
         },
         $parsed_quarter_1: {
-          $or: [
-            {
-              domain: '77a3471d3a8c9b37009b9bf0'
-            },
-            {
-              sets: '77a3471d3a8c9b37009b9bf0'
-            }
-          ],
+          domain: '77a3471d3a8c9b37009b9bf0',
           'parsedProperties.quarter.millis': 1349049600000,
           'parsedProperties.quarter.timeType': 'QUARTER_TYPE'
         },
         $parsed_quarter_2: {
-          $or: [
-            {
-              domain: '77a3471d3a8c9b37009b9bf0'
-            },
-            {
-              sets: '77a3471d3a8c9b37009b9bf0'
-            }
-          ],
+          domain: '77a3471d3a8c9b37009b9bf0',
           'parsedProperties.quarter.millis': 1435708800000,
           'parsedProperties.quarter.timeType': 'QUARTER_TYPE'
         }
@@ -397,25 +355,11 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       from: 'datapoints',
       join: {
         $geo: {
-          $or: [
-            {
-              domain: '17a3470d3a8c9b37009b9bf9'
-            },
-            {
-              sets: '17a3470d3a8c9b37009b9bf9'
-            }
-          ],
+          domain: '17a3470d3a8c9b37009b9bf9',
           'properties.is--country': true
         },
         $parsed_time_1: {
-          $or: [
-            {
-              domain: '27a3470d3a8c9b37009b9bf9'
-            },
-            {
-              sets: '27a3470d3a8c9b37009b9bf9'
-            }
-          ],
+          domain: '27a3470d3a8c9b37009b9bf9',
           'parsedProperties.time.millis': {
             $gte: -5364662400000,
             $lte: 1420070400000
@@ -466,24 +410,24 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     expect(actualDdfql).to.deep.equal(normalizedDdfql);
   }));
 
-  it('should parse `{"join": "where": {"geo.is--country": true}}` in where clause', sandbox(function () {
+  it('should parse `{"join": "where": {"country.is--country": true}}` in where clause', sandbox(function () {
     const ddfql = {
       from: 'datapoints',
       select: {
-        key: ['geo', 'time'],
+        key: ['country', 'time'],
         value: ['sg_population']
       },
       where: {
         $and: [
-          { geo: '$geo' },
+          { country: '$country' },
           { time: { $gte: 1800, $lte: 2015 } }
         ]
       },
       join: {
-        $geo: {
-          key: 'geo',
+        $country: {
+          key: 'country',
           where: {
-            'geo.is--country': true
+            'country.is--country': true
           }
         }
       }
@@ -492,26 +436,12 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     const normalizedDdfql = {
       from: 'datapoints',
       join: {
-        $geo: {
-          $or: [
-            {
-              domain: '17a3470d3a8c9b37009b9bf9'
-            },
-            {
-              sets: '17a3470d3a8c9b37009b9bf9'
-            }
-          ],
+        $country: {
+          sets: '17a3470d3a8c9b37009b9bf9-country',
           'properties.is--country': true
         },
         $parsed_time_1: {
-          $or: [
-            {
-              domain: '27a3470d3a8c9b37009b9bf9'
-            },
-            {
-              sets: '27a3470d3a8c9b37009b9bf9'
-            }
-          ],
+          domain: '27a3470d3a8c9b37009b9bf9',
           'parsedProperties.time.millis': {
             $gte: -5364662400000,
             $lte: 1420070400000
@@ -521,7 +451,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       },
       select: {
         key: [
-          'geo',
+          'country',
           'time'
         ],
         value: [
@@ -531,7 +461,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       where: {
         $and: [
           { dimensions: { $size: 2 } },
-          { dimensionsConcepts: { $all: ['17a3470d3a8c9b37009b9bf9', '27a3470d3a8c9b37009b9bf9'] } },
+          { dimensionsConcepts: { $all: ['17a3470d3a8c9b37009b9bf9-country', '27a3470d3a8c9b37009b9bf9'] } },
           {
             measure: {
               $in: [
@@ -542,7 +472,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
           {
             $and: [
               {
-                dimensions: '$geo'
+                dimensions: '$country'
               },
               {
                 dimensions: '$parsed_time_1'
@@ -562,12 +492,12 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     expect(actualDdfql).to.deep.equal(normalizedDdfql);
   }));
 
-  it('should parse and normalize query with geo and time domains', sandbox(function () {
+  it('should parse and normalize query with country and time domains', sandbox(function () {
     const ddfql = {
       from: 'datapoints',
       select: {
         key: [
-          'geo',
+          'country',
           'time'
         ],
         value: [
@@ -576,7 +506,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       },
       where: {
         $and: [
-          { geo: { $in: ['dza', 'usa', 'ukr'] } }
+          { country: { $in: ['dza', 'usa', 'ukr'] } }
         ]
       },
       join: {}
@@ -585,15 +515,8 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     const normalizedDdfql = {
       from: 'datapoints',
       join: {
-        $parsed_geo_1: {
-          $or: [
-            {
-              domain: '17a3470d3a8c9b37009b9bf9'
-            },
-            {
-              sets: '17a3470d3a8c9b37009b9bf9'
-            }
-          ],
+        $parsed_country_1: {
+          sets: '17a3470d3a8c9b37009b9bf9-country',
           gid: {
             $in: [
               'dza',
@@ -605,7 +528,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       },
       select: {
         key: [
-          'geo',
+          'country',
           'time'
         ],
         value: [
@@ -615,7 +538,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       where: {
         $and: [
           { dimensions: { $size: 2 } },
-          { dimensionsConcepts: { $all: ['17a3470d3a8c9b37009b9bf9', '27a3470d3a8c9b37009b9bf9'] } },
+          { dimensionsConcepts: { $all: ['17a3470d3a8c9b37009b9bf9-country', '27a3470d3a8c9b37009b9bf9'] } },
           {
             measure: {
               $in: [
@@ -626,7 +549,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
           {
             $and: [
               {
-                dimensions: '$parsed_geo_1'
+                dimensions: '$parsed_country_1'
               }
             ]
           }
@@ -662,14 +585,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       from: 'datapoints',
       join: {
         $parsed_project_1: {
-          $or: [
-            {
-              domain: '27a3470d3a8c9b37429b9bf9'
-            },
-            {
-              sets: '27a3470d3a8c9b37429b9bf9'
-            }
-          ],
+          domain: '27a3470d3a8c9b37429b9bf9',
           gid: {
             $in: [
               'vizabi',
@@ -753,14 +669,7 @@ describe('ddf datapoints query normalizer - different time types', () => {
       from: 'datapoints',
       join: {
         $time: {
-          $or: [
-            {
-              domain: '27a3470d3a8c9b37009b9bf9'
-            },
-            {
-              sets: '27a3470d3a8c9b37009b9bf9'
-            }
-          ],
+          domain: '27a3470d3a8c9b37009b9bf9',
           'parsedProperties.time.millis': {
             $lt: 1435708800000
           },
@@ -835,14 +744,7 @@ describe('ddf datapoints query normalizer - different time types', () => {
       from: 'datapoints',
       join: {
         $time: {
-          $or: [
-            {
-              domain: '27a3470d3a8c9b37009b9bf9'
-            },
-            {
-              sets: '27a3470d3a8c9b37009b9bf9'
-            }
-          ],
+          domain: '27a3470d3a8c9b37009b9bf9',
           'parsedProperties.time.millis': {
             $lt: 1420070400000
           },
@@ -931,14 +833,7 @@ describe('ddf datapoints query normalizer - different time types', () => {
               'parsedProperties.time.timeType': 'WEEK_TYPE'
             }
           ],
-          $or: [
-            {
-              domain: '27a3470d3a8c9b37009b9bf9'
-            },
-            {
-              sets: '27a3470d3a8c9b37009b9bf9'
-            }
-          ]
+          domain: '27a3470d3a8c9b37009b9bf9'
         }
       },
       select: {
@@ -1026,14 +921,7 @@ describe('ddf datapoints query normalizer - different time types', () => {
               'parsedProperties.time.timeType': 'DATE_TYPE'
             }
           ],
-          $or: [
-            {
-              domain: '27a3470d3a8c9b37009b9bf9'
-            },
-            {
-              sets: '27a3470d3a8c9b37009b9bf9'
-            }
-          ]
+          domain: '27a3470d3a8c9b37009b9bf9'
         }
       },
       select: {
@@ -1130,18 +1018,12 @@ describe('ddf datapoints query normalizer - different time types', () => {
       },
       join: {
         $quarter1: {
-          $or: [
-            { domain: '77a3471d3a8c9b37009b9bf0' },
-            { sets: '77a3471d3a8c9b37009b9bf0' }
-          ],
+          domain: '77a3471d3a8c9b37009b9bf0',
           'parsedProperties.quarter.timeType': 'QUARTER_TYPE',
           'parsedProperties.quarter.millis': { $gt: 1349049600000 }
         },
         $quarter2: {
-          $or: [
-            { domain: '77a3471d3a8c9b37009b9bf0' },
-            { sets: '77a3471d3a8c9b37009b9bf0' }
-          ],
+          domain: '77a3471d3a8c9b37009b9bf0',
           'parsedProperties.quarter.timeType': 'QUARTER_TYPE',
           'parsedProperties.quarter.millis': { $lt: 1435708800000 }
         }

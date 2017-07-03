@@ -74,10 +74,10 @@ function replaceValueOnPath(options: any): void {
   if (options.substituteEntryWithItsContent) {
     const content = value[key];
     delete value[key];
-    _.merge(value, content);
+    _.defaultsDeep(value, content);
   } else {
     delete value[key];
-    _.set(queryFragment, path, _.merge(value, normalizedValue));
+    _.set(queryFragment, path, _.defaultsDeep(value, normalizedValue));
   }
 }
 
