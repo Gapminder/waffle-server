@@ -56,7 +56,7 @@
     "cors": "2.8.3",
     "csvtojson": "1.1.6",
     "ddf-time-utils": "0.1.7",
-    "ddf-validation": "~1.7.6",
+    "ddf-validation": "~1.8.0",
     "entities": "1.1.1",
     "express": "4.15.3",
     "express-redis-cache": "0.5.1",
@@ -84,7 +84,7 @@
     "typescript": "2.3.4",
     "urlon": "2.0.1",
     "validator": "6.2.1",
-    "waffle-server-import-cli": "~2.6.13",
+    "waffle-server-import-cli": "~2.6.15",
     "waffle-server-repo-service": "1.0.6"
   },
   "devDependencies": {
