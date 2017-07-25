@@ -1,7 +1,8 @@
 import * as _ from 'lodash';
 import * as traverse from 'traverse';
-import * as ddfQueryUtils from './ddf-query-utils';
 import * as conceptUtils from '../ws.import/utils/concepts.utils';
+import * as ddfQueryUtils from './ddf-query-utils';
+import { constants } from '../ws.utils/constants';
 
 export {
   normalizeDatapoints,
@@ -10,14 +11,24 @@ export {
   substituteDatapointJoinLinks
 };
 
-function substituteDatapointJoinLinks(query: any, linksInJoinToValues: any): any {
+function substituteDatapointJoinLinks(query: any, linksInJoinToValues: any, timeConceptOriginIds: any): any {
   const safeQuery = ddfQueryUtils.toSafeQuery(query);
 
   traverse(safeQuery.where).forEach(function (link: string): void {
     /* tslint:disable: no-invalid-this */
     if (safeQuery.join.hasOwnProperty(link)) {
-      const id = linksInJoinToValues[link];
-      this.update(id ? { $in: id } : link);
+      const isTimeType = _.includes(timeConceptOriginIds, safeQuery.join[link].domain);
+      if (isTimeType) {
+        ddfQueryUtils.replaceValueOnPath({
+          key: this.key,
+          path: this.path,
+          normalizedValue: _.omit(safeQuery.join[link], ['domain']),
+          queryFragment: safeQuery.where
+        });
+      } else {
+        const id = linksInJoinToValues[link];
+        this.update(id ? { $in: id } : link);
+      }
     }
     /* tslint:enable: no-invalid-this */
   });
@@ -163,14 +174,16 @@ function __normalizeJoin(query: any, options: any): void {
       const conceptType = _.get(options, `conceptsByGids.${filterValue}.properties.concept_type`);
       const domainOrSetOriginId = _.get(options, `conceptsByGids.${filterValue}.originId`);
 
-      if (conceptType === 'entity_domain' || conceptType !== 'entity_set') {
+      if (conceptType === 'entity_set') {
+        normalizedFilter = {
+          sets: domainOrSetOriginId
+        };
+      } else if (conceptType === 'entity_domain' || _.includes(constants.TIME_CONCEPT_TYPES, conceptType)) {
         normalizedFilter = {
           domain: domainOrSetOriginId
         };
       } else {
-        normalizedFilter = {
-          sets: domainOrSetOriginId
-        };
+        normalizedFilter = {};
       }
     }
 
