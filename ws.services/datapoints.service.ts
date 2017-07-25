@@ -3,6 +3,7 @@ import * as async from 'async';
 import * as ddfql from '../ws.ddfql/ddf-datapoints-query-normalizer';
 import { logger } from '../ws.config/log';
 import { constants } from '../ws.utils/constants';
+import * as conceptUtils from '../ws.import/utils/concepts.utils';
 import * as commonService from './common.service';
 import * as conceptsService from './concepts.service';
 import * as entitiesService from './entities.service';
@@ -104,7 +105,8 @@ function normalizeQueriesToDatapointsByDdfql(pipe: any, cb: Function): void {
       return cb(err, pipe);
     }
 
-    const promotedQuery = ddfql.substituteDatapointJoinLinks(normalizedQuery, substituteJoinLinks);
+    const timeConceptsOriginIds = conceptUtils.getTimeConceptOriginIds(pipe.concepts);
+    const promotedQuery = ddfql.substituteDatapointJoinLinks(normalizedQuery, substituteJoinLinks, timeConceptsOriginIds);
     const subDatapointQuery = promotedQuery.where;
     const validateQuery: ValidateQueryModel = ddfQueryValidator.validateMongoQuery(subDatapointQuery);
 

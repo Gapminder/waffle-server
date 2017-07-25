@@ -40,7 +40,15 @@ function mapDdfEntityToWsModel(entry: any, context: any): any {
     };
 }
 
+interface TimeDimension {
+  conceptGid: string;
+  timeType: string;
+  millis: number;
+}
+
 function mapDdfDataPointToWsModel(entry: any, context: any): any {
+    let timeDimension: TimeDimension;
+
     const dimensions = _.chain(entry)
       .pick(_.keys(context.dimensions))
       .reduce((result: any, entityGid: string, conceptGid: any) => {
@@ -50,6 +58,14 @@ function mapDdfDataPointToWsModel(entry: any, context: any): any {
           || context.entities.bySet[key]
           || context.entities.byGid[entityGid]
           || context.entities.foundInDatapointsByGid[entityGid];
+
+        if (!_.isEmpty(_.get(entity, 'parsedProperties', false))) {
+          timeDimension = {
+            conceptGid,
+            timeType: _.get(entity, `parsedProperties.${conceptGid}.timeType`, ''),
+            millis: _.get(entity, `parsedProperties.${conceptGid}.millis`, 0)
+          };
+        }
 
         result.push(entity.originId);
         return result;
@@ -69,6 +85,8 @@ function mapDdfDataPointToWsModel(entry: any, context: any): any {
           properties: entry,
           originId: entry.originId,
           languages: _.get(context, 'languages', {}),
+
+          time: timeDimension,
 
           isNumeric: !_.isNil(datapointValueAsNumber),
           from: context.version,
