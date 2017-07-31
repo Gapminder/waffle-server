@@ -7,7 +7,8 @@ export {
   getTimeConceptOriginIds,
   getTimeConceptGids,
   getTimeConcepts,
-  isTimeConceptType
+  isTimeConceptType,
+  getSortedDimensionConceptGids
 };
 
 function getTimeConceptOriginIds(concepts: any): any[] {
@@ -26,4 +27,13 @@ function getTimeConcepts(concepts: any): any[] {
 
 function isTimeConceptType(conceptType: any): boolean {
   return TIME_CONCEPT_TYPES.has(conceptType);
+}
+
+function getSortedDimensionConceptGids(conceptGids: string[], concepts: any[]): any {
+  return _.chain(conceptGids)
+    .filter((conceptGid: string) => !isTimeConceptType(concepts[conceptGid].type))
+    .map((conceptGid: string) => ({domain: _.get(concepts[conceptGid], 'domain.gid', null), gid: conceptGid}))
+    .sortBy(['domain', 'gid'])
+    .map('gid')
+    .value();
 }

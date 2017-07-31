@@ -2,6 +2,7 @@ import * as _ from 'lodash';
 import {constants} from '../../ws.utils/constants';
 import * as ddfImportUtils from './import-ddf.utils';
 import * as conceptsUtils from './concepts.utils';
+import { isTimeConceptType } from './concepts.utils';
 import { logger } from '../../ws.config/log';
 
 const JSON_COLUMNS = ['color', 'scales', 'drill_up'];
@@ -54,9 +55,11 @@ interface TimeDimension {
 function mapDdfDataPointToWsModel(entry: any, context: any): any {
     let timeDimension: TimeDimension;
 
-    const dimensions = _.chain(entry)
-      .pick(_.keys(context.dimensions))
-      .reduce((result: any, entityGid: string, conceptGid: any) => {
+    const sortedDimensionConceptGids = conceptsUtils.getSortedDimensionConceptGids(_.keys(context.dimensions), context.concepts);
+
+    const dimensions = _.chain(sortedDimensionConceptGids)
+      .reduce((result: any, conceptGid: any) => {
+        const entityGid = entry[conceptGid];
         const key = `${entityGid}-${context.concepts[conceptGid].originId}`;
         const entity =
           context.entities.byDomain[key]
