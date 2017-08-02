@@ -10,6 +10,7 @@ import { DatasetTransactionsRepository } from '../ws.repository/ddf/dataset-tran
 import { constants } from '../ws.utils/constants';
 import { logger } from '../ws.config/log';
 import { DatasetRemovalTracker } from './datasets-removal-tracker';
+import { MongooseCallback } from '../ws.repository/repository.types';
 
 const DATAPOINTS_TO_REMOVE_CHUNK_SIZE = 50000;
 
@@ -199,7 +200,7 @@ function _removeAllTransactions(pipe: any, onTransactionsRemoved: Function): any
   return DatasetTransactionsRepository.removeAllByDataset(pipe.datasetId, (error: string) => onTransactionsRemoved(error, pipe));
 }
 
-function _removeDataset(pipe: any, onDatasetRemoved: Function): void {
+function _removeDataset(pipe: any, onDatasetRemoved: MongooseCallback): void {
   return DatasetsRepository.removeById(pipe.datasetId, onDatasetRemoved);
 }
 

@@ -1,3 +1,5 @@
+/* tslint:disable:no-console */
+
 import * as _ from 'lodash';
 import * as async from 'async';
 import * as wsCli from 'waffle-server-import-cli';
@@ -7,6 +9,15 @@ import '../ws.config/db.config';
 import '../ws.repository';
 
 e2eUtils.setUpEnvironmentVariables();
+
+interface ImportOptions {
+  repos: Repo[];
+}
+
+interface Repo {
+  url: string;
+  commitIndexToStartImport?: number;
+}
 
 const CACHED_COMMITS = new WeakMap();
 
@@ -98,13 +109,4 @@ function getCommitsByGithubUrl(githubUrl: string, done: Function): void {
     CACHED_COMMITS.set(githubUrlObj, commits);
     return done(null, CACHED_COMMITS.get(githubUrlObj));
   });
-}
-
-interface ImportOptions {
-  repos: Repo[];
-}
-
-interface Repo {
-  url: string;
-  commitIndexToStartImport?: number;
 }

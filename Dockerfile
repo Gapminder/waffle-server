@@ -6,7 +6,7 @@ RUN apt-get install -y sudo git python build-essential libssl-dev openssh-server
 COPY ./deployment/rsys_conf/rsyslog.conf /etc/rsyslog.conf
 COPY ./deployment/rsys_conf/ws.conf /etc/rsyslog.d/ws.conf
 
-RUN curl -sL https://deb.nodesource.com/setup_7.x | sudo -E bash -
+RUN curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
 RUN apt-get install -y nodejs
 RUN npm i -g forever
 RUN npm i -g shelljs

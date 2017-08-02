@@ -1,3 +1,5 @@
+/* tslint:disable:no-console no-unused-expression */
+
 import * as _ from 'lodash';
 import * as shell from 'shelljs';
 import { e2eEnv } from './e2e.env';

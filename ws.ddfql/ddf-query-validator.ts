@@ -116,7 +116,7 @@ function _validateDdfQueryWhereClause(query: any): any {
 
 function _validateDdfQueryJoinClause(query: any): any {
   const errorMessages =
-    _.chain(_.get(query, 'join')).keys().reduce((errors: string[], key: string) => {
+    _.chain(_.get<any, any>(query, 'join')).keys().reduce((errors: string[], key: string) => {
       if (!_.startsWith(key, '$')) {
         errors.push('Invalid DDFQL-query. Validation of Join Clause: does not contain "$" in ' + key);
       }

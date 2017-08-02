@@ -1,5 +1,7 @@
 import { model, MongooseDocument } from 'mongoose';
 import * as _ from 'lodash';
+import { MongoCallback } from 'mongodb';
+import { MongooseCallback } from '../../repository.types';
 
 const Datasets = model('Datasets');
 
@@ -69,7 +71,7 @@ class DatasetsRepository {
     }, {isLocked: true}, {new: true}).lean().exec(done);
   }
 
-  public removeById(datasetId: any, done: Function): any {
+  public removeById(datasetId: any, done: MongooseCallback): any {
     return Datasets.findOneAndRemove({_id: datasetId}, done);
   }
 
