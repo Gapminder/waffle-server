@@ -132,8 +132,8 @@ function storeDatapointsTranslationsToDb(externalContext: any): any {
 }
 
 function existTranslationFilepathStream(resolvedFilepath: string, resource: any): any {
-  return hi.wrapCallback((path: string, mode: number, done: Function) => {
-    fs.access(path, mode, (error: Error) => {
+  return hi.wrapCallback((filePath: string, mode: number, done: Function) => {
+    fs.access(filePath, mode, (error: Error) => {
       done(null, _.isNil(error));
     });
   })(resolvedFilepath, fs.constants.R_OK)

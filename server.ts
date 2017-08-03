@@ -16,7 +16,7 @@ import {reposService} from 'waffle-server-repo-service';
 reposService.logger = logger;
 const app: express.Application = express();
 
-process.on('uncaughtException', function (err: string): void {
+process.on('uncaughtException', function (err: Error): void {
   logger.error(err);
 });
 

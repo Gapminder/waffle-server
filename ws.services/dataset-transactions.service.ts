@@ -7,6 +7,7 @@ import { ConceptsRepositoryFactory } from '../ws.repository/ddf/concepts/concept
 import { EntitiesRepositoryFactory } from '../ws.repository/ddf/entities/entities.repository';
 import { DatapointsRepositoryFactory } from '../ws.repository/ddf/data-points/data-points.repository';
 import { DatasetSchemaRepository } from '../ws.repository/ddf/dataset-index/dataset-index.repository';
+import { MongooseCallback } from '../ws.repository/repository.types';
 
 export {
   setLastError,
@@ -157,7 +158,7 @@ function _forceDatasetUnlock(externalContext: any, onDatasetUnlocked: Function):
   });
 }
 
-function _removeDatasetWithoutTransactions(externalContext: any, onDatasetRemoved: Function): void {
+function _removeDatasetWithoutTransactions(externalContext: any, onDatasetRemoved: MongooseCallback): void {
   return DatasetTransactionsRepository.countByDataset(externalContext.datasetId, (countTransactionError: any, amount: number) => {
     if (countTransactionError) {
       return onDatasetRemoved(countTransactionError);

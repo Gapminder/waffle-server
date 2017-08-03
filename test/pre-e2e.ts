@@ -1,3 +1,5 @@
+/* tslint:disable:no-console */
+
 import * as e2eUtils from './e2e.utils';
 import { e2eEnv } from './e2e.env';
 import * as cliUtils from './cli.utils';
@@ -29,7 +31,7 @@ const importOptions: cliUtils.ImportOptions = {
   repos: [
     {
       url: e2eEnv.repo,
-      commitIndexToStartImport: COMMIT_INDEX_TO_IMPORT
+      commitIndexToStartImport: +COMMIT_INDEX_TO_IMPORT
     },
     {
       url: e2eEnv.repo2,
