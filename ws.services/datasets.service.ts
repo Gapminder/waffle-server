@@ -10,6 +10,7 @@ import { DatasetTransactionsRepository } from '../ws.repository/ddf/dataset-tran
 import { constants } from '../ws.utils/constants';
 import { logger } from '../ws.config/log';
 import { DatasetRemovalTracker } from './datasets-removal-tracker';
+import { MongooseCallback } from '../ws.repository/repository.types';
 
 const DATAPOINTS_TO_REMOVE_CHUNK_SIZE = 50000;
 
@@ -24,7 +25,7 @@ export {
 
 function findDatasetsWithVersions(userId: any, onFound: AsyncResultCallback<any, any>): void {
   return async.waterfall([
-    async.constant({userId}),
+    async.constant({ userId }),
     _findDatasetsByUser,
     _collectVersionsForEachDataset
   ], (error: string, datasetsWithVersions: any) => {
@@ -35,7 +36,7 @@ function findDatasetsWithVersions(userId: any, onFound: AsyncResultCallback<any,
 function removeDatasetData(datasetName: string, user: any, onRemovedDataset: AsyncResultCallback<any, any>): void {
   DatasetRemovalTracker.track(datasetName);
   return async.waterfall([
-    async.constant({datasetName, user}),
+    async.constant({ datasetName, user }),
     findDatasetByNameAndValidateOwnership,
     lockDataset,
     _checkDefaultTransactionInDataset,
@@ -46,7 +47,7 @@ function removeDatasetData(datasetName: string, user: any, onRemovedDataset: Asy
     DatasetRemovalTracker.clean(datasetName);
 
     if (removalError) {
-      return unlockDataset({datasetName}, () => onRemovedDataset(removalError, null));
+      return unlockDataset({ datasetName }, () => onRemovedDataset(removalError, null));
     }
 
     return onRemovedDataset(removalError, null);
@@ -59,7 +60,10 @@ function findDatasetByNameAndValidateOwnership(externalContext: any, onDatasetVa
       return onDatasetValidated(datasetSearchError || `Dataset was not found for the given name: ${externalContext.datasetName}`);
     }
 
-    return securityUtils.validateDatasetOwner({dataset, user: externalContext.user}, (datasetValidationError: any) => {
+    return securityUtils.validateDatasetOwner({
+      dataset,
+      user: externalContext.user
+    }, (datasetValidationError: any) => {
       if (datasetValidationError) {
         return onDatasetValidated(datasetValidationError);
       }
@@ -97,7 +101,7 @@ function unlockDataset(externalContext: any, done: Function): any {
 }
 
 function _checkDefaultTransactionInDataset(externalContext: any, onTransactionsFound: Function): void {
-  return DatasetTransactionsRepository.findDefault({datasetId: externalContext.datasetId}, (transactionsSearchError: any, defaultTransaction: any) => {
+  return DatasetTransactionsRepository.findDefault({ datasetId: externalContext.datasetId }, (transactionsSearchError: any, defaultTransaction: any) => {
     if (transactionsSearchError) {
       return onTransactionsFound(transactionsSearchError);
     }
@@ -153,7 +157,7 @@ function _removeAllDataByDataset(externalContext: any, onDataRemoved: AsyncResul
   });
 }
 
-function removeDatapointsInChunks({datasetId, datasetName}: any, onRemoved: Function): void {
+function removeDatapointsInChunks({ datasetId, datasetName }: any, onRemoved: Function): void {
   const datapointsRepository = DatapointsRepositoryFactory.versionAgnostic();
   datapointsRepository.findIdsByDatasetAndLimit(datasetId, DATAPOINTS_TO_REMOVE_CHUNK_SIZE, (error: string, datapointIds: any[]) => {
     const amountOfDatapointsToRemove = _.size(datapointIds);
@@ -177,13 +181,13 @@ function removeDatapointsInChunks({datasetId, datasetName}: any, onRemoved: Func
         .get(datasetName)
         .increment(constants.DATAPOINTS, amountOfDatapointsToRemove);
 
-      removeDatapointsInChunks({datasetId, datasetName}, onRemoved);
+      removeDatapointsInChunks({ datasetId, datasetName }, onRemoved);
     });
   });
 }
 
 function getRemovalStateForDataset(datasetName: any, user: any, done: Function): any {
-  return findDatasetByNameAndValidateOwnership({datasetName, user}, (error: string, externalContext: any) => {
+  return findDatasetByNameAndValidateOwnership({ datasetName, user }, (error: string, externalContext: any) => {
     if (error) {
       return done(error);
     }
@@ -196,7 +200,7 @@ function _removeAllTransactions(pipe: any, onTransactionsRemoved: Function): any
   return DatasetTransactionsRepository.removeAllByDataset(pipe.datasetId, (error: string) => onTransactionsRemoved(error, pipe));
 }
 
-function _removeDataset(pipe: any, onDatasetRemoved: Function): void {
+function _removeDataset(pipe: any, onDatasetRemoved: MongooseCallback): void {
   return DatasetsRepository.removeById(pipe.datasetId, onDatasetRemoved);
 }
 

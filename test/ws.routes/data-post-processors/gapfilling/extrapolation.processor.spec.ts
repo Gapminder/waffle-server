@@ -18,7 +18,7 @@ describe('data post processors extrapolation', () => {
     //arrange
     const input = [
       [
-        "usa",
+        'usa',
         2004,
         null
       ]
@@ -35,27 +35,27 @@ describe('data post processors extrapolation', () => {
     //arrange
     const input = [
       [
-        "usa",
+        'usa',
         2004,
         null
       ],
       [
-        "usa",
+        'usa',
         2005,
         null
       ],
       [
-        "usa",
+        'usa',
         2006,
         null
       ],
       [
-        "usa",
+        'usa',
         2007,
         null
       ],
       [
-        "angola",
+        'angola',
         2007,
         null
       ]

@@ -17,7 +17,7 @@ function substituteDatapointJoinLinks(query: any, linksInJoinToValues: any): any
     /* tslint:disable: no-invalid-this */
     if (safeQuery.join.hasOwnProperty(link)) {
       const id = linksInJoinToValues[link];
-      this.update(id ? {$in: id} : link);
+      this.update(id ? { $in: id } : link);
     }
     /* tslint:enable: no-invalid-this */
   });
@@ -97,9 +97,9 @@ function ___extendWhereWithDefaultClause(query: any, options: any): void {
 
   query.where = {
     $and: [
-      {dimensions: {$size: _.size(query.select.key)}},
-      {dimensionsConcepts: {$all: _.map(query.select.key, (conceptGid: string) => options.conceptOriginIdsByGids[conceptGid])}},
-      {measure: {$in: query.select.value}}
+      { dimensions: { $size: _.size(query.select.key) } },
+      { dimensionsConcepts: { $all: _.map(query.select.key, (conceptGid: string) => options.conceptOriginIdsByGids[conceptGid]) } },
+      { measure: { $in: query.select.value } }
     ]
   };
 
@@ -122,7 +122,7 @@ function ___evaluateNormalizedFilterByEntityFilter(filterValue: any, key: string
 
   query.join[joinLink] = {
     key,
-    where: {[key]: filterValue}
+    where: { [key]: filterValue }
   };
 
   return {
@@ -160,10 +160,18 @@ function __normalizeJoin(query: any, options: any): void {
     }
 
     if (this.key === 'key') {
+      const conceptType = _.get(options, `conceptsByGids.${filterValue}.properties.concept_type`);
       const domainOrSetOriginId = _.get(options, `conceptsByGids.${filterValue}.originId`);
-      normalizedFilter = {
-        $or: [{domain: domainOrSetOriginId}, {sets: domainOrSetOriginId}]
-      };
+
+      if (conceptType === 'entity_domain' || conceptType !== 'entity_set') {
+        normalizedFilter = {
+          domain: domainOrSetOriginId
+        };
+      } else {
+        normalizedFilter = {
+          sets: domainOrSetOriginId
+        };
+      }
     }
 
     if (normalizedFilter) {

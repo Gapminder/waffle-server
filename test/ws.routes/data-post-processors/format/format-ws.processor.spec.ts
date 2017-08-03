@@ -277,7 +277,7 @@ describe('Format WS Processor', () => {
     }));
 
     it('should format concept in WS-JSON: should translate given concepts according to given lang', sandbox(function (): void {
-      const translateDocumentStub = this.stub(commonService, 'translateDocument', (concept, lang) => {
+      const translateDocumentStub = this.stub(commonService, 'translateDocument').callsFake((concept, lang) => {
         return concept.properties;
       });
 
@@ -436,7 +436,7 @@ describe('Format WS Processor', () => {
         datasetName: '',
         datasetVersionCommit: '',
         query: {
-          order_by: [{'url': 'desc'}]
+          order_by: [{url: 'desc'}]
         }
       });
 
@@ -509,13 +509,13 @@ describe('Format WS Processor', () => {
       });
 
       const expectedResponse = {
-        'dataset': 'bla/bla',
-        'version': '1a1a1a1',
-        'headers': [
+        dataset: 'bla/bla',
+        version: '1a1a1a1',
+        headers: [
           'world_4region',
           'country'
         ],
-        'rows': [
+        rows: [
           [
             'europe',
             'ukr'
@@ -554,14 +554,14 @@ describe('Format WS Processor', () => {
       });
 
       const expectedResponse = {
-        'dataset': 'bla/bla',
-        'version': '1a1a1a1',
-        'headers': [
+        dataset: 'bla/bla',
+        version: '1a1a1a1',
+        headers: [
           'world_4region',
           'country',
           'test'
         ],
-        'rows': [
+        rows: [
           [
             'europe',
             'ukr',
@@ -579,7 +579,7 @@ describe('Format WS Processor', () => {
     });
 
     it('should format entities in WS-JSON: entity should be translated', sandbox(function () {
-      const translateDocumentStub = this.stub(commonService, 'translateDocument', (entity, lang) => {
+      const translateDocumentStub = this.stub(commonService, 'translateDocument').callsFake((entity, lang) => {
         return entity.properties;
       });
 
@@ -608,14 +608,14 @@ describe('Format WS Processor', () => {
       });
 
       const expectedResponse = {
-        'dataset': 'bla/bla',
-        'version': '1a1a1a1',
-        'language': 'ar-SA',
-        'headers': [
+        dataset: 'bla/bla',
+        version: '1a1a1a1',
+        language: 'ar-SA',
+        headers: [
           'world_4region',
           'country'
         ],
-        'rows': [
+        rows: [
           [
             'europe',
             'ukr'
@@ -659,14 +659,14 @@ describe('Format WS Processor', () => {
       });
 
       const expectedResponse = {
-        'dataset': 'bla/bla',
-        'version': '1a1a1a1',
-        'language': 'ar-SA',
-        'headers': [
+        dataset: 'bla/bla',
+        version: '1a1a1a1',
+        language: 'ar-SA',
+        headers: [
           'world_4region',
           'geo'
         ],
-        'rows': [
+        rows: [
           [
             'europe',
             'ukr'
@@ -708,13 +708,13 @@ describe('Format WS Processor', () => {
       });
 
       const expectedResponse = {
-        'dataset': 'bla/bla',
-        'version': '1a1a1a1',
-        'headers': [
+        dataset: 'bla/bla',
+        version: '1a1a1a1',
+        headers: [
           'world_4region',
           'country'
         ],
-        'rows': [
+        rows: [
           [
             'africa',
             'dza'
@@ -742,10 +742,10 @@ describe('Format WS Processor', () => {
       };
 
       const expectedResponse = {
-        'dataset': '',
-        'headers': [],
-        'rows': [],
-        'version': ''
+        dataset: '',
+        headers: [],
+        rows: [],
+        version: ''
       };
 
       const response = mapSchema(data);
@@ -771,10 +771,10 @@ describe('Format WS Processor', () => {
       };
 
       const expectedResponse = {
-        'dataset': 'bla/bla',
-        'version': 'aaaaaaa',
-        'headers': ['key', 'value'],
-        'rows': [
+        dataset: 'bla/bla',
+        version: 'aaaaaaa',
+        headers: ['key', 'value'],
+        rows: [
           [
             ['geo', 'year'], 'population'
           ],
@@ -791,7 +791,7 @@ describe('Format WS Processor', () => {
     it('should format schema to WS-JSON: use aliases', () => {
       const data = {
         datasetName: 'bla/bla',
-        aliases: {'min': 'min(value)'},
+        aliases: {min: 'min(value)'},
         datasetVersionCommit: 'aaaaaaa',
         headers: ['key', 'value', 'min'],
         schema: [
@@ -809,10 +809,10 @@ describe('Format WS Processor', () => {
       };
 
       const expectedResponse = {
-        'dataset': 'bla/bla',
-        'version': 'aaaaaaa',
-        'headers': ['key', 'value', 'min(value)'],
-        'rows': [
+        dataset: 'bla/bla',
+        version: 'aaaaaaa',
+        headers: ['key', 'value', 'min(value)'],
+        rows: [
           [
             ['geo', 'year'], 'population', 42
           ],
@@ -832,7 +832,7 @@ describe('Format WS Processor', () => {
         query: {
           order_by: [{'min(value)': 'desc'}]
         },
-        aliases: {'min': 'min(value)'},
+        aliases: {min: 'min(value)'},
         datasetVersionCommit: 'aaaaaaa',
         headers: ['key', 'value', 'min'],
         schema: [
@@ -850,10 +850,10 @@ describe('Format WS Processor', () => {
       };
 
       const expectedResponse = {
-        'dataset': 'bla/bla',
-        'version': 'aaaaaaa',
-        'headers': ['key', 'value', 'min(value)'],
-        'rows': [
+        dataset: 'bla/bla',
+        version: 'aaaaaaa',
+        headers: ['key', 'value', 'min(value)'],
+        rows: [
           [
             ['geo', 'year', 'age'], 'population', 100500
           ],

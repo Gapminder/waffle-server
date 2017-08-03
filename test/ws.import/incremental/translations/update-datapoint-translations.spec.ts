@@ -55,7 +55,7 @@ describe('Datapoints Translations Update Plugin', () => {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       expect(externalContextFrozen.datasetId).to.equal(externalContext.dataset._id);
       expect(externalContextFrozen.version).to.equal(externalContext.transaction.createdAt);
       expect(externalContextFrozen.dataset).to.equal(externalContext.dataset);
@@ -79,7 +79,7 @@ describe('Datapoints Translations Update Plugin', () => {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       expect(Object.isFrozen(externalContextFrozen)).to.be.equal(true, 'context should be frozen');
 
       expect(plugin.dataType).to.equal(constants.DATAPOINTS);
@@ -119,7 +119,7 @@ describe('Datapoints Translations Update Plugin', () => {
       dimensions
     });
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       const enrichment = plugin.enrichContext(fakeResource, null, externalContext);
 
       expect(enrichment).to.deep.equal({measures, dimensions});
@@ -138,40 +138,40 @@ describe('Datapoints Translations Update Plugin', () => {
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
     const datapointChangeGeneratedByDiff = {
-      "object": {
-        "gid": "company",
-        "company": "mic",
-        "data-update": {"company": "mcrsft", "anno": "1975", "company_size": "klein", "population": 42},
-        "data-origin": {"company": "mic", "anno": "1975", "company_size": "klein", "population": 43}
+      object: {
+        gid: 'company',
+        company: 'mic',
+        'data-update': {company: 'mcrsft', anno: '1975', company_size: 'klein', population: 42},
+        'data-origin': {company: 'mic', anno: '1975', company_size: 'klein', population: 43}
       },
-      "metadata": {
-        "file": {
-          "new": {
-            "path": "ddf--datapoints--company_size--by--company--anno.csv",
-            "name": "ddf--datapoints--company_size--by--company--anno",
-            "schema": {
-              "fields": [{"name": "company"}, {"name": "anno"}, {"name": "company_size"}, {"name": "population"}],
-              "primaryKey": ["company", "anno"]
+      metadata: {
+        file: {
+          new: {
+            path: 'ddf--datapoints--company_size--by--company--anno.csv',
+            name: 'ddf--datapoints--company_size--by--company--anno',
+            schema: {
+              fields: [{name: 'company'}, {name: 'anno'}, {name: 'company_size'}, {name: 'population'}],
+              primaryKey: ['company', 'anno']
             }
           },
-          "old": {
-            "path": "ddf--datapoints--company_size--by--company--anno.csv",
-            "name": "ddf--datapoints--company_size--by--company--anno",
-            "schema": {
-              "fields": [{"name": "company"}, {"name": "anno"}, {"name": "company_size"}, {"name": "population"}],
-              "primaryKey": ["company", "anno"]
+          old: {
+            path: 'ddf--datapoints--company_size--by--company--anno.csv',
+            name: 'ddf--datapoints--company_size--by--company--anno',
+            schema: {
+              fields: [{name: 'company'}, {name: 'anno'}, {name: 'company_size'}, {name: 'population'}],
+              primaryKey: ['company', 'anno']
             }
           }
         },
-        "action": "change",
-        "removedColumns": ["population"],
-        "type": "datapoints",
-        "lang": "nl-nl",
-        "onlyColumnsRemoved": false
+        action: 'change',
+        removedColumns: ['population'],
+        type: 'datapoints',
+        lang: 'nl-nl',
+        onlyColumnsRemoved: false
       }
     };
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
 
       const changes = hi([new ChangesDescriptor(datapointChangeGeneratedByDiff)]);
       plugin.transformStreamBeforeActionSegregation(changes).toArray((result: ChangesDescriptor[]) => {
@@ -180,7 +180,7 @@ describe('Datapoints Translations Update Plugin', () => {
         expect(result[0].language).to.equal('nl-nl');
         expect(result[0].describes(constants.DATAPOINTS)).to.be.true;
         expect(result[0].oldResource).to.exist;
-        expect(result[0].changes).to.deep.equal({"company": "mic", "anno": "1975", "population": 43});
+        expect(result[0].changes).to.deep.equal({company: 'mic', anno: '1975', population: 43});
 
         expect(result[1].action).to.equal('change');
         expect(result[1].language).to.equal('nl-nl');
@@ -188,10 +188,10 @@ describe('Datapoints Translations Update Plugin', () => {
         expect(result[1].oldResource).to.exist;
         expect(result[1].currentResource).to.exist;
         expect(result[1].changes).to.deep.equal({
-          "company": "mcrsft",
-          "anno": "1975",
-          "company_size": "klein",
-          "population": 42
+          company: 'mcrsft',
+          anno: '1975',
+          company_size: 'klein',
+          population: 42
         });
         callback();
       });
@@ -207,40 +207,40 @@ describe('Datapoints Translations Update Plugin', () => {
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
     const datapointChangeGeneratedByDiff = {
-      "object": {
-        "gid": "company",
-        "company": "mic",
-        "data-update": {"company": "mcrsft", "anno": "1975", "company_size": "klein", "population": 43},
-        "data-origin": {"company": "mcrsft", "anno": "1975", "company_size": "klein", "population": 43}
+      object: {
+        gid: 'company',
+        company: 'mic',
+        'data-update': {company: 'mcrsft', anno: '1975', company_size: 'klein', population: 43},
+        'data-origin': {company: 'mcrsft', anno: '1975', company_size: 'klein', population: 43}
       },
-      "metadata": {
-        "file": {
-          "new": {
-            "path": "ddf--datapoints--company_size--by--company--anno.csv",
-            "name": "ddf--datapoints--company_size--by--company--anno",
-            "schema": {
-              "fields": [{"name": "company"}, {"name": "anno"}, {"name": "company_size"}, {"name": "population"}],
-              "primaryKey": ["company", "anno"]
+      metadata: {
+        file: {
+          new: {
+            path: 'ddf--datapoints--company_size--by--company--anno.csv',
+            name: 'ddf--datapoints--company_size--by--company--anno',
+            schema: {
+              fields: [{name: 'company'}, {name: 'anno'}, {name: 'company_size'}, {name: 'population'}],
+              primaryKey: ['company', 'anno']
             }
           },
-          "old": {
-            "path": "ddf--datapoints--company_size--by--company--anno.csv",
-            "name": "ddf--datapoints--company_size--by--company--anno",
-            "schema": {
-              "fields": [{"name": "company"}, {"name": "anno"}, {"name": "company_size"}, {"name": "population"}],
-              "primaryKey": ["company", "anno"]
+          old: {
+            path: 'ddf--datapoints--company_size--by--company--anno.csv',
+            name: 'ddf--datapoints--company_size--by--company--anno',
+            schema: {
+              fields: [{name: 'company'}, {name: 'anno'}, {name: 'company_size'}, {name: 'population'}],
+              primaryKey: ['company', 'anno']
             }
           }
         },
-        "action": "change",
-        "removedColumns": ["population"],
-        "type": "datapoints",
-        "lang": "nl-nl",
-        "onlyColumnsRemoved": true
+        action: 'change',
+        removedColumns: ['population'],
+        type: 'datapoints',
+        lang: 'nl-nl',
+        onlyColumnsRemoved: true
       }
     };
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
 
       const changes = hi([new ChangesDescriptor(datapointChangeGeneratedByDiff)]);
       plugin.transformStreamBeforeActionSegregation(changes).toArray((result: ChangesDescriptor[]) => {
@@ -249,7 +249,7 @@ describe('Datapoints Translations Update Plugin', () => {
         expect(result[0].language).to.equal('nl-nl');
         expect(result[0].describes(constants.DATAPOINTS)).to.be.true;
         expect(result[0].oldResource).to.exist;
-        expect(result[0].changes).to.deep.equal({"company": "mcrsft", "anno": "1975", "population": 43});
+        expect(result[0].changes).to.deep.equal({company: 'mcrsft', anno: '1975', population: 43});
         callback();
       });
     });
@@ -264,40 +264,40 @@ describe('Datapoints Translations Update Plugin', () => {
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
     const datapointChangeGeneratedByDiff = {
-      "object": {
-        "gid": "company",
-        "company": "mic",
-        "data-update": {"company": "mcrsft", "anno": "1975", "company_size": "klein", "population": 43},
-        "data-origin": {"company": "mcrsft", "anno": "1975", "company_size": "klein", "population": 43}
+      object: {
+        gid: 'company',
+        company: 'mic',
+        'data-update': {company: 'mcrsft', anno: '1975', company_size: 'klein', population: 43},
+        'data-origin': {company: 'mcrsft', anno: '1975', company_size: 'klein', population: 43}
       },
-      "metadata": {
-        "file": {
-          "new": {
-            "path": "ddf--datapoints--company_size--by--company--anno.csv",
-            "name": "ddf--datapoints--company_size--by--company--anno",
-            "schema": {
-              "fields": [{"name": "company"}, {"name": "anno"}, {"name": "company_size"}, {"name": "population"}],
-              "primaryKey": ["company", "anno"]
+      metadata: {
+        file: {
+          new: {
+            path: 'ddf--datapoints--company_size--by--company--anno.csv',
+            name: 'ddf--datapoints--company_size--by--company--anno',
+            schema: {
+              fields: [{name: 'company'}, {name: 'anno'}, {name: 'company_size'}, {name: 'population'}],
+              primaryKey: ['company', 'anno']
             }
           },
-          "old": {
-            "path": "ddf--datapoints--company_size--by--company--anno.csv",
-            "name": "ddf--datapoints--company_size--by--company--anno",
-            "schema": {
-              "fields": [{"name": "company"}, {"name": "anno"}, {"name": "company_size"}, {"name": "population"}],
-              "primaryKey": ["company", "anno"]
+          old: {
+            path: 'ddf--datapoints--company_size--by--company--anno.csv',
+            name: 'ddf--datapoints--company_size--by--company--anno',
+            schema: {
+              fields: [{name: 'company'}, {name: 'anno'}, {name: 'company_size'}, {name: 'population'}],
+              primaryKey: ['company', 'anno']
             }
           }
         },
-        "action": "change",
-        "removedColumns": ["bla"],
-        "type": "datapoints",
-        "lang": "nl-nl",
-        "onlyColumnsRemoved": true
+        action: 'change',
+        removedColumns: ['bla'],
+        type: 'datapoints',
+        lang: 'nl-nl',
+        onlyColumnsRemoved: true
       }
     };
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
 
       const changes = hi([new ChangesDescriptor(datapointChangeGeneratedByDiff)]);
       plugin.transformStreamBeforeActionSegregation(changes).toArray((result: ChangesDescriptor[]) => {
@@ -316,35 +316,35 @@ describe('Datapoints Translations Update Plugin', () => {
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
     const datapointChangeGeneratedByDiff = {
-      "object": {
-        "company": "mcrsft",
-        "anno": "1975",
-        "company_size": "klein",
-        "population": 43
+      object: {
+        company: 'mcrsft',
+        anno: '1975',
+        company_size: 'klein',
+        population: 43
       },
-      "metadata": {
-        "file": {
-          "new": {
-            "path": "ddf--datapoints--company_size--by--company--anno.csv",
-            "name": "ddf--datapoints--company_size--by--company--anno",
-            "schema": {
-              "fields": [{"name": "company"}, {"name": "anno"}, {"name": "company_size"}, {"name": "population"}],
-              "primaryKey": ["company", "anno"]
+      metadata: {
+        file: {
+          new: {
+            path: 'ddf--datapoints--company_size--by--company--anno.csv',
+            name: 'ddf--datapoints--company_size--by--company--anno',
+            schema: {
+              fields: [{name: 'company'}, {name: 'anno'}, {name: 'company_size'}, {name: 'population'}],
+              primaryKey: ['company', 'anno']
             }
           },
-          "old": {
-            "path": "ddf--datapoints--company_size--by--company--anno.csv",
-            "name": "ddf--datapoints--company_size--by--company--anno",
-            "schema": {
-              "fields": [{"name": "company"}, {"name": "anno"}, {"name": "company_size"}, {"name": "population"}],
-              "primaryKey": ["company", "anno"]
+          old: {
+            path: 'ddf--datapoints--company_size--by--company--anno.csv',
+            name: 'ddf--datapoints--company_size--by--company--anno',
+            schema: {
+              fields: [{name: 'company'}, {name: 'anno'}, {name: 'company_size'}, {name: 'population'}],
+              primaryKey: ['company', 'anno']
             }
           }
-        }, "action": "create", "type": "datapoints", "lang": "nl-nl", "removedColumns": [], "onlyColumnsRemoved": false
+        }, action: 'create', type: 'datapoints', lang: 'nl-nl', removedColumns: [], onlyColumnsRemoved: false
       }
     };
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
 
       const changesDescriptor = new ChangesDescriptor(datapointChangeGeneratedByDiff);
       const changes = hi([changesDescriptor]);
@@ -364,16 +364,16 @@ describe('Datapoints Translations Update Plugin', () => {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       const closedTarget = constants.MONGO_SPECIAL_FIELDS.reduce((result, field) => Object.assign(result, {[field]: 1}), {});
 
-      expect(constants.MONGO_SPECIAL_FIELDS.every(field => field in closedTarget)).to.equal(true);
+      expect(constants.MONGO_SPECIAL_FIELDS.every((field) => field in closedTarget)).to.equal(true);
 
       const newTarget = plugin.makeTranslationTargetBasedOnItsClosedVersion({}, externalContext);
 
       expect(newTarget.to).to.equal(constants.MAX_VERSION);
       expect(newTarget.from).to.equal(externalContext.version);
-      expect(constants.MONGO_SPECIAL_FIELDS.some(field => field in newTarget)).to.equal(false);
+      expect(constants.MONGO_SPECIAL_FIELDS.some((field) => field in newTarget)).to.equal(false);
 
       callback();
     });
@@ -388,11 +388,11 @@ describe('Datapoints Translations Update Plugin', () => {
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
     const changesDescriptor = new ChangesDescriptor({
-      "object": {
-        "company": "mcrsft",
-        "anno": "1975",
-        "company_size": "klein",
-        "population": 43
+      object: {
+        company: 'mcrsft',
+        anno: '1975',
+        company_size: 'klein',
+        population: 43
       }
     });
 
@@ -412,7 +412,7 @@ describe('Datapoints Translations Update Plugin', () => {
     ];
     const getDimensionsAsEntityOriginIdsStub = this.stub(datapointsUtils, 'getDimensionsAsEntityOriginIds').returns(expectedDimensionsAsOriginIds);
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       const query = plugin.makeQueryToFetchTranslationTarget(changesDescriptor, context);
 
       sinon.assert.calledOnce(getDimensionsAsEntityOriginIdsStub);
@@ -436,11 +436,11 @@ describe('Datapoints Translations Update Plugin', () => {
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
     const changesDescriptor = new ChangesDescriptor({
-      "object": {
-        "company": "mcrsft",
-        "anno": "1975",
-        "company_size": "klein",
-        "population": 43
+      object: {
+        company: 'mcrsft',
+        anno: '1975',
+        company_size: 'klein',
+        population: 43
       }
     });
 
@@ -452,7 +452,7 @@ describe('Datapoints Translations Update Plugin', () => {
     this.stub(datapointsUtils, 'getDimensionsAsEntityOriginIds').returns([]);
     const loggerErrorStub = this.stub(logger, 'error');
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       const query = plugin.makeQueryToFetchTranslationTarget(changesDescriptor, context);
 
       sinon.assert.calledOnce(loggerErrorStub);
@@ -470,11 +470,11 @@ describe('Datapoints Translations Update Plugin', () => {
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
     const changesDescriptor = new ChangesDescriptor({
-      "object": {
-        "company": "mcrsft",
-        "anno": "1975",
-        "company_size": "klein",
-        "population": 43
+      object: {
+        company: 'mcrsft',
+        anno: '1975',
+        company_size: 'klein',
+        population: 43
       }
     });
 
@@ -489,10 +489,10 @@ describe('Datapoints Translations Update Plugin', () => {
       }
     };
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       const changes = hi([{changesDescriptor, context}]);
 
-      plugin.transformStreamBeforeChangesApplied(changes).toArray(result => {
+      plugin.transformStreamBeforeChangesApplied(changes).toArray((result) => {
         expect(result.length).to.equal(2);
 
         expect(result[0].context.indicator.gid).to.equal('population');
@@ -514,11 +514,11 @@ describe('Datapoints Translations Update Plugin', () => {
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
     const changesDescriptor = new ChangesDescriptor({
-      "object": {
-        "company": "mcrsft",
-        "anno": "1975",
-        "company_size": "klein",
-        "population": 43
+      object: {
+        company: 'mcrsft',
+        anno: '1975',
+        company_size: 'klein',
+        population: 43
       }
     });
 
@@ -530,10 +530,10 @@ describe('Datapoints Translations Update Plugin', () => {
       }
     };
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater', (plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       const changes = hi([{changesDescriptor, context}]);
 
-      plugin.transformStreamBeforeChangesApplied(changes).toArray(result => {
+      plugin.transformStreamBeforeChangesApplied(changes).toArray((result) => {
         expect(result.length).to.equal(0);
         callback();
       });

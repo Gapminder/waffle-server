@@ -1,9 +1,11 @@
+/* tslint:disable:no-console */
+
 import * as e2eUtils from './e2e.utils';
 import { e2eEnv } from './e2e.env';
 import * as cliUtils from './cli.utils';
-import {logger} from '../ws.config/log';
+import { logger } from '../ws.config/log';
 import * as shell from 'shelljs';
-import {syncFn} from 'synchronize';
+import { syncFn } from 'synchronize';
 
 logger.info('==========================================');
 logger.info('Starting e2e tests');
@@ -29,7 +31,7 @@ const importOptions: cliUtils.ImportOptions = {
   repos: [
     {
       url: e2eEnv.repo,
-      commitIndexToStartImport: COMMIT_INDEX_TO_IMPORT
+      commitIndexToStartImport: +COMMIT_INDEX_TO_IMPORT
     },
     {
       url: e2eEnv.repo2,

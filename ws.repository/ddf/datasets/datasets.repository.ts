@@ -1,4 +1,7 @@
-import {model, MongooseDocument} from 'mongoose';
+import { model, MongooseDocument } from 'mongoose';
+import * as _ from 'lodash';
+import { MongoCallback } from 'mongodb';
+import { MongooseCallback } from '../../repository.types';
 
 const Datasets = model('Datasets');
 
@@ -17,6 +20,12 @@ class DatasetsRepository {
   }
 
   public findByName(name: any, done: Function): Promise<Object> {
+    let query: any = {name};
+    if (_.endsWith(name, '#master')) {
+      query = {
+        $or: [{name}, {name: _.trimEnd(name, '#master')}]
+      };
+    }
     return Datasets.findOne({name}).lean().exec(done);
   }
 
@@ -49,21 +58,31 @@ class DatasetsRepository {
   }
 
   public unlock(datasetName: any, done: Function): Promise<Object> {
-    return Datasets.findOneAndUpdate({name: datasetName, isLocked: true}, {isLocked: false}, {new: true}).lean().exec(done);
+    return Datasets.findOneAndUpdate({
+      name: datasetName,
+      isLocked: true
+    }, {isLocked: false}, {new: true}).lean().exec(done);
   }
 
   public lock(datasetName: any, done: Function): Promise<Object> {
-    return Datasets.findOneAndUpdate({name: datasetName, isLocked: false}, {isLocked: true}, {new: true}).lean().exec(done);
+    return Datasets.findOneAndUpdate({
+      name: datasetName,
+      isLocked: false
+    }, {isLocked: true}, {new: true}).lean().exec(done);
   }
 
-  public removeById(datasetId: any, done: Function): any {
+  public removeById(datasetId: any, done: MongooseCallback): any {
     return Datasets.findOneAndRemove({_id: datasetId}, done);
   }
 
   public setAccessTokenForPrivateDataset({datasetName, userId, accessToken}: any, done: Function): any {
-    return Datasets.findOneAndUpdate({name: datasetName, createdBy: userId, private: true}, {accessToken}, {new: true}, done as any);
+    return Datasets.findOneAndUpdate({
+      name: datasetName,
+      createdBy: userId,
+      private: true
+    }, {accessToken}, {new: true}, done as any);
   }
 }
 
 const repository = new DatasetsRepository();
-export {repository as DatasetsRepository};
+export { repository as DatasetsRepository };

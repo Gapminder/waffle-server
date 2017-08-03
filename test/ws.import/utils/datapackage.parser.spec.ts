@@ -8,105 +8,105 @@ import * as datapackageParser from '../../../ws.import/utils/datapackage.parser'
 const sandbox = sinonTest.configureTest(sinon);
 
 const entitiesResource = {
-  "path": "ddf--entities--company--company_scale.csv",
-  "name": "ddf--entities--company--company_scale",
-  "schema": {
-    "fields": [
+  path: 'ddf--entities--company--company_scale.csv',
+  name: 'ddf--entities--company--company_scale',
+  schema: {
+    fields: [
       {
-        "name": "company_scale"
+        name: 'company_scale'
       },
       {
-        "name": "full_name_changed"
+        name: 'full_name_changed'
       },
       {
-        "name": "is--company_scale"
+        name: 'is--company_scale'
       }
     ],
-    "primaryKey": "company_scale"
+    primaryKey: 'company_scale'
   }
 };
 
 const conceptsResource = {
-  "path": "ddf--concepts.csv",
-  "name": "ddf--concepts",
-  "schema": {
-    "fields": [
+  path: 'ddf--concepts.csv',
+  name: 'ddf--concepts',
+  schema: {
+    fields: [
       {
-        "name": "concept"
+        name: 'concept'
       },
       {
-        "name": "concept_type"
+        name: 'concept_type'
       },
       {
-        "name": "domain"
+        name: 'domain'
       },
       {
-        "name": "additional_column"
+        name: 'additional_column'
       }
     ],
-    "primaryKey": "concept"
+    primaryKey: 'concept'
   }
 };
 
 const datapointsResource = {
-  "path": "ddf--datapoints--lines_of_code--by--company--anno.csv",
-  "name": "ddf--datapoints--lines_of_code--by--company--anno",
-  "schema": {
-    "fields": [
+  path: 'ddf--datapoints--lines_of_code--by--company--anno.csv',
+  name: 'ddf--datapoints--lines_of_code--by--company--anno',
+  schema: {
+    fields: [
       {
-        "name": "company"
+        name: 'company'
       },
       {
-        "name": "anno"
+        name: 'anno'
       },
       {
-        "name": "lines_of_code"
+        name: 'lines_of_code'
       }
     ],
-    "primaryKey": [
-      "company",
-      "anno"
+    primaryKey: [
+      'company',
+      'anno'
     ]
   }
 };
 
 const datapackageStub = {
-  "name": "ddf--ws-testing",
-  "title": "ddf--ws-testing",
-  "description": "",
-  "version": "0.0.1",
-  "language": {
-    "id": "en",
-    "name": "English"
+  name: 'ddf--ws-testing',
+  title: 'ddf--ws-testing',
+  description: '',
+  version: '0.0.1',
+  language: {
+    id: 'en',
+    name: 'English'
   },
-  "translations": [
+  translations: [
     {
-      "id": "nl-nl",
-      "name": "nl-nl"
+      id: 'nl-nl',
+      name: 'nl-nl'
     }
   ],
-  "license": "",
-  "author": "",
-  "resources": [
+  license: '',
+  author: '',
+  resources: [
     conceptsResource,
     {
-      "path": "ddf--datapoints--company_scale--by--company--anno.csv",
-      "name": "ddf--datapoints--company_scale--by--company--anno",
-      "schema": {
-        "fields": [
+      path: 'ddf--datapoints--company_scale--by--company--anno.csv',
+      name: 'ddf--datapoints--company_scale--by--company--anno',
+      schema: {
+        fields: [
           {
-            "name": "company"
+            name: 'company'
           },
           {
-            "name": "anno"
+            name: 'anno'
           },
           {
-            "name": "company_scale"
+            name: 'company_scale'
           }
         ],
-        "primaryKey": [
-          "company",
-          "anno"
+        primaryKey: [
+          'company',
+          'anno'
         ]
       }
     },
@@ -119,11 +119,11 @@ describe('Datapackage Parser', () => {
   it('should respond with an error if file cannot be read', sandbox(function () {
     const expectedError = 'Boo!';
 
-    const readFileStub = this.stub(fs, 'readFile', (pathToDatapackage, encoding, done) => {
+    const readFileStub = this.stub(fs, 'readFile').callsFake((pathToDatapackage, encoding, done) => {
       done(expectedError);
     });
 
-    datapackageParser.loadDatapackage({folder: 'foo', file: 'bar'}, error => {
+    datapackageParser.loadDatapackage({folder: 'foo', file: 'bar'}, (error) => {
       expect(error).to.equal(expectedError);
       sinon.assert.calledWith(readFileStub, 'foo/bar', 'utf-8');
     });
@@ -132,61 +132,61 @@ describe('Datapackage Parser', () => {
   it('should parse datapackage resources', sandbox(function () {
     const expectedResources = [
       {
-        "path": "ddf--concepts.csv",
-        "primaryKey": [
-          "concept"
+        path: 'ddf--concepts.csv',
+        primaryKey: [
+          'concept'
         ],
-        "type": "concepts"
+        type: 'concepts'
       },
       {
-        "dimensions": [
-          "company",
-          "anno"
+        dimensions: [
+          'company',
+          'anno'
         ],
-        "indicators": [
-          "company_scale"
+        indicators: [
+          'company_scale'
         ],
-        "path": "ddf--datapoints--company_scale--by--company--anno.csv",
-        "primaryKey": [
-          "company",
-          "anno"
+        path: 'ddf--datapoints--company_scale--by--company--anno.csv',
+        primaryKey: [
+          'company',
+          'anno'
         ],
-        "type": "datapoints"
+        type: 'datapoints'
       },
       {
-        "dimensions": [
-          "company",
-          "anno"
+        dimensions: [
+          'company',
+          'anno'
         ],
-        "indicators": [
-          "lines_of_code"
+        indicators: [
+          'lines_of_code'
         ],
-        "path": "ddf--datapoints--lines_of_code--by--company--anno.csv",
-        "primaryKey": [
-          "company",
-          "anno"
+        path: 'ddf--datapoints--lines_of_code--by--company--anno.csv',
+        primaryKey: [
+          'company',
+          'anno'
         ],
-        "type": "datapoints"
+        type: 'datapoints'
       },
       {
-        "concept": "company_scale",
-        "entitySets": [
-          "company_scale"
+        concept: 'company_scale',
+        entitySets: [
+          'company_scale'
         ],
-        "fields": [
-          "company_scale",
-          "full_name_changed",
-          "is--company_scale"
+        fields: [
+          'company_scale',
+          'full_name_changed',
+          'is--company_scale'
         ],
-        "path": "ddf--entities--company--company_scale.csv",
-        "primaryKey": [
-          "company_scale"
+        path: 'ddf--entities--company--company_scale.csv',
+        primaryKey: [
+          'company_scale'
         ],
-        "type": "entities"
+        type: 'entities'
       }
     ];
 
-    const readFileStub = this.stub(fs, 'readFile', (pathToDatapackage, encoding, done) => {
+    const readFileStub = this.stub(fs, 'readFile').callsFake((pathToDatapackage, encoding, done) => {
       done(null, JSON.stringify(datapackageStub));
     });
 

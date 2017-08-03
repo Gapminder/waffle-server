@@ -46,15 +46,15 @@ export {
 function bodyFromUrlQuery(req: express.Request, res: express.Response, next: express.NextFunction): void {
   const query = _.get(req.query, 'query', null);
   const parser = query
-    ? {parse: parseJsonAsync, query, queryType: 'JSON'}
-    : {parse: parseUrlonAsync, query: url.parse(req.url).query, queryType: 'URLON'};
+    ? { parse: parseJsonAsync, query, queryType: 'JSON' }
+    : { parse: parseUrlonAsync, query: url.parse(req.url).query, queryType: 'URLON' };
 
   parser.parse(parser.query, (error: string, parsedQuery: any) => {
-    logger.info({ddfqlRaw: parser.query});
+    logger.info({ ddfqlRaw: parser.query });
     if (error) {
       res.json(toErrorResponse('Query was sent in incorrect format'));
     } else {
-      req.body = _.extend(parsedQuery, {rawDdfQuery: {queryRaw: parser.query, type: parser.queryType}});
+      req.body = _.extend(parsedQuery, { rawDdfQuery: { queryRaw: parser.query, type: parser.queryType } });
       next();
     }
   });
@@ -188,7 +188,7 @@ function respondWithRawDdf(query: any, req: express.Request, res: express.Respon
 
     _storeWarmUpQueryForDefaultDataset(query);
 
-    (req as any).rawData = {rawDdf: result};
+    (req as any).rawData = { rawDdf: result };
 
     return next();
   };
@@ -253,11 +253,11 @@ function checkDatasetAccessibility(req: express.Request, res: express.Response, 
   return DatasetsRepository.findByName(datasetName, (error: string, dataset: any) => {
     if (error) {
       logger.error(error);
-      return res.json({success: false, error});
+      return res.json({ success: false, error });
     }
 
     if (!dataset) {
-      return res.json({success: false, message: `Dataset with given name ${datasetName} was not found`});
+      return res.json({ success: false, message: `Dataset with given name ${datasetName} was not found` });
     }
 
     if (!dataset.private) {
@@ -269,7 +269,7 @@ function checkDatasetAccessibility(req: express.Request, res: express.Response, 
       return next();
     }
 
-    return res.json({success: false, error: 'You are not allowed to access data according to given query'});
+    return res.json({ success: false, error: 'You are not allowed to access data according to given query' });
   });
 }
 
@@ -281,15 +281,15 @@ function _validateDatasetAccessToken(datasetAccessToken: string, providedAccessT
 
 function toErrorResponse(error: any): ErrorResponse {
   logger.error(error);
-  return {success: false, error: error.message || error};
+  return { success: false, error: error.message || error };
 }
 
 function toMessageResponse(message: string): MessageResponse {
-  return {success: true, message};
+  return { success: true, message };
 }
 
 function toDataResponse(data: any): DataResponse {
-  return {success: true, data};
+  return { success: true, data };
 }
 
 interface ErrorResponse {

@@ -25,26 +25,26 @@ describe('Multiple datasets in WS', function() {
 
   it('can serve data from multiple datasets at once', function () {
     const ddfql = {
-      "dataset": e2eEnv.datasetName,
-      "version": versions.get(e2eEnv.datasetName),
-      "select": {
-        "key": ["concept"],
-        "value": [
-          "concept_type"
+      dataset: e2eEnv.datasetName,
+      version: versions.get(e2eEnv.datasetName),
+      select: {
+        key: ['concept'],
+        value: [
+          'concept_type'
         ]
       },
-      "from": "concepts",
-      "where": {
-        "$and": [
-          {"domain": "company"}
+      from: 'concepts',
+      where: {
+        $and: [
+          {domain: 'company'}
         ]
       },
-      "order_by": ["concept"]
+      order_by: ['concept']
     };
 
     const ddfql2 = Object.assign({}, ddfql, {
       dataset: e2eEnv.datasetName2,
-      version: versions.get(e2eEnv.datasetName2),
+      version: versions.get(e2eEnv.datasetName2)
     });
 
     const expectedResultDataset1 = {
@@ -83,5 +83,3 @@ function getCommitForGivenIndex(index: number, repo: string): Promise<string> {
 function sendDdfqlRequestAndVerifyResponse(ddfql, expectedResult): Promise<any> {
   return new Promise((resolve: Function) => e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, expectedResult, resolve));
 }
-
-

@@ -66,7 +66,7 @@ describe('Common Service', function () {
 
   it('should not find default dataset and transaction: there is no transaction', sandbox(function (done: Function) {
     const expectedError = 'Transaction isn\'t present in db.';
-    this.stub(datasetTransactionsService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(2, null, {dataset: {}});
+    this.stub(datasetTransactionsService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(2, null, { dataset: {} });
 
     commonService.findDefaultDatasetAndTransaction({}, (error) => {
       expect(error).to.equal(expectedError);
@@ -82,7 +82,7 @@ describe('Common Service', function () {
       transaction: {
         _id: 'txId',
         createdAt: 1111111
-      },
+      }
     };
 
     this.stub(datasetTransactionsService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(2, null, datasetAndTransaction);

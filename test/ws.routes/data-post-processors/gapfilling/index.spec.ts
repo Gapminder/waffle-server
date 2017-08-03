@@ -77,43 +77,43 @@ describe('data post processors gapfilling middleware', () => {
         ],
         rows: [
           [
-            "usa",
+            'usa',
             2004,
             null,
             null
           ],
           [
-            "usa",
+            'usa',
             2005,
             74.0,
             null
           ],
           [
-            "usa",
+            'usa',
             2006,
             null,
             null
           ],
           [
-            "usa",
+            'usa',
             2007,
             null,
             42
           ],
           [
-            "usa",
+            'usa',
             2008,
             null,
             null
           ],
           [
-            "usa",
+            'usa',
             2009,
             80.3,
             null
           ],
           [
-            "usa",
+            'usa',
             2010,
             null,
             null
@@ -161,7 +161,7 @@ describe('data post processors gapfilling middleware', () => {
         ],
         rows: [
           [
-            "usa",
+            'usa',
             2004,
             null,
             null
@@ -186,7 +186,7 @@ describe('data post processors gapfilling middleware', () => {
 
     const gapfillingMiddleware = proxyquire(gapfillingProcessorPath, {
       './interpolation.processor': {interpolate},
-      './extrapolation.processor': {extrapolate},
+      './extrapolation.processor': {extrapolate}
     }).gapfillingMiddleware;
 
     //act
@@ -215,7 +215,7 @@ describe('data post processors gapfilling middleware', () => {
         ],
         rows: [
           [
-            "usa",
+            'usa',
             2004,
             null,
             null
@@ -240,7 +240,7 @@ describe('data post processors gapfilling middleware', () => {
 
     const gapfillingMiddleware = proxyquire(gapfillingProcessorPath, {
       './interpolation.processor': {interpolate},
-      './extrapolation.processor': {extrapolate},
+      './extrapolation.processor': {extrapolate}
     }).gapfillingMiddleware;
     //act
     gapfillingMiddleware(req, null, next);
@@ -269,7 +269,7 @@ describe('data post processors gapfilling middleware', () => {
         ],
         rows: [
           [
-            "usa",
+            'usa',
             2004,
             null,
             null
@@ -299,7 +299,7 @@ describe('data post processors gapfilling middleware', () => {
 
     const gapfillingMiddleware = proxyquire(gapfillingProcessorPath, {
       './interpolation.processor': {interpolate},
-      './extrapolation.processor': {extrapolate},
+      './extrapolation.processor': {extrapolate}
     }).gapfillingMiddleware;
 
     //act
@@ -337,7 +337,7 @@ describe('data post processors gapfilling middleware', () => {
         ],
         rows: [
           [
-            "usa",
+            'usa',
             2004,
             null,
             null

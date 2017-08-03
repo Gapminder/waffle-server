@@ -17,8 +17,8 @@ export {
 function readCsvFileAsStream(pathToDdfFolder: string, filepath: string): any {
   const resolvedFilepath = path.resolve(pathToDdfFolder, filepath);
 
-  return hi(fs.createReadStream(resolvedFilepath, 'utf-8')
-    .pipe(new csvtojson.Converter({constructResult: false}, {objectMode: true})));
+  return hi(fs.createReadStream(resolvedFilepath, {encoding: 'utf-8'})
+    .pipe(new csvtojson.Converter({ constructResult: false }, { objectMode: true })));
 }
 
 function readCsvFile(pathToDdfFolder: string, filepath: string, options: any, cb: Function): void {
@@ -44,7 +44,7 @@ function readCsvFile(pathToDdfFolder: string, filepath: string, options: any, cb
 }
 
 function readTextFileByLineAsJsonStream(pathToFile: string): any {
-  const fileWithChangesStream = fs.createReadStream(pathToFile, {encoding: 'utf8'});
+  const fileWithChangesStream = fs.createReadStream(pathToFile, { encoding: 'utf8' });
   const jsonByLine = byline(fileWithChangesStream).pipe(JSONStream.parse());
   return hi(jsonByLine);
 }

@@ -356,7 +356,7 @@ describe('Dataset incremental update', () => {
       user: {email: 'dev@gapminder.org'},
       lifecycleHooks: {
         onTransactionCreated: () => {}
-      },
+      }
     };
 
     const expectedError = 'Boo!';

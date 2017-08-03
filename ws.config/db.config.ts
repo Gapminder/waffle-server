@@ -6,20 +6,18 @@ const db = mongoose.connection;
 mongoose.set('debug', config.MONGOOSE_DEBUG);
 (mongoose as any).Promise = global.Promise;
 
-const dbOptions = {
-  server: {
-    socketOptions: {
-      keepAlive: 1,
-      connectTimeoutMS: 300000,
-      socketTimeoutMS: 300000
-    }
-  }
+const mongoOptions = {
+  keepAlive: true,
+  connectTimeoutMS: 300000,
+  socketTimeoutMS: 300000
 };
 
+const mongooseOptions = { useMongoClient: true };
+
 if (config.THRASHING_MACHINE) {
-  mongoose.connect(config.MONGODB_URL, dbOptions);
+  mongoose.connect(config.MONGODB_URL, Object.assign({}, mongoOptions, mongooseOptions));
 } else {
-  mongoose.connect(config.MONGODB_URL);
+  mongoose.connect(config.MONGODB_URL, mongooseOptions);
 }
 
 db.on('error', function (err: any): void {

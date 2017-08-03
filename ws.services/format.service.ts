@@ -3,7 +3,7 @@ import * as async from 'async';
 import * as hi from 'highland';
 import * as fastCsv from 'fast-csv';
 import * as wsJsonPack from '../ws.routes/data-post-processors/format/format-ws.processor';
-import {constants} from '../ws.utils/constants';
+import { constants } from '../ws.utils/constants';
 
 const toFormatter = _.curry(sendResponse);
 const csvFormatter = toFormatter(packToCsv);
@@ -27,7 +27,7 @@ function packToCsv(data: any): any {
     const headers = _.get(wsJson, 'headers', []);
 
     return hi(rows).map((row: any) => _.zipObject(headers, row));
-  }).pipe(fastCsv.createWriteStream({headers: true}));
+  }).pipe(fastCsv.createWriteStream({ headers: true }));
 }
 
 function packToWsJson(data: any): any {

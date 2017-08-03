@@ -1,12 +1,12 @@
 import * as _ from 'lodash';
 import * as hi from 'highland';
-import {logger} from '../ws.config/log';
+import { logger } from '../ws.config/log';
 import * as ddfImportUtils from './utils/import-ddf.utils';
-import {constants} from '../ws.utils/constants';
+import { constants } from '../ws.utils/constants';
 import * as fileUtils from '../ws.utils/file';
 import * as entitiesUtils from './utils/entities.utils';
 import * as ddfMappers from './utils/ddf-mappers';
-import {EntitiesRepositoryFactory} from '../ws.repository/ddf/entities/entities.repository';
+import { EntitiesRepositoryFactory } from '../ws.repository/ddf/entities/entities.repository';
 
 export {
   startEntitiesCreation as createEntities
@@ -39,12 +39,12 @@ function createEntities(externalContext: any): any {
 }
 
 function loadEntitiesFromCsv(resource: any, externalContext: any): any {
-  const {pathToDdfFolder} = externalContext;
+  const { pathToDdfFolder } = externalContext;
 
   return fileUtils.readCsvFileAsStream(pathToDdfFolder, resource.path)
     .map((rawEntity: any) => {
       const setsAndDomain = entitiesUtils.getSetsAndDomain(resource, externalContext, rawEntity);
-      const context = _.extend({filename: resource.path}, setsAndDomain, externalContext);
+      const context = _.extend({ filename: resource.path }, setsAndDomain, externalContext);
       return toEntity(rawEntity, context);
     });
 }
@@ -70,7 +70,16 @@ function toEntity(rawEntity: any, externalContext: any): any {
     }
   } = externalContext;
 
-  const context = {entitySet, concepts, entityDomain, filename, timeConcepts, version, datasetId, entitySetsOriginIds};
+  const context = {
+    entitySet,
+    concepts,
+    entityDomain,
+    filename,
+    timeConcepts,
+    version,
+    datasetId,
+    entitySetsOriginIds
+  };
 
   return ddfMappers.mapDdfEntityToWsModel(rawEntity, context);
 }

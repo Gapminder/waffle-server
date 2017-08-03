@@ -14,7 +14,7 @@ import * as reposService from '../../../../ws.services/repos.service';
 import * as cacheUtils from '../../../../ws.utils/cache-warmup';
 import * as cliApi from 'waffle-server-import-cli';
 import {Request, Response} from 'express';
-import {json} from "body-parser";
+import {json} from 'body-parser';
 
 const sandbox = sinonTest.configureTest(sinon);
 
@@ -27,7 +27,7 @@ describe('WS-CLI controller', () => {
       const expectedResponse = {success: false, error: 'Boo!'};
 
       const loggerStub = this.stub(logger, 'error');
-      const cliServiceStub = this.stub(cliService, 'importDataset', (params, onImported) => onImported(expectedError));
+      const cliServiceStub = this.stub(cliService, 'importDataset').callsFake((params, onImported) => onImported(expectedError));
       const resJsonSpy = this.spy();
 
       const req = {
@@ -57,7 +57,7 @@ describe('WS-CLI controller', () => {
       const expectedError = {message: 'Boo!'};
 
       const loggerStub = this.stub(logger, 'error');
-      const cliServiceStub = this.stub(cliService, 'importDataset', (params, onImported) => onImported(expectedError));
+      const cliServiceStub = this.stub(cliService, 'importDataset').callsFake((params, onImported) => onImported(expectedError));
       const resJsonSpy = this.spy();
 
       const req = {
@@ -85,7 +85,7 @@ describe('WS-CLI controller', () => {
       const commit = '8744022391f4c6518b0d070e3b85ff12b7884dd2';
 
       const expectedMessage = `finished import for dataset '${github}' and commit '${commit}'`;
-      const cliServiceStub = this.stub(cliService, 'importDataset', (params, onImported) => onImported());
+      const cliServiceStub = this.stub(cliService, 'importDataset').callsFake((params, onImported) => onImported());
 
       const req = {
         body: {
@@ -121,7 +121,7 @@ describe('WS-CLI controller', () => {
       const expectedResponse = {success: true, message: expectedMessage};
 
       const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'importDataset', params => {
+      const cliServiceStub = this.stub(cliService, 'importDataset').callsFake((params) => {
         params.lifecycleHooks.onTransactionCreated();
       });
 
@@ -147,7 +147,7 @@ describe('WS-CLI controller', () => {
       const toMessageResponseSpy = this.spy(routeUtils, 'toMessageResponse');
 
       const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'importDataset', params => {
+      const cliServiceStub = this.stub(cliService, 'importDataset').callsFake((params) => {
         params.lifecycleHooks.onTransactionCreated();
       });
 
@@ -175,7 +175,7 @@ describe('WS-CLI controller', () => {
       const expectedResponse = {success: true, message: expectedMessage};
 
       const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'cleanDdfRedisCache', onCleaned => onCleaned(null));
+      const cliServiceStub = this.stub(cliService, 'cleanDdfRedisCache').callsFake((onCleaned) => onCleaned(null));
 
       const req = {
         user: {
@@ -228,7 +228,7 @@ describe('WS-CLI controller', () => {
 
       const loggerStub = this.stub(logger, 'error');
       const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'cleanDdfRedisCache', onCleaned => onCleaned(expectedError));
+      const cliServiceStub = this.stub(cliService, 'cleanDdfRedisCache').callsFake((onCleaned) => onCleaned(expectedError));
 
       const req = {
         user: {
@@ -259,7 +259,7 @@ describe('WS-CLI controller', () => {
       const expectedResponse = {success: true, message: expectedMessage};
 
       const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliApi, 'cleanRepos', (path, onCleaned) => onCleaned(null));
+      const cliServiceStub = this.stub(cliApi, 'cleanRepos').callsFake((path, onCleaned) => onCleaned(null));
 
       const req = {
         user: {
@@ -312,7 +312,7 @@ describe('WS-CLI controller', () => {
 
       const loggerStub = this.stub(logger, 'error');
       const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliApi, 'cleanRepos', (path, onCleaned) => onCleaned(expectedError));
+      const cliServiceStub = this.stub(cliApi, 'cleanRepos').callsFake((path, onCleaned) => onCleaned(expectedError));
 
       const req = {
         user: {
@@ -398,7 +398,7 @@ describe('WS-CLI controller', () => {
 
       const loggerStub = this.stub(logger, 'error');
       const resJsonSpy = this.spy();
-      const authServiceStub = this.stub(authService, 'authenticate', ({email, password}, onAuthenticated) => {
+      const authServiceStub = this.stub(authService, 'authenticate').callsFake(({email, password}, onAuthenticated) => {
         return onAuthenticated(expectedError);
       });
 
@@ -432,7 +432,7 @@ describe('WS-CLI controller', () => {
       const expectedResponse = {success: true, data: {token: expectedData}};
 
       const resJsonSpy = this.spy();
-      const authServiceStub = this.stub(authService, 'authenticate', ({email, password}, onAuthenticated) => {
+      const authServiceStub = this.stub(authService, 'authenticate').callsFake(({email, password}, onAuthenticated) => {
         return onAuthenticated(null, expectedData);
       });
 
@@ -522,7 +522,7 @@ describe('WS-CLI controller', () => {
 
       const loggerStub = this.stub(logger, 'error');
       const resJsonSpy = this.spy();
-      const transactionsServiceStub = this.stub(transactionsService, 'getStatusOfLatestTransactionByDatasetName', (datasetName, user, onStatusGot) => {
+      const transactionsServiceStub = this.stub(transactionsService, 'getStatusOfLatestTransactionByDatasetName').callsFake((datasetName, user, onStatusGot) => {
         return onStatusGot(expectedError);
       });
 
@@ -559,7 +559,7 @@ describe('WS-CLI controller', () => {
       const expectedResponse = {success: true, data: expectedData};
 
       const resJsonSpy = this.spy();
-      const transactionsServiceStub = this.stub(transactionsService, 'getStatusOfLatestTransactionByDatasetName', (datasetName, user, onStatusGot) => {
+      const transactionsServiceStub = this.stub(transactionsService, 'getStatusOfLatestTransactionByDatasetName').callsFake((datasetName, user, onStatusGot) => {
         return onStatusGot(null, expectedData);
       });
 
@@ -652,7 +652,7 @@ describe('WS-CLI controller', () => {
 
       const loggerStub = this.stub(logger, 'error');
       const resJsonSpy = this.spy();
-      const transactionsServiceStub = this.stub(transactionsService, 'rollbackFailedTransactionFor', (datasetName, user, onRollbackActivated) => {
+      const transactionsServiceStub = this.stub(transactionsService, 'rollbackFailedTransactionFor').callsFake((datasetName, user, onRollbackActivated) => {
         return onRollbackActivated(expectedError);
       });
 
@@ -689,7 +689,7 @@ describe('WS-CLI controller', () => {
       const expectedResponse = {success: true, message: expectedMessage};
 
       const resJsonSpy = this.spy();
-      const transactionsServiceStub = this.stub(transactionsService, 'rollbackFailedTransactionFor', (datasetName, user, onRollbackActivated) => {
+      const transactionsServiceStub = this.stub(transactionsService, 'rollbackFailedTransactionFor').callsFake((datasetName, user, onRollbackActivated) => {
         return onRollbackActivated(null);
       });
 
@@ -783,7 +783,7 @@ describe('WS-CLI controller', () => {
 
       const loggerStub = this.stub(logger, 'error');
       const resJsonSpy = this.spy();
-      const datasetsServiceStub = this.stub(datasetsService, 'removeDatasetData', (datasetName, user, onDatasetRemoved) => {
+      const datasetsServiceStub = this.stub(datasetsService, 'removeDatasetData').callsFake((datasetName, user, onDatasetRemoved) => {
         return onDatasetRemoved(expectedError);
       });
 
@@ -821,7 +821,7 @@ describe('WS-CLI controller', () => {
       const expectedResponse = {success: true, message: expectedMessage};
 
       const resJsonSpy = this.spy();
-      const datasetsServiceStub = this.stub(datasetsService, 'removeDatasetData', (datasetName, user, onDatasetRemoved) => {
+      const datasetsServiceStub = this.stub(datasetsService, 'removeDatasetData').callsFake((datasetName, user, onDatasetRemoved) => {
         return setTimeout(onDatasetRemoved, 1);
       });
 
@@ -839,7 +839,7 @@ describe('WS-CLI controller', () => {
         json: resJsonSpy
       };
 
-      const loggerStub = this.stub(logger, 'info', () => {
+      const loggerStub = this.stub(logger, 'info').callsFake(() => {
         sinon.assert.calledOnce(loggerStub);
         sinon.assert.calledWithExactly(loggerStub, expectedInfoMessage);
         sinon.assert.calledOnce(datasetsServiceStub);
@@ -891,7 +891,7 @@ describe('WS-CLI controller', () => {
 
       const loggerStub = this.stub(logger, 'error');
       const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'getAvailableDatasetsAndVersions', (user, onDatasetAndVersionsGot) => {
+      const cliServiceStub = this.stub(cliService, 'getAvailableDatasetsAndVersions').callsFake((user, onDatasetAndVersionsGot) => {
         return onDatasetAndVersionsGot(expectedError);
       });
 
@@ -927,7 +927,7 @@ describe('WS-CLI controller', () => {
 
       const loggerStub = this.stub(logger, 'info');
       const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'getAvailableDatasetsAndVersions', (user, onDatasetAndVersionsGot) => {
+      const cliServiceStub = this.stub(cliService, 'getAvailableDatasetsAndVersions').callsFake((user, onDatasetAndVersionsGot) => {
         return onDatasetAndVersionsGot(null, expectedData);
       });
 
@@ -1089,7 +1089,7 @@ describe('WS-CLI controller', () => {
 
       const loggerStub = this.stub(logger, 'error');
       const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'updateIncrementally', (options,  onDatasetUpdated) => {
+      const cliServiceStub = this.stub(cliService, 'updateIncrementally').callsFake((options, onDatasetUpdated) => {
         return onDatasetUpdated(expectedError);
       });
 
@@ -1137,7 +1137,7 @@ describe('WS-CLI controller', () => {
 
       const loggerStub = this.stub(logger, 'error');
       const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'updateIncrementally', (options,  onDatasetUpdated) => {
+      const cliServiceStub = this.stub(cliService, 'updateIncrementally').callsFake((options, onDatasetUpdated) => {
         return onDatasetUpdated(expectedError);
       });
 
@@ -1186,7 +1186,7 @@ describe('WS-CLI controller', () => {
 
       const loggerStub = this.stub(logger, 'info');
       const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'updateIncrementally', (options, onDatasetUpdated) => {
+      const cliServiceStub = this.stub(cliService, 'updateIncrementally').callsFake((options, onDatasetUpdated) => {
         options.lifecycleHooks.onTransactionCreated();
         return onDatasetUpdated(null);
       });
@@ -1240,7 +1240,7 @@ describe('WS-CLI controller', () => {
 
       const loggerStub = this.stub(logger, 'info');
       const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'updateIncrementally', (options, onDatasetUpdated) => {
+      const cliServiceStub = this.stub(cliService, 'updateIncrementally').callsFake((options, onDatasetUpdated) => {
         options.lifecycleHooks.onTransactionCreated();
         return onDatasetUpdated(null);
       });
@@ -1350,7 +1350,7 @@ describe('WS-CLI controller', () => {
 
       const loggerStub = this.stub(logger, 'error');
       const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'getCommitOfLatestDatasetVersion', (github, user,  onCommitGot) => {
+      const cliServiceStub = this.stub(cliService, 'getCommitOfLatestDatasetVersion').callsFake((github, user, onCommitGot) => {
         return onCommitGot(expectedError);
       });
 
@@ -1408,7 +1408,7 @@ describe('WS-CLI controller', () => {
 
       const loggerStub = this.stub(logger, 'info');
       const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'getCommitOfLatestDatasetVersion', (github, user, onCommitListGot) => {
+      const cliServiceStub = this.stub(cliService, 'getCommitOfLatestDatasetVersion').callsFake((github, user, onCommitListGot) => {
         return onCommitListGot(null, result);
       });
 
@@ -1536,7 +1536,7 @@ describe('WS-CLI controller', () => {
 
       const loggerStub = this.stub(logger, 'error');
       const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'setTransactionAsDefault', (userId, datasetName, transactionCommit, onDatasetUpdated) => {
+      const cliServiceStub = this.stub(cliService, 'setTransactionAsDefault').callsFake((userId, datasetName, transactionCommit, onDatasetUpdated) => {
         return onDatasetUpdated(expectedError);
       });
 
@@ -1574,10 +1574,10 @@ describe('WS-CLI controller', () => {
 
       const loggerStub = this.stub(logger, 'error');
       const resJsonSpy = this.spy();
-      const setTransactionAsDefaultStub = this.stub(cliService, 'setTransactionAsDefault', (userId, datasetName, transactionCommit, onDatasetUpdated) => {
+      const setTransactionAsDefaultStub = this.stub(cliService, 'setTransactionAsDefault').callsFake((userId, datasetName, transactionCommit, onDatasetUpdated) => {
         return onDatasetUpdated();
       });
-      const cleanDdfRedisCacheStub = this.stub(cliService, 'cleanDdfRedisCache', (onCacheCleaned) => {
+      const cleanDdfRedisCacheStub = this.stub(cliService, 'cleanDdfRedisCache').callsFake((onCacheCleaned) => {
         return onCacheCleaned(expectedError);
       });
 
@@ -1621,13 +1621,13 @@ describe('WS-CLI controller', () => {
 
       const loggerStub = this.stub(logger, 'error');
       const resJsonSpy = this.spy();
-      const setTransactionAsDefaultStub = this.stub(cliService, 'setTransactionAsDefault', (userId, datasetName, transactionCommit, onDatasetUpdated) => {
+      const setTransactionAsDefaultStub = this.stub(cliService, 'setTransactionAsDefault').callsFake((userId, datasetName, transactionCommit, onDatasetUpdated) => {
         return onDatasetUpdated(null, expectedData);
       });
-      const cleanDdfRedisCacheStub = this.stub(cliService, 'cleanDdfRedisCache', (onCacheCleaned) => {
+      const cleanDdfRedisCacheStub = this.stub(cliService, 'cleanDdfRedisCache').callsFake((onCacheCleaned) => {
         return onCacheCleaned();
       });
-      const cacheUtilsStub = this.stub(cacheUtils, 'warmUpCache', (onCacheWarmedUp) => {
+      const cacheUtilsStub = this.stub(cacheUtils, 'warmUpCache').callsFake((onCacheWarmedUp) => {
         return onCacheWarmedUp(expectedError);
       });
 
@@ -1672,13 +1672,13 @@ describe('WS-CLI controller', () => {
 
       const loggerStub = this.stub(logger, 'info');
       const resJsonSpy = this.spy();
-      const setTransactionAsDefaultStub = this.stub(cliService, 'setTransactionAsDefault', (userId, datasetName, transactionCommit, onDatasetUpdated) => {
+      const setTransactionAsDefaultStub = this.stub(cliService, 'setTransactionAsDefault').callsFake((userId, datasetName, transactionCommit, onDatasetUpdated) => {
         return onDatasetUpdated(null, expectedData);
       });
-      const cleanDdfRedisCacheStub = this.stub(cliService, 'cleanDdfRedisCache', (onCacheCleaned) => {
+      const cleanDdfRedisCacheStub = this.stub(cliService, 'cleanDdfRedisCache').callsFake((onCacheCleaned) => {
         return onCacheCleaned();
       });
-      const cacheUtilsStub = this.stub(cacheUtils, 'warmUpCache', (onCacheWarmedUp) => {
+      const cacheUtilsStub = this.stub(cacheUtils, 'warmUpCache').callsFake((onCacheWarmedUp) => {
         return onCacheWarmedUp();
       });
 
@@ -1720,7 +1720,7 @@ describe('WS-CLI controller', () => {
       const expectedResponse = {success: true, data: expectedData};
 
       const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'findDatasetsWithVersions', (userId, onCleaned) => onCleaned(null, expectedData));
+      const cliServiceStub = this.stub(cliService, 'findDatasetsWithVersions').callsFake((userId, onCleaned) => onCleaned(null, expectedData));
 
       const req = {
         user: {
@@ -1774,7 +1774,7 @@ describe('WS-CLI controller', () => {
 
       const loggerStub = this.stub(logger, 'error');
       const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'findDatasetsWithVersions', (userId, onCleaned) => onCleaned(expectedError));
+      const cliServiceStub = this.stub(cliService, 'findDatasetsWithVersions').callsFake((userId, onCleaned) => onCleaned(expectedError));
 
       const req = {
         user: {
@@ -1807,7 +1807,7 @@ describe('WS-CLI controller', () => {
       const removalStatus = {
         concepts: 42,
         entities: 42,
-        datapoints: 42,
+        datapoints: 42
       };
 
       const getRemovalStateForDatasetStub = this.stub(datasetsService, 'getRemovalStateForDataset');
@@ -1943,7 +1943,7 @@ describe('WS-CLI controller', () => {
 
       const loggerStub = this.stub(logger, 'info');
       const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'getRemovableDatasets', (userId, onCleaned) => onCleaned(null, expectedData));
+      const cliServiceStub = this.stub(cliService, 'getRemovableDatasets').callsFake((userId, onCleaned) => onCleaned(null, expectedData));
 
       const req = {
         user: {
@@ -1999,7 +1999,7 @@ describe('WS-CLI controller', () => {
 
       const loggerStub = this.stub(logger, 'error');
       const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'getRemovableDatasets', (userId, onCleaned) => onCleaned(expectedError));
+      const cliServiceStub = this.stub(cliService, 'getRemovableDatasets').callsFake((userId, onCleaned) => onCleaned(expectedError));
 
       const req = {
         user: {
@@ -2033,7 +2033,7 @@ describe('WS-CLI controller', () => {
 
       const loggerStub = this.stub(logger, 'info');
       const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'getPrivateDatasets', (userId, onCleaned) => onCleaned(null, expectedData));
+      const cliServiceStub = this.stub(cliService, 'getPrivateDatasets').callsFake((userId, onCleaned) => onCleaned(null, expectedData));
 
       const req = {
         user: {
@@ -2089,7 +2089,7 @@ describe('WS-CLI controller', () => {
 
       const loggerStub = this.stub(logger, 'error');
       const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'getPrivateDatasets', (userId, onCleaned) => onCleaned(expectedError));
+      const cliServiceStub = this.stub(cliService, 'getPrivateDatasets').callsFake((userId, onCleaned) => onCleaned(expectedError));
 
       const req = {
         user: {
@@ -2177,7 +2177,7 @@ describe('WS-CLI controller', () => {
 
       const loggerStub = this.stub(logger, 'error');
       const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'setAccessTokenForDataset', (datasetName, userId, onDatasetRemoved) => {
+      const cliServiceStub = this.stub(cliService, 'setAccessTokenForDataset').callsFake((datasetName, userId, onDatasetRemoved) => {
         return onDatasetRemoved(expectedError);
       });
 
@@ -2215,7 +2215,7 @@ describe('WS-CLI controller', () => {
       const loggerErrorStub = this.stub(logger, 'error');
       const loggerWarnStub = this.stub(logger, 'warn');
       const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'setAccessTokenForDataset', (datasetName, userId, onDatasetRemoved) => {
+      const cliServiceStub = this.stub(cliService, 'setAccessTokenForDataset').callsFake((datasetName, userId, onDatasetRemoved) => {
         return onDatasetRemoved(null, null);
       });
 
@@ -2262,7 +2262,7 @@ describe('WS-CLI controller', () => {
       const loggerErrorStub = this.stub(logger, 'error');
       const loggerWarnStub = this.stub(logger, 'warn');
       const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'setAccessTokenForDataset', (datasetName, userId, onDatasetRemoved) => {
+      const cliServiceStub = this.stub(cliService, 'setAccessTokenForDataset').callsFake((datasetName, userId, onDatasetRemoved) => {
         return onDatasetRemoved(null, expectedData);
       });
 
@@ -2332,7 +2332,7 @@ describe('WS-CLI controller', () => {
 
       const loggerStub = this.stub(logger, 'info');
       const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'getDatasetsInProgress', (userId, onFound) => {
+      const cliServiceStub = this.stub(cliService, 'getDatasetsInProgress').callsFake((userId, onFound) => {
         return onFound(null, expectedData);
       });
 
@@ -2367,7 +2367,7 @@ describe('WS-CLI controller', () => {
 
       const loggerStub = this.stub(logger, 'error');
       const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'getDatasetsInProgress', (userId, onFound) => {
+      const cliServiceStub = this.stub(cliService, 'getDatasetsInProgress').callsFake((userId, onFound) => {
         return onFound(expectedMessage);
       });
 

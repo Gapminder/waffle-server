@@ -42,38 +42,38 @@ const expectedCreatedConcepts = [
     dataset: datasetId,
     domain: null,
     from: version,
-    gid: "company_scale",
+    gid: 'company_scale',
     languages: {  },
     originId: null,
     properties: {
-      additional_column: "updated",
-      concept: "company_scale",
-      concept_type: "entity_set",
-      domain: "company1",
-      drill_up: ["foundation1"]
+      additional_column: 'updated',
+      concept: 'company_scale',
+      concept_type: 'entity_set',
+      domain: 'company1',
+      drill_up: ['foundation1']
     },
     subsetOf: [],
     title: undefined,
     to: 9007199254740991,
-    type: "entity_set"
+    type: 'entity_set'
   }, {
     dataset: datasetId,
     domain: null,
     from: version,
-    gid: "company_scale1",
+    gid: 'company_scale1',
     languages: {  },
     originId: null,
     properties: {
-      additional_column: "updated",
-      concept: "company_scale1",
-      concept_type: "entity_set",
-      domain: "company",
-      drill_up: ["foundation"]
+      additional_column: 'updated',
+      concept: 'company_scale1',
+      concept_type: 'entity_set',
+      domain: 'company',
+      drill_up: ['foundation']
     },
     subsetOf: [],
     title: undefined,
     to: 9007199254740991,
-    type: "entity_set"
+    type: 'entity_set'
   }
 ];
 
@@ -89,37 +89,37 @@ describe('Update Concepts', function () {
       dataset: datasetId,
       domain: null,
       from: version - 1,
-      gid: "company",
+      gid: 'company',
       languages: {  },
       originId: 'AAA',
       properties: {
-        concept: "company",
-        concept_type: "entity_domain",
+        concept: 'company',
+        concept_type: 'entity_domain',
         domain: null
       },
       subsetOf: [],
       title: undefined,
       to: 9007199254740991,
-      type: "entity_domain"
+      type: 'entity_domain'
     };
     const drillup = {
       _id: 'DRILLUPID',
       dataset: datasetId,
       domain: 'AAA',
       from: version - 1,
-      gid: "foundation",
+      gid: 'foundation',
       languages: {  },
       originId: 'BBB',
       properties: {
-        concept: "foundation",
-        concept_type: "entity_set",
-        domain: "company",
-        additional_column: ""
+        concept: 'foundation',
+        concept_type: 'entity_set',
+        domain: 'company',
+        additional_column: ''
       },
       subsetOf: [],
       title: undefined,
       to: 9007199254740991,
-      type: "entity_set"
+      type: 'entity_set'
     };
     const expectedDrillups = [drillup.gid, 'foundation1'];
     const expectedDomains = [domain.gid, 'company1'];
@@ -215,7 +215,7 @@ describe('Update Concepts', function () {
       sinon.assert.calledWithExactly(allOpenedInGivenVersionStub, datasetId, version);
 
       return done();
-    })
+    });
   }));
 
   it('should interrupt preliminary process if error happens during reading test file by line as json stream', sandbox(function (done: Function) {
@@ -235,7 +235,7 @@ describe('Update Concepts', function () {
       sinon.assert.calledWith(fileUtilsStub, originExternalContext.pathToDatasetDiff);
 
       return done();
-    })
+    });
   }));
 
   it('should interrupt removing concepts process if error happens during closing concept', sandbox(function (done: Function) {
@@ -259,7 +259,7 @@ describe('Update Concepts', function () {
       sinon.assert.calledWith(closeByGidStub, sinon.match('foundation').or(sinon.match('company_size')).or(sinon.match('num_users')));
 
       return done();
-    })
+    });
   }));
 
   it('should interrupt creating concepts process when trying create concept with duplicated gid', sandbox(function (done: Function) {
@@ -286,7 +286,7 @@ describe('Update Concepts', function () {
       sinon.assert.notCalled(createStub);
 
       return done();
-    })
+    });
   }));
 
   it('should interrupt updating concepts process if error happens during searching drillups', sandbox(function(done: Function) {
@@ -321,7 +321,7 @@ describe('Update Concepts', function () {
       sinon.assert.notCalled(findDistinctDomainsStub);
 
       return done();
-    })
+    });
   }));
 
   it('should interrupt updating concepts process if error happens during searching domains', sandbox(function(done: Function) {
@@ -356,7 +356,7 @@ describe('Update Concepts', function () {
       sinon.assert.calledOnce(findDistinctDomainsStub);
 
       return done();
-    })
+    });
   }));
 
   it('should interrupt updating concepts process if error happens during closing concepts in applying changes to concept flow', sandbox(function(done: Function) {
@@ -400,7 +400,7 @@ describe('Update Concepts', function () {
       sinon.assert.calledWith(closeByGidStub, sinon.match('foundation').or(sinon.match('company')).or(sinon.match('time')));
 
       return done();
-    })
+    });
   }));
 
   it('should log warn message if no concept was found during closing original concept in applying changes to concept flow', sandbox(function(done: Function) {
@@ -447,7 +447,7 @@ describe('Update Concepts', function () {
       sinon.assert.calledWith(closeByGidStub, sinon.match('foundation').or(sinon.match('company')).or(sinon.match('time')));
 
       return done();
-    })
+    });
   }));
 
   it('should create new concepts versions during applying changes to concept flow', sandbox(function(done: Function) {
@@ -461,110 +461,110 @@ describe('Update Concepts', function () {
       dataset: datasetId,
       domain: null,
       from: version - 1,
-      gid: "company",
+      gid: 'company',
       languages: {  },
       originId: 'CCC',
       properties: {
-        concept: "company",
-        concept_type: "entity_domain",
+        concept: 'company',
+        concept_type: 'entity_domain',
         domain: null,
-        additional_column: ""
+        additional_column: ''
       },
       subsetOf: [],
       title: undefined,
       to: version,
-      type: "entity_domain"
+      type: 'entity_domain'
     };
     const domain = {
       _id: 'DOMAINID',
       dataset: datasetId,
       domain: null,
       from: version - 1,
-      gid: "company",
+      gid: 'company',
       languages: {  },
       originId: 'AAA',
       properties: {
-        concept: "company",
-        concept_type: "entity_domain",
+        concept: 'company',
+        concept_type: 'entity_domain',
         domain: null,
-        additional_column: ""
+        additional_column: ''
       },
       subsetOf: [],
       title: undefined,
       to: version,
-      type: "entity_domain"
+      type: 'entity_domain'
     };
     const drillup = {
       _id: 'DRILLUPID',
       dataset: datasetId,
       domain: 'AAA',
       from: version - 1,
-      gid: "foundation",
+      gid: 'foundation',
       languages: {  },
       originId: 'BBB',
       properties: {
-        concept: "foundation",
-        concept_type: "entity_set",
-        domain: "company",
-        additional_column: ""
+        concept: 'foundation',
+        concept_type: 'entity_set',
+        domain: 'company',
+        additional_column: ''
       },
       subsetOf: [],
       title: undefined,
       to: version,
-      type: "entity_set"
+      type: 'entity_set'
     };
 
     const expectedConcepts = [drillup, domain, time];
 
     const expectedUpdatedDrillup = {
-      "dataset": "DATASETID",
-      "from": 1111111,
-      "gid": "foundation1",
-      "languages": {},
-      "originId": "BBB",
-      "properties": {
-        "additional_column": null,
-        "concept": "foundation1",
-        "concept_type": "entity_domain",
-        "domain": null
+      dataset: 'DATASETID',
+      from: 1111111,
+      gid: 'foundation1',
+      languages: {},
+      originId: 'BBB',
+      properties: {
+        additional_column: null,
+        concept: 'foundation1',
+        concept_type: 'entity_domain',
+        domain: null
       },
       title: undefined,
-      "to": 9007199254740991,
-      "type": "entity_domain"
+      to: 9007199254740991,
+      type: 'entity_domain'
     };
     const expectedUpdatedDomain = {
-      "dataset": "DATASETID",
-      "from": 1111111,
-      "gid": "company",
-      "languages": {},
-      "originId": "AAA",
-      "properties": {
-        "additional_column": null,
-        "concept": "company",
-        "concept_type": "entity_set",
-        "domain": "foundation1",
-        "subsetOf": null,
-        "drill_up": ["foundation1"]
+      dataset: 'DATASETID',
+      from: 1111111,
+      gid: 'company',
+      languages: {},
+      originId: 'AAA',
+      properties: {
+        additional_column: null,
+        concept: 'company',
+        concept_type: 'entity_set',
+        domain: 'foundation1',
+        subsetOf: null,
+        drill_up: ['foundation1']
       },
       title: undefined,
-      "to": 9007199254740991,
-      "type": "entity_set"
+      to: 9007199254740991,
+      type: 'entity_set'
     };
     const expectedUpdatedTime = {
-      "dataset": "DATASETID",
-      "from": 1111111,
-      "gid": "time",
-      "languages": {},
-      "originId": "CCC",
-      "properties": {
-        "additional_column": "{}",
-        "concept": "time",
-        "concept_type": "time",
-        "domain": null
+      dataset: 'DATASETID',
+      from: 1111111,
+      gid: 'time',
+      languages: {},
+      originId: 'CCC',
+      properties: {
+        additional_column: '{}',
+        concept: 'time',
+        concept_type: 'time',
+        domain: null
       },
       title: undefined,
-      "to": 9007199254740991,
-      "type": "entity_domain"
+      to: 9007199254740991,
+      type: 'entity_domain'
     };
 
     const loggerInfoStub = this.stub(logger, 'info');
@@ -613,7 +613,7 @@ describe('Update Concepts', function () {
       expect(createStub.args[2][0]).to.be.deep.equal(expectedUpdatedTime);
 
       return done();
-    })
+    });
   }));
 
   it('should interrupt updating concepts process if error happens during finding all concepts in applying updates to concept flow', sandbox(function(done: Function) {
@@ -659,7 +659,7 @@ describe('Update Concepts', function () {
       sinon.assert.notCalled(closeByGidStub);
 
       return done();
-    })
+    });
   }));
 
   it('should interrupt updating concepts process if error happens during closing concepts in applying updates to concept flow', sandbox(function(done: Function) {
@@ -674,38 +674,38 @@ describe('Update Concepts', function () {
       dataset: datasetId,
       domain: null,
       from: version - 1,
-      gid: "company",
+      gid: 'company',
       languages: {  },
       originId: 'AAA',
       properties: {
-        concept: "company",
-        concept_type: "entity_domain",
+        concept: 'company',
+        concept_type: 'entity_domain',
         domain: null,
-        additional_column: ""
+        additional_column: ''
       },
       subsetOf: [],
       title: undefined,
       to: 9007199254740991,
-      type: "entity_domain"
+      type: 'entity_domain'
     };
     const drillup = {
       _id: 'DRILLUPID',
       dataset: datasetId,
       domain: 'AAA',
       from: version - 1,
-      gid: "foundation",
+      gid: 'foundation',
       languages: {  },
       originId: 'BBB',
       properties: {
-        concept: "foundation",
-        concept_type: "entity_set",
-        domain: "company",
-        additional_column: ""
+        concept: 'foundation',
+        concept_type: 'entity_set',
+        domain: 'company',
+        additional_column: ''
       },
       subsetOf: [],
       title: undefined,
       to: 9007199254740991,
-      type: "entity_set"
+      type: 'entity_set'
     };
     const expectedConcepts = [drillup, domain];
     const expectedUpdatedConcepts = [];
@@ -755,7 +755,7 @@ describe('Update Concepts', function () {
       sinon.assert.notCalled(createStub);
 
       return done();
-    })
+    });
   }));
 
   it('should finish main updating process when concept changes were apllied successfully', sandbox(function(done: Function) {
@@ -769,71 +769,71 @@ describe('Update Concepts', function () {
       dataset: datasetId,
       domain: null,
       from: version - 1,
-      gid: "company",
+      gid: 'company',
       languages: {  },
       originId: 'AAA',
       properties: {
-        concept: "company",
-        concept_type: "entity_domain",
+        concept: 'company',
+        concept_type: 'entity_domain',
         domain: null,
-        additional_column: ""
+        additional_column: ''
       },
       subsetOf: [],
       title: undefined,
       to: version,
-      type: "entity_domain"
+      type: 'entity_domain'
     };
     const drillup = {
       _id: 'DRILLUPID',
       dataset: datasetId,
       domain: 'AAA',
       from: version - 1,
-      gid: "foundation",
+      gid: 'foundation',
       languages: {  },
       originId: 'BBB',
       properties: {
-        concept: "foundation",
-        concept_type: "entity_set",
-        domain: "company",
-        additional_column: ""
+        concept: 'foundation',
+        concept_type: 'entity_set',
+        domain: 'company',
+        additional_column: ''
       },
       subsetOf: [],
       title: undefined,
       to: version,
-      type: "entity_set"
+      type: 'entity_set'
     };
 
     const expectedConcepts = [drillup, domain];
 
     const expectedUpdatedDrillup = {
-      "dataset": "DATASETID",
-      "from": 1111111,
-      "gid": "foundation",
-      "languages": {},
-      "originId": "BBB",
-      "properties": {
-        "concept": "foundation",
-        "concept_type": "entity_set",
-        "domain": "company"
+      dataset: 'DATASETID',
+      from: 1111111,
+      gid: 'foundation',
+      languages: {},
+      originId: 'BBB',
+      properties: {
+        concept: 'foundation',
+        concept_type: 'entity_set',
+        domain: 'company'
       },
       title: undefined,
-      "to": 9007199254740991,
-      "type": "entity_set"
+      to: 9007199254740991,
+      type: 'entity_set'
     };
     const expectedUpdatedDomain = {
-      "dataset": "DATASETID",
-      "from": 1111111,
-      "gid": "company",
-      "languages": {},
-      "originId": "AAA",
-      "properties": {
-        "concept": "company",
-        "concept_type": "entity_domain",
-        "domain": null
+      dataset: 'DATASETID',
+      from: 1111111,
+      gid: 'company',
+      languages: {},
+      originId: 'AAA',
+      properties: {
+        concept: 'company',
+        concept_type: 'entity_domain',
+        domain: null
       },
       title: undefined,
-      "to": 9007199254740991,
-      "type": "entity_domain"
+      to: 9007199254740991,
+      type: 'entity_domain'
     };
 
     const loggerStub = this.stub(logger, 'info');
@@ -886,6 +886,6 @@ describe('Update Concepts', function () {
       expect(createStub.args[1][0]).to.be.deep.equal(expectedUpdatedDomain);
 
       return done();
-    })
+    });
   }));
 });

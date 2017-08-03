@@ -1,13 +1,23 @@
+/* tslint:disable:no-console */
+
 import * as _ from 'lodash';
 import * as async from 'async';
 import * as wsCli from 'waffle-server-import-cli';
 import { e2eEnv } from './e2e.env';
 import * as e2eUtils from './e2e.utils';
+import '../ws.config/db.config';
+import '../ws.repository';
 
 e2eUtils.setUpEnvironmentVariables();
 
-import '../ws.config/db.config';
-import '../ws.repository';
+interface ImportOptions {
+  repos: Repo[];
+}
+
+interface Repo {
+  url: string;
+  commitIndexToStartImport?: number;
+}
 
 const CACHED_COMMITS = new WeakMap();
 
@@ -44,7 +54,10 @@ function _runDatasetImport(repo: Repo, onIncrementalUpdateDone: Function): void 
 
     const allowedCommits = _.drop(commits, commitIndexToStartImport);
     const finishCommitIndex = commitIndexToStartImport ? 3 - commitIndexToStartImport : _.size(allowedCommits);
-    const cliOptions = _.extend({from: _.first(allowedCommits), to: _.get(allowedCommits, `${finishCommitIndex}`)}, DEFAULT_WS_CLI_OPTIONS, {repo: repo.url});
+    const cliOptions = _.extend({
+      from: _.first(allowedCommits),
+      to: _.get(allowedCommits, `${finishCommitIndex}`)
+    }, DEFAULT_WS_CLI_OPTIONS, { repo: repo.url });
 
     wsCli.importUpdate(cliOptions, (importUpdateError: any) => {
       if (importUpdateError) {
@@ -61,7 +74,7 @@ function setDefaultCommit(commit: string, options?: any, done?: any): void {
     options = {};
   }
 
-  options = _.defaults(options, DEFAULT_WS_CLI_OPTIONS, {commit});
+  options = _.defaults(options, DEFAULT_WS_CLI_OPTIONS, { commit });
   wsCli.setDefault(options, (error: string) => {
     if (error) {
       return done(error);
@@ -96,13 +109,4 @@ function getCommitsByGithubUrl(githubUrl: string, done: Function): void {
     CACHED_COMMITS.set(githubUrlObj, commits);
     return done(null, CACHED_COMMITS.get(githubUrlObj));
   });
-}
-
-interface ImportOptions {
-  repos: Repo[];
-}
-
-interface Repo {
-  url: string;
-  commitIndexToStartImport?: number;
 }

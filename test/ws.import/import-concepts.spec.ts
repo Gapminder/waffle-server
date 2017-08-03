@@ -39,7 +39,7 @@ const datapackageStub = {
   license: '',
   author: '',
   resources: [
-    conceptsResource,
+    conceptsResource
   ]
 };
 
@@ -49,7 +49,7 @@ describe('Import ddf concepts', () => {
       concept: 'company',
       name: 'Company',
       concept_type: 'entity_domain',
-      domain: '',
+      domain: ''
     };
 
     const context = {
@@ -71,7 +71,7 @@ describe('Import ddf concepts', () => {
       gid: 'company',
       languages: {},
       originId: null,
-      properties: {concept: 'company', name: 'Company', concept_type: 'entity_domain', domain: null},
+      properties: { concept: 'company', name: 'Company', concept_type: 'entity_domain', domain: null },
       sources: ['ddf--concepts.csv'],
       subsetOf: [],
       title: 'Company',
@@ -83,11 +83,11 @@ describe('Import ddf concepts', () => {
     const conceptMapperStub = this.spy(ddfMappers, 'mapDdfConceptsToWsModel');
 
     const conceptCreateStub = this.stub().callsArgWithAsync(1, null);
-    this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({create: conceptCreateStub});
+    this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({ create: conceptCreateStub });
 
-    const getAllConceptsStub = this.stub(ddfImportUtils, 'getAllConcepts', (externalContext, done) => {
-      externalContext.concepts = {company: {}, year: {}};
-      externalContext.timeConcepts = {year: {}};
+    const getAllConceptsStub = this.stub(ddfImportUtils, 'getAllConcepts').callsFake((externalContext, done) => {
+      externalContext.concepts = { company: {}, year: {} };
+      externalContext.timeConcepts = { year: {} };
       done(null, externalContext);
     });
 
@@ -103,8 +103,8 @@ describe('Import ddf concepts', () => {
           _id: 'datasetId'
         },
         datapackage: datapackageStub,
-        concepts: {company: {}, year: {}},
-        timeConcepts: {year: {}}
+        concepts: { company: {}, year: {} },
+        timeConcepts: { year: {} }
       });
 
       sinon.assert.calledOnce(readCsvFileAsStreamStub);
@@ -143,7 +143,7 @@ describe('Import ddf concepts', () => {
     this.stub(fileUtils, 'readCsvFileAsStream').returns(hi(Promise.reject(expectedError)));
 
     const conceptCreateStub = this.stub().callsArgWithAsync(1, null);
-    this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({create: conceptCreateStub});
+    this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({ create: conceptCreateStub });
 
     createConcepts(context, (error) => {
       expect(error).to.equal(expectedError);
@@ -158,7 +158,7 @@ describe('Import ddf concepts', () => {
       concept: 'company',
       name: 'Company',
       concept_type: 'entity_domain',
-      domain: '',
+      domain: ''
     };
 
     const context = {
@@ -177,7 +177,7 @@ describe('Import ddf concepts', () => {
 
     const expectedError = 'Cannot save concept to db';
     const conceptCreateStub = this.stub().callsArgWithAsync(1, expectedError);
-    this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({create: conceptCreateStub});
+    this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({ create: conceptCreateStub });
 
     createConcepts(context, (error) => {
       expect(error).to.equal(expectedError);
@@ -192,7 +192,7 @@ describe('Import ddf concepts', () => {
       concept: 'company',
       name: 'Company',
       concept_type: 'entity_domain',
-      domain: '',
+      domain: ''
     };
 
     const rawConcept2 = {
@@ -215,47 +215,47 @@ describe('Import ddf concepts', () => {
 
     const expectedConceptsToCreate = [
       {
-        'gid': 'company',
-        'title': 'Company',
-        'type': 'entity_domain',
-        'properties': {
-          'concept': 'company',
-          'name': 'Company',
-          'concept_type': 'entity_domain',
-          'domain': null
+        gid: 'company',
+        title: 'Company',
+        type: 'entity_domain',
+        properties: {
+          concept: 'company',
+          name: 'Company',
+          concept_type: 'entity_domain',
+          domain: null
         },
-        'domain': null,
-        'languages': {},
-        'subsetOf': [],
-        'from': 1111111,
-        'to': 9007199254740991,
-        'dataset': 'datasetId',
-        'originId': null,
-        'sources': [
+        domain: null,
+        languages: {},
+        subsetOf: [],
+        from: 1111111,
+        to: 9007199254740991,
+        dataset: 'datasetId',
+        originId: null,
+        sources: [
           'ddf--concepts.csv'
         ]
       },
       {
-        'gid': 'english_speaking',
-        'type': 'entity_set',
-        'properties': {
-          'concept': 'english_speaking',
-          'concept_type': 'entity_set',
-          'domain': 'company',
-          'drill_up': [
+        gid: 'english_speaking',
+        type: 'entity_set',
+        properties: {
+          concept: 'english_speaking',
+          concept_type: 'entity_set',
+          domain: 'company',
+          drill_up: [
             'company',
             'company'
           ]
         },
-        'domain': null,
-        'languages': {},
-        'subsetOf': [],
-        'from': 1111111,
-        'to': 9007199254740991,
-        'dataset': 'datasetId',
-        'originId': null,
-        'title': undefined,
-        'sources': [
+        domain: null,
+        languages: {},
+        subsetOf: [],
+        from: 1111111,
+        to: 9007199254740991,
+        dataset: 'datasetId',
+        originId: null,
+        title: undefined,
+        sources: [
           'ddf--concepts.csv'
         ]
       }
@@ -264,12 +264,12 @@ describe('Import ddf concepts', () => {
     this.stub(fileUtils, 'readCsvFileAsStream').returns(hi([rawConcept, rawConcept2]));
 
     const conceptCreateStub = this.stub().callsArgWithAsync(1, null);
-    this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({create: conceptCreateStub});
+    this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({ create: conceptCreateStub });
 
     const addSubsetOfByGidStub = this.stub().callsArgWithAsync(1, null);
     this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({ addSubsetOfByGid: addSubsetOfByGidStub });
 
-    this.stub(ddfImportUtils, 'getAllConcepts', (externalContext, done) => {
+    this.stub(ddfImportUtils, 'getAllConcepts').callsFake((externalContext, done) => {
       externalContext.concepts = _.keyBy(expectedConceptsToCreate, 'gid');
       externalContext.concepts.company._id = 'companyId';
       externalContext.timeConcepts = {};
@@ -280,7 +280,7 @@ describe('Import ddf concepts', () => {
       expect(error).to.not.exist;
 
       sinon.assert.calledOnce(addSubsetOfByGidStub);
-      sinon.assert.calledWith(addSubsetOfByGidStub, {gid: 'company', parentConceptId: 'companyId'});
+      sinon.assert.calledWith(addSubsetOfByGidStub, { gid: 'company', parentConceptId: 'companyId' });
 
       done();
     });
@@ -291,7 +291,7 @@ describe('Import ddf concepts', () => {
       concept: 'company',
       name: 'Company',
       concept_type: 'entity_domain',
-      domain: '',
+      domain: ''
     };
 
     const rawConcept2 = {
@@ -314,47 +314,47 @@ describe('Import ddf concepts', () => {
 
     const expectedConceptsToCreate = [
       {
-        'gid': 'company',
-        'title': 'Company',
-        'type': 'entity_domain',
-        'properties': {
-          'concept': 'company',
-          'name': 'Company',
-          'concept_type': 'entity_domain',
-          'domain': null
+        gid: 'company',
+        title: 'Company',
+        type: 'entity_domain',
+        properties: {
+          concept: 'company',
+          name: 'Company',
+          concept_type: 'entity_domain',
+          domain: null
         },
-        'domain': null,
-        'languages': {},
-        'subsetOf': [],
-        'from': 1111111,
-        'to': 9007199254740991,
-        'dataset': 'datasetId',
-        'originId': null,
-        'sources': [
+        domain: null,
+        languages: {},
+        subsetOf: [],
+        from: 1111111,
+        to: 9007199254740991,
+        dataset: 'datasetId',
+        originId: null,
+        sources: [
           'ddf--concepts.csv'
         ]
       },
       {
-        'gid': 'english_speaking',
-        'type': 'entity_set',
-        'properties': {
-          'concept': 'english_speaking',
-          'concept_type': 'entity_set',
-          'domain': 'company',
-          'drill_up': [
+        gid: 'english_speaking',
+        type: 'entity_set',
+        properties: {
+          concept: 'english_speaking',
+          concept_type: 'entity_set',
+          domain: 'company',
+          drill_up: [
             'company',
             'company'
           ]
         },
-        'domain': null,
-        'languages': {},
-        'subsetOf': [],
-        'from': 1111111,
-        'to': 9007199254740991,
-        'dataset': 'datasetId',
-        'originId': null,
-        'title': undefined,
-        'sources': [
+        domain: null,
+        languages: {},
+        subsetOf: [],
+        from: 1111111,
+        to: 9007199254740991,
+        dataset: 'datasetId',
+        originId: null,
+        title: undefined,
+        sources: [
           'ddf--concepts.csv'
         ]
       }
@@ -363,12 +363,12 @@ describe('Import ddf concepts', () => {
     this.stub(fileUtils, 'readCsvFileAsStream').returns(hi([rawConcept, rawConcept2]));
 
     const conceptCreateStub = this.stub().callsArgWithAsync(1, null);
-    this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({create: conceptCreateStub});
+    this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({ create: conceptCreateStub });
 
     const addSubsetOfByGidStub = this.stub().callsArgWithAsync(1, null);
     this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({ addSubsetOfByGid: addSubsetOfByGidStub });
 
-    this.stub(ddfImportUtils, 'getAllConcepts', (externalContext, done) => {
+    this.stub(ddfImportUtils, 'getAllConcepts').callsFake((externalContext, done) => {
       externalContext.concepts = _.keyBy(expectedConceptsToCreate, 'gid');
       externalContext.concepts.company._id = 'companyId';
       externalContext.timeConcepts = {};
@@ -383,19 +383,18 @@ describe('Import ddf concepts', () => {
     });
   }));
 
-
   it('should import concepts: domains are calculated', sandbox(function (done: Function) {
     const rawConcept = {
       concept: 'company',
       name: 'Company',
       concept_type: 'entity_domain',
-      domain: '',
+      domain: ''
     };
 
     const rawConcept2 = {
       concept: 'english_speaking',
       concept_type: 'entity_set',
-      domain: 'company',
+      domain: 'company'
     };
 
     const context = {
@@ -412,43 +411,43 @@ describe('Import ddf concepts', () => {
 
     const expectedConceptsToCreate = [
       {
-        'gid': 'company',
-        'title': 'Company',
-        'type': 'entity_domain',
-        'properties': {
-          'concept': 'company',
-          'name': 'Company',
-          'concept_type': 'entity_domain',
-          'domain': null
+        gid: 'company',
+        title: 'Company',
+        type: 'entity_domain',
+        properties: {
+          concept: 'company',
+          name: 'Company',
+          concept_type: 'entity_domain',
+          domain: null
         },
-        'domain': null,
-        'languages': {},
-        'subsetOf': [],
-        'from': 1111111,
-        'to': 9007199254740991,
-        'dataset': 'datasetId',
-        'originId': null,
-        'sources': [
+        domain: null,
+        languages: {},
+        subsetOf: [],
+        from: 1111111,
+        to: 9007199254740991,
+        dataset: 'datasetId',
+        originId: null,
+        sources: [
           'ddf--concepts.csv'
         ]
       },
       {
-        'gid': 'english_speaking',
-        'type': 'entity_set',
-        'properties': {
-          'concept': 'english_speaking',
-          'concept_type': 'entity_set',
-          'domain': 'company',
+        gid: 'english_speaking',
+        type: 'entity_set',
+        properties: {
+          concept: 'english_speaking',
+          concept_type: 'entity_set',
+          domain: 'company'
         },
-        'domain': null,
-        'languages': {},
-        'subsetOf': [],
-        'from': 1111111,
-        'to': 9007199254740991,
-        'dataset': 'datasetId',
-        'originId': null,
-        'title': undefined,
-        'sources': [
+        domain: null,
+        languages: {},
+        subsetOf: [],
+        from: 1111111,
+        to: 9007199254740991,
+        dataset: 'datasetId',
+        originId: null,
+        title: undefined,
+        sources: [
           'ddf--concepts.csv'
         ]
       }
@@ -457,12 +456,12 @@ describe('Import ddf concepts', () => {
     this.stub(fileUtils, 'readCsvFileAsStream').returns(hi([rawConcept, rawConcept2]));
 
     const conceptCreateStub = this.stub().callsArgWithAsync(1, null);
-    this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({create: conceptCreateStub});
+    this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({ create: conceptCreateStub });
 
     const setDomainByGidStub = this.stub().callsArgWithAsync(1, null);
     this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({ setDomainByGid: setDomainByGidStub });
 
-    this.stub(ddfImportUtils, 'getAllConcepts', (externalContext, done) => {
+    this.stub(ddfImportUtils, 'getAllConcepts').callsFake((externalContext, done) => {
       externalContext.concepts = _.keyBy(expectedConceptsToCreate, 'gid');
       externalContext.concepts.company._id = 'companyId';
       externalContext.timeConcepts = {};
@@ -473,7 +472,7 @@ describe('Import ddf concepts', () => {
       expect(error).to.not.exist;
 
       sinon.assert.calledOnce(setDomainByGidStub);
-      sinon.assert.calledWith(setDomainByGidStub, {gid: 'company', domainConceptId: 'companyId'});
+      sinon.assert.calledWith(setDomainByGidStub, { gid: 'company', domainConceptId: 'companyId' });
 
       done();
     });
@@ -484,13 +483,13 @@ describe('Import ddf concepts', () => {
       concept: 'company',
       name: 'Company',
       concept_type: 'entity_domain',
-      domain: '',
+      domain: ''
     };
 
     const rawConcept2 = {
       concept: 'english_speaking',
       concept_type: 'entity_set',
-      domain: 'bla',
+      domain: 'bla'
     };
 
     const context = {
@@ -507,43 +506,43 @@ describe('Import ddf concepts', () => {
 
     const expectedConceptsToCreate = [
       {
-        'gid': 'company',
-        'title': 'Company',
-        'type': 'entity_domain',
-        'properties': {
-          'concept': 'company',
-          'name': 'Company',
-          'concept_type': 'entity_domain',
-          'domain': null
+        gid: 'company',
+        title: 'Company',
+        type: 'entity_domain',
+        properties: {
+          concept: 'company',
+          name: 'Company',
+          concept_type: 'entity_domain',
+          domain: null
         },
-        'domain': null,
-        'languages': {},
-        'subsetOf': [],
-        'from': 1111111,
-        'to': 9007199254740991,
-        'dataset': 'datasetId',
-        'originId': null,
-        'sources': [
+        domain: null,
+        languages: {},
+        subsetOf: [],
+        from: 1111111,
+        to: 9007199254740991,
+        dataset: 'datasetId',
+        originId: null,
+        sources: [
           'ddf--concepts.csv'
         ]
       },
       {
-        'gid': 'english_speaking',
-        'type': 'entity_set',
-        'properties': {
-          'concept': 'english_speaking',
-          'concept_type': 'entity_set',
-          'domain': 'company',
+        gid: 'english_speaking',
+        type: 'entity_set',
+        properties: {
+          concept: 'english_speaking',
+          concept_type: 'entity_set',
+          domain: 'company'
         },
-        'domain': null,
-        'languages': {},
-        'subsetOf': [],
-        'from': 1111111,
-        'to': 9007199254740991,
-        'dataset': 'datasetId',
-        'originId': null,
-        'title': undefined,
-        'sources': [
+        domain: null,
+        languages: {},
+        subsetOf: [],
+        from: 1111111,
+        to: 9007199254740991,
+        dataset: 'datasetId',
+        originId: null,
+        title: undefined,
+        sources: [
           'ddf--concepts.csv'
         ]
       }
@@ -552,12 +551,12 @@ describe('Import ddf concepts', () => {
     this.stub(fileUtils, 'readCsvFileAsStream').returns(hi([rawConcept, rawConcept2]));
 
     const conceptCreateStub = this.stub().callsArgWithAsync(1, null);
-    this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({create: conceptCreateStub});
+    this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({ create: conceptCreateStub });
 
     const setDomainByGidStub = this.stub().callsArgWithAsync(1, null);
     this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({ setDomainByGid: setDomainByGidStub });
 
-    this.stub(ddfImportUtils, 'getAllConcepts', (externalContext, done) => {
+    this.stub(ddfImportUtils, 'getAllConcepts').callsFake((externalContext, done) => {
       externalContext.concepts = _.keyBy(expectedConceptsToCreate, 'gid');
       externalContext.concepts.company._id = 'companyId';
       externalContext.timeConcepts = {};

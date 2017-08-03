@@ -1,333 +1,264 @@
-import 'mocha';
-
-import * as _ from 'lodash';
 import { expect } from 'chai';
+import * as fs from 'fs';
+import * as _ from 'lodash';
+import 'mocha';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as sinonTest from 'sinon-test';
+import { reposService } from 'waffle-server-repo-service';
+import { config } from '../../ws.config/config';
+
+import { logger } from '../../ws.config/log';
+import * as wsReposService from '../../ws.services/repos.service';
 
 const assert = sinon.assert;
 const match = sinon.match;
 
-import * as fs from 'fs';
-import * as proxyquire from 'proxyquire';
-import * as git from 'simple-git';
-import * as shell from 'shelljs';
-
-import { logger } from '../../ws.config/log';
-import { config } from '../../ws.config/config';
-import * as reposService from '../../ws.services/repos.service';
-
 const sandbox = sinonTest.configureTest(sinon);
-const reposServicePath = '../../ws.services/repos.service';
 
 describe('repos service', () => {
-  it('should hard checkout repo if it was cloned before', (done: Function) => {
-    const ddfRepoName = 'ddf--gapminder--systema_globalis';
-    const ddfRepoCommitHash = 'bla1234';
-    const resetStub = sinon.stub();
-    resetStub.callsArgWithAsync(1, null);
-    const checkoutStub = sinon.stub();
-    checkoutStub.callsArgWithAsync(1, null);
-    const pullStub = sinon.stub();
-    pullStub
-      .onFirstCall().callsArgWithAsync(0, null)
-      .onSecondCall().callsArgWithAsync(2, null);
-    const cleanStub = sinon.stub();
-    cleanStub.callsArgWithAsync(1, null);
-    const cloneStub = sinon.stub();
-    cloneStub.callsArgWithAsync(3, null);
+  it('should hard checkout repo if it was cloned before', sandbox(function (done: Function): void {
+    const fetchStub = this.stub(reposService, 'fetch').callsArgOnWithAsync(1, reposService, null);
+    const resetStub = this.stub(reposService, 'reset').callsArgOnWithAsync(1, reposService, null);
+    const checkoutToBranchStub = this.stub(reposService, 'checkoutToBranch').callsArgOnWithAsync(1, reposService, null);
+    const pullStub = this.stub(reposService, 'pull').callsArgOnWithAsync(1, reposService, null);
+    const cleanStub = this.stub(reposService, 'clean').callsArgOnWithAsync(1, reposService, null);
+    const checkoutToCommitStub = this.stub(reposService, 'checkoutToCommit').callsArgOnWithAsync(1, reposService, null);
+    const silentCloneStub = this.stub(reposService, 'silentClone').callsArgOnWithAsync(1, reposService, null);
+    const cloneStub = this.stub(reposService, 'clone').callsArgOnWithAsync(1, reposService, null);
 
-    const infoStub = sinon.stub(logger, 'info');
-    const errorStub = sinon.stub(logger, 'error');
-    const debugStub = sinon.stub(logger, 'debug');
-
-    const stubbedReposService = proxyquire(reposServicePath, {
-      '../ws.config/log': {
-        info: infoStub,
-        debug: debugStub,
-        error: errorStub
-      },
-      'simple-git': function () {
-        return {
-          pull: pullStub,
-          reset: resetStub,
-          clean: cleanStub,
-          checkout: checkoutStub,
-          clone: cloneStub
-        };
-      },
-      'fs': {
-        exists: (pathTeRepo, done) => {
-          const wasClonedBefore = true;
-          done(wasClonedBefore);
-        }
-      }
-    });
-
-    const accountName = 'open-numbers';
-    const githubUrl = `git@github.com:${accountName}/${ddfRepoName}.git`;
-    const expectedPathToRepo = path.resolve(config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName, 'master');
-
-    return stubbedReposService.cloneRepo(githubUrl, ddfRepoCommitHash, (error, cloneResult) => {
-      expect(cloneResult.pathToRepo).to.equal(expectedPathToRepo);
-
-      assert.calledOnce(resetStub);
-      expect(resetStub.args[0][0]).to.be.deep.equal(['--hard', `origin/master`]);
-
-      assert.calledThrice(checkoutStub);
-      expect(checkoutStub.args[0][0]).to.be.deep.equal([`master`]);
-      expect(checkoutStub.args[1][0]).to.be.deep.equal([`master`]);
-      expect(checkoutStub.args[2][0]).to.be.deep.equal([ddfRepoCommitHash]);
-
-      assert.calledTwice(pullStub);
-      expect(pullStub.args[0][0]).to.not.instanceof(Array);
-      expect(pullStub.args[1][0]).to.be.equal('origin');
-      expect(pullStub.args[1][1]).to.be.equal('master');
-
-      assert.calledOnce(cleanStub);
-      expect(cleanStub.args[0][0]).to.be.equal('f');
-
-      assert.notCalled(cloneStub);
-
-      assert.calledThrice(infoStub);
-      assert.notCalled(debugStub);
-      assert.notCalled(errorStub);
-
-      infoStub.restore();
-      errorStub.restore();
-      debugStub.restore();
-
-      return done();
-    });
-  });
-
-  it('should respond with an error if cannot detect repo name for cloning', (done: Function) => {
-    const infoStub = sinon.stub(logger, 'info');
-    const errorStub = sinon.stub(logger, 'error');
-    const debugStub = sinon.stub(logger, 'debug');
-
-    const stubbedReposService = proxyquire(reposServicePath, {
-      '../ws.config/log': {
-        info: infoStub,
-        debug: debugStub,
-        error: errorStub
-      },
-      'fs': {
-        exists: (pathTeRepo, done) => {
-          const wasClonedBefore = false;
-          done(wasClonedBefore);
-        }
-      }
-    });
-
-    return stubbedReposService.cloneRepo('fake repo', 'any commit', error => {
-      expect(error).to.equal('Incorrect github url was given (repo url: fake repo)');
-
-      assert.notCalled(infoStub);
-      assert.calledThrice(debugStub);
-      assert.calledWithExactly(debugStub, match.string, match.string.or(match.number));
-      assert.calledOnce(errorStub);
-      assert.calledWithExactly(errorStub, match.string);
-
-      infoStub.restore();
-      errorStub.restore();
-      debugStub.restore();
-
-      return done();
-    });
-  });
-
-  it('should respond with an error if it was impossible to create a path for repo to clone ', (done: Function) => {
-    const expectedError = 'mkdirp was not able to create a folder <---- test error';
-    const ddfRepoName = 'ddf--gapminder--systema_globalis';
-    const expectedGithubUrl = `git@github.com:open-numbers/${ddfRepoName}.git`;
-    const accountName = 'open-numbers';
-    const expectedPathToRepo = path.resolve(config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName, 'master');
-
-    const infoStub = sinon.stub(logger, 'info');
-    const errorStub = sinon.stub(logger, 'error');
-    const debugStub = sinon.stub(logger, 'debug');
-
-    const stubbedReposService = proxyquire(reposServicePath, {
-      'fs': {
-        exists: (pathTeRepo, done) => {
-          const wasClonedBefore = false;
-          done(wasClonedBefore);
-        }
-      },
-      mkdirp: (pathTeRepo, done) => {
-        expect(pathTeRepo).to.equal(expectedPathToRepo);
-        done(expectedError);
-      },
-      '../ws.config/log': {
-        info: infoStub,
-        debug: debugStub,
-        error: errorStub
-      }
-    });
-
-    return stubbedReposService.cloneRepo(expectedGithubUrl, 'any commit', error => {
-      expect(error).to.equal(`${expectedError} (repo url: ${expectedGithubUrl})`);
-
-      assert.notCalled(infoStub);
-      assert.notCalled(debugStub);
-      assert.calledOnce(errorStub);
-      assert.calledWithExactly(errorStub, expectedError);
-
-      infoStub.restore();
-      errorStub.restore();
-      debugStub.restore();
-
-      return done();
-    });
-  });
-
-  it('should respond with an error if something wrong occurred during "git clone" invocation', (done: Function) => {
-    const ddfRepoName = 'ddf--gapminder--systema_globalis';
-    const expectedGithubUrl = `git@github.com:open-numbers/${ddfRepoName}.git`;
-    const accountName = 'open-numbers';
-    const expectedPathToRepo = path.resolve(config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName, 'master');
-
-    const infoStub = sinon.stub(logger, 'info');
-    const errorStub = sinon.stub(logger, 'error');
-    const debugStub = sinon.stub(logger, 'debug');
-
-    const stubbedReposService = proxyquire(reposServicePath, {
-      'simple-git': function () {
-        return {
-          clone: function (actualGithubUrl, pathToRepo, options, done) {
-            expect(actualGithubUrl).to.equal(expectedGithubUrl);
-            expect(pathToRepo).to.equal(expectedPathToRepo);
-            expect(options).to.deep.equal(['-b', 'master']);
-            done('some error');
-            return this;
-          },
-          silent: function () {
-            return this;
-          }
-        };
-      },
-      'fs': {
-        exists: (pathTeRepo, done) => {
-          const wasClonedBefore = false;
-          done(wasClonedBefore);
-        }
-      },
-      '../ws.config/log': {
-        info: infoStub,
-        debug: debugStub,
-        error: errorStub
-      }
-    });
-
-    return stubbedReposService.cloneRepo(expectedGithubUrl, null, error => {
-      expect(error).to.equal(`some error (repo url: ${expectedGithubUrl})`);
-
-      assert.calledOnce(infoStub);
-      assert.calledWithExactly(infoStub, match.string);
-      assert.calledThrice(debugStub);
-      assert.calledWithExactly(debugStub, match.string, match.string.or(match.number));
-      assert.calledOnce(errorStub);
-      assert.calledWithExactly(errorStub, match('some error'));
-
-      infoStub.restore();
-      errorStub.restore();
-      debugStub.restore();
-
-      return done();
-    });
-  });
-
-  it('should clone repo successfully (when no commit given to checkout - HEAD is used instead)', sandbox(function (done: Function) {
-    const accountName = 'open-numbers';
-    const expectedDdfRepoName = 'ddf--gapminder--systema_globalis';
-    const expectedGithubUrl = `git@github.com:${accountName}/${expectedDdfRepoName}.git`;
-    const expectedPathToRepo = path.resolve(config.PATH_TO_DDF_REPOSITORIES, accountName, expectedDdfRepoName, 'master');
-
-    const resetStub = sinon.stub();
-    resetStub.callsArgWithAsync(1, null);
-    const checkoutStub = sinon.stub();
-    checkoutStub.callsArgWithAsync(1, null);
-    const pullStub = sinon.stub();
-    pullStub
-      .onFirstCall().callsArgWithAsync(0, null)
-      .onSecondCall().callsArgWithAsync(2, null);
-    const cleanStub = sinon.stub();
-    cleanStub.callsArgWithAsync(1, null);
-    const cloneStub = sinon.stub();
-    cloneStub.callsArgWithAsync(3, null);
+    const exists = this.stub(fs, 'exists').callsArgWithAsync(1, true);
 
     const infoStub = this.stub(logger, 'info');
     const errorStub = this.stub(logger, 'error');
     const debugStub = this.stub(logger, 'debug');
 
-    const stubbedReposService = proxyquire(reposServicePath, {
-      'simple-git': function () {
-        return {
-          pull: pullStub,
-          reset: resetStub,
-          clean: cleanStub,
-          checkout: checkoutStub,
-          clone: cloneStub
-        };
-      },
-      'fs': {
-        exists: (pathTeRepo, done) => {
-          const wasClonedBefore = false;
-          done(wasClonedBefore);
-        }
-      },
-      '../ws.config/log': {
-        info: infoStub,
-        debug: debugStub,
-        error: errorStub
-      }
-    });
+    const ddfRepoName = 'ddf--gapminder--systema_globalis';
+    const commit = 'bla1234';
+    const accountName = 'open-numbers';
+    const githubUrl = `git@github.com:${accountName}/${ddfRepoName}.git`;
+    const expectedPathToRepo = path.resolve(config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName, 'master');
 
-    return stubbedReposService.cloneRepo(expectedGithubUrl, null, (error, cloneResult) => {
+    return wsReposService.cloneRepo(githubUrl, commit, (error: string, cloneResult: any) => {
       expect(cloneResult.pathToRepo).to.equal(expectedPathToRepo);
 
-      assert.calledOnce(cloneStub);
-      expect(cloneStub.args[0][0]).to.be.equal(expectedGithubUrl);
-      expect(cloneStub.args[0][1]).to.be.equal(expectedPathToRepo);
-      expect(cloneStub.args[0][2]).to.be.deep.equal(['-b', 'master']);
-
+      assert.calledOnce(fetchStub);
       assert.calledOnce(resetStub);
-      expect(resetStub.args[0][0]).to.be.deep.equal(['--hard', `origin/master`]);
-
-      assert.calledThrice(checkoutStub);
-      expect(checkoutStub.args[0][0]).to.be.deep.equal([`master`]);
-      expect(checkoutStub.args[1][0]).to.be.deep.equal([`master`]);
-      expect(checkoutStub.args[2][0]).to.be.deep.equal(['HEAD']);
-
-      assert.calledTwice(pullStub);
-      expect(pullStub.args[0][0]).to.not.instanceof(Array);
-      expect(pullStub.args[1][0]).to.be.equal('origin');
-      expect(pullStub.args[1][1]).to.be.equal('master');
-
+      assert.calledOnce(checkoutToBranchStub);
+      assert.calledOnce(checkoutToCommitStub);
+      assert.calledOnce(pullStub);
       assert.calledOnce(cleanStub);
-      expect(cleanStub.args[0][0]).to.be.equal('f');
+      assert.notCalled(cloneStub);
+      assert.notCalled(silentCloneStub);
 
-      assert.callCount(infoStub, 4);
-      assert.calledWithExactly(infoStub, `** Start cloning dataset: ${expectedGithubUrl}`);
-      assert.calledWithExactly(infoStub, `** Dataset has been cloned: ${expectedGithubUrl}`);
-      assert.calledThrice(debugStub);
-      assert.calledWithExactly(debugStub, match.string, match.string.or(match.number));
+      assert.calledThrice(infoStub);
+      assert.notCalled(debugStub);
       assert.notCalled(errorStub);
 
       return done();
     });
   }));
 
-  it('should fail cloning if github url to ddf repo was not given', (done: Function) => {
+  it('should respond with an error if cannot detect repo name for cloning', sandbox(function (done: Function): void {
+    const fetchStub = this.stub(reposService, 'fetch').callsArgOnWithAsync(1, reposService, null);
+    const resetStub = this.stub(reposService, 'reset').callsArgOnWithAsync(1, reposService, null);
+    const checkoutToBranchStub = this.stub(reposService, 'checkoutToBranch').callsArgOnWithAsync(1, reposService, null);
+    const pullStub = this.stub(reposService, 'pull').callsArgOnWithAsync(1, reposService, null);
+    const cleanStub = this.stub(reposService, 'clean').callsArgOnWithAsync(1, reposService, null);
+    const checkoutToCommitStub = this.stub(reposService, 'checkoutToCommit').callsArgOnWithAsync(1, reposService, null);
+    const silentCloneStub = this.stub(reposService, 'silentClone').callsArgOnWithAsync(1, reposService, null);
+    const cloneStub = this.stub(reposService, 'clone').callsArgOnWithAsync(1, reposService, null);
+    const makeDirForceStub = this.stub(reposService, 'makeDirForce').callsArgWithAsync(1, null);
+    const removeDirForceStub = this.stub(reposService, 'removeDirForce').callsArgWithAsync(1, null);
+
+    const exists = this.stub(fs, 'exists').callsArgWithAsync(1, false);
+
+    const infoStub = this.stub(logger, 'info');
+    const errorStub = this.stub(logger, 'error');
+    const debugStub = this.stub(logger, 'debug');
+
+    return wsReposService.cloneRepo('fake repo', 'any commit', (error) => {
+      expect(error).to.equal('Incorrect github url was given (repo url: fake repo)');
+
+      assert.calledTwice(exists);
+      assert.calledOnce(makeDirForceStub);
+      assert.calledOnce(removeDirForceStub);
+
+      assert.notCalled(fetchStub);
+      assert.notCalled(resetStub);
+      assert.notCalled(checkoutToBranchStub);
+      assert.notCalled(checkoutToCommitStub);
+      assert.notCalled(pullStub);
+      assert.notCalled(cleanStub);
+      assert.notCalled(cloneStub);
+      assert.notCalled(silentCloneStub);
+
+      assert.notCalled(infoStub);
+      assert.notCalled(debugStub);
+      assert.calledOnce(errorStub);
+      assert.calledWithExactly(errorStub, match.string);
+
+      return done();
+    });
+  }));
+
+  it('should respond with an error if it was impossible to create a path for repo to clone ', sandbox(function (done: Function): void {
+    const expectedError = 'mkdirp was not able to create a folder <---- test error';
+    const ddfRepoName = 'ddf--gapminder--systema_globalis';
+    const expectedGithubUrl = `git@github.com:open-numbers/${ddfRepoName}.git`;
+    const accountName = 'open-numbers';
+    const expectedPathToRepo = path.resolve(config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName, 'master');
+
+    const fetchStub = this.stub(reposService, 'fetch').callsArgOnWithAsync(1, reposService, null);
+    const resetStub = this.stub(reposService, 'reset').callsArgOnWithAsync(1, reposService, null);
+    const checkoutToBranchStub = this.stub(reposService, 'checkoutToBranch').callsArgOnWithAsync(1, reposService, null);
+    const pullStub = this.stub(reposService, 'pull').callsArgOnWithAsync(1, reposService, null);
+    const cleanStub = this.stub(reposService, 'clean').callsArgOnWithAsync(1, reposService, null);
+    const checkoutToCommitStub = this.stub(reposService, 'checkoutToCommit').callsArgOnWithAsync(1, reposService, null);
+    const silentCloneStub = this.stub(reposService, 'silentClone').callsArgOnWithAsync(1, reposService, null);
+    const cloneStub = this.stub(reposService, 'clone').callsArgOnWithAsync(1, reposService, null);
+    const makeDirForceStub = this.stub(reposService, 'makeDirForce').callsArgWithAsync(1, expectedError);
+    const removeDirForceStub = this.stub(reposService, 'removeDirForce').callsArgWithAsync(1, null);
+
+    const exists = this.stub(fs, 'exists').callsArgWithAsync(1, false);
+
+    const infoStub = this.stub(logger, 'info');
+    const errorStub = this.stub(logger, 'error');
+    const debugStub = this.stub(logger, 'debug');
+
+    return wsReposService.cloneRepo(expectedGithubUrl, 'any commit', (error: string) => {
+      expect(error).to.equal(`${expectedError} (repo url: ${expectedGithubUrl})`);
+
+      assert.calledOnce(exists);
+      assert.calledOnce(makeDirForceStub);
+      assert.notCalled(removeDirForceStub);
+
+      assert.notCalled(fetchStub);
+      assert.notCalled(resetStub);
+      assert.notCalled(checkoutToBranchStub);
+      assert.notCalled(checkoutToCommitStub);
+      assert.notCalled(pullStub);
+      assert.notCalled(cleanStub);
+      assert.notCalled(cloneStub);
+      assert.notCalled(silentCloneStub);
+
+      assert.notCalled(infoStub);
+      assert.notCalled(debugStub);
+      assert.calledOnce(errorStub);
+      assert.calledWithExactly(errorStub, expectedError);
+
+      return done();
+    });
+  }));
+
+  it('should respond with an error if something wrong occurred during "git clone" invocation', sandbox(function (done: Function): void {
+    const expectedError = 'some error';
+    const ddfRepoName = 'ddf--gapminder--systema_globalis';
+    const expectedGithubUrl = `git@github.com:open-numbers/${ddfRepoName}.git`;
+    const accountName = 'open-numbers';
+    const expectedPathToRepo = path.resolve(config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName, 'master');
+
+    const fetchStub = this.stub(reposService, 'fetch').callsArgOnWithAsync(1, reposService, null);
+    const resetStub = this.stub(reposService, 'reset').callsArgOnWithAsync(1, reposService, null);
+    const checkoutToBranchStub = this.stub(reposService, 'checkoutToBranch').callsArgOnWithAsync(1, reposService, null);
+    const pullStub = this.stub(reposService, 'pull').callsArgOnWithAsync(1, reposService, null);
+    const cleanStub = this.stub(reposService, 'clean').callsArgOnWithAsync(1, reposService, null);
+    const checkoutToCommitStub = this.stub(reposService, 'checkoutToCommit').callsArgOnWithAsync(1, reposService, null);
+    const silentCloneStub = this.stub(reposService, 'silentClone').callsArgOnWithAsync(1, reposService, expectedError);
+    const cloneStub = this.stub(reposService, 'clone').callsArgOnWithAsync(1, reposService, null);
+    const makeDirForceStub = this.stub(reposService, 'makeDirForce').callsArgWithAsync(1, null);
+    const removeDirForceStub = this.stub(reposService, 'removeDirForce').callsArgWithAsync(1, null);
+
+    const exists = this.stub(fs, 'exists').callsArgWithAsync(1, false);
+
+    const infoStub = this.stub(logger, 'info');
+    const errorStub = this.stub(logger, 'error');
+    const debugStub = this.stub(logger, 'debug');
+
+    return wsReposService.cloneRepo(expectedGithubUrl, null, (error) => {
+      expect(error).to.equal(`${expectedError} (repo url: ${expectedGithubUrl})`);
+
+      assert.calledTwice(exists);
+      assert.calledOnce(makeDirForceStub);
+      assert.calledOnce(removeDirForceStub);
+
+      assert.notCalled(fetchStub);
+      assert.notCalled(resetStub);
+      assert.notCalled(checkoutToBranchStub);
+      assert.notCalled(checkoutToCommitStub);
+      assert.notCalled(pullStub);
+      assert.notCalled(cleanStub);
+      assert.notCalled(cloneStub);
+      assert.calledOnce(silentCloneStub);
+
+      assert.calledOnce(infoStub);
+      assert.calledWithExactly(infoStub, match.string);
+      assert.notCalled(debugStub);
+      assert.calledOnce(errorStub);
+      assert.calledWithExactly(errorStub, match('some error'));
+
+      return done();
+    });
+  }));
+
+  it('should clone repo successfully (when no commit given to checkout - HEAD is used instead)', sandbox(function (done: Function): void {
+    const accountName = 'open-numbers';
+    const expectedDdfRepoName = 'ddf--gapminder--systema_globalis';
+    const expectedGithubUrl = `git@github.com:${accountName}/${expectedDdfRepoName}.git`;
+    const expectedPathToRepo = path.resolve(config.PATH_TO_DDF_REPOSITORIES, accountName, expectedDdfRepoName, 'master');
+
+    const fetchStub = this.stub(reposService, 'fetch').callsArgOnWithAsync(1, reposService, null);
+    const resetStub = this.stub(reposService, 'reset').callsArgOnWithAsync(1, reposService, null);
+    const checkoutToBranchStub = this.stub(reposService, 'checkoutToBranch').callsArgOnWithAsync(1, reposService, null);
+    const pullStub = this.stub(reposService, 'pull').callsArgOnWithAsync(1, reposService, null);
+    const cleanStub = this.stub(reposService, 'clean').callsArgOnWithAsync(1, reposService, null);
+    const checkoutToCommitStub = this.stub(reposService, 'checkoutToCommit').callsArgOnWithAsync(1, reposService, null);
+    const silentCloneStub = this.stub(reposService, 'silentClone').callsArgOnWithAsync(1, reposService, null);
+    const cloneStub = this.stub(reposService, 'clone').callsArgOnWithAsync(1, reposService, null);
+    const makeDirForceStub = this.stub(reposService, 'makeDirForce').callsArgWithAsync(1, null);
+    const removeDirForceStub = this.stub(reposService, 'removeDirForce').callsArgWithAsync(1, null);
+
+    const exists = this.stub(fs, 'exists').callsArgWithAsync(1, true);
+
+    const infoStub = this.stub(logger, 'info');
+    const errorStub = this.stub(logger, 'error');
+    const debugStub = this.stub(logger, 'debug');
+
+    return wsReposService.cloneRepo(expectedGithubUrl, null, (error: string, cloneResult: any) => {
+      expect(cloneResult.pathToRepo).to.equal(expectedPathToRepo);
+
+      assert.calledTwice(exists);
+      assert.notCalled(makeDirForceStub);
+      assert.notCalled(removeDirForceStub);
+
+      assert.calledOnce(fetchStub);
+      assert.calledOnce(resetStub);
+      assert.calledOnce(checkoutToBranchStub);
+      assert.calledOnce(checkoutToCommitStub);
+      assert.calledOnce(pullStub);
+      assert.calledOnce(cleanStub);
+      assert.notCalled(cloneStub);
+      assert.notCalled(silentCloneStub);
+
+      assert.callCount(infoStub, 3);
+      assert.calledWithExactly(infoStub, `** Start cloning dataset: ${expectedGithubUrl}`);
+      assert.calledWithExactly(infoStub, `** Start checkout dataset commit: ${expectedGithubUrl}`);
+      assert.calledWithExactly(infoStub, `** Dataset commit has been got: ${expectedGithubUrl}`);
+      assert.notCalled(debugStub);
+      assert.notCalled(errorStub);
+
+      return done();
+    });
+  }));
+
+  it('should fail cloning if github url to ddf repo was not given', sandbox(function (done: Function): void {
     const noGithubUrl = null;
 
-    reposService.cloneRepo(noGithubUrl, 'any commit', error => {
+    wsReposService.cloneRepo(noGithubUrl, 'any commit', (error: string) => {
       expect(error).to.equal('Github url was not given');
-      done();
+      return done();
     });
-  });
+  }));
 
   it('should fail removing files in destination dir, when it\'s not git repo', sandbox(function (done: Function): void {
     const accountName = 'open-numbers';
@@ -335,44 +266,44 @@ describe('repos service', () => {
     const expectedGithubUrl = `git@github.com:${accountName}/${expectedDdfRepoName}.git`;
     const expectedPathToRepo = path.resolve(config.PATH_TO_DDF_REPOSITORIES, accountName, expectedDdfRepoName, 'master');
 
-    const expectedCode = 1;
-    const expectedStdout = 'Stdout';
-    const expectedStderr = 'Stderr';
+    const expectedError = 'Boo!';
+
+    const fetchStub = this.stub(reposService, 'fetch').callsArgOnWithAsync(1, reposService, null);
+    const resetStub = this.stub(reposService, 'reset').callsArgOnWithAsync(1, reposService, null);
+    const checkoutToBranchStub = this.stub(reposService, 'checkoutToBranch').callsArgOnWithAsync(1, reposService, null);
+    const pullStub = this.stub(reposService, 'pull').callsArgOnWithAsync(1, reposService, null);
+    const cleanStub = this.stub(reposService, 'clean').callsArgOnWithAsync(1, reposService, null);
+    const checkoutToCommitStub = this.stub(reposService, 'checkoutToCommit').callsArgOnWithAsync(1, reposService, null);
+    const silentCloneStub = this.stub(reposService, 'silentClone').callsArgOnWithAsync(1, reposService, expectedError);
+    const cloneStub = this.stub(reposService, 'clone').callsArgOnWithAsync(1, reposService, null);
+    const makeDirForceStub = this.stub(reposService, 'makeDirForce').callsArgWithAsync(1, null);
+    const removeDirForceStub = this.stub(reposService, 'removeDirForce').callsArgWithAsync(1, null);
 
     const existsStub = this.stub(fs, 'exists').callsArgWithAsync(1, null, false);
-    const execStub = this.stub(shell, 'exec').callsArgWithAsync(1, expectedCode, expectedStdout, expectedStderr);
 
     const infoStub = this.stub(logger, 'info');
     const errorStub = this.stub(logger, 'error');
     const debugStub = this.stub(logger, 'debug');
 
-    const stubbedReposService = proxyquire(reposServicePath, {
-      'shell': {
-        exec: execStub
-      },
-      'fs': {
-        exists: existsStub
-      },
-      '../ws.config/log': {
-        info: infoStub,
-        debug: debugStub,
-        error: errorStub
-      }
-    });
-
-    return stubbedReposService.cloneRepo(expectedGithubUrl, null, (error: string) => {
-      expect(error).to.equal(`Error: cleaning repo directory '${expectedPathToRepo}' was failed (repo url: ${expectedGithubUrl})`);
+    return wsReposService.cloneRepo(expectedGithubUrl, null, (error: string) => {
+      expect(error).to.equal(`${expectedError} (repo url: ${expectedGithubUrl})`);
 
       assert.calledTwice(existsStub);
       assert.calledWith(existsStub, match.string);
-      assert.calledOnce(execStub);
-      assert.calledWithExactly(execStub, `rm -rf ${expectedPathToRepo}`, match.func);
+      assert.calledOnce(makeDirForceStub);
+      assert.calledOnce(removeDirForceStub);
 
-      assert.notCalled(infoStub);
-      assert.calledThrice(debugStub);
-      assert.calledWithExactly(debugStub, 'Exit code:', expectedCode);
-      assert.calledWithExactly(debugStub, 'Program output:', expectedStdout);
-      assert.calledWithExactly(debugStub, 'Program stderr:', expectedStderr);
+      assert.notCalled(fetchStub);
+      assert.notCalled(resetStub);
+      assert.notCalled(checkoutToBranchStub);
+      assert.notCalled(checkoutToCommitStub);
+      assert.notCalled(pullStub);
+      assert.notCalled(cleanStub);
+      assert.notCalled(cloneStub);
+      assert.calledOnce(silentCloneStub);
+
+      assert.calledOnce(infoStub);
+      assert.notCalled(debugStub);
       assert.calledOnce(errorStub);
       assert.calledWithExactly(errorStub, match.string);
 
@@ -383,7 +314,7 @@ describe('repos service', () => {
   it('should properly extract repo name from github url', () => {
     const expectedDdfRepoName = 'open-numbers/ddf--gapminder--systema_globalis';
 
-    const actualRepoName = reposService.getRepoNameForDataset(`git@github.com:open-numbers/ddf--gapminder--systema_globalis.git`);
+    const actualRepoName = wsReposService.getRepoNameForDataset(`git@github.com:open-numbers/ddf--gapminder--systema_globalis.git`);
 
     expect(actualRepoName).to.equal(expectedDdfRepoName);
   });
@@ -391,7 +322,7 @@ describe('repos service', () => {
   it('should properly extract repo name from github url with branch included', () => {
     const expectedDdfRepoName = 'open-numbers/ddf--gapminder--systema_globalis#development';
 
-    const actualRepoName = reposService.getRepoNameForDataset(`git@github.com:open-numbers/ddf--gapminder--systema_globalis.git#development`);
+    const actualRepoName = wsReposService.getRepoNameForDataset(`git@github.com:open-numbers/ddf--gapminder--systema_globalis.git#development`);
 
     expect(actualRepoName).to.equal(expectedDdfRepoName);
   });
@@ -399,7 +330,7 @@ describe('repos service', () => {
   it('should build repo name without branch name included if this branch is master', () => {
     const expectedDdfRepoName = 'open-numbers/ddf--gapminder--systema_globalis';
 
-    const actualRepoName = reposService.getRepoNameForDataset(`git@github.com:open-numbers/ddf--gapminder--systema_globalis.git#master`);
+    const actualRepoName = wsReposService.getRepoNameForDataset(`git@github.com:open-numbers/ddf--gapminder--systema_globalis.git#master`);
 
     expect(actualRepoName).to.equal(expectedDdfRepoName);
   });
@@ -407,25 +338,25 @@ describe('repos service', () => {
   it('should build repo name without branch name included if only "#" branch separator is given', () => {
     const expectedDdfRepoName = 'open-numbers/ddf--gapminder--systema_globalis';
 
-    const actualRepoName = reposService.getRepoNameForDataset(`git@github.com:open-numbers/ddf--gapminder--systema_globalis.git#master`);
+    const actualRepoName = wsReposService.getRepoNameForDataset(`git@github.com:open-numbers/ddf--gapminder--systema_globalis.git#master`);
 
     expect(actualRepoName).to.equal(expectedDdfRepoName);
   });
 
   it('should return null when no account can be inferred from given url', () => {
-    const actualRepoName = reposService.getRepoNameForDataset(`git@github.com:/ddf--gapminder--systema_globalis.git`);
+    const actualRepoName = wsReposService.getRepoNameForDataset(`git@github.com:/ddf--gapminder--systema_globalis.git`);
     expect(actualRepoName).to.be.null;
   });
 
   it('should return null when no repo name can be inferred from given url', () => {
-    const actualRepoName = reposService.getRepoNameForDataset(`git@github.com:open-numbers/`);
+    const actualRepoName = wsReposService.getRepoNameForDataset(`git@github.com:open-numbers/`);
     expect(actualRepoName).to.be.null;
   });
 
   it('should throw away part .git from repo name', () => {
     const expectedDdfRepoName = 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git';
 
-    const actualRepoName = reposService.getRepoNameForDataset(expectedDdfRepoName);
+    const actualRepoName = wsReposService.getRepoNameForDataset(expectedDdfRepoName);
 
     expect(_.endsWith(actualRepoName, '.git')).to.equal(false);
   });
@@ -435,246 +366,310 @@ describe('repos service', () => {
     const accountName = 'open-numbers';
 
     const expectedPathToRepo = path.resolve(config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName, 'master');
-    const actualPathToRepo = reposService.getPathToRepo(`git@github.com:${accountName}/${ddfRepoName}`);
+    const actualPathToRepo = wsReposService.getPathToRepo(`git@github.com:${accountName}/${ddfRepoName}`);
 
     expect(actualPathToRepo).to.equal(expectedPathToRepo);
   });
 
-  it('should return falsy value as is when it was passed as a github url', () => {
+  it('should return falsy value as is when it was passed as a github url', sandbox(() => {
     const falsyInputs = [
       '',
       null,
       undefined
     ];
 
-    falsyInputs.forEach(falsyInput => {
-      expect(reposService.getPathToRepo(falsyInput)).to.equal(falsyInput);
+    falsyInputs.forEach((falsyInput: any) => {
+      expect(wsReposService.getPathToRepo(falsyInput)).to.equal(falsyInput);
     });
-  });
+  }));
 
-  it('should handle pulling error during checkout to given commit', sandbox(function (done: Function): void {
+  it('should handle pulling error during checkout when commit wasn\'t given', sandbox(function (done: Function): void {
+    const ddfRepoName = 'sg';
+    const githubUrl = `/ddf--gapminder--systema_globalis/master/.git`;
+    const accountName = 'open-numbers';
+    const expectedPathToRepo = path.resolve(process.cwd(), config.PATH_TO_DDF_REPOSITORIES, accountName, ddfRepoName, 'master');
+
     const expectedError = 'Boo!';
+
+    const fetchStub = this.stub(reposService, 'fetch').callsArgOnWithAsync(1, reposService, null);
+    const resetStub = this.stub(reposService, 'reset').callsArgOnWithAsync(1, reposService, null);
+    const checkoutToBranchStub = this.stub(reposService, 'checkoutToBranch').callsArgOnWithAsync(1, reposService, null);
+    const pullStub = this.stub(reposService, 'pull').callsArgOnWithAsync(1, reposService, expectedError);
+    const cleanStub = this.stub(reposService, 'clean').callsArgOnWithAsync(1, reposService, null);
+    const checkoutToCommitStub = this.stub(reposService, 'checkoutToCommit').callsArgOnWithAsync(1, reposService, null);
+    const silentCloneStub = this.stub(reposService, 'silentClone').callsArgOnWithAsync(1, reposService, null);
+    const cloneStub = this.stub(reposService, 'clone').callsArgOnWithAsync(1, reposService, null);
+    const makeDirForceStub = this.stub(reposService, 'makeDirForce').callsArgWithAsync(1, null);
+    const removeDirForceStub = this.stub(reposService, 'removeDirForce').callsArgWithAsync(1, null);
+
     const existsStub = this.stub(fs, 'exists').callsArgWithAsync(1, true);
 
-    const resetStub = sinon.stub();
-    resetStub.callsArgWithAsync(1, null);
-    const checkoutStub = sinon.stub();
-    checkoutStub.callsArgWithAsync(1, null);
-    const pullStub = sinon.stub();
-    pullStub
-      .onFirstCall().callsArgWithAsync(0, expectedError)
-      .onSecondCall().callsArgWithAsync(2, null);
-    const cleanStub = sinon.stub();
-    cleanStub.callsArgWithAsync(1, null);
-    const cloneStub = sinon.stub();
-    cloneStub.callsArgWithAsync(3, null);
+    const infoStub = this.stub(logger, 'info');
+    const errorStub = this.stub(logger, 'error');
+    const debugStub = this.stub(logger, 'debug');
 
-    const stubbedReposService = proxyquire(reposServicePath, {
-      'simple-git': () => {
-        return {
-          pull: pullStub,
-          reset: resetStub,
-          clean: cleanStub,
-          checkout: checkoutStub,
-          clone: cloneStub
-        };
-      }
-    });
-
-    const githubUrl = `git@github.com:open-numbers/sg.git`;
-    return stubbedReposService.cloneRepo(githubUrl, null, (error: string) => {
+    return wsReposService.cloneRepo(githubUrl, undefined, (error: string) => {
       expect(error).to.equal(`${expectedError} on branch master and commit HEAD (repo url: ${githubUrl})`);
 
-      sinon.assert.calledTwice(existsStub);
+      assert.calledTwice(existsStub);
+      assert.calledWith(existsStub, match.string);
+      assert.notCalled(makeDirForceStub);
+      assert.notCalled(removeDirForceStub);
 
-      sinon.assert.notCalled(cloneStub);
-      sinon.assert.notCalled(cleanStub);
-      sinon.assert.calledOnce(pullStub);
-      sinon.assert.calledOnce(resetStub);
-      sinon.assert.calledOnce(checkoutStub);
+      assert.calledOnce(fetchStub);
+      assert.calledOnce(resetStub);
+      assert.calledOnce(checkoutToBranchStub);
+      assert.notCalled(checkoutToCommitStub);
+      assert.calledOnce(pullStub);
+      assert.notCalled(cleanStub);
+      assert.notCalled(silentCloneStub);
+      assert.notCalled(cloneStub);
+
+      assert.calledTwice(infoStub);
+      assert.notCalled(debugStub);
+      assert.calledOnce(errorStub);
+      assert.calledWithExactly(errorStub, match.string);
 
       return done();
     });
   }));
 
-  it('should handle reset error during checkout', sandbox(function (done: Function): void {
+  it('should handle reset error during checkout when commit wasn\'t given', sandbox(function (done: Function): void {
+    const githubUrl = `git@github.com:open-numbers/sg.git`;
     const expectedError = 'Boo!';
+
+    const fetchStub = this.stub(reposService, 'fetch').callsArgOnWithAsync(1, reposService, null);
+    const resetStub = this.stub(reposService, 'reset').callsArgOnWithAsync(1, reposService, expectedError);
+    const checkoutToBranchStub = this.stub(reposService, 'checkoutToBranch').callsArgOnWithAsync(1, reposService, null);
+    const pullStub = this.stub(reposService, 'pull').callsArgOnWithAsync(1, reposService, null);
+    const cleanStub = this.stub(reposService, 'clean').callsArgOnWithAsync(1, reposService, null);
+    const checkoutToCommitStub = this.stub(reposService, 'checkoutToCommit').callsArgOnWithAsync(1, reposService, null);
+    const silentCloneStub = this.stub(reposService, 'silentClone').callsArgOnWithAsync(1, reposService, null);
+    const cloneStub = this.stub(reposService, 'clone').callsArgOnWithAsync(1, reposService, null);
+    const makeDirForceStub = this.stub(reposService, 'makeDirForce').callsArgWithAsync(1, null);
+    const removeDirForceStub = this.stub(reposService, 'removeDirForce').callsArgWithAsync(1, null);
+
     const existsStub = this.stub(fs, 'exists').callsArgWithAsync(1, true);
 
-    const resetStub = sinon.stub();
-    resetStub.callsArgWithAsync(1, expectedError);
-    const checkoutStub = sinon.stub();
-    checkoutStub.callsArgWithAsync(1, null);
-    const pullStub = sinon.stub();
-    pullStub
-      .onFirstCall().callsArgWithAsync(0, null)
-      .onSecondCall().callsArgWithAsync(2, null);
-    const cleanStub = sinon.stub();
-    cleanStub.callsArgWithAsync(1, null);
-    const cloneStub = sinon.stub();
-    cloneStub.callsArgWithAsync(3, null);
+    const infoStub = this.stub(logger, 'info');
+    const errorStub = this.stub(logger, 'error');
+    const debugStub = this.stub(logger, 'debug');
 
-    const stubbedReposService = proxyquire(reposServicePath, {
-      'simple-git': () => {
-        return {
-          pull: pullStub,
-          reset: resetStub,
-          clean: cleanStub,
-          checkout: checkoutStub,
-          clone: cloneStub
-        };
-      }
-    });
-
-    const githubUrl = `git@github.com:open-numbers/sg.git`;
-    return stubbedReposService.cloneRepo(githubUrl, null, (error: string) => {
+    return wsReposService.cloneRepo(githubUrl, undefined, (error: string) => {
       expect(error).to.equal(`${expectedError} on branch master and commit HEAD (repo url: ${githubUrl})`);
 
-      sinon.assert.calledTwice(existsStub);
+      assert.calledTwice(existsStub);
+      assert.calledWith(existsStub, match.string);
+      assert.notCalled(makeDirForceStub);
+      assert.notCalled(removeDirForceStub);
 
-      sinon.assert.calledOnce(resetStub);
-      sinon.assert.notCalled(cloneStub);
-      sinon.assert.notCalled(cleanStub);
-      sinon.assert.notCalled(pullStub);
-      sinon.assert.notCalled(checkoutStub);
+      assert.calledOnce(fetchStub);
+      assert.calledOnce(resetStub);
+      assert.notCalled(checkoutToBranchStub);
+      assert.notCalled(checkoutToCommitStub);
+      assert.notCalled(pullStub);
+      assert.notCalled(cleanStub);
+      assert.notCalled(silentCloneStub);
+      assert.notCalled(cloneStub);
+
+      assert.calledTwice(infoStub);
+      assert.notCalled(debugStub);
+      assert.calledOnce(errorStub);
+      assert.calledWithExactly(errorStub, match.string);
 
       return done();
     });
   }));
 
-  it('should handle cleaning error during checkout', sandbox(function (done: Function): void {
+  it('should handle cleaning error during checkout when commit wasn\'t given', sandbox(function (done: Function): void {
+    const githubUrl = `git@github.com:open-numbers/sg.git`;
     const expectedError = 'Boo!';
+
+    const fetchStub = this.stub(reposService, 'fetch').callsArgOnWithAsync(1, reposService, null);
+    const resetStub = this.stub(reposService, 'reset').callsArgOnWithAsync(1, reposService, null);
+    const checkoutToBranchStub = this.stub(reposService, 'checkoutToBranch').callsArgOnWithAsync(1, reposService, null);
+    const pullStub = this.stub(reposService, 'pull').callsArgOnWithAsync(1, reposService, null);
+    const cleanStub = this.stub(reposService, 'clean').callsArgOnWithAsync(1, reposService, expectedError);
+    const checkoutToCommitStub = this.stub(reposService, 'checkoutToCommit').callsArgOnWithAsync(1, reposService, null);
+    const silentCloneStub = this.stub(reposService, 'silentClone').callsArgOnWithAsync(1, reposService, null);
+    const cloneStub = this.stub(reposService, 'clone').callsArgOnWithAsync(1, reposService, null);
+    const makeDirForceStub = this.stub(reposService, 'makeDirForce').callsArgWithAsync(1, null);
+    const removeDirForceStub = this.stub(reposService, 'removeDirForce').callsArgWithAsync(1, null);
+
     const existsStub = this.stub(fs, 'exists').callsArgWithAsync(1, true);
 
-    const resetStub = sinon.stub();
-    resetStub.callsArgWithAsync(1, null);
-    const checkoutStub = sinon.stub();
-    checkoutStub.callsArgWithAsync(1, null);
-    const pullStub = sinon.stub();
-    pullStub
-      .onFirstCall().callsArgWithAsync(0, null)
-      .onSecondCall().callsArgWithAsync(2, null);
-    const cleanStub = sinon.stub();
-    cleanStub.callsArgWithAsync(1, expectedError);
-    const cloneStub = sinon.stub();
-    cloneStub.callsArgWithAsync(3, null);
+    const infoStub = this.stub(logger, 'info');
+    const errorStub = this.stub(logger, 'error');
+    const debugStub = this.stub(logger, 'debug');
 
-    const stubbedReposService = proxyquire(reposServicePath, {
-      'simple-git': () => {
-        return {
-          pull: pullStub,
-          reset: resetStub,
-          clean: cleanStub,
-          checkout: checkoutStub,
-          clone: cloneStub
-        };
-      }
-    });
-
-    const githubUrl = `git@github.com:open-numbers/sg.git`;
-    return stubbedReposService.cloneRepo(githubUrl, null, (error: string) => {
+    return wsReposService.cloneRepo(githubUrl, undefined, (error: string) => {
       expect(error).to.equal(`${expectedError} on branch master and commit HEAD (repo url: ${githubUrl})`);
 
-      sinon.assert.calledTwice(existsStub);
+      assert.calledTwice(existsStub);
+      assert.calledWith(existsStub, match.string);
+      assert.notCalled(makeDirForceStub);
+      assert.notCalled(removeDirForceStub);
 
-      sinon.assert.notCalled(cloneStub);
-      sinon.assert.calledOnce(cleanStub);
-      sinon.assert.calledOnce(pullStub);
-      sinon.assert.calledOnce(resetStub);
-      sinon.assert.calledOnce(checkoutStub);
+      assert.calledOnce(fetchStub);
+      assert.calledOnce(resetStub);
+      assert.calledOnce(checkoutToBranchStub);
+      assert.notCalled(checkoutToCommitStub);
+      assert.calledOnce(pullStub);
+      assert.calledOnce(cleanStub);
+      assert.notCalled(silentCloneStub);
+      assert.notCalled(cloneStub);
+
+      assert.calledTwice(infoStub);
+      assert.notCalled(debugStub);
+      assert.calledOnce(errorStub);
+      assert.calledWithExactly(errorStub, match.string);
 
       return done();
     });
   }));
 
-  it('should handle error during checkout', sandbox(function (done: Function): void {
+  it('should handle error during checkout when commit wasn\'t given', sandbox(function (done: Function): void {
+    const githubUrl = `git@github.com:open-numbers/sg.git`;
     const expectedError = 'Boo!';
+
+    const fetchStub = this.stub(reposService, 'fetch').callsArgOnWithAsync(1, reposService, null);
+    const resetStub = this.stub(reposService, 'reset').callsArgOnWithAsync(1, reposService, null);
+    const checkoutToBranchStub = this.stub(reposService, 'checkoutToBranch').callsArgOnWithAsync(1, reposService, null);
+    const pullStub = this.stub(reposService, 'pull').callsArgOnWithAsync(1, reposService, null);
+    const cleanStub = this.stub(reposService, 'clean').callsArgOnWithAsync(1, reposService, null);
+    const checkoutToCommitStub = this.stub(reposService, 'checkoutToCommit').callsArgOnWithAsync(1, reposService, expectedError);
+    const silentCloneStub = this.stub(reposService, 'silentClone').callsArgOnWithAsync(1, reposService, null);
+    const cloneStub = this.stub(reposService, 'clone').callsArgOnWithAsync(1, reposService, null);
+    const makeDirForceStub = this.stub(reposService, 'makeDirForce').callsArgWithAsync(1, null);
+    const removeDirForceStub = this.stub(reposService, 'removeDirForce').callsArgWithAsync(1, null);
+
     const existsStub = this.stub(fs, 'exists').callsArgWithAsync(1, true);
 
-    const resetStub = sinon.stub();
-    resetStub.callsArgWithAsync(1, null);
-    const checkoutStub = sinon.stub();
-    checkoutStub.callsArgWithAsync(1, expectedError);
-    const pullStub = sinon.stub();
-    pullStub
-      .onFirstCall().callsArgWithAsync(0, null)
-      .onSecondCall().callsArgWithAsync(2, null);
-    const cleanStub = sinon.stub();
-    cleanStub.callsArgWithAsync(1, null);
-    const cloneStub = sinon.stub();
-    cloneStub.callsArgWithAsync(3, null);
+    const infoStub = this.stub(logger, 'info');
+    const errorStub = this.stub(logger, 'error');
+    const debugStub = this.stub(logger, 'debug');
 
-    const stubbedReposService = proxyquire(reposServicePath, {
-      'simple-git': () => {
-        return {
-          pull: pullStub,
-          reset: resetStub,
-          clean: cleanStub,
-          checkout: checkoutStub,
-          clone: cloneStub
-        };
-      }
-    });
-
-    const githubUrl = `git@github.com:open-numbers/sg.git`;
-    return stubbedReposService.cloneRepo(githubUrl, null, (error: string) => {
+    return wsReposService.cloneRepo(githubUrl, undefined, (error: string) => {
       expect(error).to.equal(`${expectedError} on branch master and commit HEAD (repo url: ${githubUrl})`);
 
-      sinon.assert.calledTwice(existsStub);
+      assert.calledTwice(existsStub);
+      assert.calledWith(existsStub, match.string);
+      assert.notCalled(makeDirForceStub);
+      assert.notCalled(removeDirForceStub);
 
-      sinon.assert.notCalled(cloneStub);
-      sinon.assert.notCalled(cleanStub);
-      sinon.assert.notCalled(pullStub);
-      sinon.assert.calledOnce(resetStub);
-      sinon.assert.calledOnce(checkoutStub);
+      assert.calledOnce(fetchStub);
+      assert.calledOnce(resetStub);
+      assert.calledOnce(checkoutToBranchStub);
+      assert.calledOnce(checkoutToCommitStub);
+      assert.calledOnce(pullStub);
+      assert.calledOnce(cleanStub);
+      assert.notCalled(silentCloneStub);
+      assert.notCalled(cloneStub);
+
+      assert.calledTwice(infoStub);
+      assert.notCalled(debugStub);
+      assert.calledOnce(errorStub);
+      assert.calledWithExactly(errorStub, match.string);
+
+      return done();
+    });
+  }));
+
+  it('should handle pulling error on second call for some branch name during checkout when commit wasn\'t given', sandbox(function (done: Function): void {
+    const branch = 'branch';
+    const githubUrl = `git@github.com:open-numbers/sg.git#${branch}`;
+    const expectedError = 'Boo!';
+
+    const fetchStub = this.stub(reposService, 'fetch').callsArgOnWithAsync(1, reposService, null);
+    const resetStub = this.stub(reposService, 'reset').callsArgOnWithAsync(1, reposService, null);
+    const checkoutToBranchStub = this.stub(reposService, 'checkoutToBranch').callsArgOnWithAsync(1, reposService, null);
+    const pullStub = this.stub(reposService, 'pull').callsArgOnWithAsync(1, reposService, expectedError);
+    const cleanStub = this.stub(reposService, 'clean').callsArgOnWithAsync(1, reposService, null);
+    const checkoutToCommitStub = this.stub(reposService, 'checkoutToCommit').callsArgOnWithAsync(1, reposService, null);
+    const silentCloneStub = this.stub(reposService, 'silentClone').callsArgOnWithAsync(1, reposService, null);
+    const cloneStub = this.stub(reposService, 'clone').callsArgOnWithAsync(1, reposService, null);
+    const makeDirForceStub = this.stub(reposService, 'makeDirForce').callsArgWithAsync(1, null);
+    const removeDirForceStub = this.stub(reposService, 'removeDirForce').callsArgWithAsync(1, null);
+
+    const existsStub = this.stub(fs, 'exists').callsArgWithAsync(1, true);
+
+    const infoStub = this.stub(logger, 'info');
+    const errorStub = this.stub(logger, 'error');
+    const debugStub = this.stub(logger, 'debug');
+
+    return wsReposService.cloneRepo(githubUrl, undefined, (error: string) => {
+      expect(error).to.equal(`${expectedError} on branch ${branch} and commit HEAD (repo url: ${githubUrl})`);
+
+      assert.calledTwice(existsStub);
+      assert.calledWith(existsStub, match.string);
+      assert.notCalled(makeDirForceStub);
+      assert.notCalled(removeDirForceStub);
+
+      assert.calledOnce(fetchStub);
+      assert.calledOnce(resetStub);
+      assert.calledOnce(checkoutToBranchStub);
+      assert.notCalled(checkoutToCommitStub);
+      assert.calledOnce(pullStub);
+      assert.notCalled(cleanStub);
+      assert.notCalled(silentCloneStub);
+      assert.notCalled(cloneStub);
+
+      assert.calledTwice(infoStub);
+      assert.notCalled(debugStub);
+      assert.calledOnce(errorStub);
+      assert.calledWithExactly(errorStub, match.string);
 
       return done();
     });
   }));
 
   it('should handle pulling error on second call for some branch name during checkout to given commit', sandbox(function (done: Function): void {
-    const expectedError = 'Boo!';
     const branch = 'branch';
+    const commit = 'aaaaaaa';
+    const githubUrl = `git@github.com:open-numbers/sg.git#${branch}`;
+    const expectedError = 'Boo!';
+
+    const fetchStub = this.stub(reposService, 'fetch').callsArgOnWithAsync(1, reposService, null);
+    const resetStub = this.stub(reposService, 'reset').callsArgOnWithAsync(1, reposService, null);
+    const checkoutToBranchStub = this.stub(reposService, 'checkoutToBranch').callsArgOnWithAsync(1, reposService, null);
+    const pullStub = this.stub(reposService, 'pull').callsArgOnWithAsync(1, reposService, expectedError);
+    const cleanStub = this.stub(reposService, 'clean').callsArgOnWithAsync(1, reposService, null);
+    const checkoutToCommitStub = this.stub(reposService, 'checkoutToCommit').callsArgOnWithAsync(1, reposService, null);
+    const silentCloneStub = this.stub(reposService, 'silentClone').callsArgOnWithAsync(1, reposService, null);
+    const cloneStub = this.stub(reposService, 'clone').callsArgOnWithAsync(1, reposService, null);
+    const makeDirForceStub = this.stub(reposService, 'makeDirForce').callsArgWithAsync(1, null);
+    const removeDirForceStub = this.stub(reposService, 'removeDirForce').callsArgWithAsync(1, null);
+
     const existsStub = this.stub(fs, 'exists').callsArgWithAsync(1, true);
 
-    const resetStub = sinon.stub();
-    resetStub.callsArgWithAsync(1, null);
-    const checkoutStub = sinon.stub();
-    checkoutStub.callsArgWithAsync(1, null);
-    const pullStub = sinon.stub();
-    pullStub
-      .onFirstCall().callsArgWithAsync(0, null)
-      .onSecondCall().callsArgWithAsync(2, expectedError);
-    const cleanStub = sinon.stub();
-    cleanStub.callsArgWithAsync(1, null);
-    const cloneStub = sinon.stub();
-    cloneStub.callsArgWithAsync(3, null);
+    const infoStub = this.stub(logger, 'info');
+    const errorStub = this.stub(logger, 'error');
+    const debugStub = this.stub(logger, 'debug');
 
-    const stubbedReposService = proxyquire(reposServicePath, {
-      'simple-git': () => {
-        return {
-          pull: pullStub,
-          reset: resetStub,
-          clean: cleanStub,
-          checkout: checkoutStub,
-          clone: cloneStub
-        };
-      }
-    });
+    return wsReposService.cloneRepo(githubUrl, commit, (error: string) => {
+      expect(error).to.equal(`${expectedError} on branch ${branch} and commit ${commit} (repo url: ${githubUrl})`);
 
-    const githubUrl = `git@github.com:open-numbers/sg.git#${branch}`;
-    return stubbedReposService.cloneRepo(githubUrl, null, (error: string) => {
-      expect(error).to.equal(`${expectedError} on branch ${branch} and commit HEAD (repo url: ${githubUrl})`);
+      assert.calledTwice(existsStub);
+      assert.calledWith(existsStub, match.string);
+      assert.notCalled(makeDirForceStub);
+      assert.notCalled(removeDirForceStub);
 
-      sinon.assert.calledTwice(existsStub);
+      assert.calledOnce(fetchStub);
+      assert.calledOnce(resetStub);
+      assert.calledOnce(checkoutToBranchStub);
+      assert.notCalled(checkoutToCommitStub);
+      assert.calledOnce(pullStub);
+      assert.notCalled(cleanStub);
+      assert.notCalled(silentCloneStub);
+      assert.notCalled(cloneStub);
 
-      sinon.assert.notCalled(cloneStub);
-      sinon.assert.calledOnce(cleanStub);
-      sinon.assert.calledTwice(pullStub);
-      sinon.assert.calledOnce(resetStub);
-      sinon.assert.calledTwice(checkoutStub);
+      assert.calledTwice(infoStub);
+      assert.notCalled(debugStub);
+      assert.calledOnce(errorStub);
+      assert.calledWithExactly(errorStub, match.string);
 
       return done();
     });
   }));
+
 });

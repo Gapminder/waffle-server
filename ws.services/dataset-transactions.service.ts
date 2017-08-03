@@ -1,12 +1,13 @@
 import * as async from 'async';
-import {constants} from '../ws.utils/constants';
+import { constants } from '../ws.utils/constants';
 import * as datasetsService from './datasets.service';
-import {DatasetsRepository} from '../ws.repository/ddf/datasets/datasets.repository';
-import {DatasetTransactionsRepository} from '../ws.repository/ddf/dataset-transactions/dataset-transactions.repository';
-import {ConceptsRepositoryFactory} from '../ws.repository/ddf/concepts/concepts.repository';
-import {EntitiesRepositoryFactory} from '../ws.repository/ddf/entities/entities.repository';
-import {DatapointsRepositoryFactory} from '../ws.repository/ddf/data-points/data-points.repository';
-import {DatasetSchemaRepository} from '../ws.repository/ddf/dataset-index/dataset-index.repository';
+import { DatasetsRepository } from '../ws.repository/ddf/datasets/datasets.repository';
+import { DatasetTransactionsRepository } from '../ws.repository/ddf/dataset-transactions/dataset-transactions.repository';
+import { ConceptsRepositoryFactory } from '../ws.repository/ddf/concepts/concepts.repository';
+import { EntitiesRepositoryFactory } from '../ws.repository/ddf/entities/entities.repository';
+import { DatapointsRepositoryFactory } from '../ws.repository/ddf/data-points/data-points.repository';
+import { DatasetSchemaRepository } from '../ws.repository/ddf/dataset-index/dataset-index.repository';
+import { MongooseCallback } from '../ws.repository/repository.types';
 
 export {
   setLastError,
@@ -32,7 +33,7 @@ function setLastError(transactionId: any, lastErrorMessage: string, onErrorSet: 
 
 function setTransactionAsDefault(userId: any, datasetName: string, transactionCommit: any, onSetAsDefault: AsyncResultCallback<any, any>): void {
   return async.waterfall([
-    async.constant({userId, datasetName, transactionCommit}),
+    async.constant({ userId, datasetName, transactionCommit }),
     _findDatasetByNameAndUser,
     _findTransactionByDatasetAndCommit,
     _setTransactionAsDefault
@@ -81,7 +82,7 @@ function _setTransactionAsDefault(externalContext: any, done: Function): void {
 
 function rollbackFailedTransactionFor(datasetName: string, user: any, onRollbackCompleted: AsyncResultCallback<any, any>): void {
   return async.waterfall([
-    async.constant({datasetName, user}),
+    async.constant({ datasetName, user }),
     datasetsService.findDatasetByNameAndValidateOwnership,
     _findLatestFailedTransactionByDataset,
     _forceDatasetLock,
@@ -157,7 +158,7 @@ function _forceDatasetUnlock(externalContext: any, onDatasetUnlocked: Function):
   });
 }
 
-function _removeDatasetWithoutTransactions(externalContext: any, onDatasetRemoved: Function): void {
+function _removeDatasetWithoutTransactions(externalContext: any, onDatasetRemoved: MongooseCallback): void {
   return DatasetTransactionsRepository.countByDataset(externalContext.datasetId, (countTransactionError: any, amount: number) => {
     if (countTransactionError) {
       return onDatasetRemoved(countTransactionError);
@@ -172,7 +173,10 @@ function _removeDatasetWithoutTransactions(externalContext: any, onDatasetRemove
 }
 
 function getStatusOfLatestTransactionByDatasetName(datasetName: string, user: any, done: Function): void {
-  return datasetsService.findDatasetByNameAndValidateOwnership({datasetName, user}, (error: string, externalContext: any)=> {
+  return datasetsService.findDatasetByNameAndValidateOwnership({
+    datasetName,
+    user
+  }, (error: string, externalContext: any) => {
     if (error) {
       return done(error);
     }
@@ -191,6 +195,26 @@ function _findObjectsModifiedDuringLastTransaction(externalContext: any, done: F
       return done(`Transaction is absent for dataset: ${externalContext.datasetName}`);
     }
 
+    const result = {
+      datasetName: externalContext.datasetName,
+      transaction: {
+        lastError: latestTransaction.lastError,
+        commit: latestTransaction.commit,
+        status: latestTransaction.isClosed ? 'Completed' : 'In progress',
+        createdAt: new Date(latestTransaction.createdAt)
+      },
+      modifiedObjects: {
+        concepts: 0,
+        entities: 0,
+        datapoints: 0
+      }
+    };
+
+    return done(null, result);
+/*
+    // TODO: The strategy for calculating these statistics should be changed. Cause for now it executs quites complex quries
+    // which perform very poorly on huge datasets. Time that is required for execution is bigger than amount of time till
+    // mongo's connection timeout
     const modifiedObjectsTasks =
       _createTasksForCountingObjectsModifiedInGivenVersion(externalContext.datasetId, latestTransaction.createdAt);
 
@@ -210,8 +234,9 @@ function _findObjectsModifiedDuringLastTransaction(externalContext: any, done: F
         modifiedObjects: stats
       };
 
-      return done(countingError, result);
+      return done(null, result);
     });
+*/
   });
 }
 
@@ -246,7 +271,7 @@ function findDefaultDatasetAndTransaction(datasetName: string, commit: string, o
 }
 
 function _findDefaultDatasetAndTransactionByDatasetNameAndCommit(datasetName: string, transactionCommit: any, onFound: Function): void {
-  return _getDefaultDatasetAndTransaction({transactionCommit, datasetName}, [
+  return _getDefaultDatasetAndTransaction({ transactionCommit, datasetName }, [
     _findDatasetByName,
     _findTransactionByDatasetAndCommit
   ], onFound);
@@ -264,14 +289,14 @@ function _findDatasetByName(externalContext: any, done: Function): any {
 }
 
 function _findDefaultDatasetAndTransactionByDatasetName(datasetName: string, onFound: Function): void {
-  return _getDefaultDatasetAndTransaction({datasetName}, [
+  return _getDefaultDatasetAndTransaction({ datasetName }, [
     _findDatasetByName,
     _findDefaultByDatasetId,
     _findLatestCompletedByDatasetId
   ], onFound);
 
   function _findDefaultByDatasetId(externalContext: any, done: Function): void {
-    return DatasetTransactionsRepository.findDefault({datasetId: externalContext.dataset._id}, (error: string, transaction: any) => {
+    return DatasetTransactionsRepository.findDefault({ datasetId: externalContext.dataset._id }, (error: string, transaction: any) => {
       if (error) {
         return done(error);
       }
@@ -298,13 +323,13 @@ function _findDefaultDatasetAndTransactionByDatasetName(datasetName: string, onF
 }
 
 function _findDefaultDatasetAndTransactionByCommit(transactionCommit: any, onFound: Function): void {
-  return _getDefaultDatasetAndTransaction({transactionCommit}, [
+  return _getDefaultDatasetAndTransaction({ transactionCommit }, [
     _findDefaultDataset,
     _findTransactionByDatasetAndCommit
   ], onFound);
 
   function _findDefaultDataset(pipe: any, done: Function): void {
-    return DatasetTransactionsRepository.findDefault({populateDataset: true}, (error: string, transaction: any) => {
+    return DatasetTransactionsRepository.findDefault({ populateDataset: true }, (error: string, transaction: any) => {
       if (error || !transaction) {
         return done(error || `Default dataset was not set`);
       }
@@ -316,7 +341,7 @@ function _findDefaultDatasetAndTransactionByCommit(transactionCommit: any, onFou
 }
 
 function _findDefaultPopulatedDatasetAndTransaction(onFound: Function): void {
-  return DatasetTransactionsRepository.findDefault({populateDataset: true}, (error: string, transaction: any) => {
+  return DatasetTransactionsRepository.findDefault({ populateDataset: true }, (error: string, transaction: any) => {
     if (error || !transaction) {
       return onFound(error || 'Default dataset was not set');
     }

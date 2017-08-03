@@ -6,9 +6,9 @@ import { logger } from '../ws.config/log';
 const FUNCTION_OPERATORS = ['min', 'max', 'avg'];
 
 export function normalize(query: any, options?: any): any {
-  const safeQuery = ddfQueryUtils.toSafeQuery(query, {except: ['join']});
+  const safeQuery = ddfQueryUtils.toSafeQuery(query, { except: ['join'] });
 
-  switch(safeQuery.from) {
+  switch (safeQuery.from) {
     case 'concepts.schema':
       return normalizeConceptsSchema(safeQuery, options);
     case 'entities.schema':
@@ -41,14 +41,14 @@ function normalizeSchema(query: any, options: any): any {
 }
 
 function normalizeWhere(query: any, options: any): void {
-  const $andClause = [{type: toSchemaType(query.from)}];
+  const $andClause = [{ type: toSchemaType(query.from) }];
 
   if (!_.isEmpty(_.keys(query.where))) {
     $andClause.push(query.where);
   }
 
   if (_.get(options, 'transactionId')) {
-    $andClause.push({transaction: options.transactionId} as any);
+    $andClause.push({ transaction: options.transactionId } as any);
   }
 
   query.where = {
@@ -69,7 +69,7 @@ function normalizeSelect(query: any): void {
       }
 
       return projection;
-    }, {select: {}, aliases: {}})
+    }, { select: {}, aliases: {} })
     .value();
 
   query.select = selectWithAliases.select;
@@ -77,7 +77,7 @@ function normalizeSelect(query: any): void {
 }
 
 function toSchemaType(from: string): string {
-  switch(from) {
+  switch (from) {
     case 'concepts.schema':
       return constants.CONCEPTS;
     case 'entities.schema':

@@ -1,3 +1,5 @@
+/* tslint:disable:no-console */
+
 import * as e2eUtils from './e2e.utils';
 
 console.log('==========================================');

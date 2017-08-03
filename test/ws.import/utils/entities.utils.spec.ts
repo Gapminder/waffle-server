@@ -24,7 +24,7 @@ describe('Entities utils', () => {
           },
           originId: 'foundationId'
         }
-      },
+      }
     };
 
     const expectedSetsAndDomain = {
@@ -56,7 +56,7 @@ describe('Entities utils', () => {
           },
           originId: 'foundationId'
         }
-      },
+      }
     };
 
     const expectedSetsAndDomain = {
@@ -92,7 +92,7 @@ describe('Entities utils', () => {
           },
           originId: 'foundationId'
         }
-      },
+      }
     };
 
     const expectedSetsAndDomain = {
@@ -117,7 +117,7 @@ describe('Entities utils', () => {
           type: 'entity_domain',
           originId: 'foundationId'
         }
-      },
+      }
     };
 
     const expectedSetsAndDomain = {
@@ -145,7 +145,7 @@ describe('Entities utils', () => {
           },
           originId: 'foundationId'
         }
-      },
+      }
     };
 
     const expectedSetsAndDomain = {
@@ -188,7 +188,7 @@ describe('Entities utils', () => {
           domain: companyDomain,
           originId: 'foundationId'
         }
-      },
+      }
     };
 
     const expectedSetsAndDomain = {

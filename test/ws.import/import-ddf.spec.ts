@@ -22,7 +22,7 @@ describe('Import ddf dataset from git repository', () => {
       github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git',
       datasetName: 'open-numbers/ddf--gapminder--systema_globalis.git',
       commit: 'aaaaaaa',
-      user: {email: 'dev@gapminder.org'},
+      user: { email: 'dev@gapminder.org' },
       lifecycleHooks: {
         onTransactionCreated: this.spy()
       },
@@ -70,7 +70,7 @@ describe('Import ddf dataset from git repository', () => {
         createDatapointsStub,
         createTranslationsStub,
         createDatasetSchemaStub,
-        closeTransactionStub,
+        closeTransactionStub
       );
 
       done();
@@ -83,9 +83,10 @@ describe('Import ddf dataset from git repository', () => {
       github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git',
       datasetName: 'open-numbers/ddf--gapminder--systema_globalis.git',
       commit: 'aaaaaaa',
-      user: {email: 'dev@gapminder.org'},
+      user: { email: 'dev@gapminder.org' },
       lifecycleHooks: {
-        onTransactionCreated: () => {}
+        onTransactionCreated: () => {
+        }
       }
     };
 
@@ -110,9 +111,10 @@ describe('Import ddf dataset from git repository', () => {
       github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git',
       datasetName: 'open-numbers/ddf--gapminder--systema_globalis.git',
       commit: 'aaaaaaa',
-      user: {email: 'dev@gapminder.org'},
+      user: { email: 'dev@gapminder.org' },
       lifecycleHooks: {
-        onTransactionCreated: () => {}
+        onTransactionCreated: () => {
+        }
       },
       transaction: {
         _id: 'txId',
@@ -135,7 +137,7 @@ describe('Import ddf dataset from git repository', () => {
       sinon.assert.callOrder(
         resolvePathToDdfFolderStub,
         createTransactionStub,
-        createDatasetStub,
+        createDatasetStub
       );
 
       done();
@@ -147,10 +149,11 @@ describe('Import ddf dataset from git repository', () => {
       isDatasetPrivate: false,
       github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git',
       commit: 'aaaaaaa',
-      user: {email: 'dev@gapminder.org'},
+      user: { email: 'dev@gapminder.org' },
       lifecycleHooks: {
-        onTransactionCreated: () => {}
-      },
+        onTransactionCreated: () => {
+        }
+      }
     };
 
     const expectedError = 'Boo!';

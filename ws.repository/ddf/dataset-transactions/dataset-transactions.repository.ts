@@ -1,5 +1,6 @@
 import * as _ from 'lodash';
 import { model, MongooseDocument } from 'mongoose';
+import { MongooseCallback } from '../../repository.types';
 
 const DatasetTransactions = model('DatasetTransactions');
 
@@ -38,7 +39,7 @@ DatasetTransactionsRepository.prototype.findByDatasetAndCommit = function (datas
   return DatasetTransactions.findOne({dataset: datasetId, commit}).lean().exec(done);
 };
 
-DatasetTransactionsRepository.prototype.removeById = function (transactionId: any, done: Function): any {
+DatasetTransactionsRepository.prototype.removeById = function (transactionId: any, done: MongooseCallback): any {
   return DatasetTransactions.findOneAndRemove({_id: transactionId}, done);
 };
 
@@ -59,11 +60,11 @@ DatasetTransactionsRepository.prototype.setLastError = function (transactionId: 
 };
 
 DatasetTransactionsRepository.prototype.create = function (transaction: any, onCreated: Function): any {
-  return DatasetTransactions.create(transaction, (error: string, model: MongooseDocument) => {
+  return DatasetTransactions.create(transaction, (error: string, doc: MongooseDocument) => {
     if (error) {
       return onCreated(error);
     }
-    return onCreated(null, model.toObject());
+    return onCreated(null, doc.toObject());
   });
 };
 
@@ -71,7 +72,7 @@ DatasetTransactionsRepository.prototype.countByDataset = function (datasetId: an
   return DatasetTransactions.count({dataset: datasetId}, onCounted);
 };
 
-DatasetTransactionsRepository.prototype.closeTransaction = function ({transactionId, transactionStartTime}: any, onClosed: Function): any {
+DatasetTransactionsRepository.prototype.closeTransaction = function ({transactionId, transactionStartTime}: any, onClosed: MongooseCallback): any {
   if (!transactionId) {
     return onClosed('TransactionId is required');
   }

@@ -56,8 +56,8 @@ describe('Routes utils', () => {
       const loggerErrorStub = this.stub(logger, 'error');
 
       const res = {
-        json: response => {
-          expect(response).to.be.deep.equal({success: false, error: errorMessage});
+        json: (response) => {
+          expect(response).to.be.deep.equal({ success: false, error: errorMessage });
           done(); // At this point test is finished
         }
       };
@@ -72,8 +72,7 @@ describe('Routes utils', () => {
       routeUtils.checkDatasetAccessibility(req, res, next);
     }));
 
-
-    it('should call next middleware if no dataset name was found', done => {
+    it('should call next middleware if no dataset name was found', (done) => {
       const req: any = {};
 
       const res: any = 'any';
@@ -85,7 +84,7 @@ describe('Routes utils', () => {
       routeUtils.checkDatasetAccessibility(req, res, next);
     });
 
-    it('should respond with error when dataset was not found', done => {
+    it('should respond with error when dataset was not found', (done) => {
       const expectedDatasetName = 'fake/dataset';
 
       const routeUtils = proxyquire('../../ws.routes/utils.js', {
@@ -105,7 +104,7 @@ describe('Routes utils', () => {
       };
 
       const res = {
-        json: response => {
+        json: (response) => {
           expect(response).to.be.deep.equal({
             success: false,
             message: `Dataset with given name ${expectedDatasetName} was not found`
@@ -121,7 +120,7 @@ describe('Routes utils', () => {
       routeUtils.checkDatasetAccessibility(req, res, next);
     });
 
-    it('should call next middleware when dataset is not private', done => {
+    it('should call next middleware when dataset is not private', (done) => {
       const expectedDatasetName = 'fake/dataset';
       const routeUtils = proxyquire('../../ws.routes/utils.js', {
         '../ws.repository/ddf/datasets/datasets.repository': {
@@ -151,7 +150,7 @@ describe('Routes utils', () => {
       routeUtils.checkDatasetAccessibility(req, res, next);
     });
 
-    it('should call next middleware when provided dataset access token matches token stored in dataset', done => {
+    it('should call next middleware when provided dataset access token matches token stored in dataset', (done) => {
       const expectedDatasetName = 'fake/dataset';
       const datasetAccessToken = 'aaaaabbbbbcccccddddd';
 
@@ -185,7 +184,7 @@ describe('Routes utils', () => {
       routeUtils.checkDatasetAccessibility(req, res, next);
     });
 
-    it('should respond with an error when user tries to access private dataset without access token', done => {
+    it('should respond with an error when user tries to access private dataset without access token', (done) => {
       const expectedDatasetName = 'fake/dataset';
       const routeUtils = proxyquire('../../ws.routes/utils.js', {
         '../ws.repository/ddf/datasets/datasets.repository': {
@@ -224,7 +223,7 @@ describe('Routes utils', () => {
       routeUtils.checkDatasetAccessibility(req, res, next);
     });
 
-    it('should respond with an error when user tries to access private dataset with wrong token', done => {
+    it('should respond with an error when user tries to access private dataset with wrong token', (done) => {
       const expectedDatasetName = 'fake/dataset';
       const routeUtils = proxyquire('../../ws.routes/utils.js', {
         '../ws.repository/ddf/datasets/datasets.repository': {
@@ -264,7 +263,7 @@ describe('Routes utils', () => {
       routeUtils.checkDatasetAccessibility(req, res, next);
     });
 
-    it('should respond with an error when user tries to access private dataset - dataset.accessToken and dataset_access_token are empty', done => {
+    it('should respond with an error when user tries to access private dataset - dataset.accessToken and dataset_access_token are empty', (done) => {
       const expectedDatasetName = 'fake/dataset';
       const routeUtils = proxyquire('../../ws.routes/utils.js', {
         '../ws.repository/ddf/datasets/datasets.repository': {
@@ -306,13 +305,13 @@ describe('Routes utils', () => {
   });
 
   describe('Cache config', () => {
-    it('should generate correct cache key', done => {
+    it('should generate correct cache key', (done) => {
       const expectedCachePrefix = 'MyPrefix';
       const expectedMethod = 'GET';
 
       const req: any = {
         query: {},
-        body: {bla: 42},
+        body: { bla: 42 },
         method: expectedMethod,
         url: '/status?name=ryan'
       };
@@ -333,13 +332,13 @@ describe('Routes utils', () => {
       routeUtils.getCacheConfig(expectedCachePrefix)(req, res, next);
     });
 
-    it('should use default cache key prefix if it was not provided', done => {
+    it('should use default cache key prefix if it was not provided', (done) => {
       const expectedCachePrefix = 'PREFIX_NOT_SET';
       const expectedMethod = 'GET';
 
       const req: any = {
         query: {},
-        body: {bla: 42},
+        body: { bla: 42 },
         method: expectedMethod,
         url: '/status?name=ryan'
       };
@@ -360,9 +359,9 @@ describe('Routes utils', () => {
       routeUtils.getCacheConfig()(req, res, next);
     });
 
-    it('should invalidate redis cache if force option is provided', done => {
+    it('should invalidate redis cache if force option is provided', (done) => {
       const req: any = {
-        query: {force: 'true'},
+        query: { force: 'true' }
       };
 
       const res: any = {
@@ -381,9 +380,9 @@ describe('Routes utils', () => {
   describe('Parse query from url and populate request body with a result', () => {
     it('should parse query as json if "query" param given in url', sandbox(function (done: Function) {
       const ddfql = {
-        "from": "entities",
-        "select": {
-          "key": ["company"]
+        from: 'entities',
+        select: {
+          key: ['company']
         }
       };
 
@@ -392,7 +391,7 @@ describe('Routes utils', () => {
       const req: any = {
         query: {
           query: queryRaw
-        },
+        }
       };
 
       const res: any = {};
@@ -400,12 +399,12 @@ describe('Routes utils', () => {
       const loggerInfoStub = this.stub(logger, 'info');
 
       const next = () => {
-        const rawDdfQuery = {queryRaw: queryRaw, type: 'JSON'};
-        const expectedBody = _.extend({rawDdfQuery}, ddfql);
+        const rawDdfQuery = { queryRaw, type: 'JSON' };
+        const expectedBody = _.extend({ rawDdfQuery }, ddfql);
         expect(req.body).to.deep.equal(expectedBody);
 
         sinon.assert.calledOnce(loggerInfoStub);
-        sinon.assert.calledWithExactly(loggerInfoStub, {ddfqlRaw: queryRaw});
+        sinon.assert.calledWithExactly(loggerInfoStub, { ddfqlRaw: queryRaw });
 
         done();
       };
@@ -416,8 +415,8 @@ describe('Routes utils', () => {
     it('should respond with an error when it is impossible to parse json', sandbox(function (done: Function) {
       const req: any = {
         query: {
-          query: "bla"
-        },
+          query: 'bla'
+        }
       };
 
       const loggerInfoStub = this.stub(logger, 'info');
@@ -427,7 +426,7 @@ describe('Routes utils', () => {
           expect(response.success).to.be.false;
           expect(response.error).to.equal('Query was sent in incorrect format');
           sinon.assert.calledOnce(loggerInfoStub);
-          sinon.assert.calledWithExactly(loggerInfoStub, {ddfqlRaw: req.query.query});
+          sinon.assert.calledWithExactly(loggerInfoStub, { ddfqlRaw: req.query.query });
 
           done();
         }
@@ -442,9 +441,9 @@ describe('Routes utils', () => {
 
     it('should parse query as urlon if "query" param is not given in url', sandbox(function (done: Function) {
       const ddfql = {
-        "from": "entities",
-        "select": {
-          "key": ["company"]
+        from: 'entities',
+        select: {
+          key: ['company']
         }
       };
 
@@ -460,11 +459,11 @@ describe('Routes utils', () => {
       const loggerInfoStub = this.stub(logger, 'info');
 
       const next = () => {
-        const rawDdfQuery = {queryRaw, type: 'URLON'};
-        const expectedBody = _.extend({rawDdfQuery}, ddfql);
+        const rawDdfQuery = { queryRaw, type: 'URLON' };
+        const expectedBody = _.extend({ rawDdfQuery }, ddfql);
         expect(req.body).to.deep.equal(expectedBody);
         sinon.assert.calledOnce(loggerInfoStub);
-        sinon.assert.calledWithExactly(loggerInfoStub, {ddfqlRaw: queryRaw});
+        sinon.assert.calledWithExactly(loggerInfoStub, { ddfqlRaw: queryRaw });
         done();
       };
 
@@ -486,7 +485,7 @@ describe('Routes utils', () => {
           expect(response.success).to.be.false;
           expect(response.error).to.equal('Query was sent in incorrect format');
           sinon.assert.calledOnce(loggerInfoStub);
-          sinon.assert.calledWithExactly(loggerInfoStub, {ddfqlRaw: queryRaw});
+          sinon.assert.calledWithExactly(loggerInfoStub, { ddfqlRaw: queryRaw });
           done();
         }
       };
@@ -500,10 +499,10 @@ describe('Routes utils', () => {
 
     it('assumes that dataset passed in urlon ddfql is encoded with encodeURIComponent', sandbox(function (done: Function) {
       const ddfql = {
-        "from": "entities",
-        "dataset": 'VS-work%2Fddf--ws-testing%23master-twin-for-e2e',
-        "select": {
-          "key": ["company"]
+        from: 'entities',
+        dataset: 'VS-work%2Fddf--ws-testing%23master-twin-for-e2e',
+        select: {
+          key: ['company']
         }
       };
 
@@ -521,7 +520,7 @@ describe('Routes utils', () => {
       const next = () => {
         expect(req.body.dataset).to.equal('VS-work/ddf--ws-testing#master-twin-for-e2e');
         sinon.assert.calledOnce(loggerInfoStub);
-        sinon.assert.calledWithExactly(loggerInfoStub, {ddfqlRaw: queryRaw});
+        sinon.assert.calledWithExactly(loggerInfoStub, { ddfqlRaw: queryRaw });
         done();
       };
 
@@ -530,10 +529,10 @@ describe('Routes utils', () => {
 
     it('assumes that dataset passed in urlon ddfql is encoded with encodeURIComponent: dataset value is coerced to string', sandbox(function (done: Function) {
       const ddfql = {
-        "from": "entities",
-        "dataset": 42,
-        "select": {
-          "key": ["company"]
+        from: 'entities',
+        dataset: 42,
+        select: {
+          key: ['company']
         }
       };
 
@@ -551,7 +550,7 @@ describe('Routes utils', () => {
       const next = () => {
         expect(req.body.dataset).to.equal('42');
         sinon.assert.calledOnce(loggerInfoStub);
-        sinon.assert.calledWithExactly(loggerInfoStub, {ddfqlRaw: queryRaw});
+        sinon.assert.calledWithExactly(loggerInfoStub, { ddfqlRaw: queryRaw });
         done();
       };
 
@@ -569,11 +568,11 @@ describe('Routes utils', () => {
       const loggerInfoStub = this.stub(logger, 'info');
 
       const res = {
-        json: response => {
+        json: (response) => {
           expect(response.success).to.be.false;
           expect(response.error).to.equal('Query was sent in incorrect format');
           sinon.assert.calledOnce(loggerInfoStub);
-          sinon.assert.calledWithExactly(loggerInfoStub, {ddfqlRaw: queryRaw});
+          sinon.assert.calledWithExactly(loggerInfoStub, { ddfqlRaw: queryRaw });
           done();
         }
       };
@@ -589,7 +588,7 @@ describe('Routes utils', () => {
   describe('RouteUtils.respondWithRawDdf', () => {
     it('should flush redis cache if error occured', sandbox(function () {
       const expectedError = 'Boo!';
-      const expectedErrorResponse = {success: false, error: 'Boo!'};
+      const expectedErrorResponse = { success: false, error: 'Boo!' };
 
       const loggerStub = this.stub(logger, 'error');
       const anyQuery = {};
@@ -669,7 +668,7 @@ describe('Routes utils', () => {
       };
 
       const debugStub = this.stub(logger, 'debug');
-      const createWarmpUpQueryStub = this.stub(RecentDdfqlQueriesRepository, 'create', (query, done) => {
+      const createWarmpUpQueryStub = this.stub(RecentDdfqlQueriesRepository, 'create').callsFake((query, done) => {
         done(null, ddfQuery.rawDdfQuery);
       });
 
@@ -713,7 +712,7 @@ describe('Routes utils', () => {
 
       const debugStub = this.stub(logger, 'debug');
 
-      this.stub(RecentDdfqlQueriesRepository, 'create', (query, done) => {
+      this.stub(RecentDdfqlQueriesRepository, 'create').callsFake((query, done) => {
         done(expectedError);
       });
 
@@ -836,7 +835,7 @@ describe('Routes utils', () => {
       };
 
       const tokenAuthSpy = this.stub().returns(middleware);
-      const passportAuthStub = this.stub(passport, 'authenticate', () => {
+      const passportAuthStub = this.stub(passport, 'authenticate').callsFake(() => {
         return tokenAuthSpy;
       });
 
@@ -889,7 +888,7 @@ describe('Routes utils', () => {
     });
 
     it('should produce data response', function () {
-      const expectedData = {foo: 'bar'};
+      const expectedData = { foo: 'bar' };
       const response = routeUtils.toDataResponse(expectedData);
 
       expect(response.success).to.be.true;
@@ -942,7 +941,7 @@ describe('Routes utils', () => {
 
       sinon.assert.notCalled(next);
       sinon.assert.calledOnce(json);
-      sinon.assert.calledWith(json, {success: false, error: `Please, change your WS-CLI version from bla to 2.5.23`});
+      sinon.assert.calledWith(json, { success: false, error: `Please, change your WS-CLI version from bla to 2.5.23` });
     }));
 
     it('responds with an error when WS-CLI version from client is not given', sandbox(function () {
@@ -964,7 +963,7 @@ describe('Routes utils', () => {
 
       sinon.assert.notCalled(next);
       sinon.assert.calledOnce(json);
-      sinon.assert.calledWith(json, {success: false, error: 'This url can be accessed only from WS-CLI'});
+      sinon.assert.calledWith(json, { success: false, error: 'This url can be accessed only from WS-CLI' });
     }));
 
     it('checks that requests from CLI with supported version are valid', sandbox(function () {
@@ -1024,7 +1023,7 @@ describe('Routes utils', () => {
       routeUtils.bodyFromUrlAssets(req, res, nextSpy);
 
       expect(res._status).to.equal(400);
-      sinon.assert.calledWith(jsonSpy, {success: false, error: 'Malformed url was given'});
+      sinon.assert.calledWith(jsonSpy, { success: false, error: 'Malformed url was given' });
       sinon.assert.notCalled(nextSpy);
     }));
 
@@ -1096,7 +1095,7 @@ describe('Routes utils', () => {
         name: 'open-numbers/globalis#development'
       };
 
-      this.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, {dataset: defaultDataset});
+      this.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, { dataset: defaultDataset });
 
       const req: any = {
         originalUrl: `${constants.ASSETS_ROUTE_BASE_PATH}/default/SECURED/foo.json`,
@@ -1128,7 +1127,7 @@ describe('Routes utils', () => {
         name: 'open-numbers/globalis'
       };
 
-      this.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, {dataset: defaultDataset});
+      this.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, { dataset: defaultDataset });
 
       const req: any = {
         query: {

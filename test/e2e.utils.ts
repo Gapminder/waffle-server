@@ -1,8 +1,10 @@
+/* tslint:disable:no-console no-unused-expression */
+
 import * as _ from 'lodash';
 import * as shell from 'shelljs';
-import {e2eEnv} from './e2e.env';
+import { e2eEnv } from './e2e.env';
 import * as supertest from 'supertest';
-import {expect} from 'chai';
+import { expect } from 'chai';
 import * as URLON from 'urlon';
 
 const wsApi = supertest(e2eEnv.wsUrl);
@@ -20,8 +22,8 @@ export {
 };
 
 function sendDdfqlRequest(ddfql: any, onResponseReceived: Function): void {
-  const encodedDataset = _.has(ddfql, 'dataset') ? {dataset: encodeURIComponent(ddfql.dataset)} : {};
-  ddfql = Object.assign({}, ddfql, {force: true}, encodedDataset);
+  const encodedDataset = _.has(ddfql, 'dataset') ? { dataset: encodeURIComponent(ddfql.dataset) } : {};
+  ddfql = Object.assign({}, ddfql, { force: true }, encodedDataset);
   return wsApi.get(`/api/ddf/ql?${URLON.stringify(ddfql)}`)
   // Here is alternative way of sending ddfql - via encoded JSON
   // return wsApi.get(`/api/ddf/ql?query=${encodeURIComponent(JSON.stringify(ddfql))}`)
@@ -61,7 +63,7 @@ function setUpEnvironmentVariables(): void {
 }
 
 function sendDdfqlRequestAndVerifyResponse(ddfql: any, expectedResponse: any, done: Function, options: any = {}): void {
-  const {sort = true} = options;
+  const { sort = true } = options;
 
   sendDdfqlRequest(ddfql, (error: string, response: any) => {
     if (response.body.success === false) {

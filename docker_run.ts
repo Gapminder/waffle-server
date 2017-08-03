@@ -40,19 +40,19 @@ function startWaffleServerThrashingMachine(): void {
 }
 
 function startWaffleServer(): void {
-  shell.exec(runWaffleServerCommand,  {silent:true});
+  shell.exec(runWaffleServerCommand, { silent: true });
 
   while (true) {
     const myip = shell.exec('/usr/bin/curl -m 2 http://169.254.169.254/latest/meta-data/local-ipv4 2>/dev/null');
     if (myip.code === 0) {
       const ip = myip.stdout;
-      shell.exec(`/usr/bin/redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} setex /upstreams/${SERVICE_NAME}/${process.env.HOSTNAME}  ${HA_REG_EXPIRE} \"${ip} ${ip}:${NODE_PORT}\"`,  {silent:true});
+      shell.exec(`/usr/bin/redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} setex /upstreams/${SERVICE_NAME}/${process.env.HOSTNAME}  ${HA_REG_EXPIRE} \"${ip} ${ip}:${NODE_PORT}\"`, { silent: true });
     } else {
       logger.info('-- ERROR: Could not determine local ip address. Exit.');
       process.exit(1);
     }
 
-    const isWaffleServerNotRunning = _.trim((shell.exec('/usr/bin/forever list | /bin/grep server.js | wc -l', {silent: true}) as shell.ExecOutputReturnValue).stdout) !== '1';
+    const isWaffleServerNotRunning = _.trim((shell.exec('/usr/bin/forever list | /bin/grep server.js | wc -l', { silent: true }) as shell.ExecOutputReturnValue).stdout) !== '1';
     if (isWaffleServerNotRunning) {
       logger.info('-- ERROR: ws is failed to start. Going to start Waffle Server once more...');
       shell.exec('/usr/bin/forever stopall');

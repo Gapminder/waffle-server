@@ -1,17 +1,17 @@
 import 'mocha';
 
 import * as _ from 'lodash';
-import {expect} from 'chai';
+import { expect } from 'chai';
 
 import * as ddfQueryValidator from '../../ws.ddfql/ddf-query-validator';
 
 describe('ddf query validator', () => {
   it('should return error message: Invalid DDFQL-query. Validation of Where Clause: contain "."', () => {
     const ddfql = {
-      "where": {
-        "$and": [
+      where: {
+        $and: [
           {
-            ".is--english_speaking": true
+            '.is--english_speaking': true
           }
         ]
       }
@@ -25,15 +25,15 @@ describe('ddf query validator', () => {
 
   it('should return error message: Invalid DDFQL-query. Validation of Join Clause: does not contain "$"', () => {
     const ddfql = {
-      "join": {
-        "geo": {
-          key: "geo",
+      join: {
+        geo: {
+          key: 'geo',
           where: {
-            "is--country": true,
-            "latitude": { "$lte": 0 },
+            'is--country': true,
+            latitude: { $lte: 0 }
           }
         }
-      },
+      }
     };
 
     const message = ddfQueryValidator.validateDdfQuery(ddfql).messages;
@@ -44,30 +44,30 @@ describe('ddf query validator', () => {
 
   it('should validate query without errors', () => {
     const ddfql = {
-      "select": {
-        "key": ["company"],
-        "value": ["company", "name", "is--english_speaking"]
+      select: {
+        key: ['company'],
+        value: ['company', 'name', 'is--english_speaking']
       },
-      "from": "entities",
-      "where": {
-        "$and": [
+      from: 'entities',
+      where: {
+        $and: [
           {
-            "$or":[
-              {"domain": {"$in": ["17a3470d3a8c9b37009b9bf9"]}},
-              {"sets": {"$in": ["17a3470d3a8c9b37009b9bf9"]}}
+            $or: [
+              { domain: { $in: ['17a3470d3a8c9b37009b9bf9'] } },
+              { sets: { $in: ['17a3470d3a8c9b37009b9bf9'] } }
             ]
           }
         ]
       },
-      "join": {
-        "$geo": {
-          key: "geo",
+      join: {
+        $geo: {
+          key: 'geo',
           where: {
-            "is--country": true,
-            "latitude": { "$lte": 0 },
+            'is--country': true,
+            latitude: { $lte: 0 }
           }
         }
-      },
+      }
     };
 
     const message = ddfQueryValidator.validateDdfQuery(ddfql);
@@ -77,9 +77,9 @@ describe('ddf query validator', () => {
 
   it('should return error message: Invalid DDFQL-query. Validation of Select Clause: does not contain \'key\'', () => {
     const ddfql = {
-      "select": {
-        "value": ["company", "name", "is--english_speaking"]
-      },
+      select: {
+        value: ['company', 'name', 'is--english_speaking']
+      }
     };
 
     const message = ddfQueryValidator.validateDdfQuery(ddfql).messages;
@@ -88,14 +88,14 @@ describe('ddf query validator', () => {
     expect(message.toString()).to.contain(expectedMessage);
   });
 
-  it(`should return error message: Invalid DDFQL-query. Validation of Select Clause: "value" 
+  it(`should return error message: Invalid DDFQL-query. Validation of Select Clause: "value"
   contains more than 5 measures, please try again with less amount`, () => {
     const ddfql = {
-      "select": {
-        "key": ["company"],
-        "value": ["company", "name", "english_speaking", "geo", "time", "landlocked"]
+      select: {
+        key: ['company'],
+        value: ['company', 'name', 'english_speaking', 'geo', 'time', 'landlocked']
       },
-      "from": "datapoints",
+      from: 'datapoints'
     };
 
     const message = ddfQueryValidator.validateDdfQuery(ddfql).messages;
@@ -106,12 +106,12 @@ describe('ddf query validator', () => {
 
   it('should return error message: order_by should contain an array', () => {
     const ddfql = {
-      "select": {
-        "key": ["company"],
-        "value": ["company", "name", "english_speaking", "geo"]
+      select: {
+        key: ['company'],
+        value: ['company', 'name', 'english_speaking', 'geo']
       },
-      "from": "datapoints",
-      "order_by": "life_expectancy",
+      from: 'datapoints',
+      order_by: 'life_expectancy'
     };
 
     const message = ddfQueryValidator.validateDdfQuery(ddfql).messages;
@@ -122,12 +122,12 @@ describe('ddf query validator', () => {
 
   it('should return error message: order_by should not contain empty values', () => {
     const ddfql = {
-      "select": {
-        "key": ["company"],
-        "value": ["company", "name", "english_speaking", "geo"]
+      select: {
+        key: ['company'],
+        value: ['company', 'name', 'english_speaking', 'geo']
       },
-      "from": "datapoints",
-      "order_by": [,],
+      from: 'datapoints',
+      order_by: [,]
     };
 
     const message = ddfQueryValidator.validateDdfQuery(ddfql).messages[0];
@@ -138,12 +138,12 @@ describe('ddf query validator', () => {
 
   it('should return error message: order_by cannot contain arrays as its elements', () => {
     const ddfql = {
-      "select": {
-        "key": ["company"],
-        "value": ["company", "name", "english_speaking", "geo"]
+      select: {
+        key: ['company'],
+        value: ['company', 'name', 'english_speaking', 'geo']
       },
-      "from": "datapoints",
-      "order_by": [["",""]],
+      from: 'datapoints',
+      order_by: [['', '']]
     };
 
     const message = ddfQueryValidator.validateDdfQuery(ddfql).messages;
@@ -154,15 +154,15 @@ describe('ddf query validator', () => {
     expect(message[1].toString()).to.contain(expectedMessage2);
   });
 
-  it(`should return error message: object in order_by clause should contain only following sort directions: 
+  it(`should return error message: object in order_by clause should contain only following sort directions:
   "asc", "desc"`, () => {
     const ddfql = {
-      "select": {
-        "key": ["company"],
-        "value": ["company", "name", "english_speaking", "geo"]
+      select: {
+        key: ['company'],
+        value: ['company', 'name', 'english_speaking', 'geo']
       },
-      "from": "datapoints",
-      "order_by": [{"": "asc"},{"": "top"}],
+      from: 'datapoints',
+      order_by: [{ '': 'asc' }, { '': 'top' }]
     };
 
     const message = ddfQueryValidator.validateDdfQuery(ddfql).messages;
@@ -175,11 +175,11 @@ describe('ddf query validator', () => {
 
   it('should return error message: Invalid DDFQL-query. Validation by Operators, not acceptable: $sq', () => {
     const query = {
-        "$and": [
-          {"geo.is--country": {"$sq": true}},
-          {"geo.world_4region": {"$sq": "africa"}}
-        ]
-      };
+      $and: [
+        { 'geo.is--country': { $sq: true } },
+        { 'geo.world_4region': { $sq: 'africa' } }
+      ]
+    };
 
     const validationResult = ddfQueryValidator.validateMongoQuery(query);
     const message = _.get(validationResult, 'messages');

@@ -2,7 +2,7 @@ import '../../../../ws.repository';
 
 import * as sinon from 'sinon';
 import * as sinonTest from 'sinon-test';
-import {expect} from 'chai'
+import {expect} from 'chai';
 import * as proxyquire from 'proxyquire';
 import * as stream from 'stream';
 import * as hi from 'highland';

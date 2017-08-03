@@ -1,31 +1,31 @@
 import 'newrelic';
 
 import * as express from 'express';
-
-const app: express.Application = express();
-
 import { config } from './ws.config/config';
 import { logger } from './ws.config/log';
-
-process.on('uncaughtException', function (err: string): void {
-  logger.error(err);
-});
-
 import * as bodyParser from 'body-parser';
-app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
-app.use(bodyParser.json({limit: '10mb'}));
-
 import { ServiceLocator } from './ws.service-locator';
-const serviceLocator = ServiceLocator.create(app);
-
 import './ws.repository';
 import * as Config from './ws.config';
-Config.configureWaffleServer(app);
-
 import { registerRoutes } from './ws.routes';
 import { makeDefaultUser } from './make-default-user';
 import * as Cache from './ws.utils/cache-warmup';
 import * as importUtils from './ws.import/utils/import-ddf.utils';
+import {reposService} from 'waffle-server-repo-service';
+
+reposService.logger = logger;
+const app: express.Application = express();
+
+process.on('uncaughtException', function (err: Error): void {
+  logger.error(err);
+});
+
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+app.use(bodyParser.json({ limit: '10mb' }));
+
+const serviceLocator = ServiceLocator.create(app);
+
+Config.configureWaffleServer(app);
 
 registerRoutes(serviceLocator);
 

@@ -2,9 +2,9 @@ import * as _ from 'lodash';
 import * as async from 'async';
 import * as commonService from './common.service';
 import * as schemaQueryNormalizer from '../ws.ddfql/ddf-schema-query-normalizer';
-import {DatasetSchemaRepository} from '../ws.repository/ddf/dataset-index/dataset-index.repository';
+import { DatasetSchemaRepository } from '../ws.repository/ddf/dataset-index/dataset-index.repository';
 import * as ddfQueryValidator from '../ws.ddfql/ddf-query-validator';
-import {ValidateQueryModel} from '../ws.ddfql/ddf-query-validator';
+import { ValidateQueryModel } from '../ws.ddfql/ddf-query-validator';
 
 export {
   findSchemaByDdfql
@@ -20,10 +20,10 @@ function findSchemaByDdfql(options: any, onFound: AsyncResultCallback<any, any>)
 }
 
 function _findSchemaByDdfql(pipe: any, done: Function): void {
-  const normalizedQuery = schemaQueryNormalizer.normalize(pipe.query, {transactionId: pipe.transaction._id});
+  const normalizedQuery = schemaQueryNormalizer.normalize(pipe.query, { transactionId: pipe.transaction._id });
 
   const validateQuery: ValidateQueryModel = ddfQueryValidator.validateMongoQuery(normalizedQuery.where);
-  if(!validateQuery.valid) {
+  if (!validateQuery.valid) {
     return done(validateQuery.log, pipe);
   }
 

@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import * as ddfTimeUtils from 'ddf-time-utils';
-import {constants} from '../ws.utils/constants';
+import { constants } from '../ws.utils/constants';
 import * as traverse from 'traverse';
 
 export {
@@ -74,10 +74,10 @@ function replaceValueOnPath(options: any): void {
   if (options.substituteEntryWithItsContent) {
     const content = value[key];
     delete value[key];
-    _.merge(value, content);
+    _.defaultsDeep(value, content);
   } else {
     delete value[key];
-    _.set(queryFragment, path, _.merge(value, normalizedValue));
+    _.set(queryFragment, path, _.defaultsDeep(value, normalizedValue));
   }
 }
 
@@ -91,7 +91,7 @@ function normalizeOrderBy(query: any): void {
       return statement;
     }
 
-    return {[statement]: constants.ASC_SORTING_DIRECTION};
+    return { [statement]: constants.ASC_SORTING_DIRECTION };
   });
 }
 
