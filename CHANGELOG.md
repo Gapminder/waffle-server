@@ -1,3 +1,22 @@
+<a name="2.8.0"></a>
+# [2.8.0](https://github.com/Gapminder/waffle-server/compare/v2.7.0...v2.8.0) (2017-08-03)
+
+
+### Bug Fixes
+
+* fix issue on ws when try to get commits list ([1bfaa7e](https://github.com/Gapminder/waffle-server/commit/1bfaa7e))
+* **cache:** fix cache memory leak; upgrade dependencies ([9d1254b](https://github.com/Gapminder/waffle-server/commit/9d1254b))
+* **datasets.repository:** detect datasets imported from master taking into account that specifying branch for it is not required ([0d1c430](https://github.com/Gapminder/waffle-server/commit/0d1c430))
+* **ddfql:** use entity_domain or entity_set as a query criteria properly ([bd4d1d8](https://github.com/Gapminder/waffle-server/commit/bd4d1d8))
+* **import:** disable import stats ([2bf7d79](https://github.com/Gapminder/waffle-server/commit/2bf7d79))
+
+
+### Performance Improvements
+
+* **repos.service.ts:** use shelljs instead of simple-git ([5064e93](https://github.com/Gapminder/waffle-server/commit/5064e93))
+
+
+
 <a name="2.7.0"></a>
 # [2.7.0](https://github.com/Gapminder/waffle-server/compare/v2.6.0...v2.7.0) (2017-06-19)
 
