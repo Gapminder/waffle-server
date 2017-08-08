@@ -9,6 +9,13 @@ import {EntitiesRepositoryFactory} from '../../ws.repository/ddf/entities/entiti
 import {DatapointsRepositoryFactory} from '../../ws.repository/ddf/data-points/data-points.repository';
 import { constants } from '../../ws.utils/constants';
 import { DatasetTracker } from '../../ws.services/datasets-tracker';
+import * as conceptsUtils from './concepts.utils';
+
+export interface TimeDimensionQuery {
+  'time.conceptGid': string;
+  'time.timeType': string;
+  'time.millis': number;
+}
 
 export {
   getDimensionsAndMeasures,
@@ -147,22 +154,58 @@ function getDimensionsAndMeasures(resource: any, externalContext: any): any {
   return { measures, dimensions };
 }
 
-function getDimensionsAsEntityOriginIds(datapoint: any, externalContext: any): any[] {
-  const entityGids = _.chain(datapoint)
-    .pick(_.keys(externalContext.dimensions))
-    .values()
-    .compact()
+function getDimensionsAsEntityOriginIds(datapoint: any, externalContext: any): any {
+  let timeDimension: TimeDimensionQuery;
+  const timeConcept: any = _.find(externalContext.timeConcepts, (_timeConcept: any) => _.has(datapoint, _timeConcept.gid));
+  const dimensions = _.chain(externalContext.dimensions)
+    .omit(_.keys(externalContext.timeConcepts))
+    .keys()
     .value();
 
-  return _.flatMap(entityGids, (gid: string) => {
-    const entities = externalContext.segregatedEntities.groupedByGid[gid] || externalContext.segregatedPreviousEntities.groupedByGid[gid];
-    return _.map(entities, 'originId');
-  });
+  if (timeConcept) {
+    const timeEntityGid = datapoint[timeConcept.gid];
+    const timeEntity = _.first(externalContext.segregatedEntities.groupedByGid[timeEntityGid] || externalContext.segregatedPreviousEntities.groupedByGid[timeEntityGid]);
+    timeDimension = {
+      'time.conceptGid': timeConcept.gid,
+      'time.timeType': _.get(timeEntity, `parsedProperties.${timeConcept.gid}.timeType`, ''),
+      'time.millis': _.get(timeEntity, `parsedProperties.${timeConcept.gid}.millis`, 0)
+    };
+  }
+
+  const result = {dimensionsEntityOriginIds: [], timeDimension};
+
+  _.chain(datapoint)
+    .pickBy((entityGid: string, conceptGid: string) => _.includes(dimensions, conceptGid) && !!entityGid)
+    .reduce((_result: any, entityGid: string, conceptGid: string) => {
+      const concept = externalContext.dimensions[conceptGid];
+      const entities = externalContext.segregatedEntities.groupedByGid[entityGid] || externalContext.segregatedPreviousEntities.groupedByGid[entityGid];
+      const matchedEntities = _.chain(entities).filter((entity: any) => {
+        const isDomain = concept.type === constants.CONCEPT_TYPE_ENTITY_DOMAIN;
+        const isSet = concept.type === constants.CONCEPT_TYPE_ENTITY_SET;
+
+        if (isDomain && _.isEqual(entity.domain, concept.originId) && _.isEmpty(entity.sets)) {
+          return true;
+        }
+
+        if (isSet && _.isEqual(entity.domain, concept.domain.originId) && _.includes(entity.sets, concept.originId)) {
+          return true;
+        }
+
+        return false;
+      }).map('originId').value();
+
+      _result.dimensionsEntityOriginIds.push(...matchedEntities);
+
+      return _result;
+    }, result)
+    .value();
+
+  return result;
 }
 
 function segregateEntities(entities: any): any {
   // FIXME: Segregation is a workaround for issue related to having same gid in couple entity files
-  return _.reduce(entities, (result: any, entity: any) => {
+  return _.reduce(entities, (result: any, entity: any, conceptGid) => {
     if (_.isEmpty(entity.sets)) {
       const domain = entity.domain;
       result.byDomain[`${entity.gid}-${_.get(domain, 'originId', domain)}`] = entity;
@@ -184,13 +227,13 @@ function findEntitiesInDatapoint(datapoint: any, context: any, externalContext: 
 
   const {transaction: {createdAt: version}, dataset: {_id: datasetId}, timeConcepts} = externalContext;
 
-  return _.reduce(context.dimensions, (entitiesFoundInDatapoint: any, concept: any) => {
+  return _.reduce(context.dimensions, (entitiesFoundInDatapoint: any, concept: any, conceptGid: string) => {
     const domain = concept.domain || concept;
-    const entityGid = datapoint[concept.gid];
-    const existedEntity = context.segregatedEntities.byGid[entityGid];
+    const entityGid = datapoint[conceptGid];
+    const existedEntities: any[] = context.segregatedEntities.byGid[entityGid];
     const alreadyFoundEntity = alreadyFoundEntityGids.has(entityGid);
 
-    if (!existedEntity && !alreadyFoundEntity) {
+    if (_.isEmpty(existedEntities) && !alreadyFoundEntity) {
 
       const entityFoundInDatapoint = ddfMappers.mapDdfEntityFoundInDatapointToWsModel(datapoint, {
         version,
@@ -201,7 +244,7 @@ function findEntitiesInDatapoint(datapoint: any, context: any, externalContext: 
         filename: context.filename
       });
 
-      alreadyFoundEntityGids.add(entityGid);
+      alreadyFoundEntityGids.add(entityFoundInDatapoint.gid);
       entitiesFoundInDatapoint.push(entityFoundInDatapoint);
     }
 

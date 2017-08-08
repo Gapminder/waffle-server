@@ -16,14 +16,16 @@ const DataPoints = mongoose.model('DataPoints');
 
 class DataPointsRepository extends VersionedModelRepository {
   private static toByDimensionsAndMeasureQuery(options: any): any {
-    const {measureOriginId, dimensionsSize, dimensionsEntityOriginIds} = options;
-    return {
+    const {time, measureOriginId, dimensionsEntityOriginIds} = options;
+    const query = {
       measure: measureOriginId,
       dimensions: {
-        $size: dimensionsSize,
+        $size: _.size(dimensionsEntityOriginIds),
         $not: {$elemMatch: {$nin: dimensionsEntityOriginIds}}
       }
     };
+    const timeSubQuery = _.isNil(time) ? {time: null} : _.omit(time, 'time.conceptGid');
+    return _.extend(query, timeSubQuery);
   }
 
   public constructor(versionQueryFragment: any, datasetId?: any, version?: any) {
@@ -99,7 +101,10 @@ class DataPointsRepository extends VersionedModelRepository {
         // },
         allowDiskUse: constants.MONGODB_ALLOW_DISK_USE, maxTimeMS: constants.DEFAULT_DATAPOINTS_QUERY_TIMEOUT_MS})
       .group({
-        _id: '$dimensions',
+        _id: {
+          dimensions: '$dimensions',
+          time: '$time'
+        },
         indicators: {$push: {
           measure: '$measure',
           properties: '$properties',

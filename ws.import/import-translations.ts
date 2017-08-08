@@ -75,7 +75,7 @@ function createTranslations(externalContext: any): any {
     .map(({ object: properties, resource: { language, path: source, primaryKey: [primaryKey] } }: any) => {
       const resolvedProperties = _.reduce(properties, (result: any, propertyValue: any, propertyName: string) => {
         if (_.startsWith(propertyName, constants.IS_OPERATOR)) {
-          result[`properties.${propertyName}`] = ddfImportUtils.toBoolean(propertyValue);
+          result[`${constants.PROPERTIES}.${propertyName}`] = ddfImportUtils.toBoolean(propertyValue);
         }
         if (propertyName === primaryKey) {
           result.gid = propertyValue;
@@ -97,7 +97,7 @@ function createTranslations(externalContext: any): any {
     .map(({ object: properties, resource: { language, path: source, primaryKey } }: any) => {
       const resolvedProperties = _.reduce(properties, (result: any, propertyValue: any, propertyName: string) => {
         if (_.includes(primaryKey, propertyName)) {
-          result[`properties.${propertyName}`] = propertyValue;
+          result[`${constants.PROPERTIES}.${propertyName}`] = propertyValue;
         }
         return result;
       }, {});

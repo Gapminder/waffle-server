@@ -175,7 +175,7 @@ function mapConcepts(pipe: any, cb: Function): void {
     return cb(`Your choose key column(s) '${_.join(missingKeys, ', ')}' which aren't present in choosen dataset`);
   }
 
-  pipe.measures = _.filter(pipe.concepts, [constants.CONCEPT_TYPE, constants.CONCEPT_TYPE_MEASURE]);
+  pipe.measures = _.filter(pipe.concepts, [constants.TYPE, constants.CONCEPT_TYPE_MEASURE]);
   pipe.resolvedDomainsAndSetGids = pipe.domainGids;
 
   return async.setImmediate(() => cb(null, pipe));

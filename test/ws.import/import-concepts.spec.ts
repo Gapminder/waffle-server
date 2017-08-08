@@ -48,7 +48,7 @@ describe('Import ddf concepts', () => {
     const rawConcept = {
       concept: 'company',
       name: 'Company',
-      concept_type: 'entity_domain',
+      concept_type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
       domain: ''
     };
 
@@ -71,12 +71,12 @@ describe('Import ddf concepts', () => {
       gid: 'company',
       languages: {},
       originId: null,
-      properties: { concept: 'company', name: 'Company', concept_type: 'entity_domain', domain: null },
+      properties: { concept: 'company', name: 'Company', concept_type: constants.CONCEPT_TYPE_ENTITY_DOMAIN, domain: null },
       sources: ['ddf--concepts.csv'],
       subsetOf: [],
       title: 'Company',
       to: 9007199254740991,
-      type: 'entity_domain'
+      type: constants.CONCEPT_TYPE_ENTITY_DOMAIN
     };
 
     const readCsvFileAsStreamStub = this.stub(fileUtils, 'readCsvFileAsStream').returns(hi([rawConcept]));
@@ -157,7 +157,7 @@ describe('Import ddf concepts', () => {
     const rawConcept = {
       concept: 'company',
       name: 'Company',
-      concept_type: 'entity_domain',
+      concept_type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
       domain: ''
     };
 
@@ -191,13 +191,13 @@ describe('Import ddf concepts', () => {
     const rawConcept = {
       concept: 'company',
       name: 'Company',
-      concept_type: 'entity_domain',
+      concept_type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
       domain: ''
     };
 
     const rawConcept2 = {
       concept: 'english_speaking',
-      concept_type: 'entity_set',
+      concept_type: constants.CONCEPT_TYPE_ENTITY_SET,
       drill_up: ['company', 'company']
     };
 
@@ -217,11 +217,11 @@ describe('Import ddf concepts', () => {
       {
         gid: 'company',
         title: 'Company',
-        type: 'entity_domain',
+        type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
         properties: {
           concept: 'company',
           name: 'Company',
-          concept_type: 'entity_domain',
+          concept_type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
           domain: null
         },
         domain: null,
@@ -237,10 +237,10 @@ describe('Import ddf concepts', () => {
       },
       {
         gid: 'english_speaking',
-        type: 'entity_set',
+        type: constants.CONCEPT_TYPE_ENTITY_SET,
         properties: {
           concept: 'english_speaking',
-          concept_type: 'entity_set',
+          concept_type: constants.CONCEPT_TYPE_ENTITY_SET,
           domain: 'company',
           drill_up: [
             'company',
@@ -290,13 +290,13 @@ describe('Import ddf concepts', () => {
     const rawConcept = {
       concept: 'company',
       name: 'Company',
-      concept_type: 'entity_domain',
+      concept_type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
       domain: ''
     };
 
     const rawConcept2 = {
       concept: 'english_speaking',
-      concept_type: 'entity_set',
+      concept_type: constants.CONCEPT_TYPE_ENTITY_SET,
       drill_up: ['bla']
     };
 
@@ -316,11 +316,11 @@ describe('Import ddf concepts', () => {
       {
         gid: 'company',
         title: 'Company',
-        type: 'entity_domain',
+        type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
         properties: {
           concept: 'company',
           name: 'Company',
-          concept_type: 'entity_domain',
+          concept_type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
           domain: null
         },
         domain: null,
@@ -336,10 +336,10 @@ describe('Import ddf concepts', () => {
       },
       {
         gid: 'english_speaking',
-        type: 'entity_set',
+        type: constants.CONCEPT_TYPE_ENTITY_SET,
         properties: {
           concept: 'english_speaking',
-          concept_type: 'entity_set',
+          concept_type: constants.CONCEPT_TYPE_ENTITY_SET,
           domain: 'company',
           drill_up: [
             'company',
@@ -387,13 +387,13 @@ describe('Import ddf concepts', () => {
     const rawConcept = {
       concept: 'company',
       name: 'Company',
-      concept_type: 'entity_domain',
+      concept_type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
       domain: ''
     };
 
     const rawConcept2 = {
       concept: 'english_speaking',
-      concept_type: 'entity_set',
+      concept_type: constants.CONCEPT_TYPE_ENTITY_SET,
       domain: 'company'
     };
 
@@ -413,11 +413,11 @@ describe('Import ddf concepts', () => {
       {
         gid: 'company',
         title: 'Company',
-        type: 'entity_domain',
+        type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
         properties: {
           concept: 'company',
           name: 'Company',
-          concept_type: 'entity_domain',
+          concept_type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
           domain: null
         },
         domain: null,
@@ -433,10 +433,10 @@ describe('Import ddf concepts', () => {
       },
       {
         gid: 'english_speaking',
-        type: 'entity_set',
+        type: constants.CONCEPT_TYPE_ENTITY_SET,
         properties: {
           concept: 'english_speaking',
-          concept_type: 'entity_set',
+          concept_type: constants.CONCEPT_TYPE_ENTITY_SET,
           domain: 'company'
         },
         domain: null,
@@ -482,13 +482,13 @@ describe('Import ddf concepts', () => {
     const rawConcept = {
       concept: 'company',
       name: 'Company',
-      concept_type: 'entity_domain',
+      concept_type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
       domain: ''
     };
 
     const rawConcept2 = {
       concept: 'english_speaking',
-      concept_type: 'entity_set',
+      concept_type: constants.CONCEPT_TYPE_ENTITY_SET,
       domain: 'bla'
     };
 
@@ -508,11 +508,11 @@ describe('Import ddf concepts', () => {
       {
         gid: 'company',
         title: 'Company',
-        type: 'entity_domain',
+        type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
         properties: {
           concept: 'company',
           name: 'Company',
-          concept_type: 'entity_domain',
+          concept_type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
           domain: null
         },
         domain: null,
@@ -528,10 +528,10 @@ describe('Import ddf concepts', () => {
       },
       {
         gid: 'english_speaking',
-        type: 'entity_set',
+        type: constants.CONCEPT_TYPE_ENTITY_SET,
         properties: {
           concept: 'english_speaking',
-          concept_type: 'entity_set',
+          concept_type: constants.CONCEPT_TYPE_ENTITY_SET,
           domain: 'company'
         },
         domain: null,

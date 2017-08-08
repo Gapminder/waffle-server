@@ -10,6 +10,7 @@ import * as datapointsUtils from '../../../../ws.import/utils/datapoints.utils';
 import * as UpdateTranslationsFlow from '../../../../ws.import/incremental/translations/update-translations-flow';
 import * as UpdateDatapointTranslations from '../../../../ws.import/incremental/translations/update-datapoint-translations';
 import { DatapointsRepositoryFactory } from '../../../../ws.repository/ddf/data-points/data-points.repository';
+import { TimeDimensionQuery } from '../../../../ws.import/utils/datapoints.utils';
 
 const sandbox = sinonTest.configureTest(sinon);
 
@@ -383,7 +384,7 @@ describe('Datapoints Translations Update Plugin', () => {
     });
   }));
 
-  it('makes a query to fetch translation target based on giving context and changes descriptor', sandbox(function (done: Function) {
+  it('makes a query to fetch translation target based on giving context and changes descriptor', sandbox(function (done: Function): void {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
@@ -398,7 +399,7 @@ describe('Datapoints Translations Update Plugin', () => {
 
     const context = {
       indicator: {
-        originId: 'originId'
+        originId: 'originId1'
       },
       dimensions: [
         'time',
@@ -407,31 +408,36 @@ describe('Datapoints Translations Update Plugin', () => {
     };
 
     const expectedDimensionsAsOriginIds = [
-      'originId1',
       'originId2'
     ];
-    const getDimensionsAsEntityOriginIdsStub = this.stub(datapointsUtils, 'getDimensionsAsEntityOriginIds').returns(expectedDimensionsAsOriginIds);
+    const expectedTimeDimension: TimeDimensionQuery = {
+      'time.conceptGid': 'anno',
+      'time.millis': 157759200000,
+      'time.timeType': 'YEAR_TYPE'
+    };
+    const expectedDimensions = {dimensionsEntityOriginIds: expectedDimensionsAsOriginIds, timeDimension: expectedTimeDimension};
+    const getDimensionsAsEntityOriginIdsStub = this.stub(datapointsUtils, 'getDimensionsAsEntityOriginIds').returns(expectedDimensions);
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin: any, externalContextFrozen: any, callback: Function) => {
       const query = plugin.makeQueryToFetchTranslationTarget(changesDescriptor, context);
 
       sinon.assert.calledOnce(getDimensionsAsEntityOriginIdsStub);
       sinon.assert.calledWith(getDimensionsAsEntityOriginIdsStub, changesDescriptor.changes, context);
 
       expect(query.measureOriginId).to.equal(context.indicator.originId);
-      expect(query.dimensionsSize).to.equal(2);
+      expect(query.dimensionsSize).to.equal(1);
       expect(query.dimensionsEntityOriginIds).to.deep.equal(expectedDimensionsAsOriginIds);
-      expect(Object.keys(query).length).to.equal(3);
+      expect(Object.keys(query).length).to.equal(4);
 
-      callback();
+      return callback();
     });
 
-    UpdateDatapointTranslations.updateDatapointsTranslations(externalContext, () => {
-      done();
+    return UpdateDatapointTranslations.updateDatapointsTranslations(externalContext, () => {
+      return done();
     });
   }));
 
-  it('makes a query to fetch translation target based on giving context and changes descriptor: if no indicator origin is is found - logs this fact', sandbox(function (done: Function) {
+  it('makes a query to fetch translation target based on giving context and changes descriptor: if no indicator origin is is found - logs this fact', sandbox(function (done: Function): void {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
@@ -449,7 +455,7 @@ describe('Datapoints Translations Update Plugin', () => {
       dimensions: []
     };
 
-    this.stub(datapointsUtils, 'getDimensionsAsEntityOriginIds').returns([]);
+    this.stub(datapointsUtils, 'getDimensionsAsEntityOriginIds').returns({dimensionsEntityOriginIds: [], timeDimension: null});
     const loggerErrorStub = this.stub(logger, 'error');
 
     this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
@@ -465,7 +471,7 @@ describe('Datapoints Translations Update Plugin', () => {
     });
   }));
 
-  it('transforms stream before changes are actually applied: streams comes in form of changesDescriptor --> context pairs', sandbox(function (done: Function) {
+  it('transforms stream before changes are actually applied: streams comes in form of changesDescriptor --> context pairs', sandbox(function (done: Function): void {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
@@ -489,10 +495,10 @@ describe('Datapoints Translations Update Plugin', () => {
       }
     };
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin: any, externalContextFrozen: any, callback: Function) => {
       const changes = hi([{changesDescriptor, context}]);
 
-      plugin.transformStreamBeforeChangesApplied(changes).toArray((result) => {
+      plugin.transformStreamBeforeChangesApplied(changes).toArray((result: any) => {
         expect(result.length).to.equal(2);
 
         expect(result[0].context.indicator.gid).to.equal('population');
@@ -505,11 +511,11 @@ describe('Datapoints Translations Update Plugin', () => {
     });
 
     UpdateDatapointTranslations.updateDatapointsTranslations(externalContext, () => {
-      done();
+      return done();
     });
   }));
 
-  it('transforms stream before changes are actually applied: if no indicators in context can be mapped to changes - nothign should be changed', sandbox(function (done: Function) {
+  it('transforms stream before changes are actually applied: if no indicators in context can be mapped to changes - nothign should be changed', sandbox(function (done: Function): void {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
@@ -530,17 +536,17 @@ describe('Datapoints Translations Update Plugin', () => {
       }
     };
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
+    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin: any, externalContextFrozen: any, callback: Function) => {
       const changes = hi([{changesDescriptor, context}]);
 
-      plugin.transformStreamBeforeChangesApplied(changes).toArray((result) => {
+      plugin.transformStreamBeforeChangesApplied(changes).toArray((result: any) => {
         expect(result.length).to.equal(0);
-        callback();
+        return callback();
       });
     });
 
     UpdateDatapointTranslations.updateDatapointsTranslations(externalContext, () => {
-      done();
+      return done();
     });
   }));
 });

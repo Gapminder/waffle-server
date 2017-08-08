@@ -18,6 +18,8 @@ export {
 interface RawDdf {
   datasetName?: string;
   datasetVersionCommit?: string;
+  timeConcepts?: any;
+  concepts?: any[];
 }
 
 function packToCsv(data: any): any {
@@ -34,7 +36,11 @@ function packToWsJson(data: any): any {
   const rawDdf: RawDdf = _.get(data, 'rawDdf', {});
   rawDdf.datasetName = _.get(data, 'rawDdf.dataset.name', '');
   rawDdf.datasetVersionCommit = _.get(data, 'rawDdf.transaction.commit', '');
-
+  rawDdf.concepts = _.get(rawDdf, 'concepts', []);
+  rawDdf.timeConcepts = _.chain(rawDdf.concepts)
+    .filter((concept: any) => _.includes(constants.TIME_CONCEPT_TYPES, concept[constants.PROPERTIES][constants.CONCEPT_TYPE]))
+    .keyBy(constants.GID)
+    .value();
   const ddfDataType = _.get(data, 'type');
 
   let json = {};

@@ -62,8 +62,8 @@ function _loadConcepts(pipe: any, done: Function): void {
 
       pipe.raw = {
         concepts,
-        subsetOf: reduceUniqueNestedValues(concepts, 'properties.drill_up'),
-        domains: reduceUniqueNestedValues(concepts, 'properties.domain')
+        subsetOf: reduceUniqueNestedValues(concepts, `${constants.PROPERTIES}.drill_up`),
+        domains: reduceUniqueNestedValues(concepts, `${constants.PROPERTIES}.domain`)
       };
 
       return done(error, pipe);

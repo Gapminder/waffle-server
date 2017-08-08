@@ -108,11 +108,17 @@ function ___extendWhereWithDefaultClause(query: any, options: any): void {
 
   query.where = {
     $and: [
-      { dimensions: { $size: _.size(query.select.key) } },
+      { dimensions: { $size: _.size(query.select.key) - _.chain(query.select.key).intersection(options.timeConceptsGids).size().value() } },
       { dimensionsConcepts: { $all: _.map(query.select.key, (conceptGid: string) => options.conceptOriginIdsByGids[conceptGid]) } },
       { measure: { $in: query.select.value } }
     ]
   };
+
+  const hasTimeConceptInQueryHeader = _.some(query.select.key, (header: string) => _.includes(options.timeConceptsGids, header));
+
+  if (!hasTimeConceptInQueryHeader) {
+    query.where.$and.push({time: null});
+  }
 
   if (!_.isEmpty(subWhere)) {
     query.where.$and.push(subWhere);
@@ -151,7 +157,7 @@ function __normalizeJoin(query: any, options: any): void {
     const isTimePropertyFilter = isEntityFilter(this.key, query) && ddfQueryUtils.isTimePropertyFilter(this.key, options.timeConceptsGids);
 
     if (isWhereClause && isTimePropertyFilter) {
-      normalizedFilter = ddfQueryUtils.normalizeTimePropertyFilter(this.key, filterValue, this.path, query.join);
+      normalizedFilter = ddfQueryUtils.normalizeDatapointTimePropertyFilter(this.key, filterValue, this.path, query.join);
     }
 
     const isEntityPropertyFilter = isDatapointEntityPropertyFilter(this.key, query);
@@ -171,14 +177,14 @@ function __normalizeJoin(query: any, options: any): void {
     }
 
     if (this.key === 'key') {
-      const conceptType = _.get(options, `conceptsByGids.${filterValue}.properties.concept_type`);
-      const domainOrSetOriginId = _.get(options, `conceptsByGids.${filterValue}.originId`);
+      const conceptType = _.get(options, `conceptsByGids.${filterValue}.${constants.PROPERTIES}.${constants.CONCEPT_TYPE}`);
+      const domainOrSetOriginId = _.get(options, `conceptsByGids.${filterValue}.${constants.ORIGIN_ID}`);
 
-      if (conceptType === 'entity_set') {
+      if (conceptType === constants.CONCEPT_TYPE_ENTITY_SET) {
         normalizedFilter = {
           sets: domainOrSetOriginId
         };
-      } else if (conceptType === 'entity_domain' || _.includes(constants.TIME_CONCEPT_TYPES, conceptType)) {
+      } else if (conceptType === constants.CONCEPT_TYPE_ENTITY_DOMAIN || _.includes(constants.TIME_CONCEPT_TYPES, conceptType)) {
         normalizedFilter = {
           domain: domainOrSetOriginId
         };

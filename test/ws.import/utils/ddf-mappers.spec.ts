@@ -148,8 +148,7 @@ describe('DDF mappers', () => {
       {
         dataset: 'dsId',
         dimensions: [
-          'usaOriginId',
-          '1942OriginId'
+          'usaOriginId'
         ],
         dimensionsConcepts: [
           'countryOriginId',
@@ -181,8 +180,7 @@ describe('DDF mappers', () => {
       {
         dataset: 'dsId',
         dimensions: [
-          'usaOriginId',
-          '1942OriginId'
+          'usaOriginId'
         ],
         dimensionsConcepts: [
           'countryOriginId',
@@ -273,8 +271,7 @@ describe('DDF mappers', () => {
       {
         dataset: 'dsId',
         dimensions: [
-          'usaOriginId',
-          '1942OriginId'
+          'usaOriginId'
         ],
         dimensionsConcepts: [
           'countryOriginId',
@@ -364,8 +361,7 @@ describe('DDF mappers', () => {
       {
         dataset: 'dsId',
         dimensions: [
-          'usaOriginId',
-          '1942OriginId'
+          'usaOriginId'
         ],
         dimensionsConcepts: [
           'countryOriginId',
@@ -455,8 +451,7 @@ describe('DDF mappers', () => {
       {
         dataset: 'dsId',
         dimensions: [
-          'usaOriginId',
-          '1942OriginId'
+          'usaOriginId'
         ],
         dimensionsConcepts: [
           'countryOriginId',
@@ -547,8 +542,7 @@ describe('DDF mappers', () => {
       {
         dataset: 'dsId',
         dimensions: [
-          'usaOriginId',
-          '1942OriginId'
+          'usaOriginId'
         ],
         dimensionsConcepts: [
           'countryOriginId',

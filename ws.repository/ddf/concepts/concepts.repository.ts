@@ -18,7 +18,7 @@ export class ConceptsRepository extends VersionedModelRepository {
   }
 
   private static prefixWithProperties(object: any): any {
-    return _.mapKeys(object, (value: any, property: any) => `properties.${property}`);
+    return _.mapKeys(object, (value: any, property: any) => `${constants.PROPERTIES}.${property}`);
   }
 
   public constructor(versionQueryFragment: any, datasetId?: any, version?: any) {
@@ -41,7 +41,7 @@ export class ConceptsRepository extends VersionedModelRepository {
     if (!_.isEmpty(projection)) {
       projection.gid = 1;
       projection.originId = 1;
-      projection['properties.concept_type'] = 1;
+      projection[`${constants.PROPERTIES}.${constants.CONCEPT_TYPE}`] = 1;
     }
 
     const normalizedWhereClause = this._normalizeWhereClause(where);
@@ -51,23 +51,23 @@ export class ConceptsRepository extends VersionedModelRepository {
   }
 
   public addSubsetOfByGid({gid, parentConceptId}: any, done: (err: any) => void): any {
-    const query = this._composeQuery({'properties.drill_up': gid});
+    const query = this._composeQuery({[`${constants.PROPERTIES}.drill_up`]: gid});
     return Concepts.update(query, {$addToSet: {subsetOf: parentConceptId}}, {multi: true}, done);
   }
 
   public setDomainByGid({gid, domainConceptId}: any, done: (err: any) => void): any {
-    const query = this._composeQuery({'properties.domain': gid});
+    const query = this._composeQuery({[`${constants.PROPERTIES}.domain`]: gid});
     return Concepts.update(query, {$set: {domain: domainConceptId}}, {multi: true}, done);
   }
 
   public findDistinctDrillups(done: Function): Promise<Object> {
     const query = this._composeQuery();
-    return Concepts.distinct('properties.drill_up', query).lean().exec(done);
+    return Concepts.distinct(`${constants.PROPERTIES}.drill_up`, query).lean().exec(done);
   }
 
   public findDistinctDomains(done: Function): Promise<Object> {
     const query = this._composeQuery();
-    return Concepts.distinct('properties.domain', query).lean().exec(done);
+    return Concepts.distinct(`${constants.PROPERTIES}.domain`, query).lean().exec(done);
   }
 
   public closeByGid(gid: any, onClosed: Function): any {

@@ -43,7 +43,8 @@ function updateDatapointsTranslations(externalContext: any, done: Function): voi
         previousTransaction: externalContext.previousTransaction,
         pathToLangDiff: externalContext.pathToLangDiff,
         concepts: externalContext.concepts,
-        previousConcepts: externalContext.previousConcepts
+        previousConcepts: externalContext.previousConcepts,
+        timeConcepts: externalContext.timeConcepts
       }, previousAndCurrentSegregatedEntities));
 
       return createTranslationsUpdater(plugin, externalContextFrozen, (error: string) => {
@@ -98,11 +99,12 @@ function makeQueryToFetchTranslationTarget(changesDescriptor: ChangesDescriptor,
     logger.error('Measure was not found! ChangesDescriptor internals are: ', changesDescriptor.changes);
   }
 
-  const dimensionsEntityOriginIds = datapointsUtils.getDimensionsAsEntityOriginIds(changesDescriptor.changes, externalContext);
+  const {dimensionsEntityOriginIds, timeDimension: time} = datapointsUtils.getDimensionsAsEntityOriginIds(changesDescriptor.changes, externalContext);
 
   return {
+    time,
     measureOriginId: indicatorOriginId,
-    dimensionsSize: _.size(externalContext.dimensions),
+    dimensionsSize: _.size(dimensionsEntityOriginIds),
     dimensionsEntityOriginIds
   };
 }

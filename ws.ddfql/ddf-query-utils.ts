@@ -6,7 +6,8 @@ import { constants } from '../ws.utils/constants';
 export {
   toSafeQuery,
   replaceValueOnPath,
-  normalizeTimePropertyFilter,
+  normalizeDatapointTimePropertyFilter,
+  normalizeEntityTimePropertyFilter,
   isTimePropertyFilter,
   isDomainPropertyFilter,
   normalizeOrderBy,
@@ -95,7 +96,7 @@ function normalizeOrderBy(query: any): void {
   });
 }
 
-function normalizeTimePropertyFilter(key: string, filterValue: any, path: string[], query: any): any {
+function normalizeDatapointTimePropertyFilter(key: string, filterValue: any, path: string[], query: any): any {
   let timeType = '';
   const normalizedFilter = {
     'time.millis': traverse(filterValue).map(function (value: any): any {
@@ -118,6 +119,33 @@ function normalizeTimePropertyFilter(key: string, filterValue: any, path: string
   // always set latest detected time type
   const conditionsForTimeEntities = _.get(query, path.slice(0, path.length - 1), []);
   conditionsForTimeEntities['time.timeType'] = timeType;
+
+  return normalizedFilter;
+}
+
+function normalizeEntityTimePropertyFilter(key: string, filterValue: any, path: string[], query: any): any {
+  let timeType = '';
+  const normalizedFilter = {
+    [`parsed${constants.PROPERTIES}.${key}.millis`]: traverse(filterValue).map(function (value: any): any {
+      /* tslint:disable: no-invalid-this */
+      if (this.notLeaf) {
+        return value;
+      }
+
+      if (_.isObject(value) && _.isEmpty(value)) {
+        return value;
+      }
+
+      const timeDescriptor = ddfTimeUtils.parseTime(value);
+      timeType = timeDescriptor.type;
+      return timeDescriptor.time;
+      /* tslint:enable: no-invalid-this */
+    })
+  };
+
+  // always set latest detected time type
+  const conditionsForTimeEntities = _.get(query, path.slice(0, path.length - 1), []);
+  conditionsForTimeEntities[`parsed${constants.PROPERTIES}.${key}.timeType`] = timeType;
 
   return normalizedFilter;
 }
@@ -177,7 +205,7 @@ function wrapEntityProperties(key: string, options: any): string {
   const propertyName = cutPrefixByDot(key, options.domainGids);
 
   if (!isTimePropertyFilter(key, options) && isEntityPropertyFilter(propertyName, options)) {
-    return `properties.${propertyName}`;
+    return `${constants.PROPERTIES}.${propertyName}`;
   }
 
   return propertyName;
@@ -194,7 +222,7 @@ function getConceptGids(concepts: ReadonlyArray<any>): string[] {
 function getDomainGids(concepts: ReadonlyArray<any>): any[] {
   return _.chain(concepts)
     .filter((concept: any) => {
-      return _.includes(constants.DEFAULT_ENTITY_GROUP_TYPES, _.get(concept, 'properties.concept_type', null));
+      return _.includes(constants.DEFAULT_ENTITY_GROUP_TYPES, _.get(concept, `${constants.PROPERTIES}.${constants.CONCEPT_TYPE}`, null));
     })
     .map(constants.GID)
     .value();

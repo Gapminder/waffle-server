@@ -21,7 +21,7 @@ function getTimeConceptGids(concepts: any): any[] {
 
 function getTimeConcepts(concepts: any): any[] {
   return _.chain(concepts)
-    .filter((concept: any) => isTimeConceptType(_.get(concept, 'properties.concept_type')))
+    .filter((concept: any) => isTimeConceptType(_.get(concept, `${constants.PROPERTIES}.${constants.CONCEPT_TYPE}`)))
     .value();
 }
 
@@ -31,7 +31,6 @@ function isTimeConceptType(conceptType: any): boolean {
 
 function getSortedDimensionConceptGids(conceptGids: string[], concepts: any[]): any {
   return _.chain(conceptGids)
-    .filter((conceptGid: string) => !isTimeConceptType(concepts[conceptGid].type))
     .map((conceptGid: string) => ({domain: _.get(concepts[conceptGid], 'domain.gid', null), gid: conceptGid}))
     .sortBy(['domain', 'gid'])
     .map('gid')

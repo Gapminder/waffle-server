@@ -1,14 +1,15 @@
-import '../../../ws.repository';
+import { expect } from 'chai';
+import * as hi from 'highland';
 
 import * as _ from 'lodash';
-import * as hi from 'highland';
 import * as sinon from 'sinon';
 import * as sinonTest from 'sinon-test';
-import {expect} from 'chai';
 import * as datapointsUtils from '../../../ws.import/utils/datapoints.utils';
-import {DatapointsRepositoryFactory} from '../../../ws.repository/ddf/data-points/data-points.repository';
-import {EntitiesRepositoryFactory} from '../../../ws.repository/ddf/entities/entities.repository';
 import * as ddfMappers from '../../../ws.import/utils/ddf-mappers';
+import '../../../ws.repository';
+import { DatapointsRepositoryFactory } from '../../../ws.repository/ddf/data-points/data-points.repository';
+import { EntitiesRepositoryFactory } from '../../../ws.repository/ddf/entities/entities.repository';
+import { constants } from '../../../ws.utils/constants';
 
 const sandbox = sinonTest.configureTest(sinon);
 
@@ -34,13 +35,26 @@ const threeDimensionsContext = {
   },
   dimensions: {
     anno: {
+      type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
       originId: 'annoOriginId'
     },
-    company: {
-      originId: 'companyOriginId',
-      domain: 'domainOfCompanyOriginId'
+    domainOfCompany: {
+      type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
+      originId: 'domainOfCompanyOriginId'
     },
-    another_dim: {
+    company: {
+      type: constants.CONCEPT_TYPE_ENTITY_SET,
+      originId: 'companyOriginId',
+      domain: {
+        originId: 'domainOfCompanyOriginId'
+      }
+    },
+    anotherDimDomain: {
+      type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
+      originId: 'another_dimDomainOriginId'
+    },
+    anotherDim: {
+      type: constants.CONCEPT_TYPE_ENTITY_SET,
       originId: 'anotherDimOriginId',
       domain: {
         originId: 'another_dimDomainOriginId'
@@ -94,7 +108,7 @@ const datapoint2 = {
   datapoint: {
     anno: 1912,
     company: 'gapminder',
-    another_dim: 'some_value_of_another_dim'
+    anotherDim: 'some_value_of_another_dim'
   },
   context: threeDimensionsContext
 };
@@ -156,7 +170,7 @@ describe('Datapoints Utils', () => {
     const mapDdfDataPointToWsModelStub = this.stub(ddfMappers, 'mapDdfDataPointToWsModel').returns(wsDatapoints);
 
     const datapointsCreateStub = this.spy();
-    this.stub(DatapointsRepositoryFactory, 'versionAgnostic').callsFake(() => ({create: datapointsCreateStub}));
+    this.stub(DatapointsRepositoryFactory, 'versionAgnostic').callsFake(() => ({ create: datapointsCreateStub }));
 
     const saveEntitiesFoundInDatapoints = this.stub().returns(Promise.resolve(entitiesFoundInDatapoints));
 
@@ -174,10 +188,9 @@ describe('Datapoints Utils', () => {
     });
   }));
 
-  it('should extract dimensions and measures from datapackage resource', function() {
+  it('should extract dimensions and measures from datapackage resource', function () {
     const externalContext = {
-      previousConcepts: {
-      },
+      previousConcepts: {},
       concepts: {
         lines_of_code: {
           originId: 'lines_of_code'
@@ -199,13 +212,16 @@ describe('Datapoints Utils', () => {
       dimensions: ['anno', 'company']
     };
 
-    const {measures, dimensions} = datapointsUtils.getDimensionsAndMeasures(resource, externalContext);
+    const { measures, dimensions } = datapointsUtils.getDimensionsAndMeasures(resource, externalContext);
 
-    expect(measures).to.deep.equal({lines_of_code: externalContext.concepts.lines_of_code});
-    expect(dimensions).to.deep.equal({anno: externalContext.concepts.anno, company: externalContext.concepts.company});
+    expect(measures).to.deep.equal({ lines_of_code: externalContext.concepts.lines_of_code });
+    expect(dimensions).to.deep.equal({
+      anno: externalContext.concepts.anno,
+      company: externalContext.concepts.company
+    });
   });
 
-  it('should extract dimensions and measures from datapackage resource: anno taken from previous concepts', function() {
+  it('should extract dimensions and measures from datapackage resource: anno taken from previous concepts', function () {
     const externalContext = {
       previousConcepts: {
         anno: {
@@ -230,16 +246,18 @@ describe('Datapoints Utils', () => {
       dimensions: ['anno', 'company']
     };
 
-    const {measures, dimensions} = datapointsUtils.getDimensionsAndMeasures(resource, externalContext);
+    const { measures, dimensions } = datapointsUtils.getDimensionsAndMeasures(resource, externalContext);
 
-    expect(measures).to.deep.equal({lines_of_code: externalContext.concepts.lines_of_code});
-    expect(dimensions).to.deep.equal({anno: externalContext.previousConcepts.anno, company: externalContext.concepts.company});
+    expect(measures).to.deep.equal({ lines_of_code: externalContext.concepts.lines_of_code });
+    expect(dimensions).to.deep.equal({
+      anno: externalContext.previousConcepts.anno,
+      company: externalContext.concepts.company
+    });
   });
 
-  it('should throw an error if measures were not found', function() {
+  it('should throw an error if measures were not found', function () {
     const externalContext = {
-      previousConcepts: {
-      },
+      previousConcepts: {},
       concepts: {
         anno: {
           originId: 'anno'
@@ -260,10 +278,9 @@ describe('Datapoints Utils', () => {
     expect(error.message).to.equal(`Measures were not found for indicators: ${resource.indicators} from resource ${resource.path}`);
   });
 
-  it('should throw an error if dimensions were not found', function() {
+  it('should throw an error if dimensions were not found', function () {
     const externalContext = {
-      previousConcepts: {
-      },
+      previousConcepts: {},
       concepts: {
         lines_of_code: {
           originId: 'lines_of_code'
@@ -281,10 +298,10 @@ describe('Datapoints Utils', () => {
     expect(error.message).to.equal(`Dimensions were not found for dimensions: ${resource.dimensions} from resource ${resource.path}`);
   });
 
-  it('should find all entities', sandbox(function() {
+  it('should find all entities', sandbox(function () {
     const thenSegregateEntitiesStub = this.spy();
 
-    const findAllStub = this.stub().returns({then: thenSegregateEntitiesStub});
+    const findAllStub = this.stub().returns({ then: thenSegregateEntitiesStub });
     const latestVersionStub = this.stub(EntitiesRepositoryFactory, 'latestVersion').callsFake(() => {
       return {
         findAll: findAllStub
@@ -302,10 +319,10 @@ describe('Datapoints Utils', () => {
     sinon.assert.calledWith(thenSegregateEntitiesStub, datapointsUtils.segregateEntities);
   }));
 
-  it('should find all previous entities', sandbox(function() {
+  it('should find all previous entities', sandbox(function () {
     const thenSegregateEntitiesStub = this.spy();
 
-    const findAllStub = this.stub().returns({then: thenSegregateEntitiesStub});
+    const findAllStub = this.stub().returns({ then: thenSegregateEntitiesStub });
     const currentVersionStub = this.stub(EntitiesRepositoryFactory, 'currentVersion').callsFake(() => {
       return {
         findAll: findAllStub
@@ -332,21 +349,31 @@ describe('Datapoints Utils', () => {
     sinon.assert.calledWith(thenSegregateEntitiesStub, datapointsUtils.segregateEntities);
   }));
 
-  it('should get dimensions as entity origin ids', function () {
+  it('should get dimensions as entity origin ids', function (): void {
     const datapoint = {
       anno: 1905,
       company: 'gapminder',
-      another_dim: 'some_value_of_another_dim'
+      anotherDim: 'some_value_of_another_dim'
     };
 
     const context = {
-      dimensions: _.extend({not_existing_dimension: {}}, threeDimensionsContext.dimensions),
+      dimensions: _.extend({ not_existing_dimension: {} }, threeDimensionsContext.dimensions),
+      timeConcepts: {anno: {gid: 'anno', originId: 'annoOriginId'}},
       segregatedEntities: {
         groupedByGid: {
           1905: [{
+            parsedProperties: {
+              anno: {
+                millis: -2051229600000,
+                timeType: 'YEAR_TYPE'
+              }
+            },
+            domain: 'anno',
             originId: '1905OriginId'
           }],
           gapminder: [{
+            domain: 'domainOfCompanyOriginId',
+            sets: ['companyOriginId'],
             originId: 'gapminderOriginId'
           }]
         }
@@ -354,20 +381,27 @@ describe('Datapoints Utils', () => {
       segregatedPreviousEntities: {
         groupedByGid: {
           some_value_of_another_dim: [{
+            domain: 'another_dimDomainOriginId',
+            sets: ['anotherDimOriginId'],
             originId: 'some_value_of_another_dimOriginId'
           }]
         }
       }
     };
 
-    const dimensionsAsOriginIds = datapointsUtils.getDimensionsAsEntityOriginIds(datapoint, context);
+    const { dimensionsEntityOriginIds: dimensionsAsOriginIds, timeDimension } = datapointsUtils.getDimensionsAsEntityOriginIds(datapoint, context);
 
-    expect(_.sortBy(dimensionsAsOriginIds)).to.deep.equal(_.sortBy(['1905OriginId', 'some_value_of_another_dimOriginId', 'gapminderOriginId']));
+    expect(_.sortBy(dimensionsAsOriginIds)).to.deep.equal(_.sortBy(['some_value_of_another_dimOriginId', 'gapminderOriginId']));
+    expect(timeDimension).to.deep.equal({
+      'time.conceptGid': 'anno',
+      'time.millis': -2051229600000,
+      'time.timeType': 'YEAR_TYPE'
+    });
   });
 
   it('should segregate entities: on empty entities - empty result', () => {
     const segregatedEntities = datapointsUtils.segregateEntities([]);
-    expect(segregatedEntities).to.deep.equal({bySet: {}, byDomain: {}, byGid: {}, groupedByGid: {}});
+    expect(segregatedEntities).to.deep.equal({ bySet: {}, byDomain: {}, byGid: {}, groupedByGid: {} });
   });
 
   it('should segregate entities', () => {
@@ -382,8 +416,8 @@ describe('Datapoints Utils', () => {
     const entity12 = {
       gid: '12',
       sets: [
-        {originId: 'ageEntitySet1'},
-        {originId: 'ageEntitySet2'}
+        { originId: 'ageEntitySet1' },
+        { originId: 'ageEntitySet2' }
       ]
     };
 
@@ -436,23 +470,29 @@ describe('Datapoints Utils', () => {
     });
   });
 
-  it('should find entities in datapoint: concept as domain', sandbox(function() {
+  it('should find entities in datapoint: concept as domain', sandbox(function (): void {
     const context = {
       segregatedEntities: {
         byGid: {
-          1925: {},
-          1926: {},
-          gapminder: {},
-          some_value_of_another_dim: {}
+          1925: {gid: '1925'},
+          1926: {gid: '1926'},
+          gapminder: {gid: 'gapminder'},
+          some_value_of_another_dim: {gid: 'some_value_of_another_dim'}
         }
       },
       dimensions: {
         anno: {
+          gid: 'anno',
+          type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
           originId: 'annoOriginId'
         },
         company: {
+          gid: 'company',
+          type: constants.CONCEPT_TYPE_ENTITY_SET,
           originId: 'companyOriginId',
-          domain: 'domainOfCompanyOriginId'
+          domain: {
+            originId: 'domainOfCompanyOriginId'
+          }
         }
       },
       measures: {
@@ -477,26 +517,26 @@ describe('Datapoints Utils', () => {
     const entities = datapointsUtils.findEntitiesInDatapoint(datapoint.datapoint, context, externalContext);
 
     sinon.assert.calledOnce(foundEntityMappperStub);
-    sinon.assert.calledWith(foundEntityMappperStub, datapoint.datapoint, {
+    sinon.assert.calledWith(foundEntityMappperStub, datapoint.datapoint, sinon.match({
       version: externalContext.transaction.createdAt,
       datasetId: externalContext.dataset._id,
       timeConcepts: externalContext.timeConcepts,
-      domain: { originId: 'annoOriginId' },
-      concept: { originId: 'annoOriginId' },
+      domain: { gid: 'anno', originId: 'annoOriginId', type: constants.CONCEPT_TYPE_ENTITY_DOMAIN },
+      concept: { gid: 'anno', originId: 'annoOriginId', type: constants.CONCEPT_TYPE_ENTITY_DOMAIN },
       filename: context.filename
-    });
+    }));
     expect(entities.length).to.equal(1);
     expect(entities[0]).to.equal(stubEntity);
   }));
 
-  it('should find entities in datapoint', sandbox(function() {
+  it('should find entities in datapoint', sandbox(function (): void {
     const context = {
       segregatedEntities: {
         byGid: {
-          1925: {},
-          1926: {},
-          gapminder: {},
-          some_value_of_another_dim: {}
+          1925: {gid: '1925'},
+          1926: {gid: '1926'},
+          gapminder: {gid: 'gapminder'},
+          some_value_of_another_dim: {gid: 'some_value_of_another_dim'}
         }
       },
       dimensions: {
@@ -507,6 +547,7 @@ describe('Datapoints Utils', () => {
         },
         company: {
           gid: 'company',
+          type: constants.CONCEPT_TYPE_ENTITY_SET,
           originId: 'companyOriginId',
           domain: 'domainOfCompanyOriginId'
         }
@@ -528,31 +569,31 @@ describe('Datapoints Utils', () => {
     };
 
     const stubEntity = {};
-    const foundEntityMappperStub = this.stub(ddfMappers, 'mapDdfEntityFoundInDatapointToWsModel').returns(stubEntity);
+    const foundEntityMapperStub = this.stub(ddfMappers, 'mapDdfEntityFoundInDatapointToWsModel').returns(stubEntity);
 
     const entities = datapointsUtils.findEntitiesInDatapoint(datapoint.datapoint, context, externalContext);
 
-    sinon.assert.calledOnce(foundEntityMappperStub);
-    sinon.assert.calledWith(foundEntityMappperStub, datapoint.datapoint, {
+    sinon.assert.calledOnce(foundEntityMapperStub);
+    sinon.assert.calledWith(foundEntityMapperStub, datapoint.datapoint, sinon.match({
       version: externalContext.transaction.createdAt,
       datasetId: externalContext.dataset._id,
       timeConcepts: externalContext.timeConcepts,
       domain: 'timeDomainOriginId',
       concept: { domain: 'timeDomainOriginId', gid: 'anno', originId: 'annoOriginId' },
       filename: context.filename
-    });
+    }));
     expect(entities.length).to.equal(1);
     expect(entities[0]).to.equal(stubEntity);
   }));
 
-  it('should find entities in datapoint: existed entity should not be found', sandbox(function() {
+  it('should find entities in datapoint: existed entity should not be found', sandbox(function (): void {
     const context = {
       segregatedEntities: {
         byGid: {
-          1925: {},
-          1926: {},
-          gapminder: {},
-          some_value_of_another_dim: {}
+          1925: {gid: '1925'},
+          1926: {gid: '1926'},
+          gapminder: {gid: 'gapminder'},
+          some_value_of_another_dim: {gid: 'some_value_of_another_dim'}
         }
       },
       dimensions: {
@@ -563,6 +604,7 @@ describe('Datapoints Utils', () => {
         },
         company: {
           gid: 'company',
+          type: constants.CONCEPT_TYPE_ENTITY_SET,
           originId: 'companyOriginId',
           domain: 'domainOfCompanyOriginId'
         }
@@ -607,7 +649,7 @@ describe('Datapoints Utils', () => {
 
     const entitiesByGid = _.keyBy(entities, 'gid');
 
-    const createStub = this.stub().returns(Promise.resolve(_.map(entities, (entity) => ({toObject: () => entity}))));
+    const createStub = this.stub().returns(Promise.resolve(_.map(entities, (entity) => ({ toObject: () => entity }))));
 
     this.stub(EntitiesRepositoryFactory, 'versionAgnostic').callsFake(() => {
       return {

@@ -93,7 +93,7 @@ function normalizeWhere(query: any, options: any): void {
 
     if (ddfQueryUtils.isEntityPropertyFilter(this.key, options)) {
       if (ddfQueryUtils.isTimePropertyFilter(this.key, options.timeConceptsGids)) {
-        normalizedFilter = ddfQueryUtils.normalizeTimePropertyFilter(this.key, filterValue, this.path, query.where);
+        normalizedFilter = ddfQueryUtils.normalizeEntityTimePropertyFilter(this.key, filterValue, this.path, query.where);
       } else {
         normalizedFilter = {
           [ddfQueryUtils.wrapEntityProperties(this.key, options)]: filterValue
@@ -148,7 +148,7 @@ function normalizeJoin(query: any, options: any): void {
 
     if (ddfQueryUtils.isEntityPropertyFilter(this.key, options) && _.includes(this.path, 'where')) {
       if (ddfQueryUtils.isTimePropertyFilter(this.key, options.timeConceptsGids)) {
-        normalizedFilter = ddfQueryUtils.normalizeTimePropertyFilter(this.key, filterValue, this.path, query.join);
+        normalizedFilter = ddfQueryUtils.normalizeDatapointTimePropertyFilter(this.key, filterValue, this.path, query.join);
       } else if (joinKeys[this.key]) {
         normalizedFilter = {
           gid: filterValue
@@ -162,11 +162,11 @@ function normalizeJoin(query: any, options: any): void {
 
     if (this.key === 'key') {
       normalizedFilter = {};
-      if (_.get(conceptsByGids, `${filterValue}.properties.concept_type`) === 'entity_set') {
+      if (_.get(conceptsByGids, `${filterValue}.${constants.PROPERTIES}.${constants.CONCEPT_TYPE}`) === constants.CONCEPT_TYPE_ENTITY_SET) {
         normalizedFilter.sets = filterValue;
       }
 
-      if (_.get(conceptsByGids, `${filterValue}.properties.concept_type`) === 'entity_domain') {
+      if (_.get(conceptsByGids, `${filterValue}.${constants.PROPERTIES}.${constants.CONCEPT_TYPE}`) === constants.CONCEPT_TYPE_ENTITY_DOMAIN) {
         normalizedFilter.domain = filterValue;
       }
     }

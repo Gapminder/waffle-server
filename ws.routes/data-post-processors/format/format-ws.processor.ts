@@ -1,9 +1,10 @@
-import * as _ from 'lodash';
 import * as hi from 'highland';
-import { constants } from '../../../ws.utils/constants';
+import * as _ from 'lodash';
 import * as ddfQueryUtils from '../../../ws.ddfql/ddf-query-utils';
-import * as commonService from '../../../ws.services/common.service';
 import * as ddfImportUtils from '../../../ws.import/utils/import-ddf.utils';
+import * as commonService from '../../../ws.services/common.service';
+import { constants } from '../../../ws.utils/constants';
+import {formatTime} from 'ddf-time-utils';
 
 export {
   mapConceptToWsJson as mapConcepts,
@@ -47,7 +48,7 @@ function mapConceptToWsJson(data: any): any {
   };
 
   if (data.language) {
-    return _.extend(result, {language: data.language});
+    return _.extend(result, { language: data.language });
   }
 
   return result;
@@ -80,14 +81,14 @@ function mapEntitiesToWsJson(data: any): any {
   };
 
   if (data.language) {
-    return _.extend(result, {language: data.language});
+    return _.extend(result, { language: data.language });
   }
 
   return result;
 }
 
 function _mapEntitiesPropertiesToWsJson(entityDomainGid: any, select: any, entity: any, language: string): any {
-  const flattenedEntity = _.extend({[entityDomainGid]: entity.gid}, commonService.translateDocument(entity, language));
+  const flattenedEntity = _.extend({ [entityDomainGid]: entity.gid }, commonService.translateDocument(entity, language));
 
   return _.map(select, (property: string) => {
     return flattenedEntity[property];
@@ -105,6 +106,7 @@ function mapDatapointsToWsJson(data: any): any {
 
   const conceptsByOriginId = _.keyBy(data.concepts, constants.ORIGIN_ID);
   const entitiesByOriginId = _.keyBy(data.entities, constants.ORIGIN_ID);
+  const timeConcepts = _.get(data, 'timeConcepts', {});
 
   const result = {
     dataset: data.datasetName,
@@ -114,10 +116,14 @@ function mapDatapointsToWsJson(data: any): any {
   };
 
   if (data.language) {
-    _.extend(result, {language: data.language});
+    _.extend(result, { language: data.language });
   }
 
+  let positionTimeConceptInHeader;
   const headerConceptsDictionary = _.reduce(data.headers, (dictionary: any, header: any, index: any) => {
+    if (timeConcepts.hasOwnProperty(header)) {
+      positionTimeConceptInHeader = index;
+    }
     dictionary.set(header, index);
     return dictionary;
   }, new Map());
@@ -129,10 +135,11 @@ function mapDatapointsToWsJson(data: any): any {
         selectedConceptsByOriginId,
         selectedConceptsOriginIds,
         headerConceptsDictionary,
-        headers: data.headers
+        headers: data.headers,
+        positionTimeConceptInHeader
       };
 
-      const newRow = createNewDatapointsRow({dimensions: datapoint._id}, context);
+      const newRow = createNewDatapointsRow(datapoint._id, context);
 
       _.each(datapoint.indicators, (indicator: any) => {
         const measureGid = conceptsByOriginId[indicator.measure][constants.GID];
@@ -147,13 +154,24 @@ function mapDatapointsToWsJson(data: any): any {
     })
     .collect()
     .map((unsortedRows: any[]) => {
-      return _.extend(result, {rows: sortRows(unsortedRows, data.query, data.headers)});
+      return _.extend(result, { rows: sortRows(unsortedRows, data.query, data.headers) });
     });
 }
 
 function createNewDatapointsRow(datapoint: any, externalContext: any): any {
-  const {entitiesByOriginId, selectedConceptsByOriginId, selectedConceptsOriginIds, headerConceptsDictionary, headers} = externalContext;
+  const {
+    entitiesByOriginId,
+    selectedConceptsByOriginId,
+    selectedConceptsOriginIds,
+    headerConceptsDictionary,
+    headers,
+    positionTimeConceptInHeader
+  } = externalContext;
   const rowTemplate = _.times(headers.length, () => null);
+
+  if (!_.isNil(positionTimeConceptInHeader)) {
+    rowTemplate[positionTimeConceptInHeader] = formatTime(_.get(datapoint, 'time'));
+  }
 
   return _.reduce(datapoint.dimensions, (row: any, dimension: any) => {
     const originEntity = entitiesByOriginId[dimension];

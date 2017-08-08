@@ -1,6 +1,7 @@
 import * as cliUtils from '../../../cli.utils';
 import * as e2eUtils from '../../../e2e.utils';
 import { e2eEnv } from '../../../e2e.env';
+import { constants } from '../../../../ws.utils/constants';
 
 const INDEX_OF_INITIAL_COMMIT = 0;
 const COMMIT_INDEX_TO_IMPORT = process.env.COMMIT_INDEX_TO_IMPORT || 0;
@@ -127,7 +128,7 @@ describe('Complex queries for Entities, Datapoints: JOIN', function() {
         from: 'concepts',
         where: {
           $and: [
-            {concept_type: {$ne: 'entity_set'}},
+            {concept_type: {$ne: constants.CONCEPT_TYPE_ENTITY_SET}},
             {concept_type: {$in: ['time', 'string']}}
           ]
         },
