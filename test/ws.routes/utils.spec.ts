@@ -599,10 +599,15 @@ describe('Routes utils', () => {
       };
 
       const jsonSpy = this.spy();
+      const statusStub = this.stub();
       const nextSpy = this.spy();
 
       const res: any = {
         use_express_redis_cache: true,
+        status(... args: any[]): any {
+          statusStub(... args);
+          return this;
+        },
         json: jsonSpy
       };
 
@@ -611,6 +616,9 @@ describe('Routes utils', () => {
 
       sinon.assert.calledOnce(jsonSpy);
       sinon.assert.calledWith(jsonSpy, expectedErrorResponse);
+
+      sinon.assert.calledOnce(statusStub);
+      sinon.assert.calledWith(statusStub, 500);
 
       sinon.assert.notCalled(nextSpy);
 

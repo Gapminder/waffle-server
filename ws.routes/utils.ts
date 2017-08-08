@@ -183,7 +183,7 @@ function respondWithRawDdf(query: any, req: express.Request, res: express.Respon
     if (error) {
       logger.error(error);
       (res as any).use_express_redis_cache = false;
-      return res.json(toErrorResponse(error));
+      return res.status(500).json(toErrorResponse(error));
     }
 
     _storeWarmUpQueryForDefaultDataset(query);

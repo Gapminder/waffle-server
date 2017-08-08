@@ -51,7 +51,9 @@ const constants: any = {
   ASSETS_CACHE_CONTROL_MAX_AGE_IN_MILLIS: (7 * 24 * 60) * 60 * 1000, // one week
 
   ASSETS_ROUTE_BASE_PATH: '/api/ddf/assets',
-  ASSETS_EXPECTED_DIR: 'assets'
+  ASSETS_EXPECTED_DIR: 'assets',
+
+  LONG_RUNNING_QUERY_THRESHOLD_IN_SECONDS: 30
 };
 
 export { constants };

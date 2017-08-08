@@ -10,7 +10,7 @@ describe('auth service testing', () => {
 
     const auth = proxyquire('../../ws.services/auth.service', {
       '../ws.repository/ddf/users/users.repository': {
-        UsersRepository: {
+        usersRepository: {
           findUserByEmail: (email, done) => {
             done('Boom!');
           }
@@ -28,7 +28,7 @@ describe('auth service testing', () => {
 
     const auth = proxyquire('../../ws.services/auth.service', {
       '../ws.repository/ddf/users/users.repository': {
-        UsersRepository: {
+        usersRepository: {
           findUserByEmail: (email, done) => {
             done();
           }
@@ -51,7 +51,7 @@ describe('auth service testing', () => {
     };
     const auth = proxyquire('../../ws.services/auth.service', {
       '../ws.repository/ddf/users/users.repository': {
-        UsersRepository: {
+        usersRepository: {
           findUserByEmail: (email, done) => {
             done(null, validUser);
           }
@@ -74,7 +74,7 @@ describe('auth service testing', () => {
     };
     const auth = proxyquire('../../ws.services/auth.service', {
       '../ws.repository/ddf/users/users.repository': {
-        UsersRepository: {
+        usersRepository: {
           findUserByEmail: (email, done) => {
             done(null, validUser);
           }
@@ -101,7 +101,7 @@ describe('auth service testing', () => {
 
     const auth = proxyquire('../../ws.services/auth.service', {
       '../ws.repository/ddf/users/users.repository': {
-        UsersRepository: {
+        usersRepository: {
           findUserByEmail: (email, done) => {
             done(null, validUser);
           },
@@ -131,7 +131,7 @@ describe('auth service testing', () => {
     };
     const auth = proxyquire('../../ws.services/auth.service', {
       '../ws.repository/ddf/users/users.repository': {
-        UsersRepository: {
+        usersRepository: {
           findUserByEmail: (email, done) => {
             done(null, validUser);
           },

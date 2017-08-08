@@ -1,5 +1,5 @@
-import {model} from 'mongoose';
-import {constants} from '../../../ws.utils/constants';
+import { model } from 'mongoose';
+import { constants } from '../../../ws.utils/constants';
 
 const Users = model('Users');
 
@@ -7,14 +7,14 @@ function calculateNewTokenExpirationDate(now: any): void {
   return now + constants.VALID_TOKEN_PERIOD_IN_MILLIS;
 }
 
-class UsersRepository {
+export class UsersRepository {
 
   public findById(id: any, onFound: Function): any {
-    return Users.findOne({_id: id}).lean().exec(onFound);
+    return Users.findOne({ _id: id }).lean().exec(onFound);
   }
 
-  public findUserByEmail(email: any, onFound: Function): any {
-    return Users.findOne({email}).exec(onFound);
+  public findUserByEmail(email: any, onFound?: Function): any {
+    return Users.findOne({ email }).exec(onFound);
   }
 
   public findUserByUniqueTokenAndProlongSession(uniqueToken: any, onFound: Function): Promise<object> {
@@ -22,7 +22,7 @@ class UsersRepository {
 
     const notExpiredUserQuery = {
       uniqueToken,
-      expireToken: {$gt: now}
+      expireToken: { $gt: now }
     };
 
     const updateExpireTokenQuery = {
@@ -31,11 +31,11 @@ class UsersRepository {
       }
     };
 
-    return Users.findOneAndUpdate(notExpiredUserQuery, updateExpireTokenQuery, {new: true}).lean().exec(onFound);
+    return Users.findOneAndUpdate(notExpiredUserQuery, updateExpireTokenQuery, { new: true }).lean().exec(onFound);
   }
 
   public setUpToken(email: string, uniqueToken: string, expireToken: number, onFound: Function): any {
-    return Users.findOne({email}).exec((error: string, user: any) => {
+    return Users.findOne({ email }).exec((error: string, user: any) => {
       if (error) {
         return onFound(error);
       }
@@ -57,20 +57,15 @@ class UsersRepository {
     });
   }
 
-  public createUser(user: any, done: Function): Promise<any> {
-    return Users.findOne({email: user.email}).lean().exec((error: string, existingUser: any) => {
-      if (error) {
-        return done(`Error occurred during user creation`);
-      }
-
-      if (existingUser) {
-        return done(`User with an email: "${user.email}" already exists`);
-      }
-
-      return Users.create(user, done);
-    });
+  public createUser(user: any): Promise<any> {
+    return Users.findOne({ email: user.email }).lean().exec()
+      .then((existingUser: any) => {
+        if (existingUser) {
+          throw Error(`User with an email: "${user.email}" already exists`);
+        }
+        return Users.create(user);
+      });
   }
 }
 
-const repository = new UsersRepository();
-export {repository as UsersRepository};
+export const usersRepository = new UsersRepository();

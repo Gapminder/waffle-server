@@ -17,7 +17,7 @@ import * as incrementalUpdateService from '../../ws.import/incremental/update-dd
 import { DatasetsRepository } from '../../ws.repository/ddf/datasets/datasets.repository';
 import { DatasetTransactionsRepository } from '../../ws.repository/ddf/dataset-transactions/dataset-transactions.repository';
 import { constants } from '../../ws.utils/constants';
-import { UsersRepository } from '../../ws.repository/ddf/users/users.repository';
+import { usersRepository } from '../../ws.repository/ddf/users/users.repository';
 
 const sandbox = sinonTest.configureTest(sinon);
 
@@ -58,7 +58,7 @@ describe('WS-CLI service', () => {
 
     const cliService = proxyquire(cliServicePath, {
       [usersRepositoryPath]: {
-        UsersRepository: {
+        usersRepository: {
           findUserByEmail: (email, onFound) => {
             flowStepCounterSpy('findUserByEmail');
             onFound(null, expectedUser);
@@ -139,7 +139,7 @@ describe('WS-CLI service', () => {
 
     const cliService = proxyquire(cliServicePath, {
       [usersRepositoryPath]: {
-        UsersRepository: {
+        usersRepository: {
           findUserByEmail: (email, onFound) => {
             flowStepCounterSpy('findUserByEmail');
             expect(email).to.equal(constants.DEFAULT_USER_EMAIL);
@@ -218,7 +218,7 @@ describe('WS-CLI service', () => {
 
     const cliService = proxyquire(cliServicePath, {
       [usersRepositoryPath]: {
-        UsersRepository: {
+        usersRepository: {
           findUserByEmail: (email, onFound) => {
             flowStepCounterSpy('findUserByEmail');
             onFound(null, expectedUser);
@@ -290,7 +290,7 @@ describe('WS-CLI service', () => {
 
     const cliService = proxyquire(cliServicePath, {
       [usersRepositoryPath]: {
-        UsersRepository: {
+        usersRepository: {
           findUserByEmail: (email, onFound) => {
             flowStepCounterSpy('findUserByEmail');
             expect(email).to.equal(constants.DEFAULT_USER_EMAIL);
@@ -334,7 +334,7 @@ describe('WS-CLI service', () => {
 
     const cliService = proxyquire(cliServicePath, {
       [usersRepositoryPath]: {
-        UsersRepository: {
+        usersRepository: {
           findUserByEmail: (email, onFound) => {
             onFound(expectedError);
           }
@@ -364,7 +364,7 @@ describe('WS-CLI service', () => {
 
     const cliService = proxyquire(cliServicePath, {
       [usersRepositoryPath]: {
-        UsersRepository: {
+        usersRepository: {
           findUserByEmail: (email, onFound) => {
             onFound(null, null);
           }
@@ -395,7 +395,7 @@ describe('WS-CLI service', () => {
 
     const cliService = proxyquire(cliServicePath, {
       [usersRepositoryPath]: {
-        UsersRepository: {
+        usersRepository: {
           findUserByEmail: (email, onFound) => {
             onFound(null, user);
           }
@@ -468,7 +468,7 @@ describe('WS-CLI service', () => {
   it('should not update dataset incrementally: fail searching user', sandbox(function (done: Function) {
     const expectedError = 'User searching error';
 
-    this.stub(UsersRepository, 'findUserByEmail').callsArgWithAsync(1, expectedError);
+    this.stub(usersRepository, 'findUserByEmail').callsArgWithAsync(1, expectedError);
     this.stub(datasetsService, 'unlockDataset').callsArgAsync(1);
 
     cliService.updateIncrementally({}, (error) => {
@@ -480,7 +480,7 @@ describe('WS-CLI service', () => {
   it('should not update dataset incrementally: fail cause user is not found', sandbox(function (done: Function) {
     const expectedError = 'User that tries to initiate import was not found';
 
-    this.stub(UsersRepository, 'findUserByEmail').callsArgWithAsync(1, null, null);
+    this.stub(usersRepository, 'findUserByEmail').callsArgWithAsync(1, null, null);
     this.stub(datasetsService, 'unlockDataset').callsArgAsync(1);
 
     cliService.updateIncrementally({}, (error) => {
@@ -500,7 +500,7 @@ describe('WS-CLI service', () => {
 
     const expectedError = 'Error while searching for dataset';
 
-    this.stub(UsersRepository, 'findUserByEmail').callsArgWithAsync(1, null, user);
+    this.stub(usersRepository, 'findUserByEmail').callsArgWithAsync(1, null, user);
     this.stub(DatasetsRepository, 'findByGithubUrl').callsArgWithAsync(1, expectedError);
     this.stub(datasetsService, 'unlockDataset').callsArgAsync(1);
 
@@ -523,7 +523,7 @@ describe('WS-CLI service', () => {
 
     const expectedError = 'Owner is not valid';
 
-    this.stub(UsersRepository, 'findUserByEmail').callsArgWithAsync(1, null, user);
+    this.stub(usersRepository, 'findUserByEmail').callsArgWithAsync(1, null, user);
     this.stub(DatasetsRepository, 'findByGithubUrl').callsArgWithAsync(1, null, dataset);
     this.stub(securityUtils, 'validateDatasetOwner').callsArgWithAsync(1, expectedError);
     this.stub(datasetsService, 'unlockDataset').callsArgAsync(1);
@@ -551,7 +551,7 @@ describe('WS-CLI service', () => {
 
     const expectedError = 'Transaction verification failed';
 
-    this.stub(UsersRepository, 'findUserByEmail').callsArgWithAsync(1, null, user);
+    this.stub(usersRepository, 'findUserByEmail').callsArgWithAsync(1, null, user);
     this.stub(DatasetsRepository, 'findByGithubUrl').callsArgWithAsync(1, null, dataset);
     this.stub(securityUtils, 'validateDatasetOwner').callsArgWithAsync(1, null, context);
     this.stub(datasetsService, 'lockDataset').callsArgWithAsync(1, null, context);
@@ -584,7 +584,7 @@ describe('WS-CLI service', () => {
 
     const expectedError = `Version of dataset "${context.github}" with commit: "${transaction.commit}" was already applied`;
 
-    this.stub(UsersRepository, 'findUserByEmail').callsArgWithAsync(1, null, user);
+    this.stub(usersRepository, 'findUserByEmail').callsArgWithAsync(1, null, user);
     this.stub(DatasetsRepository, 'findByGithubUrl').callsArgWithAsync(1, null, dataset);
     this.stub(securityUtils, 'validateDatasetOwner').callsArgWithAsync(1, null, context);
     this.stub(datasetsService, 'lockDataset').callsArgWithAsync(1, null, context);
@@ -623,7 +623,7 @@ describe('WS-CLI service', () => {
       github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git'
     };
 
-    const findUserByEmailStub = this.stub(UsersRepository, 'findUserByEmail').callsArgWithAsync(1, null, user);
+    const findUserByEmailStub = this.stub(usersRepository, 'findUserByEmail').callsArgWithAsync(1, null, user);
     const findByGithubUrlStub = this.stub(DatasetsRepository, 'findByGithubUrl').callsArgWithAsync(1, null, dataset);
     const validateDatasetOwnerStub = this.stub(securityUtils, 'validateDatasetOwner').callsArgWithAsync(1, null, context);
     const lockDatasetStub = this.stub(datasetsService, 'lockDataset').callsArgWithAsync(1, null, context);
@@ -704,7 +704,7 @@ describe('WS-CLI service', () => {
 
     const expectedError = 'Boo! during inc update';
 
-    this.stub(UsersRepository, 'findUserByEmail').callsArgWithAsync(1, null, user);
+    this.stub(usersRepository, 'findUserByEmail').callsArgWithAsync(1, null, user);
     this.stub(DatasetsRepository, 'findByGithubUrl').callsArgWithAsync(1, null, dataset);
     this.stub(securityUtils, 'validateDatasetOwner').callsArgWithAsync(1, null, context);
     this.stub(datasetsService, 'lockDataset').callsArgWithAsync(1, null, context);

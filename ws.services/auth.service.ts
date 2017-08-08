@@ -1,6 +1,6 @@
 import * as crypto from 'crypto';
 import { constants } from '../ws.utils/constants';
-import { UsersRepository } from '../ws.repository/ddf/users/users.repository';
+import { usersRepository } from '../ws.repository/ddf/users/users.repository';
 
 export {
   authenticate
@@ -10,7 +10,7 @@ function authenticate(credentials: Credentials, onAuthenticated: Function): void
   const email = credentials.email;
   const password = credentials.password;
 
-  return UsersRepository.findUserByEmail(email, (error: string, user: any) => {
+  return usersRepository.findUserByEmail(email, (error: string, user: any) => {
     if (error) {
       return onAuthenticated('Error was happened during credentials verification');
     }
@@ -29,7 +29,7 @@ function authenticate(credentials: Credentials, onAuthenticated: Function): void
       }
 
       const tokenDescriptor = generateTokenDescriptor();
-      return UsersRepository.setUpToken(email, tokenDescriptor.uniqueToken, tokenDescriptor.expireToken, (setUpTokenError: any, userWithToken: any) => {
+      return usersRepository.setUpToken(email, tokenDescriptor.uniqueToken, tokenDescriptor.expireToken, (setUpTokenError: any, userWithToken: any) => {
         if (setUpTokenError) {
           return onAuthenticated(`Couldn't set up Waffle Server token`);
         }
