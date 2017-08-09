@@ -653,12 +653,14 @@ describe('Routes utils', () => {
       expect(req.rawData.rawDdf).to.equal(rawDdfData);
     }));
 
-    it('should store query for which data will be returned in db (for the subsequernt warmups)', sandbox(function () {
+    it('should store query for which data will be returned in db (for the subsequernt warmups)', sandbox(function (): void {
       const ddfQuery = {
         rawDdfQuery: {
+          docsAmount: 0,
           queryRaw: {
             some: 'bla'
-          }
+          },
+          timeSpentInMillis: 0
         }
       };
 
@@ -732,10 +734,13 @@ describe('Routes utils', () => {
       sinon.assert.calledOnce(nextSpy);
     }));
 
-    it('should not store warmup query if it was sent with dataset property', sandbox(function () {
+    it('should store warmup query if it was sent with dataset property', sandbox(function (): void {
       const ddfQuery = {
         dataset: 'dataset',
-        rawDdfQuery: {}
+        rawDdfQuery: {
+          docsAmount: 0,
+          timeSpentInMillis: 0
+        }
       };
 
       const req: any = {
@@ -765,9 +770,12 @@ describe('Routes utils', () => {
       expect(req.rawData.rawDdf).to.equal(rawDdfData);
     }));
 
-    it('should not store warmup query if it was sent with version property', sandbox(function () {
+    it('should store warmup query if it was sent with version property', sandbox(function (): void {
       const ddfQuery = {
-        rawDdfQuery: {},
+        rawDdfQuery: {
+          docsAmount: 5464554643,
+          timeSpentInMillis: 21423142
+        },
         version: 'version'
       };
 
@@ -798,9 +806,12 @@ describe('Routes utils', () => {
       expect(req.rawData.rawDdf).to.equal(rawDdfData);
     }));
 
-    it('should not store warmup query if it was sent with format property', sandbox(function (): void {
+    it('should store warmup query if it was sent with format property', sandbox(function (): void {
       const ddfQuery = {
-        rawDdfQuery: {},
+        rawDdfQuery: {
+          docsAmount: 12,
+          timeSpentInMillis: 453
+        },
         format: 'format'
       };
 

@@ -6,6 +6,8 @@ import { e2eEnv } from './e2e.env';
 import * as supertest from 'supertest';
 import { expect } from 'chai';
 import * as URLON from 'urlon';
+import { logger } from '../ws.config/log';
+import * as async from 'async';
 
 const wsApi = supertest(e2eEnv.wsUrl);
 
@@ -33,23 +35,57 @@ function sendDdfqlRequest(ddfql: any, onResponseReceived: Function): void {
     .end(onResponseReceived);
 }
 
-function startWaffleServer(): void {
-  setUpEnvironmentVariables();
-  if (START_WAFFLE_SERVER) {
-    shell.exec(`./node_modules/.bin/forever start -t -o /dev/null -l /dev/null -a --uid "${e2eEnv.wsUid}" ./server.js`);
-  }
+function startWaffleServer(done: Function): void {
+  async.series([
+    (_done: Function) => {
+      async.setImmediate(() => {
+        setUpEnvironmentVariables();
+        return _done(null);
+      });
+    },
+    dropMongoDb,
+    stopWaffleServer,
+    (_done: Function) => {
+      if (START_WAFFLE_SERVER) {
+        return shell.exec(`INNER_PORT=${e2eEnv.wsPort} ./node_modules/.bin/forever start --fifo -t -o ./logs/forever.output.log -l ./logs/forever.error.log -a --uid "${e2eEnv.wsUid}" server.js`, (code: number, stdout: string, stderr: string) => {
+          if (code > 0) {
+            logger.error('startWaffleServer', code, stdout, stderr);
+            return _done(stderr);
+          }
+          return _done(null);
+        });
+      }
+      return async.setImmediate(() => _done(null));
+    }
+  ], (error: string) => {
+    return done(error);
+  });
 }
 
-function stopWaffleServer(): void {
+function stopWaffleServer(done: Function): any {
   if (START_WAFFLE_SERVER) {
-    shell.exec(`./node_modules/.bin/forever stop "${e2eEnv.wsUid}"`);
+    return shell.exec(`./node_modules/.bin/forever stopall`, (code: number, stdout: string, stderr: string) => {
+      if (code > 1) {
+        logger.error('stopWaffleServer', code, stdout, stderr);
+        return done(stderr);
+      }
+      return done(null);
+    });
   }
+  return async.setImmediate(() => done(null));
 }
 
-function dropMongoDb(): void {
+function dropMongoDb(done: Function): any {
   if (DROP_MONGO_DATABASE) {
-    shell.exec(`mongo ${e2eEnv.mongodb} --eval "db.dropDatabase()"`);
+    return shell.exec(`mongo ${e2eEnv.mongodb} --eval "db.dropDatabase()"`, (code: number, stdout: string, stderr: string) => {
+      if (code > 0) {
+        logger.error('dropMongoDb', code, stdout, stderr);
+        return done(stderr);
+      }
+      return done(null);
+    });
   }
+  return async.setImmediate(() => done(null));
 }
 
 function setUpEnvironmentVariables(): void {

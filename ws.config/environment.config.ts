@@ -5,6 +5,7 @@ const NODE_ENV = process.env.NODE_ENV || DEFAULT_NODE_ENV;
 
 const DEFAULT_LOG_LEVELS = Object.freeze({
   local: 'info',
+  test: 'info',
   development: 'info',
   stage: 'warn',
   production: 'error'
@@ -12,6 +13,7 @@ const DEFAULT_LOG_LEVELS = Object.freeze({
 
 const DEFAULT_HOST_URLS = Object.freeze({
   local: 'http://localhost',
+  test: 'http://localhost',
   development: 'https://waffle-server-dev.gapminderdev.org',
   stage: 'https://waffle-server-stage.gapminderdev.org',
   production: 'https://waffle-server.gapminder.org'
@@ -19,6 +21,7 @@ const DEFAULT_HOST_URLS = Object.freeze({
 
 const LOG_MARKERS = {
   local: 'LOC',
+  test: 'TEST',
   development: 'DEV',
   stage: 'STG',
   production: 'PRD'
@@ -26,6 +29,7 @@ const LOG_MARKERS = {
 
 const DEFAULT_PORTS = Object.freeze({
   local: 3000,
+  test: 3000,
   development: 443,
   stage: 443,
   production: 443

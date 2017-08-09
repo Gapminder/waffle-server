@@ -13,37 +13,47 @@ logger.info('==========================================');
 
 const COMMIT_INDEX_TO_IMPORT = process.env.COMMIT_INDEX_TO_IMPORT || 0;
 
-e2eUtils.setUpEnvironmentVariables();
-
-e2eUtils.dropMongoDb();
-e2eUtils.stopWaffleServer();
-e2eUtils.startWaffleServer();
-
-shell.exec('sleep 20');
-
 process.on('SIGINT', () => {
   console.log('Caught interrupt signal');
-  e2eUtils.stopWaffleServer();
-  process.exit(0);
+  e2eUtils.stopWaffleServer((error: string) => {
+    if (error) {
+      console.error(error);
+      process.exit(1);
+      return;
+    }
+
+    process.exit(0);
+  });
 });
 
-const importOptions: cliUtils.ImportOptions = {
-  repos: [
-    {
-      url: e2eEnv.repo,
-      commitIndexToStartImport: +COMMIT_INDEX_TO_IMPORT
-    },
-    {
-      url: e2eEnv.repo2,
-      commitIndexToStartImport: 9
-    }
-  ]
-};
+e2eUtils.startWaffleServer( (error: string) => {
+  const importOptions: cliUtils.ImportOptions = {
+    repos: [
+      {
+        url: e2eEnv.repo,
+        commitIndexToStartImport: +COMMIT_INDEX_TO_IMPORT
+      },
+      {
+        url: e2eEnv.repo2,
+        commitIndexToStartImport: 9
+      }
+    ]
+  };
+  const runDatasetImport = cliUtils.runDatasetImport.bind(cliUtils);
 
-syncFn(cliUtils.runDatasetImport.bind(cliUtils))(importOptions, (error: string) => {
-  if (error) {
-    e2eUtils.stopWaffleServer();
-    process.exit(1);
-  }
-  process.exit(0);
+  runDatasetImport(importOptions, (datasetImportError: string) => {
+    if (datasetImportError) {
+      e2eUtils.stopWaffleServer((_error: string) => {
+        if (_error) {
+          console.error(_error);
+        }
+        console.error(datasetImportError);
+
+        process.exit(1);
+      });
+    }
+
+    process.exit(0);
+  });
+
 });

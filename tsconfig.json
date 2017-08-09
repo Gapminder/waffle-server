@@ -7,14 +7,7 @@
     "preserveConstEnums": true,
     "removeComments": true,
     "sourceMap": true,
-    "types": [
-      "sinon",
-      "async",
-      "node",
-      "chai",
-      "mocha",
-      "proxyquire"
-    ]
+    "typeRoots": ["node_modules/@types"]
   },
   "include": [
     "**/*"
