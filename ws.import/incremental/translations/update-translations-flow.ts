@@ -5,6 +5,7 @@ import {constants} from '../../../ws.utils/constants';
 import * as fileUtils from '../../../ws.utils/file';
 import {ChangesDescriptor} from '../../utils/changes-descriptor';
 import * as ddfImportUtils from '../../utils/import-ddf.utils';
+import { DatasetTracker } from '../../../ws.services/datasets-tracker';
 
 export {
   createTranslationsUpdater
@@ -45,6 +46,10 @@ function toUpdatedTranslationsStream(translationsDiffStream: any, plugin: any, e
   const translationApiPlugin = getTranslationApiFromPlugin(plugin);
   const translationApiRepository = getTranslationApiFromRepository(latestVersionRepository);
 
+  DatasetTracker
+    .get(externalContext.datasetName)
+    .increment(constants.TRANSLATIONS, 1);
+
   const translationApiBase = {
     isApplicable: (changesDescriptor: ChangesDescriptor) => changesDescriptor.isUpdateAction(),
     getResource: (changesDescriptor: ChangesDescriptor) => changesDescriptor.currentResource,
@@ -61,6 +66,10 @@ function toCreatedTranslationsStream(translationsDiffStream: any, plugin: any, e
 
   const translationApiPlugin = getTranslationApiFromPlugin(plugin);
   const translationApiRepository = getTranslationApiFromRepository(latestVersionRepository);
+
+  DatasetTracker
+    .get(externalContext.datasetName)
+    .increment(constants.TRANSLATIONS, 1);
 
   const translationApiBase = {
     isApplicable: (changesDescriptor: ChangesDescriptor) => changesDescriptor.isCreateAction(),
@@ -79,6 +88,10 @@ function toRemovedTranslationsStream(translationsDiffStream: any, plugin: any, e
 
   const translationApiPlugin = getTranslationApiFromPlugin(plugin);
   const translationApiRepository = getTranslationApiFromRepository(fetchingRepository, updatingRepository);
+
+  DatasetTracker
+    .get(externalContext.datasetName)
+    .increment(constants.TRANSLATIONS, 1);
 
   const translationApiBase = {
     isApplicable: (changesDescriptor: ChangesDescriptor) => changesDescriptor.isRemoveAction(),

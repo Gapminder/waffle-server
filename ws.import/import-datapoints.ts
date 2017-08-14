@@ -30,7 +30,7 @@ function createDatapoints(externalContextFrozen: any): any {
   const { pathToDdfFolder, datapackage: { resources } } = externalContextFrozen;
   const findAllEntitiesMemoized = _.memoize(datapointsUtils.findAllEntities);
 
-  const saveEntitiesFoundInDatapoints = datapointsUtils.createEntitiesFoundInDatapointsSaverWithCache();
+  const saveEntitiesFoundInDatapoints = datapointsUtils.createEntitiesFoundInDatapointsSaverWithCache(externalContextFrozen);
 
   const saveDatapointsAndEntitiesFoundInThem = _.curry(datapointsUtils.saveDatapointsAndEntitiesFoundInThem)(
     saveEntitiesFoundInDatapoints,

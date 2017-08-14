@@ -20,7 +20,7 @@ import {DatapointsRepositoryFactory} from '../../ws.repository/ddf/data-points/d
 import * as datasetsService from '../../ws.services/datasets.service';
 import {logger} from '../../ws.config/log';
 
-import {DatasetRemovalTracker} from '../../ws.services/datasets-removal-tracker';
+import {DatasetTracker} from '../../ws.services/datasets-tracker';
 
 import * as datasetService from '../../ws.services/datasets.service';
 import set = Reflect.set;
@@ -932,7 +932,7 @@ describe('Remove Dataset Service', () => {
       return datapointsRepository;
     });
 
-    const clearStatsForDatasetStub = this.stub(DatasetRemovalTracker, 'clean').returns();
+    const clearStatsForDatasetStub = this.stub(DatasetTracker, 'clean').returns();
 
     datasetsService.removeDatasetData(expectedDatasetName, expectedOwnerUser, (error) => {
       expect(error).to.not.exist;
@@ -943,7 +943,8 @@ describe('Remove Dataset Service', () => {
         expect(stats).to.deep.equal({
           concepts: 12,
           entities: 42,
-          datapoints: 2
+          datapoints: 2,
+          translations: 0
         });
 
         sinon.assert.calledOnce(lockStub);
@@ -986,16 +987,17 @@ describe('Remove Dataset Service', () => {
     const findByNameStub = this.stub(DatasetsRepository, 'findByName');
     findByNameStub.onFirstCall().callsArgWithAsync(1, null, dataset);
 
-    DatasetRemovalTracker.track(datasetName);
+    DatasetTracker.track(datasetName);
 
     datasetsService.getRemovalStateForDataset(datasetName, user, (error, removalState) => {
       expect(error).to.not.exist;
       expect(removalState).to.deep.equal({
         concepts: 0,
         entities: 0,
-        datapoints: 0
+        datapoints: 0,
+        translations: 0
       });
-      DatasetRemovalTracker.clean(datasetName);
+      DatasetTracker.clean(datasetName);
       done();
     });
   }));

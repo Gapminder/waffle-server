@@ -8,6 +8,7 @@ import {constants} from '../../ws.utils/constants';
 import * as fileUtils from '../../ws.utils/file';
 import * as ddfMappers from '../utils/ddf-mappers';
 import {logger} from '../../ws.config/log';
+import { DatasetTracker } from '../../ws.services/datasets-tracker';
 
 export {
   startConceptsCreation as updateConcepts
@@ -70,6 +71,10 @@ function processRemovedConcepts(removedConcepts: any): any {
       pipe.external.transaction.createdAt
     );
 
+    DatasetTracker
+      .get(pipe.external.dataset.name)
+      .increment(constants.CONCEPTS, removedConcepts.length);
+
     return async.eachLimit(removedConcepts, constants.LIMIT_NUMBER_PROCESS, (removedConcept: any, onConceptClosed: any) => {
       return conceptsRepository.closeByGid(getGid(removedConcept), onConceptClosed);
     }, (error: string) => {
@@ -80,6 +85,10 @@ function processRemovedConcepts(removedConcepts: any): any {
 
 function processCreatedConcepts(createdConcepts: any): any {
   return (pipe: any, done: Function) => {
+    DatasetTracker
+      .get(pipe.external.dataset.name)
+      .increment(constants.CONCEPTS, createdConcepts.length);
+
     return async.waterfall([
         async.constant(pipe),
         createConcepts(createdConcepts),
@@ -102,6 +111,10 @@ function processUpdatedConcepts(updatedConcepts: any, removedProperties: any): a
     }
 
     const propsWereAddedToConcepts = _.isEmpty(removedProperties);
+
+    DatasetTracker
+      .get(externalContext.external.dataset.name)
+      .increment(constants.CONCEPTS, _.size(updatedConcepts));
 
     let applyModificationsToConcepts;
     if (propsWereAddedToConcepts) {

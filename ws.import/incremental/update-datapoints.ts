@@ -9,6 +9,7 @@ import * as ddfImportUtils from '../utils/import-ddf.utils';
 import * as datapointsUtils from '../utils/datapoints.utils';
 import { ChangesDescriptor } from '../utils/changes-descriptor';
 import { DatapointsRepositoryFactory } from '../../ws.repository/ddf/data-points/data-points.repository';
+import { DatasetTracker } from '../../ws.services/datasets-tracker';
 
 export {
   startDatapointsCreation as updateDatapoints
@@ -34,7 +35,7 @@ function startDatapointsCreation(externalContext: any, done: Function): void {
 function updateDatapoints(externalContextFrozen: any): void {
   const findAllEntitiesMemoized = _.memoize(datapointsUtils.findAllEntities);
   const findAllPreviousEntitiesMemoized = _.memoize(datapointsUtils.findAllPreviousEntities);
-  const saveEntitiesFoundInDatapoints = datapointsUtils.createEntitiesFoundInDatapointsSaverWithCache();
+  const saveEntitiesFoundInDatapoints = datapointsUtils.createEntitiesFoundInDatapointsSaverWithCache(externalContextFrozen);
 
   const saveDatapointsAndEntitiesFoundInThem = _.curry(datapointsUtils.saveDatapointsAndEntitiesFoundInThem)(
     saveEntitiesFoundInDatapoints,
@@ -152,8 +153,13 @@ function closeRemovedDatapoints(removedDataPoints: any, onAllRemovedDatapointsCl
         segregatedPreviousEntities: externalContext.segregatedPreviousEntities,
         measures: externalContext.measures,
         datasetId: externalContext.dataset._id,
+        datasetName: externalContext.dataset.name,
         version: externalContext.transaction.createdAt
       };
+
+      DatasetTracker
+        .get(context.datasetName)
+        .increment(constants.DATAPOINTS, removedDataPoints.length);
 
       return closeDatapointsPerMeasure(changesDescriptor.original, context, onDatapointsForGivenMeasuresClosed);
   }, onAllRemovedDatapointsClosed);

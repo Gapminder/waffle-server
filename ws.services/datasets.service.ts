@@ -9,7 +9,7 @@ import { DatasetSchemaRepository } from '../ws.repository/ddf/dataset-index/data
 import { DatasetTransactionsRepository } from '../ws.repository/ddf/dataset-transactions/dataset-transactions.repository';
 import { constants } from '../ws.utils/constants';
 import { logger } from '../ws.config/log';
-import { DatasetRemovalTracker } from './datasets-removal-tracker';
+import { DatasetTracker } from './datasets-tracker';
 import { MongooseCallback } from '../ws.repository/repository.types';
 
 const DATAPOINTS_TO_REMOVE_CHUNK_SIZE = 50000;
@@ -34,7 +34,7 @@ function findDatasetsWithVersions(userId: any, onFound: AsyncResultCallback<any,
 }
 
 function removeDatasetData(datasetName: string, user: any, onRemovedDataset: AsyncResultCallback<any, any>): void {
-  DatasetRemovalTracker.track(datasetName);
+  DatasetTracker.track(datasetName);
   return async.waterfall([
     async.constant({ datasetName, user }),
     findDatasetByNameAndValidateOwnership,
@@ -44,7 +44,7 @@ function removeDatasetData(datasetName: string, user: any, onRemovedDataset: Asy
     _removeAllTransactions,
     _removeDataset
   ], (removalError: any) => {
-    DatasetRemovalTracker.clean(datasetName);
+    DatasetTracker.clean(datasetName);
 
     if (removalError) {
       return unlockDataset({ datasetName }, () => onRemovedDataset(removalError, null));
@@ -130,7 +130,7 @@ function _removeAllDataByDataset(externalContext: any, onDataRemoved: AsyncResul
         return done(error);
       }
 
-      DatasetRemovalTracker
+      DatasetTracker
         .get(externalContext.datasetName)
         .increment(constants.CONCEPTS, removeResult.result.n);
 
@@ -141,7 +141,7 @@ function _removeAllDataByDataset(externalContext: any, onDataRemoved: AsyncResul
         return done(error);
       }
 
-      DatasetRemovalTracker
+      DatasetTracker
         .get(externalContext.datasetName)
         .increment(constants.ENTITIES, removeResult.result.n);
 
@@ -177,7 +177,7 @@ function removeDatapointsInChunks({ datasetId, datasetName }: any, onRemoved: Fu
         return onRemoved(removalError);
       }
 
-      DatasetRemovalTracker
+      DatasetTracker
         .get(datasetName)
         .increment(constants.DATAPOINTS, amountOfDatapointsToRemove);
 
@@ -192,7 +192,7 @@ function getRemovalStateForDataset(datasetName: any, user: any, done: Function):
       return done(error);
     }
 
-    return done(null, DatasetRemovalTracker.get(datasetName).getState());
+    return done(null, DatasetTracker.get(datasetName).getState());
   });
 }
 
