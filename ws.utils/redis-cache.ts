@@ -2,6 +2,7 @@ import { logger } from '../ws.config/log';
 import { config } from '../ws.config/config';
 
 import * as expressRedisCache from 'express-redis-cache';
+import { constants } from './constants';
 
 const cache = expressRedisCache({
   host: config.REDIS_HOST,
@@ -34,4 +35,11 @@ cache.on('deprecated', (deprecated: any) => {
   });
 });
 
-export { cache };
+const statusCodesExpirationConfig = {
+  expire: {
+    500: 1,
+    xxx: constants.DDF_REDIS_CACHE_LIFETIME
+  }
+};
+
+export { cache, statusCodesExpirationConfig };

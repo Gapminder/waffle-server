@@ -1,18 +1,18 @@
 import * as _ from 'lodash';
 import * as cors from 'cors';
 import * as express from 'express';
+import { Application, NextFunction } from 'express';
 import * as compression from 'compression';
-import {constants} from '../../../ws.utils/constants';
+import { constants } from '../../../ws.utils/constants';
 import * as schemaService from '../../../ws.services/schema.service';
 import * as entitiesService from '../../../ws.services/entities.service';
 import * as conceptsService from '../../../ws.services/concepts.service';
 import * as datapointsService from '../../../ws.services/datapoints.service';
 import * as dataPostProcessors from '../../data-post-processors';
-import {cache} from '../../../ws.utils/redis-cache';
-import {logger} from '../../../ws.config/log';
+import { cache, statusCodesExpirationConfig } from '../../../ws.utils/redis-cache';
+import { logger } from '../../../ws.config/log';
 import * as routeUtils from '../../utils';
-import {ServiceLocator} from '../../../ws.service-locator/index';
-import {Application, NextFunction} from 'express';
+import { ServiceLocator } from '../../../ws.service-locator/index';
 
 function createDdfqlController(serviceLocator: ServiceLocator): Application {
   const app = serviceLocator.getApplication();
@@ -23,7 +23,7 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
 
   router.get('/api/ddf/ql',
     routeUtils.getCacheConfig(constants.DDF_REDIS_CACHE_NAME_DDFQL),
-    cache.route(),
+    cache.route(statusCodesExpirationConfig),
     compression(),
     routeUtils.bodyFromUrlQuery,
     routeUtils.checkDatasetAccessibility,
@@ -35,7 +35,7 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
 
   router.post('/api/ddf/ql',
     routeUtils.getCacheConfig(constants.DDF_REDIS_CACHE_NAME_DDFQL),
-    cache.route(),
+    cache.route(statusCodesExpirationConfig),
     compression(),
     routeUtils.checkDatasetAccessibility,
     getDdfStats,

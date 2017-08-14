@@ -1,9 +1,8 @@
 import './passport';
-import './db.config';
 
 import { configureExpress } from './express.config';
-import * as express from 'express';
+import { ServiceLocator } from '../ws.service-locator';
 
-export function configureWaffleServer(app: express.Application): void {
-  configureExpress(app);
+export function configureWaffleServer(serviceLocator: ServiceLocator): void {
+  configureExpress(serviceLocator.getApplication());
 }

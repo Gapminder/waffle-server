@@ -44,3 +44,5 @@ clean-env.sh
 specReports
 
 siege-attack.sh
+
+yarn.lock

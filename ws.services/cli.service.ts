@@ -5,7 +5,7 @@ import * as importDdfService from '../ws.import/import-ddf';
 import * as incrementalUpdateService from '../ws.import/incremental/update-ddf';
 import { DatasetTransactionsRepository } from '../ws.repository/ddf/dataset-transactions/dataset-transactions.repository';
 import { DatasetsRepository } from '../ws.repository/ddf/datasets/datasets.repository';
-import { UsersRepository } from '../ws.repository/ddf/users/users.repository';
+import { usersRepository } from '../ws.repository/ddf/users/users.repository';
 import { constants } from '../ws.utils/constants';
 import { cache } from '../ws.utils/redis-cache';
 import * as securityUtils from '../ws.utils/security';
@@ -45,7 +45,7 @@ interface VersionModel {
 }
 
 function _findCurrentUser(pipe: any, done: Function): void {
-  UsersRepository.findUserByEmail(constants.DEFAULT_USER_EMAIL, (error: string, user: any) => {
+  usersRepository.findUserByEmail(constants.DEFAULT_USER_EMAIL, (error: string, user: any) => {
     if (error) {
       return done(error);
     }
