@@ -10,6 +10,7 @@ import {ChangesDescriptor} from '../utils/changes-descriptor';
 import * as entitiesUtils from '../utils/entities.utils';
 import * as ddfImportUtils from '../utils/import-ddf.utils';
 import {EntitiesRepositoryFactory} from '../../ws.repository/ddf/entities/entities.repository';
+import { DatasetTracker } from '../../ws.services/datasets-tracker';
 
 export {
   startEntitiesUpdate as updateEntities
@@ -44,12 +45,12 @@ function updateEntities(externalContextFrozen: any): void {
 
   return hi([
     toRemovedEntitiesStream(entityChangesStream, externalContextFrozen),
-    toCreatedEntitiesStream(entityChangesStream),
+    toCreatedEntitiesStream(entityChangesStream, externalContextFrozen),
     toUpdatedEntitiesStream(entityChangesStream, externalContextFrozen)
   ]).parallel(3);
 }
 
-function toCreatedEntitiesStream(entityChangesStream: any): void {
+function toCreatedEntitiesStream(entityChangesStream: any, externalContextFrozen: any): void {
   logger.info('Start creating entities');
   return entityChangesStream.fork()
     .filter(({changesDescriptor}: any) => changesDescriptor.isCreateAction())
@@ -60,6 +61,9 @@ function toCreatedEntitiesStream(entityChangesStream: any): void {
     })
     .batch(ddfImportUtils.DEFAULT_CHUNK_SIZE)
     .flatMap((entitiesBatch: any) => {
+      DatasetTracker
+        .get(externalContextFrozen.dataset.name)
+        .increment(constants.ENTITIES, entitiesBatch.length);
       logger.debug('Saving batch of created entities. Amount: ', _.size(entitiesBatch));
       return hi.wrapCallback(storeEntitiesToDb)(entitiesBatch);
     });
@@ -85,6 +89,9 @@ function toUpdatedEntitiesStream(entityChangesStream: any, externalContextFrozen
     })
     .batch(ddfImportUtils.DEFAULT_CHUNK_SIZE)
     .flatMap((updatedEntitiesBatch: any) => {
+      DatasetTracker
+        .get(externalContextFrozen.dataset.name)
+        .increment(constants.ENTITIES, updatedEntitiesBatch.length);
       logger.debug('Updating batch of entities. Amount: ', _.size(updatedEntitiesBatch));
       return hi.wrapCallback(closeEntities)({
         entityChangesBatch: updatedEntitiesBatch,
@@ -112,6 +119,9 @@ function toRemovedEntitiesStream(entityChangesStream: any, externalContextFrozen
     })
     .batch(ddfImportUtils.DEFAULT_CHUNK_SIZE)
     .flatMap((removedEntitiesBatch: any) => {
+      DatasetTracker
+        .get(externalContextFrozen.dataset.name)
+        .increment(constants.ENTITIES, removedEntitiesBatch.length);
       logger.debug('Removing batch of entities. Amount: ', _.size(removedEntitiesBatch));
       return hi.wrapCallback(closeEntities)({
         entityChangesBatch: removedEntitiesBatch,

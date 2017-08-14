@@ -8,6 +8,7 @@ import {createDatasetSchema} from '../import-dataset-schema';
 import {updateEntitiesTranslation} from './translations/update-entity-translations';
 import {updateConceptsTranslations} from './translations/update-concept-translations';
 import {updateDatapointsTranslations} from './translations/update-datapoint-translations';
+import { DatasetTracker } from '../../ws.services/datasets-tracker';
 
 const DATASET_INCREMENTAL_UPDATE_LABEL = 'Dataset incremental update';
 
@@ -27,6 +28,7 @@ function updateDdf(options: any, done: Function): void {
   ]);
 
   console.time(DATASET_INCREMENTAL_UPDATE_LABEL);
+  DatasetTracker.track(_.get(pipe, 'datasetName'));
   async.waterfall([
     async.constant(pipe),
     ddfImportUtils.resolvePathToDdfFolder,
@@ -51,6 +53,7 @@ function updateDdf(options: any, done: Function): void {
     ddfImportUtils.closeTransaction
   ], (updateError: Function, _pipe: any) => {
     console.timeEnd(DATASET_INCREMENTAL_UPDATE_LABEL);
+    DatasetTracker.clean(_.get(_pipe, 'dataset.name'));
 
     if (updateError && _.get(_pipe, 'transaction')) {
       return done(updateError, {transactionId: _pipe.transaction._id});

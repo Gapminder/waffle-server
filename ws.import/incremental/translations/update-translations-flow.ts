@@ -5,6 +5,7 @@ import {constants} from '../../../ws.utils/constants';
 import * as fileUtils from '../../../ws.utils/file';
 import {ChangesDescriptor} from '../../utils/changes-descriptor';
 import * as ddfImportUtils from '../../utils/import-ddf.utils';
+import { DatasetTracker } from '../../../ws.services/datasets-tracker';
 
 export {
   createTranslationsUpdater
@@ -103,6 +104,9 @@ function toApplyTranslationChangesStream(translationsDiffStream: any, translatio
     })
     .through(translationsApi.transformStreamBeforeChangesApplied)
     .map((changesAndContext: any) => {
+      DatasetTracker
+        .get(changesAndContext.context.datasetName)
+        .increment(constants.TRANSLATIONS, 1);
       return hi.wrapCallback(applyTranslationChanges)(changesAndContext, translationsApi);
     })
     .parallel(constants.LIMIT_NUMBER_PROCESS);
@@ -127,6 +131,7 @@ function applyTranslationChanges({changesDescriptor, context}: any, translations
     logger.debug('Translation target was found. OriginId: ', foundTarget.originId);
 
     const options = {changesDescriptor, context, foundTarget, fetchTranslationTargetQuery};
+
     return translationsApi.translationChangeHandler(translationsApi, options, onChangesApplied);
   });
 }

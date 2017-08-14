@@ -8,6 +8,7 @@ import {constants} from '../../ws.utils/constants';
 import * as fileUtils from '../../ws.utils/file';
 import * as ddfMappers from '../utils/ddf-mappers';
 import {logger} from '../../ws.config/log';
+import { DatasetTracker } from '../../ws.services/datasets-tracker';
 
 export {
   startConceptsCreation as updateConcepts
@@ -49,6 +50,10 @@ function updateConcepts(externalContext: any, done: Function): void {
       const create = _.map(allChanges.create, '_object');
       const change = _.map(allChanges.change, '_object');
       const update = _.map(allChanges.update, '_object');
+
+      DatasetTracker
+        .get(externalContext.dataset.name)
+        .increment(constants.CONCEPTS, _.size([...remove, ...create, ...change, ...update]));
 
       return async.waterfall([
         async.constant({external: externalContext, internal: {}}),

@@ -9,6 +9,7 @@ import * as ddfImportUtils from '../utils/import-ddf.utils';
 import * as datapointsUtils from '../utils/datapoints.utils';
 import { ChangesDescriptor } from '../utils/changes-descriptor';
 import { DatapointsRepositoryFactory } from '../../ws.repository/ddf/data-points/data-points.repository';
+import { DatasetTracker } from '../../ws.services/datasets-tracker';
 
 export {
   startDatapointsCreation as updateDatapoints
@@ -34,7 +35,7 @@ function startDatapointsCreation(externalContext: any, done: Function): void {
 function updateDatapoints(externalContextFrozen: any): void {
   const findAllEntitiesMemoized = _.memoize(datapointsUtils.findAllEntities);
   const findAllPreviousEntitiesMemoized = _.memoize(datapointsUtils.findAllPreviousEntities);
-  const saveEntitiesFoundInDatapoints = datapointsUtils.createEntitiesFoundInDatapointsSaverWithCache();
+  const saveEntitiesFoundInDatapoints = datapointsUtils.createEntitiesFoundInDatapointsSaverWithCache(externalContextFrozen);
 
   const saveDatapointsAndEntitiesFoundInThem = _.curry(datapointsUtils.saveDatapointsAndEntitiesFoundInThem)(
     saveEntitiesFoundInDatapoints,
@@ -58,7 +59,7 @@ function updateDatapoints(externalContextFrozen: any): void {
     });
 
   const datapointsWithFoundEntitiesStream = hi([
-    toRemovedDatapointsStream(datapointsChangesWithContextStream),
+    toRemovedDatapointsStream(datapointsChangesWithContextStream, externalContextFrozen),
     toCreatedDatapointsStream(datapointsChangesWithContextStream),
     toUpdatedDatapointsStream(datapointsChangesWithContextStream)
   ]).parallel(3);
@@ -90,7 +91,7 @@ function enrichDatapointChangesWithContextStream(changesDescriptor: ChangesDescr
     });
 }
 
-function toRemovedDatapointsStream(datapointsChangesWithContextStream: any): void {
+function toRemovedDatapointsStream(datapointsChangesWithContextStream: any, externalContextFrozen: any): void {
   return datapointsChangesWithContextStream.fork()
     .filter(({changesDescriptor}: any) => changesDescriptor.isRemoveAction())
     .map(({changesDescriptor, context}: any) => {
@@ -99,7 +100,7 @@ function toRemovedDatapointsStream(datapointsChangesWithContextStream: any): voi
     })
     .batch(ddfImportUtils.DEFAULT_CHUNK_SIZE)
     .flatMap((context: any) => {
-      return hi.wrapCallback(closeRemovedDatapoints)(context);
+      return hi.wrapCallback(closeRemovedDatapoints)(context, externalContextFrozen);
     });
 }
 
@@ -141,8 +142,12 @@ function toUpdatedDatapointsStream(datapointsChangesWithContextStream: any): voi
     .flatMap((datapointsAndFoundEntitiesAndContext: any) => hi(datapointsAndFoundEntitiesAndContext));
 }
 
-function closeRemovedDatapoints(removedDataPoints: any, onAllRemovedDatapointsClosed: ErrorCallback<{}>): void {
+function closeRemovedDatapoints(removedDataPoints: any, externalContextFrozen: any, onAllRemovedDatapointsClosed: ErrorCallback<{}>): void {
   logger.info('Closing removed datapoints');
+
+  DatasetTracker
+    .get(externalContextFrozen.dataset.name)
+    .increment(constants.DATAPOINTS, removedDataPoints.length);
 
   return async.eachLimit(removedDataPoints, constants.LIMIT_NUMBER_PROCESS,
     ({changesDescriptor, context: externalContext}: any, onDatapointsForGivenMeasuresClosed: Function) => {

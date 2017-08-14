@@ -38,7 +38,7 @@ const mongoOptions = {
 const mongooseOptions = { useMongoClient: true };
 
 export function connectToDb(onConnected: (error: any, db?: Connection) => void): void {
-  const options: any = config.THRASHING_MACHINE ? Object.assign({}, mongoOptions, mongooseOptions) : mongoOptions;
+  const options: any = config.THRASHING_MACHINE ? Object.assign({}, mongoOptions, mongooseOptions) : mongooseOptions;
   mongoose.connect(config.MONGODB_URL, options, (error: any) => {
     if (error) {
       return onConnected(error);
