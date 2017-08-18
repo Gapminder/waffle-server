@@ -40,8 +40,7 @@ describe('Cache Warm up', () => {
           }
         }
       },
-      [fetchPath]: (url, options) => {
-        expect(url).to.equal(expectedUrl);
+      [fetchPath]: (url: string, options: any) => {
         expect(options.method).to.equal('HEAD');
         return {
           then: () => [recentQuery.queryRaw]
@@ -54,9 +53,10 @@ describe('Cache Warm up', () => {
       expect(warmedQueriesAmount).to.equal(1);
 
       sinon.assert.calledOnce(loggerInfoStub);
-      sinon.assert.calledWithExactly(loggerInfoStub, `Warm cache up using DDFQL query: `, recentQuery.queryRaw);
+      sinon.assert.alwaysCalledWithExactly(loggerInfoStub, `Warm cache up using DDFQL query: `, recentQuery.queryRaw);
 
-      sinon.assert.calledOnce(loggerDebugStub);
+      sinon.assert.calledTwice(loggerDebugStub);
+      sinon.assert.calledWithExactly(loggerDebugStub, sinon.match.object, 'Config for warm up cache');
       sinon.assert.calledWithExactly(loggerDebugStub, 'Cache is going to be warmed up from url: ', expectedUrl);
 
       done();
@@ -102,7 +102,8 @@ describe('Cache Warm up', () => {
       sinon.assert.calledOnce(loggerInfoStub);
       sinon.assert.calledWithExactly(loggerInfoStub, `Warm cache up using DDFQL query: `, recentQuery.queryRaw);
 
-      sinon.assert.calledOnce(loggerDebugStub);
+      sinon.assert.calledTwice(loggerDebugStub);
+      sinon.assert.calledWithExactly(loggerDebugStub, sinon.match.object, 'Config for warm up cache');
       sinon.assert.calledWithExactly(loggerDebugStub, 'Cache is going to be warmed up from url: ', expectedUrl);
 
       done();

@@ -1,7 +1,7 @@
-import * as _ from 'lodash';
 import * as ddfTimeUtils from 'ddf-time-utils';
-import { constants } from '../ws.utils/constants';
+import * as _ from 'lodash';
 import * as traverse from 'traverse';
+import { constants } from '../ws.utils/constants';
 
 export {
   toSafeQuery,
@@ -98,7 +98,7 @@ function normalizeOrderBy(query: any): void {
 function normalizeTimePropertyFilter(key: string, filterValue: any, path: string[], query: any): any {
   let timeType = '';
   const normalizedFilter = {
-    [`parsedProperties.${key}.millis`]: traverse(filterValue).map(function (value: any): any {
+    'time.millis': traverse(filterValue).map(function (value: any): any {
       /* tslint:disable: no-invalid-this */
       if (this.notLeaf) {
         return value;
@@ -117,7 +117,7 @@ function normalizeTimePropertyFilter(key: string, filterValue: any, path: string
 
   // always set latest detected time type
   const conditionsForTimeEntities = _.get(query, path.slice(0, path.length - 1), []);
-  conditionsForTimeEntities[`parsedProperties.${key}.timeType`] = timeType;
+  conditionsForTimeEntities['time.timeType'] = timeType;
 
   return normalizedFilter;
 }

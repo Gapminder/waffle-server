@@ -50,10 +50,11 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
     logger.info({req}, 'DDFQL URL');
     logger.info({obj: req.body}, 'DDFQL');
 
+    const queryStartTime: number = Date.now();
     const query = _.get(req, 'body', {});
     const from = _.get(req, 'body.from', null);
 
-    const onEntriesCollected = routeUtils.respondWithRawDdf(query, req, res, next) as AsyncResultCallback<any, any>;
+    const onEntriesCollected = routeUtils.respondWithRawDdf(_.extend({queryStartTime}, query), req, res, next) as AsyncResultCallback<any, any>;
 
     if (!from) {
       return onEntriesCollected(`The filed 'from' must present in query.`, null);
@@ -93,7 +94,7 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
       return conceptsService.collectConceptsByDdfql(options, onEntriesCollected);
     } else if (queryToSchema(from)) {
       req.ddfDataType = constants.SCHEMA;
-      const onSchemaEntriesFound = routeUtils.respondWithRawDdf(query, req, res, next) as AsyncResultCallback<any, any> ;
+      const onSchemaEntriesFound = routeUtils.respondWithRawDdf(_.extend({queryStartTime}, query), req, res, next) as AsyncResultCallback<any, any> ;
       return schemaService.findSchemaByDdfql(options, onSchemaEntriesFound);
     } else {
       return onEntriesCollected(`Value '${from}' in the 'from' field isn't supported yet.`, null);
