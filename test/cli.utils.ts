@@ -32,6 +32,7 @@ export {
   setDefaultCommit,
   runDatasetImport,
   getCommitByGithubUrl,
+  getCommitsByGithubUrl,
   ImportOptions,
   Repo
 };
@@ -59,12 +60,7 @@ function _runDatasetImport(repo: Repo, onIncrementalUpdateDone: Function): void 
       to: _.get(allowedCommits, `${finishCommitIndex}`)
     }, DEFAULT_WS_CLI_OPTIONS, { repo: repo.url });
 
-    wsCli.importUpdate(cliOptions, (importUpdateError: any) => {
-      if (importUpdateError) {
-        return onIncrementalUpdateDone(importUpdateError);
-      }
-      return onIncrementalUpdateDone();
-    });
+    wsCli.importUpdate(cliOptions, onIncrementalUpdateDone);
   });
 }
 

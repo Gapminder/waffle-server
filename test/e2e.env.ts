@@ -8,6 +8,9 @@ const e2eEnv = {
   nodeEnv: 'local',
   wsPort: '8081',
   wsHost: 'localhost',
+  get wsHostUrl(): string {
+    return `http://${this.wsHost}`;
+  },
   get wsUrl(): string {
     return `http://${this.wsHost}:${this.wsPort}`;
   },

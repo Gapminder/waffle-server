@@ -8,6 +8,7 @@ import { EntitiesRepositoryFactory } from '../ws.repository/ddf/entities/entitie
 import { DatapointsRepositoryFactory } from '../ws.repository/ddf/data-points/data-points.repository';
 import { DatasetSchemaRepository } from '../ws.repository/ddf/dataset-index/dataset-index.repository';
 import { MongooseCallback } from '../ws.repository/repository.types';
+import { logger } from '../ws.config/log';
 
 export {
   setLastError,
@@ -56,6 +57,7 @@ function _findDatasetByNameAndUser(externalContext: any, done: Function): any {
 }
 
 function _findTransactionByDatasetAndCommit(extrenalContext: any, done: Function): void {
+  logger.info(extrenalContext, 'Transaction and dataset');
   return DatasetTransactionsRepository.findByDatasetAndCommit(extrenalContext.dataset._id, extrenalContext.transactionCommit, (error: string, transaction: any) => {
     if (error || !_isTransactionValid(transaction)) {
       return done(error || `Given transaction was not found: '${extrenalContext.transactionCommit}'`);

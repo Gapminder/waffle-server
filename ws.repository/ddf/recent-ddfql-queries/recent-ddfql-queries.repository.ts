@@ -1,4 +1,5 @@
 import { model } from 'mongoose';
+import { logger } from '../../../ws.config/log';
 
 const RecentDdfqlQueries = model('RecentDdfqlQueries');
 
@@ -11,7 +12,27 @@ RecentDdfqlQueriesRepository.prototype.findAllAsStream = function (): any {
 };
 
 RecentDdfqlQueriesRepository.prototype.create = function (query: any, done: (err: any) => void): any {
-  return RecentDdfqlQueries.findOneAndUpdate({queryRaw: query.queryRaw}, query, {upsert: true}, done);
+  return RecentDdfqlQueries.findOne({queryRaw: query.queryRaw}, (error: string, recentDdfqlQuery: any) => {
+    if (error) {
+      return done(error);
+    }
+
+    if (recentDdfqlQuery) {
+      if (recentDdfqlQuery.docsAmount !== query.docsAmount) {
+        logger.error(recentDdfqlQuery, query, 'RecentDdfqlQueriesRepository: TOO BAD! Documents amounts aren\'t equal' );
+      }
+
+      if ((recentDdfqlQuery.timeSpentInMillis * 1.2) < query.timeSpentInMillis) {
+        logger.error(recentDdfqlQuery, query, 'RecentDdfqlQueriesRepository: TOO BAD! Spent time is too high');
+      }
+
+      if (recentDdfqlQuery.timeSpentInMillis * 0.8 > query.timeSpentInMillis) {
+        logger.warn(recentDdfqlQuery, query, 'RecentDdfqlQueriesRepository: GREAT JOB!!!');
+      }
+    }
+
+    RecentDdfqlQueries.update({queryRaw: query.queryRaw}, query, {upsert: true}, done);
+  });
 };
 
 const repository = new RecentDdfqlQueriesRepository();

@@ -177,8 +177,9 @@ async function cloneImportedDdfRepos(): Promise<any> {
 }
 
 function validateDdfRepo(pipe: any, onDdfRepoValidated: Function): void {
-  logger.info('Start ddf dataset validation process: ', _.get(pipe.repoInfo, 'pathToRepo'));
-  const simpleDdfValidator = new SimpleDdfValidator(pipe.repoInfo.pathToRepo, ddfValidationConfig);
+  logger.info('Start ddf dataset validation process: ', _.get(pipe.repoInfo, 'pathToRepo'), ddfValidationConfig);
+
+  const simpleDdfValidator = new SimpleDdfValidator(pipe.repoInfo.pathToRepo, _.extend({excludeRules: 'NON_UNIQUE_ENTITY_VALUE'}, ddfValidationConfig));
   simpleDdfValidator.on('finish', (error: string, isDatasetCorrect: boolean) => {
     if (error) {
       return onDdfRepoValidated(error);
