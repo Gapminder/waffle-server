@@ -322,47 +322,31 @@ function findDifferenceBetweenStartAndCurrentVersion(context: any, done: Functio
     logger.info(query.queryRaw, `docsAmount: ${query.docsAmount} === ${newQuery.docsAmount}`, `timeSpentInMillis: ${query.timeSpentInMillis * 1.2} > ${newQuery.timeSpentInMillis}`);
 
     if (query.docsAmount !== newQuery.docsAmount) {
-      context.foundAggravations.push({
-        queryRaw: query.queryRaw,
-        type: query.type,
-        query,
-        newQuery,
-        difference: {
-          docsAmount: `${query.docsAmount} => ${newQuery.docsAmount}`,
-          timeSpentInMillis: `${query.timeSpentInMillis} => ${newQuery.timeSpentInMillis}`
-        },
-        message: 'Documents amount aren\'t equal between new and old query'
-      });
+      context.foundAggravations.push(createDifferenceDescriptor(query, newQuery, 'Documents amount aren\'t equal between new and old query'));
     }
 
     if (query.timeSpentInMillis * 1.2 < newQuery.timeSpentInMillis) {
-      context.foundAggravations.push({
-        queryRaw: query.queryRaw,
-        type: query.type,
-        query,
-        newQuery,
-        difference: {
-          docsAmount: `${query.docsAmount} => ${newQuery.docsAmount}`,
-          timeSpentInMillis: `${query.timeSpentInMillis} => ${newQuery.timeSpentInMillis}`
-        },
-        message: 'Too bad! Spent much more time than expected!'
-      });
+      context.foundAggravations.push(createDifferenceDescriptor(query, newQuery, 'Too bad! Spent much more time than expected!'));
     }
 
     if (query.timeSpentInMillis * 0.85 > newQuery.timeSpentInMillis) {
-      context.foundImprovements.push({
-        queryRaw: query.queryRaw,
-        type: query.type,
-        query,
-        newQuery,
-        difference: {
-          docsAmount: `${query.docsAmount} => ${newQuery.docsAmount}`,
-          timeSpentInMillis: `${query.timeSpentInMillis} => ${newQuery.timeSpentInMillis}`
-        },
-        message: 'Good job!!!'
-      });
+      context.foundImprovements.push(createDifferenceDescriptor(query, newQuery, 'Good job!!!'));
     }
   });
 
   async.setImmediate(() => done(null, context));
+}
+
+function createDifferenceDescriptor(query: any, newQuery: any, message: string): any {
+  return {
+    queryRaw: query.queryRaw,
+      type: query.type,
+    query,
+    newQuery,
+    difference: {
+      docsAmount: `${query.docsAmount} => ${newQuery.docsAmount}`,
+      timeSpentInMillis: `${query.timeSpentInMillis} => ${newQuery.timeSpentInMillis}`
+    },
+    message
+  };
 }

@@ -9,6 +9,8 @@ const Entities = new Schema({
 
   title: String,
   sources: [{type: String, required: true}],
+
+  parsedProperties: {type: Schema.Types.Mixed, default: {}},
   properties: {type: Schema.Types.Mixed, default: {}},
   languages: {type: Schema.Types.Mixed, default: {}},
 
@@ -29,10 +31,14 @@ Entities.plugin(OriginIdPlugin, {
 });
 
 // This index exists only for entities of type "time"
-Entities.index({dataset: 1, 'parsedProperties.time.timeType': 1, from: 1, to: 1, 'parsedProperties.time.millis': 1}, {sparse: true});
-Entities.index({dataset: 1, from: 1, to: 1, domain: 1, sets: 1});
+Entities.index({dataset: 1, domain: 1, parsedProperties: 1, from: 1, to: 1}, {sparse: true});
+Entities.index({dataset: 1, parsedProperties: 1, from: 1, to: 1}, {sparse: true});
+Entities.index({dataset: 1, domain: 1, from: 1, to: 1});
+Entities.index({dataset: 1, domain: 1, sets: 1, from: 1, to: 1});
+
+Entities.index({dataset: 1, gid: 1, from: 1, to: 1});
 Entities.index({dataset: 1, originId: 1, from: 1, to: 1});
-Entities.index({dataset: 1, gid: 1, 'properties.concept_type': 1, from: 1, to: 1});
+Entities.index({dataset: 1, from: 1, to: 1});
 Entities.index({dataset: 1, to: 1});
 Entities.index({originId: 1});
 
