@@ -1,13 +1,12 @@
+import 'mongoose';
+import '../ws.repository';
+
 import * as async from 'async';
 import * as _ from 'lodash';
 import * as fetch from 'node-fetch';
 import * as shell from 'shelljs';
-import '../ws.config/db.config';
-import { connectToDb as _connectToDb } from '../ws.config/db.config';
 import { logger } from '../ws.config/log';
-import '../ws.repository';
-import * as cliService from '../ws.services/cli.service';
-import * as Cache from '../ws.utils/cache-warmup';
+import { cleanDdfRedisCache } from '../ws.services/cli.service';
 import { getCommitsByGithubUrl, runDatasetImport, setDefaultCommit as _setDefaultCommit } from './cli.utils';
 import { e2eEnv } from './e2e.env';
 import { startWaffleServer as _startWaffleServer, stopWaffleServer as _stopWaffleServer } from './e2e.utils';
@@ -15,7 +14,7 @@ import { startWaffleServer as _startWaffleServer, stopWaffleServer as _stopWaffl
 const repos = [
   { url: 'git@github.com:VS-work/ddf--ws-testing.git' },
   { url: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git#develop' },
-  { url: 'git@github.com:open-numbers/ddf--gapminder--population.git#develop' }
+  // { url: 'git@github.com:open-numbers/ddf--gapminder--population.git#develop' }
 ];
 
 const externalContext = {
@@ -46,8 +45,7 @@ getCurrentBranchName(externalContext, (error: string, _context: any) => {
     recognizeLastCommitForEachRepos,
     runImportsOfAllRepos,
     setDefaultDataset,
-    connectToDb,
-    runCacheWarmupRecentQueries,
+    waitForCacheWarmup,
     async.apply(getAllRecentQueriesResults, _context.startBranchName),
     stopWaffleServer,
     cleanCache,
@@ -56,8 +54,7 @@ getCurrentBranchName(externalContext, (error: string, _context: any) => {
     startWaffleServer,
     runImportsOfAllRepos,
     setDefaultDataset,
-    connectToDb,
-    runCacheWarmupRecentQueries,
+    waitForCacheWarmup,
     async.apply(getAllRecentQueriesResults, _context.currentBranchName),
     stopWaffleServer,
     cleanCache,
@@ -75,13 +72,13 @@ getCurrentBranchName(externalContext, (error: string, _context: any) => {
       });
     }
 
-    const queriesAmount = results[results.startBranchName].length;
+    const queriesAmount = _.get(results, results.startBranchName, []).length;
 
     if (_.isEmpty(results.foundAggravations)) {
       logger.info('No aggravations were found');
     } else {
-      const aggravationsAmount = results.foundAggravations.length;
-      const groupedAggravations = _.groupBy(results.foundAggravations, 'message');
+      const aggravationsAmount = _.get(results, 'foundAggravations', []).length;
+      const groupedAggravations = _.groupBy(_.get(results, 'foundAggravations', []), 'message');
 
       logger.warn(`Counted ${aggravationsAmount} aggravations of ${queriesAmount} queries`);
 
@@ -109,20 +106,8 @@ getCurrentBranchName(externalContext, (error: string, _context: any) => {
   });
 });
 
-function connectToDb(context: any, done: Function): void {
-  _connectToDb((error: string, db: any) => {
-    if (error) {
-      return done(error);
-    }
-
-    context.db = db;
-
-    return done(null, context);
-  });
-}
-
 function cleanCache(context: any, done: Function): void {
-  cliService.cleanDdfRedisCache((error: string) => {
+  cleanDdfRedisCache((error: string) => {
     if (error) {
       return done(error);
     }
@@ -162,7 +147,7 @@ function waitForDefaultUser(counter: number, done: Function): void {
 
     if (response.success) {
       logger.info(response, 'Connect to WS successfully');
-      return done();
+      return done(null, response.data);
     }
 
     if (counter > 10000) {
@@ -207,7 +192,15 @@ function setDefaultDataset(context: any, done: Function): void {
 function startWaffleServer(context: any, done: Function): void {
   async.series([
     _startWaffleServer,
-    (_done: Function) => setTimeout(() => waitForDefaultUser(0, _done), 2000)
+    (_done: Function) => waitForDefaultUser(0, (error: string, result: any) => {
+      if (error) {
+        return _done(error);
+      }
+
+      context.token = result.token;
+
+      return _done();
+    })
   ], (error: string) => done(error, context));
 }
 
@@ -217,8 +210,13 @@ function runImportsOfAllRepos(context: any, done: Function): void {
   });
 }
 
-function runCacheWarmupRecentQueries(context: any, done: Function): void {
-  Cache.warmUpCache((error: string, warmedQueriesAmount: any) => {
+function waitForCacheWarmup(context: any, done: Function): void {
+  const lastResponseSize = 0;
+  const startRequestsCounter = 0;
+  const {token} = context;
+  const options = {counter: startRequestsCounter, lastResponseSize, token};
+
+  _waitForCacheWarmup(options, (error: string, warmedQueriesAmount: number) => {
     if (error) {
       return done(error);
     }
@@ -226,17 +224,70 @@ function runCacheWarmupRecentQueries(context: any, done: Function): void {
     if (warmedQueriesAmount) {
       logger.info(`Cache is warm. Amount of warmed queries: ${warmedQueriesAmount}`);
     } else {
-      logger.info(`There are no queries to warm up cache OR queries were executed with no success`);
+      logger.warn(`There are no queries to warm up cache OR queries were executed with no success`);
     }
 
     return done(null, context);
   });
 }
 
-function stopWaffleServer(context: any, done: Function): void {
-  _stopWaffleServer((error: string) => {
+function _waitForCacheWarmup( options: any, done: Function): void {
+  let {counter, lastResponseSize, token} = options;
+  const limit = 3600000;
+  const step = 60000;
+
+  // const limit = 60000;
+  // const step = 2000;
+
+  fetch(`http://${e2eEnv.wsHost}:${e2eEnv.wsPort}/api/ddf/cli/recentQueries/status`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  }).then((response: any) => {
+    return response.json();
+  }).then((response: any) => {
+    if (!response.success) {
+      logger.warn(response.error);
+    }
+
+    if (response.success && _.size(response.data) === lastResponseSize) {
+      logger.info(response, 'Connect to WS successfully');
+      return done(null, _.size(response.data));
+    }
+
+    if (response.success) {
+      lastResponseSize = _.size(response.data);
+    }
+
+    if (counter > limit) {
+      return done('TIMEOUT');
+    }
+
+    setTimeout(() => {
+      counter += step;
+      _waitForCacheWarmup({counter, lastResponseSize}, done);
+    }, step);
+  }).catch((error: any) => {
     if (error) {
-      return done(error);
+      logger.warn(error);
+    }
+
+    if (counter > limit) {
+      return done('TIMEOUT');
+    }
+
+    setTimeout(() => {
+      counter += step;
+      _waitForCacheWarmup({counter, lastResponseSize}, done);
+    }, step);
+  });
+}
+
+function stopWaffleServer(context: any, done: Function): void {
+  _stopWaffleServer((_error: string) => {
+    if (_error) {
+      return done(_error);
     }
 
     return done(null, context);
@@ -303,8 +354,8 @@ function getAllRecentQueriesResults(branch: string, context: any, done: Function
 }
 
 function findDifferenceBetweenStartAndCurrentVersion(context: any, done: Function): void {
-  const newResults = _.keyBy(context[context.currentBranchName], 'queryRaw');
-  const oldResults = context[context.startBranchName];
+  const newResults = _.keyBy(_.get(context, context.currentBranchName, []), 'queryRaw');
+  const oldResults = _.get(context, context.startBranchName, []);
   context.foundAggravations = [];
   context.foundImprovements = [];
 
@@ -340,7 +391,7 @@ function findDifferenceBetweenStartAndCurrentVersion(context: any, done: Functio
 function createDifferenceDescriptor(query: any, newQuery: any, message: string): any {
   return {
     queryRaw: query.queryRaw,
-      type: query.type,
+    type: query.type,
     query,
     newQuery,
     difference: {
