@@ -57,7 +57,7 @@
     "cron": "1.2.1",
     "csvtojson": "1.1.7",
     "ddf-time-utils": "0.1.7",
-    "ddf-validation": "~1.9.0",
+    "ddf-validation": "^1.9.4",
     "entities": "1.1.1",
     "express": "4.15.3",
     "express-redis-cache": "1.0.0",
