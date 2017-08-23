@@ -7,6 +7,7 @@ import * as fileUtils from '../ws.utils/file';
 import * as entitiesUtils from './utils/entities.utils';
 import * as ddfMappers from './utils/ddf-mappers';
 import { EntitiesRepositoryFactory } from '../ws.repository/ddf/entities/entities.repository';
+import { DatasetTracker } from '../ws.services/datasets-tracker';
 
 export {
   startEntitiesCreation as createEntities
@@ -29,11 +30,16 @@ function startEntitiesCreation(externalContext: any, done: Function): void {
 }
 
 function createEntities(externalContext: any): any {
+  const { dataset: { name : datasetName } } = externalContext;
   return hi(externalContext.datapackage.resources)
     .filter((resource: any) => resource.type === constants.ENTITIES)
     .flatMap((resource: any) => loadEntitiesFromCsv(resource, externalContext))
     .batch(ddfImportUtils.DEFAULT_CHUNK_SIZE)
     .flatMap((entitiesBatch: any[]) => {
+      DatasetTracker
+        .get(datasetName)
+        .increment(constants.ENTITIES, entitiesBatch.length);
+
       return hi(storeEntitesToDb(entitiesBatch));
     });
 }

@@ -615,7 +615,7 @@ describe('Datapoints Utils', () => {
       };
     });
 
-    const createEntitiesWithCache = datapointsUtils.createEntitiesFoundInDatapointsSaverWithCache();
+    const createEntitiesWithCache = datapointsUtils.createEntitiesFoundInDatapointsSaverWithCache(externalContext);
 
     const createdEntities = createEntitiesWithCache(entities);
 

@@ -14,6 +14,7 @@ function updateConceptsTranslations(externalContext: any, done: Function): void 
   const externalContextFrozen = Object.freeze({
     transaction: externalContext.transaction,
     datasetId: externalContext.dataset._id,
+    datasetName: externalContext.dataset.name,
     version: externalContext.transaction.createdAt,
     pathToLangDiff: externalContext.pathToLangDiff
   });

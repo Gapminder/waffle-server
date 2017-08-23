@@ -7,6 +7,8 @@ import * as ddfMappers from './ddf-mappers';
 import * as ddfImportUtils from './import-ddf.utils';
 import {EntitiesRepositoryFactory} from '../../ws.repository/ddf/entities/entities.repository';
 import {DatapointsRepositoryFactory} from '../../ws.repository/ddf/data-points/data-points.repository';
+import { constants } from '../../ws.utils/constants';
+import { DatasetTracker } from '../../ws.services/datasets-tracker';
 
 export {
   getDimensionsAndMeasures,
@@ -79,7 +81,7 @@ function saveDatapoints(datapointsByFilename: any, externalContextFrozen: any): 
 function mapAndStoreDatapointsToDb(datapointsFromSameFile: any, externalContext: any): any {
   const {measures, filename, dimensions, dimensionsConcepts, context: {segregatedEntities: entities}} = datapointsFromSameFile;
 
-  const {dataset: {_id: datasetId}, transaction: {createdAt: version}, concepts} = externalContext;
+  const {dataset: {_id: datasetId, name: datasetName}, transaction: {createdAt: version}, concepts} = externalContext;
 
   const mappingContext = {
     measures,
@@ -95,6 +97,10 @@ function mapAndStoreDatapointsToDb(datapointsFromSameFile: any, externalContext:
   const wsDatapoints = _.flatMap(datapointsFromSameFile.datapoints, (datapointWithContext: any) => {
     return ddfMappers.mapDdfDataPointToWsModel(datapointWithContext.datapoint, mappingContext);
   });
+
+  DatasetTracker
+    .get(datasetName)
+    .increment(constants.DATAPOINTS,  _.size(wsDatapoints));
 
   logger.debug('Store datapoints to database. Amount: ', _.size(wsDatapoints));
   return DatapointsRepositoryFactory.versionAgnostic().create(wsDatapoints);
@@ -203,8 +209,10 @@ function findEntitiesInDatapoint(datapoint: any, context: any, externalContext: 
   }, []);
 }
 
-function createEntitiesFoundInDatapointsSaverWithCache(): any {
+function createEntitiesFoundInDatapointsSaverWithCache(externalContext: any): any {
   const entitiesFoundInDatapointsCache = {};
+  const { dataset: { name : datasetName } } = externalContext;
+
   return (entities: any) => {
     const notSeenEntities = _.reduce(entities, (result: any, entity: any) => {
       if (!entitiesFoundInDatapointsCache[entity.gid]) {
@@ -217,6 +225,10 @@ function createEntitiesFoundInDatapointsSaverWithCache(): any {
     if (_.isEmpty(notSeenEntities)) {
       return Promise.resolve(entitiesFoundInDatapointsCache);
     }
+
+    DatasetTracker
+      .get(datasetName)
+      .increment(constants.ENTITIES, notSeenEntities.length);
 
     return storeEntitiesToDb(notSeenEntities)
       .then((entityModels: any) => {
