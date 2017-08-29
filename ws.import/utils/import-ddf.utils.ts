@@ -114,9 +114,10 @@ function parseProperties(concept: any, entityGid: any, entityProperties: any, ti
       .mapValues(toInternalTimeForm)
       .value();
 
-  if (timeConcepts[concept.gid]) {
+  if (_.get(concept, 'gid', null) && _.get(timeConcepts, concept.gid, null)) {
     parsedProperties = _.extend(parsedProperties || {}, {[concept.gid]: toInternalTimeForm(entityGid)});
   }
+
   return parsedProperties;
 }
 
