@@ -125,7 +125,9 @@ function getStateOfLatestTransaction(req: any, res: any): void {
       return res.json(routeUtils.toErrorResponse(statusError));
     }
 
-    return res.json(_.extend(routeUtils.toDataResponse(status), {datasetData : DatasetTracker.get(datasetName).getState()}));
+    status.modifiedObjects = DatasetTracker.get(datasetName).getState();
+
+    return res.json(routeUtils.toDataResponse(status));
   });
 }
 
