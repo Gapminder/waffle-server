@@ -1,0 +1,214 @@
+[
+  {
+    "queryRaw": "_language=nl-nl&select_key@=project&=company;&value@=popular/_appeal&=meeting/_style&=methodology;;&from=datapoints&dataset=VS-work%252Fddf--ws-testing",
+    "type": "URLON"
+  }, {
+  "queryRaw": "_language=en&from=datapoints&animatable=year&select_key@=geo&=year&=age;&value@=population;;&where_$and@_geo=$geo;&_age=$age;&_year=$year;;;&join_$geo_key=geo&where_geo_$nin@=world;;;;&$year_key=year&where_year_$gte:1950&$lt:1951;;;&$age_key=age&where_age_$nin@=80plus&=100plus;;;;;&order/_by@=year;&dataset=open-numbers%252Fddf--gapminder--population%2523stage",
+  "type": "URLON"
+}, {
+  "queryRaw": "_language=en&from=datapoints&animatable=year&select_key@=geo&=year&=age;&value@=population;;&where_$and@_geo=$geo;&_age=$age;&_year=$year;;;&join_$geo_key=geo&where_geo_$nin@=world;;;;&$year_key=year&where_year_$gte:1951&$lt:1952;;;&$age_key=age&where_age_$nin@=80plus&=100plus;;;;;&order/_by@=year;&dataset=open-numbers%252Fddf--gapminder--population%2523stage",
+  "type": "URLON"
+},
+  {
+    "queryRaw": "_language=en&from=datapoints&animatable=year&select_key@=geo&=year&=age;&value@=population;;&where_$and@_geo=$geo;&_age=$age;&_year=$year;;;&join_$geo_key=geo&where_geo_$nin@=world;;;;&$year_key=year&where_year_$gte:1952&$lt:1953;;;&$age_key=age&where_age_$nin@=80plus&=100plus;;;;;&order/_by@=year;&dataset=open-numbers%252Fddf--gapminder--population%2523stage",
+    "type": "URLON"
+  },
+  {
+    "queryRaw": "_language=en&from=datapoints&animatable=year&select_key@=geo&=year&=age;&value@=population;;&where_$and@_geo=$geo;&_age=$age;&_year=$year;;;&join_$geo_key=geo&where_geo_$nin@=world;;;;&$year_key=year&where_year_$gte:1953&$lt:1954;;;&$age_key=age&where_age_$nin@=80plus&=100plus;;;;;&order/_by@=year;&dataset=open-numbers%252Fddf--gapminder--population%2523stage",
+    "type": "URLON"
+  },
+  {
+    "queryRaw": "_language=en&from=datapoints&animatable=year&select_key@=geo&=year&=age;&value@=population;;&where_$and@_age=$age;&_year=$year;;;&join_$year_key=year&where_year_$gte:2012&$lt:2022;;;&$age_key=age&where_age_$nin@=80plus&=100plus;;;;;&order/_by@=year;&dataset=open-numbers%252Fddf--gapminder--population%2523stage",
+    "type": "URLON"
+  },
+  {
+    "queryRaw": "_language=en&from=datapoints&animatable=year&select_key@=geo&=year&=age;&value@=population;;&where_$and@_age=$age;&_year=$year;;;&join_$year_key=year&where_year_$gte:2013&$lt:2023;;;&$age_key=age&where_age_$nin@=80plus&=100plus;;;;;&order/_by@=year;&dataset=open-numbers%252Fddf--gapminder--population%2523stage",
+    "type": "URLON"
+  },
+  {
+    "queryRaw": "_language=en&from=datapoints&animatable=year&select_key@=geo&=year&=age;&value@=population;;&where_$and@_age=$age;&_year=$year;;;&join_$year_key=year&where_year_$gte:2014&$lt:2024;;;&$age_key=age&where_age_$nin@=80plus&=100plus;;;;;&order/_by@=year;&dataset=open-numbers%252Fddf--gapminder--population%2523stage",
+    "type": "URLON"
+  },
+  {
+    "queryRaw": "_language=en&from=datapoints&animatable=year&select_key@=geo&=year&=age;&value@=population;;&where_$and@_age=$age;&_year=$year;;;&join_$year_key=year&where_year_$gte:2015&$lt:2025;;;&$age_key=age&where_age_$nin@=80plus&=100plus;;;;;&order/_by@=year;&dataset=open-numbers%252Fddf--gapminder--population%2523stage",
+    "type": "URLON"
+  },
+  {
+    "queryRaw": "_language=en&from=datapoints&animatable=year&select_key@=geo&=year&=age;&value@=population;;&where_$and@_age=$age;&_year=$year;;;&join_$year_key=year&where_year_$gte:2016&$lt:2026;;;&$age_key=age&where_age_$nin@=80plus&=100plus;;;;;&order/_by@=year;&dataset=open-numbers%252Fddf--gapminder--population%2523stage",
+    "type": "URLON"
+  },
+  {
+    "queryRaw": "_language=en&from=datapoints&animatable=year&select_key@=geo&=year&=age;&value@=population;;&where_$and@_age=$age;&_year=$year;;;&join_$year_key=year&where_year_$gte:2017&$lt:2027;;;&$age_key=age&where_age_$nin@=80plus&=100plus;;;;;&order/_by@=year;&dataset=open-numbers%252Fddf--gapminder--population%2523stage",
+    "type": "URLON"
+  },
+  {
+    "queryRaw": "_language=en&from=datapoints&animatable=year&select_key@=geo&=year&=age;&value@=population;;&where_$and@_age=$age;&_year=$year;;;&join_$year_key=year&where_year_$gte:2018&$lt:2028;;;&$age_key=age&where_age_$nin@=80plus&=100plus;;;;;&order/_by@=year;&dataset=open-numbers%252Fddf--gapminder--population%2523stage",
+    "type": "URLON"
+  },
+  {
+    "queryRaw": "_language=en&from=datapoints&animatable=year&select_key@=geo&=year&=age;&value@=population;;&where_$and@_age=$age;&_year=$year;;;&join_$year_key=year&where_year_$gte:2019&$lt:2029;;;&$age_key=age&where_age_$nin@=80plus&=100plus;;;;;&order/_by@=year;&dataset=open-numbers%252Fddf--gapminder--population%2523stage",
+    "type": "URLON"
+  },
+  {
+    "queryRaw": "_language=en&from=datapoints&animatable=year&select_key@=geo&=year&=age;&value@=population;;&where_$and@_age=$age;&_year=$year;;;&join_$year_key=year&where_year_$gte:2020&$lt:2030;;;&$age_key=age&where_age_$nin@=80plus&=100plus;;;;;&order/_by@=year;&dataset=open-numbers%252Fddf--gapminder--population%2523stage",
+    "type": "URLON"
+  },
+  {
+    "queryRaw": "_language=en&from=datapoints&animatable=year&select_key@=geo&=year&=age;&value@=population;;&where_$and@_age=$age;&_year=$year;;;&join_$year_key=year&where_year_$gte:2021&$lt:2031;;;&$age_key=age&where_age_$nin@=80plus&=100plus;;;;;&order/_by@=year;&dataset=open-numbers%252Fddf--gapminder--population%2523stage",
+    "type": "URLON"
+  },
+  {
+    "queryRaw": "_language=en&from=datapoints&animatable=year&select_key@=geo&=year&=age;&value@=population;;&where_$and@_age=$age;&_year=$year;;;&join_$year_key=year&where_year_$gte:2022&$lt:2032;;;&$age_key=age&where_age_$nin@=80plus&=100plus;;;;;&order/_by@=year;&dataset=open-numbers%252Fddf--gapminder--population%2523stage",
+    "type": "URLON"
+  },
+  {
+    "queryRaw": "_language=en&from=datapoints&animatable=year&select_key@=geo&=year&=age;&value@=population;;&where_$and@_age=$age;&_year=$year;;;&join_$year_key=year&where_year_$gte:2023&$lt:2033;;;&$age_key=age&where_age_$nin@=80plus&=100plus;;;;;&order/_by@=year;&dataset=open-numbers%252Fddf--gapminder--population%2523stage",
+    "type": "URLON"
+  },
+  {
+    "queryRaw": "_language=en&from=datapoints&animatable=year&select_key@=geo&=year&=age;&value@=population;;&where_$and@_age=$age;&_year=$year;;;&join_$year_key=year&where_year_$gte:2024&$lt:2034;;;&$age_key=age&where_age_$nin@=80plus&=100plus;;;;;&order/_by@=year;&dataset=open-numbers%252Fddf--gapminder--population%2523stage",
+    "type": "URLON"
+  },
+  {
+    "queryRaw": "_language=en&from=datapoints&animatable=year&select_key@=geo&=year&=age;&value@=population;;&where_$and@_age=$age;&_year=$year;;;&join_$year_key=year&where_year_$gte:2025&$lt:2035;;;&$age_key=age&where_age_$nin@=80plus&=100plus;;;;;&order/_by@=year;&dataset=open-numbers%252Fddf--gapminder--population%2523stage",
+    "type": "URLON"
+  },
+  {
+    "queryRaw": "_language=en&from=datapoints&animatable=year&select_key@=geo&=year&=age;&value@=population;;&where_$and@_age=$age;&_year=$year;;;&join_$year_key=year&where_year_$gte:2026&$lt:2036;;;&$age_key=age&where_age_$nin@=80plus&=100plus;;;;;&order/_by@=year;&dataset=open-numbers%252Fddf--gapminder--population%2523stage",
+    "type": "URLON"
+  },
+  {
+    "queryRaw": "_language=en&from=datapoints&animatable=year&select_key@=geo&=year&=age;&value@=population;;&where_$and@_age=$age;&_year=$year;;;&join_$year_key=year&where_year_$gte:2027&$lt:2037;;;&$age_key=age&where_age_$nin@=80plus&=100plus;;;;;&order/_by@=year;&dataset=open-numbers%252Fddf--gapminder--population%2523stage",
+    "type": "URLON"
+  },
+  {
+    "queryRaw": "_language=en&from=datapoints&animatable=year&select_key@=geo&=year&=age;&value@=population;;&where_$and@_age=$age;&_year=$year;;;&join_$year_key=year&where_year_$gte:2028&$lt:2038;;;&$age_key=age&where_age_$nin@=80plus&=100plus;;;;;&order/_by@=year;&dataset=open-numbers%252Fddf--gapminder--population%2523stage",
+    "type": "URLON"
+  },
+  {
+    "queryRaw": "_language=en&from=datapoints&animatable=year&select_key@=geo&=year&=age;&value@=population;;&where_$and@_age=$age;&_year=$year;;;&join_$year_key=year&where_year_$gte:2029&$lt:2039;;;&$age_key=age&where_age_$nin@=80plus&=100plus;;;;;&order/_by@=year;&dataset=open-numbers%252Fddf--gapminder--population%2523stage",
+    "type": "URLON"
+  },
+  {
+    "queryRaw": "_language=en&from=datapoints&animatable=year&select_key@=geo&=year&=age;&value@=population;;&where_$and@_age=$age;&_year=$year;;;&join_$year_key=year&where_year_$gte:2030&$lt:2040;;;&$age_key=age&where_age_$nin@=80plus&=100plus;;;;;&order/_by@=year;&dataset=open-numbers%252Fddf--gapminder--population%2523stage",
+    "type": "URLON"
+  },
+  {
+    "queryRaw": "_language=en&from=datapoints&animatable=year&select_key@=geo&=year&=age;&value@=population;;&where_$and@_age=$age;&_year=$year;;;&join_$year_key=year&where_year_$gte:2031&$lt:2041;;;&$age_key=age&where_age_$nin@=80plus&=100plus;;;;;&order/_by@=year;&dataset=open-numbers%252Fddf--gapminder--population%2523stage",
+    "type": "URLON"
+  },
+  {
+    "queryRaw": "_language=en&from=datapoints&animatable=year&select_key@=geo&=year&=age;&value@=population;;&where_$and@_age=$age;&_year=$year;;;&join_$year_key=year&where_year_$gte:2032&$lt:2042;;;&$age_key=age&where_age_$nin@=80plus&=100plus;;;;;&order/_by@=year;&dataset=open-numbers%252Fddf--gapminder--population%2523stage",
+    "type": "URLON"
+  },
+  {
+    "queryRaw": "_language=en&from=datapoints&animatable=year&select_key@=geo&=year&=age;&value@=population;;&where_$and@_age=$age;&_year=$year;;;&join_$year_key=year&where_year_$gte:2033&$lt:2043;;;&$age_key=age&where_age_$nin@=80plus&=100plus;;;;;&order/_by@=year;&dataset=open-numbers%252Fddf--gapminder--population%2523stage",
+    "type": "URLON"
+  },
+  {
+    "queryRaw": "_language=en&from=datapoints&animatable=year&select_key@=geo&=year&=age;&value@=population;;&where_$and@_age=$age;&_year=$year;;;&join_$year_key=year&where_year_$gte:2034&$lt:2044;;;&$age_key=age&where_age_$nin@=80plus&=100plus;;;;;&order/_by@=year;&dataset=open-numbers%252Fddf--gapminder--population%2523stage",
+    "type": "URLON"
+  },
+  {
+    "queryRaw": "_language=en&from=datapoints&animatable=year&select_key@=geo&=year&=age;&value@=population;;&where_$and@_age=$age;&_year=$year;;;&join_$year_key=year&where_year_$gte:2035&$lt:2045;;;&$age_key=age&where_age_$nin@=80plus&=100plus;;;;;&order/_by@=year;&dataset=open-numbers%252Fddf--gapminder--population%2523stage",
+    "type": "URLON"
+  },
+  {
+    "_id": {
+      "$oid": "595b539de1e77df40ca92837"
+    },
+    "queryRaw": "_language=en&from=entities&animatable:false&select_key@=tag;&value@=name&=parent;;&where_;&join_;&order/_by@=rank;",
+    "type": "URLON"
+  },
+  {
+    "_id": {
+      "$oid": "595b539de1e77df40ca9283a"
+    },
+    "queryRaw": "_language=en&from=entities&animatable=time&select_key@=geo;&value@=name&=latitude&=longitude&=world/_4region;;&where_$and@_is--country:true;;;&join_;&order/_by@=rank;",
+    "type": "URLON"
+  },
+  {
+    "_id": {
+      "$oid": "595b539de1e77df40ca9283c"
+    },
+    "queryRaw": "_language=en&from=entities&animatable:false&select_key@=world/_4region;&value@=name&=rank&=shape/_lores/_svg;;&where_;&join_;&order/_by@=rank;",
+    "type": "URLON"
+  },
+  {
+    "_id": {
+      "$oid": "595b539de1e77df40ca92842"
+    },
+    "queryRaw": "_language=en&from=datapoints&animatable=time&select_key@=geo&=time;&value@=population/_total;;&where_$and@_geo=$geo;&_time=$time;;;&join_$geo_key=geo&where_is--country:true;;&$time_key=time&where_time=2015;;;&order/_by@=time;",
+    "type": "URLON"
+  },
+  {
+    "_id": {
+      "$oid": "595b539ee1e77df40ca92857"
+    },
+    "queryRaw": "_language=en&from=entities&animatable=time&select_key@=geo;&value@=latitude&=longitude&=world/_4region;;&where_$and@_is--country:true;;;&join_;&order/_by@=rank;",
+    "type": "URLON"
+  },
+  {
+    "_id": {
+      "$oid": "595b539ee1e77df40ca9285b"
+    },
+    "queryRaw": "_language=en&from=entities&animatable:false&select_key@=world/_4region;&value@=rank&=shape/_lores/_svg;;&where_;&join_;&order/_by@=rank;",
+    "type": "URLON"
+  },
+  {
+    "_id": {
+      "$oid": "595b539fe1e77df40ca92869"
+    },
+    "queryRaw": "_language=en&from=entities&animatable:false&select_key@=tag;&value@=parent;;&where_;&join_;&order/_by@=rank;",
+    "type": "URLON"
+  },
+  {
+    "_id": {
+      "$oid": "595b53a0e1e77df40ca928a6"
+    },
+    "queryRaw": "_language=en&from=datapoints&animatable=time&select_key@=geo&=time;&value@=population/_total;;&where_$and@_geo=$geo;&_time=$time;;;&join_$geo_key=geo&where_is--country:true;;&$time_key=time&where_time_$gte=1800&$lte=2015;;;;&order/_by@=time;",
+    "type": "URLON"
+  },
+  {
+    "_id": {
+      "$oid": "595b53d3e1e77df40ca9291d"
+    },
+    "queryRaw": "_language=en&from=entities&animatable=time&select_key@=geo;&value@=name&=world/_4region;;&where_$and@_is--country:true;;;&join_;&order/_by@=rank;",
+    "type": "URLON"
+  },
+  {
+    "_id": {
+      "$oid": "595b53dae1e77df40ca92979"
+    },
+    "queryRaw": "_language=en&from=datapoints&animatable=time&select_key@=geo&=time;&value@=income/_per/_person/_gdppercapita/_ppp/_inflation/_adjusted&=life/_expectancy/_years&=population/_total;;&where_$and@_geo=$geo;&_time=$time;;;&join_$geo_key=geo&where_is--country:true;;&$time_key=time&where_time_$gte=1800&$lte=2015;;;;&order/_by@=time;",
+    "type": "URLON"
+  },
+  {
+    "_id": {
+      "$oid": "595b582be1e77df40ca93225"
+    },
+    "queryRaw": "_language=en&from=entities&animatable:false&select_key@=geo;&value@=name&=world/_4region;;&where_$and@_is--country:true;;;&join_;&order/_by@=rank;",
+    "type": "URLON"
+  },
+  {
+    "_id": {
+      "$oid": "595b5830e1e77df40ca9327e"
+    },
+    "queryRaw": "_language=en&from=datapoints&animatable=time&select_key@=geo&=time;&value@=population/_total&=income/_per/_person/_gdppercapita/_ppp/_inflation/_adjusted&=gapminder/_gini;;&where_$and@_geo=$geo;&_time=$time;;;&join_$geo_key=geo&where_is--country:true;;&$time_key=time&where_time_$gte=1800&$lte=2015;;;;&order/_by@=time;",
+    "type": "URLON"
+  },
+  {
+    "_id": {
+      "$oid": "595b583ae1e77df40ca932a2"
+    },
+    "queryRaw": "_language=en&from=entities&animatable:false&select_key@=country;&value@=name&=rank&=shape/_lores/_svg;;&where_;&join_;&order/_by@=rank;",
+    "type": "URLON"
+  },
+  {
+    "_id": {
+      "$oid": "595b6a61e1e77df40ca94158"
+    },
+    "queryRaw": "_language=en&from=entities&animatable=time&select_key@=geo;&value@=name&=world/_4region;;&where_$and@_geo_$in@=usa&=rus&=chn&=nga;;;;;&join_;&order/_by@=rank;",
+    "type": "URLON"
+  }
+]

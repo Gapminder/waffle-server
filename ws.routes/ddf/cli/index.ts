@@ -16,6 +16,8 @@ function registerDdfCliRoutes(serviceLocator: ServiceLocator): Application {
   // cause it is entry point for acquiring token and requesting other resources
   router.post('/authenticate', CliController.getToken);
 
+  router.get('/recentQueries/status', CliController.getStateOfRecentQueries);
+
   router.use(routeUtils.ensureAuthenticatedViaToken);
   router.use(routeUtils.ensureCliVersion);
 

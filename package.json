@@ -1,4 +1,9 @@
 {
+  "binary": {
+    "module_name": "server.js",
+    "module_path": ".",
+    "host": "localhost"
+  },
   "name": "Waffle-Server",
   "version": "2.8.0",
   "description": "Server for keeping and serving ddf data",
@@ -6,8 +11,8 @@
   "scripts": {
     "lint": "tslint --type-check -e **/node_modules/**/* -e **/test/**/* -e **/test/* --project tsconfig.json --config tslint.json ./**/*.ts",
     "test": "npm run tsc && npm run spec && npm run e2e",
-    "spec": "mocha --reporter mochawesome --reporter-options reportDir=specReports,reportFilename=specReport --timeout 20000 --compilers ts:ts-node/register 'test/**/*.spec.ts'",
-    "spec:coverage": "rm -rf specReports && istanbul --include-all-sources cover _mocha -- -R spec --timeout 20000 --compilers ts:ts-node/register 'test/**/*.spec.ts' && remap-istanbul -i coverage/coverage.json -e node_modules,coverage,'ws.import/repos' -t html -o coverage/remap-istanbul",
+    "spec": "mocha --reporter mochawesome --reporter-options reportDir=specReports,reportFilename=specReport --timeout 20000 --require mocha.env.js --compilers ts:ts-node/register 'test/**/*.spec.ts'",
+    "spec:coverage": "rm -rf specReports && istanbul --include-all-sources cover _mocha -- -R spec --timeout 20000 --require mocha.env.js --compilers ts:ts-node/register 'test/**/*.spec.ts' && remap-istanbul -i coverage/coverage.json -e node_modules,coverage,'ws.import/repos' -t html -o coverage/remap-istanbul",
     "e2e": "npm run e2e:allCommits && npm run e2e:2commit && npm run e2e:3commit && npm run e2e:4commit",
     "pree2e:allCommits": "ts-node ./test/pre-e2e.ts",
     "e2e:allCommits": "mocha --timeout 200000 --compilers ts:ts-node/register 'test/**/*.e2e.ts'",
@@ -15,6 +20,7 @@
     "e2e:2commit": "COMMIT_INDEX_TO_IMPORT=1 npm run e2e:allCommits",
     "e2e:3commit": "COMMIT_INDEX_TO_IMPORT=2 npm run e2e:allCommits",
     "e2e:4commit": "COMMIT_INDEX_TO_IMPORT=3 npm run e2e:allCommits",
+    "performance": "HOST_URL=http://localhost INNER_PORT=8081 METHOD=GET MONGODB_URL=mongodb://localhost:27017/ws_ddf_test MONGOOSE_DEBUG=true node test/cache-warmup.performance.js",
     "local": "DEFAULT_USER_PASSWORD=123 MONGODB_URL='mongodb://localhost:27017/ws_ddf_local' INNER_PORT=3000 NODE_ENV=local ts-node server.ts",
     "start": "forever stopall && forever start --logFile forever.log --outFile logs/out.log --errFile logs/err.log -a -p logs --minUptime 1000 --spinSleepTime 1000000 server.js",
     "changelog": "conventional-changelog -i CHANGELOG.md -s -p angular",
@@ -56,7 +62,7 @@
     "cors": "2.8.4",
     "cron": "1.2.1",
     "csvtojson": "1.1.7",
-    "ddf-time-utils": "0.1.7",
+    "ddf-time-utils": "git://github.com/korel-san/ddf-time-utils.git#feat-format-time-function",
     "ddf-validation": "^1.9.4",
     "entities": "1.1.1",
     "express": "4.15.3",
@@ -89,7 +95,7 @@
     "waffle-server-repo-service": "1.0.6"
   },
   "devDependencies": {
-    "@types/chai": "4.0.2",
+    "@types/chai": "4.0.3",
     "@types/mocha": "2.2.41",
     "@types/proxyquire": "1.3.27",
     "@types/sinon": "2.3.3",
@@ -107,7 +113,7 @@
     "remap-istanbul": "0.9.5",
     "sinon": "2.4.1",
     "sinon-chai-in-order": "0.1.0",
-    "sinon-test": "2.0.0",
+    "sinon-test": "2.1.0",
     "supertest": "3.0.0",
     "tslint": "5.5.0"
   },

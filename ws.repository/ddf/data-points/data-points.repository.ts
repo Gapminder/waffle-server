@@ -92,7 +92,12 @@ class DataPointsRepository extends VersionedModelRepository {
     logger.debug({mongo: query}, 'Datapoints query');
 
     return DataPoints.collection
-      .aggregate([{$match: query}], {allowDiskUse: constants.MONGODB_ALLOW_DISK_USE, maxTimeMS: constants.DEFAULT_DATAPOINTS_QUERY_TIMEOUT_MS})
+      .aggregate([{$match: query}], {
+        // TODO: add when release 3.5.5 version of mongodb
+        // hint: {
+        //   dataset: 1, measure: 1, dimensions: 1, from: 1, to: 1, 'time.timeType': 1, 'time.millis': 1
+        // },
+        allowDiskUse: constants.MONGODB_ALLOW_DISK_USE, maxTimeMS: constants.DEFAULT_DATAPOINTS_QUERY_TIMEOUT_MS})
       .group({
         _id: '$dimensions',
         indicators: {$push: {
