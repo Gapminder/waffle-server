@@ -11,10 +11,8 @@ import * as proxyquire from 'proxyquire';
 
 import * as datasetTransactionsService from '../../ws.services/dataset-transactions.service';
 import * as datasetsService from '../../ws.services/datasets.service';
+import { DatasetTracker } from '../../ws.services/datasets-tracker';
 import { DatasetTransactionsRepository } from '../../ws.repository/ddf/dataset-transactions/dataset-transactions.repository';
-import {ConceptsRepositoryFactory} from '../../ws.repository/ddf/concepts/concepts.repository';
-import {EntitiesRepositoryFactory} from '../../ws.repository/ddf/entities/entities.repository';
-import {DatapointsRepositoryFactory} from '../../ws.repository/ddf/data-points/data-points.repository';
 
 const datasetTransactionsServicePath = '../../ws.services/dataset-transactions.service';
 const datasetServicePath = './datasets.service';
@@ -1125,7 +1123,6 @@ describe('Dataset Transactions Service', () => {
     sinon.assert.calledWith(setLastErrorSpy, transactionId, lastErrorMessage, onErrorSet);
   }));
 
-  // TODO: This test should be fixed once new strategy for calculating dataset importing/updating stats is implemented
   it('should get latest transaction status by dataset name', sandbox(function (done: Function) {
     const externalContext = {
       datasetId: 'dsId',
@@ -1138,30 +1135,24 @@ describe('Dataset Transactions Service', () => {
       isClosed: true
     };
 
+    const expectedModifiedObjects = {
+      concepts: 0,
+      entities: 0,
+      datapoints: 0,
+      translations: 0
+    };
+
     const user = {
       email: 'dev@gapminder.org'
     };
+
+    const DatasetTrackerSpy = this.spy(DatasetTracker, 'get');
 
     const findDatasetByNameAndValidateOwnershipStub =
       this.stub(datasetsService, 'findDatasetByNameAndValidateOwnership')
         .callsArgWith(1, null, externalContext);
 
     this.stub(DatasetTransactionsRepository, 'findLatestByDataset').callsArgWithAsync(1, null, latestTransaction);
-
-    const conceptsCountStub = this.stub().callsArgWithAsync(0, null, 1);
-    const ConceptsRepositoryFactoryStub =
-      this.stub(ConceptsRepositoryFactory, 'closedOrOpenedInGivenVersion')
-        .returns({count: conceptsCountStub});
-
-    const entitiesCountStub = this.stub().callsArgWithAsync(0, null, 2);
-    const EntitiesRepositoryFactoryStub =
-      this.stub(EntitiesRepositoryFactory, 'closedOrOpenedInGivenVersion')
-        .returns({count: entitiesCountStub});
-
-    const datapointsCountStub = this.stub().callsArgWithAsync(0, null, 3);
-    const DatapointsRepositoryFactoryStub =
-      this.stub(DatapointsRepositoryFactory, 'closedOrOpenedInGivenVersion')
-        .returns({count: datapointsCountStub});
 
     datasetTransactionsService.getStatusOfLatestTransactionByDatasetName(externalContext.datasetName, user, (error, status) => {
       expect(error).to.not.exist;
@@ -1173,33 +1164,20 @@ describe('Dataset Transactions Service', () => {
           status: 'Completed',
           createdAt: new Date(latestTransaction.createdAt)
         },
-        modifiedObjects: {
-          concepts: 0,
-          entities: 0,
-          datapoints: 0
-        }
+        modifiedObjects: expectedModifiedObjects
       });
-
-      sinon.assert.notCalled(ConceptsRepositoryFactoryStub);
-      // sinon.assert.calledWith(ConceptsRepositoryFactoryStub, externalContext.datasetId, latestTransaction.createdAt);
-
-      sinon.assert.notCalled(EntitiesRepositoryFactoryStub);
-      // sinon.assert.calledWith(EntitiesRepositoryFactoryStub, externalContext.datasetId, latestTransaction.createdAt);
-
-      sinon.assert.notCalled(DatapointsRepositoryFactoryStub);
-      // sinon.assert.calledWith(DatapointsRepositoryFactoryStub, externalContext.datasetId, latestTransaction.createdAt);
-
-      sinon.assert.notCalled(conceptsCountStub);
-      sinon.assert.notCalled(entitiesCountStub);
-      sinon.assert.notCalled(datapointsCountStub);
 
       sinon.assert.calledOnce(findDatasetByNameAndValidateOwnershipStub);
       sinon.assert.calledWith(findDatasetByNameAndValidateOwnershipStub, {datasetName: externalContext.datasetName, user});
+      sinon.assert.calledOnce(DatasetTrackerSpy);
+      sinon.assert.calledWith(DatasetTrackerSpy, externalContext.datasetName);
+
+      sinon.restore(DatasetTracker.get);
+
       done();
     });
   }));
 
-  // TODO: This test should be fixed once new strategy for calculating dataset importing/updating stats is implemented
   it('should determine transaction progress', sandbox(function (done: Function) {
     const externalContext = {
       datasetId: 'dsId',
@@ -1212,21 +1190,25 @@ describe('Dataset Transactions Service', () => {
       isClosed: false
     };
 
+    const expectedModifiedObjects = {
+      concepts: 590,
+      entities: 400,
+      datapoints: 190000,
+      translations: 0
+    };
+
     const user = {
       email: 'dev@gapminder.org'
     };
 
+    const getStateStub = this.stub().returns(expectedModifiedObjects);
+
+    const DatasetTrackerStub = this.stub(DatasetTracker, 'get').callsFake(() => {
+      return {getState: getStateStub};
+    });
+
     this.stub(datasetsService, 'findDatasetByNameAndValidateOwnership').callsArgWith(1, null, externalContext);
     this.stub(DatasetTransactionsRepository, 'findLatestByDataset').callsArgWithAsync(1, null, latestTransaction);
-
-    this.stub(ConceptsRepositoryFactory, 'closedOrOpenedInGivenVersion')
-      .returns({count: this.stub().callsArgWithAsync(0, null, 1)});
-
-    this.stub(EntitiesRepositoryFactory, 'closedOrOpenedInGivenVersion')
-      .returns({count: this.stub().callsArgWithAsync(0, null, 2)});
-
-    this.stub(DatapointsRepositoryFactory, 'closedOrOpenedInGivenVersion')
-      .returns({count: this.stub().callsArgWithAsync(0, null, 3)});
 
     datasetTransactionsService.getStatusOfLatestTransactionByDatasetName(externalContext.datasetName, user, (error, status) => {
       expect(error).to.not.exist;
@@ -1238,12 +1220,14 @@ describe('Dataset Transactions Service', () => {
           status: 'In progress',
           createdAt: new Date(latestTransaction.createdAt)
         },
-        modifiedObjects: {
-          concepts: 0,
-          entities: 0,
-          datapoints: 0
-        }
+        modifiedObjects: expectedModifiedObjects
       });
+
+      sinon.assert.calledOnce(getStateStub);
+      sinon.assert.calledOnce(DatasetTrackerStub);
+      sinon.assert.calledWith(DatasetTrackerStub, externalContext.datasetName);
+
+      sinon.restore(DatasetTracker.get);
 
       done();
     });
@@ -1277,44 +1261,6 @@ describe('Dataset Transactions Service', () => {
 
     datasetTransactionsService.getStatusOfLatestTransactionByDatasetName(null, null, (error) => {
       expect(error).to.equal(expectedError);
-      done();
-    });
-  }));
-
-  // TODO: This test should be fixed once new strategy for calculating dataset importing/updating stats is implemented
-  xit('shouldn\'t get latest transaction status by dataset name: fail cause was not able to count amount of changed objects', sandbox(function (done: Function) {
-    const externalContext = {
-      datasetId: 'dsId',
-      datasetName: 'dsName'
-    };
-    const latestTransaction = {
-      createdAt: Date.now(),
-      lastError: 'lastError',
-      commit: 'aaaaaaa',
-      isClosed: false
-    };
-
-    const user = {
-      email: 'dev@gapminder.org'
-    };
-
-    const expectedError = 'Datapoints count has failed';
-
-    this.stub(datasetsService, 'findDatasetByNameAndValidateOwnership').callsArgWith(1, null, externalContext);
-    this.stub(DatasetTransactionsRepository, 'findLatestByDataset').callsArgWithAsync(1, null, latestTransaction);
-
-    this.stub(ConceptsRepositoryFactory, 'closedOrOpenedInGivenVersion')
-      .returns({count: this.stub().callsArgWithAsync(0, null, 1)});
-
-    this.stub(EntitiesRepositoryFactory, 'closedOrOpenedInGivenVersion')
-      .returns({count: this.stub().callsArgWithAsync(0, null, 2)});
-
-    this.stub(DatapointsRepositoryFactory, 'closedOrOpenedInGivenVersion')
-      .returns({count: this.stub().callsArgWithAsync(0, expectedError)});
-
-    datasetTransactionsService.getStatusOfLatestTransactionByDatasetName(externalContext.datasetName, user, (error, status) => {
-      expect(error).to.equal(expectedError);
-
       done();
     });
   }));
