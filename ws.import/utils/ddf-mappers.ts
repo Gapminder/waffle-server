@@ -2,6 +2,7 @@ import * as _ from 'lodash';
 import {constants} from '../../ws.utils/constants';
 import * as ddfImportUtils from './import-ddf.utils';
 import * as conceptsUtils from './concepts.utils';
+import { logger } from '../../ws.config/log';
 
 const JSON_COLUMNS = ['color', 'scales', 'drill_up'];
 
@@ -16,7 +17,11 @@ export {
 
 function mapDdfEntityToWsModel(entry: any, context: any): any {
     const transformedEntry = transformEntityProperties(entry, context.concepts);
-    const gid = transformedEntry[context.entitySet.gid];
+    const gid = _.get(transformedEntry, context.entitySet.gid, null);
+
+    if (!gid) {
+      logger.error(transformedEntry, context.entitySet.gid, 'Gid was not found!!!');
+    }
 
     const domainOriginId = _.get(context, 'entityDomain.originId', context.entityDomain);
 
@@ -81,7 +86,12 @@ function mapDdfDataPointToWsModel(entry: any, context: any): any {
 }
 
 function mapDdfEntityFoundInDatapointToWsModel(datapoint: any, context: any): any {
-  const gid = datapoint[context.concept.gid];
+  const gid = _.get(datapoint, context.concept.gid, null);
+
+  if (!gid) {
+    logger.error(datapoint, context.concept.gid, 'Gid was not found!!!');
+  }
+
   return {
     gid: String(gid),
     sources: [context.filename],
@@ -99,6 +109,10 @@ function mapDdfEntityFoundInDatapointToWsModel(datapoint: any, context: any): an
 
 function mapDdfConceptsToWsModel(entry: any, context: any): void {
   const transformedEntry = transformConceptProperties(entry);
+
+  if (!transformedEntry.concept) {
+    logger.error(transformedEntry, 'Gid was not found!!!');
+  }
 
   const concept: any = {
     gid: transformedEntry.concept,

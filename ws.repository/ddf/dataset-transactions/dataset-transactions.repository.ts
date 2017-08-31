@@ -1,6 +1,7 @@
 import * as _ from 'lodash';
 import { model, MongooseDocument } from 'mongoose';
 import { MongooseCallback } from '../../repository.types';
+import { config } from '../../../ws.config/config';
 
 const DatasetTransactions = model('DatasetTransactions');
 
@@ -32,7 +33,12 @@ DatasetTransactionsRepository.prototype.findLatestCompletedByDataset = function 
 
 DatasetTransactionsRepository.prototype.findLatestFailedByDataset = function (datasetId: string, done: Function): void {
   /* tslint:disable-next-line:no-invalid-this */
-  return this._findLatestByQuery({dataset: datasetId, lastError: {$exists: true}}, done);
+  const query = {dataset: datasetId, isClosed: false};
+
+  if (config.NODE_ENV !== 'local') {
+    _.extend(query, {lastError: {$exists: true}});
+  }
+  return this._findLatestByQuery(query, done);
 };
 
 DatasetTransactionsRepository.prototype.findByDatasetAndCommit = function (datasetId: any, commit: any, done: Function): Promise<Object> {
