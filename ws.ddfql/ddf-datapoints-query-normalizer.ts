@@ -11,14 +11,19 @@ export {
   substituteDatapointJoinLinks
 };
 
-function substituteDatapointJoinLinks(query: any, linksInJoinToValues: any, timeConceptOriginIds: any): any {
+function substituteDatapointJoinLinks(query: any, linksInJoinToValues: any, timeConceptsGidsByOriginIds: any): any {
   const safeQuery = ddfQueryUtils.toSafeQuery(query);
 
   traverse(safeQuery.where).forEach(function (link: string): void {
     /* tslint:disable: no-invalid-this */
     if (safeQuery.join.hasOwnProperty(link)) {
-      const isTimeType = _.includes(timeConceptOriginIds, safeQuery.join[link].domain);
+      const isTimeType = _.has(timeConceptsGidsByOriginIds, safeQuery.join[link].domain);
+
       if (isTimeType) {
+        const conceptGid = _.get(timeConceptsGidsByOriginIds, `${safeQuery.join[link].domain}.${constants.GID}`, '');
+
+        normalizeTimeValue(safeQuery.join[link], conceptGid);
+
         ddfQueryUtils.replaceValueOnPath({
           key: this.key,
           path: this.path,
@@ -34,6 +39,23 @@ function substituteDatapointJoinLinks(query: any, linksInJoinToValues: any, time
   });
 
   return safeQuery;
+}
+
+function normalizeTimeValue(link: any, conceptGid: string): void {
+  traverse(link).forEach(function (): void {
+    if (_.includes(this.key, `parsedProperties.${conceptGid}`)) {
+      const newPath = _.map(this.path, (subPath: string) => _.replace(subPath, `parsedProperties.${conceptGid}`, 'time'));
+      traverse(link).set(newPath, this.node);
+      this.remove();
+      // this.update(item);
+      // ddfQueryUtils.replaceValueOnPath({
+      //   key: this.key,
+      //   path: _.map(this.path, (subPath: string) => _.replace(subPath, `parsedProperties.${conceptGid}`, 'time')),
+      //   normalizedValue: item,
+      //   queryFragment: link
+      // });
+    }
+  });
 }
 
 function normalizeDatapoints(query: any, concepts: any): any {
@@ -157,7 +179,7 @@ function __normalizeJoin(query: any, options: any): void {
     const isTimePropertyFilter = isEntityFilter(this.key, query) && ddfQueryUtils.isTimePropertyFilter(this.key, options.timeConceptsGids);
 
     if (isWhereClause && isTimePropertyFilter) {
-      normalizedFilter = ddfQueryUtils.normalizeDatapointTimePropertyFilter(this.key, filterValue, this.path, query.join);
+      normalizedFilter = ddfQueryUtils.normalizeTimePropertyFilter(this.key, filterValue, this.path, query.join);
     }
 
     const isEntityPropertyFilter = isDatapointEntityPropertyFilter(this.key, query);

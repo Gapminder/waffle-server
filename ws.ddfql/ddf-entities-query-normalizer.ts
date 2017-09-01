@@ -93,7 +93,7 @@ function normalizeWhere(query: any, options: any): void {
 
     if (ddfQueryUtils.isEntityPropertyFilter(this.key, options)) {
       if (ddfQueryUtils.isTimePropertyFilter(this.key, options.timeConceptsGids)) {
-        normalizedFilter = ddfQueryUtils.normalizeEntityTimePropertyFilter(this.key, filterValue, this.path, query.where);
+        normalizedFilter = ddfQueryUtils.normalizeTimePropertyFilter(this.key, filterValue, this.path, query.where);
       } else {
         normalizedFilter = {
           [ddfQueryUtils.wrapEntityProperties(this.key, options)]: filterValue
@@ -148,7 +148,7 @@ function normalizeJoin(query: any, options: any): void {
 
     if (ddfQueryUtils.isEntityPropertyFilter(this.key, options) && _.includes(this.path, 'where')) {
       if (ddfQueryUtils.isTimePropertyFilter(this.key, options.timeConceptsGids)) {
-        normalizedFilter = ddfQueryUtils.normalizeDatapointTimePropertyFilter(this.key, filterValue, this.path, query.join);
+        normalizedFilter = ddfQueryUtils.normalizeTimePropertyFilter(this.key, filterValue, this.path, query.join);
       } else if (joinKeys[this.key]) {
         normalizedFilter = {
           gid: filterValue

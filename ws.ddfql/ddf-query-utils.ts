@@ -6,8 +6,7 @@ import { constants } from '../ws.utils/constants';
 export {
   toSafeQuery,
   replaceValueOnPath,
-  normalizeDatapointTimePropertyFilter,
-  normalizeEntityTimePropertyFilter,
+  normalizeTimePropertyFilter,
   isTimePropertyFilter,
   isDomainPropertyFilter,
   normalizeOrderBy,
@@ -96,10 +95,10 @@ function normalizeOrderBy(query: any): void {
   });
 }
 
-function normalizeDatapointTimePropertyFilter(key: string, filterValue: any, path: string[], query: any): any {
+function normalizeTimePropertyFilter(key: string, filterValue: any, path: string[], query: any): any {
   let timeType = '';
   const normalizedFilter = {
-    'time.millis': traverse(filterValue).map(function (value: any): any {
+    [`parsedProperties.${key}.millis`]: traverse(filterValue).map(function (value: any): any {
       /* tslint:disable: no-invalid-this */
       if (this.notLeaf) {
         return value;
@@ -118,34 +117,7 @@ function normalizeDatapointTimePropertyFilter(key: string, filterValue: any, pat
 
   // always set latest detected time type
   const conditionsForTimeEntities = _.get(query, path.slice(0, path.length - 1), []);
-  conditionsForTimeEntities['time.timeType'] = timeType;
-
-  return normalizedFilter;
-}
-
-function normalizeEntityTimePropertyFilter(key: string, filterValue: any, path: string[], query: any): any {
-  let timeType = '';
-  const normalizedFilter = {
-    [`parsed${constants.PROPERTIES}.${key}.millis`]: traverse(filterValue).map(function (value: any): any {
-      /* tslint:disable: no-invalid-this */
-      if (this.notLeaf) {
-        return value;
-      }
-
-      if (_.isObject(value) && _.isEmpty(value)) {
-        return value;
-      }
-
-      const timeDescriptor = ddfTimeUtils.parseTime(value);
-      timeType = timeDescriptor.type;
-      return timeDescriptor.time;
-      /* tslint:enable: no-invalid-this */
-    })
-  };
-
-  // always set latest detected time type
-  const conditionsForTimeEntities = _.get(query, path.slice(0, path.length - 1), []);
-  conditionsForTimeEntities[`parsed${constants.PROPERTIES}.${key}.timeType`] = timeType;
+  conditionsForTimeEntities[`parsedProperties.${key}.timeType`] = timeType;
 
   return normalizedFilter;
 }

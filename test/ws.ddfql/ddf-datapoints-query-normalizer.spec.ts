@@ -30,7 +30,7 @@ const options = Object.freeze({
   conceptGids: ddfQueryUtils.getConceptGids(concepts),
   domainGids: ddfQueryUtils.getDomainGids(concepts),
   timeConceptsGids: conceptUtils.getTimeConceptGids(concepts),
-  timeConceptsOriginIds: conceptUtils.getTimeConceptOriginIds(concepts),
+  timeConceptsGidsByOriginIds: conceptUtils.getTimeConceptsByOriginIds(concepts),
   conceptsByGids: ddfQueryUtils.getConceptsByGids(concepts),
   conceptsByOriginIds: ddfQueryUtils.getConceptsByOriginIds(concepts)
 });
@@ -103,17 +103,17 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
         },
         $time: {
           domain: '27a3470d3a8c9b37009b9bf9',
-          'time.millis': {
+          'parsedProperties.time.millis': {
             $lt: 1420070400000
           },
-          'time.timeType': 'YEAR_TYPE'
+          'parsedProperties.time.timeType': 'YEAR_TYPE'
         },
         $time2: {
           domain: '27a3470d3a8c9b37009b9bf9',
-          'time.millis': {
+          'parsedProperties.time.millis': {
             $eq: -1640995200000
           },
-          'time.timeType': 'YEAR_TYPE'
+          'parsedProperties.time.timeType': 'YEAR_TYPE'
         }
       },
       order_by: [
@@ -230,13 +230,13 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
         },
         $parsed_quarter_1: {
           domain: '77a3471d3a8c9b37009b9bf0',
-          'time.millis': 1349049600000,
-          'time.timeType': 'QUARTER_TYPE'
+          'parsedProperties.quarter.millis': 1349049600000,
+          'parsedProperties.quarter.timeType': 'QUARTER_TYPE'
         },
         $parsed_quarter_2: {
           domain: '77a3471d3a8c9b37009b9bf0',
-          'time.millis': 1435708800000,
-          'time.timeType': 'QUARTER_TYPE'
+          'parsedProperties.quarter.millis': 1435708800000,
+          'parsedProperties.quarter.timeType': 'QUARTER_TYPE'
         }
       },
       select: {
@@ -361,11 +361,11 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
         },
         $parsed_time_1: {
           domain: '27a3470d3a8c9b37009b9bf9',
-          'time.millis': {
+          'parsedProperties.time.millis': {
             $gte: -5364662400000,
             $lte: 1420070400000
           },
-          'time.timeType': 'YEAR_TYPE'
+          'parsedProperties.time.timeType': 'YEAR_TYPE'
         }
       },
       select: {
@@ -443,11 +443,11 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
         },
         $parsed_time_1: {
           domain: '27a3470d3a8c9b37009b9bf9',
-          'time.millis': {
+          'parsedProperties.time.millis': {
             $gte: -5364662400000,
             $lte: 1420070400000
           },
-          'time.timeType': 'YEAR_TYPE'
+          'parsedProperties.time.timeType': 'YEAR_TYPE'
         }
       },
       select: {
@@ -672,10 +672,10 @@ describe('ddf datapoints query normalizer - different time types', () => {
       join: {
         $time: {
           domain: '27a3470d3a8c9b37009b9bf9',
-          'time.millis': {
+          'parsedProperties.time.millis': {
             $lt: 1435708800000
           },
-          'time.timeType': 'QUARTER_TYPE'
+          'parsedProperties.time.timeType': 'QUARTER_TYPE'
         }
       },
       select: {
@@ -747,10 +747,10 @@ describe('ddf datapoints query normalizer - different time types', () => {
       join: {
         $time: {
           domain: '27a3470d3a8c9b37009b9bf9',
-          'time.millis': {
+          'parsedProperties.time.millis': {
             $lt: 1420070400000
           },
-          'time.timeType': 'YEAR_TYPE'
+          'parsedProperties.time.timeType': 'YEAR_TYPE'
         }
       },
       select: {
@@ -824,16 +824,16 @@ describe('ddf datapoints query normalizer - different time types', () => {
           domain: '27a3470d3a8c9b37009b9bf9',
           $and: [
             {
-              'time.millis': {
+              'parsedProperties.time.millis': {
                 $lt: 1422230400000
               },
-              'time.timeType': 'WEEK_TYPE'
+              'parsedProperties.time.timeType': 'WEEK_TYPE'
             },
             {
-              'time.millis': {
+              'parsedProperties.time.millis': {
                 $gt: 1420416000000
               },
-              'time.timeType': 'WEEK_TYPE'
+              'parsedProperties.time.timeType': 'WEEK_TYPE'
             }
           ]
         }
@@ -912,16 +912,16 @@ describe('ddf datapoints query normalizer - different time types', () => {
           domain: '27a3470d3a8c9b37009b9bf9',
           $and: [
             {
-              'time.millis': {
+              'parsedProperties.time.millis': {
                 $lt: 1448928000000
               },
-              'time.timeType': 'DATE_TYPE'
+              'parsedProperties.time.timeType': 'DATE_TYPE'
             },
             {
-              'time.millis': {
+              'parsedProperties.time.millis': {
                 $gt: 1377993600000
               },
-              'time.timeType': 'DATE_TYPE'
+              'parsedProperties.time.timeType': 'DATE_TYPE'
             }
           ]
         }
@@ -1021,13 +1021,13 @@ describe('ddf datapoints query normalizer - different time types', () => {
       join: {
         $quarter1: {
           domain: '77a3471d3a8c9b37009b9bf0',
-          'time.timeType': 'QUARTER_TYPE',
-          'time.millis': { $gt: 1349049600000 }
+          'parsedProperties.quarter.timeType': 'QUARTER_TYPE',
+          'parsedProperties.quarter.millis': { $gt: 1349049600000 }
         },
         $quarter2: {
           domain: '77a3471d3a8c9b37009b9bf0',
-          'time.timeType': 'QUARTER_TYPE',
-          'time.millis': { $lt: 1435708800000 }
+          'parsedProperties.quarter.timeType': 'QUARTER_TYPE',
+          'parsedProperties.quarter.millis': { $lt: 1435708800000 }
         }
       }
     };
@@ -1241,13 +1241,13 @@ describe('ddf datapoints query normalizer - substitute links', () => {
         },
         $time: {
           domain: '27a3470d3a8c9b37009b9bf9',
-          'time.timeType': 'YEAR_TYPE',
-          'time.millis': { $lt: 1377993600000 }
+          'parsedProperties.time.timeType': 'YEAR_TYPE',
+          'parsedProperties.time.millis': { $lt: 1377993600000 }
         },
         $time2: {
           domain: '27a3470d3a8c9b37009b9bf9',
-          'time.timeType': 'YEAR_TYPE',
-          'time.millis': { $eq: 1377993600000 }
+          'parsedProperties.time.timeType': 'YEAR_TYPE',
+          'parsedProperties.time.millis': { $eq: 1377993600000 }
         }
       }
     };
@@ -1327,7 +1327,7 @@ describe('ddf datapoints query normalizer - substitute links', () => {
       },
       order_by: []
     };
-    const timeConceptOriginIds = options.timeConceptsOriginIds;
+    const timeConceptOriginIds = options.timeConceptsGidsByOriginIds;
 
     expect(ddfQueryNormalizer.substituteDatapointJoinLinks(normalizedDdfql, linksInJoinToValues, timeConceptOriginIds)).to.deep.equal(normalizedDdfqlWithSubstitutedJoinLinks);
   }));

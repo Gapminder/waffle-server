@@ -8,7 +8,7 @@ const DataPoints: any = new Schema({
 
   isNumeric: {type: Boolean, required: true},
   measure: {type: Schema.Types.ObjectId, required: true},
-  dimensions: {type: Schema.Types.Mixed, default: {}},
+  dimensions: [{type: Schema.Types.ObjectId}],
   dimensionsConcepts: [{type: Schema.Types.ObjectId}],
   properties: {type: Schema.Types.Mixed, default: {}},
   languages: {type: Schema.Types.Mixed, default: {}},
@@ -32,9 +32,8 @@ DataPoints.plugin(OriginIdPlugin, {
   originId: 'DataPoints'
 });
 
-DataPoints.index({dataset: 1, measure: 1, dimensions: 1, 'time.timeType': 1, from: 1, to: 1, 'time.millis': 1});
-DataPoints.index({dataset: 1, measure: 1, dimensions: 1, from: 1, to: 1});
-DataPoints.index({dimensionsConcepts: 1, dataset: 1, measure: 1, from: 1, to: 1});
+DataPoints.index({dataset: 1, measure: 1, dimensions: 1, from: 1, to: 1, time: 1});
+DataPoints.index({dataset: 1, measure: 1, dimensionsConcepts: 1, from: 1, to: 1, time: 1});
 DataPoints.index({dataset: 1, sources: 1, from: 1, to: 1});
 DataPoints.index({dataset: 1, from: 1, to: 1});
 DataPoints.index({dataset: 1, to: 1});

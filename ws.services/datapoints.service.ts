@@ -105,8 +105,8 @@ function normalizeQueriesToDatapointsByDdfql(pipe: any, cb: Function): void {
       return cb(err, pipe);
     }
 
-    const timeConceptsOriginIds = conceptUtils.getTimeConceptOriginIds(pipe.concepts);
-    const promotedQuery = ddfql.substituteDatapointJoinLinks(normalizedQuery, substituteJoinLinks, timeConceptsOriginIds);
+    const timeConceptsGidsByOriginIds = conceptUtils.getTimeConceptsByOriginIds(pipe.concepts);
+    const promotedQuery = ddfql.substituteDatapointJoinLinks(normalizedQuery, substituteJoinLinks, timeConceptsGidsByOriginIds);
     const subDatapointQuery = promotedQuery.where;
     const validateQuery: ValidateQueryModel = ddfQueryValidator.validateMongoQuery(subDatapointQuery);
 
