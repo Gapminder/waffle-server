@@ -5,7 +5,7 @@ const e2eEnv = {
   pass: '123',
   login: constants.DEFAULT_USER_EMAIL,
   mongodb: 'ws_ddf_test',
-  nodeEnv: 'local',
+  nodeEnv: 'test',
   wsPort: '8081',
   wsHost: 'localhost',
   get wsHostUrl(): string {
