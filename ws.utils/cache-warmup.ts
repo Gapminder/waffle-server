@@ -4,7 +4,7 @@ import { config } from '../ws.config/config';
 import { logger } from '../ws.config/log';
 import * as ddfImportUtils from './../ws.import/utils/import-ddf.utils';
 import {RecentDdfqlQueriesRepository} from '../ws.repository/ddf/recent-ddfql-queries/recent-ddfql-queries.repository';
-const _queriesFixture = config.IS_TEST ? [] : require('./queries.fixture');
+const _queriesFixture = require('./queries.fixture');
 
 export {
   warmUpCache
