@@ -102,11 +102,12 @@ function sendDdfqlRequestAndVerifyResponse(ddfql: any, expectedResponse: any, do
   const { sort = true } = options;
 
   sendDdfqlRequest(ddfql, (error: string, response: any) => {
+    expect(error).to.not.exist;
+
     if (response.body.success === false) {
       throw Error(`DDFQL response contains an error: ${response.body.error}`);
     }
 
-    expect(error).to.not.exist;
     const actualRows = sort ? _.sortBy(response.body.rows) : response.body.rows;
     const expectedRows = sort ? _.sortBy(expectedResponse.rows) : expectedResponse.rows;
 
