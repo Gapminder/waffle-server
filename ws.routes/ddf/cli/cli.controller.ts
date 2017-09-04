@@ -11,7 +11,6 @@ import * as routeUtils from '../../utils';
 import {cleanRepos as cliApiCleanRepos} from 'waffle-server-import-cli';
 import {config} from '../../../ws.config/config';
 import {Request, Response} from 'express';
-import { DatasetTracker } from '../../../ws.services/datasets-tracker';
 import { RecentDdfqlQueriesRepository } from '../../../ws.repository/ddf/recent-ddfql-queries/recent-ddfql-queries.repository';
 import * as ddfImportUtils from '../../../ws.import/utils/import-ddf.utils';
 
@@ -125,7 +124,7 @@ function getStateOfLatestTransaction(req: any, res: any): void {
       return res.json(routeUtils.toErrorResponse(statusError));
     }
 
-    return res.json(_.extend(routeUtils.toDataResponse(status), {datasetData : DatasetTracker.get(datasetName).getState()}));
+    return res.json(routeUtils.toDataResponse(status));
   });
 }
 

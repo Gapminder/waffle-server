@@ -556,7 +556,7 @@ describe('WS-CLI controller', () => {
       const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
       const toDataResponseStub = this.spy(routeUtils, 'toDataResponse');
       const expectedData = 'Complete';
-      const expectedResponse = {success: true, data: expectedData, datasetData:  { concepts: 0, datapoints: 0, entities: 0, translations: 0 }};
+      const expectedResponse = {success: true, data: expectedData};
 
       const resJsonSpy = this.spy();
       const transactionsServiceStub = this.stub(transactionsService, 'getStatusOfLatestTransactionByDatasetName').callsFake((datasetName, user, onStatusGot) => {
