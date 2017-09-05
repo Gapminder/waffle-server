@@ -1,3 +1,22 @@
+<a name="2.9.0"></a>
+# [2.9.0](https://github.com/Gapminder/waffle-server/compare/v2.8.0...v2.9.0) (2017-09-05)
+
+
+### Bug Fixes
+
+* **dataset-repository:** fix query to datasets collection ([36f1d98](https://github.com/Gapminder/waffle-server/commit/36f1d98))
+* **deployment:** add "--no-include-email" option for get-login command in aws-cli ([3740fc5](https://github.com/Gapminder/waffle-server/commit/3740fc5))
+* **import:** fix import process for sodertornsmodellen dataset ([eac8c06](https://github.com/Gapminder/waffle-server/commit/eac8c06))
+
+
+### Features
+
+* add a job for killing long running queries ([0254674](https://github.com/Gapminder/waffle-server/commit/0254674))
+* **datasets:** add checking progress functionality for import/update dataset. ([3545c06](https://github.com/Gapminder/waffle-server/commit/3545c06))
+* **warmup:** add timeSpentInMillis and docsAmount fields to recent ddfql queries collection ([69d8860](https://github.com/Gapminder/waffle-server/commit/69d8860))
+
+
+
 <a name="2.8.0"></a>
 # [2.8.0](https://github.com/Gapminder/waffle-server/compare/v2.7.0...v2.8.0) (2017-08-03)
 
