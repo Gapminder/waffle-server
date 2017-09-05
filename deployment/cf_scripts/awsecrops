@@ -18,7 +18,7 @@ AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-"us-east-1"}
 function help {
  echo -e "\
   Usage:
-    
+
     ./awsecrops <command> [settings file]
 
   Commands:
@@ -155,7 +155,7 @@ function buildnpush {
 ===============================================\n\n"
   sleep 5
 
-  $($AWS ecr get-login --region ${AWS_DEFAULT_REGION})
+  $($AWS ecr get-login --no-include-email --region ${AWS_DEFAULT_REGION})
   $DOCKER push  $NODE_ECR_URI:${NODE_ECR_LABEL}
   $DOCKER push  $HAPROXY_ECR_URI:${HAPROXY_ECR_LABEL}
 

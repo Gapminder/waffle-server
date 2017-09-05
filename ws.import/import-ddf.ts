@@ -6,6 +6,7 @@ import { createConcepts } from './import-concepts';
 import { createDatapoints } from './import-datapoints';
 import { createTranslations } from './import-translations';
 import { createDatasetSchema } from './import-dataset-schema';
+import { DatasetTracker } from '../ws.services/datasets-tracker';
 
 const DATASET_IMPORT_LABEL = 'Dataset import';
 
@@ -20,6 +21,7 @@ export function importDdf(options: any, done: Function): void {
   ]), { raw: {} });
 
   console.time(DATASET_IMPORT_LABEL);
+  DatasetTracker.track(_.get(context, 'datasetName'));
   async.waterfall([
     async.constant(context),
     ddfImportUtils.resolvePathToDdfFolder,
@@ -39,6 +41,7 @@ export function importDdf(options: any, done: Function): void {
     ddfImportUtils.closeTransaction
   ], (importError: any, externalContext: any) => {
     console.timeEnd(DATASET_IMPORT_LABEL);
+    DatasetTracker.clean(_.get(externalContext, 'datasetName'));
 
     if (importError && _.get(externalContext, 'transaction')) {
       return done(importError, { transactionId: externalContext.transaction._id });

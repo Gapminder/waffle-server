@@ -11,6 +11,7 @@ import * as datapackageParser from './utils/datapackage.parser';
 import { ConceptsRepositoryFactory } from '../ws.repository/ddf/concepts/concepts.repository';
 import { EntitiesRepositoryFactory } from '../ws.repository/ddf/entities/entities.repository';
 import { DatapointsRepositoryFactory } from '../ws.repository/ddf/data-points/data-points.repository';
+import { DatasetTracker } from '../ws.services/datasets-tracker';
 
 export {
   importTranslations as createTranslations
@@ -35,7 +36,7 @@ function createTranslations(externalContext: any): any {
   const {
     pathToDdfFolder,
     datapackage: { resources, translations },
-    dataset: { _id: datasetId },
+    dataset: { _id: datasetId, name: datasetName },
     transaction: { createdAt: version },
     concepts
   } = externalContext;
@@ -59,7 +60,11 @@ function createTranslations(externalContext: any): any {
   const storeConceptTranslationsStream = loadTranslationsStream.fork()
     .filter(({ resource: { primaryKey } }: any) => datapackageParser.isConceptsResource(primaryKey))
     .map(({ object: properties, resource: { language } }: any) => {
-      const context = { properties, language, datasetId, version };
+      const context = { properties, language, datasetId, datasetName, version };
+
+      DatasetTracker
+        .get(datasetName)
+        .increment(constants.TRANSLATIONS, 1);
 
       return hi(storeConceptsTranslationsToDb(context));
     })
@@ -77,7 +82,11 @@ function createTranslations(externalContext: any): any {
         }
         return result;
       }, {});
-      const context = { source, properties, language, resolvedProperties, datasetId, version, concepts };
+      const context = { source, properties, language, resolvedProperties, datasetId, datasetName, version, concepts };
+
+      DatasetTracker
+        .get(datasetName)
+        .increment(constants.TRANSLATIONS, 1);
 
       return hi(storeEntitiesTranslationsToDb(context));
     })
@@ -92,7 +101,11 @@ function createTranslations(externalContext: any): any {
         }
         return result;
       }, {});
-      const context = { source, properties, language, resolvedProperties, datasetId, version };
+      const context = { source, properties, language, resolvedProperties, datasetId, datasetName, version };
+
+      DatasetTracker
+        .get(datasetName)
+        .increment(constants.TRANSLATIONS, 1);
 
       return hi(storeDatapointsTranslationsToDb(context));
     })
@@ -109,7 +122,6 @@ function createTranslations(externalContext: any): any {
 
 function storeConceptsTranslationsToDb({ properties, language, datasetId, version }: any): any {
   const translation = ddfMappers.transformConceptProperties(properties);
-
   return ConceptsRepositoryFactory
     .allOpenedInGivenVersion(datasetId, version)
     .addTranslationsForGivenProperties(translation, { language });
@@ -118,7 +130,6 @@ function storeConceptsTranslationsToDb({ properties, language, datasetId, versio
 function storeEntitiesTranslationsToDb(externalContext: any): any {
   const { source, properties, language, resolvedProperties, datasetId, version, concepts } = externalContext;
   const translation = ddfMappers.transformEntityProperties(properties, concepts);
-
   return EntitiesRepositoryFactory
     .allOpenedInGivenVersion(datasetId, version)
     .addTranslationsForGivenProperties(translation, { language, source, resolvedProperties });

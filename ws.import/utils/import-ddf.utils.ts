@@ -22,7 +22,9 @@ const MONGODB_DOC_CREATION_THREADS_AMOUNT = 3;
 const RESERVED_PROPERTIES = ['properties', 'dimensions', 'subsetOf', 'from', 'to', 'originId', 'gid', 'domain', 'type', 'languages'];
 
 const ddfValidationConfig = {
-  datapointlessMode: true
+  datapointlessMode: true,
+  isMultithread: true,
+  useAllCpu: true
 };
 
 export {
@@ -114,9 +116,10 @@ function parseProperties(concept: any, entityGid: any, entityProperties: any, ti
       .mapValues(toInternalTimeForm)
       .value();
 
-  if (timeConcepts[concept.gid]) {
+  if (_.get(concept, 'gid', null) && _.get(timeConcepts, concept.gid, null)) {
     parsedProperties = _.extend(parsedProperties || {}, {[concept.gid]: toInternalTimeForm(entityGid)});
   }
+
   return parsedProperties;
 }
 
@@ -177,7 +180,8 @@ async function cloneImportedDdfRepos(): Promise<any> {
 }
 
 function validateDdfRepo(pipe: any, onDdfRepoValidated: Function): void {
-  logger.info('Start ddf dataset validation process: ', _.get(pipe.repoInfo, 'pathToRepo'));
+  logger.info('Start ddf dataset validation process: ', _.get(pipe.repoInfo, 'pathToRepo'), ddfValidationConfig);
+
   const simpleDdfValidator = new SimpleDdfValidator(pipe.repoInfo.pathToRepo, ddfValidationConfig);
   simpleDdfValidator.on('finish', (error: string, isDatasetCorrect: boolean) => {
     if (error) {

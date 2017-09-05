@@ -378,7 +378,18 @@ describe('State Version 3 (3rd commit)', function() {
       const expectedResult = {
         headers: ['company', 'is--foundation'],
         rows: [
-          ['xsoft', false]
+          [
+            'mcrsft',
+            false
+          ],
+          [
+            'valor',
+            false
+          ],
+          [
+            'xsoft',
+            false
+          ]
         ]
       };
 

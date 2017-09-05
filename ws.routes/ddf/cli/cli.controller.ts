@@ -1,3 +1,5 @@
+import * as _ from 'lodash';
+import * as hi from 'highland';
 import {logger} from '../../../ws.config/log';
 import * as authService from '../../../ws.services/auth.service';
 import * as cliService from '../../../ws.services/cli.service';
@@ -9,6 +11,8 @@ import * as routeUtils from '../../utils';
 import {cleanRepos as cliApiCleanRepos} from 'waffle-server-import-cli';
 import {config} from '../../../ws.config/config';
 import {Request, Response} from 'express';
+import { RecentDdfqlQueriesRepository } from '../../../ws.repository/ddf/recent-ddfql-queries/recent-ddfql-queries.repository';
+import * as ddfImportUtils from '../../../ws.import/utils/import-ddf.utils';
 
 export {
   getToken,
@@ -27,10 +31,12 @@ export {
   getPrivateDatasets,
   getDatasetsInProgress,
   cleanCache,
-  cleanRepos
+  cleanRepos,
+  getStateOfRecentQueries
 };
 
 function getToken(req: Request, res: Response): Response | void {
+  console.log(req.body);
   const email = req.body.email;
   const password = req.body.password;
 
@@ -42,12 +48,12 @@ function getToken(req: Request, res: Response): Response | void {
     return res.json(routeUtils.toErrorResponse('Password was not provided'));
   }
 
-  return authService.authenticate({email, password}, (error: string, token: any) => {
+  return authService.authenticate({ email, password }, (error: string, token: any) => {
     if (error) {
       return res.json(routeUtils.toErrorResponse(error));
     }
 
-    return res.json(routeUtils.toDataResponse({token}));
+    return res.json(routeUtils.toDataResponse({ token }));
   });
 }
 
@@ -188,7 +194,7 @@ function getAvailableDatasetsAndVersions(req: any, res: any): void {
     return res.json(routeUtils.toErrorResponse('There is no authenticated user to get its datasets'));
   }
 
-  cliService.getAvailableDatasetsAndVersions (req.user._id, (error: string, datasetsAndVersions: any) => {
+  cliService.getAvailableDatasetsAndVersions(req.user._id, (error: string, datasetsAndVersions: any) => {
     if (error) {
       return res.json(routeUtils.toErrorResponse(error));
     }
@@ -204,7 +210,7 @@ function getRemovableDatasets(req: any, res: any): void {
     return res.json(routeUtils.toErrorResponse('There is no authenticated user to get its datasets'));
   }
 
-  cliService.getRemovableDatasets (req.user._id, (error: string, removableDatasets: any) => {
+  cliService.getRemovableDatasets(req.user._id, (error: string, removableDatasets: any) => {
     if (error) {
       return res.json(routeUtils.toErrorResponse(error));
     }
@@ -235,7 +241,7 @@ function updateIncrementally(req: any, res: any): void {
     return res.json(routeUtils.toErrorResponse('Unauthenticated user cannot perform CLI operations'));
   }
 
-  const {hashFrom, hashTo, github} = req.body;
+  const { hashFrom, hashTo, github } = req.body;
 
   if (!hashFrom) {
     return res.json(routeUtils.toErrorResponse('Start commit for update was not given'));
@@ -347,7 +353,7 @@ function generateDatasetAccessToken(req: any, res: any): void {
       return res.json(routeUtils.toErrorResponse('Cannot generate access token for given dataset'));
     }
 
-    return res.json(routeUtils.toDataResponse({accessToken: dataset.accessToken}));
+    return res.json(routeUtils.toDataResponse({ accessToken: dataset.accessToken }));
   });
 }
 
@@ -391,5 +397,23 @@ function getDatasetsInProgress(req: any, res: any): void {
     logger.info(`finished getting private datasets is progress`);
 
     return res.json(routeUtils.toDataResponse(datasetsInProgress));
+  });
+}
+
+function getStateOfRecentQueries(req: any, res: any): void {
+  let recentQueries = [];
+
+  const recentDdfqlQueriesStream = hi(RecentDdfqlQueriesRepository.findAllAsStream())
+    .tap((recentQuery: any) => {
+      logger.debug(recentQuery.toObject());
+      recentQueries.push(_.pick(recentQuery.toObject(), ['queryRaw', 'type', 'docsAmount', 'timeSpentInMillis']));
+    });
+
+  return ddfImportUtils.startStreamProcessing(recentDdfqlQueriesStream, null, (error: string) => {
+    if (error) {
+      return res.json(routeUtils.toErrorResponse(error));
+    }
+
+    return res.json(routeUtils.toDataResponse(recentQueries));
   });
 }

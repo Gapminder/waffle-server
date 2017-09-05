@@ -17,7 +17,7 @@ export {
 function readCsvFileAsStream(pathToDdfFolder: string, filepath: string): any {
   const resolvedFilepath = path.resolve(pathToDdfFolder, filepath);
 
-  return hi(fs.createReadStream(resolvedFilepath, {encoding: 'utf-8'})
+  return hi(fs.createReadStream(resolvedFilepath)
     .pipe(new csvtojson.Converter({ constructResult: false }, { objectMode: true })));
 }
 

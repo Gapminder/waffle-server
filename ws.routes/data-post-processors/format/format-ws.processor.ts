@@ -90,7 +90,7 @@ function _mapEntitiesPropertiesToWsJson(entityDomainGid: any, select: any, entit
   const flattenedEntity = _.extend({[entityDomainGid]: entity.gid}, commonService.translateDocument(entity, language));
 
   return _.map(select, (property: string) => {
-    return flattenedEntity[property];
+    return _.isEqual(flattenedEntity[property], '') ? null : flattenedEntity[property];
   });
 }
 

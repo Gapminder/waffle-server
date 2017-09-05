@@ -7,6 +7,7 @@ import { logger } from '../ws.config/log';
 import { constants } from '../ws.utils/constants';
 import * as ddfMappers from './utils/ddf-mappers';
 import { ConceptsRepositoryFactory } from '../ws.repository/ddf/concepts/concepts.repository';
+import { DatasetTracker } from '../ws.services/datasets-tracker';
 
 export function createConcepts(pipe: any, done: Function): void {
 
@@ -77,12 +78,24 @@ function _createConcepts(pipe: any, done: Function): void {
     ddfImportUtils.MONGODB_DOC_CREATION_THREADS_AMOUNT,
     __createConcepts,
     (err: any) => {
+
       return done(err, pipe);
     }
   );
 
   function __createConcepts(chunk: any, cb: Function): void {
-    return ConceptsRepositoryFactory.versionAgnostic().create(chunk, cb);
+    return ConceptsRepositoryFactory.versionAgnostic().create(chunk, (error: any , result: any) => {
+      if (error) {
+        return cb(error);
+      }
+
+      const { dataset: { name }} = pipe;
+      DatasetTracker
+        .get(name)
+        .increment(constants.CONCEPTS, chunk.length);
+
+      return cb(null, result);
+    });
   }
 }
 

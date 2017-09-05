@@ -20,13 +20,7 @@ class DatasetsRepository {
   }
 
   public findByName(name: any, done: Function): Promise<Object> {
-    let query: any = {name};
-    if (_.endsWith(name, '#master')) {
-      query = {
-        $or: [{name}, {name: _.trimEnd(name, '#master')}]
-      };
-    }
-    return Datasets.findOne({name}).lean().exec(done);
+    return Datasets.findOne(this.getDatasetNameQuery(name)).lean().exec(done);
   }
 
   public findByUser(userId: any, done: Function): Promise<Object> {
@@ -46,29 +40,26 @@ class DatasetsRepository {
   }
 
   public findByNameAndUser(datasetName: any, userId: any, done: Function): Promise<Object> {
-    return Datasets.findOne({name: datasetName, createdBy: userId}).lean().exec(done);
+    const options = {createdBy: userId};
+    return Datasets.findOne(this.getDatasetNameQuery(datasetName, options)).lean().exec(done);
   }
 
   public forceLock(datasetName: any, done: Function): Promise<Object> {
-    return Datasets.findOneAndUpdate({name: datasetName}, {isLocked: true}, {new: true}).lean().exec(done);
+    return Datasets.findOneAndUpdate(this.getDatasetNameQuery(datasetName), {isLocked: true}, {new: true}).lean().exec(done);
   }
 
   public forceUnlock(datasetName: any, done: Function): Promise<Object> {
-    return Datasets.findOneAndUpdate({name: datasetName}, {isLocked: false}, {new: true}).lean().exec(done);
+    return Datasets.findOneAndUpdate(this.getDatasetNameQuery(datasetName), {isLocked: false}, {new: true}).lean().exec(done);
   }
 
   public unlock(datasetName: any, done: Function): Promise<Object> {
-    return Datasets.findOneAndUpdate({
-      name: datasetName,
-      isLocked: true
-    }, {isLocked: false}, {new: true}).lean().exec(done);
+    const options = { isLocked: true };
+    return Datasets.findOneAndUpdate(this.getDatasetNameQuery(datasetName, options), {isLocked: false}, {new: true}).lean().exec(done);
   }
 
   public lock(datasetName: any, done: Function): Promise<Object> {
-    return Datasets.findOneAndUpdate({
-      name: datasetName,
-      isLocked: false
-    }, {isLocked: true}, {new: true}).lean().exec(done);
+    const options = { isLocked: false };
+    return Datasets.findOneAndUpdate(this.getDatasetNameQuery(datasetName, options), {isLocked: true}, {new: true}).lean().exec(done);
   }
 
   public removeById(datasetId: any, done: MongooseCallback): any {
@@ -76,11 +67,23 @@ class DatasetsRepository {
   }
 
   public setAccessTokenForPrivateDataset({datasetName, userId, accessToken}: any, done: Function): any {
-    return Datasets.findOneAndUpdate({
-      name: datasetName,
-      createdBy: userId,
-      private: true
-    }, {accessToken}, {new: true}, done as any);
+    const options = { createdBy: userId, private: true };
+    return Datasets.findOneAndUpdate(this.getDatasetNameQuery(datasetName, options), {accessToken}, {new: true}, done as any);
+  }
+
+  private getDatasetNameQuery(name: string, options?: any) {
+    let query: any = {name};
+    if (_.endsWith(name, '#master')) {
+      query = {
+        $or: [{name}, {name: _.trimEnd(name, '#master')}]
+      };
+    }
+
+    if (_.isEmpty(options)) {
+      return query;
+    }
+
+    return _.extend(query, options);
   }
 }
 

@@ -1621,13 +1621,13 @@ describe('WS-CLI controller', () => {
 
       const loggerStub = this.stub(logger, 'error');
       const resJsonSpy = this.spy();
-      const setTransactionAsDefaultStub = this.stub(cliService, 'setTransactionAsDefault').callsFake((userId, datasetName, transactionCommit, onDatasetUpdated) => {
+      const setTransactionAsDefaultStub = this.stub(cliService, 'setTransactionAsDefault').callsFake((userId, datasetName, transactionCommit, onDatasetUpdated: Function) => {
         return onDatasetUpdated(null, expectedData);
       });
-      const cleanDdfRedisCacheStub = this.stub(cliService, 'cleanDdfRedisCache').callsFake((onCacheCleaned) => {
+      const cleanDdfRedisCacheStub = this.stub(cliService, 'cleanDdfRedisCache').callsFake((onCacheCleaned: Function) => {
         return onCacheCleaned();
       });
-      const cacheUtilsStub = this.stub(cacheUtils, 'warmUpCache').callsFake((onCacheWarmedUp) => {
+      const cacheUtilsStub = this.stub(cacheUtils, 'warmUpCache').callsFake((onCacheWarmedUp: Function) => {
         return onCacheWarmedUp(expectedError);
       });
 
@@ -1672,13 +1672,13 @@ describe('WS-CLI controller', () => {
 
       const loggerStub = this.stub(logger, 'info');
       const resJsonSpy = this.spy();
-      const setTransactionAsDefaultStub = this.stub(cliService, 'setTransactionAsDefault').callsFake((userId, datasetName, transactionCommit, onDatasetUpdated) => {
+      const setTransactionAsDefaultStub = this.stub(cliService, 'setTransactionAsDefault').callsFake((userId, datasetName, transactionCommit, onDatasetUpdated: Function) => {
         return onDatasetUpdated(null, expectedData);
       });
-      const cleanDdfRedisCacheStub = this.stub(cliService, 'cleanDdfRedisCache').callsFake((onCacheCleaned) => {
+      const cleanDdfRedisCacheStub = this.stub(cliService, 'cleanDdfRedisCache').callsFake((onCacheCleaned: Function) => {
         return onCacheCleaned();
       });
-      const cacheUtilsStub = this.stub(cacheUtils, 'warmUpCache').callsFake((onCacheWarmedUp) => {
+      const cacheUtilsStub = this.stub(cacheUtils, 'warmUpCache').callsFake((onCacheWarmedUp: Function) => {
         return onCacheWarmedUp();
       });
 

@@ -183,10 +183,11 @@ function respondWithRawDdf(query: any, req: express.Request, res: express.Respon
     if (error) {
       logger.error(error);
       (res as any).use_express_redis_cache = false;
-      return res.json(toErrorResponse(error));
+      return res.status(500).json(toErrorResponse(error));
     }
-
-    _storeWarmUpQueryForDefaultDataset(query);
+    const collectionName = _.get(query, 'from', '');
+    const docsAmount = _.get(result, collectionName, []).length;
+    _storeWarmUpQueryForDefaultDataset(_.extend({docsAmount}, query));
 
     (req as any).rawData = { rawDdf: result };
 
@@ -196,16 +197,18 @@ function respondWithRawDdf(query: any, req: express.Request, res: express.Respon
 
 function _storeWarmUpQueryForDefaultDataset(query: any): void {
   const rawDdfQuery = _.get(query, 'rawDdfQuery', null);
+  const docsAmount = _.get(query, 'docsAmount', 0);
+  const timeSpentInMillis = Date.now() - _.get(query, 'queryStartTime', 0);
 
   if (!rawDdfQuery) {
     return;
   }
 
-  if (_.has(query, 'dataset') || _.has(query, 'version') || _.has(query, 'format')) {
+  if (config.NODE_ENV !== 'local' && (_.has(query, 'dataset') || _.has(query, 'version') || _.has(query, 'format'))) {
     return;
   }
 
-  RecentDdfqlQueriesRepository.create(rawDdfQuery, (error: string) => {
+  RecentDdfqlQueriesRepository.create(_.extend({timeSpentInMillis, docsAmount}, rawDdfQuery), (error: string) => {
     if (error) {
       logger.debug(error);
     } else {

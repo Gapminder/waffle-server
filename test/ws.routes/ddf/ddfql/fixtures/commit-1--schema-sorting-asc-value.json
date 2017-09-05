@@ -64,22 +64,6 @@
     [
       [
         "anno",
-        "english_speaking"
-      ],
-      "lines_of_code",
-      null
-    ],
-    [
-      [
-        "anno",
-        "foundation"
-      ],
-      "lines_of_code",
-      null
-    ],
-    [
-      [
-        "anno",
         "company",
         "project"
       ],
@@ -89,8 +73,24 @@
     [
       [
         "anno",
+        "english_speaking"
+      ],
+      "lines_of_code",
+      null
+    ],
+    [
+      [
+        "anno",
         "english_speaking",
         "project"
+      ],
+      "lines_of_code",
+      null
+    ],
+    [
+      [
+        "anno",
+        "foundation"
       ],
       "lines_of_code",
       null

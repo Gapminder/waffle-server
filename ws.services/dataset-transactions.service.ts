@@ -1,6 +1,7 @@
 import * as async from 'async';
 import { constants } from '../ws.utils/constants';
 import * as datasetsService from './datasets.service';
+import { DatasetTracker } from './datasets-tracker';
 import { DatasetsRepository } from '../ws.repository/ddf/datasets/datasets.repository';
 import { DatasetTransactionsRepository } from '../ws.repository/ddf/dataset-transactions/dataset-transactions.repository';
 import { ConceptsRepositoryFactory } from '../ws.repository/ddf/concepts/concepts.repository';
@@ -8,6 +9,7 @@ import { EntitiesRepositoryFactory } from '../ws.repository/ddf/entities/entitie
 import { DatapointsRepositoryFactory } from '../ws.repository/ddf/data-points/data-points.repository';
 import { DatasetSchemaRepository } from '../ws.repository/ddf/dataset-index/dataset-index.repository';
 import { MongooseCallback } from '../ws.repository/repository.types';
+import { logger } from '../ws.config/log';
 
 export {
   setLastError,
@@ -56,6 +58,7 @@ function _findDatasetByNameAndUser(externalContext: any, done: Function): any {
 }
 
 function _findTransactionByDatasetAndCommit(extrenalContext: any, done: Function): void {
+  logger.info(extrenalContext, 'Transaction and dataset');
   return DatasetTransactionsRepository.findByDatasetAndCommit(extrenalContext.dataset._id, extrenalContext.transactionCommit, (error: string, transaction: any) => {
     if (error || !_isTransactionValid(transaction)) {
       return done(error || `Given transaction was not found: '${extrenalContext.transactionCommit}'`);
@@ -195,61 +198,21 @@ function _findObjectsModifiedDuringLastTransaction(externalContext: any, done: F
       return done(`Transaction is absent for dataset: ${externalContext.datasetName}`);
     }
 
+    const { datasetName } = externalContext;
+    const modifiedObjects = DatasetTracker.get(datasetName).getState();
     const result = {
-      datasetName: externalContext.datasetName,
+      datasetName,
       transaction: {
         lastError: latestTransaction.lastError,
         commit: latestTransaction.commit,
         status: latestTransaction.isClosed ? 'Completed' : 'In progress',
         createdAt: new Date(latestTransaction.createdAt)
       },
-      modifiedObjects: {
-        concepts: 0,
-        entities: 0,
-        datapoints: 0
-      }
+      modifiedObjects
     };
 
     return done(null, result);
-/*
-    // TODO: The strategy for calculating these statistics should be changed. Cause for now it executs quites complex quries
-    // which perform very poorly on huge datasets. Time that is required for execution is bigger than amount of time till
-    // mongo's connection timeout
-    const modifiedObjectsTasks =
-      _createTasksForCountingObjectsModifiedInGivenVersion(externalContext.datasetId, latestTransaction.createdAt);
-
-    return async.parallelLimit(modifiedObjectsTasks, constants.LIMIT_NUMBER_PROCESS, (countingError: any, stats: any) => {
-      if (countingError) {
-        return done(countingError);
-      }
-
-      const result = {
-        datasetName: externalContext.datasetName,
-        transaction: {
-          lastError: latestTransaction.lastError,
-          commit: latestTransaction.commit,
-          status: latestTransaction.isClosed ? 'Completed' : 'In progress',
-          createdAt: new Date(latestTransaction.createdAt)
-        },
-        modifiedObjects: stats
-      };
-
-      return done(null, result);
-    });
-*/
   });
-}
-
-function _createTasksForCountingObjectsModifiedInGivenVersion(datasetId: any, version: any): any {
-  const conceptsRepository = ConceptsRepositoryFactory.closedOrOpenedInGivenVersion(datasetId, version);
-  const entitiesRepository = EntitiesRepositoryFactory.closedOrOpenedInGivenVersion(datasetId, version);
-  const datapointsRepository = DatapointsRepositoryFactory.closedOrOpenedInGivenVersion(datasetId, version);
-
-  return {
-    concepts: (done: (err: any, count: number) => void) => conceptsRepository.count(done),
-    entities: (done: Function) => entitiesRepository.count(done),
-    datapoints: (done: Function) => datapointsRepository.count(done)
-  };
 }
 
 function findDefaultDatasetAndTransaction(datasetName: string, commit: string, onFound: Function): void {

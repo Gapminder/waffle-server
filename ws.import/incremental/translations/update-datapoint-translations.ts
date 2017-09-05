@@ -36,6 +36,7 @@ function updateDatapointsTranslations(externalContext: any, done: Function): voi
 
       const externalContextFrozen = Object.freeze(_.extend({
         datasetId: externalContext.dataset._id,
+        datasetName: externalContext.dataset.name,
         version: externalContext.transaction.createdAt,
         dataset: externalContext.dataset,
         transaction: externalContext.transaction,
