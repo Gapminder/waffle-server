@@ -105,6 +105,7 @@ function sendDdfqlRequestAndVerifyResponse(ddfql: any, expectedResponse: any, do
     expect(error).to.not.exist;
 
     if (response.body.success === false) {
+      logger.error({obj: response});
       throw Error(`DDFQL response contains an error: ${response.body.error}`);
     }
 
