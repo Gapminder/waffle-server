@@ -47,7 +47,7 @@ function startWaffleServer(done: Function): void {
     stopWaffleServer,
     (_done: Function) => {
       if (START_WAFFLE_SERVER) {
-        return shell.exec(`INNER_PORT=${e2eEnv.wsPort} ./node_modules/.bin/forever start --fifo -t -o ./logs/forever.output.log -l ./logs/forever.error.log -a --uid "${e2eEnv.wsUid}" server.js`, (code: number, stdout: string, stderr: string) => {
+        return shell.exec(`INNER_PORT=${e2eEnv.wsPort} FOREVER_ROOT=${__dirname} ./node_modules/.bin/forever start --fifo -t -o ./logs/forever.output.log -e ./logs/forever.error.log -a --uid "${e2eEnv.wsUid}" server.js`, (code: number, stdout: string, stderr: string) => {
           if (code > 0) {
             logger.error('startWaffleServer', code, stdout, stderr);
             return _done(stderr);
