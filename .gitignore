@@ -46,3 +46,7 @@ specReports
 siege-attack.sh
 
 yarn.lock
+
+# forever
+test/pids/*
+test/config.json
