@@ -9,7 +9,7 @@ export {
 
 function getSetsAndDomain(resource: any, context: any, entity: any): any {
   const entitySet = context.concepts[resource.concept] || context.previousConcepts[resource.concept];
-  const entityDomain = entitySet.type === 'entity_domain' ? entitySet : entitySet.domain;
+  const entityDomain = entitySet.type === constants.CONCEPT_TYPE_ENTITY_DOMAIN ? entitySet : entitySet.domain;
 
   const entitySets = _.reduce(resource.entitySets, (sets: any, set: string) => {
     if (_.toUpper(_.toString(entity[`${constants.IS_OPERATOR}${set}`])) === 'TRUE') {

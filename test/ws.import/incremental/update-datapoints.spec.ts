@@ -10,6 +10,7 @@ import * as datapointsUtils from '../../../ws.import/utils/datapoints.utils';
 import { updateDatapoints } from '../../../ws.import/incremental/update-datapoints';
 import { logger } from '../../../ws.config/log';
 import { DatapointsRepositoryFactory } from '../../../ws.repository/ddf/data-points/data-points.repository';
+import { constants } from '../../../ws.utils/constants';
 
 const sandbox = sinonTest.configureTest(sinon);
 
@@ -19,22 +20,28 @@ const context = {
   concepts: {
     company: {
       gid: 'company',
+      type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
       originId: 'company'
     },
     anno: {
       gid: 'anno',
+      type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
       originId: 'anno'
     },
     company_size: {
       gid: 'company_size',
+      type: constants.CONCEPT_TYPE_ENTITY_SET,
+      domain: 'company',
       originId: 'company_size'
     },
     lines_of_code: {
       gid: 'lines_of_code',
+      type: constants.CONCEPT_TYPE_MEASURE,
       originId: 'lines_of_code'
     },
     project: {
       gid: 'project',
+      type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
       originId: 'project'
     },
     longitude: {
@@ -63,10 +70,14 @@ const context = {
     },
     english_speaking: {
       gid: 'english_speaking',
+      type: constants.CONCEPT_TYPE_ENTITY_SET,
+      domain: 'company',
       originId: 'english_speaking'
     },
     foundation: {
       gid: 'foundation',
+      type: constants.CONCEPT_TYPE_ENTITY_SET,
+      domain: 'company',
       originId: 'foundation'
     },
     country: {
@@ -75,6 +86,7 @@ const context = {
     },
     region: {
       gid: 'region',
+      type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
       originId: 'region'
     }
   },
@@ -99,33 +111,41 @@ const context = {
 
 const segregatedEntities = {
   byGid: {
-    ws: {originId: 'wsOriginId'},
-    gap: {originId: 'gapOriginId'},
-    mcrsft: {originId: 'mcrsftOriginId'},
+    ws: {domain: 'company', originId: 'wsOriginId'},
+    gap: {domain: 'company', originId: 'gapOriginId'},
+    mcrsft: {domain: 'company', originId: 'mcrsftOriginId'},
     1975: {
+      domain: 'anno',
       originId: '1975OriginId'
     },
     2015: {
+      domain: 'anno',
       originId: '2015OriginId'
     },
     2016: {
+      domain: 'anno',
       originId: '2016OriginId'
     }
   },
   groupedByGid: {
     1975: [{
+      domain: 'anno',
       originId: '1975OriginId'
     }],
     2015: [{
+      domain: 'anno',
       originId: '2015OriginId'
     }],
     2016: [{
+      domain: 'anno',
       originId: '2016OriginId'
     }],
     mcrsft: [{
+      domain: 'company',
       originId: 'mcrsftOriginId'
     }],
     windows: [{
+      domain: 'project',
       originId: 'windowsOriginId'
     }]
   }
@@ -133,7 +153,7 @@ const segregatedEntities = {
 
 const segregatedPreviousEntities = {
   groupedByGid: {
-    mic: [{originId: 'micOriginId'}]
+    mic: [{domain: 'company', originId: 'micOriginId'}]
   }
 };
 
@@ -196,16 +216,19 @@ describe('Datapoints incremental update flow', () => {
         measures: {
           lines_of_code: {
             gid: 'lines_of_code',
+            type: 'measure',
             originId: 'lines_of_code'
           }
         },
         dimensions: {
           company: {
             gid: 'company',
+            type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
             originId: 'company'
           },
           anno: {
             gid: 'anno',
+            type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
             originId: 'anno'
           }
         }
@@ -248,20 +271,24 @@ describe('Datapoints incremental update flow', () => {
         measures: {
           lines_of_code: {
             gid: 'lines_of_code',
+            type: 'measure',
             originId: 'lines_of_code'
           }
         },
         dimensions: {
           company: {
             gid: 'company',
+            type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
             originId: 'company'
           },
           project: {
             gid: 'project',
+            type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
             originId: 'project'
           },
           anno: {
             gid: 'anno',
+            type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
             originId: 'anno'
           }
         }
@@ -293,7 +320,7 @@ describe('Datapoints incremental update flow', () => {
     });
   }));
 
-  it('updates existing datapoints', sandbox(function (done: Function) {
+  it('updates existing datapoints', sandbox(function (done: Function): void {
     this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
     this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
 
@@ -381,10 +408,12 @@ describe('Datapoints incremental update flow', () => {
       expect(collectedDatapoints[1].context.dimensions).to.deep.equal({
         company: {
           gid: 'company',
+          type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
           originId: 'company'
         },
         project: {
           gid: 'project',
+          type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
           originId: 'project'
         }
       });
@@ -555,39 +584,38 @@ describe('Datapoints incremental update flow', () => {
 
     const loggerInfoStub = this.stub(logger, 'info');
 
-    updateDatapoints(context, (errors, externalContext) => {
+    updateDatapoints(context, (errors: any[], externalContext: any) => {
       expect(errors).to.not.exist;
       expect(externalContext).to.equal(context);
       expect(collectedDatapoints).to.deep.equal([undefined], 'Here we have "undefined" cause deleted datapoints should not be pushed down the stream after removal');
 
       sinon.assert.calledThrice(closeDatapointByMeasureAndDimensionsStub);
-      sinon.assert.calledWith(closeDatapointByMeasureAndDimensionsStub, {
+      const closeDatapointByMeasureAndDimensionsArgs = closeDatapointByMeasureAndDimensionsStub.args;
+      expect(closeDatapointByMeasureAndDimensionsArgs[0][0]).to.deep.equal({
         measureOriginId: 'longitude',
-        dimensionsSize: 2,
         dimensionsEntityOriginIds: [
           'mcrsftOriginId',
           'windowsOriginId'
         ],
+        time: undefined,
         datapointValue: '90'
       });
-
-      sinon.assert.calledWith(closeDatapointByMeasureAndDimensionsStub, {
+      expect(closeDatapointByMeasureAndDimensionsArgs[1][0]).to.deep.equal({
         measureOriginId: 'latitude',
-        dimensionsSize: 2,
         dimensionsEntityOriginIds: [
           'mcrsftOriginId',
           'windowsOriginId'
         ],
+        time: undefined,
         datapointValue: '44.1'
       });
-
-      sinon.assert.calledWith(closeDatapointByMeasureAndDimensionsStub, {
+      expect(closeDatapointByMeasureAndDimensionsArgs[2][0]).to.deep.equal({
         measureOriginId: 'num_users',
-        dimensionsSize: 2,
         dimensionsEntityOriginIds: [
           'mcrsftOriginId',
           'windowsOriginId'
         ],
+        time: undefined,
         datapointValue: '4'
       });
 

@@ -3,6 +3,7 @@ import * as async from 'async';
 import * as ddfql from '../ws.ddfql/ddf-datapoints-query-normalizer';
 import { logger } from '../ws.config/log';
 import { constants } from '../ws.utils/constants';
+import * as conceptUtils from '../ws.import/utils/concepts.utils';
 import * as commonService from './common.service';
 import * as conceptsService from './concepts.service';
 import * as entitiesService from './entities.service';
@@ -104,7 +105,8 @@ function normalizeQueriesToDatapointsByDdfql(pipe: any, cb: Function): void {
       return cb(err, pipe);
     }
 
-    const promotedQuery = ddfql.substituteDatapointJoinLinks(normalizedQuery, substituteJoinLinks);
+    const timeConceptsGidsByOriginIds = conceptUtils.getTimeConceptsByOriginIds(pipe.concepts);
+    const promotedQuery = ddfql.substituteDatapointJoinLinks(normalizedQuery, substituteJoinLinks, timeConceptsGidsByOriginIds);
     const subDatapointQuery = promotedQuery.where;
     const validateQuery: ValidateQueryModel = ddfQueryValidator.validateMongoQuery(subDatapointQuery);
 
@@ -173,7 +175,7 @@ function mapConcepts(pipe: any, cb: Function): void {
     return cb(`Your choose key column(s) '${_.join(missingKeys, ', ')}' which aren't present in choosen dataset`);
   }
 
-  pipe.measures = _.filter(pipe.concepts, [constants.CONCEPT_TYPE, constants.CONCEPT_TYPE_MEASURE]);
+  pipe.measures = _.filter(pipe.concepts, [constants.TYPE, constants.CONCEPT_TYPE_MEASURE]);
   pipe.resolvedDomainsAndSetGids = pipe.domainGids;
 
   return async.setImmediate(() => cb(null, pipe));

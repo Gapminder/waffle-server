@@ -28,6 +28,7 @@ import * as fixtureEntityTranslationsCompanySize from './fixtures/commit-4--tran
 import * as fixtureEntityTranslationsRegion from './fixtures/commit-4--translations-entities-region.json';
 import * as fixtureEntityTranslationsCompany from './fixtures/commit-4--translations-entities-company.json';
 import * as fixtureConceptsTranslations from './fixtures/commit-4--translations-concepts.json';
+import { constants } from '../../../../ws.utils/constants';
 
 const INDEX_OF_FOURTH_COMMIT = 3;
 const COMMIT_INDEX_TO_IMPORT = process.env.COMMIT_INDEX_TO_IMPORT || 0;
@@ -119,7 +120,7 @@ describe('State Version 4 (4th commit)', function() {
           $and: [
             {
               concept_type: {
-                $eq: 'entity_set'
+                $eq: constants.CONCEPT_TYPE_ENTITY_SET
               }
             }
           ]

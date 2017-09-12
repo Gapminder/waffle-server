@@ -1,27 +1,27 @@
-import 'mocha';
-
-import * as _ from 'lodash';
 import { expect } from 'chai';
+import * as _ from 'lodash';
+import 'mocha';
 import * as sinon from 'sinon';
 import * as sinonTest from 'sinon-test';
-import * as conceptUtils from '../../ws.import/utils/concepts.utils';
-import * as ddfQueryUtils from '../../ws.ddfql/ddf-query-utils';
 import * as ddfQueryNormalizer from '../../ws.ddfql/ddf-datapoints-query-normalizer';
+import * as ddfQueryUtils from '../../ws.ddfql/ddf-query-utils';
+import * as conceptUtils from '../../ws.import/utils/concepts.utils';
+import { constants } from '../../ws.utils/constants';
 
 const sandbox = sinonTest.configureTest(sinon);
 
 const concepts = Object.freeze([
   { gid: 'time', originId: '27a3470d3a8c9b37009b9bf9', properties: { concept_type: 'time' } },
   { gid: 'quarter', originId: '77a3471d3a8c9b37009b9bf0', properties: { concept_type: 'quarter' } },
-  { gid: 'geo', originId: '17a3470d3a8c9b37009b9bf9', properties: { concept_type: 'entity_domain' } },
-  { gid: 'country', originId: '17a3470d3a8c9b37009b9bf9-country', properties: { concept_type: 'entity_set' } },
+  { gid: 'geo', originId: '17a3470d3a8c9b37009b9bf9', properties: { concept_type: constants.CONCEPT_TYPE_ENTITY_DOMAIN } },
+  { gid: 'country', originId: '17a3470d3a8c9b37009b9bf9-country', properties: { concept_type: constants.CONCEPT_TYPE_ENTITY_SET } },
   { gid: 'latitude', properties: { concept_type: 'measure' } },
   { gid: 'population', originId: '37a3470d3a8c9b37009b9bf9', properties: { concept_type: 'measure' } },
   { gid: 'life_expectancy', originId: '47a3470d3a8c9b37009b9bf9', properties: { concept_type: 'measure' } },
   { gid: 'gdp_per_cap', originId: '57a3470d3a8c9b37009b9bf9', properties: { concept_type: 'measure' } },
   { gid: 'gov_type', originId: '67a3470d3a8c9b37009b9bf9', properties: { concept_type: 'measure' } },
-  { gid: 'company', originId: '17a3470d3a8c9b37429b9bf9', properties: { concept_type: 'entity_domain' } },
-  { gid: 'project', originId: '27a3470d3a8c9b37429b9bf9', properties: { concept_type: 'entity_domain' } },
+  { gid: 'company', originId: '17a3470d3a8c9b37429b9bf9', properties: { concept_type: constants.CONCEPT_TYPE_ENTITY_DOMAIN } },
+  { gid: 'project', originId: '27a3470d3a8c9b37429b9bf9', properties: { concept_type: constants.CONCEPT_TYPE_ENTITY_DOMAIN } },
   { gid: 'lines_of_code', originId: '37a3470d3a8c9b37429b9bf9', properties: { concept_type: 'measure' } }
 ]);
 const options = Object.freeze({
@@ -30,6 +30,7 @@ const options = Object.freeze({
   conceptGids: ddfQueryUtils.getConceptGids(concepts),
   domainGids: ddfQueryUtils.getDomainGids(concepts),
   timeConceptsGids: conceptUtils.getTimeConceptGids(concepts),
+  timeConceptsGidsByOriginIds: conceptUtils.getTimeConceptsByOriginIds(concepts),
   conceptsByGids: ddfQueryUtils.getConceptsByGids(concepts),
   conceptsByOriginIds: ddfQueryUtils.getConceptsByOriginIds(concepts)
 });
@@ -137,7 +138,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       },
       where: {
         $and: [
-          { dimensions: { $size: 2 } },
+          { dimensions: { $size: 1 } },
           { dimensionsConcepts: { $all: ['17a3470d3a8c9b37009b9bf9', '27a3470d3a8c9b37009b9bf9'] } },
           {
             measure: {
@@ -249,7 +250,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       },
       where: {
         $and: [
-          { dimensions: { $size: 2 } },
+          { dimensions: { $size: 1 } },
           { dimensionsConcepts: { $all: ['17a3470d3a8c9b37009b9bf9', '77a3471d3a8c9b37009b9bf0'] } },
           {
             measure: {
@@ -311,7 +312,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       from: 'datapoints',
       where: {
         $and: [
-          { dimensions: { $size: 2 } },
+          { dimensions: { $size: 1 } },
           { dimensionsConcepts: { $all: ['17a3470d3a8c9b37009b9bf9', '27a3470d3a8c9b37009b9bf9'] } },
           { measure: { $in: ['sg_population'] } }
         ]
@@ -378,7 +379,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       },
       where: {
         $and: [
-          { dimensions: { $size: 2 } },
+          { dimensions: { $size: 1 } },
           { dimensionsConcepts: { $all: ['17a3470d3a8c9b37009b9bf9', '27a3470d3a8c9b37009b9bf9'] } },
           {
             measure: {
@@ -460,7 +461,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       },
       where: {
         $and: [
-          { dimensions: { $size: 2 } },
+          { dimensions: { $size: 1 } },
           { dimensionsConcepts: { $all: ['17a3470d3a8c9b37009b9bf9-country', '27a3470d3a8c9b37009b9bf9'] } },
           {
             measure: {
@@ -537,7 +538,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       },
       where: {
         $and: [
-          { dimensions: { $size: 2 } },
+          { dimensions: { $size: 1 } },
           { dimensionsConcepts: { $all: ['17a3470d3a8c9b37009b9bf9-country', '27a3470d3a8c9b37009b9bf9'] } },
           {
             measure: {
@@ -619,6 +620,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
               ]
             }
           },
+          { time: null },
           {
             $and: [
               {
@@ -690,7 +692,7 @@ describe('ddf datapoints query normalizer - different time types', () => {
       },
       where: {
         $and: [
-          { dimensions: { $size: 2 } },
+          { dimensions: { $size: 1 } },
           { dimensionsConcepts: { $all: ['17a3470d3a8c9b37009b9bf9', '27a3470d3a8c9b37009b9bf9'] } },
           {
             measure: {
@@ -765,7 +767,7 @@ describe('ddf datapoints query normalizer - different time types', () => {
       },
       where: {
         $and: [
-          { dimensions: { $size: 2 } },
+          { dimensions: { $size: 1 } },
           { dimensionsConcepts: { $all: ['17a3470d3a8c9b37009b9bf9', '27a3470d3a8c9b37009b9bf9'] } },
           {
             measure: {
@@ -819,6 +821,7 @@ describe('ddf datapoints query normalizer - different time types', () => {
       from: 'datapoints',
       join: {
         $time: {
+          domain: '27a3470d3a8c9b37009b9bf9',
           $and: [
             {
               'parsedProperties.time.millis': {
@@ -832,8 +835,7 @@ describe('ddf datapoints query normalizer - different time types', () => {
               },
               'parsedProperties.time.timeType': 'WEEK_TYPE'
             }
-          ],
-          domain: '27a3470d3a8c9b37009b9bf9'
+          ]
         }
       },
       select: {
@@ -850,7 +852,7 @@ describe('ddf datapoints query normalizer - different time types', () => {
       },
       where: {
         $and: [
-          { dimensions: { $size: 2 } },
+          { dimensions: { $size: 1 } },
           { dimensionsConcepts: { $all: ['17a3470d3a8c9b37009b9bf9', '27a3470d3a8c9b37009b9bf9'] } },
           {
             measure: {
@@ -907,6 +909,7 @@ describe('ddf datapoints query normalizer - different time types', () => {
       from: 'datapoints',
       join: {
         $time: {
+          domain: '27a3470d3a8c9b37009b9bf9',
           $and: [
             {
               'parsedProperties.time.millis': {
@@ -920,8 +923,7 @@ describe('ddf datapoints query normalizer - different time types', () => {
               },
               'parsedProperties.time.timeType': 'DATE_TYPE'
             }
-          ],
-          domain: '27a3470d3a8c9b37009b9bf9'
+          ]
         }
       },
       select: {
@@ -938,7 +940,7 @@ describe('ddf datapoints query normalizer - different time types', () => {
       },
       where: {
         $and: [
-          { dimensions: { $size: 2 } },
+          { dimensions: { $size: 1 } },
           { dimensionsConcepts: { $all: ['17a3470d3a8c9b37009b9bf9', '27a3470d3a8c9b37009b9bf9'] } },
           {
             measure: {
@@ -1005,7 +1007,7 @@ describe('ddf datapoints query normalizer - different time types', () => {
       from: 'datapoints',
       where: {
         $and: [
-          { dimensions: { $size: 2 } },
+          { dimensions: { $size: 1 } },
           { dimensionsConcepts: { $all: ['17a3470d3a8c9b37009b9bf9', '77a3471d3a8c9b37009b9bf0'] } },
           { measure: { $in: ['sg_population'] } },
           {
@@ -1047,7 +1049,7 @@ describe('ddf datapoints query normalizer - substitute links', () => {
       from: 'datapoints',
       where: {
         $and: [
-          { dimensions: { $size: 2 } },
+          { dimensions: { $size: 1 } },
           { dimensionsConcepts: { $all: ['17a3470d3a8c9b37009b9bf9', '27a3470d3a8c9b37009b9bf9'] } },
           {
             $and: [
@@ -1109,7 +1111,7 @@ describe('ddf datapoints query normalizer - substitute links', () => {
       from: 'datapoints',
       where: {
         $and: [
-          { dimensions: { $size: 2 } },
+          { dimensions: { $size: 1 } },
           { dimensionsConcepts: { $all: ['17a3470d3a8c9b37009b9bf9', '27a3470d3a8c9b37009b9bf9'] } },
           {
             $and: [
@@ -1193,7 +1195,7 @@ describe('ddf datapoints query normalizer - substitute links', () => {
       from: 'datapoints',
       where: {
         $and: [
-          { dimensions: { $size: 2 } },
+          { dimensions: { $size: 1 } },
           { dimensionsConcepts: { $all: ['17a3470d3a8c9b37009b9bf9', '27a3470d3a8c9b37009b9bf9'] } },
           {
             $and: [
@@ -1260,7 +1262,7 @@ describe('ddf datapoints query normalizer - substitute links', () => {
       from: 'datapoints',
       where: {
         $and: [
-          { dimensions: { $size: 2 } },
+          { dimensions: { $size: 1 } },
           { dimensionsConcepts: { $all: ['17a3470d3a8c9b37009b9bf9', '27a3470d3a8c9b37009b9bf9'] } },
           {
             $and: [
@@ -1274,26 +1276,16 @@ describe('ddf datapoints query normalizer - substitute links', () => {
                 }
               },
               {
-                dimensions: {
-                  $in: [
-                    '47a3470d3a8c9b37009b9bf9',
-                    '47a3470d3a8c9b37009b9bf9',
-                    '47a3470d3a8c9b37009b9bf9'
-                  ]
-                }
+                'time.timeType': 'YEAR_TYPE',
+                'time.millis': { $lt: 1377993600000 }
               },
               {
                 $or: [
                   {
                     measure: '37a3470d3a8c9b37009b9bf9',
                     value: { $gt: 100000 },
-                    dimensions: {
-                      $in: [
-                        '67a3470d3a8c9b37009b9bf9',
-                        '67a3470d3a8c9b37009b9bf9',
-                        '67a3470d3a8c9b37009b9bf9'
-                      ]
-                    }
+                    'time.timeType': 'YEAR_TYPE',
+                    'time.millis': { $eq: 1377993600000 }
                   },
                   {
                     measure: '47a3470d3a8c9b37009b9bf9',
@@ -1324,18 +1316,19 @@ describe('ddf datapoints query normalizer - substitute links', () => {
         },
         $time: {
           domain: '27a3470d3a8c9b37009b9bf9',
-          'parsedProperties.time.timeType': 'YEAR_TYPE',
-          'parsedProperties.time.millis': { $lt: 1377993600000 }
+          'time.timeType': 'YEAR_TYPE',
+          'time.millis': { $lt: 1377993600000 }
         },
         $time2: {
           domain: '27a3470d3a8c9b37009b9bf9',
-          'parsedProperties.time.timeType': 'YEAR_TYPE',
-          'parsedProperties.time.millis': { $eq: 1377993600000 }
+          'time.timeType': 'YEAR_TYPE',
+          'time.millis': { $eq: 1377993600000 }
         }
       },
       order_by: []
     };
+    const timeConceptOriginIds = options.timeConceptsGidsByOriginIds;
 
-    expect(ddfQueryNormalizer.substituteDatapointJoinLinks(normalizedDdfql, linksInJoinToValues)).to.deep.equal(normalizedDdfqlWithSubstitutedJoinLinks);
+    expect(ddfQueryNormalizer.substituteDatapointJoinLinks(normalizedDdfql, linksInJoinToValues, timeConceptOriginIds)).to.deep.equal(normalizedDdfqlWithSubstitutedJoinLinks);
   }));
 });

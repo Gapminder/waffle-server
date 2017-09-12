@@ -13,6 +13,12 @@ const DataPoints: any = new Schema({
   properties: {type: Schema.Types.Mixed, default: {}},
   languages: {type: Schema.Types.Mixed, default: {}},
 
+  time: {
+    conceptGid: String,
+    timeType: String,
+    millis: Number
+  },
+
   originId: {type: Schema.Types.ObjectId},
   from: {type: Number, required: true},
   to: {type: Number, required: true, default: constants.MAX_VERSION},
@@ -26,8 +32,8 @@ DataPoints.plugin(OriginIdPlugin, {
   originId: 'DataPoints'
 });
 
-DataPoints.index({dataset: 1, measure: 1, dimensions: 1, from: 1, to: 1});
-DataPoints.index({dimensionsConcepts: 1, dataset: 1, measure: 1, from: 1, to: 1});
+DataPoints.index({dataset: 1, measure: 1, dimensions: 1, from: 1, to: 1, time: 1});
+DataPoints.index({dataset: 1, measure: 1, dimensionsConcepts: 1, from: 1, to: 1, time: 1});
 DataPoints.index({dataset: 1, sources: 1, from: 1, to: 1});
 DataPoints.index({dataset: 1, from: 1, to: 1});
 DataPoints.index({dataset: 1, to: 1});

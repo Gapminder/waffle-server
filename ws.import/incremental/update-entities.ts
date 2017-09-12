@@ -142,7 +142,7 @@ function closeEntities({entityChangesBatch, externalContext, handleClosedEntity}
     const query = {
       domain: context.oldEntityDomain.originId,
       sets: context.oldEntitySetsOriginIds,
-      [`properties.${changesDescriptor.concept}`]: changesDescriptor.gid,
+      [`${constants.PROPERTIES}.${changesDescriptor.concept}`]: changesDescriptor.gid,
       sources: context.oldFilename
     };
 

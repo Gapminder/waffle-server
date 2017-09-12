@@ -5,6 +5,7 @@ import * as sinonTest from 'sinon-test';
 import { expect } from 'chai';
 
 import * as entitiesUtils from '../../../ws.import/utils/entities.utils';
+import { constants } from '../../../ws.utils/constants';
 
 const sandbox = sinonTest.configureTest(sinon);
 
@@ -18,7 +19,7 @@ describe('Entities utils', () => {
     const context = {
       concepts: {
         foundation: {
-          type: 'entity_set',
+          type: constants.CONCEPT_TYPE_ENTITY_SET,
           domain: {
             gid: 'company'
           },
@@ -50,7 +51,7 @@ describe('Entities utils', () => {
       concepts: {},
       previousConcepts: {
         foundation: {
-          type: 'entity_set',
+          type: constants.CONCEPT_TYPE_ENTITY_SET,
           domain: {
             gid: 'company'
           },
@@ -86,7 +87,7 @@ describe('Entities utils', () => {
       },
       previousConcepts: {
         foundation: {
-          type: 'entity_set',
+          type: constants.CONCEPT_TYPE_ENTITY_SET,
           domain: {
             gid: 'company'
           },
@@ -114,7 +115,7 @@ describe('Entities utils', () => {
     const context = {
       concepts: {
         foundation: {
-          type: 'entity_domain',
+          type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
           originId: 'foundationId'
         }
       }
@@ -139,7 +140,7 @@ describe('Entities utils', () => {
     const context = {
       concepts: {
         foundation: {
-          type: 'entity_set',
+          type: constants.CONCEPT_TYPE_ENTITY_SET,
           domain: {
             gid: 'company'
           },
@@ -170,21 +171,21 @@ describe('Entities utils', () => {
     const companyDomain = {
       gid: 'company',
       originId: 'originId',
-      type: 'entity_domain'
+      type: constants.CONCEPT_TYPE_ENTITY_DOMAIN
     };
 
     const context = {
       concepts: {
         company: companyDomain,
         english_speaking: {
-          type: 'entity_set',
+          type: constants.CONCEPT_TYPE_ENTITY_SET,
           domain: companyDomain,
           originId: 'english_speakingId'
         }
       },
       previousConcepts: {
         foundation: {
-          type: 'entity_set',
+          type: constants.CONCEPT_TYPE_ENTITY_SET,
           domain: companyDomain,
           originId: 'foundationId'
         }

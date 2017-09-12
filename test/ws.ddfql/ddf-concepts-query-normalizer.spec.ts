@@ -3,12 +3,13 @@ import 'mocha';
 import { expect } from 'chai';
 
 import * as ddfQueryNormalizer from '../../ws.ddfql/ddf-concepts-query-normalizer';
+import { constants } from '../../ws.utils/constants';
 
 const concepts = [
   { gid: 'time', properties: { concept_type: 'time' } },
   { gid: 'quarter', properties: { concept_type: 'quarter' } },
-  { gid: 'geo', properties: { concept_type: 'entity_domain' } },
-  { gid: 'country', properties: { concept_type: 'entity_set' } },
+  { gid: 'geo', properties: { concept_type: constants.CONCEPT_TYPE_ENTITY_DOMAIN } },
+  { gid: 'country', properties: { concept_type: constants.CONCEPT_TYPE_ENTITY_SET } },
   { gid: 'color' }
 ];
 
@@ -52,9 +53,9 @@ describe('ddf concepts query normalizer', () => {
       from: 'concepts',
       where: {
         $and: [
-          { concept_type: { $not: 'entity_set' } },
+          { concept_type: { $not: constants.CONCEPT_TYPE_ENTITY_SET } },
           { 'color.palette._default': { $exists: true } },
-          { type: 'entity_domain' }
+          { type: constants.CONCEPT_TYPE_ENTITY_DOMAIN }
         ]
       }
     };
@@ -69,9 +70,9 @@ describe('ddf concepts query normalizer', () => {
       from: 'concepts',
       where: {
         $and: [
-          { 'properties.concept_type': { $not: 'entity_set' } },
+          { 'properties.concept_type': { $not: constants.CONCEPT_TYPE_ENTITY_SET } },
           { 'properties.color.palette._default': { $exists: true } },
-          { type: 'entity_domain' }
+          { type: constants.CONCEPT_TYPE_ENTITY_DOMAIN }
         ]
       },
       join: {},
@@ -92,9 +93,9 @@ describe('ddf concepts query normalizer', () => {
       from: 'concepts',
       where: {
         $and: [
-          { concept_type: { $not: 'entity_set' } },
+          { concept_type: { $not: constants.CONCEPT_TYPE_ENTITY_SET } },
           { 'color.palette._default': { $exists: true } },
-          { type: 'entity_domain' }
+          { type: constants.CONCEPT_TYPE_ENTITY_DOMAIN }
         ]
       }
     };
@@ -109,9 +110,9 @@ describe('ddf concepts query normalizer', () => {
       from: 'concepts',
       where: {
         $and: [
-          { 'properties.concept_type': { $not: 'entity_set' } },
+          { 'properties.concept_type': { $not: constants.CONCEPT_TYPE_ENTITY_SET } },
           { 'color.palette._default': { $exists: true } },
-          { type: 'entity_domain' }
+          { type: constants.CONCEPT_TYPE_ENTITY_DOMAIN }
         ]
       },
       join: {},

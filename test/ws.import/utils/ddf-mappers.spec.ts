@@ -1,8 +1,6 @@
-import * as sinon from 'sinon';
 import { expect } from 'chai';
-
-import '../../../ws.repository';
 import * as ddfMappers from '../../../ws.import/utils/ddf-mappers';
+import '../../../ws.repository';
 import { constants } from '../../../ws.utils/constants';
 
 describe('DDF mappers', () => {
@@ -28,8 +26,8 @@ describe('DDF mappers', () => {
       valueString: 'Boo!',
       valueJsonLikeThatWillNotBeTouched: '{"hello": "world!"}',
       color: ['aaa', 'bbb', 'ccc'],
-      scales: {bla: 'bla'},
-      drill_up: [{parent: ['geo']}],
+      scales: { bla: 'bla' },
+      drill_up: [{ parent: ['geo'] }],
       valueObject: {
         foo: 'bar'
       }
@@ -120,7 +118,13 @@ describe('DDF mappers', () => {
           },
           '1942-yearOriginId': {
             gid: '1942',
-            originId: '1942OriginId'
+            originId: '1942OriginId',
+            parsedProperties: {
+              year: {
+                millis: 123,
+                timeType: 'YEAR_TYPE'
+              }
+            }
           }
         },
         byGid: {},
@@ -144,8 +148,7 @@ describe('DDF mappers', () => {
       {
         dataset: 'dsId',
         dimensions: [
-          'usaOriginId',
-          '1942OriginId'
+          'usaOriginId'
         ],
         dimensionsConcepts: [
           'countryOriginId',
@@ -164,6 +167,11 @@ describe('DDF mappers', () => {
           pop: 100500,
           year: '1942'
         },
+        time: {
+          conceptGid: 'year',
+          millis: 123,
+          timeType: 'YEAR_TYPE'
+        },
         sources: [
           'datapoints.csv'
         ],
@@ -172,8 +180,7 @@ describe('DDF mappers', () => {
       {
         dataset: 'dsId',
         dimensions: [
-          'usaOriginId',
-          '1942OriginId'
+          'usaOriginId'
         ],
         dimensionsConcepts: [
           'countryOriginId',
@@ -191,6 +198,11 @@ describe('DDF mappers', () => {
           income: '200',
           pop: 100500,
           year: '1942'
+        },
+        time: {
+          conceptGid: 'year',
+          millis: 123,
+          timeType: 'YEAR_TYPE'
         },
         sources: [
           'datapoints.csv'
@@ -232,7 +244,13 @@ describe('DDF mappers', () => {
           },
           '1942-yearOriginId': {
             gid: '1942',
-            originId: '1942OriginId'
+            originId: '1942OriginId',
+            parsedProperties: {
+              year: {
+                millis: 123,
+                timeType: 'YEAR_TYPE'
+              }
+            }
           }
         },
         byGid: {},
@@ -253,8 +271,7 @@ describe('DDF mappers', () => {
       {
         dataset: 'dsId',
         dimensions: [
-          'usaOriginId',
-          '1942OriginId'
+          'usaOriginId'
         ],
         dimensionsConcepts: [
           'countryOriginId',
@@ -271,6 +288,11 @@ describe('DDF mappers', () => {
           geo: 'usa',
           pop: 'Boo!',
           year: '1942'
+        },
+        time: {
+          conceptGid: 'year',
+          millis: 123,
+          timeType: 'YEAR_TYPE'
         },
         sources: [
           'datapoints.csv'
@@ -311,7 +333,13 @@ describe('DDF mappers', () => {
           },
           '1942-yearOriginId': {
             gid: '1942',
-            originId: '1942OriginId'
+            originId: '1942OriginId',
+            parsedProperties: {
+              year: {
+                millis: 123,
+                timeType: 'YEAR_TYPE'
+              }
+            }
           }
         },
         byDomain: {},
@@ -333,8 +361,7 @@ describe('DDF mappers', () => {
       {
         dataset: 'dsId',
         dimensions: [
-          'usaOriginId',
-          '1942OriginId'
+          'usaOriginId'
         ],
         dimensionsConcepts: [
           'countryOriginId',
@@ -351,6 +378,11 @@ describe('DDF mappers', () => {
           geo: 'usa',
           pop: 'Boo!',
           year: '1942'
+        },
+        time: {
+          conceptGid: 'year',
+          millis: 123,
+          timeType: 'YEAR_TYPE'
         },
         sources: [
           'datapoints.csv'
@@ -393,7 +425,13 @@ describe('DDF mappers', () => {
           },
           1942: {
             gid: '1942',
-            originId: '1942OriginId'
+            originId: '1942OriginId',
+            parsedProperties: {
+              year: {
+                millis: 123,
+                timeType: 'YEAR_TYPE'
+              }
+            }
           }
         },
         foundInDatapointsByGid: {}
@@ -413,8 +451,7 @@ describe('DDF mappers', () => {
       {
         dataset: 'dsId',
         dimensions: [
-          'usaOriginId',
-          '1942OriginId'
+          'usaOriginId'
         ],
         dimensionsConcepts: [
           'countryOriginId',
@@ -431,6 +468,11 @@ describe('DDF mappers', () => {
           geo: 'usa',
           pop: 'Boo!',
           year: '1942'
+        },
+        time: {
+          conceptGid: 'year',
+          millis: 123,
+          timeType: 'YEAR_TYPE'
         },
         sources: [
           'datapoints.csv'
@@ -475,7 +517,13 @@ describe('DDF mappers', () => {
         foundInDatapointsByGid: {
           1942: {
             gid: '1942',
-            originId: '1942OriginId'
+            originId: '1942OriginId',
+            parsedProperties: {
+              year: {
+                millis: 123,
+                timeType: 'YEAR_TYPE'
+              }
+            }
           }
         }
       },
@@ -494,8 +542,7 @@ describe('DDF mappers', () => {
       {
         dataset: 'dsId',
         dimensions: [
-          'usaOriginId',
-          '1942OriginId'
+          'usaOriginId'
         ],
         dimensionsConcepts: [
           'countryOriginId',
@@ -512,6 +559,11 @@ describe('DDF mappers', () => {
           geo: 'usa',
           pop: 'Boo!',
           year: '1942'
+        },
+        time: {
+          conceptGid: 'year',
+          millis: 123,
+          timeType: 'YEAR_TYPE'
         },
         sources: [
           'datapoints.csv'

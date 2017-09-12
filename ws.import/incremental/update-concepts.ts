@@ -311,7 +311,7 @@ function mergeConcepts(originalConcept: any, changesToConcept: any, currentTrans
     }
 
     if (property === 'concept_type') {
-      originalConcept.type = conceptsUtils.isTimeConceptType(changedValue) ? 'entity_domain' : changedValue;
+      originalConcept.type = conceptsUtils.isTimeConceptType(changedValue) ? constants.CONCEPT_TYPE_ENTITY_DOMAIN : changedValue;
     }
 
     if (ddfImportUtils.isJson(changedValue)) {

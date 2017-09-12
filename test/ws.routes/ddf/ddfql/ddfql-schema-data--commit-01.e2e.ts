@@ -30,6 +30,7 @@ import * as fixtureEntityTranslationsCompanySize from './fixtures/commit-1--tran
 import * as fixtureEntityTranslationsRegion from './fixtures/commit-1--translations-entities-region.json';
 import * as fixtureEntityTranslationsCompany from './fixtures/commit-1--translations-entities-company.json';
 import * as fixtureConceptsTranslations from './fixtures/commit-1--translations-concepts.json';
+import { constants } from '../../../../ws.utils/constants';
 
 const INDEX_OF_INITIAL_COMMIT = 0;
 const COMMIT_INDEX_TO_IMPORT = process.env.COMMIT_INDEX_TO_IMPORT || 0;
@@ -121,7 +122,7 @@ describe('Initial State, Version 1 (1st commit)', function() {
           $and: [
             {
               concept_type: {
-                $eq: 'entity_set'
+                $eq: constants.CONCEPT_TYPE_ENTITY_SET
               }
             }
           ]

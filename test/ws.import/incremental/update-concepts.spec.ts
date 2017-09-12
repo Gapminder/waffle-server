@@ -10,6 +10,7 @@ import {logger} from '../../../ws.config/log';
 import * as updateService from '../../../ws.import/incremental/update-concepts';
 import {ConceptsRepositoryFactory} from '../../../ws.repository/ddf/concepts/concepts.repository';
 import * as fileUtils from '../../../ws.utils/file';
+import { constants } from '../../../ws.utils/constants';
 
 const sandbox = sinonTest.configureTest(sinon);
 
@@ -48,14 +49,14 @@ const expectedCreatedConcepts = [
     properties: {
       additional_column: 'updated',
       concept: 'company_scale',
-      concept_type: 'entity_set',
+      concept_type: constants.CONCEPT_TYPE_ENTITY_SET,
       domain: 'company1',
       drill_up: ['foundation1']
     },
     subsetOf: [],
     title: undefined,
     to: 9007199254740991,
-    type: 'entity_set'
+    type: constants.CONCEPT_TYPE_ENTITY_SET
   }, {
     dataset: datasetId,
     domain: null,
@@ -66,14 +67,14 @@ const expectedCreatedConcepts = [
     properties: {
       additional_column: 'updated',
       concept: 'company_scale1',
-      concept_type: 'entity_set',
+      concept_type: constants.CONCEPT_TYPE_ENTITY_SET,
       domain: 'company',
       drill_up: ['foundation']
     },
     subsetOf: [],
     title: undefined,
     to: 9007199254740991,
-    type: 'entity_set'
+    type: constants.CONCEPT_TYPE_ENTITY_SET
   }
 ];
 
@@ -94,13 +95,13 @@ describe('Update Concepts', function () {
       originId: 'AAA',
       properties: {
         concept: 'company',
-        concept_type: 'entity_domain',
+        concept_type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
         domain: null
       },
       subsetOf: [],
       title: undefined,
       to: 9007199254740991,
-      type: 'entity_domain'
+      type: constants.CONCEPT_TYPE_ENTITY_DOMAIN
     };
     const drillup = {
       _id: 'DRILLUPID',
@@ -112,14 +113,14 @@ describe('Update Concepts', function () {
       originId: 'BBB',
       properties: {
         concept: 'foundation',
-        concept_type: 'entity_set',
+        concept_type: constants.CONCEPT_TYPE_ENTITY_SET,
         domain: 'company',
         additional_column: ''
       },
       subsetOf: [],
       title: undefined,
       to: 9007199254740991,
-      type: 'entity_set'
+      type: constants.CONCEPT_TYPE_ENTITY_SET
     };
     const expectedDrillups = [drillup.gid, 'foundation1'];
     const expectedDomains = [domain.gid, 'company1'];
@@ -466,14 +467,14 @@ describe('Update Concepts', function () {
       originId: 'CCC',
       properties: {
         concept: 'company',
-        concept_type: 'entity_domain',
+        concept_type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
         domain: null,
         additional_column: ''
       },
       subsetOf: [],
       title: undefined,
       to: version,
-      type: 'entity_domain'
+      type: constants.CONCEPT_TYPE_ENTITY_DOMAIN
     };
     const domain = {
       _id: 'DOMAINID',
@@ -485,14 +486,14 @@ describe('Update Concepts', function () {
       originId: 'AAA',
       properties: {
         concept: 'company',
-        concept_type: 'entity_domain',
+        concept_type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
         domain: null,
         additional_column: ''
       },
       subsetOf: [],
       title: undefined,
       to: version,
-      type: 'entity_domain'
+      type: constants.CONCEPT_TYPE_ENTITY_DOMAIN
     };
     const drillup = {
       _id: 'DRILLUPID',
@@ -504,14 +505,14 @@ describe('Update Concepts', function () {
       originId: 'BBB',
       properties: {
         concept: 'foundation',
-        concept_type: 'entity_set',
+        concept_type: constants.CONCEPT_TYPE_ENTITY_SET,
         domain: 'company',
         additional_column: ''
       },
       subsetOf: [],
       title: undefined,
       to: version,
-      type: 'entity_set'
+      type: constants.CONCEPT_TYPE_ENTITY_SET
     };
 
     const expectedConcepts = [drillup, domain, time];
@@ -525,12 +526,12 @@ describe('Update Concepts', function () {
       properties: {
         additional_column: null,
         concept: 'foundation1',
-        concept_type: 'entity_domain',
+        concept_type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
         domain: null
       },
       title: undefined,
       to: 9007199254740991,
-      type: 'entity_domain'
+      type: constants.CONCEPT_TYPE_ENTITY_DOMAIN
     };
     const expectedUpdatedDomain = {
       dataset: 'DATASETID',
@@ -541,14 +542,14 @@ describe('Update Concepts', function () {
       properties: {
         additional_column: null,
         concept: 'company',
-        concept_type: 'entity_set',
+        concept_type: constants.CONCEPT_TYPE_ENTITY_SET,
         domain: 'foundation1',
         subsetOf: null,
         drill_up: ['foundation1']
       },
       title: undefined,
       to: 9007199254740991,
-      type: 'entity_set'
+      type: constants.CONCEPT_TYPE_ENTITY_SET
     };
     const expectedUpdatedTime = {
       dataset: 'DATASETID',
@@ -564,7 +565,7 @@ describe('Update Concepts', function () {
       },
       title: undefined,
       to: 9007199254740991,
-      type: 'entity_domain'
+      type: constants.CONCEPT_TYPE_ENTITY_DOMAIN
     };
 
     const loggerInfoStub = this.stub(logger, 'info');
@@ -679,14 +680,14 @@ describe('Update Concepts', function () {
       originId: 'AAA',
       properties: {
         concept: 'company',
-        concept_type: 'entity_domain',
+        concept_type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
         domain: null,
         additional_column: ''
       },
       subsetOf: [],
       title: undefined,
       to: 9007199254740991,
-      type: 'entity_domain'
+      type: constants.CONCEPT_TYPE_ENTITY_DOMAIN
     };
     const drillup = {
       _id: 'DRILLUPID',
@@ -698,14 +699,14 @@ describe('Update Concepts', function () {
       originId: 'BBB',
       properties: {
         concept: 'foundation',
-        concept_type: 'entity_set',
+        concept_type: constants.CONCEPT_TYPE_ENTITY_SET,
         domain: 'company',
         additional_column: ''
       },
       subsetOf: [],
       title: undefined,
       to: 9007199254740991,
-      type: 'entity_set'
+      type: constants.CONCEPT_TYPE_ENTITY_SET
     };
     const expectedConcepts = [drillup, domain];
     const expectedUpdatedConcepts = [];
@@ -774,14 +775,14 @@ describe('Update Concepts', function () {
       originId: 'AAA',
       properties: {
         concept: 'company',
-        concept_type: 'entity_domain',
+        concept_type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
         domain: null,
         additional_column: ''
       },
       subsetOf: [],
       title: undefined,
       to: version,
-      type: 'entity_domain'
+      type: constants.CONCEPT_TYPE_ENTITY_DOMAIN
     };
     const drillup = {
       _id: 'DRILLUPID',
@@ -793,14 +794,14 @@ describe('Update Concepts', function () {
       originId: 'BBB',
       properties: {
         concept: 'foundation',
-        concept_type: 'entity_set',
+        concept_type: constants.CONCEPT_TYPE_ENTITY_SET,
         domain: 'company',
         additional_column: ''
       },
       subsetOf: [],
       title: undefined,
       to: version,
-      type: 'entity_set'
+      type: constants.CONCEPT_TYPE_ENTITY_SET
     };
 
     const expectedConcepts = [drillup, domain];
@@ -813,12 +814,12 @@ describe('Update Concepts', function () {
       originId: 'BBB',
       properties: {
         concept: 'foundation',
-        concept_type: 'entity_set',
+        concept_type: constants.CONCEPT_TYPE_ENTITY_SET,
         domain: 'company'
       },
       title: undefined,
       to: 9007199254740991,
-      type: 'entity_set'
+      type: constants.CONCEPT_TYPE_ENTITY_SET
     };
     const expectedUpdatedDomain = {
       dataset: 'DATASETID',
@@ -828,12 +829,12 @@ describe('Update Concepts', function () {
       originId: 'AAA',
       properties: {
         concept: 'company',
-        concept_type: 'entity_domain',
+        concept_type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
         domain: null
       },
       title: undefined,
       to: 9007199254740991,
-      type: 'entity_domain'
+      type: constants.CONCEPT_TYPE_ENTITY_DOMAIN
     };
 
     const loggerStub = this.stub(logger, 'info');

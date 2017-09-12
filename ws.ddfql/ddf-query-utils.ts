@@ -1,7 +1,7 @@
-import * as _ from 'lodash';
 import * as ddfTimeUtils from 'ddf-time-utils';
-import { constants } from '../ws.utils/constants';
+import * as _ from 'lodash';
 import * as traverse from 'traverse';
+import { constants } from '../ws.utils/constants';
 
 export {
   toSafeQuery,
@@ -177,7 +177,7 @@ function wrapEntityProperties(key: string, options: any): string {
   const propertyName = cutPrefixByDot(key, options.domainGids);
 
   if (!isTimePropertyFilter(key, options) && isEntityPropertyFilter(propertyName, options)) {
-    return `properties.${propertyName}`;
+    return `${constants.PROPERTIES}.${propertyName}`;
   }
 
   return propertyName;
@@ -194,7 +194,7 @@ function getConceptGids(concepts: ReadonlyArray<any>): string[] {
 function getDomainGids(concepts: ReadonlyArray<any>): any[] {
   return _.chain(concepts)
     .filter((concept: any) => {
-      return _.includes(constants.DEFAULT_ENTITY_GROUP_TYPES, _.get(concept, 'properties.concept_type', null));
+      return _.includes(constants.DEFAULT_ENTITY_GROUP_TYPES, _.get(concept, `${constants.PROPERTIES}.${constants.CONCEPT_TYPE}`, null));
     })
     .map(constants.GID)
     .value();

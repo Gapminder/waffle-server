@@ -18,7 +18,7 @@ class EntitiesRepository extends VersionedModelRepository {
   }
 
   private static toPropertiesDotNotation(object: any): Dictionary<{}> {
-    return _.mapKeys(object, (value: any, property: string) => property === 'gid' ? property : `properties.${property}`);
+    return _.mapKeys(object, (value: any, property: string) => property === 'gid' ? property : `${constants.PROPERTIES}.${property}`);
   }
 
   public constructor(versionQueryFragment: any, datasetId?: any, version?: any) {
@@ -80,7 +80,7 @@ class EntitiesRepository extends VersionedModelRepository {
   public findEntityProperties(entityDomainGid: any, select: any, where: any, onPropertiesFound: Function): Promise<Object> {
     const conceptQuery = this._composeQuery({
       gid: entityDomainGid,
-      'properties.concept_type': {$in: constants.DEFAULT_ENTITY_GROUP_TYPES}
+      [`${constants.PROPERTIES}.${constants.CONCEPT_TYPE}`]: {$in: constants.DEFAULT_ENTITY_GROUP_TYPES}
     });
 
     return Concepts.findOne(conceptQuery).lean().exec((error: string, concept: any) => {

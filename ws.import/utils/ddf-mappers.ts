@@ -2,6 +2,8 @@ import * as _ from 'lodash';
 import {constants} from '../../ws.utils/constants';
 import * as ddfImportUtils from './import-ddf.utils';
 import * as conceptsUtils from './concepts.utils';
+import { isTimeConceptType } from './concepts.utils';
+import * as datapointsUtils from './datapoints.utils';
 import { logger } from '../../ws.config/log';
 
 const JSON_COLUMNS = ['color', 'scales', 'drill_up'];
@@ -45,41 +47,62 @@ function mapDdfEntityToWsModel(entry: any, context: any): any {
     };
 }
 
-function mapDdfDataPointToWsModel(entry: any, context: any): any {
-    const dimensions = _.chain(entry)
-      .pick(_.keys(context.dimensions))
-      .reduce((result: any, entityGid: string, conceptGid: any) => {
-        const key = `${entityGid}-${context.concepts[conceptGid].originId}`;
-        const entity =
-          context.entities.byDomain[key]
-          || context.entities.bySet[key]
-          || context.entities.byGid[entityGid]
-          || context.entities.foundInDatapointsByGid[entityGid];
+export interface TimeDimension {
+  conceptGid: string;
+  timeType: string;
+  millis: number;
+}
 
-        result.push(entity.originId);
+function mapDdfDataPointToWsModel(entry: any, externalContext: any): any {
+    let timeDimension: TimeDimension;
+
+    const sortedDimensionConceptGids = conceptsUtils.getSortedDimensionConceptGids(_.keys(externalContext.dimensions), externalContext.concepts);
+
+    const dimensions = _.chain(sortedDimensionConceptGids)
+      .reduce((result: any, conceptGid: any) => {
+        const entityGid = entry[conceptGid];
+        const key = `${entityGid}-${externalContext.concepts[conceptGid].originId}`;
+        const entity =
+          externalContext.entities.byDomain[key]
+          || externalContext.entities.bySet[key]
+          || externalContext.entities.byGid[entityGid]
+          || externalContext.entities.foundInDatapointsByGid[entityGid];
+
+        if (!_.isEmpty(_.get(entity, 'parsedProperties', false))) {
+          timeDimension = {
+            conceptGid,
+            timeType: _.get(entity, `parsedProperties.${conceptGid}.timeType`, ''),
+            millis: _.get(entity, `parsedProperties.${conceptGid}.millis`, 0)
+          };
+        } else {
+          result.push(entity.originId);
+        }
+
         return result;
       }, [])
       .value();
 
     return _.chain(entry)
-      .pick(_.keys(context.measures))
+      .pick(_.keys(externalContext.measures))
       .map((datapointValue: any, measureGid: any) => {
         const datapointValueAsNumber = ddfImportUtils.toNumeric(datapointValue);
         return {
           value: _.isNil(datapointValueAsNumber) ? datapointValue : datapointValueAsNumber,
-          measure: context.measures[measureGid].originId,
+          measure: externalContext.measures[measureGid].originId,
           dimensions,
-          dimensionsConcepts: context.dimensionsConcepts,
+          dimensionsConcepts: externalContext.dimensionsConcepts,
 
           properties: entry,
           originId: entry.originId,
-          languages: _.get(context, 'languages', {}),
+          languages: _.get(externalContext, 'languages', {}),
+
+          time: timeDimension,
 
           isNumeric: !_.isNil(datapointValueAsNumber),
-          from: context.version,
+          from: externalContext.version,
           to: constants.MAX_VERSION,
-          dataset: context.datasetId,
-          sources: [context.filename]
+          dataset: externalContext.datasetId,
+          sources: [externalContext.filename]
         };
       })
       .value();
@@ -99,7 +122,7 @@ function mapDdfEntityFoundInDatapointToWsModel(datapoint: any, context: any): an
     parsedProperties: ddfImportUtils.parseProperties(context.concept, gid, datapoint, context.timeConcepts),
 
     domain: context.domain.originId,
-    sets: context.concept.type === 'entity_set' ? [context.concept.originId] : [],
+    sets: context.concept.type === constants.CONCEPT_TYPE_ENTITY_SET ? [context.concept.originId] : [],
     drillups: [],
 
     from: context.version,
@@ -118,7 +141,7 @@ function mapDdfConceptsToWsModel(entry: any, context: any): void {
     gid: transformedEntry.concept,
 
     title: transformedEntry.name || transformedEntry.title,
-    type: conceptsUtils.isTimeConceptType(transformedEntry.concept_type) ? 'entity_domain' : transformedEntry.concept_type,
+    type: conceptsUtils.isTimeConceptType(transformedEntry.concept_type) ? constants.CONCEPT_TYPE_ENTITY_DOMAIN : transformedEntry.concept_type,
 
     properties: transformedEntry,
 

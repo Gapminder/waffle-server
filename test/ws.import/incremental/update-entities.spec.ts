@@ -8,6 +8,7 @@ import {logger} from '../../../ws.config/log';
 
 import * as updateService from '../../../ws.import/incremental/update-entities';
 import {EntitiesRepositoryFactory} from '../../../ws.repository/ddf/entities/entities.repository';
+import { constants } from '../../../ws.utils/constants';
 
 const datasetId = 'DATASETID';
 const version = 1111111;
@@ -24,13 +25,13 @@ const domain = {
   originId: 'DOMAINID',
   properties: {
     concept: 'company',
-    concept_type: 'entity_domain',
+    concept_type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
     domain: null
   },
   subsetOf: [],
   title: undefined,
   to: 9007199254740991,
-  type: 'entity_domain'
+  type: constants.CONCEPT_TYPE_ENTITY_DOMAIN
 };
 
 const set1 = {
@@ -43,13 +44,13 @@ const set1 = {
   originId: 'ENTITYSETID',
   properties: {
     concept: 'company_size',
-    concept_type: 'entity_set',
+    concept_type: constants.CONCEPT_TYPE_ENTITY_SET,
     domain: 'company'
   },
   subsetOf: [],
   title: undefined,
   to: version,
-  type: 'entity_set'
+  type: constants.CONCEPT_TYPE_ENTITY_SET
 };
 
 const set2 = {
@@ -62,13 +63,13 @@ const set2 = {
   originId: 'ENTITYSETID',
   properties: {
     concept: 'company_scale',
-    concept_type: 'entity_set',
+    concept_type: constants.CONCEPT_TYPE_ENTITY_SET,
     domain: 'company'
   },
   subsetOf: [],
   title: undefined,
   to: 9007199254740991,
-  type: 'entity_set'
+  type: constants.CONCEPT_TYPE_ENTITY_SET
 };
 
 const set3 = {
@@ -81,13 +82,13 @@ const set3 = {
   originId: 'ENTITYSETID2',
   properties: {
     concept: 'english_speaking',
-    concept_type: 'entity_set',
+    concept_type: constants.CONCEPT_TYPE_ENTITY_SET,
     domain: 'company'
   },
   subsetOf: [],
   title: undefined,
   to: 9007199254740991,
-  type: 'entity_set'
+  type: constants.CONCEPT_TYPE_ENTITY_SET
 };
 
 const set4 = {
@@ -100,13 +101,13 @@ const set4 = {
   originId: 'ENTITYSETID3',
   properties: {
     concept: 'region',
-    concept_type: 'entity_domain',
+    concept_type: constants.CONCEPT_TYPE_ENTITY_DOMAIN,
     domain: null
   },
   subsetOf: [],
   title: undefined,
   to: 9007199254740991,
-  type: 'entity_domain'
+  type: constants.CONCEPT_TYPE_ENTITY_DOMAIN
 };
 
 const externalContextFixture: any = {

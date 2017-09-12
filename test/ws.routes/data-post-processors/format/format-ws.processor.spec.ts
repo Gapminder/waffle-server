@@ -17,6 +17,7 @@ describe('Format WS Processor', () => {
   describe('Datapoints formatting', () => {
     it('should invoke map an empty array of datapoints by format-ws processor', sandbox(function (done: Function) {
       const data = {
+        timeConcepts: {},
         concepts: [],
         entities: [],
         datasetName: 'DatasetName',
@@ -37,8 +38,11 @@ describe('Format WS Processor', () => {
       });
     }));
 
-    it('should invoke mapping a few datapoints by format-ws processor', sandbox(function (done: Function) {
+    it('should invoke mapping a few datapoints by format-ws processor', sandbox(function (done: Function): void {
       const data = {
+        timeConcepts: {
+          time: {gid: 'time', originId: 'C2'}
+        },
         concepts: [
           {gid: 'population', originId: 'C1'},
           {gid: 'time', originId: 'C2'},
@@ -49,23 +53,23 @@ describe('Format WS Processor', () => {
         entities: [
           {gid: 'usa', originId: 'E1', domain: 'C3', sets: ['C4']},
           {gid: 'ukraine', originId: 'E2', domain: 'C3', sets: ['C4']},
-          {gid: '2000', originId: 'E3', domain: 'C2', sets: []},
-          {gid: '1800', originId: 'E4', domain: 'C2', sets: []},
-          {gid: '1900', originId: 'E5', domain: 'C2', sets: []},
-          {gid: '2100', originId: 'E6', domain: 'C2', sets: []}
+          {gid: '2000', parsedProperties: {time: {millis: 946684800000, timeType: 'YEAR_TYPE'}}, originId: 'E3', domain: 'C2', sets: []},
+          {gid: '1800', parsedProperties: {time: {millis: -5364662400000, timeType: 'YEAR_TYPE'}}, originId: 'E4', domain: 'C2', sets: []},
+          {gid: '1900', parsedProperties: {time: {millis: -2208988800000, timeType: 'YEAR_TYPE'}}, originId: 'E5', domain: 'C2', sets: []},
+          {gid: '2100', parsedProperties: {time: {millis: 4102444800000, timeType: 'YEAR_TYPE'}}, originId: 'E6', domain: 'C2', sets: []}
         ],
         datasetName: 'DatasetName',
         datasetVersionCommit: 'Version',
         headers: ['population', 'country', 'time', 'population2'],
         datapoints: [
-          {indicators: [{properties: {population: '123'}, measure: 'C1'}], _id: ['E2', 'E3']},
-          {indicators: [{properties: {population: '234'}, measure: 'C1'}, {properties: {population2: '234'}, measure: 'C5'}], _id: ['E3', 'E1']},
-          {indicators: [{properties: {population: '345'}, measure: 'C1'}, {properties: {population2: '345'}, measure: 'C5'}], _id: ['E2', 'E4']},
-          {indicators: [{properties: {population: '456'}, measure: 'C1'}, {properties: {population2: '456'}, measure: 'C5'}], _id: ['E1', 'E4']},
-          {indicators: [{properties: {population2: '567'}, measure: 'C5'}, {properties: {population: '567'}, measure: 'C1'}], _id: ['E5', 'E1']},
-          {indicators: [{properties: {population: '678'}, measure: 'C1'}], _id: ['E5', 'E2']},
-          {indicators: [{properties: {population2: '678'}, measure: 'C5'}], _id: ['E6', 'E2']},
-          {indicators: [{properties: {population2: '678'}, measure: 'C5'}], _id: ['E6', 'E1']}
+          {indicators: [{properties: {population: '123'}, measure: 'C1'}], _id: {dimensions: ['E2'], time: {millis: 946684800000, timeType: 'YEAR_TYPE'}}},
+          {indicators: [{properties: {population: '234'}, measure: 'C1'}, {properties: {population2: '234'}, measure: 'C5'}], _id: {dimensions: ['E1'], time: {millis: 946684800000, timeType: 'YEAR_TYPE'}}},
+          {indicators: [{properties: {population: '345'}, measure: 'C1'}, {properties: {population2: '345'}, measure: 'C5'}], _id: {dimensions: ['E2'], time: {millis: -5364662400000, timeType: 'YEAR_TYPE'}}},
+          {indicators: [{properties: {population: '456'}, measure: 'C1'}, {properties: {population2: '456'}, measure: 'C5'}], _id: {dimensions: ['E1'], time: {millis: -5364662400000, timeType: 'YEAR_TYPE'}}},
+          {indicators: [{properties: {population2: '567'}, measure: 'C5'}, {properties: {population: '567'}, measure: 'C1'}], _id: {dimensions: ['E1'], time: {millis: -2208988800000, timeType: 'YEAR_TYPE'}}},
+          {indicators: [{properties: {population: '678'}, measure: 'C1'}], _id: {dimensions: ['E2'], time: {millis: -2208988800000, timeType: 'YEAR_TYPE'}}},
+          {indicators: [{properties: {population2: '678'}, measure: 'C5'}], _id: {dimensions: ['E2'], time: {millis: 4102444800000, timeType: 'YEAR_TYPE'}}},
+          {indicators: [{properties: {population2: '678'}, measure: 'C5'}], _id: {dimensions: ['E1'], time: {millis: 4102444800000, timeType: 'YEAR_TYPE'}}}
         ],
         query: {}
       };
@@ -86,6 +90,7 @@ describe('Format WS Processor', () => {
       };
 
       return mapDatapoints(data).toCallback((error, result) => {
+        expect(error).to.not.exist;
         expect(result).to.be.deep.equal(expectedData);
         return done();
       });
@@ -93,6 +98,9 @@ describe('Format WS Processor', () => {
 
     it('should invoke map a few datapoints by format-ws processor with ordering', sandbox(function (done: Function) {
       const data = {
+        timeConcepts: {
+          time: {gid: 'time', originId: 'C2'}
+        },
         concepts: [
           {gid: 'population', originId: 'C1'},
           {gid: 'time', originId: 'C2'},
@@ -103,23 +111,23 @@ describe('Format WS Processor', () => {
         entities: [
           {gid: 'usa', originId: 'E1', domain: 'C3', sets: ['C4']},
           {gid: 'ukraine', originId: 'E2', domain: 'C3', sets: ['C4']},
-          {gid: '2000', originId: 'E3', domain: 'C2', sets: []},
-          {gid: '1800', originId: 'E4', domain: 'C2', sets: []},
-          {gid: '1900', originId: 'E5', domain: 'C2', sets: []},
-          {gid: '2100', originId: 'E6', domain: 'C2', sets: []}
+          {gid: '2000', parsedProperties: {time: {millis: 946684800000, timeType: 'YEAR_TYPE'}}, originId: 'E3', domain: 'C2', sets: []},
+          {gid: '1800', parsedProperties: {time: {millis: -5364662400000, timeType: 'YEAR_TYPE'}}, originId: 'E4', domain: 'C2', sets: []},
+          {gid: '1900', parsedProperties: {time: {millis: -2208988800000, timeType: 'YEAR_TYPE'}}, originId: 'E5', domain: 'C2', sets: []},
+          {gid: '2100', parsedProperties: {time: {millis: 4102444800000, timeType: 'YEAR_TYPE'}}, originId: 'E6', domain: 'C2', sets: []}
         ],
         datasetName: 'DatasetName',
         datasetVersionCommit: 'Version',
         headers: ['population', 'country', 'time', 'population2'],
         datapoints: [
-          {indicators: [{properties: {population: '123'}, measure: 'C1'}], _id: ['E2', 'E3']},
-          {indicators: [{properties: {population2: '234'}, measure: 'C5'}, {properties: {population: '234'}, measure: 'C1'}], _id: ['E3', 'E1']},
-          {indicators: [{properties: {population2: '345'}, measure: 'C5'}, {properties: {population: '345'}, measure: 'C1'}], _id: ['E2', 'E4']},
-          {indicators: [{properties: {population2: '456'}, measure: 'C5'}, {properties: {population: '456'}, measure: 'C1'}], _id: ['E1', 'E4']},
-          {indicators: [{properties: {population: '567'}, measure: 'C1'}, {properties: {population2: '567'}, measure: 'C5'}], _id: ['E5', 'E1']},
-          {indicators: [{properties: {population: '678'}, measure: 'C1'}], _id: ['E5', 'E2']},
-          {indicators: [{properties: {population2: '678'}, measure: 'C5'}], _id: ['E6', 'E2']},
-          {indicators: [{properties: {population2: '678'}, measure: 'C5'}], _id: ['E6', 'E1']}
+          {indicators: [{properties: {population: '123'}, measure: 'C1'}], _id: {dimensions: ['E2'], time: {millis: 946684800000, timeType: 'YEAR_TYPE'}}},
+          {indicators: [{properties: {population2: '234'}, measure: 'C5'}, {properties: {population: '234'}, measure: 'C1'}], _id: {dimensions: ['E1'], time: {millis: 946684800000, timeType: 'YEAR_TYPE'}}},
+          {indicators: [{properties: {population2: '345'}, measure: 'C5'}, {properties: {population: '345'}, measure: 'C1'}], _id: {dimensions: ['E2'], time: {millis: -5364662400000, timeType: 'YEAR_TYPE'}}},
+          {indicators: [{properties: {population2: '456'}, measure: 'C5'}, {properties: {population: '456'}, measure: 'C1'}], _id: {dimensions: ['E1'], time: {millis: -5364662400000, timeType: 'YEAR_TYPE'}}},
+          {indicators: [{properties: {population: '567'}, measure: 'C1'}, {properties: {population2: '567'}, measure: 'C5'}], _id: {dimensions: ['E1'], time: {millis: -2208988800000, timeType: 'YEAR_TYPE'}}},
+          {indicators: [{properties: {population: '678'}, measure: 'C1'}], _id: {dimensions: ['E2'], time: {millis: -2208988800000, timeType: 'YEAR_TYPE'}}},
+          {indicators: [{properties: {population2: '678'}, measure: 'C5'}], _id: {dimensions: ['E2'], time: {millis: 4102444800000, timeType: 'YEAR_TYPE'}}},
+          {indicators: [{properties: {population2: '678'}, measure: 'C5'}], _id: {dimensions: ['E1'], time: {millis: 4102444800000, timeType: 'YEAR_TYPE'}}}
         ],
         query: {
           order_by: [{country: 'asc'}, {time: 'desc'}]
@@ -149,6 +157,9 @@ describe('Format WS Processor', () => {
 
     it('should invoke map a few datapoints by format-ws processor with translations', sandbox(function (done: Function) {
       const data = {
+        timeConcepts: {
+          time: {gid: 'time', originId: 'C2'}
+        },
         concepts: [
           {gid: 'population', originId: 'C1'},
           {gid: 'time', originId: 'C2'},
@@ -160,22 +171,22 @@ describe('Format WS Processor', () => {
         entities: [
           {gid: 'usa', originId: 'E1', domain: 'C3', sets: ['C4']},
           {gid: 'ukraine', originId: 'E2', domain: 'C3', sets: ['C4']},
-          {gid: '2000', originId: 'E3', domain: 'C2', sets: []},
-          {gid: '1800', originId: 'E4', domain: 'C2', sets: []},
-          {gid: '1900', originId: 'E5', domain: 'C2', sets: []},
-          {gid: '2100', originId: 'E6', domain: 'C2', sets: []}
+          {gid: '2000', parsedProperties: {time: {millis: 946684800000, timeType: 'YEAR_TYPE'}}, originId: 'E3', domain: 'C2', sets: []},
+          {gid: '1800', parsedProperties: {time: {millis: -5364662400000, timeType: 'YEAR_TYPE'}}, originId: 'E4', domain: 'C2', sets: []},
+          {gid: '1900', parsedProperties: {time: {millis: -2208988800000, timeType: 'YEAR_TYPE'}}, originId: 'E5', domain: 'C2', sets: []},
+          {gid: '2100', parsedProperties: {time: {millis: 4102444800000, timeType: 'YEAR_TYPE'}}, originId: 'E6', domain: 'C2', sets: []}
         ],
         datasetName: 'DatasetName',
         language: 'nl-nl',
         datasetVersionCommit: 'Version',
         headers: ['population', 'country', 'time', 'name'],
         datapoints: [
-          {indicators: [{properties: {population: '123'}, measure: 'C1'}, {properties: { name: 'Population' }, measure: 'C6', languages: {'nl-nl': {name: 'Bevolking'}}}], _id: ['E2', 'E3']},
-          {indicators: [{properties: { name: 'Population' }, measure: 'C6', languages: {'nl-nl': {name: 'Bevolking'}}}, {properties: {population: '234'}, measure: 'C1'}], _id: ['E3', 'E1']},
-          {indicators: [{properties: {population: '345'}, measure: 'C1'}, {properties: { name: 'Dimensions' }, measure: 'C6', languages: {'nl-nl': {name: 'Dimensies'}}}], _id: ['E2', 'E4']},
-          {indicators: [{properties: { name: null }, measure: 'C6'}, {properties: {population: '456'}, measure: 'C1'}], _id: ['E1', 'E4']},
-          {indicators: [{properties: {population: '567'}, measure: 'C1'}], _id: ['E5', 'E1']},
-          {indicators: [{properties: {population: '678'}, measure: 'C1'}], _id: ['E5', 'E2']}
+          {indicators: [{properties: {population: '123'}, measure: 'C1'}, {properties: { name: 'Population' }, measure: 'C6', languages: {'nl-nl': {name: 'Bevolking'}}}], _id: {dimensions: ['E2'], time: {millis: 946684800000, timeType: 'YEAR_TYPE'}}},
+          {indicators: [{properties: { name: 'Population' }, measure: 'C6', languages: {'nl-nl': {name: 'Bevolking'}}}, {properties: {population: '234'}, measure: 'C1'}], _id: {dimensions: ['E1'], time: {millis: 946684800000, timeType: 'YEAR_TYPE'}}},
+          {indicators: [{properties: {population: '345'}, measure: 'C1'}, {properties: { name: 'Dimensions' }, measure: 'C6', languages: {'nl-nl': {name: 'Dimensies'}}}], _id: {dimensions: ['E2'], time: {millis: -5364662400000, timeType: 'YEAR_TYPE'}}},
+          {indicators: [{properties: { name: null }, measure: 'C6'}, {properties: {population: '456'}, measure: 'C1'}], _id: {dimensions: ['E1'], time: {millis: -5364662400000, timeType: 'YEAR_TYPE'}}},
+          {indicators: [{properties: {population: '567'}, measure: 'C1'}], _id: {dimensions: ['E1'], time: {millis: -2208988800000, timeType: 'YEAR_TYPE'}}},
+          {indicators: [{properties: {population: '678'}, measure: 'C1'}], _id: {dimensions: ['E2'], time: {millis: -2208988800000, timeType: 'YEAR_TYPE'}}}
         ],
         query: {}
       };

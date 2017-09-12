@@ -1,6 +1,7 @@
 import { e2eEnv } from '../../../e2e.env';
 import * as cliUtils from '../../../cli.utils';
 import * as e2eUtils from '../../../e2e.utils';
+import { constants } from '../../../../ws.utils/constants';
 
 const versions = new Map<string, string>();
 
@@ -50,17 +51,17 @@ describe('Multiple datasets in WS', function() {
     const expectedResultDataset1 = {
       headers:['concept', 'concept_type'],
       rows: [
-        ['company_size', 'entity_set'],
-        ['english_speaking', 'entity_set'],
-        ['foundation', 'entity_set']
+        ['company_size', constants.CONCEPT_TYPE_ENTITY_SET],
+        ['english_speaking', constants.CONCEPT_TYPE_ENTITY_SET],
+        ['foundation', constants.CONCEPT_TYPE_ENTITY_SET]
       ]
     };
 
     const expectedResultDataset2 = {
       headers:['concept', 'concept_type'],
       rows: [
-        ['company_scale', 'entity_set'],
-        ['english_speaking', 'entity_set']
+        ['company_scale', constants.CONCEPT_TYPE_ENTITY_SET],
+        ['english_speaking', constants.CONCEPT_TYPE_ENTITY_SET]
       ]
     };
 

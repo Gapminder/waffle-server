@@ -1,10 +1,22 @@
+import * as _ from 'lodash';
+
 const CONCEPTS = 'concepts';
 const ENTITIES = 'entities';
 const DATAPOINTS = 'datapoints';
 const TRANSLATIONS = 'translations';
 
-const TIME_CONCEPT_TYPES = ['time', 'year', 'week', 'month', 'day', 'quarter'];
-const DEFAULT_ENTITY_GROUP_TYPES = ['entity_domain', 'entity_set', ...TIME_CONCEPT_TYPES];
+const MAPPER_TIME_CONCEPT_TYPES = {
+  year: 'YEAR_TYPE',
+  time: 'YEAR_TYPE',
+  week: 'WEEK_TYPE',
+  month: 'MONTH_TYPE',
+  day: 'DATE_TYPE',
+  quarter: 'QUARTER_TYPE'
+};
+const TIME_CONCEPT_TYPES = _.keys(MAPPER_TIME_CONCEPT_TYPES);
+const CONCEPT_TYPE_ENTITY_DOMAIN = 'entity_domain';
+const CONCEPT_TYPE_ENTITY_SET = 'entity_set';
+const DEFAULT_ENTITY_GROUP_TYPES = [CONCEPT_TYPE_ENTITY_DOMAIN, CONCEPT_TYPE_ENTITY_SET, ...TIME_CONCEPT_TYPES];
 
 const constants: any = {
   MAX_VERSION: Number.MAX_SAFE_INTEGER,
@@ -29,10 +41,13 @@ const constants: any = {
   GID: 'gid',
   ORIGIN_ID: 'originId',
   IS_OPERATOR: 'is--',
-  CONCEPT_TYPE: 'type',
+  PROPERTIES: 'properties',
+  PARSED_PROPERTIES: 'parsedProperties',
+  TYPE: 'type',
+  CONCEPT_TYPE: 'concept_type',
   CONCEPT_TYPE_MEASURE: 'measure',
-  CONCEPT_TYPE_ENTITY_DOMAIN: 'entity_domain',
-  CONCEPT_TYPE_ENTITY_SET: 'entity_set',
+  CONCEPT_TYPE_ENTITY_DOMAIN,
+  CONCEPT_TYPE_ENTITY_SET,
 
   DEFAULT_USER_EMAIL: 'dev@gapminder.org',
 

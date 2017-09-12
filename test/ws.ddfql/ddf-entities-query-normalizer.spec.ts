@@ -3,19 +3,20 @@ import 'mocha';
 import { expect } from 'chai';
 
 import * as ddfQueryNormalizer from '../../ws.ddfql/ddf-entities-query-normalizer';
+import { constants } from '../../ws.utils/constants';
 
 const concepts = [
   { gid: 'time', properties: { concept_type: 'time' } },
   { gid: 'quarter', properties: { concept_type: 'quarter' } },
-  { gid: 'geo', originId: '17a3470d3a8c9b37009b9bf9', properties: { concept_type: 'entity_domain' } },
-  { gid: 'country', originId: '77a3470d3a8c9b37009b9bf9', properties: { concept_type: 'entity_set' } },
-  { gid: 'company', originId: '87a3470d3a8c9b37009b9bf9', properties: { concept_type: 'entity_set' } },
-  { gid: 'english_speaking', originId: '97a3470d3a8c9b37009b9bf9', properties: { concept_type: 'entity_set' } },
-  { gid: 'world_4region', properties: { concept_type: 'entity_set' } },
-  { gid: 'main_religion', properties: { concept_type: 'entity_set' } },
-  { gid: 'landlocked', properties: { concept_type: 'entity_set' } },
-  { gid: 'latitude', properties: { concept_type: 'measure' } },
-  { gid: 'longitude', properties: { concept_type: 'measure' } },
+  { gid: 'geo', originId: '17a3470d3a8c9b37009b9bf9', properties: { concept_type: constants.CONCEPT_TYPE_ENTITY_DOMAIN } },
+  { gid: 'country', originId: '77a3470d3a8c9b37009b9bf9', properties: { concept_type: constants.CONCEPT_TYPE_ENTITY_SET } },
+  { gid: 'company', originId: '87a3470d3a8c9b37009b9bf9', properties: { concept_type: constants.CONCEPT_TYPE_ENTITY_SET } },
+  { gid: 'english_speaking', originId: '97a3470d3a8c9b37009b9bf9', properties: { concept_type: constants.CONCEPT_TYPE_ENTITY_SET } },
+  { gid: 'world_4region', properties: { concept_type: constants.CONCEPT_TYPE_ENTITY_SET } },
+  { gid: 'main_religion', properties: { concept_type: constants.CONCEPT_TYPE_ENTITY_SET } },
+  { gid: 'landlocked', properties: { concept_type: constants.CONCEPT_TYPE_ENTITY_SET } },
+  { gid: 'latitude', properties: { concept_type: constants.CONCEPT_TYPE_ENTITY_SET } },
+  { gid: 'longitude', properties: { concept_type: constants.CONCEPT_TYPE_ENTITY_SET } },
   { gid: 'color' },
   { gid: 'name' },
   { gid: 'gwid' }

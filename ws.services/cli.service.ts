@@ -76,7 +76,8 @@ function importDataset(params: any, onDatasetImported: Function): void {
 }
 
 function _findDataset(pipe: any, done: Function): any {
-  return DatasetsRepository.findByGithubUrl(pipe.github, (error: string, dataset: any) => {
+  const path = pipe.github;
+  return DatasetsRepository.findByGithubUrl(path, (error: string, dataset: any) => {
     if (error) {
       return done(error);
     }

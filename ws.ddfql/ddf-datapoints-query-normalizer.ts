@@ -1,7 +1,8 @@
 import * as _ from 'lodash';
 import * as traverse from 'traverse';
-import * as ddfQueryUtils from './ddf-query-utils';
 import * as conceptUtils from '../ws.import/utils/concepts.utils';
+import * as ddfQueryUtils from './ddf-query-utils';
+import { constants } from '../ws.utils/constants';
 
 export {
   normalizeDatapoints,
@@ -10,19 +11,51 @@ export {
   substituteDatapointJoinLinks
 };
 
-function substituteDatapointJoinLinks(query: any, linksInJoinToValues: any): any {
+function substituteDatapointJoinLinks(query: any, linksInJoinToValues: any, timeConceptsGidsByOriginIds: any): any {
   const safeQuery = ddfQueryUtils.toSafeQuery(query);
 
   traverse(safeQuery.where).forEach(function (link: string): void {
     /* tslint:disable: no-invalid-this */
     if (safeQuery.join.hasOwnProperty(link)) {
-      const id = linksInJoinToValues[link];
-      this.update(id ? { $in: id } : link);
+      const isTimeType = _.has(timeConceptsGidsByOriginIds, safeQuery.join[link].domain);
+
+      if (isTimeType) {
+        const conceptGid = _.get(timeConceptsGidsByOriginIds, `${safeQuery.join[link].domain}.${constants.GID}`, '');
+
+        normalizeTimeValue(safeQuery.join[link], conceptGid);
+
+        ddfQueryUtils.replaceValueOnPath({
+          key: this.key,
+          path: this.path,
+          normalizedValue: _.omit(safeQuery.join[link], ['domain']),
+          queryFragment: safeQuery.where
+        });
+      } else {
+        const id = linksInJoinToValues[link];
+        this.update(id ? { $in: id } : link);
+      }
     }
     /* tslint:enable: no-invalid-this */
   });
 
   return safeQuery;
+}
+
+function normalizeTimeValue(link: any, conceptGid: string): void {
+  traverse(link).forEach(function (): void {
+    if (_.includes(this.key, `parsedProperties.${conceptGid}`)) {
+      const newPath = _.map(this.path, (subPath: string) => _.replace(subPath, `parsedProperties.${conceptGid}`, 'time'));
+      traverse(link).set(newPath, this.node);
+      this.remove();
+      // this.update(item);
+      // ddfQueryUtils.replaceValueOnPath({
+      //   key: this.key,
+      //   path: _.map(this.path, (subPath: string) => _.replace(subPath, `parsedProperties.${conceptGid}`, 'time')),
+      //   normalizedValue: item,
+      //   queryFragment: link
+      // });
+    }
+  });
 }
 
 function normalizeDatapoints(query: any, concepts: any): any {
@@ -97,11 +130,17 @@ function ___extendWhereWithDefaultClause(query: any, options: any): void {
 
   query.where = {
     $and: [
-      { dimensions: { $size: _.size(query.select.key) } },
+      { dimensions: { $size: _.size(query.select.key) - _.chain(query.select.key).intersection(options.timeConceptsGids).size().value() } },
       { dimensionsConcepts: { $all: _.map(query.select.key, (conceptGid: string) => options.conceptOriginIdsByGids[conceptGid]) } },
       { measure: { $in: query.select.value } }
     ]
   };
+
+  const hasTimeConceptInQueryHeader = _.some(query.select.key, (header: string) => _.includes(options.timeConceptsGids, header));
+
+  if (!hasTimeConceptInQueryHeader) {
+    query.where.$and.push({time: null});
+  }
 
   if (!_.isEmpty(subWhere)) {
     query.where.$and.push(subWhere);
@@ -160,17 +199,19 @@ function __normalizeJoin(query: any, options: any): void {
     }
 
     if (this.key === 'key') {
-      const conceptType = _.get(options, `conceptsByGids.${filterValue}.properties.concept_type`);
-      const domainOrSetOriginId = _.get(options, `conceptsByGids.${filterValue}.originId`);
+      const conceptType = _.get(options, `conceptsByGids.${filterValue}.${constants.PROPERTIES}.${constants.CONCEPT_TYPE}`);
+      const domainOrSetOriginId = _.get(options, `conceptsByGids.${filterValue}.${constants.ORIGIN_ID}`);
 
-      if (conceptType === 'entity_domain' || conceptType !== 'entity_set') {
+      if (conceptType === constants.CONCEPT_TYPE_ENTITY_SET) {
+        normalizedFilter = {
+          sets: domainOrSetOriginId
+        };
+      } else if (conceptType === constants.CONCEPT_TYPE_ENTITY_DOMAIN || _.includes(constants.TIME_CONCEPT_TYPES, conceptType)) {
         normalizedFilter = {
           domain: domainOrSetOriginId
         };
       } else {
-        normalizedFilter = {
-          sets: domainOrSetOriginId
-        };
+        normalizedFilter = {};
       }
     }
 

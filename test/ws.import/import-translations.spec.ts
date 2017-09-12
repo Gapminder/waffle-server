@@ -54,7 +54,7 @@ describe('Import translations', () => {
   describe('Import concepts translations', () => {
     const conceptTranslation = {
       concept: 'english_speaking',
-      concept_type: 'entity_set',
+      concept_type: constants.CONCEPT_TYPE_ENTITY_SET,
       domain: 'company',
       additional_column: 'Engels sprekende'
     };

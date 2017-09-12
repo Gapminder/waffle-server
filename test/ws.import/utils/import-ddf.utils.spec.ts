@@ -12,6 +12,7 @@ import { ConceptsRepositoryFactory } from '../../../ws.repository/ddf/concepts/c
 import { DatasetTransactionsRepository } from '../../../ws.repository/ddf/dataset-transactions/dataset-transactions.repository';
 import { DatasetsRepository } from '../../../ws.repository/ddf/datasets/datasets.repository';
 import { logger } from '../../../ws.config/log';
+import { constants } from '../../../ws.utils/constants';
 
 const sandbox = sinonTest.configureTest(sinon);
 
@@ -48,7 +49,7 @@ describe('Ddf import utils', () => {
       {
         gid: 'geo',
         properties: {
-          concept_type: 'entity_domain'
+          concept_type: constants.CONCEPT_TYPE_ENTITY_DOMAIN
         }
       }
     ];
@@ -82,7 +83,7 @@ describe('Ddf import utils', () => {
         geo: {
           gid: 'geo',
           properties: {
-            concept_type: 'entity_domain'
+            concept_type: constants.CONCEPT_TYPE_ENTITY_DOMAIN
           }
         }
       });
@@ -147,7 +148,7 @@ describe('Ddf import utils', () => {
       {
         gid: 'geo',
         properties: {
-          concept_type: 'entity_domain'
+          concept_type: constants.CONCEPT_TYPE_ENTITY_DOMAIN
         }
       }
     ];
@@ -169,7 +170,7 @@ describe('Ddf import utils', () => {
         geo: {
           gid: 'geo',
           properties: {
-            concept_type: 'entity_domain'
+            concept_type: constants.CONCEPT_TYPE_ENTITY_DOMAIN
           }
         }
       });
