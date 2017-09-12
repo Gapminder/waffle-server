@@ -3,7 +3,7 @@ import * as async from 'async';
 import { logger } from '../../../ws.config/log';
 
 import * as mongoose from 'mongoose';
-import {AggregationCursor, MongoCallback, MongoError} from 'mongodb';
+import { AggregationCursor, BulkWriteResult, MongoCallback, MongoError } from 'mongodb';
 
 import * as ddfImportUtils from '../../../ws.import/utils/import-ddf.utils';
 import { VersionedModelRepositoryFactory } from '../../versioned-model-repository-factory';
@@ -40,12 +40,13 @@ class DataPointsRepository extends VersionedModelRepository {
     const executeDatapointsBulk = new Promise((resolve: any, reject: any) => {
       const bulk = mongoose.connection.collection('datapoints').initializeUnorderedBulkOp();
       documentsForStoring.forEach((document: any) => bulk.insert(this.setSingleDocumentId(document)));
-      bulk.execute((error: string, response: any) => {
+      const cb: MongoCallback<BulkWriteResult> = (error: MongoError, response: any) => {
         if (error) {
           return reject(error);
         }
         resolve(response);
-      });
+      };
+      bulk.execute(cb);
     });
 
     if (onCreated) {

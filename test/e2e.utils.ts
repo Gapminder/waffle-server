@@ -35,57 +35,38 @@ function sendDdfqlRequest(ddfql: any, onResponseReceived: Function): void {
     .end(onResponseReceived);
 }
 
-function startWaffleServer(done: Function): void {
-  async.series([
-    (_done: Function) => {
-      async.setImmediate(() => {
-        setUpEnvironmentVariables();
-        return _done(null);
-      });
-    },
-    dropMongoDb,
-    stopWaffleServer,
-    (_done: Function) => {
-      if (START_WAFFLE_SERVER) {
-        return shell.exec(`INNER_PORT=${e2eEnv.wsPort} FOREVER_ROOT=${__dirname} ./node_modules/.bin/forever start --fifo -t -o ./logs/forever.output.log -e ./logs/forever.error.log -a --uid "${e2eEnv.wsUid}" server.js`, (code: number, stdout: string, stderr: string) => {
-          if (code > 0) {
-            logger.error('startWaffleServer', code, stdout, stderr);
-            return _done(stderr);
-          }
-          return _done(null);
-        });
-      }
-      return async.setImmediate(() => _done(null));
-    }
-  ], (error: string) => {
-    return done(error);
-  });
-}
-
-function stopWaffleServer(done: Function): any {
+function startWaffleServer(): void {
+  setUpEnvironmentVariables();
   if (START_WAFFLE_SERVER) {
-    return shell.exec(`./node_modules/.bin/forever stopall`, (code: number, stdout: string, stderr: string) => {
-      if (code > 1) {
-        logger.error('stopWaffleServer', code, stdout, stderr);
-        return done(stderr);
-      }
-      return done(null);
-    });
+    shell.exec(`./node_modules/.bin/forever start --fifo -o ./logs/forever.output.log -e ./logs/forever.error.log -a --uid "${e2eEnv.wsUid}" server.js`);
+
+    if (shell.error()) {
+      logger.error('startWaffleServer error:', shell.error());
+      shell.exec(`./node_modules/.bin/forever list`);
+    }
   }
-  return async.setImmediate(() => done(null));
 }
 
-function dropMongoDb(done: Function): any {
-  if (DROP_MONGO_DATABASE) {
-    return shell.exec(`mongo ${e2eEnv.mongodb} --eval "db.dropDatabase()"`, (code: number, stdout: string, stderr: string) => {
-      if (code > 0) {
-        logger.error('dropMongoDb', code, stdout, stderr);
-        return done(stderr);
-      }
-      return done(null);
-    });
+function stopWaffleServer(done: Function): void {
+  if (START_WAFFLE_SERVER) {
+    shell.exec(`node -v`);
+    shell.exec(`./node_modules/.bin/forever list`);
+    shell.exec(`./node_modules/.bin/forever stop --uid "${e2eEnv.wsUid}" server.js`);
+
+    return done(shell.error());
   }
-  return async.setImmediate(() => done(null));
+
+  return done();
+}
+
+function dropMongoDb(done: Function): void {
+  if (DROP_MONGO_DATABASE) {
+    shell.exec(`mongo ${e2eEnv.mongodb} --eval "db.dropDatabase()"`);
+
+    return done(shell.error());
+  }
+
+  return done();
 }
 
 function setUpEnvironmentVariables(): void {
@@ -95,6 +76,7 @@ function setUpEnvironmentVariables(): void {
   shell.env['NODE_ENV'] = e2eEnv.nodeEnv;
   shell.env['DEFAULT_USER_PASSWORD'] = e2eEnv.pass;
   shell.env['INNER_PORT'] = e2eEnv.wsPort;
+  shell.env['FOREVER_ROOT'] = __dirname;
   /* tslint:enable:no-string-literal */
 }
 
@@ -106,7 +88,7 @@ function sendDdfqlRequestAndVerifyResponse(ddfql: any, expectedResponse: any, do
 
     if (response.body.success === false) {
       logger.error({obj: response});
-      throw Error(`DDFQL response contains an error: ${response.body.error}`);
+      throw Error(`DDFQL response contains an error: ${response.body.error || response.body.message}`);
     }
 
     const actualRows = sort ? _.sortBy(response.body.rows) : response.body.rows;
