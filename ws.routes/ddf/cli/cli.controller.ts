@@ -380,7 +380,13 @@ function cleanRepos(req: any, res: any): void {
       return res.json(routeUtils.toErrorResponse(reposCleanError));
     }
 
-    return res.json(routeUtils.toMessageResponse('Repos folder was cleaned'));
+    return ddfImportUtils.cloneImportedDdfRepos()
+      .then(() => {
+        return res.json(routeUtils.toMessageResponse('Repos folder was cleaned and cloned successfully'));
+      })
+      .catch((reposCloneError: string) => {
+        return res.json(routeUtils.toErrorResponse(reposCloneError));
+      });
   });
 }
 

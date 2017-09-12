@@ -13,8 +13,7 @@ import * as datasetsService from '../../../../ws.services/datasets.service';
 import * as reposService from '../../../../ws.services/repos.service';
 import * as cacheUtils from '../../../../ws.utils/cache-warmup';
 import * as cliApi from 'waffle-server-import-cli';
-import {Request, Response} from 'express';
-import {json} from 'body-parser';
+import * as ddfImportUtils from '../../../../ws.import/utils/import-ddf.utils';
 
 const sandbox = sinonTest.configureTest(sinon);
 
@@ -253,13 +252,23 @@ describe('WS-CLI controller', () => {
   });
 
   describe('Clean repos folder', function() {
-    it('should clean without errors', sandbox(function () {
+    it('should clean and clone without errors', sandbox(function (done: Function): void {
       const toMessageResponseSpy = this.spy(routeUtils, 'toMessageResponse');
-      const expectedMessage = 'Repos folder was cleaned';
+      const expectedMessage = 'Repos folder was cleaned and cloned successfully';
       const expectedResponse = {success: true, message: expectedMessage};
 
-      const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliApi, 'cleanRepos').callsFake((path, onCleaned) => onCleaned(null));
+      const resJsonSpy = this.stub().callsFake((result: any) => {
+        expect(result).to.be.deep.equal(expectedResponse);
+
+        sinon.assert.calledOnce(cliServiceStub);
+        sinon.assert.calledOnce(ddfImportUtilsStub);
+        sinon.assert.calledOnce(toMessageResponseSpy);
+        sinon.assert.calledWithExactly(toMessageResponseSpy, expectedMessage);
+
+        return done();
+      });
+      const cliServiceStub = this.stub(cliApi, 'cleanRepos').callsArgWithAsync(1, null);
+      const ddfImportUtilsStub = this.stub(ddfImportUtils, 'cloneImportedDdfRepos').callsFake(() => Promise.resolve());
 
       const req = {
         user: {
@@ -272,12 +281,37 @@ describe('WS-CLI controller', () => {
       };
 
       cliController.cleanRepos(req, res);
+    }));
 
-      sinon.assert.calledOnce(cliServiceStub);
-      sinon.assert.calledOnce(resJsonSpy);
-      sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
-      sinon.assert.calledOnce(toMessageResponseSpy);
-      sinon.assert.calledWithExactly(toMessageResponseSpy, expectedMessage);
+    it('should clean without errors, but cloning was failed', sandbox(function (done: Function): void {
+      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'Repos folder was cleaned and cloned successfully';
+      const expectedResponse = {success: false, error: expectedError};
+
+      const resJsonSpy = this.stub().callsFake((result: any) => {
+        expect(result).to.be.deep.equal(expectedResponse);
+
+        sinon.assert.calledOnce(cliServiceStub);
+        sinon.assert.calledOnce(ddfImportUtilsStub);
+        sinon.assert.calledOnce(toErrorResponseSpy);
+        sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
+
+        return done();
+      });
+      const cliServiceStub = this.stub(cliApi, 'cleanRepos').callsArgWithAsync(1, null);
+      const ddfImportUtilsStub = this.stub(ddfImportUtils, 'cloneImportedDdfRepos').callsFake(() => Promise.reject(expectedError));
+
+      const req = {
+        user: {
+          name: 'fake'
+        }
+      };
+
+      const res = {
+        json: resJsonSpy
+      };
+
+      cliController.cleanRepos(req, res);
     }));
 
     it('should not clean repos folder cause user is not authenticated', sandbox(function () {
