@@ -1,17 +1,16 @@
 import { model, MongooseDocument } from 'mongoose';
 import * as _ from 'lodash';
-import { MongoCallback } from 'mongodb';
 import { MongooseCallback } from '../../repository.types';
 
 const Datasets = model('Datasets');
 
 class DatasetsRepository {
   public create(dataset: any, done: Function): any {
-    return Datasets.create(dataset, (error: string, model: MongooseDocument) => {
+    return Datasets.create(dataset, (error: string, modelInstance: MongooseDocument) => {
       if (error) {
         return done(error);
       }
-      return done(null, model.toObject());
+      return done(null, modelInstance.toObject());
     });
   }
 
@@ -35,8 +34,8 @@ class DatasetsRepository {
     return Datasets.find({createdBy: userId, isLocked: true}).lean().exec(done);
   }
 
-  public findByGithubUrl(githubUrl: any, done: Function): Promise<Object> {
-    return Datasets.findOne({path: githubUrl}).lean().exec(done);
+  public findByGithubUrl(githubUrl: string, done: Function): Promise<Object> {
+    return Datasets.findOne(this.handleMasterEndingForQuery('path', githubUrl)).lean().exec(done);
   }
 
   public findByNameAndUser(datasetName: any, userId: any, done: Function): Promise<Object> {
@@ -71,19 +70,24 @@ class DatasetsRepository {
     return Datasets.findOneAndUpdate(this.getDatasetNameQuery(datasetName, options), {accessToken}, {new: true}, done as any);
   }
 
-  private getDatasetNameQuery(name: string, options?: any) {
-    let query: any = {name};
-    if (_.endsWith(name, '#master')) {
-      query = {
-        $or: [{name}, {name: _.trimEnd(name, '#master')}]
-      };
-    }
+  private getDatasetNameQuery(name: string, options?: any): any {
+    const query = this.handleMasterEndingForQuery('name', name);
 
     if (_.isEmpty(options)) {
       return query;
     }
 
     return _.extend(query, options);
+  }
+
+  private handleMasterEndingForQuery(searchingField: string, searchingFieldValue: string): any {
+    if (_.endsWith(searchingFieldValue, '#master')) {
+      return {
+        $or: [{[searchingField]: searchingFieldValue}, {[searchingField]: _.replace(searchingFieldValue, /#master$/, '')}]
+      };
+    }
+
+    return {[searchingField]: searchingFieldValue};
   }
 }
 
