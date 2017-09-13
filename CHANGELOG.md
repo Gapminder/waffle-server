@@ -1,3 +1,17 @@
+<a name="2.9.1"></a>
+## [2.9.1](https://github.com/Gapminder/waffle-server/compare/v2.9.0...v2.9.1) (2017-09-13)
+
+
+### Bug Fixes
+
+* change pre-commit hook to pre-push hook ([0a65656](https://github.com/Gapminder/waffle-server/commit/0a65656))
+* fix dataset name handling ([37fd867](https://github.com/Gapminder/waffle-server/commit/37fd867))
+* fix e2e runner ([84ee475](https://github.com/Gapminder/waffle-server/commit/84ee475))
+* **db:** fix the way imported dataset name is resolved ([e62c2cd](https://github.com/Gapminder/waffle-server/commit/e62c2cd))
+* **repo-service:** fix options for cleaning repos dir function & add running cloning process of all imported repos ([ecfc4ab](https://github.com/Gapminder/waffle-server/commit/ecfc4ab))
+
+
+
 <a name="2.9.0"></a>
 # [2.9.0](https://github.com/Gapminder/waffle-server/compare/v2.8.0...v2.9.0) (2017-09-05)
 
