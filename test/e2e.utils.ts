@@ -50,8 +50,11 @@ function startWaffleServer(): void {
 function stopWaffleServer(done: Function): void {
   if (START_WAFFLE_SERVER) {
     shell.exec(`node -v`);
-    shell.exec(`./node_modules/.bin/forever list`);
-    shell.exec(`./node_modules/.bin/forever stop --uid "${e2eEnv.wsUid}" server.js`);
+    const list = shell.exec(`./node_modules/.bin/forever list`);
+
+    if (!_.includes(list.stdout, 'No forever processes running')) {
+      shell.exec(`./node_modules/.bin/forever stopall`);
+    }
 
     return done(shell.error());
   }
