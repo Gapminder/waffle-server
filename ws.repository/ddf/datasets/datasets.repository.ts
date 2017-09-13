@@ -83,7 +83,7 @@ class DatasetsRepository {
   private handleMasterEndingForQuery(searchingField: string, searchingFieldValue: string): any {
     if (_.endsWith(searchingFieldValue, '#master')) {
       return {
-        $or: [{[searchingField]: searchingFieldValue}, {[searchingField]: _.replace(searchingFieldValue, '#master$', '')}]
+        $or: [{[searchingField]: searchingFieldValue}, {[searchingField]: _.replace(searchingFieldValue, /#master$/, '')}]
       };
     }
 
