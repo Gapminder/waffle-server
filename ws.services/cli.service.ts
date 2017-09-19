@@ -12,6 +12,7 @@ import * as securityUtils from '../ws.utils/security';
 import * as transactionsService from './dataset-transactions.service';
 import * as datasetsService from './datasets.service';
 import * as reposService from './repos.service';
+import * as wsCli from 'waffle-server-import-cli';
 
 export {
   importDataset,
@@ -63,6 +64,7 @@ function importDataset(params: any, onDatasetImported: Function): void {
   return async.waterfall([
     async.constant(params),
     _findCurrentUser,
+    _transformDatasetRequest,
     _findDataset,
     _validateDatasetBeforeImport,
     _importDdfService,
@@ -73,6 +75,39 @@ function importDataset(params: any, onDatasetImported: Function): void {
     }
     return onDatasetImported(importError, context);
   });
+}
+
+function _transformDatasetRequest(pipe: any, done: Function): any {
+  pipe.github = _checkAndSetDefaultBranch(pipe.github);
+
+  _checkAndSetDefaultCommit(pipe, done);
+}
+
+function _checkAndSetDefaultBranch(githubUrl: string): string {
+  const trimmedGithubUrl = _.trimEnd(githubUrl, '#');
+  const isBranchExist = githubUrl.match(/#(.*)/) ? githubUrl.match(/#(.*)/)[0] : null;
+
+  if(!isBranchExist) {
+    return trimmedGithubUrl + '#master';
+  } else {
+    return githubUrl;
+  }
+}
+
+function _checkAndSetDefaultCommit(pipe: any, done: Function): any {
+  if(pipe.commit) {
+    return done(null, pipe);
+  } else {
+    wsCli.getCommitListByGithubUrl(pipe.github, (error: string, commits: string[]) => {
+      if (error) {
+        return done(error);
+      }
+
+      pipe.commit = commits[commits.length -1];
+
+      return done(null, pipe);
+    });
+  }
 }
 
 function _findDataset(pipe: any, done: Function): any {
