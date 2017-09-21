@@ -5,11 +5,13 @@ import * as routeUtils from '../../utils';
 import * as CliController from './cli.controller';
 import {ServiceLocator} from '../../../ws.service-locator/index';
 import {Application} from 'express';
+import * as passport from 'passport';
 
 function registerDdfCliRoutes(serviceLocator: ServiceLocator): Application {
   const router = express.Router();
 
   router.use(cors());
+  router.use(passport.initialize());
   router.use(compression());
 
   // authentication route should be defined before router.use(passport.authenticate('token'));
