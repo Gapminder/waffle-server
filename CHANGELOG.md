@@ -1,3 +1,13 @@
+<a name="2.9.2"></a>
+## [2.9.2](https://github.com/Gapminder/waffle-server/compare/v2.9.1...v2.9.2) (2017-09-21)
+
+
+### Bug Fixes
+
+* **passport:** use passport middleware just for cli routes & remove other unnecessary middlewares ([5afc1a0](https://github.com/Gapminder/waffle-server/commit/5afc1a0))
+
+
+
 <a name="2.9.1"></a>
 ## [2.9.1](https://github.com/Gapminder/waffle-server/compare/v2.9.0...v2.9.1) (2017-09-13)
 
