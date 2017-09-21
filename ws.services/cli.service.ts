@@ -85,7 +85,7 @@ function _transformDatasetRequest(pipe: any, done: Function): any {
 
 function _checkAndSetDefaultBranch(githubUrl: string): string {
   const trimmedGithubUrl = _.trimEnd(githubUrl, '#');
-  const isBranchExist = githubUrl.match(/#(.*)/) ? githubUrl.match(/#(.*)/)[0] : null;
+  const isBranchExist = trimmedGithubUrl.match(/#(.*)/) ? trimmedGithubUrl.match(/#(.*)/)[0] : null;
 
   if(!isBranchExist) {
     return trimmedGithubUrl + '#master';
