@@ -115,7 +115,7 @@ describe('WS-CLI service', () => {
         onTransactionCreated: () => {
         }
       },
-      github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git'
+      github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git#master'
     };
 
     const expectedUser = {
