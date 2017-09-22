@@ -64,7 +64,9 @@ function importDataset(params: any, onDatasetImported: Function): void {
   return async.waterfall([
     async.constant(params),
     _findCurrentUser,
-    _transformDatasetRequest,
+    _parseDefaultBranch,
+    _parseDefaultCommit,
+    _setDefaulParamsFromQuery,
     _findDataset,
     _validateDatasetBeforeImport,
     _importDdfService,
@@ -77,37 +79,41 @@ function importDataset(params: any, onDatasetImported: Function): void {
   });
 }
 
-function _transformDatasetRequest(pipe: any, done: Function): any {
-  pipe.github = _checkAndSetDefaultBranch(pipe.github);
-
-  _checkAndSetDefaultCommit(pipe, done);
-}
-
-function _checkAndSetDefaultBranch(githubUrl: string): string {
-  const trimmedGithubUrl = _.trimEnd(githubUrl, '#');
-  const isBranchExist = trimmedGithubUrl.match(/#(.*)/) ? trimmedGithubUrl.match(/#(.*)/)[0] : null;
+function _parseDefaultBranch(pipe: any, done: Function): any {
+  const {query: {github}} = pipe;
+  // this trim for cases like 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git#',
+  // where we have just '#' without exact branch
+  const trimmedGithubUrl = _.trimEnd(github, '#');
+  const isBranchExist = /#(.*)/.test(trimmedGithubUrl);
 
   if(!isBranchExist) {
-    return trimmedGithubUrl + '#master';
-  } else {
-    return githubUrl;
+    pipe.github = `${trimmedGithubUrl}#master`;
   }
+
+  return done(null, pipe);
 }
 
-function _checkAndSetDefaultCommit(pipe: any, done: Function): any {
-  if(pipe.commit) {
+function _parseDefaultCommit(pipe: any, done: Function): any {
+  const {query: {commit}} = pipe;
+  const github = pipe.github || pipe.query.github;
+
+  if(commit) {
     return done(null, pipe);
-  } else {
-    wsCli.getCommitListByGithubUrl(pipe.github, (error: string, commits: string[]) => {
-      if (error) {
-        return done(error);
-      }
-
-      pipe.commit = commits[commits.length -1];
-
-      return done(null, pipe);
-    });
   }
+
+  wsCli.getCommitListByGithubUrl(github, (error: string, commits: string[]) => {
+    if (error) {
+      return done(error);
+    }
+
+    pipe.commit = commits[commits.length -1];
+
+    return done(null, pipe);
+  });
+}
+
+function _setDefaulParamsFromQuery(pipe: any, done: Function): any {
+  return done(null,_.defaults(pipe, pipe.query));
 }
 
 function _findDataset(pipe: any, done: Function): any {

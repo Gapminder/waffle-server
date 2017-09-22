@@ -284,9 +284,9 @@ function updateIncrementally(req: any, res: any): void {
 }
 
 function importDataset(req: any, res: any): void {
-  const params = req.body;
+  const params = {query: req.body};
 
-  params.lifecycleHooks = {
+  params.query.lifecycleHooks = {
     onTransactionCreated: () => {
       if (!res.headersSent) {
         res.json(routeUtils.toMessageResponse('Dataset importing is in progress ...'));
@@ -303,7 +303,7 @@ function importDataset(req: any, res: any): void {
       return logger.error(importError);
     }
 
-    logger.info(`finished import for dataset '${params.github}' and commit '${params.commit}'`);
+    logger.info(`finished import for dataset '${params.query.github}' and commit '${params.query.commit}'`);
   });
 }
 

@@ -4,7 +4,7 @@ import {expect} from 'chai';
 import * as fetch from 'node-fetch';
 import * as shell from 'shelljs';
 import {e2eEnv} from '../../e2e.env';
-import {startWaffleServer as _startWaffleServer, stopWaffleServer, dropMongoDb, waitForDefaultUser} from '../../e2e.utils';
+import {startWaffleServer as _startWaffleServer, stopWaffleServer, dropMongoDb as _dropMongoDb, waitForDefaultUser as _waitForDefaultUser} from '../../e2e.utils';
 import * as path from 'path';
 
 const packageJson = require('../../../package-lock.json');
@@ -15,9 +15,11 @@ const dbDumpMasterLastCommitPath = path.resolve(__dirname, './fixtures/db-test-d
 const dbDumpDefaultLastCommitPath = path.resolve(__dirname, './fixtures/db-test-dump-default-last-commit-e6ef10e.gz');
 const dbDumpTwinLastCommitPath = path.resolve(__dirname, './fixtures/db-test-dump-twin-last-commit-9af6a48.gz');
 const dbDumpTempLastCommitPath = path.resolve(__dirname, './fixtures/db-test-dump-master-temp-last-commit-e6ef10e.gz');
+const dbDumpNotExisted = path.resolve(__dirname, './fixtures/db-test-dump-not-existed-repo.gz');
 
 expect(wsCLIVersion).to.not.empty;
 
+// Test cases for standard flow
 describe('Import flow: For DB with dumps (existed dataset)', () => {
   const errorMessageRegexp = /Dataset exists, cannot import same dataset twice/;
 
@@ -36,20 +38,40 @@ describe('Import flow: For DB with dumps (existed dataset)', () => {
       done();
     });
 
-    it('should not import existed dataset with branch and version', (done: Function) => {
-      expectErrorResponse({github: 'git@github.com:VS-work/ddf--ws-testing.git#master', commit: 'a003ffc'}, errorMessageRegexp, done);
+    it('should not import existed dataset with branch and version', async () => {
+      const query = {github: 'git@github.com:VS-work/ddf--ws-testing.git#master', commit: 'a003ffc'};
+      const {error, message} = await makeImportRequest(query);
+      expect(error).to.not.empty;
+      expect(message).to.not.exist;
+
+      expectErrorResponse(error, errorMessageRegexp);
     });
 
-    it('should not import existed dataset with branch, without version', (done: Function) => {
-      expectErrorResponse({github: 'git@github.com:VS-work/ddf--ws-testing.git#master'}, errorMessageRegexp, done);
+    it('should not import existed dataset with branch, without version', async() => {
+      const query = {github: 'git@github.com:VS-work/ddf--ws-testing.git#master'};
+      const {error, message} = await makeImportRequest(query);
+      expect(error).to.not.empty;
+      expect(message).to.not.exist;
+
+      expectErrorResponse(error, errorMessageRegexp);
     });
 
-    it('should not import existed dataset without branch and version if master branch had been already imported', (done: Function) => {
-      expectErrorResponse({github: 'git@github.com:VS-work/ddf--ws-testing.git'}, errorMessageRegexp, done);
+    it('should not import existed dataset without branch and version if master branch had been already imported', async() => {
+      const query = {github: 'git@github.com:VS-work/ddf--ws-testing.git'};
+      const {error, message} = await makeImportRequest(query);
+      expect(error).to.not.empty;
+      expect(message).to.not.exist;
+
+      expectErrorResponse(error, errorMessageRegexp);
     });
 
-    it('should not import existed dataset without branch and version (just with "#") if master branch had been already imported', (done: Function) => {
-      expectErrorResponse({github: 'git@github.com:VS-work/ddf--ws-testing.git#'}, errorMessageRegexp, done);
+    it('should not import existed dataset without branch and version (just with "#") if master branch had been already imported', async() => {
+      const query = {github: 'git@github.com:VS-work/ddf--ws-testing.git#'};
+      const {error, message} = await makeImportRequest(query);
+      expect(error).to.not.empty;
+      expect(message).to.not.exist;
+
+      expectErrorResponse(error, errorMessageRegexp);
     });
   });
 
@@ -60,20 +82,40 @@ describe('Import flow: For DB with dumps (existed dataset)', () => {
       done();
     });
 
-    it('should not import existed dataset with branch and version', (done: Function) => {
-      expectErrorResponse({github: 'git@github.com:VS-work/ddf--ws-testing.git#master', commit: 'a003ffc'}, errorMessageRegexp, done);
+    it('should not import existed dataset with branch and version', async () => {
+      const query = {github: 'git@github.com:VS-work/ddf--ws-testing.git#master', commit: 'a003ffc'};
+      const {error, message} = await makeImportRequest(query);
+      expect(error).to.not.empty;
+      expect(message).to.not.exist;
+
+      expectErrorResponse(error, errorMessageRegexp);
     });
 
-    it('should not import existed dataset with branch, without version', (done: Function) => {
-      expectErrorResponse({github: 'git@github.com:VS-work/ddf--ws-testing.git#master'}, errorMessageRegexp, done);
+    it('should not import existed dataset with branch, without version', async() => {
+      const query = {github: 'git@github.com:VS-work/ddf--ws-testing.git#master'};
+      const {error, message} = await makeImportRequest(query);
+      expect(error).to.not.empty;
+      expect(message).to.not.exist;
+
+      expectErrorResponse(error, errorMessageRegexp);
     });
 
-    it('should not import existed dataset without branch and version if master branch had been already imported', (done: Function) => {
-      expectErrorResponse({github: 'git@github.com:VS-work/ddf--ws-testing.git'}, errorMessageRegexp, done);
+    it('should not import existed dataset without branch and version if master branch had been already imported', async() => {
+      const query = {github: 'git@github.com:VS-work/ddf--ws-testing.git'};
+      const {error, message} = await makeImportRequest(query);
+      expect(error).to.not.empty;
+      expect(message).to.not.exist;
+
+      expectErrorResponse(error, errorMessageRegexp);
     });
 
-    it('should not import existed dataset without branch and version (just with "#") if master branch had been already imported', (done: Function) => {
-      expectErrorResponse({github: 'git@github.com:VS-work/ddf--ws-testing.git#'}, errorMessageRegexp, done);
+    it('should not import existed dataset without branch and version (just with "#") if master branch had been already imported', async() => {
+      const query = {github: 'git@github.com:VS-work/ddf--ws-testing.git#'};
+      const {error, message} = await makeImportRequest(query);
+      expect(error).to.not.empty;
+      expect(message).to.not.exist;
+
+      expectErrorResponse(error, errorMessageRegexp);
     });
   });
 
@@ -84,20 +126,66 @@ describe('Import flow: For DB with dumps (existed dataset)', () => {
       done();
     });
 
-    it('should not import existed dataset with branch and version', (done: Function) => {
-      expectErrorResponse({github: 'git@github.com:VS-work/ddf--ws-testing.git#master', commit: 'a003ffc'}, errorMessageRegexp, done);
+    it('should not import existed dataset with branch and version', async () => {
+      const query = {github: 'git@github.com:VS-work/ddf--ws-testing.git#master', commit: 'a003ffc'};
+      const {error, message} = await makeImportRequest(query);
+      expect(error).to.not.empty;
+      expect(message).to.not.exist;
+
+      expectErrorResponse(error, errorMessageRegexp);
     });
 
-    it('should not import existed dataset with branch, without version', (done: Function) => {
-      expectErrorResponse({github: 'git@github.com:VS-work/ddf--ws-testing.git#master'}, errorMessageRegexp, done);
+    it('should not import existed dataset with branch, without version', async() => {
+      const query = {github: 'git@github.com:VS-work/ddf--ws-testing.git#master'};
+      const {error, message} = await makeImportRequest(query);
+      expect(error).to.not.empty;
+      expect(message).to.not.exist;
+
+      expectErrorResponse(error, errorMessageRegexp);
     });
 
-    it('should not import existed dataset without branch and version if master branch had been already imported', (done: Function) => {
-      expectErrorResponse({github: 'git@github.com:VS-work/ddf--ws-testing.git'}, errorMessageRegexp, done);
+    it('should not import existed dataset without branch and version if master branch had been already imported', async() => {
+      const query = {github: 'git@github.com:VS-work/ddf--ws-testing.git'};
+      const {error, message} = await makeImportRequest(query);
+      expect(error).to.not.empty;
+      expect(message).to.not.exist;
+
+      expectErrorResponse(error, errorMessageRegexp);
     });
 
-    it('should not import existed dataset without branch and version (just with "#") if master branch had been already imported', (done: Function) => {
-      expectErrorResponse({github: 'git@github.com:VS-work/ddf--ws-testing.git#'}, errorMessageRegexp, done);
+    it('should not import existed dataset without branch and version (just with "#") if master branch had been already imported', async() => {
+      const query = {github: 'git@github.com:VS-work/ddf--ws-testing.git#'};
+      const {error, message} = await makeImportRequest(query);
+      expect(error).to.not.empty;
+      expect(message).to.not.exist;
+
+      expectErrorResponse(error, errorMessageRegexp);
+    });
+  });
+
+  describe('For dump with branch (#master-twin-for-e2e) - last commit', () => {
+    before((done: Function) => {
+      shell.exec(`mongorestore --drop --gzip --archive=${dbDumpTwinLastCommitPath}`);
+      expect(shell.error()).to.not.exist;
+      done();
+    });
+
+    it('should not import existed dataset with branch and version', async () => {
+      const query = {github: 'git@github.com:VS-work/ddf--ws-testing.git#master-twin-for-e2e', commit: '9af6a48'};
+      const {error, message} = await makeImportRequest(query);
+      expect(error).to.not.empty;
+      expect(message).to.not.exist;
+
+      expectErrorResponse(error, errorMessageRegexp);
+    });
+
+    it('should not import existed dataset with branch, without version', async() => {
+      const query = {github: 'git@github.com:VS-work/ddf--ws-testing.git#master-twin-for-e2e'};
+      const {error, message} = await makeImportRequest(query);
+      expect(error).to.not.empty;
+      expect(message).to.not.exist;
+
+      expectErrorResponse(error, errorMessageRegexp);
     });
   });
 });
@@ -117,16 +205,31 @@ describe('Import flow: For empty DB', () => {
     stopWaffleServer(done);
   });
 
-  it('should start import dataset with branch and version', (done: Function) => {
-    expectMessageResponse({github: 'git@github.com:VS-work/ddf--ws-testing.git#master',  commit: 'a003ffc'}, importMessageRegexp, done);
+  it('should start import dataset with branch and version', async() => {
+    const query = {github: 'git@github.com:VS-work/ddf--ws-testing.git#master', commit: 'a003ffc'};
+    const {error, message} = await makeImportRequest(query);
+    expect(message).to.not.empty;
+    expect(error).to.not.exist;
+
+    expectMessageResponse(message, importMessageRegexp);
   });
 
-  it('should start import dataset with branch, without version', (done: Function) => {
-    expectMessageResponse({github: 'git@github.com:VS-work/ddf--ws-testing.git#master'}, importMessageRegexp, done);
+  it('should start import dataset with branch, without version', async() => {
+    const query = {github: 'git@github.com:VS-work/ddf--ws-testing.git#master'};
+    const {error, message} = await makeImportRequest(query);
+    expect(message).to.not.empty;
+    expect(error).to.not.exist;
+
+    expectMessageResponse(message, importMessageRegexp);
   });
 
-  it('should start import dataset without branch and version', (done: Function) => {
-    expectMessageResponse({github: 'git@github.com:VS-work/ddf--ws-testing.git'}, importMessageRegexp, done);
+  it('should start import dataset without branch and version', async() => {
+    const query = {github: 'git@github.com:VS-work/ddf--ws-testing.git'};
+    const {error, message} = await makeImportRequest(query);
+    expect(message).to.not.empty;
+    expect(error).to.not.exist;
+
+    expectMessageResponse(message, importMessageRegexp);
   });
 });
 
@@ -145,21 +248,38 @@ describe('Import flow: For DB with another branch dataset', () => {
     stopWaffleServer(done);
   });
 
-  it('should start import dataset with branch and version', (done: Function) => {
-    expectMessageResponse({github: 'git@github.com:VS-work/ddf--ws-testing.git#master',  commit: 'a003ffc'}, importMessageRegexp, done);
+  it('should start import dataset with branch and version', async() => {
+    const query = {github: 'git@github.com:VS-work/ddf--ws-testing.git#master',  commit: 'a003ffc'};
+    const {error, message} = await makeImportRequest(query);
+    expect(message).to.not.empty;
+    expect(error).to.not.exist;
+
+    expectMessageResponse(message, importMessageRegexp);
   });
 
-  it('should start import dataset with branch, without version', (done: Function) => {
-    expectMessageResponse({github: 'git@github.com:VS-work/ddf--ws-testing.git#master'}, importMessageRegexp, done);
+  it('should start import dataset with branch, without version', async() => {
+    const query = {github: 'git@github.com:VS-work/ddf--ws-testing.git#master'};
+    const {error, message} = await makeImportRequest(query);
+    expect(message).to.not.empty;
+    expect(error).to.not.exist;
+
+    expectMessageResponse(message, importMessageRegexp);
   });
 
-  it('should start import dataset without branch and version', (done: Function) => {
-    expectMessageResponse({github: 'git@github.com:VS-work/ddf--ws-testing.git'}, importMessageRegexp, done);
+  it('should start import dataset without branch and version', async() => {
+    const query = {github: 'git@github.com:VS-work/ddf--ws-testing.git'};
+    const {error, message} = await makeImportRequest(query);
+    expect(message).to.not.empty;
+    expect(error).to.not.exist;
+
+    expectMessageResponse(message, importMessageRegexp);
   });
 });
 
+// Specific test cases for extreme points
 describe('Import flow: For not existed dataset in github (but valid name)', () => {
   const errorMessageRegexp = /Repository not found/m;
+  const errorExistDatasetRegexp = /Dataset exists, cannot import same dataset twice/;
 
   before((done: Function) => {
     startWaffleServer(null, false, done);
@@ -169,8 +289,41 @@ describe('Import flow: For not existed dataset in github (but valid name)', () =
     stopWaffleServer(done);
   });
 
-  it('should not start import for not existed dataset (with valid name)', (done: Function) => {
-    expectErrorResponse({github: 'git@github.com:not-existed-valid-dataset/not-existed-valid-dataset/.git#master'}, errorMessageRegexp, done);
+  describe('Dataset was not imported before and does not exist in github', () => {
+    it('should not start import for not existed dataset (with valid name)', async() => {
+      const query = {github: 'git@github.com:not-existed-valid-dataset/not-existed-valid-dataset.git#master'};
+      const {error, message} = await makeImportRequest(query);
+      expect(error).to.not.empty;
+      expect(message).to.not.exist;
+
+      expectErrorResponse(error, errorMessageRegexp);
+    });
+  });
+
+  describe('Dataset was imported before and now it was removed from github', () => {
+    before((done: Function) => {
+      shell.exec(`mongorestore --drop --gzip --archive=${dbDumpNotExisted}`);
+      expect(shell.error()).to.not.exist;
+      done();
+    });
+
+    it('should not start import for not existed dataset with version (with valid name) even it was imported before removing from git hub', async() => {
+      const query = {github: 'git@github.com:not-existed-valid-dataset/not-existed-valid-dataset.git#master', commit: 'e6ef10e'};
+      const {error, message} = await makeImportRequest(query);
+      expect(error).to.not.empty;
+      expect(message).to.not.exist;
+
+      expectErrorResponse(error, errorExistDatasetRegexp);
+    });
+
+    it('should not start import for not existed dataset without version (with valid name) even it was imported before removing from git hub', async() => {
+      const query = {github: 'git@github.com:not-existed-valid-dataset/not-existed-valid-dataset.git#master'};
+      const {error, message} = await makeImportRequest(query);
+      expect(error).to.not.empty;
+      expect(message).to.not.exist;
+
+      expectErrorResponse(error, errorMessageRegexp);
+    });
   });
 });
 
@@ -186,15 +339,20 @@ describe('Import flow: For not existed branch in dataset', () => {
     stopWaffleServer(done);
   });
 
-  describe('Branch was imported before, but for now it had been deleted in github', () => {
+  describe('Branch was imported before, but for now it was deleted in github', () => {
     before((done: Function) => {
       shell.exec(`mongorestore --drop --gzip --archive=${dbDumpTempLastCommitPath}`);
       expect(shell.error()).to.not.exist;
       done();
     });
 
-    it('should not import not existed branch', (done: Function) => {
-      expectErrorResponse({github: 'git@github.com:VS-work/ddf--ws-testing.git#master-temp', commit: 'e6ef10e'}, errorExistDatasetRegexp, done);
+    it('should not import not existed branch', async() => {
+      const query = {github: 'git@github.com:VS-work/ddf--ws-testing.git#master-temp', commit: 'e6ef10e'};
+      const {error, message} = await makeImportRequest(query);
+      expect(error).to.not.empty;
+      expect(message).to.not.exist;
+
+      expectErrorResponse(error, errorExistDatasetRegexp);
     });
   });
 
@@ -202,8 +360,14 @@ describe('Import flow: For not existed branch in dataset', () => {
     before((done: Function) => {
       startWaffleServer(null, true, done);
     });
-    it('should not import existed dataset with not existed branch', (done: Function) => {
-      expectErrorResponse({github: 'git@github.com:VS-work/ddf--ws-testing.git#master-temp'}, errorNotFoundRemoteRegexp, done);
+
+    it('should not import existed dataset with not existed branch', async() => {
+      const query = {github: 'git@github.com:VS-work/ddf--ws-testing.git#master-temp'};
+      const {error, message} = await makeImportRequest(query);
+      expect(error).to.not.empty;
+      expect(message).to.not.exist;
+
+      expectErrorResponse(error, errorNotFoundRemoteRegexp);
     });
   });
 });
@@ -220,39 +384,43 @@ describe('Import flow: Without specifying dataset in request', () => {
     stopWaffleServer(done);
   });
 
-  it('should not import without git repository and commit', (done: Function) => {
-    expectErrorResponse(null, errorRepoRegexp, done);
+  it('should not import without git repository and commit', async() => {
+    const query = null;
+    const {error, message} = await makeImportRequest(query);
+    expect(error).to.not.empty;
+    expect(message).to.not.exist;
+
+    expectErrorResponse(error, errorRepoRegexp);
   });
 
-  it('should not import without git repository, only with commit', (done: Function) => {
-    expectErrorResponse({commit: 'e6ef10e'}, errorRequiredNameRegexp, done);
+  it('should not import without git repository, only with commit', async() => {
+    const query = {commit: 'e6ef10e'};
+    const {error, message} = await makeImportRequest(query);
+    expect(error).to.not.empty;
+    expect(message).to.not.exist;
+
+    expectErrorResponse(error, errorRequiredNameRegexp);
   });
 });
 
-function expectErrorResponse (reqParams: {github?: string, commit?: string}, errRegexp: RegExp, done: Function): any {
-  return makeImportRequest(reqParams, (_error: string, {error}: any) => {
-    expect(_error).to.not.exist;
-    expect(error).to.not.empty;
-    expect(errRegexp.test(error)).to.be.true;
-    return done();
-  });
+function expectErrorResponse (error: string, errRegexp: RegExp): void {
+  expect(error).to.not.empty;
+  expect(errRegexp.test(error)).to.be.true;
 }
 
-function expectMessageResponse (reqParams: {github?: string, commit?: string}, msgRegexp: RegExp, done: Function): any {
-  return makeImportRequest(reqParams, (error: string, {message}: any) => {
-    expect(error).to.not.exist;
-    expect(message).to.not.empty;
-    expect(msgRegexp.test(message)).to.be.true;
-    return done();
-  });
+function expectMessageResponse (message: string, msgRegexp: RegExp): void {
+  expect(message).to.not.empty;
+  expect(msgRegexp.test(message)).to.be.true;
 }
 
-function makeImportRequest (params: {github?: string, commit?: string}, done: Function): any {
-  async.waterfall([
-    async.constant(0),
-    waitForDefaultUser,
-    (authData: any, _done: Function) => {
-      const {token} = authData;
+function makeImportRequest (params: {github?: string, commit?: string}): Promise<any> {
+  return new Promise((resolve: Function, reject: Function) => {
+    _waitForDefaultUser(0, (err: Error, {token}: {token: string}) => {
+      if (err) {
+        return reject(err);
+      }
+
+      expect(err).to.not.exist;
       expect(token).to.not.empty;
 
       fetch(`http://${e2eEnv.wsHost}:${e2eEnv.wsPort}/api/ddf/cli/import-dataset`, {
@@ -268,42 +436,48 @@ function makeImportRequest (params: {github?: string, commit?: string}, done: Fu
       }).then((response: any) => {
         return response.json();
       }).then((response: any) => {
-        return _done(null, response);
+        return resolve(response);
+      }).catch((error: any) => {
+        throw new Error(error);
       });
-    }
-  ], (error: Error, response: any) => {
-    expect(error).to.not.exist;
-    return done(error, response);
+    });
   });
 }
 
-function startWaffleServer(dbDumpPath: string, dropDb: boolean, done: Function): void {
+function dropMongoDb (isDrop: boolean, _done: Function): any {
+  if(isDrop) {
+    return _dropMongoDb(_done);
+  }
+  return _done();
+}
+
+function waitForDefaultUser (isWait: boolean, _done: Function): any {
+  if(!isWait) {
+    return  _waitForDefaultUser(0, _done);
+  }
+  return _done();
+}
+
+function restoreDbFromDump (dbDumpPath: string, _done: Function): any{
+  if(dbDumpPath) {
+    shell.exec(`mongorestore --drop --gzip --archive=${dbDumpPath}`);
+    expect(shell.error()).to.not.exist;
+
+    return _done();
+  }
+  return _done();
+}
+
+function startWaffleServer (dbDumpPath: string, dropDb: boolean, done: Function): any {
   async.series([
-    (_done: Function) => setTimeout(() => {
-      if(dropDb) {
-        return dropMongoDb(_done);
-      }
-      return _done();
-    }, 100),
+    async.apply(dropMongoDb, dropDb),
     stopWaffleServer,
     (_done: Function) => setTimeout(() => {
       _startWaffleServer();
       return _done();
     }, 100),
-    (_done: Function) => setTimeout(() => {
-      if(!dropDb) {
-        return  waitForDefaultUser(0, _done);
-      }
-      return _done();
-    }, 100),
-    (_done: Function) => setTimeout(() => {
-      if(dbDumpPath) {
-        shell.exec(`mongorestore --drop --gzip --archive=${dbDumpPath}`);
-        expect(shell.error()).to.not.exist;
-        return _done();
-      }
-      return _done();
-    }, 100)
+    async.apply(waitForDefaultUser, !dropDb),
+    async.apply(restoreDbFromDump, dbDumpPath)
   ], (error: string) => {
     return done(error);
   });
