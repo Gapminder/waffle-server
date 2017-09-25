@@ -365,27 +365,21 @@ function expectMessageResponse (response: any, msgRegexp: RegExp): void {
 
 function makeImportRequest (params: {github?: string, commit?: string}): Promise<any> {
   return new Promise((resolve: Function, reject: Function) => {
-    async.waterfall([
-      async.constant(0),
-      _waitForDefaultUser,
-      async.apply(sendImportQueryToWs, params)
-    ], (err: any, res: any) => {
-      expect(err).to.not.exist;
-
-      if(err) {
-        return reject(new Error(err));
+    _waitForDefaultUser(0, async (err: Error, {token}: {token: string}) => {
+      if (err) {
+        return reject(err);
       }
 
-      return resolve(res);
+      const response = await sendImportQueryToWs(params, token);
+      resolve(response);
     });
   });
 }
 
-function sendImportQueryToWs(query: any, authData: any, done: Function): any {
-  const {token} = authData;
+function sendImportQueryToWs(query: {github?: string, commit?: string}, token: string): any {
   expect(token).to.not.empty;
 
-  fetch(`http://${e2eEnv.wsHost}:${e2eEnv.wsPort}/api/ddf/cli/import-dataset`, {
+  return fetch(`http://${e2eEnv.wsHost}:${e2eEnv.wsPort}/api/ddf/cli/import-dataset`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -398,9 +392,9 @@ function sendImportQueryToWs(query: any, authData: any, done: Function): any {
   }).then((response: any) => {
     return response.json();
   }).then((response: any) => {
-    return done(null, response);
+    return response;
   }).catch((error: any) => {
-    done(error);
+    throw new Error(error);
   });
 }
 
