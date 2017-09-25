@@ -284,9 +284,9 @@ function updateIncrementally(req: any, res: any): void {
 }
 
 function importDataset(req: any, res: any): void {
-  const params = {query: req.body};
+  const params = {query: req.body, lifecycleHooks: {}};
 
-  params.query.lifecycleHooks = {
+  params.lifecycleHooks = {
     onTransactionCreated: () => {
       if (!res.headersSent) {
         res.json(routeUtils.toMessageResponse('Dataset importing is in progress ...'));

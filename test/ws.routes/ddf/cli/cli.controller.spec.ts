@@ -110,8 +110,8 @@ describe('WS-CLI controller', () => {
       expect(params.query.github).to.equal(github);
       expect(params.query.commit).to.equal(commit);
 
-      expect(params.query.lifecycleHooks).to.include.keys('onTransactionCreated');
-      expect(params.query.lifecycleHooks.onTransactionCreated).to.be.instanceof(Function);
+      expect(params.lifecycleHooks).to.include.keys('onTransactionCreated');
+      expect(params.lifecycleHooks.onTransactionCreated).to.be.instanceof(Function);
     }));
 
     it('should release connection once transaction was created for import process', sandbox(function() {
@@ -121,7 +121,7 @@ describe('WS-CLI controller', () => {
 
       const resJsonSpy = this.spy();
       const cliServiceStub = this.stub(cliService, 'importDataset').callsFake((params) => {
-        params.query.lifecycleHooks.onTransactionCreated();
+        params.lifecycleHooks.onTransactionCreated();
       });
 
       const req = {
@@ -147,7 +147,7 @@ describe('WS-CLI controller', () => {
 
       const resJsonSpy = this.spy();
       const cliServiceStub = this.stub(cliService, 'importDataset').callsFake((params) => {
-        params.query.lifecycleHooks.onTransactionCreated();
+        params.lifecycleHooks.onTransactionCreated();
       });
 
       const req = {
