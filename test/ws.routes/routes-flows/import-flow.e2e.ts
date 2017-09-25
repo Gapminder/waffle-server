@@ -472,10 +472,7 @@ function startWaffleServer (dbDumpPath: string, dropDb: boolean, done: Function)
   async.series([
     async.apply(dropMongoDb, dropDb),
     stopWaffleServer,
-    (_done: Function) => setTimeout(() => {
-      _startWaffleServer();
-      return _done();
-    }, 100),
+    (async as any).asyncify(_startWaffleServer),
     async.apply(waitForDefaultUser, !dropDb),
     async.apply(restoreDbFromDump, dbDumpPath)
   ], (error: string) => {
