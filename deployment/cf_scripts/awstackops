@@ -33,7 +33,7 @@ function help {
       MEMORY_TM             -> 7 Gb
       HAPROXY_ECR_LABEL     -> latest
       NODE_ECR_LABEL        -> latest
-      ECS_INSTANCE_TYPE     -> t2.medium
+      ECS_INSTANCE_TYPE     -> m4.large
       REDIS_INSTANCE_TYPE   -> cache.m4.large
       ECS_INSTANCE_TYPE_TM  -> m4.xlarge
       ECS_INSTANCE_TYPE_LB  -> t2.medium
