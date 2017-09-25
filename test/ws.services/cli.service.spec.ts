@@ -33,14 +33,15 @@ const datasetTransactionsServicePath = './dataset-transactions.service';
 describe('WS-CLI service', () => {
 
   it('should store last happened error in transaction if it was created at that moment', sandbox(function (done: Function) {
-
     const params = {
-      commit: '8ad3096185b5b17bc80ae582870fb956f00019fd',
-      lifecycleHooks: {
-        onTransactionCreated: () => {
-        }
-      },
-      github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git'
+      query: {
+        commit: '8ad3096185b5b17bc80ae582870fb956f00019fd',
+        lifecycleHooks: {
+          onTransactionCreated: () => {
+          }
+        },
+        github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git'
+      }
     };
 
     const expectedUser = {
@@ -110,12 +111,14 @@ describe('WS-CLI service', () => {
   it('should successfully execute dataset importing flow', sandbox(function (done: Function) {
 
     const params = {
-      commit: '8ad3096185b5b17bc80ae582870fb956f00019fd',
-      lifecycleHooks: {
-        onTransactionCreated: () => {
-        }
-      },
-      github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git'
+      query: {
+        commit: '8ad3096185b5b17bc80ae582870fb956f00019fd',
+        lifecycleHooks: {
+          onTransactionCreated: () => {
+          }
+        },
+        github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git#master'
+      }
     };
 
     const expectedUser = {
@@ -127,11 +130,11 @@ describe('WS-CLI service', () => {
     };
 
     const importServiceExpectedOptions = {
-      commit: params.commit,
+      commit: params.query.commit,
       datasetName: expectedDataset.name,
-      github: params.github,
+      github: params.query.github,
       isDatasetPrivate: false,
-      lifecycleHooks: params.lifecycleHooks,
+      lifecycleHooks: params.query.lifecycleHooks,
       user: expectedUser
     };
 
@@ -151,7 +154,7 @@ describe('WS-CLI service', () => {
         DatasetsRepository: {
           findByGithubUrl: (githubUrl, onFound) => {
             flowStepCounterSpy('findByGithubUrl');
-            expect(githubUrl).to.equal(params.github);
+            expect(githubUrl).to.equal(params.query.github);
             // Playing scenario where dataset doesn't exist
             onFound(null, null);
           }
@@ -196,12 +199,14 @@ describe('WS-CLI service', () => {
   it('should yield an error cause dataset was not locked by the end of the importing', sandbox(function (done: Function) {
 
     const params = {
-      commit: '8ad3096185b5b17bc80ae582870fb956f00019fd',
-      lifecycleHooks: {
-        onTransactionCreated: () => {
-        }
-      },
-      github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git'
+      query: {
+        commit: '8ad3096185b5b17bc80ae582870fb956f00019fd',
+        lifecycleHooks: {
+          onTransactionCreated: () => {
+          }
+        },
+        github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git'
+      }
     };
 
     const expectedUser = {
@@ -268,12 +273,14 @@ describe('WS-CLI service', () => {
   it('should be impossible to import same dataset twice', sandbox(function (done: Function) {
 
     const params = {
-      commit: '8ad3096185b5b17bc80ae582870fb956f00019fd',
-      lifecycleHooks: {
-        onTransactionCreated: () => {
-        }
-      },
-      github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git'
+      query: {
+        commit: '8ad3096185b5b17bc80ae582870fb956f00019fd',
+        lifecycleHooks: {
+          onTransactionCreated: () => {
+          }
+        },
+        github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git#master'
+      }
     };
 
     const expectedUser = {
@@ -302,7 +309,7 @@ describe('WS-CLI service', () => {
         DatasetsRepository: {
           findByGithubUrl: (githubUrl, onFound) => {
             flowStepCounterSpy('findByGithubUrl');
-            expect(githubUrl).to.equal(params.github);
+            expect(githubUrl).to.equal(params.query.github);
             onFound(null, expectedDataset);
           }
         }
@@ -352,12 +359,14 @@ describe('WS-CLI service', () => {
   it('should yield error when during dataset importing user was not found', sandbox(function (done: Function) {
 
     const params = {
-      commit: '8ad3096185b5b17bc80ae582870fb956f00019fd',
-      lifecycleHooks: {
-        onTransactionCreated: () => {
-        }
-      },
-      github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git'
+      query: {
+        commit: '8ad3096185b5b17bc80ae582870fb956f00019fd',
+        lifecycleHooks: {
+          onTransactionCreated: () => {
+          }
+        },
+        github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git'
+      }
     };
 
     const expectedError = 'User that tries to initiate import was not found';
@@ -382,12 +391,14 @@ describe('WS-CLI service', () => {
   it('should yield error when during dataset importing error occurred while searching for dataset', sandbox(function (done: Function) {
 
     const params = {
-      commit: '8ad3096185b5b17bc80ae582870fb956f00019fd',
-      lifecycleHooks: {
-        onTransactionCreated: () => {
-        }
-      },
-      github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git'
+      query: {
+        commit: '8ad3096185b5b17bc80ae582870fb956f00019fd',
+        lifecycleHooks: {
+          onTransactionCreated: () => {
+          }
+        },
+        github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git'
+      }
     };
 
     const expectedError = 'Boo!';
