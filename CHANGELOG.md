@@ -1,3 +1,33 @@
+<a name="2.9.3"></a>
+## [2.9.3](https://github.com/Gapminder/waffle-server/compare/v2.9.2...v2.9.3) (2017-09-26)
+
+
+### Bug Fixes
+
+* fix aws instance settings ([b83d560](https://github.com/Gapminder/waffle-server/commit/b83d560))
+
+
+
+<a name="2.9.3"></a>
+## [2.9.3](https://github.com/Gapminder/waffle-server/compare/v2.9.2...v2.9.3) (2017-09-26)
+
+
+### Bug Fixes
+
+* fix aws instance settings ([b83d560](https://github.com/Gapminder/waffle-server/commit/b83d560))
+
+
+
+<a name="2.9.3"></a>
+## [2.9.3](https://github.com/Gapminder/waffle-server/compare/v2.9.2...v2.9.3) (2017-09-25)
+
+
+### Bug Fixes
+
+* fix aws instance settings ([b83d560](https://github.com/Gapminder/waffle-server/commit/b83d560))
+
+
+
 <a name="2.9.2"></a>
 ## [2.9.2](https://github.com/Gapminder/waffle-server/compare/v2.9.1...v2.9.2) (2017-09-21)
 
