@@ -56,11 +56,14 @@ if [ "${SETTINGS}x" != "x" ]; then
   source ${SETTINGS}
 fi
 
+MEMORY_LB=${MEMORY_LB:-"3000"}
+MEMORY_NODE=${MEMORY_NODE:-"3000"}
+MEMORY_TM=${MEMORY_TM:-"14000"}
 THRASHING_MACHINE=${THRASHING_MACHINE:-"THRASHING_MACHINE"}
 HAPROXY_ECR_LABEL=${HAPROXY_ECR_LABEL:-"latest"}
 NODE_ECR_LABEL=${NODE_ECR_LABEL:-"latest"}
 ECS_INSTANCE_TYPE_LB=${ECS_INSTANCE_TYPE_LB:-"t2.medium"}
-ECS_INSTANCE_TYPE=${ECS_INSTANCE_TYPE:-"t2.medium"}
+ECS_INSTANCE_TYPE=${ECS_INSTANCE_TYPE:-"m4.large"}
 ECS_INSTANCE_TYPE_TM=${ECS_INSTANCE_TYPE_TM:-"m4.xlarge"}
 REDIS_INSTANCE_TYPE=${REDIS_INSTANCE_TYPE:-"cache.m4.large"}
 REDIS_PORT=${REDIS_PORT:-"6379"}
@@ -146,6 +149,9 @@ ParameterKey=MongoDBUrl,ParameterValue=\"${MONGODB_URL}\" \
 ParameterKey=NewRelicKey,ParameterValue=${NEWRELIC_KEY} \
 ParameterKey=NodeEnv,ParameterValue=${NODE_ENV} \
 ParameterKey=DdfRepoPath,ParameterValue=${DDF_REPO_PATH} \
+ParameterKey=MemoryLb,ParameterValue=${MEMORY_LB} \
+ParameterKey=MemoryNode,ParameterValue=${MEMORY_NODE} \
+ParameterKey=MemoryNodeThrashingMachine,ParameterValue=${MEMORY_TM} \
 ParameterKey=DefaultUserPassword,ParameterValue=${DEFAULT_USER_PASSWORD} \
 ParameterKey=ThrashingMachine,ParameterValue=${THRASHING_MACHINE}"
 
