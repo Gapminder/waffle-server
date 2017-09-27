@@ -1,3 +1,26 @@
+<a name="2.9.4"></a>
+## [2.9.4](https://github.com/Gapminder/waffle-server/compare/v2.9.3...v2.9.4) (2017-09-27)
+
+
+### Bug Fixes
+
+* **deployment:** fix issue with ECS_INSTANCE_TYPE ([7b82ac3](https://github.com/Gapminder/waffle-server/commit/7b82ac3))
+* **deployment:** fix issue with ECS_INSTANCE_TYPE ([fb85c83](https://github.com/Gapminder/waffle-server/commit/fb85c83))
+
+
+### Features
+
+* **e2e:** datasets branch version - import flow ([f9ca80e](https://github.com/Gapminder/waffle-server/commit/f9ca80e))
+* **e2e:** datasets branch version - import flow. changes according to review. ([f79b82f](https://github.com/Gapminder/waffle-server/commit/f79b82f))
+* **e2e:** datasets branch version - import flow. changes according to review. ([6e492eb](https://github.com/Gapminder/waffle-server/commit/6e492eb))
+* **e2e:** datasets branch version - import flow. changes according to review. ([a331d58](https://github.com/Gapminder/waffle-server/commit/a331d58))
+* **e2e:** datasets branch version - import flow. fix async typings. ([261fcda](https://github.com/Gapminder/waffle-server/commit/261fcda))
+* **e2e:** datasets branch version - import flow. fix cli service unit test. ([bb98628](https://github.com/Gapminder/waffle-server/commit/bb98628))
+* **e2e:** datasets branch version - import flow. fix unit tests. ([fde5276](https://github.com/Gapminder/waffle-server/commit/fde5276))
+* **e2e:** datasets branch version - import flow. in progress. ([8590037](https://github.com/Gapminder/waffle-server/commit/8590037))
+
+
+
 <a name="2.9.3"></a>
 ## [2.9.3](https://github.com/Gapminder/waffle-server/compare/v2.9.2...v2.9.3) (2017-09-26)
 

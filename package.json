@@ -5,7 +5,7 @@
     "host": "localhost"
   },
   "name": "Waffle-Server",
-  "version": "2.9.3",
+  "version": "2.9.4",
   "description": "Server for keeping and serving ddf data",
   "main": "server.js",
   "scripts": {
@@ -18,11 +18,9 @@
     "pree2e:allCommits": "node ./test/pre-e2e.js",
     "e2e:allCommits": "mocha --reporter mocha-minimalist-reporter --timeout 200000 --compilers ts:ts-node/register 'test/**/*.e2e.ts'",
     "poste2e:allCommits": "node ./test/post-e2e.js",
-
     "pree2e:allCommits:verbose": "node ./test/pre-e2e.js",
     "e2e:allCommits:verbose": "mocha --timeout 200000 --compilers ts:ts-node/register 'test/**/*.e2e.ts'",
     "poste2e:allCommits:verbose": "node ./test/post-e2e.js",
-
     "e2e:2commit": "COMMIT_INDEX_TO_IMPORT=1 npm run e2e:allCommits",
     "e2e:3commit": "COMMIT_INDEX_TO_IMPORT=2 npm run e2e:allCommits",
     "e2e:4commit": "COMMIT_INDEX_TO_IMPORT=3 npm run e2e:allCommits",
