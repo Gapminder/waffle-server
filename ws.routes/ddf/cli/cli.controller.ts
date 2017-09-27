@@ -284,7 +284,7 @@ function updateIncrementally(req: any, res: any): void {
 }
 
 function importDataset(req: any, res: any): void {
-  const params = {query: req.body, lifecycleHooks: {}};
+  const params = req.body;
 
   params.lifecycleHooks = {
     onTransactionCreated: () => {
@@ -303,7 +303,7 @@ function importDataset(req: any, res: any): void {
       return logger.error(importError);
     }
 
-    logger.info(`finished import for dataset '${params.query.github}' and commit '${params.query.commit}'`);
+    logger.info(`finished import for dataset '${params.github}' and commit '${params.commit}'`);
   });
 }
 

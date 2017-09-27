@@ -106,9 +106,9 @@ describe('WS-CLI controller', () => {
 
       const params = cliServiceStub.args[0][0];
 
-      expect(params).to.include.keys('query');
-      expect(params.query.github).to.equal(github);
-      expect(params.query.commit).to.equal(commit);
+      expect(params).to.include.keys('github', 'commit', 'lifecycleHooks');
+      expect(params.github).to.equal(github);
+      expect(params.commit).to.equal(commit);
 
       expect(params.lifecycleHooks).to.include.keys('onTransactionCreated');
       expect(params.lifecycleHooks.onTransactionCreated).to.be.instanceof(Function);
