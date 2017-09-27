@@ -12,7 +12,6 @@ import * as securityUtils from '../ws.utils/security';
 import * as transactionsService from './dataset-transactions.service';
 import * as datasetsService from './datasets.service';
 import * as reposService from './repos.service';
-import * as wsCli from 'waffle-server-import-cli';
 
 export {
   importDataset,
@@ -64,9 +63,6 @@ function importDataset(params: any, onDatasetImported: Function): void {
   return async.waterfall([
     async.constant(params),
     _findCurrentUser,
-    _parseDefaultBranch,
-    _parseDefaultCommit,
-    _setDefaulParamsFromQuery,
     _findDataset,
     _validateDatasetBeforeImport,
     _importDdfService,
@@ -77,43 +73,6 @@ function importDataset(params: any, onDatasetImported: Function): void {
     }
     return onDatasetImported(importError, context);
   });
-}
-
-function _parseDefaultBranch(pipe: any, done: Function): any {
-  const {query: {github}} = pipe;
-  // this trim for cases like 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git#',
-  // where we have just '#' without exact branch
-  const trimmedGithubUrl = _.trimEnd(github, '#');
-  const isBranchExist = /#(.*)/.test(trimmedGithubUrl);
-
-  if(!isBranchExist) {
-    pipe.github = `${trimmedGithubUrl}#master`;
-  }
-
-  return done(null, pipe);
-}
-
-function _parseDefaultCommit(pipe: any, done: Function): any {
-  const {query: {commit}} = pipe;
-  const github = pipe.github || pipe.query.github;
-
-  if(commit) {
-    return done(null, pipe);
-  }
-
-  wsCli.getCommitListByGithubUrl(github, (error: string, commits: string[]) => {
-    if (error) {
-      return done(error);
-    }
-
-    pipe.commit = commits[commits.length -1];
-
-    return done(null, pipe);
-  });
-}
-
-function _setDefaulParamsFromQuery(pipe: any, done: Function): any {
-  return done(null,_.defaults(pipe, pipe.query));
 }
 
 function _findDataset(pipe: any, done: Function): any {

@@ -848,7 +848,7 @@
     "MemoryNode":{
       "Type": "Number",
       "Description": "Ram Nodes",
-      "Default": 3000
+      "Default": 7000
     },
     "MemoryNodeThrashingMachine":{
       "Type": "Number",

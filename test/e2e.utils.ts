@@ -7,7 +7,6 @@ import * as supertest from 'supertest';
 import { expect } from 'chai';
 import * as URLON from 'urlon';
 import { logger } from '../ws.config/log';
-import * as fetch from 'node-fetch';
 import * as async from 'async';
 
 const wsApi = supertest(e2eEnv.wsUrl);
@@ -21,8 +20,7 @@ export {
   startWaffleServer,
   setUpEnvironmentVariables,
   sendDdfqlRequestAndVerifyResponse,
-  sendDdfqlRequestAndExpectError,
-  waitForDefaultUser
+  sendDdfqlRequestAndExpectError
 };
 
 function sendDdfqlRequest(ddfql: any, onResponseReceived: Function): void {
@@ -113,48 +111,5 @@ function sendDdfqlRequestAndExpectError(ddfql: any, expectedErrorMessage: string
       return done();
     }
     throw Error(`Error was expected: "${expectedErrorMessage}". But request returned status success: ${response.body.success}`);
-  });
-}
-
-function waitForDefaultUser(counter: number = 0, done: Function): void {
-  fetch(`http://${e2eEnv.wsHost}:${e2eEnv.wsPort}/api/ddf/cli/authenticate`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({email: e2eEnv.login, password: e2eEnv.pass})
-  }).then((response: any) => {
-    return response.json();
-  }).then((response: any) => {
-    if (!response.success) {
-      logger.warn(response.error);
-    }
-
-    if (response.success) {
-      logger.info(response, 'Connect to WS successfully');
-      return done(null, response.data);
-    }
-
-    if (counter > 10000) {
-      return done('TIMEOUT');
-    }
-
-    setTimeout(() => {
-      counter += 2000;
-      waitForDefaultUser(counter, done);
-    }, 2000);
-  }).catch((error: any) => {
-    if (error) {
-      logger.warn(error);
-    }
-
-    if (counter > 10000) {
-      return done('TIMEOUT');
-    }
-
-    setTimeout(() => {
-      counter += 2000;
-      waitForDefaultUser(counter, done);
-    }, 2000);
   });
 }

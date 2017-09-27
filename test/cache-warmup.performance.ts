@@ -10,7 +10,7 @@ import * as cliService from '../ws.services/cli.service';
 import * as Cache from '../ws.utils/cache-warmup';
 import { getCommitsByGithubUrl, runDatasetImport, setDefaultCommit as _setDefaultCommit } from './cli.utils';
 import { e2eEnv } from './e2e.env';
-import { startWaffleServer as _startWaffleServer, stopWaffleServer as _stopWaffleServer, waitForDefaultUser as _waitForDefaultUser} from './e2e.utils';
+import { startWaffleServer as _startWaffleServer, stopWaffleServer as _stopWaffleServer } from './e2e.utils';
 
 const repos = [
   { url: 'git@github.com:VS-work/ddf--ws-testing.git' },
@@ -146,6 +146,49 @@ function recognizeLastCommitForEachRepos(context: any, done: Function): void {
   }, (error: string) => done(error, context));
 }
 
+function waitForDefaultUser(counter: number, done: Function): void {
+  fetch(`http://${e2eEnv.wsHost}:${e2eEnv.wsPort}/api/ddf/cli/authenticate`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ email: e2eEnv.login, password: e2eEnv.pass })
+  }).then((response: any) => {
+    return response.json();
+  }).then((response: any) => {
+    if (!response.success) {
+      logger.warn(response.error);
+    }
+
+    if (response.success) {
+      logger.info(response, 'Connect to WS successfully');
+      return done();
+    }
+
+    if (counter > 10000) {
+      return done('TIMEOUT');
+    }
+
+    setTimeout(() => {
+      counter += 2000;
+      waitForDefaultUser(counter, done);
+    }, 2000);
+  }).catch((error: any) => {
+    if (error) {
+      logger.warn(error);
+    }
+
+    if (counter > 10000) {
+      return done('TIMEOUT');
+    }
+
+    setTimeout(() => {
+      counter += 2000;
+      waitForDefaultUser(counter, done);
+    }, 2000);
+  });
+}
+
 function setDefaultDataset(context: any, done: Function): void {
   const defaultRepo = _.find(context.repos, { url: context.defaultDatasetPath });
   const defaultCommit = _.get(defaultRepo, 'commitHashToSetDefaultVersion', 'HEAD');
@@ -164,7 +207,7 @@ function setDefaultDataset(context: any, done: Function): void {
 function startWaffleServer(context: any, done: Function): void {
   async.series([
     _startWaffleServer,
-    (_done: Function) => setTimeout(() => _waitForDefaultUser(0, _done), 2000)
+    (_done: Function) => setTimeout(() => waitForDefaultUser(0, _done), 2000)
   ], (error: string) => done(error, context));
 }
 
