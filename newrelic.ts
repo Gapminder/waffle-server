@@ -1,3 +1,4 @@
+import {config as applicationConfig} from './ws.config/config';
 /**
  * New Relic agent configuration.
  *
@@ -8,14 +9,14 @@ const config = {
   /**
    * Array of application names.
    */
-  app_name: ['Waffle Server'],
+  app_name: [`Waffle Server ${applicationConfig.NODE_ENV}`],
   logging: {
     /**
      * Level at which to log. 'trace' is most useful to New Relic when diagnosing
      * issues with the agent, 'info' and higher will impose the least overhead on
      * production applications.
      */
-    level: 'info'
+    level: applicationConfig.IS_PRODUCTION ? 'info' : 'trace'
   }
 };
 
