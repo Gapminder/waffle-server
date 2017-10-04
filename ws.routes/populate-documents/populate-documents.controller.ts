@@ -19,7 +19,7 @@ function createPopulateDocumentsController(serviceLocator: ServiceLocator): any 
     getDocumentByQuery
   );
 
-  return app.use(router);
+  return (app as any).use(router);
 
   function getDocumentByQuery(req: any, res: any): void {
     const datasetName = req.body.dataset;

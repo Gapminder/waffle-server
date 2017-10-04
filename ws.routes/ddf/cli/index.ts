@@ -42,7 +42,7 @@ function registerDdfCliRoutes(serviceLocator: ServiceLocator): Application {
   router.post('/repos/clean', CliController.cleanRepos);
 
   const app = serviceLocator.getApplication();
-  return app.use('/api/ddf/cli', router);
+  return (app as any).use('/api/ddf/cli', router);
 }
 
 export {

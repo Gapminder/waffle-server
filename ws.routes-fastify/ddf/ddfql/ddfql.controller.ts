@@ -1,46 +1,43 @@
 import * as _ from 'lodash';
-import * as cors from 'cors';
-import * as express from 'express';
+import * as async from 'async';
+
 import { Application, NextFunction } from 'express';
-import * as compression from 'compression';
 import { constants } from '../../../ws.utils/constants';
 import * as schemaService from '../../../ws.services/schema.service';
 import * as entitiesService from '../../../ws.services/entities.service';
 import * as conceptsService from '../../../ws.services/concepts.service';
 import * as datapointsService from '../../../ws.services/datapoints.service';
 import * as dataPostProcessors from '../../data-post-processors';
-import { cache, statusCodesExpirationConfig } from '../../../ws.utils/redis-cache';
 import { logger } from '../../../ws.config/log';
 import * as routeUtils from '../../utils';
 import { ServiceLocator } from '../../../ws.service-locator/index';
 
 function createDdfqlController(serviceLocator: ServiceLocator): Application {
   const app = serviceLocator.getApplication();
+  (app as any).use(routeUtils.bodyFromUrlQuery);
 
-  const router = express.Router();
+  (app as any).fastify.get('/api/ddf/ql/*', (request: any, reply: any) => {
+    request.body = request.query = request.req.body;
 
-  router.use(cors());
+    async.series([
+      (next: any) => {
+        getDdfStats(request, Object.assign({status: (value: any) => next(value)}, reply), next);
+      },
+      (next: any) => {
+        dataPostProcessors.gapfilling(request, reply, next);
+      },
+      (next: any) => {
+        dataPostProcessors.toPrecision(request, reply, next);
+      },
+      (next: any) => {
+        dataPostProcessors.pack(request, Object.assign({send: (value: any) => next(value), json: (value: any) => next(value), setHeader: (value: any) => value}, reply));
+      }
+    ], (result: any) => {
+      reply.send(result);
+    });
+  });
 
-  router.get('/api/ddf/ql',
-    routeUtils.bodyFromUrlQuery,
-    getDdfStats,
-    dataPostProcessors.gapfilling,
-    dataPostProcessors.toPrecision,
-    dataPostProcessors.pack
-  );
-
-  router.post('/api/ddf/ql',
-    routeUtils.getCacheConfig(constants.DDF_REDIS_CACHE_NAME_DDFQL),
-    cache.route(statusCodesExpirationConfig),
-    compression(),
-    routeUtils.checkDatasetAccessibility,
-    getDdfStats,
-    dataPostProcessors.gapfilling,
-    dataPostProcessors.toPrecision,
-    dataPostProcessors.pack
-  );
-
-  return (app as any).use(router);
+  return (app as any);
 
   function getDdfStats(req: any, res: any, next: NextFunction): void {
     logger.info({req}, 'DDFQL URL');
