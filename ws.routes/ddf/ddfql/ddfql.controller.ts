@@ -19,6 +19,8 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
 
   const router = express.Router();
 
+  router.options('/api/ddf/ql', cors({maxAge: 86400}));
+
   router.use(cors());
 
   router.get('/api/ddf/ql',
