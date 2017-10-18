@@ -36,7 +36,7 @@ describe('Long running queries killer', () => {
   it('runs given task every 30 seconds', sandbox(function (): any {
     const clock = sinon.useFakeTimers();
 
-    const infoStub = this.stub(logger, 'info');
+    const traceStub = this.stub(logger, 'trace');
 
     const dbService: any = {
       killLongRunningQueries: this.stub().resolves([])
@@ -49,7 +49,7 @@ describe('Long running queries killer', () => {
     clock.tick(THIRTY_SECONDS);
 
     sinon.assert.calledOnce(dbService.killLongRunningQueries);
-    sinon.assert.calledOnce(infoStub);
+    sinon.assert.calledOnce(traceStub);
 
     clock.restore();
   }));
