@@ -7,3 +7,4 @@ ws.import/diffs/*
 **/*.js.map
 node_modules
 *.log
+!**/.gitkeep
