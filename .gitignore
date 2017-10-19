@@ -4,7 +4,7 @@
 ### Node template
 # Logs
 tmp
-logs
+logs/*.log*
 *.log
 *.js
 *.js.map
@@ -30,8 +30,9 @@ dumps
 /ws.config/env
 
 # Directory for GitHub repositories
-ws.import/repos
-ws.import/diffs
+ws.import/repos/*
+!ws.import/repos/.gitkeep
+ws.import/diffs/*.txt
 
 settings_gapminder*.txt
 settings_valor.txt
