@@ -8,6 +8,7 @@ import { expect } from 'chai';
 
 import { createTranslations } from '../../ws.import/import-translations';
 import { constants } from '../../ws.utils/constants';
+import { logger } from '../../ws.config/log';
 import * as fileUtils from '../../ws.utils/file';
 import * as ddfMappers from '../../ws.import/utils/ddf-mappers';
 import * as ddfImportUtils from '../../ws.import/utils/import-ddf.utils';
@@ -40,7 +41,11 @@ const datapackageStub: any = {
 const context = {
   pathToDdfFolder: '/some/path',
   datapackage: datapackageStub,
-  concepts: {},
+  concepts: {
+    company_scale: {
+      type: constants.CONCEPT_TYPE_ENTITY_SET
+    }
+  },
   transaction: {
     _id: 'txId',
     createdAt: 1111111
@@ -78,6 +83,7 @@ describe('Import translations', () => {
       const fsAccessStub = this.stub(fs, 'access').callsArgWithAsync(2);
 
       const readCsvFileAsStreamStub = this.stub(fileUtils, 'readCsvFileAsStream').returns(hi([conceptTranslation]));
+      this.stub(logger, 'info');
 
       createTranslations(context, (errors, externalContext) => {
         expect(errors).to.not.exist;
@@ -115,6 +121,7 @@ describe('Import translations', () => {
       this.stub(fs, 'access').callsArgWithAsync(2);
 
       this.stub(fileUtils, 'readCsvFileAsStream').returns(hi([conceptTranslation]));
+      this.stub(logger, 'info');
 
       createTranslations(context, (errors, externalContext) => {
         expect(errors).to.not.exist;
@@ -137,6 +144,7 @@ describe('Import translations', () => {
       const fsAccessStub = this.stub(fs, 'access').callsArgWithAsync(2, 'Cannot Read File');
 
       const readCsvFileAsStreamStub = this.stub(fileUtils, 'readCsvFileAsStream').returns(hi([conceptTranslation]));
+      this.stub(logger, 'info');
 
       createTranslations(context, (errors, externalContext) => {
         expect(errors).to.not.exist;
@@ -189,7 +197,8 @@ describe('Import translations', () => {
       datapackageStub.resources = [];
     });
 
-    it('should import translations for entity', sandbox(function (done: Function) {
+    it('should import translations for entity', sandbox(function (done: Function): void {
+      const loggerStub = this.stub(logger, 'info');
       const addTranslationsForGivenPropertiesSpy = this.stub().returns(Promise.resolve());
       const allOpenedInGivenVersionStub = this.stub(EntitiesRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties: addTranslationsForGivenPropertiesSpy });
 
@@ -199,7 +208,7 @@ describe('Import translations', () => {
 
       const toBooleanSpy = this.spy(ddfImportUtils, 'toBoolean');
 
-      createTranslations(context, (errors, externalContext) => {
+      createTranslations(context, (errors: null, externalContext: any) => {
         expect(errors).to.not.exist;
         expect(externalContext).to.equal(context);
 
@@ -209,7 +218,9 @@ describe('Import translations', () => {
           'is--company_scale': true
         };
 
-        sinon.assert.callCount(toBooleanSpy, 4);
+        sinon.assert.callCount(toBooleanSpy, 2);
+
+        sinon.assert.calledOnce(loggerStub);
 
         sinon.assert.calledOnce(fsAccessStub);
         sinon.assert.calledWith(fsAccessStub, '/some/path/lang/nl-nl/ddf--entities--company--company_scale.csv', fs.constants.R_OK);
@@ -238,6 +249,7 @@ describe('Import translations', () => {
       const fsAccessStub = this.stub(fs, 'access').callsArgWithAsync(2, 'Cannot Read File');
 
       const readCsvFileAsStreamStub = this.stub(fileUtils, 'readCsvFileAsStream').returns(hi([entityTranslation]));
+      this.stub(logger, 'info');
 
       createTranslations(context, (errors, externalContext) => {
         expect(errors).to.not.exist;
@@ -294,6 +306,7 @@ describe('Import translations', () => {
       const fsAccessStub = this.stub(fs, 'access').callsArgWithAsync(2);
 
       const readCsvFileAsStreamStub = this.stub(fileUtils, 'readCsvFileAsStream').returns(hi([datapointTranslation]));
+      this.stub(logger, 'info');
 
       createTranslations(context, (errors, externalContext) => {
         expect(errors).to.not.exist;
@@ -326,6 +339,7 @@ describe('Import translations', () => {
       const fsAccessStub = this.stub(fs, 'access').callsArgWithAsync(2, 'Cannot Read File');
 
       const readCsvFileAsStreamStub = this.stub(fileUtils, 'readCsvFileAsStream').returns(hi([datapointResource]));
+      this.stub(logger, 'info');
 
       createTranslations(context, (errors, externalContext) => {
         expect(errors).to.not.exist;

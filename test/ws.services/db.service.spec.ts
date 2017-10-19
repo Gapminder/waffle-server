@@ -4,6 +4,7 @@ import * as sinonTest from 'sinon-test';
 
 import { DbService, Operation } from '../../ws.services/db.service';
 import { Connection } from 'mongoose';
+import { logger } from '../../ws.config/log';
 
 const sandbox = sinonTest.configureTest(sinon);
 
@@ -27,6 +28,7 @@ describe('DbService', () => {
 
   it('swallows connection errors and behaves as there are no long running queries', sandbox(function (): any {
     const executeDbAdminCommandStub = this.stub().rejects('Total domination');
+    this.stub(logger, 'error');
 
     const fakeDb = {
       executeDbAdminCommand: executeDbAdminCommandStub
@@ -43,8 +45,9 @@ describe('DbService', () => {
     });
   }));
 
-  it('swallows connection errors and behaves as there are no long running queries', sandbox(function (): any {
+  it('swallows connection errors and behaves as there are no long running queries 2', sandbox(function (): any {
     const executeDbAdminCommandStub = this.stub().rejects('Total domination');
+    this.stub(logger, 'error');
 
     const fakeDb = {
       executeDbAdminCommand: executeDbAdminCommandStub
@@ -156,6 +159,7 @@ describe('DbService', () => {
     ];
 
     const executeDbAdminCommandStub = this.stub();
+    this.stub(logger, 'error');
 
     executeDbAdminCommandStub.withArgs({currentOp: 1}).resolves({ inprog: operations });
 

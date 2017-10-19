@@ -13,6 +13,7 @@ import * as datasetTransactionsService from '../../ws.services/dataset-transacti
 import * as datasetsService from '../../ws.services/datasets.service';
 import { DatasetTracker } from '../../ws.services/datasets-tracker';
 import { DatasetTransactionsRepository } from '../../ws.repository/ddf/dataset-transactions/dataset-transactions.repository';
+import { logger } from '../../ws.config/log';
 
 const datasetTransactionsServicePath = '../../ws.services/dataset-transactions.service';
 const datasetServicePath = './datasets.service';

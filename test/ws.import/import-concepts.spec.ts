@@ -6,6 +6,7 @@ import * as sinon from 'sinon';
 import * as sinonTest from 'sinon-test';
 import { expect } from 'chai';
 
+import { logger } from '../../ws.config/log';
 import * as ddfImportUtils from '../../ws.import/utils/import-ddf.utils';
 import * as fileUtils from '../../ws.utils/file';
 import * as ddfMappers from '../../ws.import/utils/ddf-mappers';
@@ -91,6 +92,9 @@ describe('Import ddf concepts', () => {
       done(null, externalContext);
     });
 
+    this.stub(logger, 'info');
+    this.stub(logger, 'warn');
+
     createConcepts(context, (error, externalContext) => {
       expect(error).to.not.exist;
       expect(externalContext).to.deep.equal({
@@ -144,6 +148,7 @@ describe('Import ddf concepts', () => {
 
     const conceptCreateStub = this.stub().callsArgWithAsync(1, null);
     this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({ create: conceptCreateStub });
+    this.stub(logger, 'info');
 
     createConcepts(context, (error) => {
       expect(error).to.equal(expectedError);
@@ -178,6 +183,7 @@ describe('Import ddf concepts', () => {
     const expectedError = 'Cannot save concept to db';
     const conceptCreateStub = this.stub().callsArgWithAsync(1, expectedError);
     this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({ create: conceptCreateStub });
+    this.stub(logger, 'info');
 
     createConcepts(context, (error) => {
       expect(error).to.equal(expectedError);
@@ -275,6 +281,7 @@ describe('Import ddf concepts', () => {
       externalContext.timeConcepts = {};
       done(null, externalContext);
     });
+    this.stub(logger, 'info');
 
     createConcepts(context, (error) => {
       expect(error).to.not.exist;
@@ -374,6 +381,8 @@ describe('Import ddf concepts', () => {
       externalContext.timeConcepts = {};
       done(null, externalContext);
     });
+    this.stub(logger, 'info');
+    this.stub(logger, 'warn');
 
     createConcepts(context, (error) => {
       expect(error).to.not.exist;
@@ -467,6 +476,7 @@ describe('Import ddf concepts', () => {
       externalContext.timeConcepts = {};
       done(null, externalContext);
     });
+    this.stub(logger, 'info');
 
     createConcepts(context, (error) => {
       expect(error).to.not.exist;
@@ -562,6 +572,8 @@ describe('Import ddf concepts', () => {
       externalContext.timeConcepts = {};
       done(null, externalContext);
     });
+    this.stub(logger, 'info');
+    this.stub(logger, 'warn');
 
     createConcepts(context, (error) => {
       expect(error).to.not.exist;

@@ -97,10 +97,10 @@ function parseConceptsResource(resource: DatapackageResource, primaryKey: string
 }
 
 function toEntitySet(fieldName: string): string {
-  if (!_.startsWith(fieldName, 'is--')) {
+  if (!_.startsWith(fieldName, constants.IS_OPERATOR)) {
     return null;
   }
-  return _.last(_.split(fieldName, 'is--'));
+  return _.last(_.split(fieldName, constants.IS_OPERATOR));
 }
 
 type ParsedResource = ParsedConceptResource | ParsedDatapointResource | ParsedEntityResource;

@@ -3,8 +3,18 @@ const ENTITIES = 'entities';
 const DATAPOINTS = 'datapoints';
 const TRANSLATIONS = 'translations';
 
+const CONCEPT_TYPE_BOOLEAN = 'boolean';
+const CONCEPT_TYPE_STRING = 'string';
+const CONCEPT_TYPE_MEASURE = 'measure';
+const CONCEPT_TYPE_ENTITY_DOMAIN = 'entity_domain';
+const CONCEPT_TYPE_ENTITY_SET = 'entity_set';
 const TIME_CONCEPT_TYPES = ['time', 'year', 'week', 'month', 'day', 'quarter'];
-const DEFAULT_ENTITY_GROUP_TYPES = ['entity_domain', 'entity_set', ...TIME_CONCEPT_TYPES];
+const DEFAULT_ENTITY_GROUP_TYPES = [CONCEPT_TYPE_ENTITY_DOMAIN, CONCEPT_TYPE_ENTITY_SET, ...TIME_CONCEPT_TYPES];
+
+const DESCRETE_CONCEPT_TYPES = [...DEFAULT_ENTITY_GROUP_TYPES , CONCEPT_TYPE_STRING, CONCEPT_TYPE_BOOLEAN, 'interval', 'role', 'custom_type'];
+const CONTINUOUS_CONCEPT_TYPES = [CONCEPT_TYPE_MEASURE, 'facet'];
+
+const DEFAULT_CONCEPT_TYPES = [...DESCRETE_CONCEPT_TYPES, ...CONTINUOUS_CONCEPT_TYPES];
 
 const constants: any = {
   MAX_VERSION: Number.MAX_SAFE_INTEGER,
@@ -29,17 +39,23 @@ const constants: any = {
   GID: 'gid',
   ORIGIN_ID: 'originId',
   IS_OPERATOR: 'is--',
+
   CONCEPT_TYPE: 'type',
-  CONCEPT_TYPE_MEASURE: 'measure',
-  CONCEPT_TYPE_ENTITY_DOMAIN: 'entity_domain',
-  CONCEPT_TYPE_ENTITY_SET: 'entity_set',
+  CONCEPT_TYPE_MEASURE,
+  CONCEPT_TYPE_ENTITY_DOMAIN,
+  CONCEPT_TYPE_ENTITY_SET,
+  CONCEPT_TYPE_BOOLEAN,
+  CONCEPT_TYPE_STRING,
 
   DEFAULT_USER_EMAIL: 'dev@gapminder.org',
 
   EXCLUDED_QUERY_PARAMS: ['dataset', 'version', 'v', 'format', 'no-compression', 'key', 'geo.cat', 'force'],
   DEFAULT_ENTITY_GROUP_TYPES,
-  DEFAULT_DDF_LANGUAGE_FOLDER: 'lang',
   TIME_CONCEPT_TYPES,
+  DESCRETE_CONCEPT_TYPES,
+  CONTINUOUS_CONCEPT_TYPES,
+  DEFAULT_CONCEPT_TYPES,
+  DEFAULT_DDF_LANGUAGE_FOLDER: 'lang',
   GID_REGEXP: /^[a-z0-9_]*$/,
 
   VALID_TOKEN_PERIOD_IN_MILLIS: 60 * 60 * 1000, // one hour
