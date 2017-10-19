@@ -57,6 +57,18 @@ describe('DDF mappers', () => {
       },
       pop: {
         type: 'measure'
+      },
+      trueBoolValue: {
+        type: 'boolean'
+      },
+      falseBoolValue: {
+        type: 'boolean'
+      },
+      trueBoolValueLowercase: {
+        type: 'boolean'
+      },
+      boolValue: {
+        type: 'boolean'
       }
     };
     const properties = {

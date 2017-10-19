@@ -3,6 +3,7 @@ import * as sinonTest from 'sinon-test';
 import { expect } from 'chai';
 
 import '../../ws.repository';
+import { logger } from '../../ws.config/log';
 import { DatasetSchemaRepository } from '../../ws.repository/ddf/dataset-index/dataset-index.repository';
 import { createDatasetSchema } from '../../ws.import/import-dataset-schema';
 
@@ -54,6 +55,8 @@ describe('Import dataset schema', () => {
     });
 
     const createStub = this.stub(DatasetSchemaRepository, 'create').returns(Promise.resolve());
+    this.stub(logger, 'info');
+    
     createDatasetSchema(conceptsContext, (error, externalContext) => {
       expect(error).to.not.exist;
 

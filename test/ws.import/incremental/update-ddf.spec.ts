@@ -13,6 +13,7 @@ import * as updateDatapoints from '../../../ws.import/incremental/update-datapoi
 import { updateDdf } from '../../../ws.import/incremental/update-ddf';
 import * as updateEntities from '../../../ws.import/incremental/update-entities';
 import * as ddfImportUtils from '../../../ws.import/utils/import-ddf.utils';
+import { logger } from '../../../ws.config/log';
 
 const sandbox = sinonTest.configureTest(sinon);
 
@@ -150,6 +151,7 @@ describe('Dataset incremental update', () => {
 
       return done();
     });
+    this.stub(logger, 'info');
 
     updateDdf(options, onDatasetUpdatedSpy);
   }));
@@ -256,6 +258,7 @@ describe('Dataset incremental update', () => {
 
       return done();
     });
+    this.stub(logger, 'info');
 
     updateDdf(options, onDatasetUpdatedSpy);
   }));
@@ -362,6 +365,7 @@ describe('Dataset incremental update', () => {
     const expectedError = 'Boo!';
 
     const resolvePathToDdfFolderStub = this.stub(ddfImportUtils, 'resolvePathToDdfFolder').callsArgWithAsync(1, expectedError, context);
+    this.stub(logger, 'info');
 
     updateDdf(context, (error, externalContext) => {
       expect(error).to.equal(expectedError);

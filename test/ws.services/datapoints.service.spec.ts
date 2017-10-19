@@ -12,6 +12,7 @@ import * as commonService from '../../ws.services/common.service';
 import * as conceptsService from '../../ws.services/concepts.service';
 import * as entitiesService from '../../ws.services/entities.service';
 import { getConcepts } from '../../ws.services/concepts.service';
+import { logger } from '../../ws.config/log';
 
 const sandbox = sinonTest.configureTest(sinon);
 
@@ -233,6 +234,7 @@ describe('Datapoints service', () => {
     this.stub(ddfQueryValidator, 'validateDdfQueryAsync').callsArgWithAsync(1, null, context);
     this.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, context);
     this.stub(conceptsService, 'getConcepts').callsArgWithAsync(1, null, context);
+    this.stub(logger, 'error');
 
     const getEntitiesStub = this.stub(entitiesService, 'getEntities');
     getEntitiesStub.onFirstCall()
@@ -598,6 +600,8 @@ describe('Datapoints service', () => {
 
     getEntitiesStub.onThirdCall()
       .callsArgWithAsync(1, null, {entities: ageEntities});
+
+    this.stub(logger, 'info');
 
     datapointsService.collectDatapointsByDdfql(context, (error, externalContext) => {
       expect(error).to.not.exist;

@@ -9,7 +9,7 @@ const Concepts: any = new Schema({
 
   type: {
     type: String,
-    enum: [... constants.DEFAULT_ENTITY_GROUP_TYPES, 'string', 'measure'],
+    enum: constants.DEFAULT_CONCEPT_TYPES,
     default: 'string',
     required: true
   },
