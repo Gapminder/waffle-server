@@ -1,3 +1,21 @@
+<a name="2.9.5"></a>
+## [2.9.5](https://github.com/Gapminder/waffle-server/compare/v2.9.4...v2.9.5) (2017-10-19)
+
+
+### Bug Fixes
+
+* add diffs and repos folder ([aed0935](https://github.com/Gapminder/waffle-server/commit/aed0935))
+* exclude tracking changes for diffs and repos folder via .gitignore ([82b6ed5](https://github.com/Gapminder/waffle-server/commit/82b6ed5))
+* **deployment:** fix haproxy issue ([e40ead8](https://github.com/Gapminder/waffle-server/commit/e40ead8))
+
+
+### Features
+
+* **newrelic:** add environment to name of newrelic app ([a55e2bd](https://github.com/Gapminder/waffle-server/commit/a55e2bd))
+* **routes:** change CORS headers for OPTIONS request for /api/ddf/ql route ([ff29fdb](https://github.com/Gapminder/waffle-server/commit/ff29fdb))
+
+
+
 <a name="2.9.4"></a>
 ## [2.9.4](https://github.com/Gapminder/waffle-server/compare/v2.9.3...v2.9.4) (2017-09-27)
 
