@@ -13,8 +13,8 @@ const SERVICE_NAME = process.env.SERVICE_NAME || 'default';
 const THRASHING_MACHINE = process.env.THRASHING_MACHINE;
 const LOGS_SYNC_DISABLED = process.env.LOGS_SYNC_DISABLED;
 
-const runWaffleServerCommand = '/usr/bin/forever -o logs/out.log -e logs/err.log start -c \"/usr/bin/node --stack_trace_limit=0 --max_old_space_size=3000\" -m 10 --minUptime 500 --spinSleepTime 600 server.js';
-const runWaffleServerThrashingMachineCommand = 'INNER_PORT=80 /usr/bin/node --stack_trace_limit=0 --max_old_space_size=10000 server.js';
+const runWaffleServerCommand = `/usr/bin/pm2 start ecosystem.config.js`;
+const runWaffleServerThrashingMachineCommand = `THRASHING_MACHINE=true /usr/bin/pm2 start ecosystem.config.js`;
 
 if (!REDIS_HOST) {
   logger.info('-- ERROR: REDIS_HOST is not set. Exit.');
@@ -52,10 +52,10 @@ function startWaffleServer(): void {
       process.exit(1);
     }
 
-    const isWaffleServerNotRunning = _.trim((shell.exec('/usr/bin/forever list | /bin/grep server.js | wc -l', { silent: true }) as shell.ExecOutputReturnValue).stdout) !== '1';
+    const isWaffleServerNotRunning = _.trim((shell.exec('ls $HOME/.pm2/pids/ | grep "[WS|TM]" | wc -l', { silent: true }) as shell.ExecOutputReturnValue).stdout) !== '1';
     if (isWaffleServerNotRunning) {
       logger.info('-- ERROR: ws is failed to start. Going to start Waffle Server once more...');
-      shell.exec('/usr/bin/forever stopall');
+      shell.exec('pm2 stop all && pm2 delete all');
       shell.exec(runWaffleServerCommand);
     }
 

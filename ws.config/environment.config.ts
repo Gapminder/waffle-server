@@ -43,7 +43,7 @@ const environment = Object.freeze({
   LOG_MARKER: LOG_MARKERS[NODE_ENV],
   LOG_LEVEL: DEFAULT_LOG_LEVELS[NODE_ENV] || DEFAULT_LOG_LEVELS[DEFAULT_NODE_ENV],
 
-  MONGODB_URL: 'mongodb://localhost:27017',
+  MONGODB_URL: 'mongodb://localhost:27017/ws_ddf_local',
 
   REDIS_HOST: process.env.REDIS_HOST || 'localhost',
   REDIS_PORT: process.env.REDIS_PORT || 6379,

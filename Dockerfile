@@ -8,7 +8,9 @@ COPY ./deployment/rsys_conf/ws.conf /etc/rsyslog.d/ws.conf
 
 RUN curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
 RUN apt-get install -y nodejs
-RUN npm i -g forever
+RUN npm i -g pm2
+RUN npm i -g pm2-logrotate
+RUN pm2 install pm2-logrotate
 RUN npm i -g shelljs
 
 RUN wget -O /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.0/dumb-init_1.2.0_amd64
