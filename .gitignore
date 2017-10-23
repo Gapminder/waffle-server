@@ -49,5 +49,6 @@ siege-attack.sh
 yarn.lock
 
 # forever
-test/pids/*
+test/pids
+test/sock
 test/config.json
