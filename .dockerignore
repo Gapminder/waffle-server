@@ -1,10 +1,11 @@
 settings_gapminder*.txt
 settings_valor.txt
-logs/*
+logs/*.log*
 ws.import/repos/*
 ws.import/diffs/*
 **/*.js
 **/*.js.map
 node_modules
 *.log
+**/*.log
 !**/.gitkeep
