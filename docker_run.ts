@@ -41,10 +41,19 @@ if (THRASHING_MACHINE) {
   startWaffleServer();
 }
 
+function isWaffleServerNotRunning(): boolean {
+  const numberStartedProcess: ExecOutputReturnValue | ChildProcess = shell.exec('ls $HOME/.pm2/pids/ | grep "[WS|TM]" | wc -l', { silent: true });
+  logger.info(numberStartedProcess);
+  return (+numberStartedProcess.stdout) < 1;
+}
+
 function startWaffleServerThrashingMachine(): void {
   while (true) {
-    shell.exec(runWaffleServerThrashingMachineCommand);
-    logger.info('Waffle Server is going to be restarted...');
+    if (isWaffleServerNotRunning()) {
+      shell.exec(runWaffleServerThrashingMachineCommand);
+      logger.info('Waffle Server is going to be restarted...');
+    }
+    shell.exec('sleep 20');
   }
 }
 
@@ -63,11 +72,7 @@ function startWaffleServer(): void {
 
     shell.exec('sleep 20');
 
-    const numberStartedProcess: ExecOutputReturnValue | ChildProcess = shell.exec('ls $HOME/.pm2/pids/ | grep "[WS|TM]" | wc -l', { silent: true });
-    logger.info(numberStartedProcess);
-    const isWaffleServerNotRunning = (+numberStartedProcess.stdout) < 1;
-
-    if (isWaffleServerNotRunning) {
+    if (isWaffleServerNotRunning()) {
       logger.info('-- ERROR: ws is failed to start. Going to start Waffle Server once more...');
       shell.exec('pm2 stop all && pm2 delete all');
       shell.exec(runWaffleServerCommand);
