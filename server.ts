@@ -1,4 +1,4 @@
-import 'newrelic';
+// import 'newrelic';
 
 import * as express from 'express';
 import { connectToDb } from './ws.config/db.config';

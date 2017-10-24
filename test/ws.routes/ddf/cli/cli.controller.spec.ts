@@ -269,6 +269,7 @@ describe('WS-CLI controller', () => {
       });
       const cliServiceStub = this.stub(cliApi, 'cleanRepos').callsArgWithAsync(1, null);
       const ddfImportUtilsStub = this.stub(ddfImportUtils, 'cloneImportedDdfRepos').callsFake(() => Promise.resolve());
+      this.stub(logger, 'info');
 
       const req = {
         user: {

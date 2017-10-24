@@ -38,11 +38,11 @@ function sendDdfqlRequest(ddfql: any, onResponseReceived: Function): void {
 function startWaffleServer(): void {
   setUpEnvironmentVariables();
   if (START_WAFFLE_SERVER) {
-    shell.exec(`./node_modules/.bin/forever start --fifo -o ./logs/forever.output.log -e ./logs/forever.error.log -a --uid "${e2eEnv.wsUid}" server.js`);
+    shell.exec(`./node_modules/.bin/pm2 start ecosystem.config.js --name WSTEST`);
 
     if (shell.error()) {
       logger.error('startWaffleServer error:', shell.error());
-      shell.exec(`./node_modules/.bin/forever list`);
+      shell.exec(`./node_modules/.bin/pm2 list`);
     }
   }
 }
@@ -50,11 +50,7 @@ function startWaffleServer(): void {
 function stopWaffleServer(done: Function): void {
   if (START_WAFFLE_SERVER) {
     shell.exec(`node -v`);
-    const list = shell.exec(`./node_modules/.bin/forever list`);
-
-    if (!_.includes(list.stdout, 'No forever processes running')) {
-      shell.exec(`./node_modules/.bin/forever stopall`);
-    }
+    shell.exec(`./node_modules/.bin/pm2 stop all && ./node_modules/.bin/pm2 delete all`);
 
     return done(shell.error());
   }
@@ -79,7 +75,6 @@ function setUpEnvironmentVariables(): void {
   shell.env['NODE_ENV'] = e2eEnv.nodeEnv;
   shell.env['DEFAULT_USER_PASSWORD'] = e2eEnv.pass;
   shell.env['INNER_PORT'] = e2eEnv.wsPort;
-  shell.env['FOREVER_ROOT'] = __dirname;
   /* tslint:enable:no-string-literal */
 }
 

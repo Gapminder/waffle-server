@@ -435,6 +435,7 @@ describe('Routes utils', () => {
       const next = () => {
         expect.fail(null, null, 'Should not call next middleware');
       };
+      this.stub(logger, 'error');
 
       routeUtils.bodyFromUrlQuery(req, res, next);
     }));
@@ -479,6 +480,7 @@ describe('Routes utils', () => {
       const queryRaw = url.parse(req.url).query;
 
       const loggerInfoStub = this.stub(logger, 'info');
+      this.stub(logger, 'error');
 
       const res: any = {
         json: (response: any) => {
@@ -566,6 +568,7 @@ describe('Routes utils', () => {
       const queryRaw = url.parse(req.url).query;
 
       const loggerInfoStub = this.stub(logger, 'info');
+      this.stub(logger, 'error');
 
       const res = {
         json: (response) => {
@@ -930,6 +933,7 @@ describe('Routes utils', () => {
       const next = this.spy();
 
       this.stub(config, 'getWsCliVersionSupported').returns('2.5.23');
+      this.stub(logger, 'error');
 
       routeUtils.ensureCliVersion(req, res, next);
 
@@ -955,6 +959,7 @@ describe('Routes utils', () => {
       const next = this.spy();
 
       this.stub(config, 'getWsCliVersionSupported').returns('2.5.23');
+      this.stub(logger, 'error');
 
       routeUtils.ensureCliVersion(req, res, next);
 
@@ -977,6 +982,7 @@ describe('Routes utils', () => {
       const next = this.spy();
 
       this.stub(config, 'getWsCliVersionSupported').returns('2.5.23');
+      this.stub(logger, 'error');
 
       routeUtils.ensureCliVersion(req, res, next);
 
@@ -1025,6 +1031,7 @@ describe('Routes utils', () => {
     it(`fails when malformed url was given to the "assets" endpoint`, sandbox(function (): any {
       const jsonSpy = this.spy();
       const nextSpy = this.spy();
+      this.stub(logger, 'error');
 
       const req: any = {
         originalUrl: `${constants.ASSETS_ROUTE_BASE_PATH}/%E0%A4%A`,
@@ -1049,6 +1056,7 @@ describe('Routes utils', () => {
     it(`fails when given url contains relative path segments like "." or ".."`, sandbox(function (): any {
       const jsonSpy = this.spy();
       const nextSpy = this.spy();
+      this.stub(logger, 'error');
 
       const req: any = {
         originalUrl: `${constants.ASSETS_ROUTE_BASE_PATH}/../foo/./bar/../baz.json`,
@@ -1077,6 +1085,7 @@ describe('Routes utils', () => {
       const expectedError = 'Default dataset not found';
 
       const nextSpy = this.spy();
+      this.stub(logger, 'error');
 
       this.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, expectedError);
 
@@ -1109,6 +1118,7 @@ describe('Routes utils', () => {
       const expectedError = `You cannot access directories other than "${constants.ASSETS_EXPECTED_DIR}"`;
 
       const nextSpy = this.spy();
+      this.stub(logger, 'error');
 
       const defaultDataset: any = {
         name: 'open-numbers/globalis#development'

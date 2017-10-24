@@ -209,6 +209,7 @@ describe('Ddf import utils', () => {
     const expectedContext = Object.assign({}, context, {repoInfo});
 
     const cloneRepoStub = this.stub(reposService, 'cloneRepo').callsArgWithAsync(2, null, repoInfo);
+    this.stub(logger, 'info');
 
     ddfImportUtils.cloneDdfRepo(context, (error, externalContext) => {
       expect(error).to.not.exist;
@@ -229,6 +230,7 @@ describe('Ddf import utils', () => {
     };
 
     this.stub(reposService, 'cloneRepo').callsArgWithAsync(2, expectedError);
+    this.stub(logger, 'info');
 
     ddfImportUtils.cloneDdfRepo(context, (error) => {
       expect(error).to.equal(expectedError);
@@ -246,6 +248,7 @@ describe('Ddf import utils', () => {
     };
 
     this.stub(wsCli, 'generateDiff').callsArgWithAsync(1, expectedError);
+    this.stub(logger, 'info');
 
     ddfImportUtils.generateDiffForDatasetUpdate(context, (error) => {
       expect(error).to.equal(expectedError);
@@ -271,6 +274,7 @@ describe('Ddf import utils', () => {
     });
 
     const generateDiffStub = this.stub(wsCli, 'generateDiff').callsArgWithAsync(1, null, diffResult);
+    this.stub(logger, 'info');
 
     ddfImportUtils.generateDiffForDatasetUpdate(context, (error, externalContext) => {
       expect(error).to.not.exist;
@@ -315,6 +319,7 @@ describe('Ddf import utils', () => {
     const pathToDdf = '/path/to/ddf';
     const getPathToRepoStub = this.stub(reposService, 'getPathToRepo').returns(pathToDdf);
     const loadDatapackageStub = this.stub(datapackageParser, 'loadDatapackage').callsArgWithAsync(1, expectedError);
+    this.stub(logger, 'info');
 
     ddfImportUtils.getDatapackage(context, (error, externalContext) => {
       expect(error).to.equal(expectedError);
@@ -353,6 +358,7 @@ describe('Ddf import utils', () => {
     };
 
     const findLatestCompletedByDatasetStub = this.stub(DatasetTransactionsRepository, 'findLatestCompletedByDataset').callsArgWithAsync(1, expectedError);
+    this.stub(logger, 'info');
 
     ddfImportUtils.findPreviousTransaction(context, (error, externalContext) => {
       expect(error).to.equal(expectedError);
@@ -370,6 +376,7 @@ describe('Ddf import utils', () => {
     };
 
     const findLatestCompletedByDatasetStub = this.stub(DatasetTransactionsRepository, 'findLatestCompletedByDataset').callsArgWithAsync(1, null, previousTransaction);
+    this.stub(logger, 'info');
 
     ddfImportUtils.findPreviousTransaction(context, (error, externalContext) => {
       expect(error).to.not.exist;
@@ -392,6 +399,7 @@ describe('Ddf import utils', () => {
     };
 
     const createStub = this.stub(DatasetTransactionsRepository, 'create').callsArgWithAsync(1, expectedError);
+    this.stub(logger, 'info');
 
     ddfImportUtils.createTransaction(context, (error, externalContext) => {
       expect(error).to.equal(expectedError);
@@ -412,6 +420,7 @@ describe('Ddf import utils', () => {
     const createStub =
       this.stub(DatasetTransactionsRepository, 'create')
         .callsArgWithAsync(1, null, createdTransaction);
+    this.stub(logger, 'info');
 
     ddfImportUtils.createTransaction(context, (error, externalContext) => {
       expect(error).to.not.exist;
@@ -439,6 +448,7 @@ describe('Ddf import utils', () => {
     };
 
     const createStub = this.stub(DatasetTransactionsRepository, 'closeTransaction').callsArgWithAsync(1, expectedError);
+    this.stub(logger, 'info');
 
     ddfImportUtils.closeTransaction(context, (error, externalContext) => {
       expect(error).to.equal(expectedError);
@@ -455,6 +465,7 @@ describe('Ddf import utils', () => {
     };
 
     const closeTransactionStub = this.stub(DatasetTransactionsRepository, 'closeTransaction').callsArgWithAsync(1, null);
+    this.stub(logger, 'info');
 
     ddfImportUtils.closeTransaction(context, (error) => {
       expect(error).to.not.exist;
@@ -485,6 +496,7 @@ describe('Ddf import utils', () => {
     };
 
     const createStub = this.stub(DatasetsRepository, 'create').callsArgWithAsync(1, expectedError);
+    this.stub(logger, 'info');
 
     ddfImportUtils.createDataset(context, (error) => {
       expect(error).to.equal(expectedError);
@@ -509,6 +521,7 @@ describe('Ddf import utils', () => {
     };
 
     const createStub = this.stub(DatasetsRepository, 'create').callsArgWithAsync(1, null, null);
+    this.stub(logger, 'info');
 
     ddfImportUtils.createDataset(context, (error) => {
       expect(error).to.equal(expectedError);
@@ -549,6 +562,7 @@ describe('Ddf import utils', () => {
 
     const context = {};
     this.stub(DatasetsRepository, 'findByName').callsArgWithAsync(1, expectedError);
+    this.stub(logger, 'info');
 
     ddfImportUtils.findDataset(context, (error, externalContext) => {
       expect(error).to.equal(expectedError);
@@ -561,6 +575,7 @@ describe('Ddf import utils', () => {
 
     const context = {};
     this.stub(DatasetsRepository, 'findByName').callsArgWithAsync(1, null, null);
+    this.stub(logger, 'info');
 
     ddfImportUtils.findDataset(context, (error, externalContext) => {
       expect(error).to.equal(expectedError);
@@ -579,6 +594,7 @@ describe('Ddf import utils', () => {
     };
 
     this.stub(DatasetsRepository, 'findByName').callsArgWithAsync(1, null, expectedDataset);
+    this.stub(logger, 'info');
 
     ddfImportUtils.findDataset(context, (error, externalContext) => {
       expect(error).to.not.exist;
@@ -600,6 +616,7 @@ describe('Ddf import utils', () => {
     };
 
     this.stub(DatasetTransactionsRepository, 'establishForDataset').callsArgWithAsync(1, expectedError);
+    this.stub(logger, 'info');
 
     ddfImportUtils.establishTransactionForDataset(context, (error) => {
       expect(error).to.equal(expectedError);
@@ -618,6 +635,7 @@ describe('Ddf import utils', () => {
     };
 
     const establishForDatasetStub = this.stub(DatasetTransactionsRepository, 'establishForDataset').callsArgWithAsync(1, null, context);
+    this.stub(logger, 'info');
 
     ddfImportUtils.establishTransactionForDataset(context, (error) => {
       expect(error).to.not.exist;
@@ -646,6 +664,7 @@ describe('Ddf import utils', () => {
     };
 
     this.stub(DatasetTransactionsRepository, 'updateLanguages').callsArgWithAsync(1, expectedError);
+    this.stub(logger, 'info');
 
     ddfImportUtils.updateTransactionLanguages(context, (error) => {
       expect(error).to.equal(expectedError);
@@ -697,6 +716,7 @@ describe('Ddf import utils', () => {
 
       const findAllStub = this.stub(DatasetsRepository, 'findAll').returns(Promise.resolve(stubDatasets));
       const cloneRepoStub = this.stub(reposService, 'cloneRepo').callsArgWithAsync(2, null);
+      this.stub(logger, 'info');
 
       return ddfImportUtils.cloneImportedDdfRepos().then(() => {
         sinon.assert.calledOnce(findAllStub);
@@ -743,6 +763,7 @@ describe('Ddf import utils', () => {
 
       const findAllStub = this.stub(DatasetsRepository, 'findAll').returns(Promise.resolve(stubDatasets));
       const cloneRepoStub = this.stub(reposService, 'cloneRepo').callsArgWithAsync(2, null);
+      this.stub(logger, 'info');
 
       return ddfImportUtils.cloneImportedDdfRepos().then(() => {
         sinon.assert.notCalled(findAllStub);

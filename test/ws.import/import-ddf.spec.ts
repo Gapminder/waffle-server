@@ -12,6 +12,7 @@ import * as createTranslationsModule from '../../ws.import/import-translations';
 import * as createDatasetSchemaModule from '../../ws.import/import-dataset-schema';
 
 import { importDdf } from '../../ws.import/import-ddf';
+import { logger } from '../../ws.config/log';
 
 const sandbox = sinonTest.configureTest(sinon);
 
@@ -46,6 +47,7 @@ describe('Import ddf dataset from git repository', () => {
     const createTranslationsStub = this.stub(createTranslationsModule, 'createTranslations').callsArgWithAsync(1, null, context);
     const createDatasetSchemaStub = this.stub(createDatasetSchemaModule, 'createDatasetSchema').callsArgWithAsync(1, null, context);
     const closeTransactionStub = this.stub(ddfImportUtils, 'closeTransaction').callsArgWithAsync(1, null, context);
+    this.stub(logger, 'info');
 
     importDdf(context, (error, externalContext) => {
       expect(error).to.not.exist;
@@ -92,6 +94,7 @@ describe('Import ddf dataset from git repository', () => {
 
     const expectedError = 'Boo!';
     this.stub(ddfImportUtils, 'resolvePathToDdfFolder').callsArgWithAsync(1, expectedError, context);
+    this.stub(logger, 'info');
 
     importDdf(context, (error, externalContext) => {
       expect(error).to.equal(expectedError);
@@ -127,6 +130,7 @@ describe('Import ddf dataset from git repository', () => {
     const resolvePathToDdfFolderStub = this.stub(ddfImportUtils, 'resolvePathToDdfFolder').callsArgWithAsync(1, null, context);
     const createTransactionStub = this.stub(ddfImportUtils, 'createTransaction').callsArgWithAsync(1, null, context);
     const createDatasetStub = this.stub(ddfImportUtils, 'createDataset').callsArgWithAsync(1, expectedError, context);
+    this.stub(logger, 'info');
 
     importDdf(context, (error, externalContext) => {
       expect(error).to.equal(expectedError);
@@ -159,6 +163,7 @@ describe('Import ddf dataset from git repository', () => {
     const expectedError = 'Boo!';
 
     const resolvePathToDdfFolderStub = this.stub(ddfImportUtils, 'resolvePathToDdfFolder').callsArgWithAsync(1, expectedError, context);
+    this.stub(logger, 'info');
 
     importDdf(context, (error, externalContext) => {
       expect(error).to.equal(expectedError);

@@ -3,7 +3,7 @@ import {constants} from '../../ws.utils/constants';
 import * as ddfImportUtils from './import-ddf.utils';
 import * as conceptsUtils from './concepts.utils';
 import { logger } from '../../ws.config/log';
-
+import * as ddfQueryUtils from '../../ws.ddfql/ddf-query-utils';
 const JSON_COLUMNS = ['color', 'scales', 'drill_up'];
 
 export {
@@ -150,14 +150,21 @@ function transformTranslations(translationsByLang: any, transform: any): any {
 
 function transformEntityProperties(object: any, concepts: any): any {
   return _.transform(object, (result: any, value: any, key: any) => {
-    const ddfBool = ddfImportUtils.toBoolean(value);
-    if (!_.isNil(ddfBool)) {
-      result[key] = ddfBool;
-      return;
+    const conceptGid = ddfQueryUtils.cutPrefixByDashes(key);
+    const concept = concepts[conceptGid];
+    const conceptType = _.get(concept, 'type', null);
+
+    const isEntitySetWithIsOperator = conceptType === constants.CONCEPT_TYPE_ENTITY_SET && _.startsWith(key, constants.IS_OPERATOR);
+
+    if (conceptType === constants.CONCEPT_TYPE_BOOLEAN || isEntitySetWithIsOperator) {
+      const ddfBool = ddfImportUtils.toBoolean(value);
+      if (!_.isNil(ddfBool)) {
+        result[key] = ddfBool;
+        return;
+      }
     }
 
-    const concept = concepts[key];
-    if (concept && concept.type === 'measure') {
+    if (conceptType === constants.CONCEPT_TYPE_MEASURE) {
       const ddfNumeric = ddfImportUtils.toNumeric(value);
       if (!_.isNil(ddfNumeric)) {
         result[key] = ddfNumeric;

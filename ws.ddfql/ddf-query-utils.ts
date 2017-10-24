@@ -169,8 +169,8 @@ function cutPrefixByDot(value: string, prefix?: any): string {
   return _.replace(value, new RegExp(`^${prefix}\.`), '');
 }
 
-function cutPrefixByDashes(value: string): string {
-  return _.replace(value, /^is--/, '');
+function cutPrefixByDashes(fieldName: string): string {
+  return _.last(_.split(fieldName, constants.IS_OPERATOR));
 }
 
 function wrapEntityProperties(key: string, options: any): string {
