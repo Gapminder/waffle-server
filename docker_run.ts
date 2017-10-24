@@ -18,10 +18,6 @@ const LOGS_SYNC_DISABLED = process.env.LOGS_SYNC_DISABLED;
 const KEYMETRICS_LOGIN = process.env.KEYMETRICS_LOGIN;
 const KEYMETRICS_PASSWORD = process.env.KEYMETRICS_PASSWORD;
 
-if (NODE_ENV === 'development') {
-  shell.exec(`/usr/bin/pm2 link ${KEYMETRICS_PASSWORD} ${KEYMETRICS_LOGIN}`);
-}
-
 const runWaffleServerCommand = `/usr/bin/pm2 start ecosystem.config.js`;
 const runWaffleServerThrashingMachineCommand = `THRASHING_MACHINE=true /usr/bin/pm2 start ecosystem.config.js`;
 
@@ -47,11 +43,18 @@ function isWaffleServerNotRunning(): boolean {
   return (+numberStartedProcess.stdout) < 1;
 }
 
+function runPM2KeyMetricsLogging(): void {
+  if (NODE_ENV === 'development') {
+    shell.exec(`/usr/bin/pm2 link ${KEYMETRICS_PASSWORD} ${KEYMETRICS_LOGIN}`);
+  }
+}
+
 function startWaffleServerThrashingMachine(): void {
   while (true) {
     if (isWaffleServerNotRunning()) {
-      shell.exec(runWaffleServerThrashingMachineCommand);
       logger.info('Waffle Server is going to be restarted...');
+      shell.exec(runWaffleServerThrashingMachineCommand);
+      runPM2KeyMetricsLogging();
     }
     shell.exec('sleep 20');
   }
@@ -76,6 +79,7 @@ function startWaffleServer(): void {
       logger.info('-- ERROR: ws is failed to start. Going to start Waffle Server once more...');
       shell.exec('pm2 stop all && pm2 delete all');
       shell.exec(runWaffleServerCommand);
+      runPM2KeyMetricsLogging();
     }
 
     shell.exec('sleep 2');
