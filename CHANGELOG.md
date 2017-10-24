@@ -1,3 +1,24 @@
+<a name="2.10.0"></a>
+# [2.10.0](https://github.com/Gapminder/waffle-server/compare/v2.9.5...v2.10.0) (2017-10-24)
+
+
+### Bug Fixes
+
+* add concept types which are supported by DDF data model ([9653b88](https://github.com/Gapminder/waffle-server/commit/9653b88))
+* **docker:** fix docker_run file ([633494a](https://github.com/Gapminder/waffle-server/commit/633494a))
+* **docker:** fix docker_run file for running key metrics logging ([abf2b2d](https://github.com/Gapminder/waffle-server/commit/abf2b2d))
+* **docker:** fix docker_run file for TM ([286a597](https://github.com/Gapminder/waffle-server/commit/286a597))
+* **pm2:** add delay for running key metrics logging for development stack ([b476638](https://github.com/Gapminder/waffle-server/commit/b476638))
+* **pm2:** update ecosystem.config ([ea680f0](https://github.com/Gapminder/waffle-server/commit/ea680f0))
+* **recent-queries:** fix logging for recent ddf queries ([d8c7060](https://github.com/Gapminder/waffle-server/commit/d8c7060))
+
+
+### Features
+
+* **pm2:** add supporting of pm2 module ([7f190ad](https://github.com/Gapminder/waffle-server/commit/7f190ad))
+
+
+
 <a name="2.9.5"></a>
 ## [2.9.5](https://github.com/Gapminder/waffle-server/compare/v2.9.4...v2.9.5) (2017-10-19)
 
