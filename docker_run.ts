@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 
 import * as _ from 'lodash';
+import {ExecOutputReturnValue} from 'shelljs';
 import * as shell from 'shelljs';
 
 import { logger } from './ws.config/log';
+import { ChildProcess } from 'child_process';
 
+const NODE_ENV = process.env.NODE_ENV;
 const REDIS_HOST = process.env.REDIS_HOST;
 const REDIS_PORT = process.env.REDIS_PORT || 6379;
 const HA_REG_EXPIRE = process.env.HA_REG_EXPIRE || 60;
@@ -12,6 +15,8 @@ const NODE_PORT = process.env.NODE_PORT || 3000;
 const SERVICE_NAME = process.env.SERVICE_NAME || 'default';
 const THRASHING_MACHINE = process.env.THRASHING_MACHINE;
 const LOGS_SYNC_DISABLED = process.env.LOGS_SYNC_DISABLED;
+const KEYMETRICS_LOGIN = process.env.KEYMETRICS_LOGIN;
+const KEYMETRICS_PASSWORD = process.env.KEYMETRICS_PASSWORD;
 
 const runWaffleServerCommand = `/usr/bin/pm2 start ecosystem.config.js`;
 const runWaffleServerThrashingMachineCommand = `THRASHING_MACHINE=true /usr/bin/pm2 start ecosystem.config.js`;
@@ -32,10 +37,27 @@ if (THRASHING_MACHINE) {
   startWaffleServer();
 }
 
+function isWaffleServerNotRunning(): boolean {
+  const numberStartedProcess: ExecOutputReturnValue | ChildProcess = shell.exec('ls $HOME/.pm2/pids/ | grep "[WS|TM]" | wc -l', { silent: true });
+  logger.info(numberStartedProcess);
+  return (+numberStartedProcess.stdout) < 1;
+}
+
+function runPM2KeyMetricsLogging(): void {
+  if (NODE_ENV === 'development') {
+    shell.exec('sleep 10');
+    shell.exec(`/usr/bin/pm2 link ${KEYMETRICS_PASSWORD} ${KEYMETRICS_LOGIN}`);
+  }
+}
+
 function startWaffleServerThrashingMachine(): void {
   while (true) {
-    shell.exec(runWaffleServerThrashingMachineCommand);
-    logger.info('Waffle Server is going to be restarted...');
+    if (isWaffleServerNotRunning()) {
+      logger.info('Waffle Server is going to be restarted...');
+      shell.exec(runWaffleServerThrashingMachineCommand);
+      runPM2KeyMetricsLogging();
+    }
+    shell.exec('sleep 10');
   }
 }
 
@@ -52,13 +74,15 @@ function startWaffleServer(): void {
       process.exit(1);
     }
 
-    const isWaffleServerNotRunning = _.trim((shell.exec('ls $HOME/.pm2/pids/ | grep "[WS|TM]" | wc -l', { silent: true }) as shell.ExecOutputReturnValue).stdout) !== '1';
-    if (isWaffleServerNotRunning) {
+    shell.exec('sleep 10');
+
+    if (isWaffleServerNotRunning()) {
       logger.info('-- ERROR: ws is failed to start. Going to start Waffle Server once more...');
       shell.exec('pm2 stop all && pm2 delete all');
       shell.exec(runWaffleServerCommand);
+      runPM2KeyMetricsLogging();
     }
 
-    shell.exec('sleep 2');
+    shell.exec('sleep 10');
   }
 }
