@@ -45,6 +45,7 @@ function isWaffleServerNotRunning(): boolean {
 
 function runPM2KeyMetricsLogging(): void {
   if (NODE_ENV === 'development') {
+    shell.exec('sleep 10');
     shell.exec(`/usr/bin/pm2 link ${KEYMETRICS_PASSWORD} ${KEYMETRICS_LOGIN}`);
   }
 }
@@ -56,7 +57,7 @@ function startWaffleServerThrashingMachine(): void {
       shell.exec(runWaffleServerThrashingMachineCommand);
       runPM2KeyMetricsLogging();
     }
-    shell.exec('sleep 20');
+    shell.exec('sleep 10');
   }
 }
 
@@ -73,7 +74,7 @@ function startWaffleServer(): void {
       process.exit(1);
     }
 
-    shell.exec('sleep 20');
+    shell.exec('sleep 10');
 
     if (isWaffleServerNotRunning()) {
       logger.info('-- ERROR: ws is failed to start. Going to start Waffle Server once more...');
@@ -82,6 +83,6 @@ function startWaffleServer(): void {
       runPM2KeyMetricsLogging();
     }
 
-    shell.exec('sleep 2');
+    shell.exec('sleep 10');
   }
 }
