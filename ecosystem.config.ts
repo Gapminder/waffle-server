@@ -1,4 +1,4 @@
-const { config: appConfig } = require('./ws.config/config');
+import { config as appConfig } from './ws.config/config';
 
 const MAX_OLD_SPACE_SIZE = appConfig.THRASHING_MACHINE ? 10000 : 3000;
 const DEFAULT_INTERPRETER_ARGS = ['--stack_trace_limit=0', `--max_old_space_size=${MAX_OLD_SPACE_SIZE}`];
