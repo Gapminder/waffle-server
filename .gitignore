@@ -32,7 +32,8 @@ dumps
 # Directory for GitHub repositories
 ws.import/repos/*
 ws.import/diffs/*.txt
-!**/.gitkeep
+!ws.import/repos/.gitkeep
+!ws.import/diffs/.gitkeep
 
 settings_gapminder*.txt
 settings_valor.txt
