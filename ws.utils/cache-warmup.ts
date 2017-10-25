@@ -34,7 +34,8 @@ function executeDdfql(s: any): any {
   return s.flatMap((logRecord: any) => {
     const queryStartTime = Date.now();
 
-    const url = `${config.HOST_URL}:${config.INNER_PORT}/api/ddf/ql/?${logRecord.type === 'URLON' ? logRecord.queryRaw : 'query=' + logRecord.queryRaw}`;
+    const HOST = `http://localhost:${config.INNER_PORT}`;
+    const url = `${HOST}/api/ddf/ql/?${logRecord.type === 'URLON' ? logRecord.queryRaw : 'query=' + logRecord.queryRaw}`;
 
     logger.debug('Cache is going to be warmed up from url: ', url);
 
