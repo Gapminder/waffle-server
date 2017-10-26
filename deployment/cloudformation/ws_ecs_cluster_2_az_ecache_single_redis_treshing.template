@@ -1083,14 +1083,6 @@
               {
                 "ContainerPort": "80",
                 "HostPort": "3000"
-              },
-              {
-                "ContainerPort": "443",
-                "HostPort": "3000"
-              },
-              {
-                "ContainerPort": "8080",
-                "HostPort": "3000"
               }
             ],
             "Ulimits": [
@@ -1231,14 +1223,6 @@
             "PortMappings": [
               {
                 "ContainerPort": "80",
-                "HostPort": "3000"
-              },
-              {
-                "ContainerPort": "443",
-                "HostPort": "3000"
-              },
-              {
-                "ContainerPort": "8080",
                 "HostPort": "3000"
               }
             ],
