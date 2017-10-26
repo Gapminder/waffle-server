@@ -1082,7 +1082,7 @@
             "PortMappings": [
               {
                 "ContainerPort": "80",
-                "HostPort": "3000"
+                "HostPort": "80"
               }
             ],
             "Ulimits": [
@@ -1222,7 +1222,7 @@
 
             "PortMappings": [
               {
-                "ContainerPort": "80",
+                "ContainerPort": "3000",
                 "HostPort": "3000"
               }
             ],
