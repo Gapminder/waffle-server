@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-import * as _ from 'lodash';
 import {ExecOutputReturnValue} from 'shelljs';
 import * as shell from 'shelljs';
 
@@ -19,7 +18,7 @@ const KEYMETRICS_LOGIN = process.env.KEYMETRICS_LOGIN;
 const KEYMETRICS_PASSWORD = process.env.KEYMETRICS_PASSWORD;
 
 const runWaffleServerCommand = `/usr/bin/pm2 start ecosystem.config.js`;
-const runWaffleServerThrashingMachineCommand = `THRASHING_MACHINE=true /usr/bin/pm2 start ecosystem.config.js`;
+const runWaffleServerThrashingMachineCommand = `THRASHING_MACHINE=true /usr/bin/pm2-docker start ecosystem.config.js`;
 
 if (!REDIS_HOST) {
   logger.info('-- ERROR: REDIS_HOST is not set. Exit.');
@@ -51,14 +50,12 @@ function runPM2KeyMetricsLogging(): void {
 }
 
 function startWaffleServerThrashingMachine(): void {
-  while (true) {
-    if (isWaffleServerNotRunning()) {
-      logger.info('Waffle Server is going to be restarted...');
-      shell.exec(runWaffleServerThrashingMachineCommand);
-      runPM2KeyMetricsLogging();
-    }
-    shell.exec('sleep 10');
+  if (isWaffleServerNotRunning()) {
+    logger.info('Waffle Server is going to be restarted...');
+    shell.exec(runWaffleServerThrashingMachineCommand);
+    runPM2KeyMetricsLogging();
   }
+  shell.exec('sleep 10');
 }
 
 function startWaffleServer(): void {
