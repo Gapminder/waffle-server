@@ -28,7 +28,7 @@ module.exports = {
         MONGODB_URL: appConfig.MONGODB_URL,
         NEWRELIC_KEY: appConfig.NEWRELIC_KEY,
         LOG_LEVEL: appConfig.LOG_LEVEL,
-        PORT: appConfig.PORT,
+        PORT: appConfig.THRASHING_MACHINE ? 80 : appConfig.PORT,
         THRASHING_MACHINE: appConfig.THRASHING_MACHINE
       }
     }
