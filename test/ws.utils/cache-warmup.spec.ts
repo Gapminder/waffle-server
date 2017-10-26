@@ -27,7 +27,7 @@ describe('Cache Warm up', () => {
       type: 'URLON'
     };
 
-    const expectedUrl = `http://localhost:${config.INNER_PORT}/api/ddf/ql/?_select_key@=concept;&value@=concept/_type&=domain&=indicator/_url&=color&=scales&=interpolation&=tags&=name&=unit&=description;;&from=concepts&where_;&language=en`;
+    const expectedUrl = `http://localhost:${config.PORT}/api/ddf/ql/?_select_key@=concept;&value@=concept/_type&=domain&=indicator/_url&=color&=scales&=interpolation&=tags&=name&=unit&=description;;&from=concepts&where_;&language=en`;
 
     const loggerInfoStub = this.stub(logger, 'info');
     const loggerDebugStub = this.stub(logger, 'debug');
@@ -74,7 +74,7 @@ describe('Cache Warm up', () => {
       type: 'JSON'
     };
 
-    const expectedUrl = `http://localhost:${config.INNER_PORT}/api/ddf/ql/?query={"language":"en","from":"entities","animatable":false,"select":{"key":["geo"],"value":["name","rank","shape_lores_svg"]},"where":{},"join":{},"order_by":["rank"]}`;
+    const expectedUrl = `http://localhost:${config.PORT}/api/ddf/ql/?query={"language":"en","from":"entities","animatable":false,"select":{"key":["geo"],"value":["name","rank","shape_lores_svg"]},"where":{},"join":{},"order_by":["rank"]}`;
 
     const warmUp = proxyquire('../../ws.utils/cache-warmup', {
       [recentDdfqlQueriesRepositoryPath]: {
