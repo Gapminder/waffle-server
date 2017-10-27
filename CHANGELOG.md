@@ -8,6 +8,17 @@
 * **pm2:** changes pm2-docker configuration ([41de1fb](https://github.com/Gapminder/waffle-server/commit/41de1fb))
 
 
+
+<a name="2.11.0"></a>
+# [2.11.0](https://github.com/Gapminder/waffle-server/compare/v2.10.0...v2.11.0) (2017-10-27)
+
+
+### Bug Fixes
+
+* fix HostPort for AWS settings on Node Instances and TM ([f46b6ba](https://github.com/Gapminder/waffle-server/commit/f46b6ba))
+* **pm2:** changes pm2-docker configuration ([41de1fb](https://github.com/Gapminder/waffle-server/commit/41de1fb))
+
+
 <a name="2.10.0"></a>
 # [2.10.0](https://github.com/Gapminder/waffle-server/compare/v2.9.5...v2.10.0) (2017-10-24)
 
