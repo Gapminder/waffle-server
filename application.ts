@@ -32,8 +32,8 @@ export class Application {
 
   public run(): Promise<void> {
     return this.importUtils.cloneImportedDdfRepos()
-      .then(() => this.listen(this.config.INNER_PORT))
-      .then(() => logger.info('\nExpress server listening on port %d in %s mode', this.config.INNER_PORT, this.config.NODE_ENV))
+      .then(() => this.listen(this.config.PORT))
+      .then(() => logger.info('\nExpress server listening on port %d in %s mode', this.config.PORT, this.config.NODE_ENV))
       .then(() => this.usersService.makeDefaultUser())
       .then(() => this.warmup())
       .then(() => this.startLongRunningQueriesKiller());

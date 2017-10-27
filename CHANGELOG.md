@@ -1,3 +1,8 @@
+<a name="2.11.0"></a>
+# [2.11.0](https://github.com/Gapminder/waffle-server/compare/v2.10.0...v2.11.0) (2017-10-25)
+
+
+
 <a name="2.10.0"></a>
 # [2.10.0](https://github.com/Gapminder/waffle-server/compare/v2.9.5...v2.10.0) (2017-10-24)
 

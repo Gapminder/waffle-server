@@ -12,7 +12,7 @@
 ## Environment variables
 - `DEFAULT_USER_PASSWORD`	- is a variable for defining default WS user (example `DEFAULT_USER_PASSWORD=123`)
 - `MONGODB_URL` - defines connection url for mongodb (example	`MONGODB_URL=mongodb://localhost:27017/ws_ddf_local`)
-- `INNER_PORT` - defines on which port WS should run (example `INNER_PORT=3000`)
+- `PORT` - defines on which port WS should run (example `PORT=3000`)
 - `THRASHING_MACHINE` - this variable should be set only for WS machine that dealing with DDF importing and updating (example `THRASHING_MACHINE=true`)
 - `NODE_ENV` - environment in which WS is running  (example `NODE_ENV=local`). Possible values:
  - local

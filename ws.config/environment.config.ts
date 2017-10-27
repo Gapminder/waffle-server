@@ -27,18 +27,11 @@ const LOG_MARKERS = {
   production: 'PRD'
 };
 
-const DEFAULT_PORTS = Object.freeze({
-  local: 3000,
-  test: 3000,
-  development: 443,
-  stage: 443,
-  production: 443
-});
+const DEFAULT_PORT = 3000;
 
 const environment = Object.freeze({
   HOST_URL: DEFAULT_HOST_URLS[NODE_ENV] || DEFAULT_HOST_URLS[DEFAULT_NODE_ENV],
-  PORT: DEFAULT_PORTS[NODE_ENV] || DEFAULT_PORTS[DEFAULT_NODE_ENV],
-  INNER_PORT: 3000,
+  PORT: DEFAULT_PORT,
 
   LOG_MARKER: LOG_MARKERS[NODE_ENV],
   LOG_LEVEL: DEFAULT_LOG_LEVELS[NODE_ENV] || DEFAULT_LOG_LEVELS[DEFAULT_NODE_ENV],

@@ -38,7 +38,7 @@ function sendDdfqlRequest(ddfql: any, onResponseReceived: Function): void {
 function startWaffleServer(): void {
   setUpEnvironmentVariables();
   if (START_WAFFLE_SERVER) {
-    shell.exec(`./node_modules/.bin/pm2 restart ecosystem.config.js --name WSTEST`);
+    shell.exec(`PORT=${e2eEnv.wsPort} ./node_modules/.bin/pm2 restart ecosystem.config.js --name WSTEST`);
 
     if (shell.error()) {
       logger.error('startWaffleServer error:', shell.error());
@@ -74,7 +74,7 @@ function setUpEnvironmentVariables(): void {
   shell.env['LOG_LEVEL'] = e2eEnv.wsLogLevel;
   shell.env['NODE_ENV'] = e2eEnv.nodeEnv;
   shell.env['DEFAULT_USER_PASSWORD'] = e2eEnv.pass;
-  shell.env['INNER_PORT'] = e2eEnv.wsPort;
+  shell.env['PORT'] = e2eEnv.wsPort;
   /* tslint:enable:no-string-literal */
 }
 

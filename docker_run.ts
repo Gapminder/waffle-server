@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-import * as _ from 'lodash';
 import {ExecOutputReturnValue} from 'shelljs';
 import * as shell from 'shelljs';
 
@@ -11,7 +10,7 @@ const NODE_ENV = process.env.NODE_ENV;
 const REDIS_HOST = process.env.REDIS_HOST;
 const REDIS_PORT = process.env.REDIS_PORT || 6379;
 const HA_REG_EXPIRE = process.env.HA_REG_EXPIRE || 60;
-const NODE_PORT = process.env.NODE_PORT || 3000;
+const PORT = process.env.PORT || 3000;
 const SERVICE_NAME = process.env.SERVICE_NAME || 'default';
 const THRASHING_MACHINE = process.env.THRASHING_MACHINE;
 const LOGS_SYNC_DISABLED = process.env.LOGS_SYNC_DISABLED;
@@ -19,7 +18,7 @@ const KEYMETRICS_LOGIN = process.env.KEYMETRICS_LOGIN;
 const KEYMETRICS_PASSWORD = process.env.KEYMETRICS_PASSWORD;
 
 const runWaffleServerCommand = `/usr/bin/pm2 start ecosystem.config.js`;
-const runWaffleServerThrashingMachineCommand = `THRASHING_MACHINE=true /usr/bin/pm2 start ecosystem.config.js`;
+const runWaffleServerThrashingMachineCommand = `THRASHING_MACHINE=true /usr/bin/pm2-docker start ecosystem.config.js`;
 
 if (!REDIS_HOST) {
   logger.info('-- ERROR: REDIS_HOST is not set. Exit.');
@@ -51,14 +50,12 @@ function runPM2KeyMetricsLogging(): void {
 }
 
 function startWaffleServerThrashingMachine(): void {
-  while (true) {
-    if (isWaffleServerNotRunning()) {
-      logger.info('Waffle Server is going to be restarted...');
-      shell.exec(runWaffleServerThrashingMachineCommand);
-      runPM2KeyMetricsLogging();
-    }
-    shell.exec('sleep 10');
+  if (isWaffleServerNotRunning()) {
+    logger.info('Waffle Server is going to be restarted...');
+    shell.exec(runWaffleServerThrashingMachineCommand);
+    runPM2KeyMetricsLogging();
   }
+  shell.exec('sleep 10');
 }
 
 function startWaffleServer(): void {
@@ -68,7 +65,7 @@ function startWaffleServer(): void {
     const myip = shell.exec('/usr/bin/curl -m 2 http://169.254.169.254/latest/meta-data/local-ipv4 2>/dev/null');
     if (myip.code === 0) {
       const ip = myip.stdout;
-      shell.exec(`/usr/bin/redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} setex /upstreams/${SERVICE_NAME}/${process.env.HOSTNAME}  ${HA_REG_EXPIRE} \"${ip} ${ip}:${NODE_PORT}\"`, { silent: true });
+      shell.exec(`/usr/bin/redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} setex /upstreams/${SERVICE_NAME}/${process.env.HOSTNAME}  ${HA_REG_EXPIRE} \"${ip} ${ip}:${PORT}\"`, { silent: true });
     } else {
       logger.info('-- ERROR: Could not determine local ip address. Exit.');
       process.exit(1);

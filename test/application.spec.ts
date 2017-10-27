@@ -49,7 +49,7 @@ describe('Application', () => {
 
         return {
           THRASHING_MACHINE: true,
-          INNER_PORT: 8888,
+          PORT: 8888,
           NODE_ENV: 'development'
         };
       }
@@ -106,7 +106,7 @@ describe('Application', () => {
 
         return {
           THRASHING_MACHINE: false,
-          INNER_PORT: 8888,
+          PORT: 8888,
           NODE_ENV: 'development'
         };
       }
@@ -162,7 +162,7 @@ describe('Application', () => {
 
         return {
           THRASHING_MACHINE: true,
-          INNER_PORT: 8888,
+          PORT: 8888,
           NODE_ENV: 'development'
         };
       }
@@ -218,7 +218,7 @@ describe('Application', () => {
 
         return {
           THRASHING_MACHINE: true,
-          INNER_PORT: 8888,
+          PORT: 8888,
           NODE_ENV: 'development'
         };
       }
