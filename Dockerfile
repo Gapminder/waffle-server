@@ -1,7 +1,7 @@
 FROM ubuntu:16.04
 
 RUN apt-get update
-RUN apt-get install -y sudo git python build-essential libssl-dev openssh-server curl redis-tools nfs-common rsyslog libkrb5-dev
+RUN apt-get install -y sudo git python build-essential libssl-dev openssh-server curl redis-tools nfs-common rsyslog libkrb5-dev net-tools lsof nano htop
 
 COPY ./deployment/rsys_conf/rsyslog.conf /etc/rsyslog.conf
 COPY ./deployment/rsys_conf/ws.conf /etc/rsyslog.d/ws.conf
