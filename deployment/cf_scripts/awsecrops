@@ -142,6 +142,9 @@ function buildnpush {
 ===============================================\n\n"
   sleep 5
 
+  cat $(dirname $0)/../telegraf/telegraf.conf > $(dirname $0)/../haproxy_docker/tmp
+  cat $(dirname $0)/../../package.json > $(dirname $0)/../haproxy_docker/tmp
+
   pushd $(dirname $0)/../haproxy_docker/
     $DOCKER build -t $HAPROXY_ECR_URI:${HAPROXY_ECR_LABEL} .
   popd
