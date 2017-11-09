@@ -8,7 +8,6 @@ ws.import/diffs/*
 node_modules
 *.log
 **/*.log
-deployment/haproxy_docker/tmp/*
 !logs/.gitkeep
 !ws.import/repos/.gitkeep
 !ws.import/diffs/.gitkeep

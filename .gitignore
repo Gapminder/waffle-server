@@ -54,5 +54,5 @@ test/sock
 test/config.json
 
 # deployment
-deployment/haproxy_docker/tmp/*.*
-!deployment/haproxy_docker/tmp/.gitkeep
+deployment/**/tmp/*.*
+!deployment/**/tmp/.gitkeep

@@ -29,7 +29,7 @@ RUN ARCH= && dpkgArch="$(dpkg --print-architecture)" && \
 
 COPY ./deployment/rsys_conf/rsyslog.conf /etc/rsyslog.conf
 COPY ./deployment/rsys_conf/ws.conf /etc/rsyslog.d/ws.conf
-COPY ./deployment/telegraf/telegraf.conf /etc/telegraf/telegraf.conf
+COPY ./deployment/tmp/telegraf.conf /etc/telegraf/telegraf.conf
 
 RUN curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
 RUN apt-get install -y nodejs

@@ -1,7 +1,7 @@
 FROM ubuntu:16.04
 
 RUN apt-get update
-RUN apt-get install -y wget curl  libnl-utils
+RUN apt-get install -y sudo wget curl libnl-utils rsyslog net-tools lsof nano htop apt-utils
 RUN apt-get install -y software-properties-common
 RUN add-apt-repository ppa:vbernat/haproxy-1.7
 RUN apt-get update
@@ -38,6 +38,8 @@ RUN mv confd-0.11.0-linux-amd64 confd
 RUN chmod +x confd
 RUN chmod 777 /etc/default/telegraf
 
+RUN mkdir /var/log/haproxy
+RUN mkdir /var/lib/haproxy/dev/log
 RUN mkdir /etc/confd
 COPY ./haproxy_gracefull_reload.sh ./haproxy_gracefull_reload.sh
 COPY ./tmp/telegraf.conf /etc/telegraf/telegraf.conf
