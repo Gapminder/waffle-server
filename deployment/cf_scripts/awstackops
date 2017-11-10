@@ -71,7 +71,12 @@ MAX_CLUSTER_INSTANCES=${MAX_CLUSTER_INSTANCES:-"10"}
 MIN_CLUSTER_INSTANCES=${MIN_CLUSTER_INSTANCES:-"2"}
 DDF_REPO_PATH=${DDF_REPO_PATH:-"/home/waffle-server/ddf"}
 DEFAULT_USER_PASSWORD=${DEFAULT_USER_PASSWORD:-"123"}
-
+STACK_NAME=${STACK_NAME}
+INFLUXDB_HOST=${INFLUXDB_HOST}
+INFLUXDB_DATABASE_NAME=${INFLUXDB_DATABASE_NAME}
+INFLUXDB_USER=${INFLUXDB_USER}
+INFLUXDB_PASSWORD=${INFLUXDB_PASSWORD}
+TELEGRAF_DEBUG_MODE=${TELEGRAF_DEBUG_MODE:-'false'}
 
 
 CF_TMPLATE_PATH=${CF_TEMPLATE:-"$(dirname $0)/../cloudformation/ws_ecs_cluster_2_az_ecache_single_redis_treshing.template"}
@@ -106,7 +111,7 @@ function _check_awscli {
 
 function _check_vars {
   IS_FAILED=false
-  for var in MONGODB_URL NEWRELIC_KEY AWS_SSH_KEY_NAME HAPROXY_ECR_NAME NODE_ECR_NAME STACK_NAME; do
+  for var in MONGODB_URL NEWRELIC_KEY AWS_SSH_KEY_NAME HAPROXY_ECR_NAME NODE_ECR_NAME STACK_NAME INFLUXDB_HOST INFLUXDB_DATABASE_NAME INFLUXDB_USER INFLUXDB_PASSWORD; do
     if [ $(env | grep -w $var | wc -l) == "0" ]; then
       IS_FAILED=true
       echo "-- ERROR: '${var}' variable is not set."
@@ -148,6 +153,12 @@ ParameterKey=MinClusterInstances,ParameterValue=${MIN_CLUSTER_INSTANCES} \
 ParameterKey=MongoDBUrl,ParameterValue=\"${MONGODB_URL}\" \
 ParameterKey=NewRelicKey,ParameterValue=${NEWRELIC_KEY} \
 ParameterKey=NodeEnv,ParameterValue=${NODE_ENV} \
+ParameterKey=StackName,ParameterValue=${STACK_NAME} \
+ParameterKey=InfluxdbHost,ParameterValue=${INFLUXDB_HOST} \
+ParameterKey=InfluxdbDatabaseName,ParameterValue=${INFLUXDB_DATABASE_NAME} \
+ParameterKey=InfluxdbUser,ParameterValue=${INFLUXDB_USER} \
+ParameterKey=InfluxdbPassword,ParameterValue=${INFLUXDB_PASSWORD} \
+ParameterKey=TelegrafDebugMode,ParameterValue=${TELEGRAF_DEBUG_MODE} \
 ParameterKey=DdfRepoPath,ParameterValue=${DDF_REPO_PATH} \
 ParameterKey=MemoryLb,ParameterValue=${MEMORY_LB} \
 ParameterKey=MemoryNode,ParameterValue=${MEMORY_NODE} \
