@@ -806,7 +806,8 @@
     },
     "ThrashingMachine": {
       "Type": "String",
-      "Description": "Not Registration in LB"
+      "Description": "Not Registration in LB",
+      "Default": "true"
     },
     "InstanceTypeECacheRedis": {
       "Description": "The ElasticCache EC2 instance type. T1 and T2 types are not allowed",
