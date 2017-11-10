@@ -3,7 +3,6 @@
 # Created by .ignore support plugin (hsz.mobi)
 ### Node template
 # Logs
-tmp
 logs/*.log*
 *.log
 *.js
@@ -53,3 +52,7 @@ yarn.lock
 test/pids
 test/sock
 test/config.json
+
+# deployment
+deployment/**/tmp/*.*
+!deployment/**/tmp/.gitkeep
