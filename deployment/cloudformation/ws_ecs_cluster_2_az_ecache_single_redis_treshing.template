@@ -1016,6 +1016,42 @@
                 }
               },
               {
+                "Name": "STACK_NAME",
+                "Value": {
+                  "Ref": "StackName"
+                }
+              },
+              {
+                "Name": "INFLUXDB_HOST",
+                "Value": {
+                  "Ref": "InfluxdbHost"
+                }
+              },
+              {
+                "Name": "INFLUXDB_DATABASE_NAME",
+                "Value": {
+                  "Ref": "InfluxdbDatabaseName"
+                }
+              },
+              {
+                "Name": "INFLUXDB_USER",
+                "Value": {
+                  "Ref": "InfluxdbUser"
+                }
+              },
+              {
+                "Name": "INFLUXDB_PASSWORD",
+                "Value": {
+                  "Ref": "InfluxdbPassword"
+                }
+              },
+              {
+                "Name": "TELEGRAF_DEBUG_MODE",
+                "Value": {
+                  "Ref": "TelegrafDebugMode"
+                }
+              },
+              {
                 "Name": "TERM",
                 "Value": "xterm-256color"
               }
