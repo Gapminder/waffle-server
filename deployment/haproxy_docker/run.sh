@@ -21,7 +21,7 @@ echo -ne "export MACHINE_SUFFIX=\"${MACHINE_SUFFIX}\"\n" >> /etc/default/telegra
 echo -ne "export WAFFLE_SERVER_VERSION=\"${WAFFLE_SERVER_VERSION}\"\n" >> /etc/default/telegraf
 echo -ne "export HOST=\"${HOST}\"\n" >> /etc/default/telegraf
 
-service telegraf start
+service telegraf restart
 
 while true; do
   ./confd -node ${REDIS_HOST}:${REDIS_PORT} -onetime=true
