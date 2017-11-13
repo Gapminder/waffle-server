@@ -1,6 +1,8 @@
 #!/bin/bash
 
-/usr/sbin/haproxy -D -f /etc/haproxy/haproxy.cfg -p /var/run/haproxy.pid
+set -x
+
+sudo service haproxy restart
 
 export RELEASE_DATE=`date -u +%FT%TZ`
 export WAFFLE_SERVER_VERSION=$(nodejs -p "require('./package.json').version")
@@ -21,7 +23,9 @@ echo -ne "export MACHINE_SUFFIX=\"${MACHINE_SUFFIX}\"\n" >> /etc/default/telegra
 echo -ne "export WAFFLE_SERVER_VERSION=\"${WAFFLE_SERVER_VERSION}\"\n" >> /etc/default/telegraf
 echo -ne "export HOST=\"${HOST}\"\n" >> /etc/default/telegraf
 
-service telegraf restart
+sleep 100
+
+sudo service telegraf restart
 
 while true; do
   ./confd -node ${REDIS_HOST}:${REDIS_PORT} -onetime=true
