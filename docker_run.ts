@@ -49,7 +49,8 @@ if (!LOGS_SYNC_DISABLED) {
 
 runTelegrafService();
 
-if (THRASHING_MACHINE) {
+if (IS_THRASHING_MACHINE) {
+  logger.info('RUN command: start Thrashing machine');
   startWaffleServerThrashingMachine();
 } else {
   startWaffleServer();
@@ -82,7 +83,7 @@ function runTelegrafService(): void {
     `${echoCommand} "export AWS_DEFAULT_REGION=\"${AWS_DEFAULT_REGION}\"" >> ${file}`,
     `${echoCommand} "export AWS_ACCESS_KEY_ID=\"${AWS_ACCESS_KEY_ID}\"" >> ${file}`,
     `${echoCommand} "export AWS_SECRET_ACCESS_KEY=\"${AWS_SECRET_ACCESS_KEY}\"" >> ${file}`,
-    `service telegraf start`
+    `service telegraf restart`
   ];
 
   commands.forEach((command: string) => {
