@@ -13,11 +13,22 @@ export {
 function substituteDatapointJoinLinks(query: any, linksInJoinToValues: any): any {
   const safeQuery = ddfQueryUtils.toSafeQuery(query);
 
-  traverse(safeQuery.where).forEach(function (link: string): void {
+  traverse(safeQuery.where).forEach(function (joinLink: string): void {
     /* tslint:disable: no-invalid-this */
-    if (safeQuery.join.hasOwnProperty(link)) {
-      const id = linksInJoinToValues[link];
-      this.update(id ? { $in: id } : link);
+    if (safeQuery.join.hasOwnProperty(joinLink)) {
+      const matchedEntityIdsByLink = linksInJoinToValues[joinLink];
+      const isEmptyEntityIdsList =_.isEmpty(matchedEntityIdsByLink);
+      const domainOriginId = _.get(safeQuery.join, [joinLink, 'domain']);
+      const setOriginId = _.get(safeQuery.join, [joinLink, 'sets']);
+      const undesirableConceptOriginId = [domainOriginId || setOriginId];
+
+      if(isEmptyEntityIdsList) {
+       this.parent.node.dimensionsConcepts = { $nin: undesirableConceptOriginId };
+
+       this.delete();
+      } else {
+        this.update(matchedEntityIdsByLink ? { $in: matchedEntityIdsByLink } : joinLink);
+      }
     }
     /* tslint:enable: no-invalid-this */
   });
