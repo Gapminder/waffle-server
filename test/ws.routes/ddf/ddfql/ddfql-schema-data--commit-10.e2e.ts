@@ -18,15 +18,15 @@ describe('State Version 10 (10th commit)', function() {
     return;
   }
 
-  before((done) => {
-    cliUtils.getCommitByGithubUrl(e2eEnv.repo, INDEX_OF_NINTH_COMMIT, (error, commit) => {
+  before((done: Function) => {
+    cliUtils.getCommitByGithubUrl(e2eEnv.repo, INDEX_OF_NINTH_COMMIT, (error: Error, commit: string) => {
       if (error) return done(error);
 
       cliUtils.setDefaultCommit(commit, done);
     });
   });
 
-  it('should return all datapoints of lines_of_code indicators for company_scale and anno', (done) => {
+  it('should return all datapoints of lines_of_code indicators for company_scale and anno', (done: Function) => {
     const ddfql = {
       select: {
         key: ['company_scale', 'anno'],
@@ -42,7 +42,7 @@ describe('State Version 10 (10th commit)', function() {
     e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDatapointsLinesOfCodeByCompanyScaleAnno, done);
   });
 
-  it('should return all datapoints of lines_of_code indicators for company_scale and anno', (done) => {
+  it('should return all datapoints of lines_of_code indicators for company and anno', (done: Function) => {
     const ddfql = {
       select: {
         key: ['company', 'anno'],
@@ -61,7 +61,7 @@ describe('State Version 10 (10th commit)', function() {
     e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDatapointsLinesOfCodeByCompanyAnno, done);
   });
 
-  it('should return all datapoints of meeting_style indicators for company_scale and anno', (done) => {
+  it('should return all datapoints of meeting_style indicators for company_scale and anno', (done: Function) => {
     const ddfql = {
       select: {
         key: ['company_scale', 'anno'],
@@ -77,7 +77,7 @@ describe('State Version 10 (10th commit)', function() {
     e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDatapointsMeetingStyleCompanyScaleAnno, done);
   });
 
-  it('should return all datapoints of meeting_style indicators for company and anno', (done) => {
+  it('should return all datapoints of meeting_style indicators for company and anno', (done: Function) => {
     const ddfql = {
       select: {
         key: ['company', 'anno'],
@@ -93,7 +93,7 @@ describe('State Version 10 (10th commit)', function() {
     e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDatapointsMeetingStyleCompanyAnno, done);
   });
 
-  it('should return all datapoints of meeting_style indicators for company_scale, project and anno', (done) => {
+  it('should return all datapoints of meeting_style indicators for company_scale, project and anno', (done: Function) => {
     const ddfql = {
       select: {
         key: ['company_scale', 'anno', 'project'],
@@ -109,7 +109,7 @@ describe('State Version 10 (10th commit)', function() {
     e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDatapointsMeetingStyleCompanyScaleProjectAnno, done);
   });
 
-  it('should return all datapoints of meeting_style indicators for english_speaking, project and anno', (done) => {
+  it('should return all datapoints of meeting_style indicators for english_speaking, project and anno', (done: Function) => {
     const ddfql = {
       select: {
         key: ['english_speaking', 'anno', 'project'],
@@ -125,7 +125,7 @@ describe('State Version 10 (10th commit)', function() {
     e2eUtils.sendDdfqlRequestAndVerifyResponse(ddfql, fixtureDatapointsMeetingStyleEnglishSpeakingProjectAnno, done);
   });
 
-  it('should return all datapoints of meeting_style indicators for company, project and anno', (done) => {
+  it('should return all datapoints of meeting_style indicators for company, project and anno', (done: Function) => {
     const ddfql = {
       select: {
         key: ['company', 'anno', 'project'],
