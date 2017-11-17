@@ -1,0 +1,22 @@
+{
+  "headers": [
+    "company",
+    "project",
+    "anno",
+    "meetings_style"
+  ],
+  "rows": [
+    [
+      "international_hous",
+      "vizabi",
+      "2000",
+      "game"
+    ],
+    [
+      "it_cluster",
+      "vizabi",
+      "2010",
+      "game"
+    ]
+  ]
+}
