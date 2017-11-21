@@ -38,7 +38,7 @@ function sendDdfqlRequest(ddfql: any, onResponseReceived: Function): void {
 function startWaffleServer(): void {
   setUpEnvironmentVariables();
   if (START_WAFFLE_SERVER) {
-    shell.exec(`PORT=${e2eEnv.wsPort} ./node_modules/.bin/pm2 restart ecosystem.config.js --name WSTEST`);
+    shell.exec(`PORT=${e2eEnv.wsPort} ./node_modules/.bin/pm2 restart ecosystem.config.js --name WSTEST > /dev/null`);
 
     if (shell.error()) {
       logger.error('startWaffleServer error:', shell.error());
@@ -50,7 +50,7 @@ function startWaffleServer(): void {
 function stopWaffleServer(done: Function): void {
   if (START_WAFFLE_SERVER) {
     shell.exec(`node -v`);
-    shell.exec(`./node_modules/.bin/pm2 stop all && ./node_modules/.bin/pm2 delete all`);
+    shell.exec(`./node_modules/.bin/pm2 stop all > /dev/null && ./node_modules/.bin/pm2 delete all > /dev/null`);
 
     return done(shell.error());
   }
