@@ -78,7 +78,7 @@ INFLUXDB_PASSWORD=${INFLUXDB_PASSWORD}
 TELEGRAF_DEBUG_MODE=${TELEGRAF_DEBUG_MODE:-'false'}
 
 
-CF_TMPLATE_PATH=${CF_TEMPLATE:-"$(dirname $0)/../cloudformation/ws_ecs_cluster_2_az_ecache_single_redis_treshing.template"}
+CF_TMPLATE_PATH=${CF_TEMPLATE:-"$(dirname $0)/../cloudformation/ws_ecs_cluster_2_az_ecache_single_redis_treshing_cut_mem_alarm.template"}
 AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-"us-east-1"}
 
 S3_BUCKET_NAME="${STACK_NAME}-cf-bucket"
