@@ -1338,4 +1338,173 @@ describe('ddf datapoints query normalizer - substitute links', () => {
 
     expect(ddfQueryNormalizer.substituteDatapointJoinLinks(normalizedDdfql, linksInJoinToValues)).to.deep.equal(normalizedDdfqlWithSubstitutedJoinLinks);
   }));
+
+  it('should substitute join link in where clause and remove parents for empty entities list', sandbox(function () {
+    const linksInJoinToValues = {
+      $geo: [],
+      $time: [
+        '47a3470d3a8c9b37009b9bf9',
+        '47a3470d3a8c9b37009b9bf9',
+        '47a3470d3a8c9b37009b9bf9'
+      ],
+      $time2: [
+        '67a3470d3a8c9b37009b9bf9',
+        '67a3470d3a8c9b37009b9bf9',
+        '67a3470d3a8c9b37009b9bf9'
+      ]
+    };
+
+    const normalizedDdfql = {
+      select: {
+        key: ['geo', 'time'],
+        value: [
+          'population', 'life_expectancy', 'gdp_per_cap', 'gov_type'
+        ]
+      },
+      from: 'datapoints',
+      where: {
+        $and: [
+          { dimensions: { $size: 2 } },
+          { dimensionsConcepts: { $all: ['17a3470d3a8c9b37009b9bf9', '27a3470d3a8c9b37009b9bf9'] } },
+          {
+            $and: [
+              {
+                dimensions: '$geo'
+              },
+              {
+                dimensions: '$time'
+              },
+              {
+                $or: [
+                  {
+                    measure: '37a3470d3a8c9b37009b9bf9',
+                    value: { $gt: 100000 },
+                    dimensions: '$time2'
+                  },
+                  {
+                    measure: '47a3470d3a8c9b37009b9bf9',
+                    value: { $gt: 30, $lt: 70 }
+                  },
+                  {
+                    measure: '57a3470d3a8c9b37009b9bf9',
+                    value: { $gt: 600, $lt: 500 }
+                  },
+                  {
+                    measure: '57a3470d3a8c9b37009b9bf9',
+                    value: { $gt: 1000 }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      join: {
+        $geo: {
+          domain: '17a3470d3a8c9b37009b9bf9',
+          $and: [
+            { gid: { $in: ['dza', 'usa', 'ukr'] } },
+            { 'properties.is--country': true },
+            { 'properties.latitude': { $lte: 0 } }
+          ]
+        },
+        $time: {
+          domain: '27a3470d3a8c9b37009b9bf9',
+          'parsedProperties.time.timeType': 'YEAR_TYPE',
+          'parsedProperties.time.millis': { $lt: 1377993600000 }
+        },
+        $time2: {
+          domain: '27a3470d3a8c9b37009b9bf9',
+          'parsedProperties.time.timeType': 'YEAR_TYPE',
+          'parsedProperties.time.millis': { $eq: 1377993600000 }
+        }
+      }
+    };
+
+    const normalizedDdfqlWithSubstitutedJoinLinks = {
+      select: {
+        key: ['geo', 'time'],
+        value: [
+          'population', 'life_expectancy', 'gdp_per_cap', 'gov_type'
+        ]
+      },
+      from: 'datapoints',
+      where: {
+        $and: [
+          { dimensions: { $size: 2 } },
+          { dimensionsConcepts: { $all: ['17a3470d3a8c9b37009b9bf9', '27a3470d3a8c9b37009b9bf9'] } },
+          {
+            $and: [
+              {
+                dimensionsConcepts: {
+                  $nin: [
+                    '17a3470d3a8c9b37009b9bf9'
+                  ]
+                }
+              },
+              {
+                dimensions: {
+                  $in: [
+                    '47a3470d3a8c9b37009b9bf9',
+                    '47a3470d3a8c9b37009b9bf9',
+                    '47a3470d3a8c9b37009b9bf9'
+                  ]
+                }
+              },
+              {
+                $or: [
+                  {
+                    measure: '37a3470d3a8c9b37009b9bf9',
+                    value: { $gt: 100000 },
+                    dimensions: {
+                      $in: [
+                        '67a3470d3a8c9b37009b9bf9',
+                        '67a3470d3a8c9b37009b9bf9',
+                        '67a3470d3a8c9b37009b9bf9'
+                      ]
+                    }
+                  },
+                  {
+                    measure: '47a3470d3a8c9b37009b9bf9',
+                    value: { $gt: 30, $lt: 70 }
+                  },
+                  {
+                    measure: '57a3470d3a8c9b37009b9bf9',
+                    value: { $gt: 600, $lt: 500 }
+                  },
+                  {
+                    measure: '57a3470d3a8c9b37009b9bf9',
+                    value: { $gt: 1000 }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      join: {
+        $geo: {
+          domain: '17a3470d3a8c9b37009b9bf9',
+          $and: [
+            { gid: { $in: ['dza', 'usa', 'ukr'] } },
+            { 'properties.is--country': true },
+            { 'properties.latitude': { $lte: 0 } }
+          ]
+        },
+        $time: {
+          domain: '27a3470d3a8c9b37009b9bf9',
+          'parsedProperties.time.timeType': 'YEAR_TYPE',
+          'parsedProperties.time.millis': { $lt: 1377993600000 }
+        },
+        $time2: {
+          domain: '27a3470d3a8c9b37009b9bf9',
+          'parsedProperties.time.timeType': 'YEAR_TYPE',
+          'parsedProperties.time.millis': { $eq: 1377993600000 }
+        }
+      },
+      order_by: []
+    };
+
+    expect(ddfQueryNormalizer.substituteDatapointJoinLinks(normalizedDdfql, linksInJoinToValues)).to.deep.equal(normalizedDdfqlWithSubstitutedJoinLinks);
+  }));
 });
