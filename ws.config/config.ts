@@ -35,6 +35,7 @@ const config: any = {
 
 config.IS_PRODUCTION = PRODUCTION_ENVS.has(config.NODE_ENV);
 config.IS_TEST = config.NODE_ENV === 'test';
+config.IS_LOCAL = config.NODE_ENV === 'local';
 config.CAN_POPULATE_DOCUMENTS = config.NODE_ENV === 'local';
 
 const REQUIRED_ENVIRONMENT_VARIABLES = Object.freeze([
