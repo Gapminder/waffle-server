@@ -1,0 +1,24 @@
+{
+  "headers": [
+    "company_scale",
+    "anno",
+    "meeting_style"
+  ],
+  "rows": [
+    [
+      "small",
+      "1975",
+      "game"
+    ],
+    [
+      "medium",
+      "2014",
+      "brainstorm"
+    ],
+    [
+      "large",
+      "2016",
+      "kanban"
+    ]
+  ]
+}

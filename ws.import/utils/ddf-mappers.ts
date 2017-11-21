@@ -4,6 +4,7 @@ import * as ddfImportUtils from './import-ddf.utils';
 import * as conceptsUtils from './concepts.utils';
 import { logger } from '../../ws.config/log';
 import * as ddfQueryUtils from '../../ws.ddfql/ddf-query-utils';
+import {Types} from "mongoose";
 const JSON_COLUMNS = ['color', 'scales', 'drill_up'];
 
 export {
@@ -46,6 +47,7 @@ function mapDdfEntityToWsModel(entry: any, context: any): any {
 }
 
 function mapDdfDataPointToWsModel(entry: any, context: any): any {
+    const dimentionsConceptsDictionary = new Set(context.dimensionsConcepts);
     const dimensions = _.chain(entry)
       .pick(_.keys(context.dimensions))
       .reduce((result: any, entityGid: string, conceptGid: any) => {
@@ -57,9 +59,15 @@ function mapDdfDataPointToWsModel(entry: any, context: any): any {
           || context.entities.foundInDatapointsByGid[entityGid];
 
         result.push(entity.originId);
+        entity.sets.forEach((entitySet: string) => dimentionsConceptsDictionary.add(entitySet));
+
         return result;
       }, [])
       .value();
+
+    let dimensionsConcepts: Types.ObjectId[] = [];
+
+    dimentionsConceptsDictionary.forEach((dimensionConcept: Types.ObjectId) => dimensionsConcepts.push(dimensionConcept));
 
     return _.chain(entry)
       .pick(_.keys(context.measures))
@@ -69,7 +77,7 @@ function mapDdfDataPointToWsModel(entry: any, context: any): any {
           value: _.isNil(datapointValueAsNumber) ? datapointValue : datapointValueAsNumber,
           measure: context.measures[measureGid].originId,
           dimensions,
-          dimensionsConcepts: context.dimensionsConcepts,
+          dimensionsConcepts,
 
           properties: entry,
           originId: entry.originId,

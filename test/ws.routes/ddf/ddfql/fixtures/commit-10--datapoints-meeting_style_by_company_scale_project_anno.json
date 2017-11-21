@@ -1,0 +1,28 @@
+{
+  "headers": [
+    "company_scale",
+    "anno",
+    "project",
+    "meeting_style"
+  ],
+  "rows": [
+    [
+      "small",
+      "1975",
+      "office",
+      "brainstorm"
+    ],
+    [
+      "medium",
+      "2014",
+      "ws",
+      "game"
+    ],
+    [
+      "large",
+      "2016",
+      "vizabi",
+      "brainstorm"
+    ]
+  ]
+}

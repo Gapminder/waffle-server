@@ -130,6 +130,11 @@ function buildnpush {
 ===============================================\n\n"
   sleep 5
 
+  # Add here all needed plugins for telegraf on Node instances ONLY
+  cat $(dirname $0)/../telegraf/default-telegraf.conf >   $(dirname $0)/../tmp/telegraf.conf
+  cat $(dirname $0)/../telegraf/filestat.plugin.conf  >>  $(dirname $0)/../tmp/telegraf.conf
+  cat $(dirname $0)/../telegraf/tail.plugin.conf      >>  $(dirname $0)/../tmp/telegraf.conf
+
   pushd $(dirname $0)/../../
     $DOCKER build -t $NODE_ECR_URI:${NODE_ECR_LABEL} .
   popd
@@ -141,6 +146,11 @@ function buildnpush {
    ${HAPROXY_ECR_URI}:${HAPROXY_ECR_LABEL} ...
 ===============================================\n\n"
   sleep 5
+
+  # Add here all needed plugins for telegraf on HAPROXY instance ONLY
+  cat $(dirname $0)/../telegraf/default-telegraf.conf >   $(dirname $0)/../haproxy_docker/tmp/telegraf.conf
+  cat $(dirname $0)/../telegraf/haproxy.plugin.conf   >>  $(dirname $0)/../haproxy_docker/tmp/telegraf.conf
+  cat $(dirname $0)/../../package.json                >   $(dirname $0)/../haproxy_docker/tmp/package.json
 
   pushd $(dirname $0)/../haproxy_docker/
     $DOCKER build -t $HAPROXY_ECR_URI:${HAPROXY_ECR_LABEL} .

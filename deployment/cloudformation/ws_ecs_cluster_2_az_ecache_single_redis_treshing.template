@@ -806,7 +806,8 @@
     },
     "ThrashingMachine": {
       "Type": "String",
-      "Description": "Not Registration in LB"
+      "Description": "Not Registration in LB",
+      "Default": "true"
     },
     "InstanceTypeECacheRedis": {
       "Description": "The ElasticCache EC2 instance type. T1 and T2 types are not allowed",
@@ -839,6 +840,30 @@
     "NodeEnv": {
       "Type": "String",
       "Description": "Current application environment"
+    },
+    "StackName": {
+      "Type": "String",
+      "Description": "Current stack name, e.g. wsdevstack10"
+    },
+    "InfluxdbHost": {
+      "Type": "String",
+      "Description": "Host name for InfluxDB"
+    },
+    "InfluxdbDatabaseName": {
+      "Type": "String",
+      "Description": "Database name for InfluxDB"
+    },
+    "InfluxdbUser": {
+      "Type": "String",
+      "Description": "User name for InfluxDB"
+    },
+    "InfluxdbPassword": {
+      "Type": "String",
+      "Description": "Password to InfluxDB"
+    },
+    "TelegrafDebugMode": {
+      "Type": "String",
+      "Description": "Switch on/off debugging mode for Telegraf monitoring tool"
     },
     "MemoryLb": {
       "Type": "Number",
@@ -948,6 +973,18 @@
                 "HostPort": "80"
               },
               {
+                "ContainerPort": "8125",
+                "HostPort": "8125"
+              },
+              {
+                "ContainerPort": "8092",
+                "HostPort": "8092"
+              },
+              {
+                "ContainerPort": "8094",
+                "HostPort": "8094"
+              },
+              {
                 "ContainerPort": "443",
                 "HostPort": "443"
               },
@@ -977,6 +1014,42 @@
                 "Name": "REDIS_PORT",
                 "Value": {
                   "Ref": "RedisPort"
+                }
+              },
+              {
+                "Name": "STACK_NAME",
+                "Value": {
+                  "Ref": "StackName"
+                }
+              },
+              {
+                "Name": "INFLUXDB_HOST",
+                "Value": {
+                  "Ref": "InfluxdbHost"
+                }
+              },
+              {
+                "Name": "INFLUXDB_DATABASE_NAME",
+                "Value": {
+                  "Ref": "InfluxdbDatabaseName"
+                }
+              },
+              {
+                "Name": "INFLUXDB_USER",
+                "Value": {
+                  "Ref": "InfluxdbUser"
+                }
+              },
+              {
+                "Name": "INFLUXDB_PASSWORD",
+                "Value": {
+                  "Ref": "InfluxdbPassword"
+                }
+              },
+              {
+                "Name": "TELEGRAF_DEBUG_MODE",
+                "Value": {
+                  "Ref": "TelegrafDebugMode"
                 }
               },
               {
@@ -1083,6 +1156,18 @@
               {
                 "ContainerPort": "80",
                 "HostPort": "80"
+              },
+              {
+                "ContainerPort": "8125",
+                "HostPort": "8125"
+              },
+              {
+                "ContainerPort": "8092",
+                "HostPort": "8092"
+              },
+              {
+                "ContainerPort": "8094",
+                "HostPort": "8094"
               }
             ],
             "Ulimits": [
@@ -1136,6 +1221,42 @@
                 "Name": "NODE_ENV",
                 "Value": {
                   "Ref": "NodeEnv"
+                }
+              },
+              {
+                "Name": "STACK_NAME",
+                "Value": {
+                  "Ref": "StackName"
+                }
+              },
+              {
+                "Name": "INFLUXDB_HOST",
+                "Value": {
+                  "Ref": "InfluxdbHost"
+                }
+              },
+              {
+                "Name": "INFLUXDB_DATABASE_NAME",
+                "Value": {
+                  "Ref": "InfluxdbDatabaseName"
+                }
+              },
+              {
+                "Name": "INFLUXDB_USER",
+                "Value": {
+                  "Ref": "InfluxdbUser"
+                }
+              },
+              {
+                "Name": "INFLUXDB_PASSWORD",
+                "Value": {
+                  "Ref": "InfluxdbPassword"
+                }
+              },
+              {
+                "Name": "TELEGRAF_DEBUG_MODE",
+                "Value": {
+                  "Ref": "TelegrafDebugMode"
                 }
               },
               {
@@ -1224,6 +1345,18 @@
               {
                 "ContainerPort": "3000",
                 "HostPort": "3000"
+              },
+              {
+                "ContainerPort": "8125",
+                "HostPort": "8125"
+              },
+              {
+                "ContainerPort": "8092",
+                "HostPort": "8092"
+              },
+              {
+                "ContainerPort": "8094",
+                "HostPort": "8094"
               }
             ],
             "Ulimits": [
@@ -1277,6 +1410,42 @@
                 "Name": "NODE_ENV",
                 "Value": {
                   "Ref": "NodeEnv"
+                }
+              },
+              {
+                "Name": "STACK_NAME",
+                "Value": {
+                  "Ref": "StackName"
+                }
+              },
+              {
+                "Name": "INFLUXDB_HOST",
+                "Value": {
+                  "Ref": "InfluxdbHost"
+                }
+              },
+              {
+                "Name": "INFLUXDB_DATABASE_NAME",
+                "Value": {
+                  "Ref": "InfluxdbDatabaseName"
+                }
+              },
+              {
+                "Name": "INFLUXDB_USER",
+                "Value": {
+                  "Ref": "InfluxdbUser"
+                }
+              },
+              {
+                "Name": "INFLUXDB_PASSWORD",
+                "Value": {
+                  "Ref": "InfluxdbPassword"
+                }
+              },
+              {
+                "Name": "TELEGRAF_DEBUG_MODE",
+                "Value": {
+                  "Ref": "TelegrafDebugMode"
                 }
               },
               {
@@ -2369,7 +2538,7 @@
         "EvaluationPeriods": 1,
         "Period": 60,
         "Statistic": "Average",
-        "Threshold": 70,
+        "Threshold": 40,
         "Unit": "Percent",
         "Namespace": "AWS/ECS",
         "MetricName": "CPUUtilization",
@@ -2421,7 +2590,7 @@
         "EvaluationPeriods": 2,
         "Period": 300,
         "Statistic": "Average",
-        "Threshold": 30,
+        "Threshold": 20,
         "Unit": "Percent",
         "Namespace": "AWS/ECS",
         "MetricName": "MemoryUtilization",
@@ -2476,7 +2645,7 @@
         "EvaluationPeriods": 1,
         "Period": 60,
         "Statistic": "Average",
-        "Threshold": 70,
+        "Threshold": 40,
         "Unit": "Percent",
         "Namespace": "AWS/ECS",
         "MetricName": "MemoryUtilization",
