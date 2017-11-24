@@ -21,7 +21,8 @@ export {
   getDomainGids,
   getConceptOriginIdsByGids,
   getConceptsByGids,
-  getConceptsByOriginIds
+  getConceptsByOriginIds,
+  getDomainGidsFromQuery
 };
 
 // const normalizeKey = _.flow([cutPrefixByDot as Function, _.partialRight(_.split, '.'), _.first, cutPrefixByDashes]);
@@ -145,8 +146,8 @@ function convertOrderByForWsJson(orderBy: any, headers: string[]): any {
   };
 }
 
-function isEntityPropertyFilter(key: string, options: any): boolean {
-  return _.includes(options.conceptGids, normalizeKey(key, options.domainGids));
+function isEntityPropertyFilter(key: string, domainGids: string[], options: any): boolean {
+  return _.includes(options.conceptGids, normalizeKey(key, domainGids));
 }
 
 function getPrefixByDot(value: string): string {
@@ -173,10 +174,10 @@ function cutPrefixByDashes(fieldName: string): string {
   return _.last(_.split(fieldName, constants.IS_OPERATOR));
 }
 
-function wrapEntityProperties(key: string, options: any): string {
-  const propertyName = cutPrefixByDot(key, options.domainGids);
+function wrapEntityProperties(key: string, domainGids: string[], options: any): string {
+  const propertyName = cutPrefixByDot(key, domainGids);
 
-  if (!isTimePropertyFilter(key, options) && isEntityPropertyFilter(propertyName, options)) {
+  if (!isTimePropertyFilter(key, options.timeConceptsGids) && isEntityPropertyFilter(propertyName, domainGids, options)) {
     return `properties.${propertyName}`;
   }
 
@@ -197,6 +198,16 @@ function getDomainGids(concepts: ReadonlyArray<any>): any[] {
       return _.includes(constants.DEFAULT_ENTITY_GROUP_TYPES, _.get(concept, 'properties.concept_type', null));
     })
     .map(constants.GID)
+    .value();
+}
+
+function getDomainGidsFromQuery(conceptGidsFromQuery: string[], conceptsByGids: any, conceptsByOriginIds: any): string[] {
+  return _.chain(conceptGidsFromQuery)
+    .map((conceptGid: string) => {
+      const concept = conceptsByGids[conceptGid];
+      return concept.type === constants.CONCEPT_TYPE_ENTITY_SET ? conceptsByOriginIds[concept.domain][constants.GID] : conceptGid;
+    })
+    .uniq()
     .value();
 }
 
