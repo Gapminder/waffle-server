@@ -91,12 +91,12 @@ function normalizeWhere(query: any, options: any): void {
     let normalizedFilter = null;
     const selectKey = _.first(query.select.key);
 
-    if (ddfQueryUtils.isEntityPropertyFilter(this.key, options)) {
+    if (ddfQueryUtils.isEntityPropertyFilter(this.key, options.domainGids, options)) {
       if (ddfQueryUtils.isTimePropertyFilter(this.key, options.timeConceptsGids)) {
         normalizedFilter = ddfQueryUtils.normalizeTimePropertyFilter(this.key, filterValue, this.path, query.where);
       } else {
         normalizedFilter = {
-          [ddfQueryUtils.wrapEntityProperties(this.key, options)]: filterValue
+          [ddfQueryUtils.wrapEntityProperties(this.key, options.domainGids, options)]: filterValue
         };
       }
     }
@@ -146,7 +146,7 @@ function normalizeJoin(query: any, options: any): void {
     /* tslint:disable: no-invalid-this */
     let normalizedFilter = null;
 
-    if (ddfQueryUtils.isEntityPropertyFilter(this.key, options) && _.includes(this.path, 'where')) {
+    if (ddfQueryUtils.isEntityPropertyFilter(this.key, options.domainGids, options) && _.includes(this.path, 'where')) {
       if (ddfQueryUtils.isTimePropertyFilter(this.key, options.timeConceptsGids)) {
         normalizedFilter = ddfQueryUtils.normalizeTimePropertyFilter(this.key, filterValue, this.path, query.join);
       } else if (joinKeys[this.key]) {
@@ -155,7 +155,7 @@ function normalizeJoin(query: any, options: any): void {
         };
       } else {
         normalizedFilter = {
-          [ddfQueryUtils.wrapEntityProperties(this.key, options)]: filterValue
+          [ddfQueryUtils.wrapEntityProperties(this.key, options.domainGids, options)]: filterValue
         };
       }
     }

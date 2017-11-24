@@ -4,7 +4,6 @@ import * as ddfImportUtils from './import-ddf.utils';
 import * as conceptsUtils from './concepts.utils';
 import { logger } from '../../ws.config/log';
 import * as ddfQueryUtils from '../../ws.ddfql/ddf-query-utils';
-import {Types} from "mongoose";
 const JSON_COLUMNS = ['color', 'scales', 'drill_up'];
 
 export {
@@ -47,50 +46,43 @@ function mapDdfEntityToWsModel(entry: any, context: any): any {
 }
 
 function mapDdfDataPointToWsModel(entry: any, context: any): any {
-    const dimentionsConceptsDictionary = new Set(context.dimensionsConcepts);
-    const dimensions = _.chain(entry)
-      .pick(_.keys(context.dimensions))
-      .reduce((result: any, entityGid: string, conceptGid: any) => {
-        const key = `${entityGid}-${context.concepts[conceptGid].originId}`;
-        const entity =
-          context.entities.byDomain[key]
-          || context.entities.bySet[key]
-          || context.entities.byGid[entityGid]
-          || context.entities.foundInDatapointsByGid[entityGid];
+  const dimensions = _.chain(entry)
+    .pick(_.keys(context.dimensions))
+    .reduce((result: any, entityGid: string, conceptGid: any) => {
+      const key = `${entityGid}-${context.concepts[conceptGid].originId}`;
+      const entity =
+        context.entities.byDomain[key]
+        || context.entities.bySet[key]
+        || context.entities.byGid[entityGid]
+        || context.entities.foundInDatapointsByGid[entityGid];
 
-        result.push(entity.originId);
-        entity.sets.forEach((entitySet: string) => dimentionsConceptsDictionary.add(entitySet));
+      result.push(entity.originId);
+      return result;
+    }, [])
+    .value();
 
-        return result;
-      }, [])
-      .value();
+  return _.chain(entry)
+    .pick(_.keys(context.measures))
+    .map((datapointValue: any, measureGid: any) => {
+      const datapointValueAsNumber = ddfImportUtils.toNumeric(datapointValue);
+      return {
+        value: _.isNil(datapointValueAsNumber) ? datapointValue : datapointValueAsNumber,
+        measure: context.measures[measureGid].originId,
+        dimensions,
+        dimensionsConcepts: context.dimensionsConcepts,
 
-    let dimensionsConcepts: Types.ObjectId[] = [];
+        properties: entry,
+        originId: entry.originId,
+        languages: _.get(context, 'languages', {}),
 
-    dimentionsConceptsDictionary.forEach((dimensionConcept: Types.ObjectId) => dimensionsConcepts.push(dimensionConcept));
-
-    return _.chain(entry)
-      .pick(_.keys(context.measures))
-      .map((datapointValue: any, measureGid: any) => {
-        const datapointValueAsNumber = ddfImportUtils.toNumeric(datapointValue);
-        return {
-          value: _.isNil(datapointValueAsNumber) ? datapointValue : datapointValueAsNumber,
-          measure: context.measures[measureGid].originId,
-          dimensions,
-          dimensionsConcepts,
-
-          properties: entry,
-          originId: entry.originId,
-          languages: _.get(context, 'languages', {}),
-
-          isNumeric: !_.isNil(datapointValueAsNumber),
-          from: context.version,
-          to: constants.MAX_VERSION,
-          dataset: context.datasetId,
-          sources: [context.filename]
-        };
-      })
-      .value();
+        isNumeric: !_.isNil(datapointValueAsNumber),
+        from: context.version,
+        to: constants.MAX_VERSION,
+        dataset: context.datasetId,
+        sources: [context.filename]
+      };
+    })
+    .value();
 }
 
 function mapDdfEntityFoundInDatapointToWsModel(datapoint: any, context: any): any {
