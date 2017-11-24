@@ -204,7 +204,7 @@ function _storeWarmUpQueryForDefaultDataset(query: any): void {
     return;
   }
 
-  if (config.NODE_ENV !== 'local' && (_.has(query, 'dataset') || _.has(query, 'version') || _.has(query, 'format'))) {
+  if (config.IS_TEST && (_.has(query, 'dataset') || _.has(query, 'version') || _.has(query, 'format'))) {
     return;
   }
 

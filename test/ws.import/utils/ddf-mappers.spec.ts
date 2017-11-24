@@ -114,7 +114,7 @@ describe('DDF mappers', () => {
       version: 1111111,
       datasetId: 'dsId',
       filename: 'datapoints.csv',
-      dimensionsConcepts: ['countryOriginId', 'geoOriginId', 'yearOriginId'],
+      dimensionsConcepts: ['geoOriginId', 'yearOriginId'],
       concepts: {
         geo: {
           originId: 'geoOriginId'
@@ -128,13 +128,11 @@ describe('DDF mappers', () => {
         byDomain: {
           'usa-geoOriginId': {
             gid: 'usa',
-            originId: 'usaOriginId',
-            sets: ['anotherOriginId', 'countryOriginId']
+            originId: 'usaOriginId'
           },
           '1942-yearOriginId': {
             gid: '1942',
-            originId: '1942OriginId',
-            sets: ['anotherOriginId', 'countryOriginId']
+            originId: '1942OriginId'
           }
         },
         byGid: {},
@@ -162,10 +160,8 @@ describe('DDF mappers', () => {
           '1942OriginId'
         ],
         dimensionsConcepts: [
-          'countryOriginId',
           'geoOriginId',
-          'yearOriginId',
-          'anotherOriginId'
+          'yearOriginId'
         ],
         from: 1111111,
         to: constants.MAX_VERSION,
@@ -191,10 +187,8 @@ describe('DDF mappers', () => {
           '1942OriginId'
         ],
         dimensionsConcepts: [
-          'countryOriginId',
           'geoOriginId',
-          'yearOriginId',
-          'anotherOriginId'
+          'yearOriginId'
         ],
         from: 1111111,
         to: constants.MAX_VERSION,
@@ -230,7 +224,7 @@ describe('DDF mappers', () => {
       version: 1111111,
       datasetId: 'dsId',
       filename: 'datapoints.csv',
-      dimensionsConcepts: ['countryOriginId', 'geoOriginId', 'yearOriginId'],
+      dimensionsConcepts: ['geoOriginId', 'yearOriginId'],
       concepts: {
         geo: {
           originId: 'geoOriginId'
@@ -244,13 +238,11 @@ describe('DDF mappers', () => {
         byDomain: {
           'usa-geoOriginId': {
             gid: 'usa',
-            originId: 'usaOriginId',
-            sets: ['anotherOriginId', 'countryOriginId']
+            originId: 'usaOriginId'
           },
           '1942-yearOriginId': {
             gid: '1942',
-            originId: '1942OriginId',
-            sets: ['anotherOriginId', 'countryOriginId']
+            originId: '1942OriginId'
           }
         },
         byGid: {},
@@ -275,10 +267,8 @@ describe('DDF mappers', () => {
           '1942OriginId'
         ],
         dimensionsConcepts: [
-          'countryOriginId',
           'geoOriginId',
-          'yearOriginId',
-          'anotherOriginId'
+          'yearOriginId'
         ],
         from: 1111111,
         to: constants.MAX_VERSION,
@@ -313,7 +303,7 @@ describe('DDF mappers', () => {
       version: 1111111,
       datasetId: 'dsId',
       filename: 'datapoints.csv',
-      dimensionsConcepts: ['countryOriginId', 'geoOriginId', 'yearOriginId'],
+      dimensionsConcepts: ['geoOriginId', 'yearOriginId'],
       concepts: {
         geo: {
           originId: 'geoOriginId'
@@ -326,13 +316,11 @@ describe('DDF mappers', () => {
         bySet: {
           'usa-geoOriginId': {
             gid: 'usa',
-            originId: 'usaOriginId',
-            sets: ['anotherOriginId', 'countryOriginId']
+            originId: 'usaOriginId'
           },
           '1942-yearOriginId': {
             gid: '1942',
-            originId: '1942OriginId',
-            sets: ['anotherOriginId', 'countryOriginId']
+            originId: '1942OriginId'
           }
         },
         byDomain: {},
@@ -358,10 +346,8 @@ describe('DDF mappers', () => {
           '1942OriginId'
         ],
         dimensionsConcepts: [
-          'countryOriginId',
           'geoOriginId',
-          'yearOriginId',
-          'anotherOriginId'
+          'yearOriginId'
         ],
         from: 1111111,
         to: constants.MAX_VERSION,
@@ -396,7 +382,7 @@ describe('DDF mappers', () => {
       version: 1111111,
       datasetId: 'dsId',
       filename: 'datapoints.csv',
-      dimensionsConcepts: ['countryOriginId', 'geoOriginId', 'yearOriginId'],
+      dimensionsConcepts: ['geoOriginId', 'yearOriginId'],
       concepts: {
         geo: {
           originId: 'geoOriginId'
@@ -411,13 +397,11 @@ describe('DDF mappers', () => {
         byGid: {
           usa: {
             gid: 'usa',
-            originId: 'usaOriginId',
-            sets: ['anotherOriginId', 'countryOriginId']
+            originId: 'usaOriginId'
           },
           1942: {
             gid: '1942',
-            originId: '1942OriginId',
-            sets: ['anotherOriginId', 'countryOriginId']
+            originId: '1942OriginId'
           }
         },
         foundInDatapointsByGid: {}
@@ -441,10 +425,8 @@ describe('DDF mappers', () => {
           '1942OriginId'
         ],
         dimensionsConcepts: [
-          'countryOriginId',
           'geoOriginId',
-          'yearOriginId',
-          'anotherOriginId'
+          'yearOriginId'
         ],
         from: 1111111,
         to: constants.MAX_VERSION,
@@ -479,7 +461,7 @@ describe('DDF mappers', () => {
       version: 1111111,
       datasetId: 'dsId',
       filename: 'datapoints.csv',
-      dimensionsConcepts: ['countryOriginId', 'geoOriginId', 'yearOriginId'],
+      dimensionsConcepts: ['geoOriginId', 'yearOriginId'],
       concepts: {
         geo: {
           originId: 'geoOriginId'
@@ -494,15 +476,13 @@ describe('DDF mappers', () => {
         byGid: {
           usa: {
             gid: 'usa',
-            originId: 'usaOriginId',
-            sets: ['anotherOriginId', 'countryOriginId']
+            originId: 'usaOriginId'
           }
         },
         foundInDatapointsByGid: {
           1942: {
             gid: '1942',
-            originId: '1942OriginId',
-            sets: ['anotherOneOriginId', 'countryOriginId']
+            originId: '1942OriginId'
           }
         }
       },
@@ -525,11 +505,8 @@ describe('DDF mappers', () => {
           '1942OriginId'
         ],
         dimensionsConcepts: [
-          'countryOriginId',
           'geoOriginId',
-          'yearOriginId',
-          'anotherOriginId',
-          'anotherOneOriginId'
+          'yearOriginId'
         ],
         from: 1111111,
         to: constants.MAX_VERSION,
