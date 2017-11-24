@@ -1,3 +1,22 @@
+<a name="2.12.0"></a>
+# [2.12.0](https://github.com/Gapminder/waffle-server/compare/v2.11.1...v2.12.0) (2017-11-21)
+
+
+### Bug Fixes
+
+* **ddfql:** add functionality for adding entity_set as dimensionConcept to Datapoint, change unit tests ([c463876](https://github.com/Gapminder/waffle-server/commit/c463876))
+* **ddfql:** fix ddf ql query normalizer for working with empty entities condition ([716e9b5](https://github.com/Gapminder/waffle-server/commit/716e9b5))
+* **dockerfile:** fix docker_run file for node instance ([abcea18](https://github.com/Gapminder/waffle-server/commit/abcea18))
+* **haproxy:** fix haproxy config ([77577e1](https://github.com/Gapminder/waffle-server/commit/77577e1))
+
+
+### Features
+
+* **docker:** add tools - htop, net-tools, nano, lsof to docker images ([02dc568](https://github.com/Gapminder/waffle-server/commit/02dc568))
+* **monitoring-tools:** add monitoring tools with all needed environment variables ([7f5ed28](https://github.com/Gapminder/waffle-server/commit/7f5ed28))
+
+
+
 <a name="2.11.0"></a>
 # [2.11.0](https://github.com/Gapminder/waffle-server/compare/v2.10.0...v2.11.0) (2017-10-27)
 
