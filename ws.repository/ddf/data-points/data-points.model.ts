@@ -9,7 +9,7 @@ const DataPoints: any = new Schema({
   isNumeric: {type: Boolean, required: true},
   measure: {type: Schema.Types.ObjectId, required: true},
   dimensions: [{type: Schema.Types.ObjectId}],
-  dimensionsConcepts: [{type: Schema.Types.ObjectId}],
+  dimensionsConcepts: [{type: Schema.Types.ObjectId}], // it's the filed for storing DOMAINS only
   properties: {type: Schema.Types.Mixed, default: {}},
   languages: {type: Schema.Types.Mixed, default: {}},
 

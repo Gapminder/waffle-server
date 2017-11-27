@@ -29,7 +29,7 @@ function normalizeWhere(query: any, options: any): void {
 
     if (isConceptPropertyFilter(this.key, options.conceptGids)) {
       normalizedFilter = {
-        [ddfQueryUtils.wrapEntityProperties(this.key, options)]: filterValue
+        [ddfQueryUtils.wrapEntityProperties(this.key, options.domainGids, options)]: filterValue
       };
     }
 

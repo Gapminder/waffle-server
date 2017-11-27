@@ -14,7 +14,7 @@ const concepts = Object.freeze([
   { gid: 'time', originId: '27a3470d3a8c9b37009b9bf9', properties: { concept_type: 'time' } },
   { gid: 'quarter', originId: '77a3471d3a8c9b37009b9bf0', properties: { concept_type: 'quarter' } },
   { gid: 'geo', originId: '17a3470d3a8c9b37009b9bf9', properties: { concept_type: 'entity_domain' } },
-  { gid: 'country', originId: '17a3470d3a8c9b37009b9bf9-country', properties: { concept_type: 'entity_set' } },
+  { gid: 'country', originId: '17a3470d3a8c9b37009b9bf9-country', properties: { concept_type: 'entity_set' }, domain: '17a3470d3a8c9b37009b9bf9', type: 'entity_set' },
   { gid: 'latitude', properties: { concept_type: 'measure' } },
   { gid: 'population', originId: '37a3470d3a8c9b37009b9bf9', properties: { concept_type: 'measure' } },
   { gid: 'life_expectancy', originId: '47a3470d3a8c9b37009b9bf9', properties: { concept_type: 'measure' } },
@@ -24,11 +24,13 @@ const concepts = Object.freeze([
   { gid: 'project', originId: '27a3470d3a8c9b37429b9bf9', properties: { concept_type: 'entity_domain' } },
   { gid: 'lines_of_code', originId: '37a3470d3a8c9b37429b9bf9', properties: { concept_type: 'measure' } }
 ]);
+
 const options = Object.freeze({
   concepts,
   conceptOriginIdsByGids: ddfQueryUtils.getConceptOriginIdsByGids(concepts),
   conceptGids: ddfQueryUtils.getConceptGids(concepts),
   domainGids: ddfQueryUtils.getDomainGids(concepts),
+  domainGidsFromQuery: [],
   timeConceptsGids: conceptUtils.getTimeConceptGids(concepts),
   conceptsByGids: ddfQueryUtils.getConceptsByGids(concepts),
   conceptsByOriginIds: ddfQueryUtils.getConceptsByOriginIds(concepts)
@@ -36,9 +38,12 @@ const options = Object.freeze({
 
 describe('ddf datapoints query normalizer - queries simplification', () => {
   it('should normalize where and join clauses for full example', sandbox(function () {
+    const selectKey = ['geo', 'time'];
+    options.domainGidsFromQuery.push(...ddfQueryUtils.getDomainGidsFromQuery(selectKey, options.conceptsByGids, options.conceptsByOriginIds));
+
     const ddfql = {
       select: {
-        key: ['geo', 'time'],
+        key: selectKey,
         value: [
           'population', 'life_expectancy', 'gdp_per_cap', 'gov_type'
         ]
@@ -193,6 +198,106 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
         ]
       }
     };
+
+    expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options)).to.deep.equal(normalizedDdfql);
+  }));
+
+  it('should normalize where and join clauses for entity_set example', sandbox(function () {
+    const selectKey = ['country', 'time'];
+    options.domainGidsFromQuery.push(...ddfQueryUtils.getDomainGidsFromQuery(selectKey, options.conceptsByGids, options.conceptsByOriginIds));
+
+    const ddfql = {
+      select: {
+        key: selectKey,
+        value: [
+          'population'
+        ]
+      },
+      from: 'datapoints',
+      where: {
+        $and: [
+          { time: '$time' },
+          { population: { $gt: 100000 } }
+        ]
+      },
+      join: {
+        $time: {
+          key: 'time',
+          where: {
+            time: { $lt: 2015 }
+          }
+        }
+      },
+      order_by: ['country', { time: 'asc' }]
+    };
+
+    const normalizedDdfql = {
+      from: 'datapoints',
+      join: {
+        $parsed_geo_1: {
+          domain: '17a3470d3a8c9b37009b9bf9',
+          'properties.is--country': true
+        },
+        $time: {
+          domain: '27a3470d3a8c9b37009b9bf9',
+          'parsedProperties.time.millis': {
+            $lt: 1420070400000
+          },
+          'parsedProperties.time.timeType': 'YEAR_TYPE'
+        }
+      },
+      order_by: [
+        {
+          country: 'asc'
+        },
+        {
+          time: 'asc'
+        }
+      ],
+      select: {
+        key: [
+          'country',
+          'time'
+        ],
+        value: [
+          'population'
+        ]
+      },
+      where: {
+        $and: [
+          { dimensions: { $size: 2 } },
+          { dimensionsConcepts: { $all: ['17a3470d3a8c9b37009b9bf9', '27a3470d3a8c9b37009b9bf9'] } },
+          {
+            measure: {
+              $in: [
+                'population'
+              ]
+            }
+          },
+          {
+            $and: [
+              {
+                dimensions: '$time'
+              },
+              {
+                measure: 'population',
+                value: {
+                  $gt: 100000
+                }
+              },
+              {
+                dimensions: '$parsed_geo_1'
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    let numParsedLinks = 0;
+    this.stub(_, 'random').callsFake(() => {
+      return ++numParsedLinks;
+    });
 
     expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options)).to.deep.equal(normalizedDdfql);
   }));
@@ -411,10 +516,13 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
   }));
 
   it('should parse `{"join": "where": {"country.is--country": true}}` in where clause', sandbox(function () {
+    const selectKey = ['country', 'time'];
+    options.domainGidsFromQuery.push(...ddfQueryUtils.getDomainGidsFromQuery(selectKey, options.conceptsByGids, options.conceptsByOriginIds));
+
     const ddfql = {
       from: 'datapoints',
       select: {
-        key: ['country', 'time'],
+        key: selectKey,
         value: ['sg_population']
       },
       where: {
@@ -427,7 +535,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
         $country: {
           key: 'country',
           where: {
-            'country.is--country': true
+            'is--country': true
           }
         }
       }
@@ -438,6 +546,10 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       join: {
         $country: {
           sets: '17a3470d3a8c9b37009b9bf9-country',
+          'properties.is--country': true
+        },
+        $parsed_geo_2: {
+          domain: '17a3470d3a8c9b37009b9bf9',
           'properties.is--country': true
         },
         $parsed_time_1: {
@@ -461,7 +573,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       where: {
         $and: [
           { dimensions: { $size: 2 } },
-          { dimensionsConcepts: { $all: ['17a3470d3a8c9b37009b9bf9-country', '27a3470d3a8c9b37009b9bf9'] } },
+          { dimensionsConcepts: { $all: ['17a3470d3a8c9b37009b9bf9', '27a3470d3a8c9b37009b9bf9'] } },
           {
             measure: {
               $in: [
@@ -476,6 +588,9 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
               },
               {
                 dimensions: '$parsed_time_1'
+              },
+              {
+                dimensions: '$parsed_geo_2'
               }
             ]
           }
@@ -493,13 +608,13 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
   }));
 
   it('should parse and normalize query with country and time domains', sandbox(function () {
+    const selectKey = ['country', 'time'];
+    options.domainGidsFromQuery.push(...ddfQueryUtils.getDomainGidsFromQuery(selectKey, options.conceptsByGids, options.conceptsByOriginIds));
+
     const ddfql = {
       from: 'datapoints',
       select: {
-        key: [
-          'country',
-          'time'
-        ],
+        key: selectKey,
         value: [
           'sg_population'
         ]
@@ -515,6 +630,10 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     const normalizedDdfql = {
       from: 'datapoints',
       join: {
+        $parsed_geo_2: {
+          domain: '17a3470d3a8c9b37009b9bf9',
+          'properties.is--country': true
+        },
         $parsed_country_1: {
           sets: '17a3470d3a8c9b37009b9bf9-country',
           gid: {
@@ -538,7 +657,7 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
       where: {
         $and: [
           { dimensions: { $size: 2 } },
-          { dimensionsConcepts: { $all: ['17a3470d3a8c9b37009b9bf9-country', '27a3470d3a8c9b37009b9bf9'] } },
+          { dimensionsConcepts: { $all: ['17a3470d3a8c9b37009b9bf9', '27a3470d3a8c9b37009b9bf9'] } },
           {
             measure: {
               $in: [
@@ -550,6 +669,9 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
             $and: [
               {
                 dimensions: '$parsed_country_1'
+              },
+              {
+                dimensions: '$parsed_geo_2'
               }
             ]
           }
@@ -567,9 +689,12 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
   }));
 
   it('should parse and normalize query with project and company domains', sandbox(function () {
+    const selectKey = ['company', 'project'];
+    options.domainGidsFromQuery.push(...ddfQueryUtils.getDomainGidsFromQuery(selectKey, options.conceptsByGids, options.conceptsByOriginIds));
+
     const ddfql = {
       select: {
-        key: ['company', 'project'],
+        key: selectKey,
         value: ['lines_of_code']
       },
       from: 'datapoints',
