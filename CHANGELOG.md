@@ -1,3 +1,13 @@
+<a name="2.12.1"></a>
+## [2.12.1](https://github.com/Gapminder/waffle-server/compare/v2.12.0...v2.12.1) (2017-11-27)
+
+
+### Bug Fixes
+
+* **ddfql:** fix query normalizer for entity_sets ([4896681](https://github.com/Gapminder/waffle-server/commit/4896681))
+
+
+
 <a name="2.12.0"></a>
 # [2.12.0](https://github.com/Gapminder/waffle-server/compare/v2.11.1...v2.12.0) (2017-11-21)
 
