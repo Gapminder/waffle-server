@@ -1198,7 +1198,7 @@ describe('Routes utils', () => {
           dataset_access_token: 'foobar'
         },
         body: {},
-        originalUrl: `${constants.ASSETS_ROUTE_BASE_PATH}/myAccountOnGithub/my-custom-dataset/branch/assets/foo2.json`,
+        originalUrl: `${constants.ASSETS_ROUTE_BASE_PATH}/myAccountOnGithub/my-custom-dataset/branch/assets/foo2.json?accessToken=00001111nnnn2222mmmm3333`,
         baseUrl: constants.ASSETS_ROUTE_BASE_PATH
       };
       const res: any = {
