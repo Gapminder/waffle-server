@@ -87,7 +87,7 @@ function bodyFromUrlAssets(req: express.Request, res: express.Response, next: ex
 
     const assetPathDescriptor = getAssetPathDescriptor(
       config.PATH_TO_DDF_REPOSITORIES,
-      datasetAssetsPathFromUrl,
+      url.parse(datasetAssetsPathFromUrl).pathname,
       defaultDatasetAssetRequested && _.get(context, 'dataset')
     );
 
