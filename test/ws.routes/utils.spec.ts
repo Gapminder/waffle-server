@@ -1198,7 +1198,7 @@ describe('Routes utils', () => {
           dataset_access_token: 'foobar'
         },
         body: {},
-        originalUrl: `${constants.ASSETS_ROUTE_BASE_PATH}/myAccountOnGithub/my-custom-dataset/branch/assets/foo2.json?accessToken=00001111nnnn2222mmmm3333`,
+        originalUrl: `${constants.ASSETS_ROUTE_BASE_PATH}/myAccountOnGithub/my-custom-dataset/branch/feature/assets/foo2.json?dataset_access_token=foobar`,
         baseUrl: constants.ASSETS_ROUTE_BASE_PATH
       };
       const res: any = {
@@ -1212,13 +1212,13 @@ describe('Routes utils', () => {
       routeUtils.bodyFromUrlAssets(req, res, () => {
         // Assert
         expect(res._status).to.equal(-1);
-        expect(req.body.dataset).to.equal('myAccountOnGithub/my-custom-dataset#branch');
+        expect(req.body.dataset).to.equal('myAccountOnGithub/my-custom-dataset#branch/feature');
         expect(req.body.dataset_access_token).to.equal('foobar');
         expect(req.body.assetPathDescriptor).to.deep.equal({
           assetName: 'foo2.json',
           assetsDir: 'assets',
-          dataset: 'myAccountOnGithub/my-custom-dataset#branch',
-          path: '/home/anonymous/repos/myAccountOnGithub/my-custom-dataset/branch/assets/foo2.json'
+          dataset: 'myAccountOnGithub/my-custom-dataset#branch/feature',
+          path: '/home/anonymous/repos/myAccountOnGithub/my-custom-dataset/branch/feature/assets/foo2.json'
         });
 
         done();
