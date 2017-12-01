@@ -108,6 +108,7 @@ function bodyFromUrlAssets(req: express.Request, res: express.Response, next: ex
 
 function getAssetPathDescriptor(pathToDdfRepos: string, datasetAssetPath: string, defaultDataset?: any): any {
   const splittedDatasetAssetPath = _.split(datasetAssetPath, '/');
+  const splittedDatasetAssetPathLength = _.size(splittedDatasetAssetPath);
   const defaultDatasetInfo = getRepoInfoFromDataset(defaultDataset);
 
   const account = defaultDatasetInfo
@@ -118,18 +119,18 @@ function getAssetPathDescriptor(pathToDdfRepos: string, datasetAssetPath: string
     ? defaultDatasetInfo.repo
     : _.nth(splittedDatasetAssetPath, 1) || '';
 
+  const file = splittedDatasetAssetPath[splittedDatasetAssetPathLength - 1];
+
+  const assetsPathFragments = splittedDatasetAssetPath[splittedDatasetAssetPathLength - 2];
+
   const branch = defaultDatasetInfo
     ? defaultDatasetInfo.branch
-    : _.nth(splittedDatasetAssetPath, 2) || '';
-
-  const assetsPathFragments = defaultDatasetInfo
-    ? _.slice(splittedDatasetAssetPath, 1)
-    : _.slice(splittedDatasetAssetPath, 3);
+    : _.without(splittedDatasetAssetPath, account, repo, assetsPathFragments, file).join('/') || '';
 
   return {
-    path: path.resolve(pathToDdfRepos, account, repo, branch, _.join(assetsPathFragments, '/')),
-    assetsDir: _.first(assetsPathFragments),
-    assetName: _.last(assetsPathFragments),
+    path: path.resolve(pathToDdfRepos, account, repo, branch, assetsPathFragments, file),
+    assetsDir: assetsPathFragments,
+    assetName: file,
     dataset: `${account}/${repo}#${branch}`
   };
 }
