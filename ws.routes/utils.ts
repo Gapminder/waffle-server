@@ -65,7 +65,8 @@ function bodyFromUrlAssets(req: express.Request, res: express.Response, next: ex
     return next();
   }
 
-  const datasetAssetsPathFromUrl = safeDecodeUriComponent(_.last(_.split(req.originalUrl, constants.ASSETS_ROUTE_BASE_PATH + '/')));
+  const pathnameUrl = _.split(req.originalUrl, constants.ASSETS_ROUTE_BASE_PATH + '/').pop();
+  const datasetAssetsPathFromUrl = safeDecodeUriComponent(pathnameUrl);
 
   if (datasetAssetsPathFromUrl === null) {
     res.status(400).json(toErrorResponse('Malformed url was given'));
@@ -78,17 +79,18 @@ function bodyFromUrlAssets(req: express.Request, res: express.Response, next: ex
   }
 
   commonService.findDefaultDatasetAndTransaction({}, (error: any, context: any) => {
-    const defaultDatasetAssetRequested = _.startsWith(req.originalUrl, `${constants.ASSETS_ROUTE_BASE_PATH}/default`);
+    const isRequestedDefaultAssets = _.startsWith(req.originalUrl, `${constants.ASSETS_ROUTE_BASE_PATH}/default`);
 
-    if (error && defaultDatasetAssetRequested) {
+    if (error && isRequestedDefaultAssets) {
       res.status(500).json(toErrorResponse(`Default dataset couldn't be found`));
       return;
     }
 
+    const {pathname} = url.parse(datasetAssetsPathFromUrl);
     const assetPathDescriptor = getAssetPathDescriptor(
       config.PATH_TO_DDF_REPOSITORIES,
-      url.parse(datasetAssetsPathFromUrl).pathname,
-      defaultDatasetAssetRequested && _.get(context, 'dataset')
+      isRequestedDefaultAssets ? pathname.replace('default/', '') : pathname,
+      isRequestedDefaultAssets && _.get(context, 'dataset')
     );
 
     if (assetPathDescriptor.assetsDir !== constants.ASSETS_EXPECTED_DIR) {
@@ -107,29 +109,23 @@ function bodyFromUrlAssets(req: express.Request, res: express.Response, next: ex
 }
 
 function getAssetPathDescriptor(pathToDdfRepos: string, datasetAssetPath: string, defaultDataset?: any): any {
-  const splittedDatasetAssetPath = _.split(datasetAssetPath, '/');
-  const defaultDatasetInfo = getRepoInfoFromDataset(defaultDataset);
+  const {
+    repo: defaultRepo = '',
+    account: defaultAccount = '',
+    branch: defaultBranch = ''
+  } = getRepoInfoFromDataset(defaultDataset) || {};
 
-  const account = defaultDatasetInfo
-    ? defaultDatasetInfo.account
-    : _.nth(splittedDatasetAssetPath, 0);
+  const splittedDatasetAssetPath = datasetAssetPath.split('/');
+  const file = splittedDatasetAssetPath.pop();
+  const assetsPathFragments = splittedDatasetAssetPath.pop();
 
-  const repo = defaultDatasetInfo
-    ? defaultDatasetInfo.repo
-    : _.nth(splittedDatasetAssetPath, 1) || '';
-
-  const branch = defaultDatasetInfo
-    ? defaultDatasetInfo.branch
-    : _.nth(splittedDatasetAssetPath, 2) || '';
-
-  const assetsPathFragments = defaultDatasetInfo
-    ? _.slice(splittedDatasetAssetPath, 1)
-    : _.slice(splittedDatasetAssetPath, 3);
+  const [account = defaultAccount, repo = defaultRepo, ...splittedBranchName] = splittedDatasetAssetPath;
+  const branch = splittedBranchName.join('/') || defaultBranch;
 
   return {
-    path: path.resolve(pathToDdfRepos, account, repo, branch, _.join(assetsPathFragments, '/')),
-    assetsDir: _.first(assetsPathFragments),
-    assetName: _.last(assetsPathFragments),
+    path: path.resolve(pathToDdfRepos, account, repo, branch, assetsPathFragments, file),
+    assetsDir: assetsPathFragments,
+    assetName: file,
     dataset: `${account}/${repo}#${branch}`
   };
 }
