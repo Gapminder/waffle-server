@@ -1,6 +1,6 @@
 import { config as appConfig } from './ws.config/config';
 
-const MAX_OLD_SPACE_SIZE = appConfig.THRASHING_MACHINE ? 10000 : 3000;
+const MAX_OLD_SPACE_SIZE = appConfig.THRASHING_MACHINE ? 13000 : 6000;
 const DEFAULT_INTERPRETER_ARGS = ['--stack_trace_limit=0', `--max_old_space_size=${MAX_OLD_SPACE_SIZE}`];
 
 module.exports = {
@@ -17,7 +17,7 @@ module.exports = {
       exec_mode: 'cluster',
       listen_timeout: 60000,
       restart_delay: 60000,
-      maxMemoryRestart: appConfig.THRASHING_MACHINE ? '7G' : '2G',
+      maxMemoryRestart: appConfig.THRASHING_MACHINE ? '12G' : '6G',
       interpreterArgs: DEFAULT_INTERPRETER_ARGS,
       mergeLogs: true,
       out_file: 'logs/out.log',

@@ -1,5 +1,8 @@
 settings_gapminder*.txt
 settings_valor.txt
+deployment/gcp_scripts/settings_*.json
+deployment/gcp_scripts/build.*.sh
+deployment/gcp_scripts/*.txt
 logs/*.log*
 ws.import/repos/*
 ws.import/diffs/*
