@@ -30,7 +30,7 @@ dumps
 
 # Directory for GitHub repositories
 ws.import/repos/*
-ws.import/diffs/*.txt
+ws.import/diffs/**/*.txt
 !ws.import/repos/.gitkeep
 !ws.import/diffs/.gitkeep
 
