@@ -10,9 +10,8 @@ import { hostname } from 'os';
 const NODE_ENV = process.env.NODE_ENV;
 const REDIS_HOST = process.env.REDIS_HOST;
 const REDIS_PORT = process.env.REDIS_PORT || 6379;
-const HA_REG_EXPIRE = process.env.HA_REG_EXPIRE || 60;
+
 const PORT = process.env.PORT || 3000;
-const SERVICE_NAME = process.env.SERVICE_NAME || 'default';
 const THRASHING_MACHINE = process.env.THRASHING_MACHINE || 'false';
 const LOGS_SYNC_DISABLED = process.env.LOGS_SYNC_DISABLED;
 const WAFFLE_SERVER_VERSION = require('./package.json').version;
@@ -105,27 +104,14 @@ function startWaffleServerThrashingMachine(): void {
 }
 
 function startWaffleServer(): void {
+  logger.info(`RUN command: start ${NODE_ENV} environment`);
   shell.exec(runWaffleServerCommand, { silent: true });
 
-  while (true) {
-    logger.info(`RUN command: Check local IP via AWS for ${NODE_ENV} environment`);
-    const myip = shell.exec('/usr/bin/curl -m 2 http://169.254.169.254/latest/meta-data/local-ipv4 2>/dev/null');
-    if (myip.code === 0) {
-      const ip = myip.stdout;
-      shell.exec(`/usr/bin/redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} setex /upstreams/${SERVICE_NAME}/${process.env.HOSTNAME}  ${HA_REG_EXPIRE} \"${ip} ${ip}:${PORT}\"`, { silent: true });
-    } else if (!IS_LOCAL_ENVIRONMENT) {
-      logger.error('-- ERROR: Could not determine local ip address. Exit.');
-      process.exit(1);
-    }
-
-    shell.exec('sleep 10');
-
-    if (isWaffleServerNotRunning()) {
-      logger.warn('-- ERROR: ws is failed to start. Going to start Waffle Server once more...');
-      shell.exec('pm2 stop all && pm2 delete all');
-      shell.exec(runWaffleServerCommand);
-    }
-
-    shell.exec('sleep 10');
+  if (shell.error()) {
+    logger.error(shell.error(), `-- ERROR: Could not start ${NODE_ENV} environment due to internal error. Exit.`);
+    shell.exec('sleep 600');
+    process.exit(1);
   }
+
+  process.exit(0);
 }
