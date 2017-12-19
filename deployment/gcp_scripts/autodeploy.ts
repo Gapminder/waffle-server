@@ -3,7 +3,7 @@ import * as async from 'async';
 import {
   allowHttpTM, buildImageNode, buildImageTM, createCluster, createPods, createProject, createRedis,
   createReplicas, createTM, promoteExternalIP, pushImageNode, pushImageTM, reserveInternalIP, setupAutoscale,
-  setupLoadbalancer
+  setupLoadbalancer, printExternalIPs
 } from './autodeploy.helpers';
 import { getContextInstance } from './common.helpers';
 import { GCloudArguments } from './interfaces';
@@ -81,7 +81,8 @@ async.waterfall([
   createPods,
   createReplicas,
   setupAutoscale,
-  setupLoadbalancer
+  setupLoadbalancer,
+  printExternalIPs
 ], function (error: string, result: any) {
   if (error) {
     console.error(error);

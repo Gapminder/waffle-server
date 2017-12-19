@@ -4,7 +4,7 @@ import { ExecOptions, ExecOutputReturnValue } from 'shelljs';
 
 import { getGCloudArguments, runShellCommand } from './common.helpers';
 
-export function removeImageTM(externalContext: any, cb: Function) {
+export function removeImageTM(externalContext: any, cb: Function): void {
   const { TM_INSTANCE_VARIABLES: { IMAGE_URL }, PROJECT_ID } = externalContext;
 
   const command = `gcloud beta container images delete ${IMAGE_URL} --project=${PROJECT_ID} --quiet`;
@@ -13,7 +13,7 @@ export function removeImageTM(externalContext: any, cb: Function) {
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
-export function removeImageNode(externalContext: any, cb: Function) {
+export function removeImageNode(externalContext: any, cb: Function): void {
   const { NODE_INSTANCE_VARIABLES: { IMAGE_URL }, PROJECT_ID } = externalContext;
 
   const command = `gcloud beta container images delete ${IMAGE_URL} --project=${PROJECT_ID} --quiet`;
@@ -22,7 +22,7 @@ export function removeImageNode(externalContext: any, cb: Function) {
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
-export function removeRedis(externalContext: any, cb: Function) {
+export function removeRedis(externalContext: any, cb: Function): void {
   const {
     ZONE,
     PROJECT_ID,
@@ -36,7 +36,7 @@ export function removeRedis(externalContext: any, cb: Function) {
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
-export function releaseInternalIP(externalContext: any, cb: Function) {
+export function releaseInternalIP(externalContext: any, cb: Function): void {
   const {
     PROJECT_ID,
     REDIS_HOST,
@@ -54,7 +54,7 @@ export function releaseInternalIP(externalContext: any, cb: Function) {
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
-export function removeTM(externalContext: any, cb: Function) {
+export function removeTM(externalContext: any, cb: Function): void {
   const {
     TM_INSTANCE_VARIABLES: {
       NODE_NAME: TM_INSTANCE_NAME
@@ -70,7 +70,7 @@ export function removeTM(externalContext: any, cb: Function) {
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
-export function denyHttpTM(externalContext: any, cb: Function) {
+export function denyHttpTM(externalContext: any, cb: Function): void {
   const {
     TM_INSTANCE_VARIABLES: {
       NODE_NAME: TM_INSTANCE_NAME
@@ -86,7 +86,7 @@ export function denyHttpTM(externalContext: any, cb: Function) {
 
 }
 
-export function releaseExternalIP(externalContext: any, cb: Function) {
+export function releaseExternalIP(externalContext: any, cb: Function): void {
   const {
     TM_INSTANCE_VARIABLES: {
       IP_ADDRESS
@@ -106,7 +106,7 @@ export function releaseExternalIP(externalContext: any, cb: Function) {
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
-export function removeCluster(externalContext: any, cb: Function) {
+export function removeCluster(externalContext: any, cb: Function): void {
   const { PROJECT_ID, ZONE, CLUSTER_NAME } = externalContext;
 
   const command = `gcloud container clusters delete ${CLUSTER_NAME} --zone=${ZONE} --project=${PROJECT_ID} --quiet`;

@@ -13,7 +13,7 @@
   "DEFAULT_WS_PORTS": {
     "local": 3000,
     "development": 3000,
-    "production": 3000 
+    "production": 3000
   },
   "DEFAULT_MACHINE_TYPES": {
     "TM": "n1-highmem-2",
@@ -30,17 +30,17 @@
     "FOLDER_ID": "175894177778",
     "ORGANIZATION_ID": "766740605603",
     "ENABLE_AUTOSCALING": true,
+    "REGION": "europe-west1",
     "MAX_NODES_PER_POOL": 100,
-    "NUM_NODES": 1,
-    "REGION": "europe-west1",    
-    "MAX_NODES": 3,
+    "MAX_NODES": 5,
     "MIN_NODES": 1,
+    "NUM_NODES": 1,
+    "MAX_NUMBER_REPLICAS": 5,
     "MIN_NUMBER_REPLICAS": 1,
-    "MAX_NUMBER_REPLICAS": 3,
+    "NUMBER_REPLICAS": 1,
     "CPU_PERCENT": 40,
     "REDIS_CONTAINER_IMAGE": "docker.io/redis:4.0.2",
-    "NUMBER_REPLICAS": 1,
-    "SOURCE_PORT": 80,    
+    "SOURCE_PORT": 80,
     "CREATE_CLUSTER__ALLOWED_PARAMS": [
       "DISK_SIZE",
       "IMAGE_TYPE",
@@ -51,6 +51,6 @@
       "ZONE",
       "MAX_NODES",
       "MIN_NODES"
-    ]  
+    ]
   }
 }

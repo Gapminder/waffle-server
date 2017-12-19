@@ -5,19 +5,36 @@ import * as async from 'async';
 import { ExecOptions, ExecOutputReturnValue } from 'shelljs';
 import { DockerBuildArguments, GCloudArguments } from './interfaces';
 
+let counter = 0;
+
 export function runShellCommand(command: string, options: ExecOptions, cb: Function): void {
   console.log('RUN COMMAND: ', command, '\n');
 
-  // const ENVIRONMENT = 'prod';
+  // const ENVIRONMENT = 'dev';
   // const PROJECT_ID = `${ENVIRONMENT}-waffle-server`;
   // const REGION = 'europe-west1';
-  // return async.setImmediate(() => cb(null, {code:0, stderr: '', stdout: `[{"networkInterfaces":[{"accessConfigs":[{"natIP":"35.205.183.154"}],"subnetwork":"https://www.googleapis.com/compute/beta/projects/${PROJECT_ID}/regions/${REGION}/subnetworks/default","networkIP":"192.127.0.2"}]}]`}));
+  // const fixtures = [
+  //   ..._.times(1, String),
+  //   {code:0, stderr: '', stdout: `[{"networkInterfaces":[{"accessConfigs":[{"natIP":"35.205.183.154"}],"subnetwork":"https://www.googleapis.com/compute/beta/projects/${PROJECT_ID}/regions/${REGION}/subnetworks/default","networkIP":"192.127.0.2"}]}]`},
+  //   ..._.times(5, String),
+  //   {code:0, stderr: '', stdout: `[{"networkInterfaces":[{"accessConfigs":[{"natIP":"35.205.183.154"}],"subnetwork":"https://www.googleapis.com/compute/beta/projects/${PROJECT_ID}/regions/${REGION}/subnetworks/default","networkIP":"192.127.0.2"}]}]`},
+  //   ..._.times(7, String),
+  //   {code:0, stderr: '', stdout: `{"status": {"loadBalancer": {"ingress": [{"ip": "35.205.145.142"}]}}}`}
+  // ];
+  // return async.setImmediate(() => cb(null, fixtures[counter++]));
 
   const result: ExecOutputReturnValue | ChildProcess = shell.exec(command, options);
   const error: string = shell.error();
+  const code: number = (result as ExecOutputReturnValue).code;
+  const stderr: string = (result as ExecOutputReturnValue).stderr;
+  const isError404 = _.some(['code=404', 'was not found', 'is not a valid name'], (item: string) => _.includes(stderr, item));
 
-  if (error) {
-    return cb(`Unexpected error [code=${(result as ExecOutputReturnValue).code}]: ${result.stderr}`, result);
+  if (error && !isError404) {
+    return cb(`Unexpected error [code=${code}]: ${stderr}`, result);
+  }
+
+  if (isError404) {
+    console.log(`SKIP STEP DUE TO REASON: ${stderr}`);
   }
 
   return cb(null, result);
