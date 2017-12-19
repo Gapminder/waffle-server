@@ -83,9 +83,9 @@ const context = Object.assign(primaryContext, {
 async.waterfall([
   async.constant(context),
   // putdownLoadbalancer,
-  // removeCluster,
-  // releaseExternalIP,
-  // denyHttpTM,
+  removeCluster,
+  releaseExternalIP,
+  denyHttpTM,
   removeTM,
   releaseInternalIP,
   removeRedis,

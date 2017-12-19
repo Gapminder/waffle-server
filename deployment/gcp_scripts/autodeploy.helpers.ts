@@ -1,11 +1,10 @@
 import * as _ from 'lodash';
-import * as async from 'async';
 import { ExecOptions, ExecOutputReturnValue } from 'shelljs';
 
 import { getDockerArguments, getGCloudArguments, runShellCommand } from './common.helpers';
 import { DockerBuildArguments, DockerBuildArgumentsTM } from './interfaces';
 
-export function createProject(externalContext: any, cb: Function) {
+export function createProject(externalContext: any, cb: Function): void {
   const {
     PROJECT_ID,
     FOLDER_ID,
@@ -16,7 +15,7 @@ export function createProject(externalContext: any, cb: Function) {
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string) => {
-    if (_.isNil(error)) {
+    if (_.isNil(error) && 0) {
       console.error(
         `\nAPI [compute.googleapis.com] not enabled on project [${PROJECT_ID}]. Link billing account at https://console.cloud.google.com/billing/linkedaccount?project=${PROJECT_ID}\n\n`,
         `Please enable Google Container Registry API in Cloud Console at https://console.cloud.google.com/apis/api/containerregistry.googleapis.com/overview?project=${PROJECT_ID}\n`
@@ -33,7 +32,7 @@ export function createProject(externalContext: any, cb: Function) {
   });
 }
 
-export function buildImageTM(externalContext: any, cb: Function) {
+export function buildImageTM(externalContext: any, cb: Function): void {
   const {
     TM_INSTANCE_VARIABLES: {
       MACHINE_SUFFIX,
@@ -58,7 +57,7 @@ export function buildImageTM(externalContext: any, cb: Function) {
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
-export function buildImageNode(externalContext: any, cb: Function) {
+export function buildImageNode(externalContext: any, cb: Function): void {
   const {
     NODE_INSTANCE_VARIABLES: {
       MACHINE_SUFFIX,
@@ -82,7 +81,7 @@ export function buildImageNode(externalContext: any, cb: Function) {
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
-export function pushImageTM(externalContext: any, cb: Function) {
+export function pushImageTM(externalContext: any, cb: Function): void {
   const { TM_INSTANCE_VARIABLES: { IMAGE_URL } } = externalContext;
 
   const command = `gcloud docker -- push ${IMAGE_URL}`;
@@ -91,7 +90,7 @@ export function pushImageTM(externalContext: any, cb: Function) {
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
-export function pushImageNode(externalContext: any, cb: Function) {
+export function pushImageNode(externalContext: any, cb: Function): void {
   const { NODE_INSTANCE_VARIABLES: { IMAGE_URL } } = externalContext;
 
   const command = `gcloud docker -- push ${IMAGE_URL}`;
@@ -100,7 +99,7 @@ export function pushImageNode(externalContext: any, cb: Function) {
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
-export function createRedis(externalContext: any, cb: Function) {
+export function createRedis(externalContext: any, cb: Function): void {
   const {
     ZONE,
     PROJECT_ID,
@@ -127,7 +126,7 @@ export function createRedis(externalContext: any, cb: Function) {
   });
 }
 
-export function reserveInternalIP(externalContext: any, cb: Function) {
+export function reserveInternalIP(externalContext: any, cb: Function): void {
   const {
     PROJECT_ID,
     REDIS_HOST,
@@ -145,7 +144,7 @@ export function reserveInternalIP(externalContext: any, cb: Function) {
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
-export function createTM(externalContext: any, cb: Function) {
+export function createTM(externalContext: any, cb: Function): void {
   const {
     TM_INSTANCE_VARIABLES: {
       IMAGE_URL,
@@ -175,7 +174,7 @@ export function createTM(externalContext: any, cb: Function) {
   });
 }
 
-export function allowHttpTM(externalContext: any, cb: Function) {
+export function allowHttpTM(externalContext: any, cb: Function): void {
   const {
     TM_INSTANCE_VARIABLES: {
       NODE_NAME: TM_INSTANCE_NAME
@@ -184,14 +183,14 @@ export function allowHttpTM(externalContext: any, cb: Function) {
     FIREWALL_RULE__ALLOW_HTTP
   } = externalContext;
 
-  const command = `gcloud compute firewall-rules create ${FIREWALL_RULE__ALLOW_HTTP} --allow=tcp:80 --target-tags=${TM_INSTANCE_NAME} --project=${PROJECT_ID}`;
+  const command = `gcloud compute firewall-rules create ${FIREWALL_RULE__ALLOW_HTTP} --allow=tcp:80,tcp:443 --target-tags=${TM_INSTANCE_NAME} --project=${PROJECT_ID}`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 
 }
 
-export function promoteExternalIP(externalContext: any, cb: Function) {
+export function promoteExternalIP(externalContext: any, cb: Function): void {
   const {
     TM_INSTANCE_VARIABLES: {
       IP_ADDRESS
@@ -211,21 +210,41 @@ export function promoteExternalIP(externalContext: any, cb: Function) {
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
-export function createCluster(externalContext: any, cb: Function) {
-  const { PROJECT_ID, CLUSTER_NAME, CREATE_CLUSTER__ALLOWED_PARAMS } = externalContext;
+export function createCluster(externalContext: any, cb: Function): void {
+  const {
+    NODE_INSTANCE_VARIABLES: { MACHINE_TYPE },
+    PROJECT_ID, CLUSTER_NAME, CREATE_CLUSTER__ALLOWED_PARAMS
+  } = externalContext;
 
   const gcloudArgs = _.pick(externalContext, CREATE_CLUSTER__ALLOWED_PARAMS);
   const commandArgs = getGCloudArguments(gcloudArgs);
-  const command = `gcloud container clusters create ${CLUSTER_NAME} ${commandArgs} --project=${PROJECT_ID}`;
+  const command = `gcloud container clusters create ${CLUSTER_NAME} ${commandArgs} --machine-type=${MACHINE_TYPE} --project=${PROJECT_ID}`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
-export function createPods(externalContext: any, cb: Function) {
+export function createNodePools(externalContext: any, cb: Function): void {
+  const {
+    NODE_INSTANCE_VARIABLES: { MACHINE_TYPE },
+    PROJECT_ID, CLUSTER_NAME, NODE_POOLS_NAME,
+    NUM_NODES,
+    MAX_NODES,
+    MIN_NODES,
+    VERSION_TAGS,
+    ZONE
+  } = externalContext;
+
+  const command = `gcloud container node-pools create ${NODE_POOLS_NAME} --cluster=${CLUSTER_NAME} --machine-type=${MACHINE_TYPE} --num-nodes=${NUM_NODES} --tags=${VERSION_TAGS} --zone=${ZONE} --project=${PROJECT_ID}`;  const options: ExecOptions = {};
+
+  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+}
+
+export function createPods(externalContext: any, cb: Function): void {
   const {
     NODE_INSTANCE_VARIABLES: { IMAGE_URL, PORT },
     REPLICAS_NAME,
+    CLUSTER_NAME,
     NUMBER_REPLICAS
   } = externalContext;
 
@@ -235,10 +254,11 @@ export function createPods(externalContext: any, cb: Function) {
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
-export function createReplicas(externalContext: any, cb: Function) {
+export function createReplicas(externalContext: any, cb: Function): void {
   const {
     NUMBER_REPLICAS,
-    REPLICAS_NAME
+    REPLICAS_NAME,
+    CLUSTER_NAME
   } = externalContext;
 
   const command = `kubectl scale deployment ${REPLICAS_NAME} --replicas=${NUMBER_REPLICAS}`;
@@ -247,12 +267,13 @@ export function createReplicas(externalContext: any, cb: Function) {
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
-export function setupAutoscale(externalContext: any, cb: Function) {
+export function setupAutoscale(externalContext: any, cb: Function): void {
   const {
     MIN_NUMBER_REPLICAS,
     MAX_NUMBER_REPLICAS,
     REPLICAS_NAME,
-    CPU_PERCENT
+    CPU_PERCENT,
+    CLUSTER_NAME
   } = externalContext;
 
   const command = `kubectl autoscale deployment ${REPLICAS_NAME} --min=${MIN_NUMBER_REPLICAS} --max=${MAX_NUMBER_REPLICAS} --cpu-percent=${CPU_PERCENT}`;
@@ -261,16 +282,39 @@ export function setupAutoscale(externalContext: any, cb: Function) {
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
-export function setupLoadbalancer(externalContext: any, cb: Function) {
+export function setupLoadbalancer(externalContext: any, cb: Function): void {
   const {
     NODE_INSTANCE_VARIABLES: { PORT: TARGET_PORT },
     SOURCE_PORT,
     REPLICAS_NAME,
-    LOAD_BALANCER_NAME
+    LOAD_BALANCER_NAME,
+    CLUSTER_NAME
   } = externalContext;
 
   const command = `kubectl expose deployment ${REPLICAS_NAME} --port=${SOURCE_PORT} --target-port=${TARGET_PORT} --name=${LOAD_BALANCER_NAME} --type=LoadBalancer`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+}
+
+export function printExternalIPs(externalContext: any, cb: Function): void {
+  const {
+    TM_INSTANCE_VARIABLES: {
+      IP_ADDRESS: TM_IP_ADDRESS
+    },
+    LOAD_BALANCER_NAME
+  } = externalContext;
+
+  const command = `kubectl get service ${LOAD_BALANCER_NAME} --output=json`;
+  const options: ExecOptions = {};
+
+  return runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
+    try {
+      const {status: {loadBalancer: {ingress: [{ip: LOAD_BALANCER_IP_ADDRESS}]}}} = JSON.parse(result.stdout);
+      console.log('\nRESULTS: \n', `TM: ${TM_IP_ADDRESS}\n`, `LB: ${LOAD_BALANCER_IP_ADDRESS}\n`);
+    } catch (_error) {
+      console.error('JSON parse syntax error: ', _error);
+    }
+    return cb(error, externalContext);
+  });
 }
