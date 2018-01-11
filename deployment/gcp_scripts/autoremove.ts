@@ -55,7 +55,7 @@ const COMPUTED_VARIABLES = Object.assign({
 // gcloud variables
 
 const GCP_VARIABLES = Object.assign({
-  PROJECT_ID: `${ENVIRONMENT}-waffle-server`,
+  PROJECT_ID: `${COMPUTED_VARIABLES.PROJECT_NAME}-${ENVIRONMENT}`,
   PROJECT_LABELS: `environment=${ENVIRONMENT}`,
   CLUSTER_NAME: `${ENVIRONMENT}-cluster-${VERSION}`,
   NAME_SPACE_NODE: `${ENVIRONMENT}-namespace-${VERSION}`,
