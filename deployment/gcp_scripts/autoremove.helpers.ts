@@ -36,7 +36,7 @@ export function removeRedis(externalContext: any, cb: Function): void {
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
-export function releaseInternalIP(externalContext: any, cb: Function): void {
+export function releaseRedisInternalIP(externalContext: any, cb: Function): void {
   const {
     PROJECT_ID,
     REDIS_HOST,
@@ -49,6 +49,36 @@ export function releaseInternalIP(externalContext: any, cb: Function): void {
   } = externalContext;
 
   const ADDRESS_NAME = `${ENVIRONMENT}-redis-address-${VERSION}`;
+  const command = `gcloud compute addresses delete ${ADDRESS_NAME} --region=${REGION} --project=${PROJECT_ID} --quiet`;
+  const options: ExecOptions = {};
+  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+}
+
+export function removeMongo(externalContext: any, cb: Function): void {
+  const {
+    ZONE,
+    PROJECT_ID,
+    MONGO_INSTANCE_NAME
+  } = externalContext;
+
+  const command = `gcloud beta compute instances delete ${MONGO_INSTANCE_NAME} \
+    --delete-disks=all --zone=${ZONE} --project=${PROJECT_ID} --quiet`;
+  const options: ExecOptions = {};
+
+  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+}
+
+export function releaseMongoInternalIP(externalContext: any, cb: Function): void {
+  const {
+    PROJECT_ID,
+    REGION,
+    COMPUTED_VARIABLES: {
+      ENVIRONMENT,
+      VERSION
+    }
+  } = externalContext;
+
+  const ADDRESS_NAME = `${ENVIRONMENT}-mongo-address-${VERSION}`;
   const command = `gcloud compute addresses delete ${ADDRESS_NAME} --region=${REGION} --project=${PROJECT_ID} --quiet`;
   const options: ExecOptions = {};
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));

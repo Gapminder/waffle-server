@@ -3,8 +3,8 @@ import * as async from 'async';
 import * as semverRegex from 'semver-regex';
 
 import {
-  denyHttpTM, releaseExternalIP, releaseInternalIP, removeCluster,
-  removeImageNode, removeImageTM, removeRedis, removeTM
+  denyHttpTM, releaseExternalIP, releaseRedisInternalIP, releaseMongoInternalIP, removeCluster,
+  removeImageNode, removeImageTM, removeRedis, removeMongo, removeTM
 } from './autoremove.helpers';
 import { getContextInstance } from './common.helpers';
 import { GCloudArguments } from './interfaces';
@@ -36,7 +36,7 @@ if (_.isString(_VERSION) && !semverRegex().test(_VERSION)) {
 }
 
 const NODE_ENV = process.env.NODE_ENV || DEFAULT_NODE_ENV;
-const ENVIRONMENT = DEFAULT_ENVIRONMENTS[NODE_ENV];
+const ENVIRONMENT = DEFAULT_ENVIRONMENTS[NODE_ENV] || NODE_ENV;
 const VERSION_TAG = semverRegex().exec(process.env.VERSION)[0];
 const VERSION = VERSION_TAG.replace(/\./g, '-');
 const STATIC_VARIABLES = require(`./settings_gapminder_${ENVIRONMENT}.json`);
@@ -60,6 +60,7 @@ const GCP_VARIABLES = Object.assign({
   CLUSTER_NAME: `${ENVIRONMENT}-cluster-${VERSION}`,
   NAME_SPACE_NODE: `${ENVIRONMENT}-namespace-${VERSION}`,
   REDIS_INSTANCE_NAME: `${ENVIRONMENT}-redis-${VERSION}`,
+  MONGO_INSTANCE_NAME: `${ENVIRONMENT}-mongo-${VERSION}`,
   REPLICAS_NAME: `${ENVIRONMENT}-replicas-${VERSION}`,
   LOAD_BALANCER_NAME: `${ENVIRONMENT}-lb-${VERSION}`,
   FIREWALL_RULE__ALLOW_HTTP: `${ENVIRONMENT}-allow-http-${VERSION}`,
@@ -87,7 +88,9 @@ async.waterfall([
   releaseExternalIP,
   denyHttpTM,
   removeTM,
-  releaseInternalIP,
+  releaseMongoInternalIP,
+  removeMongo,
+  releaseRedisInternalIP,
   removeRedis,
   removeImageNode,
   removeImageTM
