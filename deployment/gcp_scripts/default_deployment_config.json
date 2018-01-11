@@ -3,16 +3,19 @@
   "DEFAULT_ENVIRONMENTS": {
     "local": "local",
     "development": "dev",
+    "test": "test",
     "production": "prod"
   },
   "DEFAULT_TM_PORTS": {
     "local": 3001,
     "development": 80,
+    "test": 80,
     "production": 80
   },
   "DEFAULT_WS_PORTS": {
     "local": 3000,
     "development": 3000,
+    "test": 3000,
     "production": 3000
   },
   "DEFAULT_MACHINE_TYPES": {
