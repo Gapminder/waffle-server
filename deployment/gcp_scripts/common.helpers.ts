@@ -11,7 +11,8 @@ export function runShellCommand(command: string, options: ExecOptions, cb: Funct
   console.log('RUN COMMAND: ', command, '\n');
 
   // const ENVIRONMENT = 'dev';
-  // const PROJECT_ID = `${ENVIRONMENT}-waffle-server`;
+  // const PROJECT_NAME = 'waffle-server';
+  // const PROJECT_ID = `${PROJECT_NAME}-${ENVIRONMENT}`;
   // const REGION = 'europe-west1';
   // const fixtures = [
   //   ..._.times(1, String),
