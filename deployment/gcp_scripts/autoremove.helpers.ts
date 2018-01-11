@@ -24,13 +24,13 @@ export function removeImageNode(externalContext: any, cb: Function): void {
 
 export function removeRedis(externalContext: any, cb: Function): void {
   const {
-    ZONE,
     PROJECT_ID,
-    REDIS_INSTANCE_NAME
+    REDIS_INSTANCE_NAME,
+    REDIS_ZONE
   } = externalContext;
 
   const command = `gcloud beta compute instances delete ${REDIS_INSTANCE_NAME} \
-    --delete-disks=all --zone=${ZONE} --project=${PROJECT_ID} --quiet`;
+    --delete-disks=all --zone=${REDIS_ZONE} --project=${PROJECT_ID} --quiet`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
@@ -39,7 +39,7 @@ export function removeRedis(externalContext: any, cb: Function): void {
 export function releaseRedisInternalIP(externalContext: any, cb: Function): void {
   const {
     PROJECT_ID,
-    REGION_REDIS,
+    REDIS_REGION,
     COMPUTED_VARIABLES: {
       ENVIRONMENT,
       VERSION
@@ -48,20 +48,20 @@ export function releaseRedisInternalIP(externalContext: any, cb: Function): void
 
   const ADDRESS_NAME = `${ENVIRONMENT}-redis-address-${VERSION}`;
   //fixme: REGION
-  const command = `gcloud compute addresses delete ${ADDRESS_NAME} --region=${REGION_REDIS} --project=${PROJECT_ID} --quiet`;
+  const command = `gcloud compute addresses delete ${ADDRESS_NAME} --region=${REDIS_REGION} --project=${PROJECT_ID} --quiet`;
   const options: ExecOptions = {};
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
 export function removeMongo(externalContext: any, cb: Function): void {
   const {
-    ZONE,
+    MONGO_ZONE,
     PROJECT_ID,
     MONGO_INSTANCE_NAME
   } = externalContext;
 
   const command = `gcloud beta compute instances delete ${MONGO_INSTANCE_NAME} \
-    --delete-disks=all --zone=${ZONE} --project=${PROJECT_ID} --quiet`;
+    --delete-disks=all --zone=${MONGO_ZONE} --project=${PROJECT_ID} --quiet`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
@@ -70,7 +70,7 @@ export function removeMongo(externalContext: any, cb: Function): void {
 export function releaseMongoInternalIP(externalContext: any, cb: Function): void {
   const {
     PROJECT_ID,
-    REGION_MONGO,
+    MONGO_REGION,
     COMPUTED_VARIABLES: {
       ENVIRONMENT,
       VERSION
@@ -79,7 +79,7 @@ export function releaseMongoInternalIP(externalContext: any, cb: Function): void
 
   const ADDRESS_NAME = `${ENVIRONMENT}-mongo-address-${VERSION}`;
   //fixme: REGION
-  const command = `gcloud compute addresses delete ${ADDRESS_NAME} --region=${REGION_MONGO} --project=${PROJECT_ID} --quiet`;
+  const command = `gcloud compute addresses delete ${ADDRESS_NAME} --region=${MONGO_REGION} --project=${PROJECT_ID} --quiet`;
   const options: ExecOptions = {};
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
@@ -89,12 +89,12 @@ export function removeTM(externalContext: any, cb: Function): void {
     TM_INSTANCE_VARIABLES: {
       NODE_NAME: TM_INSTANCE_NAME
     },
-    ZONE,
+    TM_ZONE,
     PROJECT_ID
   } = externalContext;
 
   const command = `gcloud beta compute instances delete ${TM_INSTANCE_NAME} \
-    --delete-disks=all --zone=${ZONE} --project=${PROJECT_ID} --quiet`;
+    --delete-disks=all --zone=${TM_ZONE} --project=${PROJECT_ID} --quiet`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
@@ -116,7 +116,7 @@ export function denyHttpTM(externalContext: any, cb: Function): void {
 export function releaseExternalIP(externalContext: any, cb: Function): void {
   const {
     PROJECT_ID,
-    REGION_TM,
+    TM_REGION,
     COMPUTED_VARIABLES: {
       ENVIRONMENT,
       VERSION
@@ -125,7 +125,7 @@ export function releaseExternalIP(externalContext: any, cb: Function): void {
 
   const ADDRESS_NAME = `${ENVIRONMENT}-tm-address-${VERSION}`;
   //fixme: REGION
-  const command = `gcloud compute addresses delete ${ADDRESS_NAME} --region=${REGION_TM} --project=${PROJECT_ID} --quiet`;
+  const command = `gcloud compute addresses delete ${ADDRESS_NAME} --region=${TM_REGION} --project=${PROJECT_ID} --quiet`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
