@@ -11,7 +11,7 @@ export function createProject(externalContext: any, cb: Function): void {
     PROJECT_LABELS
   } = externalContext;
 
-  const command = `gcloud projects create ${PROJECT_ID} --folder=${FOLDER_ID} --labels=${PROJECT_LABELS} --enable-cloud-apis`;
+  const command = `gcloud projects create ${PROJECT_ID} ${ FOLDER_ID ? '--folder=' + FOLDER_ID : '' } --labels=${PROJECT_LABELS} --enable-cloud-apis`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string) => {
