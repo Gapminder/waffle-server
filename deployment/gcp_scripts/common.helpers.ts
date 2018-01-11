@@ -16,6 +16,8 @@ export function runShellCommand(command: string, options: ExecOptions, cb: Funct
   // const fixtures = [
   //   ..._.times(1, String),
   //   {code:0, stderr: '', stdout: `[{"networkInterfaces":[{"accessConfigs":[{"natIP":"35.205.183.154"}],"subnetwork":"https://www.googleapis.com/compute/beta/projects/${PROJECT_ID}/regions/${REGION}/subnetworks/default","networkIP":"192.127.0.2"}]}]`},
+  //   ..._.times(1, String),
+  //   {code:0, stderr: '', stdout: `[{"networkInterfaces":[{"accessConfigs":[{"natIP":"35.205.183.154"}],"subnetwork":"https://www.googleapis.com/compute/beta/projects/${PROJECT_ID}/regions/${REGION}/subnetworks/default","networkIP":"192.127.0.2"}]}]`},
   //   ..._.times(5, String),
   //   {code:0, stderr: '', stdout: `[{"networkInterfaces":[{"accessConfigs":[{"natIP":"35.205.183.154"}],"subnetwork":"https://www.googleapis.com/compute/beta/projects/${PROJECT_ID}/regions/${REGION}/subnetworks/default","networkIP":"192.127.0.2"}]}]`},
   //   ..._.times(7, String),
