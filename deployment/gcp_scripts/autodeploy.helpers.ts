@@ -4,14 +4,82 @@ import { ExecOptions, ExecOutputReturnValue } from 'shelljs';
 import { getDockerArguments, getGCloudArguments, runShellCommand } from './common.helpers';
 import { DockerBuildArguments, DockerBuildArgumentsTM } from './interfaces';
 
+export function setDefaultUser(externalContext: any, cb: Function): void {
+  const {
+    COMPUTED_VARIABLES: { OWNER_ACCOUNT }
+  } = externalContext;
+
+  const command = `gcloud config set account ${OWNER_ACCOUNT}`;
+  const options: ExecOptions = {};
+
+  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+}
+
+export function setDefaultProject(externalContext: any, cb: Function): void {
+  const {
+    PROJECT_ID
+  } = externalContext;
+
+  const command = `gcloud config set project ${PROJECT_ID}`;
+  const options: ExecOptions = {};
+
+  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+}
+
+export function linkProjectToBilling(externalContext: any, cb: Function): void {
+  const {
+    PROJECT_ID,
+    COMPUTED_VARIABLES: { BILLING_ACCOUNT }
+  } = externalContext;
+
+  const command = `gcloud beta billing projects link ${PROJECT_ID} --billing-account=${BILLING_ACCOUNT}`;
+  const options: ExecOptions = {};
+
+  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+}
+
+export function enableComputeService(externalContext: any, cb: Function): void {
+  const {
+  } = externalContext;
+
+  const command = `gcloud beta services enable compute.googleapis.com`;
+  const options: ExecOptions = {};
+
+  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+}
+
+export function createCridentials(externalContext: any, cb: Function): void {
+  const {
+    COMPUTED_VARIABLES: { IAM_ACCOUNT },
+    GCLOUD_FILE_CRIDENTIALS_NAME
+  } = externalContext;
+
+  const command = `gcloud iam service-accounts keys create ${GCLOUD_FILE_CRIDENTIALS_NAME} --iam-account=${IAM_ACCOUNT}`;
+  const options: ExecOptions = {};
+
+  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+}
+
+export function loginGcloud(externalContext: any, cb: Function): void {
+  const {
+    GCLOUD_FILE_CRIDENTIALS_NAME
+  } = externalContext;
+
+  const command = `gcloud auth activate-service-account --key-file ${GCLOUD_FILE_CRIDENTIALS_NAME}`;
+  const options: ExecOptions = {};
+
+  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+}
+
 export function createProject(externalContext: any, cb: Function): void {
   const {
     PROJECT_ID,
+    PROJECT_NAME,
     FOLDER_ID,
     PROJECT_LABELS
   } = externalContext;
 
-  const command = `gcloud projects create ${PROJECT_ID} ${ FOLDER_ID ? '--folder=' + FOLDER_ID : '' } --labels=${PROJECT_LABELS} --enable-cloud-apis`;
+  const command = `gcloud projects create ${PROJECT_ID} ${ FOLDER_ID ? '--folder=' + FOLDER_ID : '' } --labels=${PROJECT_LABELS} --name=${PROJECT_ID} --enable-cloud-apis`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string) => {
@@ -101,13 +169,13 @@ export function pushImageNode(externalContext: any, cb: Function): void {
 
 export function createRedis(externalContext: any, cb: Function): void {
   const {
-    ZONE,
     PROJECT_ID,
     REDIS_CONTAINER_IMAGE,
-    REDIS_INSTANCE_NAME
+    REDIS_INSTANCE_NAME,
+    REDIS_ZONE
   } = externalContext;
 
-  const command = `gcloud beta compute instances create-with-container ${REDIS_INSTANCE_NAME} --machine-type=g1-small --zone ${ZONE} --container-image=${REDIS_CONTAINER_IMAGE} --project=${PROJECT_ID} --format json`;
+  const command = `gcloud beta compute instances create-with-container ${REDIS_INSTANCE_NAME} --machine-type=g1-small --zone=${REDIS_ZONE} --container-image=${REDIS_CONTAINER_IMAGE} --project=${PROJECT_ID} --format json`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
@@ -131,7 +199,7 @@ export function reserveRedisInternalIP(externalContext: any, cb: Function): void
     PROJECT_ID,
     REDIS_HOST,
     REDIS_SUBNETWORK,
-    REGION_REDIS,
+    REDIS_REGION,
     COMPUTED_VARIABLES: {
       ENVIRONMENT,
       VERSION
@@ -140,21 +208,21 @@ export function reserveRedisInternalIP(externalContext: any, cb: Function): void
 
   const ADDRESS_NAME = `${ENVIRONMENT}-redis-address-${VERSION}`;
   //fixme: REGION
-  const command = `gcloud compute addresses create ${ADDRESS_NAME} --region=${REGION_REDIS} --subnet ${REDIS_SUBNETWORK} --addresses ${REDIS_HOST} --project=${PROJECT_ID}`;
+  const command = `gcloud compute addresses create ${ADDRESS_NAME} --region=${REDIS_REGION} --subnet ${REDIS_SUBNETWORK} --addresses ${REDIS_HOST} --project=${PROJECT_ID}`;
   const options: ExecOptions = {};
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
 export function createMongo(externalContext: any, cb: Function): void {
   const {
-    ZONE,
+    MONGO_ZONE,
     PROJECT_ID,
     MONGO_PORT,
     MONGO_CONTAINER_IMAGE,
     MONGO_INSTANCE_NAME
   } = externalContext;
 
-  const command = `gcloud beta compute instances create-with-container ${MONGO_INSTANCE_NAME} --machine-type=n1-standard-1 --zone ${ZONE} --container-image=${MONGO_CONTAINER_IMAGE} --project=${PROJECT_ID} --format json`;
+  const command = `gcloud beta compute instances create-with-container ${MONGO_INSTANCE_NAME} --machine-type=n1-standard-1 --zone=${MONGO_ZONE} --container-image=${MONGO_CONTAINER_IMAGE} --project=${PROJECT_ID} --format json`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
@@ -179,7 +247,7 @@ export function reserveMongoInternalIP(externalContext: any, cb: Function): void
     PROJECT_ID,
     MONGO_HOST,
     MONGO_SUBNETWORK,
-    REGION_MONGO,
+    MONGO_REGION,
     COMPUTED_VARIABLES: {
       ENVIRONMENT,
       VERSION
@@ -188,7 +256,7 @@ export function reserveMongoInternalIP(externalContext: any, cb: Function): void
 
   const ADDRESS_NAME = `${ENVIRONMENT}-mongo-address-${VERSION}`;
   //fixme: REGION
-  const command = `gcloud compute addresses create ${ADDRESS_NAME} --region ${REGION_MONGO} --subnet ${MONGO_SUBNETWORK} --addresses ${MONGO_HOST} --project=${PROJECT_ID}`;
+  const command = `gcloud compute addresses create ${ADDRESS_NAME} --region ${MONGO_REGION} --subnet ${MONGO_SUBNETWORK} --addresses ${MONGO_HOST} --project=${PROJECT_ID}`;
   const options: ExecOptions = {};
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
@@ -199,11 +267,11 @@ export function createTM(externalContext: any, cb: Function): void {
       IMAGE_URL,
       NODE_NAME: TM_INSTANCE_NAME
     },
-    ZONE,
+    TM_ZONE,
     PROJECT_ID
   } = externalContext;
 
-  const command = `gcloud beta compute instances create-with-container ${TM_INSTANCE_NAME} --tags=${TM_INSTANCE_NAME} --machine-type=n1-highmem-2 --zone ${ZONE} --container-image=${IMAGE_URL} --project=${PROJECT_ID} --format json`;
+  const command = `gcloud beta compute instances create-with-container ${TM_INSTANCE_NAME} --tags=${TM_INSTANCE_NAME} --machine-type=n1-highmem-2 --zone=${TM_ZONE} --container-image=${IMAGE_URL} --project=${PROJECT_ID} --format json`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
@@ -245,7 +313,7 @@ export function promoteExternalIP(externalContext: any, cb: Function): void {
       IP_ADDRESS
     },
     PROJECT_ID,
-    REGION_TM,
+    TM_REGION,
     COMPUTED_VARIABLES: {
       ENVIRONMENT,
       VERSION
@@ -254,7 +322,7 @@ export function promoteExternalIP(externalContext: any, cb: Function): void {
 
   const ADDRESS_NAME = `${ENVIRONMENT}-tm-address-${VERSION}`;
   //fixme: REGION
-  const command = `gcloud compute addresses create ${ADDRESS_NAME} --addresses ${IP_ADDRESS} --region ${REGION_TM} --project=${PROJECT_ID}`;
+  const command = `gcloud compute addresses create ${ADDRESS_NAME} --addresses ${IP_ADDRESS} --region ${TM_REGION} --project=${PROJECT_ID}`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));

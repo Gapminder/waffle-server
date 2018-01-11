@@ -33,11 +33,11 @@
     "_FOLDER_ID": "175894177778",
     "ORGANIZATION_ID": "766740605603",
     "ENABLE_AUTOSCALING": true,
+
     "REGION": "europe-west1",
-    "REGION_REDIS": "europe-west4",
-    "REGION_MONGO": "europe-west3",
-    "REGION_TM": "europe-west2",
-    "REGION_LB": "europe-west1",
+    "TM_REGION": "europe-west2",
+    "LB_REGION": "europe-west1",
+
     "MAX_NODES_PER_POOL": 100,
     "MAX_NODES": 5,
     "MIN_NODES": 1,
@@ -46,8 +46,12 @@
     "MIN_NUMBER_REPLICAS": 1,
     "NUMBER_REPLICAS": 1,
     "CPU_PERCENT": 40,
+
     "REDIS_CONTAINER_IMAGE": "docker.io/redis:4.0.2",
+    "REDIS_REGION": "europe-west4",
     "MONGO_CONTAINER_IMAGE": "docker.io/mongodb:3.6",
+    "MONGO_REGION": "europe-west3",
+
     "SOURCE_PORT": 80,
     "CREATE_CLUSTER__ALLOWED_PARAMS": [
       "DISK_SIZE",

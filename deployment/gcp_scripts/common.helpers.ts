@@ -10,12 +10,12 @@ let counter = 0;
 export function runShellCommand(command: string, options: ExecOptions, cb: Function): void {
   console.log('RUN COMMAND: ', command, '\n');
 
-  // const ENVIRONMENT = 'dev';
-  // const PROJECT_NAME = 'waffle-server';
+  // const ENVIRONMENT = 'test';
+  // const PROJECT_NAME = 'my-cool-project3';
   // const PROJECT_ID = `${PROJECT_NAME}-${ENVIRONMENT}`;
   // const REGION = 'europe-west1';
   // const fixtures = [
-  //   ..._.times(1, String),
+  //   ..._.times(5, String),
   //   {code:0, stderr: '', stdout: `[{"networkInterfaces":[{"accessConfigs":[{"natIP":"35.205.183.154"}],"subnetwork":"https://www.googleapis.com/compute/beta/projects/${PROJECT_ID}/regions/${REGION}/subnetworks/default","networkIP":"192.127.0.2"}]}]`},
   //   ..._.times(1, String),
   //   {code:0, stderr: '', stdout: `[{"networkInterfaces":[{"accessConfigs":[{"natIP":"35.205.183.154"}],"subnetwork":"https://www.googleapis.com/compute/beta/projects/${PROJECT_ID}/regions/${REGION}/subnetworks/default","networkIP":"192.127.0.2"}]}]`},

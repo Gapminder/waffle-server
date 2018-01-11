@@ -1,6 +1,7 @@
 import * as async from 'async';
 
 import {
+  createCridentials, loginGcloud, enableComputeService, linkProjectToBilling, setDefaultProject, setDefaultUser,
   allowHttpTM, buildImageNode, buildImageTM, createCluster, createPods, createProject, createRedis, createMongo,
   createReplicas, createTM, promoteExternalIP, pushImageNode, pushImageTM, reserveRedisInternalIP, reserveMongoInternalIP, setupAutoscale,
   setupLoadbalancer, printExternalIPs
@@ -40,7 +41,7 @@ const COMPUTED_VARIABLES = Object.assign({
 
 // gcloud variables
 const GCP_VARIABLES = Object.assign({
-  PROJECT_ID: `${COMPUTED_VARIABLES.PROJECT_NAME}-${ENVIRONMENT}`,
+  PROJECT_ID: `${STATIC_VARIABLES.DEFAULT_PROJECT_NAME}-${ENVIRONMENT}`,
   PROJECT_LABELS: `environment=${ENVIRONMENT}`,
   CLUSTER_NAME: `${ENVIRONMENT}-cluster-${VERSION}`,
   NAME_SPACE_NODE: `${ENVIRONMENT}-namespace-${VERSION}`,
@@ -49,7 +50,11 @@ const GCP_VARIABLES = Object.assign({
   REPLICAS_NAME: `${ENVIRONMENT}-replicas-${VERSION}`,
   LOAD_BALANCER_NAME: `${ENVIRONMENT}-lb-${VERSION}`,
   FIREWALL_RULE__ALLOW_HTTP: `${ENVIRONMENT}-allow-http-${VERSION}`,
-  ZONE: `${DEFAULT_GCP_VARIABLES.REGION}-c`
+  ZONE: `${DEFAULT_GCP_VARIABLES.REGION}-c`,
+  REDIS_ZONE: `${DEFAULT_GCP_VARIABLES.REDIS_REGION}-c`,
+  MONGO_ZONE: `${DEFAULT_GCP_VARIABLES.MONGO_REGION}-c`,
+  TM_ZONE: `${DEFAULT_GCP_VARIABLES.TM_REGION}-c`,
+  LB_ZONE: `${DEFAULT_GCP_VARIABLES.LB_REGION}-c`
 }, DEFAULT_GCP_VARIABLES);
 
 const primaryContext = Object.assign({
@@ -68,7 +73,13 @@ const context = Object.assign(primaryContext, {
 
 async.waterfall([
   async.constant(context),
+  // createCridentials,
+  // loginGcloud,
+  setDefaultUser,
   createProject,
+  setDefaultProject,
+  linkProjectToBilling,
+  enableComputeService,
   createRedis,
   reserveRedisInternalIP,
   createMongo,
