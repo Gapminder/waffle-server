@@ -39,9 +39,7 @@ export function removeRedis(externalContext: any, cb: Function): void {
 export function releaseRedisInternalIP(externalContext: any, cb: Function): void {
   const {
     PROJECT_ID,
-    REDIS_HOST,
-    REDIS_SUBNETWORK,
-    REGION,
+    REGION_REDIS,
     COMPUTED_VARIABLES: {
       ENVIRONMENT,
       VERSION
@@ -49,7 +47,8 @@ export function releaseRedisInternalIP(externalContext: any, cb: Function): void
   } = externalContext;
 
   const ADDRESS_NAME = `${ENVIRONMENT}-redis-address-${VERSION}`;
-  const command = `gcloud compute addresses delete ${ADDRESS_NAME} --region=${REGION} --project=${PROJECT_ID} --quiet`;
+  //fixme: REGION
+  const command = `gcloud compute addresses delete ${ADDRESS_NAME} --region=${REGION_REDIS} --project=${PROJECT_ID} --quiet`;
   const options: ExecOptions = {};
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
@@ -71,7 +70,7 @@ export function removeMongo(externalContext: any, cb: Function): void {
 export function releaseMongoInternalIP(externalContext: any, cb: Function): void {
   const {
     PROJECT_ID,
-    REGION,
+    REGION_MONGO,
     COMPUTED_VARIABLES: {
       ENVIRONMENT,
       VERSION
@@ -79,7 +78,8 @@ export function releaseMongoInternalIP(externalContext: any, cb: Function): void
   } = externalContext;
 
   const ADDRESS_NAME = `${ENVIRONMENT}-mongo-address-${VERSION}`;
-  const command = `gcloud compute addresses delete ${ADDRESS_NAME} --region=${REGION} --project=${PROJECT_ID} --quiet`;
+  //fixme: REGION
+  const command = `gcloud compute addresses delete ${ADDRESS_NAME} --region=${REGION_MONGO} --project=${PROJECT_ID} --quiet`;
   const options: ExecOptions = {};
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
@@ -102,9 +102,6 @@ export function removeTM(externalContext: any, cb: Function): void {
 
 export function denyHttpTM(externalContext: any, cb: Function): void {
   const {
-    TM_INSTANCE_VARIABLES: {
-      NODE_NAME: TM_INSTANCE_NAME
-    },
     PROJECT_ID,
     FIREWALL_RULE__ALLOW_HTTP
   } = externalContext;
@@ -118,11 +115,8 @@ export function denyHttpTM(externalContext: any, cb: Function): void {
 
 export function releaseExternalIP(externalContext: any, cb: Function): void {
   const {
-    TM_INSTANCE_VARIABLES: {
-      IP_ADDRESS
-    },
     PROJECT_ID,
-    REGION,
+    REGION_TM,
     COMPUTED_VARIABLES: {
       ENVIRONMENT,
       VERSION
@@ -130,7 +124,8 @@ export function releaseExternalIP(externalContext: any, cb: Function): void {
   } = externalContext;
 
   const ADDRESS_NAME = `${ENVIRONMENT}-tm-address-${VERSION}`;
-  const command = `gcloud compute addresses delete ${ADDRESS_NAME} --region=${REGION} --project=${PROJECT_ID} --quiet`;
+  //fixme: REGION
+  const command = `gcloud compute addresses delete ${ADDRESS_NAME} --region=${REGION_TM} --project=${PROJECT_ID} --quiet`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));

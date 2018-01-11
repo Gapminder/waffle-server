@@ -131,7 +131,7 @@ export function reserveRedisInternalIP(externalContext: any, cb: Function): void
     PROJECT_ID,
     REDIS_HOST,
     REDIS_SUBNETWORK,
-    REGION,
+    REGION_REDIS,
     COMPUTED_VARIABLES: {
       ENVIRONMENT,
       VERSION
@@ -139,7 +139,8 @@ export function reserveRedisInternalIP(externalContext: any, cb: Function): void
   } = externalContext;
 
   const ADDRESS_NAME = `${ENVIRONMENT}-redis-address-${VERSION}`;
-  const command = `gcloud compute addresses create ${ADDRESS_NAME} --region ${REGION} --subnet ${REDIS_SUBNETWORK} --addresses ${REDIS_HOST} --project=${PROJECT_ID}`;
+  //fixme: REGION
+  const command = `gcloud compute addresses create ${ADDRESS_NAME} --region=${REGION_REDIS} --subnet ${REDIS_SUBNETWORK} --addresses ${REDIS_HOST} --project=${PROJECT_ID}`;
   const options: ExecOptions = {};
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
@@ -178,7 +179,7 @@ export function reserveMongoInternalIP(externalContext: any, cb: Function): void
     PROJECT_ID,
     MONGO_HOST,
     MONGO_SUBNETWORK,
-    REGION,
+    REGION_MONGO,
     COMPUTED_VARIABLES: {
       ENVIRONMENT,
       VERSION
@@ -186,7 +187,8 @@ export function reserveMongoInternalIP(externalContext: any, cb: Function): void
   } = externalContext;
 
   const ADDRESS_NAME = `${ENVIRONMENT}-mongo-address-${VERSION}`;
-  const command = `gcloud compute addresses create ${ADDRESS_NAME} --region ${REGION} --subnet ${MONGO_SUBNETWORK} --addresses ${MONGO_HOST} --project=${PROJECT_ID}`;
+  //fixme: REGION
+  const command = `gcloud compute addresses create ${ADDRESS_NAME} --region ${REGION_MONGO} --subnet ${MONGO_SUBNETWORK} --addresses ${MONGO_HOST} --project=${PROJECT_ID}`;
   const options: ExecOptions = {};
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
@@ -243,7 +245,7 @@ export function promoteExternalIP(externalContext: any, cb: Function): void {
       IP_ADDRESS
     },
     PROJECT_ID,
-    REGION,
+    REGION_TM,
     COMPUTED_VARIABLES: {
       ENVIRONMENT,
       VERSION
@@ -251,7 +253,8 @@ export function promoteExternalIP(externalContext: any, cb: Function): void {
   } = externalContext;
 
   const ADDRESS_NAME = `${ENVIRONMENT}-tm-address-${VERSION}`;
-  const command = `gcloud compute addresses create ${ADDRESS_NAME} --addresses ${IP_ADDRESS} --region ${REGION} --project=${PROJECT_ID}`;
+  //fixme: REGION
+  const command = `gcloud compute addresses create ${ADDRESS_NAME} --addresses ${IP_ADDRESS} --region ${REGION_TM} --project=${PROJECT_ID}`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
