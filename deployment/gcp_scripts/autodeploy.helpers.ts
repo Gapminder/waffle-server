@@ -126,7 +126,7 @@ export function createRedis(externalContext: any, cb: Function): void {
   });
 }
 
-export function reserveInternalIP(externalContext: any, cb: Function): void {
+export function reserveRedisInternalIP(externalContext: any, cb: Function): void {
   const {
     PROJECT_ID,
     REDIS_HOST,
@@ -140,6 +140,53 @@ export function reserveInternalIP(externalContext: any, cb: Function): void {
 
   const ADDRESS_NAME = `${ENVIRONMENT}-redis-address-${VERSION}`;
   const command = `gcloud compute addresses create ${ADDRESS_NAME} --region ${REGION} --subnet ${REDIS_SUBNETWORK} --addresses ${REDIS_HOST} --project=${PROJECT_ID}`;
+  const options: ExecOptions = {};
+  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+}
+
+export function createMongo(externalContext: any, cb: Function): void {
+  const {
+    ZONE,
+    PROJECT_ID,
+    MONGO_PORT,
+    MONGO_CONTAINER_IMAGE,
+    MONGO_INSTANCE_NAME
+  } = externalContext;
+
+  const command = `gcloud beta compute instances create-with-container ${MONGO_INSTANCE_NAME} --machine-type=n1-standard-1 --zone ${ZONE} --container-image=${MONGO_CONTAINER_IMAGE} --project=${PROJECT_ID} --format json`;
+  const options: ExecOptions = {};
+
+  return runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
+    console.log('\n', result.stdout, '\n');
+
+    try {
+      const [{ networkInterfaces: [{ networkIP, subnetwork }] }] = JSON.parse(result.stdout);
+      console.log('\nMONGO INTERNAL IP:', networkIP, '\n');
+      externalContext.MONGO_HOST = networkIP;
+      externalContext.MONGO_SUBNETWORK = subnetwork;
+      externalContext.MONGODB_URL = `mongodb://${networkIP}:${MONGO_PORT}`;
+    } catch (_error) {
+      return cb(_error, externalContext);
+    }
+
+    return cb(error, externalContext);
+  });
+}
+
+export function reserveMongoInternalIP(externalContext: any, cb: Function): void {
+  const {
+    PROJECT_ID,
+    MONGO_HOST,
+    MONGO_SUBNETWORK,
+    REGION,
+    COMPUTED_VARIABLES: {
+      ENVIRONMENT,
+      VERSION
+    }
+  } = externalContext;
+
+  const ADDRESS_NAME = `${ENVIRONMENT}-mongo-address-${VERSION}`;
+  const command = `gcloud compute addresses create ${ADDRESS_NAME} --region ${REGION} --subnet ${MONGO_SUBNETWORK} --addresses ${MONGO_HOST} --project=${PROJECT_ID}`;
   const options: ExecOptions = {};
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }

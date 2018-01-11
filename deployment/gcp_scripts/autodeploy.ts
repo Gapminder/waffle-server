@@ -1,8 +1,8 @@
 import * as async from 'async';
 
 import {
-  allowHttpTM, buildImageNode, buildImageTM, createCluster, createPods, createProject, createRedis,
-  createReplicas, createTM, promoteExternalIP, pushImageNode, pushImageTM, reserveInternalIP, setupAutoscale,
+  allowHttpTM, buildImageNode, buildImageTM, createCluster, createPods, createProject, createRedis, createMongo,
+  createReplicas, createTM, promoteExternalIP, pushImageNode, pushImageTM, reserveRedisInternalIP, reserveMongoInternalIP, setupAutoscale,
   setupLoadbalancer, printExternalIPs
 } from './autodeploy.helpers';
 import { getContextInstance } from './common.helpers';
@@ -45,6 +45,7 @@ const GCP_VARIABLES = Object.assign({
   CLUSTER_NAME: `${ENVIRONMENT}-cluster-${VERSION}`,
   NAME_SPACE_NODE: `${ENVIRONMENT}-namespace-${VERSION}`,
   REDIS_INSTANCE_NAME: `${ENVIRONMENT}-redis-${VERSION}`,
+  MONGO_INSTANCE_NAME: `${ENVIRONMENT}-mongo-${VERSION}`,
   REPLICAS_NAME: `${ENVIRONMENT}-replicas-${VERSION}`,
   LOAD_BALANCER_NAME: `${ENVIRONMENT}-lb-${VERSION}`,
   FIREWALL_RULE__ALLOW_HTTP: `${ENVIRONMENT}-allow-http-${VERSION}`,
@@ -69,7 +70,9 @@ async.waterfall([
   async.constant(context),
   createProject,
   createRedis,
-  reserveInternalIP,
+  reserveRedisInternalIP,
+  createMongo,
+  reserveMongoInternalIP,
   buildImageTM,
   buildImageNode,
   pushImageTM,
