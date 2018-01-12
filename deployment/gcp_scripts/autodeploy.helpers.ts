@@ -107,6 +107,7 @@ export function buildImageTM(externalContext: any, cb: Function): void {
       IMAGE_URL,
       PORT
     },
+    MONGODB_URL,
     REDIS_HOST,
     COMPUTED_VARIABLES
   } = externalContext;
@@ -114,6 +115,7 @@ export function buildImageTM(externalContext: any, cb: Function): void {
   const dockerArguments: DockerBuildArgumentsTM = Object.assign({
     PORT,
     REDIS_HOST,
+    MONGODB_URL,
     MACHINE_SUFFIX,
     THRASHING_MACHINE: true
   }, COMPUTED_VARIABLES);
@@ -133,12 +135,14 @@ export function buildImageNode(externalContext: any, cb: Function): void {
       PORT
     },
     REDIS_HOST,
+    MONGODB_URL,
     COMPUTED_VARIABLES
   } = externalContext;
 
   const dockerArguments: DockerBuildArguments = Object.assign({
     PORT,
     REDIS_HOST,
+    MONGODB_URL,
     MACHINE_SUFFIX
   }, COMPUTED_VARIABLES);
 
@@ -222,7 +226,7 @@ export function createMongo(externalContext: any, cb: Function): void {
     MONGO_INSTANCE_NAME
   } = externalContext;
 
-  const command = `gcloud beta compute instances create-with-container ${MONGO_INSTANCE_NAME} --machine-type=n1-standard-1 --zone=${MONGO_ZONE} --container-image=${MONGO_CONTAINER_IMAGE} --project=${PROJECT_ID} --format json`;
+  const command = `gcloud beta compute instances create-with-container ${MONGO_INSTANCE_NAME} --machine-type=n1-highmem-2 --zone=${MONGO_ZONE} --container-image=${MONGO_CONTAINER_IMAGE} --project=${PROJECT_ID} --format json`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
@@ -230,10 +234,11 @@ export function createMongo(externalContext: any, cb: Function): void {
 
     try {
       const [{ networkInterfaces: [{ networkIP, subnetwork }] }] = JSON.parse(result.stdout);
-      console.log('\nMONGO INTERNAL IP:', networkIP, '\n');
       externalContext.MONGO_HOST = networkIP;
       externalContext.MONGO_SUBNETWORK = subnetwork;
       externalContext.MONGODB_URL = `mongodb://${networkIP}:${MONGO_PORT}`;
+      console.log('\nMONGO INTERNAL IP:', externalContext.MONGO_HOST, '\n');
+      console.log('\nMONGO URL:', externalContext.MONGODB_URL, '\n');
     } catch (_error) {
       return cb(_error, externalContext);
     }

@@ -49,7 +49,7 @@
 
     "REDIS_CONTAINER_IMAGE": "docker.io/redis:4.0.2",
     "REDIS_REGION": "europe-west4",
-    "MONGO_CONTAINER_IMAGE": "docker.io/mongodb:3.6",
+    "MONGO_CONTAINER_IMAGE": "docker.io/mongo:3.6",
     "MONGO_REGION": "europe-west3",
 
     "SOURCE_PORT": 80,
