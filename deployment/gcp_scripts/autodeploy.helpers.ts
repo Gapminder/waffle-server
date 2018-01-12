@@ -236,7 +236,7 @@ export function createMongo(externalContext: any, cb: Function): void {
       const [{ networkInterfaces: [{ networkIP, subnetwork }] }] = JSON.parse(result.stdout);
       externalContext.MONGO_HOST = networkIP;
       externalContext.MONGO_SUBNETWORK = subnetwork;
-      externalContext.MONGODB_URL = `mongodb://${networkIP}:${MONGO_PORT}`;
+      externalContext.MONGODB_URL = `mongodb://${externalContext.MONGO_HOST}:${MONGO_PORT}`;
       console.log('\nMONGO INTERNAL IP:', externalContext.MONGO_HOST, '\n');
       console.log('\nMONGO URL:', externalContext.MONGODB_URL, '\n');
     } catch (_error) {
