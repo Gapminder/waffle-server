@@ -1,5 +1,6 @@
 import * as _ from 'lodash';
 import { ExecOptions, ExecOutputReturnValue } from 'shelljs';
+import * as async from 'async';
 
 import { getDockerArguments, getGCloudArguments, runShellCommand } from './common.helpers';
 import { DockerBuildArguments, DockerBuildArgumentsTM } from './interfaces';
@@ -179,7 +180,8 @@ export function createRedis(externalContext: any, cb: Function): void {
     REDIS_ZONE
   } = externalContext;
 
-  const command = `gcloud beta compute instances create-with-container ${REDIS_INSTANCE_NAME} --machine-type=g1-small --zone=${REDIS_ZONE} --container-image=${REDIS_CONTAINER_IMAGE} --project=${PROJECT_ID} --format json`;
+  //fixme: --project=${PROJECT_ID}
+  const command = `gcloud beta compute instances create-with-container ${REDIS_INSTANCE_NAME} --machine-type=g1-small --zone=${REDIS_ZONE} --container-image=${REDIS_CONTAINER_IMAGE} --format json`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
@@ -211,8 +213,8 @@ export function reserveRedisInternalIP(externalContext: any, cb: Function): void
   } = externalContext;
 
   const ADDRESS_NAME = `${ENVIRONMENT}-redis-address-${VERSION}`;
-  //fixme: REGION
-  const command = `gcloud compute addresses create ${ADDRESS_NAME} --region=${REDIS_REGION} --subnet ${REDIS_SUBNETWORK} --addresses ${REDIS_HOST} --project=${PROJECT_ID}`;
+  //fixme: REGION, --project=${PROJECT_ID}
+  const command = `gcloud compute addresses create ${ADDRESS_NAME} --region=${REDIS_REGION} --subnet ${REDIS_SUBNETWORK} --addresses ${REDIS_HOST}`;
   const options: ExecOptions = {};
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
@@ -226,7 +228,8 @@ export function createMongo(externalContext: any, cb: Function): void {
     MONGO_INSTANCE_NAME
   } = externalContext;
 
-  const command = `gcloud beta compute instances create-with-container ${MONGO_INSTANCE_NAME} --machine-type=n1-highmem-2 --zone=${MONGO_ZONE} --container-image=${MONGO_CONTAINER_IMAGE} --project=${PROJECT_ID} --format json`;
+  //fixme: --project=${PROJECT_ID}
+  const command = `gcloud beta compute instances create-with-container ${MONGO_INSTANCE_NAME} --machine-type=n1-highmem-2 --zone=${MONGO_ZONE} --container-image=${MONGO_CONTAINER_IMAGE} --format json`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
@@ -260,8 +263,8 @@ export function reserveMongoInternalIP(externalContext: any, cb: Function): void
   } = externalContext;
 
   const ADDRESS_NAME = `${ENVIRONMENT}-mongo-address-${VERSION}`;
-  //fixme: REGION
-  const command = `gcloud compute addresses create ${ADDRESS_NAME} --region ${MONGO_REGION} --subnet ${MONGO_SUBNETWORK} --addresses ${MONGO_HOST} --project=${PROJECT_ID}`;
+  //fixme: REGION, --project=${PROJECT_ID}
+  const command = `gcloud compute addresses create ${ADDRESS_NAME} --region ${MONGO_REGION} --subnet ${MONGO_SUBNETWORK} --addresses ${MONGO_HOST}`;
   const options: ExecOptions = {};
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
@@ -276,7 +279,8 @@ export function createTM(externalContext: any, cb: Function): void {
     PROJECT_ID
   } = externalContext;
 
-  const command = `gcloud beta compute instances create-with-container ${TM_INSTANCE_NAME} --tags=${TM_INSTANCE_NAME} --machine-type=n1-highmem-2 --zone=${TM_ZONE} --container-image=${IMAGE_URL} --project=${PROJECT_ID} --format json`;
+  //fixme: --project=${PROJECT_ID}
+  const command = `gcloud beta compute instances create-with-container ${TM_INSTANCE_NAME} --tags=${TM_INSTANCE_NAME} --machine-type=n1-highmem-2 --zone=${TM_ZONE} --container-image=${IMAGE_URL}  --format json`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
@@ -305,7 +309,8 @@ export function allowHttpTM(externalContext: any, cb: Function): void {
     FIREWALL_RULE__ALLOW_HTTP
   } = externalContext;
 
-  const command = `gcloud compute firewall-rules create ${FIREWALL_RULE__ALLOW_HTTP} --allow=tcp:80,tcp:443 --target-tags=${TM_INSTANCE_NAME} --project=${PROJECT_ID}`;
+  //fixme: --project=${PROJECT_ID}
+  const command = `gcloud compute firewall-rules create ${FIREWALL_RULE__ALLOW_HTTP} --allow=tcp:80,tcp:443 --target-tags=${TM_INSTANCE_NAME}`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
@@ -326,8 +331,8 @@ export function promoteExternalIP(externalContext: any, cb: Function): void {
   } = externalContext;
 
   const ADDRESS_NAME = `${ENVIRONMENT}-tm-address-${VERSION}`;
-  //fixme: REGION
-  const command = `gcloud compute addresses create ${ADDRESS_NAME} --addresses ${IP_ADDRESS} --region ${TM_REGION} --project=${PROJECT_ID}`;
+  //fixme: REGION, --project=${PROJECT_ID}
+  const command = `gcloud compute addresses create ${ADDRESS_NAME} --addresses ${IP_ADDRESS} --region ${TM_REGION}`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
@@ -341,7 +346,8 @@ export function createCluster(externalContext: any, cb: Function): void {
 
   const gcloudArgs = _.pick(externalContext, CREATE_CLUSTER__ALLOWED_PARAMS);
   const commandArgs = getGCloudArguments(gcloudArgs);
-  const command = `gcloud container clusters create ${CLUSTER_NAME} ${commandArgs} --machine-type=${MACHINE_TYPE} --project=${PROJECT_ID}`;
+  //fixme: --project=${PROJECT_ID}
+  const command = `gcloud container clusters create ${CLUSTER_NAME} ${commandArgs} --machine-type=${MACHINE_TYPE}`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
@@ -358,7 +364,9 @@ export function createNodePools(externalContext: any, cb: Function): void {
     ZONE
   } = externalContext;
 
-  const command = `gcloud container node-pools create ${NODE_POOLS_NAME} --cluster=${CLUSTER_NAME} --machine-type=${MACHINE_TYPE} --num-nodes=${NUM_NODES} --tags=${VERSION_TAGS} --zone=${ZONE} --project=${PROJECT_ID}`;  const options: ExecOptions = {};
+  //fixme: --project=${PROJECT_ID}
+  const command = `gcloud container node-pools create ${NODE_POOLS_NAME} --cluster=${CLUSTER_NAME} --machine-type=${MACHINE_TYPE} --num-nodes=${NUM_NODES} --tags=${VERSION_TAGS} --zone=${ZONE}`;
+  const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
@@ -431,13 +439,31 @@ export function printExternalIPs(externalContext: any, cb: Function): void {
   const command = `kubectl get service ${LOAD_BALANCER_NAME} --output=json`;
   const options: ExecOptions = {};
 
-  return runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
-    try {
-      const {status: {loadBalancer: {ingress: [{ip: LOAD_BALANCER_IP_ADDRESS}]}}} = JSON.parse(result.stdout);
-      console.log('\nRESULTS: \n', `TM: ${TM_IP_ADDRESS}\n`, `LB: ${LOAD_BALANCER_IP_ADDRESS}\n`);
-    } catch (_error) {
-      console.error('JSON parse syntax error: ', _error);
-    }
+  let LOAD_BALANCER_IP_ADDRESS;
+  let amountTimes = 0;
+
+  async.whilst(() => {
+    return amountTimes < 10 || !LOAD_BALANCER_IP_ADDRESS;
+  }, (_cb: any) => {
+    amountTimes++;
+
+    setTimeout(() => {
+      runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
+        try {
+          const parsedResult = JSON.parse(result.stdout);
+          LOAD_BALANCER_IP_ADDRESS = _.get(parsedResult, 'status.loadBalancer.ingress.0.ip', null);
+
+          console.log('\nRESULTS: \n', `TM: ${TM_IP_ADDRESS}\n`, `LB: ${LOAD_BALANCER_IP_ADDRESS}\n`);
+
+          return cb(null, LOAD_BALANCER_IP_ADDRESS);
+        } catch (_error) {
+          console.error('JSON parse syntax error with LOAD_BALANCER_IP_ADDRESS. Retry to connect again..');
+
+          return cb();
+        }
+      });
+    }, 10000);
+  }, (error: string) => {
     return cb(error, externalContext);
   });
 }
