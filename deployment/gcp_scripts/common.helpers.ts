@@ -7,9 +7,27 @@ import { DockerBuildArguments, GCloudArguments } from './interfaces';
 
 let counter = 0;
 
-export function runShellCommand(command: string, options: ExecOptions, cb: Function): void {
-  console.log('RUN COMMAND: ', command, '\n');
+interface AsyncResultCallback<T, E> { (err?: E, result?: T): void; }
 
+export function runShellCommand(command: string, options: ExecOptions, cb: AsyncResultCallback<ExecOutputReturnValue | ChildProcess, string>): void {
+
+  let outputParam = '';
+  switch(true) {
+    case _.includes(command, 'docker'):
+    break;
+    case _.includes(command, 'gcloud') && !_.includes(command, '--quiet'):
+      outputParam = ' --format=json';
+    break;
+    case _.includes(command, 'kubectl get service') && !_.includes(command, '--quiet'):
+      outputParam = ' --output=json';
+    break;
+    default:
+    break;
+  }
+
+  const wrappedCommand = `${command}${outputParam}`;
+  console.log('RUN COMMAND: ', wrappedCommand, '\n');
+  
   // const ENVIRONMENT = 'test';
   // const PROJECT_NAME = 'my-cool-project3';
   // const PROJECT_ID = `${PROJECT_NAME}-${ENVIRONMENT}`;
@@ -25,22 +43,52 @@ export function runShellCommand(command: string, options: ExecOptions, cb: Funct
   //   {code:0, stderr: '', stdout: `{"status": {"loadBalancer": {"ingress": [{"ip": "35.205.145.142"}]}}}`}
   // ];
   // return async.setImmediate(() => cb(null, fixtures[counter++]));
+  
+//  const expectedConnectionError = /The\sconnection\sto\sthe\sserver\s(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\swas\srefused/;
+  let attemptCounter = 0;
 
-  const result: ExecOutputReturnValue | ChildProcess = shell.exec(command, options);
-  const error: string = shell.error();
-  const code: number = (result as ExecOutputReturnValue).code;
-  const stderr: string = (result as ExecOutputReturnValue).stderr;
-  const isError404 = _.some(['code=404', 'was not found', 'is not a valid name'], (item: string) => _.includes(stderr, item));
+  async.retry({
+    times: 10,
+    interval: 10000
+  }, (_cb: AsyncResultCallback<ExecOutputReturnValue | ChildProcess, string>) => {
+    const result: ExecOutputReturnValue | ChildProcess = shell.exec(wrappedCommand, options);
+    const error: string = shell.error();
+    const code: number = (result as ExecOutputReturnValue).code;
+    const stderr: string = (result as ExecOutputReturnValue).stderr;
+    const stdout: string = (result as ExecOutputReturnValue).stdout;
 
-  if (error && !isError404) {
-    return cb(`Unexpected error [code=${code}]: ${stderr}`, result);
-  }
+    const isError404 = _.some(['The project ID you specified is already in use by another project', 'code=404', 'was not found', 'is not a valid name'], (item: string) => _.includes(stderr, item));
+    
+    if (error && !isError404) {
+      console.log(`Attempt ${++attemptCounter} was failed..`);
+      return async.setImmediate(() => _cb(`Unexpected error [code=${code}]: ${stderr}`, result));
+    }
+  
+    if (isError404) {
+      console.log(`SKIP STEP`);
+      return async.setImmediate(() => _cb(null, result));
+    }
+  
+    if (_.isEmpty(stdout)) {
+      console.log(`STDOUT IS EMPTY`);
+      return async.setImmediate(() => _cb(null, result));      
+    }
 
-  if (isError404) {
-    console.log(`SKIP STEP DUE TO REASON: ${stderr}`);
-  }
+    if (_.includes(command, 'docker')) {
+      console.log(`DOCKER COMMAND`);
+      return async.setImmediate(() => _cb(null, result));      
+    }
 
-  return cb(null, result);
+    try {
+      JSON.parse(stdout);
+
+      return async.setImmediate(() => _cb(null, result));
+    } catch (_error) {
+      console.log(`Attempt ${++attemptCounter} was failed..`);
+      
+      return async.setImmediate(() => _cb('JSON parse syntax error. Retry to connect again..', result));
+    }    
+  }, cb);
 }
 
 export function getDockerArguments(dockerArgs: DockerBuildArguments): string {

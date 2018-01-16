@@ -39,11 +39,41 @@ export function linkProjectToBilling(externalContext: any, cb: Function): void {
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
+export function enableCloudBillingAPI(externalContext: any, cb: Function): void {
+  const {
+  } = externalContext;
+
+  const command = `gcloud beta services enable cloudbilling.googleapis.com`;
+  const options: ExecOptions = {};
+
+  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+}
+
 export function enableComputeService(externalContext: any, cb: Function): void {
   const {
   } = externalContext;
 
   const command = `gcloud beta services enable compute.googleapis.com`;
+  const options: ExecOptions = {};
+
+  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+}
+
+export function enableContainerRegistryAPI(externalContext: any, cb: Function): void {
+  const {
+  } = externalContext;
+
+  const command = `gcloud beta services enable containerregistry.googleapis.com`;
+  const options: ExecOptions = {};
+
+  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+}
+
+export function enableStackdriverLoggingAPI(externalContext: any, cb: Function): void {
+  const {
+  } = externalContext;
+
+  const command = `gcloud beta services enable logging.googleapis.com`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
@@ -436,34 +466,21 @@ export function printExternalIPs(externalContext: any, cb: Function): void {
     LOAD_BALANCER_NAME
   } = externalContext;
 
-  const command = `kubectl get service ${LOAD_BALANCER_NAME} --output=json`;
+  const command = `kubectl get service ${LOAD_BALANCER_NAME}`;
   const options: ExecOptions = {};
 
-  let LOAD_BALANCER_IP_ADDRESS;
-  let amountTimes = 0;
+  runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
+    try {
+      const parsedResult = JSON.parse(result.stdout);
+      const LOAD_BALANCER_IP_ADDRESS = _.get(parsedResult, 'status.loadBalancer.ingress.0.ip', null);
 
-  async.whilst(() => {
-    return amountTimes < 10 || !LOAD_BALANCER_IP_ADDRESS;
-  }, (_cb: any) => {
-    amountTimes++;
+      console.log('\nRESULTS: \n', `TM: ${TM_IP_ADDRESS}\n`, `LB: ${LOAD_BALANCER_IP_ADDRESS}\n`);
 
-    setTimeout(() => {
-      runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
-        try {
-          const parsedResult = JSON.parse(result.stdout);
-          LOAD_BALANCER_IP_ADDRESS = _.get(parsedResult, 'status.loadBalancer.ingress.0.ip', null);
+      return cb(null, LOAD_BALANCER_IP_ADDRESS);
+    } catch (_error) {
+      console.error('JSON parse syntax error with LOAD_BALANCER_IP_ADDRESS. Retry to connect again..');
 
-          console.log('\nRESULTS: \n', `TM: ${TM_IP_ADDRESS}\n`, `LB: ${LOAD_BALANCER_IP_ADDRESS}\n`);
-
-          return cb(null, LOAD_BALANCER_IP_ADDRESS);
-        } catch (_error) {
-          console.error('JSON parse syntax error with LOAD_BALANCER_IP_ADDRESS. Retry to connect again..');
-
-          return cb();
-        }
-      });
-    }, 10000);
-  }, (error: string) => {
-    return cb(error, externalContext);
+      return cb();
+    }
   });
 }
