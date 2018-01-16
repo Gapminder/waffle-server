@@ -1,7 +1,7 @@
 import * as async from 'async';
 
 import {
-  createCridentials, loginGcloud, enableComputeService, linkProjectToBilling, setDefaultProject, setDefaultUser,
+  createCridentials, loginGcloud, enableCloudBillingAPI, enableComputeService, enableContainerRegistryAPI, enableStackdriverLoggingAPI, linkProjectToBilling, setDefaultProject, setDefaultUser,
   allowHttpTM, buildImageNode, buildImageTM, createCluster, createPods, createProject, createRedis, createMongo,
   createReplicas, createTM, promoteExternalIP, pushImageNode, pushImageTM, reserveRedisInternalIP, reserveMongoInternalIP, setupAutoscale,
   setupLoadbalancer, printExternalIPs
@@ -77,8 +77,11 @@ async.waterfall([
   setDefaultUser,
   createProject,
   setDefaultProject,
+  enableCloudBillingAPI,
   linkProjectToBilling,
   enableComputeService,
+  enableContainerRegistryAPI,
+  enableStackdriverLoggingAPI,
   createRedis,
   reserveRedisInternalIP,
   createMongo,

@@ -3,6 +3,10 @@ import * as async from 'async';
 import * as semverRegex from 'semver-regex';
 
 import {
+  enableCloudBillingAPI, enableComputeService, enableContainerRegistryAPI, enableStackdriverLoggingAPI,
+  setDefaultProject, setDefaultUser,
+} from './autodeploy.helpers';
+import {
   denyHttpTM, releaseExternalIP, releaseRedisInternalIP, releaseMongoInternalIP, removeCluster,
   removeImageNode, removeImageTM, removeRedis, removeMongo, removeTM
 } from './autoremove.helpers';
@@ -88,6 +92,12 @@ const context = Object.assign(primaryContext, {
 async.waterfall([
   async.constant(context),
   // putdownLoadbalancer,
+  setDefaultUser,
+  setDefaultProject,
+  enableCloudBillingAPI,
+  enableComputeService,
+  enableContainerRegistryAPI,
+  enableStackdriverLoggingAPI,
   removeCluster,
   releaseExternalIP,
   denyHttpTM,
