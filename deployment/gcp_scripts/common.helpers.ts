@@ -9,13 +9,14 @@ let counter = 0;
 
 interface AsyncResultCallback<T, E> { (err?: E, result?: T): void; }
 
-export function runShellCommand(command: string, options: ExecOptions, cb: AsyncResultCallback<ExecOutputReturnValue | ChildProcess, string>): void {
+export function runShellCommand(command: string, options: any, cb: AsyncResultCallback<ExecOutputReturnValue | ChildProcess, string>): void {
 
   let outputParam = '';
   switch(true) {
-    case _.includes(command, 'docker'):
+    case _.includes(command, 'gcloud compute') && !_.includes(command, '--quiet'):
+      outputParam = ' --format=json';
     break;
-    case _.includes(command, 'gcloud') && !_.includes(command, '--quiet'):
+    case _.includes(command, 'gcloud beta billing') && !_.includes(command, '--quiet'):
       outputParam = ' --format=json';
     break;
     case _.includes(command, 'kubectl get service') && !_.includes(command, '--quiet'):
@@ -57,30 +58,35 @@ export function runShellCommand(command: string, options: ExecOptions, cb: Async
     const stderr: string = (result as ExecOutputReturnValue).stderr;
     const stdout: string = (result as ExecOutputReturnValue).stdout;
 
-    const isError404 = _.some(['AlreadyExists', 'The project ID you specified is already in use by another project', 'code=404', 'was not found', 'is not a valid name'], (item: string) => _.includes(stderr, item));
-
-    if (error && !isError404) {
+    const isErrorShouldBeSkipped = isStepShouldBeSkipped(stderr);
+    const isResultShouldBeSkipped = isStepShouldBeSkipped(stdout);
+    
+    if (error && !isErrorShouldBeSkipped) {
       console.log(`Attempt ${++attemptCounter} was failed..`);
       return async.setImmediate(() => _cb(`Unexpected error [code=${code}]: ${stderr}`, result));
     }
 
-    if (isError404) {
-      console.log(`SKIP STEP`);
+    if (isErrorShouldBeSkipped || isResultShouldBeSkipped) {
+      console.log(`SKIP STEP\n`);
       return async.setImmediate(() => _cb(null, result));
     }
 
     if (_.isEmpty(stdout)) {
-      console.log(`STDOUT IS EMPTY`);
+      console.log(`STDOUT IS EMPTY\n`);
       return async.setImmediate(() => _cb(null, result));
     }
 
     if (_.includes(command, 'docker')) {
-      console.log(`DOCKER COMMAND`);
+      console.log(`DOCKER COMMAND\n`);
       return async.setImmediate(() => _cb(null, result));
     }
 
     try {
-      JSON.parse(stdout);
+      const parsedStdout = JSON.parse(stdout);
+
+      if (options.pathToCheck && !_.get(parsedStdout, options.pathToCheck, false)) {
+        throw new Error(`No required data by path '${options.pathToCheck}': ${parsedStdout}`);
+      }
 
       return async.setImmediate(() => _cb(null, result));
     } catch (_error) {
@@ -89,6 +95,14 @@ export function runShellCommand(command: string, options: ExecOptions, cb: Async
       return async.setImmediate(() => _cb('JSON parse syntax error. Retry to connect again..', result));
     }
   }, cb);
+}
+
+function isStepShouldBeSkipped(result) {
+  const skipMarkers = ['already exists', 'scaled', 'AlreadyExists', 'is already in use', 'code=404', 'was not found', 'is not a valid name'];
+
+  return _.some(skipMarkers, (item: string) => {
+    return _.includes(result, item);
+  });
 }
 
 export function getDockerArguments(dockerArgs: DockerBuildArguments): string {
