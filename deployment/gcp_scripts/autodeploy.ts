@@ -1,10 +1,13 @@
 import * as async from 'async';
 
 import {
-  createCridentials, loginGcloud, enableCloudBillingAPI, enableComputeService, enableContainerRegistryAPI, enableStackdriverLoggingAPI, linkProjectToBilling, setDefaultProject, setDefaultUser,
-  allowHttpTM, buildImageNode, buildImageTM, createCluster, createPods, createProject, createRedis, getRedisInternalIP, createMongo, getMongoInternalIP,
-  createReplicas, createTM, getTMExternalIP, promoteExternalIP, pushImageNode, pushImageTM, reserveRedisInternalIP, reserveMongoInternalIP, setupAutoscale,
-  setupLoadbalancer, printExternalIPs
+  setDefaultUser, createProject, setDefaultProject,
+  enableCloudBillingAPI, linkProjectToBilling, enableComputeService, enableContainerRegistryAPI, enableStackdriverLoggingAPI, enableKubernetesEngineAPI,
+  createRedis, getRedisInternalIP, reserveRedisInternalIP,
+  createMongo, getMongoInternalIP, reserveMongoInternalIP,
+  buildImageTM, buildImageNode, pushImageTM, pushImageNode,
+  createTM, getTMExternalIP, promoteTMExternalIP, allowHttpTM,
+  createCluster, createPods, createReplicas, setupAutoscale, setupLoadbalancer, printExternalIPs
 } from './autodeploy.helpers';
 import { getContextInstance } from './common.helpers';
 import { GCloudArguments } from './interfaces';
@@ -29,6 +32,7 @@ const ENVIRONMENT = DEFAULT_ENVIRONMENTS[NODE_ENV];
 const VERSION_TAG = packageJson.version;
 const VERSION = packageJson.version.replace(/\./g, '-');
 const STATIC_VARIABLES = require(`./settings_gapminder_${ENVIRONMENT}.json`);
+const DEFAULT_REGION = STATIC_VARIABLES.REGION || DEFAULT_GCP_VARIABLES.DEFAULT_REGION;
 
 const COMPUTED_VARIABLES = Object.assign({
   NODE_ENV,
@@ -47,15 +51,17 @@ const GCP_VARIABLES = Object.assign({
   NAME_SPACE_NODE: `${ENVIRONMENT}-namespace-${VERSION}`,
   REDIS_INSTANCE_NAME: `${ENVIRONMENT}-redis-${VERSION}`,
   MONGO_INSTANCE_NAME: `${ENVIRONMENT}-mongo-${VERSION}`,
-  MONGO_PORT: STATIC_VARIABLES.MONGO_PORT || DEFAULT_GCP_VARIABLES.MONGO_PORT,
+  MONGO_PORT: STATIC_VARIABLES.MONGO_PORT || DEFAULT_GCP_VARIABLES.DEFAULT_MONGO_PORT,
   REPLICAS_NAME: `${ENVIRONMENT}-replicas-${VERSION}`,
   LOAD_BALANCER_NAME: `${ENVIRONMENT}-lb-${VERSION}`,
   FIREWALL_RULE__ALLOW_HTTP: `${ENVIRONMENT}-allow-http-${VERSION}`,
-  ZONE: `${DEFAULT_GCP_VARIABLES.REGION}-c`,
-  REDIS_ZONE: `${DEFAULT_GCP_VARIABLES.REDIS_REGION}-c`,
-  MONGO_ZONE: `${DEFAULT_GCP_VARIABLES.MONGO_REGION}-c`,
-  TM_ZONE: `${DEFAULT_GCP_VARIABLES.TM_REGION}-c`,
-  LB_ZONE: `${DEFAULT_GCP_VARIABLES.LB_REGION}-c`
+  REGION: DEFAULT_REGION,
+
+  ZONE: `${ DEFAULT_REGION }-c`,
+  REDIS_ZONE: `${ STATIC_VARIABLES.REDIS_REGION || DEFAULT_REGION }-c`,
+  MONGO_ZONE: `${ STATIC_VARIABLES.MONGO_REGION || DEFAULT_REGION }-c`,
+  TM_ZONE: `${ STATIC_VARIABLES.TM_REGION || DEFAULT_REGION }-c`,
+  LB_ZONE: `${ STATIC_VARIABLES.LB_REGION || DEFAULT_REGION }-c`
 }, DEFAULT_GCP_VARIABLES);
 
 const primaryContext = Object.assign({
@@ -82,6 +88,7 @@ async.waterfall([
   enableComputeService,
   enableContainerRegistryAPI,
   enableStackdriverLoggingAPI,
+  enableKubernetesEngineAPI,
   createRedis,
   getRedisInternalIP,
   reserveRedisInternalIP,
@@ -94,7 +101,7 @@ async.waterfall([
   pushImageNode,
   createTM,
   getTMExternalIP,
-  promoteExternalIP,
+  promoteTMExternalIP,
   allowHttpTM,
   createCluster,
   createPods,
