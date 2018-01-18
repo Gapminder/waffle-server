@@ -4,7 +4,7 @@ import * as semverRegex from 'semver-regex';
 
 import {
   enableCloudBillingAPI, enableComputeService, enableContainerRegistryAPI, enableStackdriverLoggingAPI,
-  setDefaultProject, setDefaultUser,
+  setDefaultProject, setDefaultUser
 } from './autodeploy.helpers';
 import {
   denyHttpTM, releaseExternalIP, releaseRedisInternalIP, releaseMongoInternalIP, removeCluster,
@@ -44,6 +44,7 @@ const ENVIRONMENT = DEFAULT_ENVIRONMENTS[NODE_ENV] || NODE_ENV;
 const VERSION_TAG = semverRegex().exec(process.env.VERSION)[0];
 const VERSION = VERSION_TAG.replace(/\./g, '-');
 const STATIC_VARIABLES = require(`./settings_gapminder_${ENVIRONMENT}.json`);
+const DEFAULT_REGION = STATIC_VARIABLES.REGION || DEFAULT_GCP_VARIABLES.DEFAULT_REGION;
 
 console.log(`Parsed version: ${VERSION_TAG}`);
 
@@ -65,14 +66,16 @@ const GCP_VARIABLES = Object.assign({
   NAME_SPACE_NODE: `${ENVIRONMENT}-namespace-${VERSION}`,
   REDIS_INSTANCE_NAME: `${ENVIRONMENT}-redis-${VERSION}`,
   MONGO_INSTANCE_NAME: `${ENVIRONMENT}-mongo-${VERSION}`,
+  MONGO_PORT: STATIC_VARIABLES.MONGO_PORT || DEFAULT_GCP_VARIABLES.DEFAULT_MONGO_PORT,
   REPLICAS_NAME: `${ENVIRONMENT}-replicas-${VERSION}`,
   LOAD_BALANCER_NAME: `${ENVIRONMENT}-lb-${VERSION}`,
   FIREWALL_RULE__ALLOW_HTTP: `${ENVIRONMENT}-allow-http-${VERSION}`,
-  ZONE: `${DEFAULT_GCP_VARIABLES.REGION}-c`,
-  REDIS_ZONE: `${DEFAULT_GCP_VARIABLES.REDIS_REGION}-c`,
-  MONGO_ZONE: `${DEFAULT_GCP_VARIABLES.MONGO_REGION}-c`,
-  TM_ZONE: `${DEFAULT_GCP_VARIABLES.TM_REGION}-c`,
-  LB_ZONE: `${DEFAULT_GCP_VARIABLES.LB_REGION}-c`
+  REGION: DEFAULT_REGION,
+  ZONE: `${ DEFAULT_REGION }-c`,
+  REDIS_ZONE: `${ STATIC_VARIABLES.REDIS_REGION || DEFAULT_REGION }-c`,
+  MONGO_ZONE: `${ STATIC_VARIABLES.MONGO_REGION || DEFAULT_REGION }-c`,
+  TM_ZONE: `${ STATIC_VARIABLES.TM_REGION || DEFAULT_REGION }-c`,
+  LB_ZONE: `${ STATIC_VARIABLES.LB_REGION || DEFAULT_REGION }-c`
 }, DEFAULT_GCP_VARIABLES);
 
 const primaryContext = Object.assign({
