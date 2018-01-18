@@ -2,8 +2,8 @@ import * as async from 'async';
 
 import {
   createCridentials, loginGcloud, enableCloudBillingAPI, enableComputeService, enableContainerRegistryAPI, enableStackdriverLoggingAPI, linkProjectToBilling, setDefaultProject, setDefaultUser,
-  allowHttpTM, buildImageNode, buildImageTM, createCluster, createPods, createProject, createRedis, createMongo,
-  createReplicas, createTM, promoteExternalIP, pushImageNode, pushImageTM, reserveRedisInternalIP, reserveMongoInternalIP, setupAutoscale,
+  allowHttpTM, buildImageNode, buildImageTM, createCluster, createPods, createProject, createRedis, getRedisInternalIP, createMongo, getMongoInternalIP,
+  createReplicas, createTM, getTMExternalIP, promoteExternalIP, pushImageNode, pushImageTM, reserveRedisInternalIP, reserveMongoInternalIP, setupAutoscale,
   setupLoadbalancer, printExternalIPs
 } from './autodeploy.helpers';
 import { getContextInstance } from './common.helpers';
@@ -83,14 +83,17 @@ async.waterfall([
   enableContainerRegistryAPI,
   enableStackdriverLoggingAPI,
   createRedis,
+  getRedisInternalIP,
   reserveRedisInternalIP,
   createMongo,
+  getMongoInternalIP,
   reserveMongoInternalIP,
   buildImageTM,
   buildImageNode,
   pushImageTM,
   pushImageNode,
   createTM,
+  getTMExternalIP,
   promoteExternalIP,
   allowHttpTM,
   createCluster,
