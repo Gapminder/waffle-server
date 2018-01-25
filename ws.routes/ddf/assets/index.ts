@@ -19,7 +19,7 @@ function registerDdfAssetsRoutes(serviceLocator: ServiceLocator): Application {
   );
 
   const app = serviceLocator.getApplication();
-  return app.use('/api/ddf/assets', router);
+  return (app as any).use('/api/ddf/assets', router);
 }
 
 export {

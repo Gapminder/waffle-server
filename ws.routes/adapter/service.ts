@@ -48,7 +48,7 @@ function createAdapterServiceController(serviceLocator: ServiceLocator): Applica
     (req: any, res: any) => res.json(world50m)
   );
 
-  return app.use(router);
+  return (app as any).use(router);
 
   function getTranslations(req: any, res: any): void {
     const lang = (req.params && req.params.lang) || 'en';
