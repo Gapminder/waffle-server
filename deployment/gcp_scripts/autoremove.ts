@@ -3,8 +3,7 @@ import * as async from 'async';
 import * as semverRegex from 'semver-regex';
 
 import {
-  enableCloudBillingAPI, enableComputeService, enableContainerRegistryAPI, enableStackdriverLoggingAPI,
-  setDefaultProject, setDefaultUser
+  setDefaultProject, setDefaultUser, setupAPIs, linkProjectToBilling
 } from './autodeploy.helpers';
 import {
   denyHttpTM, releaseExternalIP, releaseRedisInternalIP, releaseMongoInternalIP, removeCluster,
@@ -22,7 +21,8 @@ const {
   DEFAULT_MACHINE_TYPES,
   DEFAULT_IMAGE_NAME_SUFFIXES,
   DEFAULT_MACHINE_SUFFIXES,
-  DEFAULT_GCP_VARIABLES
+  DEFAULT_GCP_VARIABLES,
+  DEFAULT_GCP_API
 } = require('./default_deployment_config.json');
 
 // Computed variables
@@ -66,7 +66,7 @@ const GCP_VARIABLES = Object.assign({
   NAME_SPACE_NODE: `${ENVIRONMENT}-namespace-${VERSION}`,
   REDIS_INSTANCE_NAME: `${ENVIRONMENT}-redis-${VERSION}`,
   MONGO_INSTANCE_NAME: `${ENVIRONMENT}-mongo-${VERSION}`,
-  MONGO_PORT: STATIC_VARIABLES.MONGO_PORT || DEFAULT_GCP_VARIABLES.DEFAULT_MONGO_PORT,
+  MONGO_PORT: STATIC_VARIABLES.MONGO_PORT || DEFAULT_GCP_VARIABLES.DEFAULT_MONGODB_PORT,
   REPLICAS_NAME: `${ENVIRONMENT}-replicas-${VERSION}`,
   LOAD_BALANCER_NAME: `${ENVIRONMENT}-lb-${VERSION}`,
   FIREWALL_RULE__ALLOW_HTTP: `${ENVIRONMENT}-allow-http-${VERSION}`,
@@ -94,13 +94,11 @@ const context = Object.assign(primaryContext, {
 
 async.waterfall([
   async.constant(context),
-  // putdownLoadbalancer,
   setDefaultUser,
   setDefaultProject,
-  enableCloudBillingAPI,
-  enableComputeService,
-  enableContainerRegistryAPI,
-  enableStackdriverLoggingAPI,
+  async.apply(setupAPIs, ['cloudbilling.googleapis.com'], {action: 'enable'}),
+  linkProjectToBilling,
+  async.apply(setupAPIs, DEFAULT_GCP_API, {action: 'enable'}),
   removeCluster,
   releaseExternalIP,
   denyHttpTM,
@@ -110,7 +108,9 @@ async.waterfall([
   releaseRedisInternalIP,
   removeRedis,
   removeImageNode,
-  removeImageTM
+  removeImageTM,
+  async.apply(setupAPIs, ['cloudbilling.googleapis.com', ...DEFAULT_GCP_API], {action: 'disable'}),
+  
 ], function (error: string, result: any) {
   if (error) {
     console.error(error);

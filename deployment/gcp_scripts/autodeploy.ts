@@ -1,10 +1,10 @@
 import * as async from 'async';
 
+import {setupRedisInstance} from './redis.helpers';
+import {setupMongoInstance} from './mongo.helpers';
 import {
   setDefaultUser, createProject, setDefaultProject,
-  enableCloudBillingAPI, linkProjectToBilling, enableComputeService, enableContainerRegistryAPI, enableStackdriverLoggingAPI, enableKubernetesEngineAPI,
-  createRedis, getRedisInternalIP, reserveRedisInternalIP,
-  createMongo, getMongoInternalIP, reserveMongoInternalIP,
+  setupAPIs, linkProjectToBilling,
   buildImageTM, buildImageNode, pushImageTM, pushImageNode,
   createTM, getTMExternalIP, promoteTMExternalIP, allowHttpTM,
   createCluster, createPods, createReplicas, setupAutoscale, setupLoadbalancer, printExternalIPs
@@ -22,7 +22,8 @@ const {
   DEFAULT_MACHINE_TYPES,
   DEFAULT_IMAGE_NAME_SUFFIXES,
   DEFAULT_MACHINE_SUFFIXES,
-  DEFAULT_GCP_VARIABLES
+  DEFAULT_GCP_VARIABLES,
+  DEFAULT_GCP_API
 } = require('./default_deployment_config.json');
 
 // Computed variables
@@ -51,7 +52,7 @@ const GCP_VARIABLES = Object.assign({
   NAME_SPACE_NODE: `${ENVIRONMENT}-namespace-${VERSION}`,
   REDIS_INSTANCE_NAME: `${ENVIRONMENT}-redis-${VERSION}`,
   MONGO_INSTANCE_NAME: `${ENVIRONMENT}-mongo-${VERSION}`,
-  MONGO_PORT: STATIC_VARIABLES.MONGO_PORT || DEFAULT_GCP_VARIABLES.DEFAULT_MONGO_PORT,
+  MONGO_PORT: STATIC_VARIABLES.MONGO_PORT || DEFAULT_GCP_VARIABLES.DEFAULT_MONGODB_PORT,
   REPLICAS_NAME: `${ENVIRONMENT}-replicas-${VERSION}`,
   LOAD_BALANCER_NAME: `${ENVIRONMENT}-lb-${VERSION}`,
   FIREWALL_RULE__ALLOW_HTTP: `${ENVIRONMENT}-allow-http-${VERSION}`,
@@ -83,18 +84,11 @@ async.waterfall([
   setDefaultUser,
   createProject,
   setDefaultProject,
-  enableCloudBillingAPI,
+  async.apply(setupAPIs, ['cloudbilling.googleapis.com'], {action: 'enable'}),
   linkProjectToBilling,
-  enableComputeService,
-  enableContainerRegistryAPI,
-  enableStackdriverLoggingAPI,
-  enableKubernetesEngineAPI,
-  createRedis,
-  getRedisInternalIP,
-  reserveRedisInternalIP,
-  createMongo,
-  getMongoInternalIP,
-  reserveMongoInternalIP,
+  async.apply(setupAPIs, DEFAULT_GCP_API, {action: 'enable'}),
+  setupRedisInstance,
+  setupMongoInstance,
   buildImageTM,
   buildImageNode,
   pushImageTM,

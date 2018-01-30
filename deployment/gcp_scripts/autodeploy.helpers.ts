@@ -56,14 +56,17 @@ export function setDefaultProject(externalContext: any, cb: Function): void {
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
-export function enableCloudBillingAPI(externalContext: any, cb: Function): void {
-  const {
-  } = externalContext;
+export function setupAPIs(apisList: string[], options: any, externalContext, cb: Function): void {
+  const {action = 'enable'} = options;
 
-  const command = `gcloud beta services enable cloudbilling.googleapis.com`;
-  const options: ExecOptions = {};
-
-  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+  async.eachSeries(apisList, (api: string, _cb: AsyncResultCallback<ExecOutputReturnValue, string>) => {
+    const command = `gcloud beta services ${action} ${api}`;
+    const options: ExecOptions = {};
+  
+    return runShellCommand(command, options, _cb);  
+  }, (error: string) => {
+    return cb(error, externalContext);
+  })
 }
 
 export function linkProjectToBilling(externalContext: any, cb: Function): void {
@@ -78,181 +81,6 @@ export function linkProjectToBilling(externalContext: any, cb: Function): void {
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
-export function enableComputeService(externalContext: any, cb: Function): void {
-  const {
-  } = externalContext;
-
-  const command = `gcloud beta services enable compute.googleapis.com`;
-  const options: ExecOptions = {};
-
-  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
-}
-
-export function enableContainerRegistryAPI(externalContext: any, cb: Function): void {
-  const {
-  } = externalContext;
-
-  const command = `gcloud beta services enable containerregistry.googleapis.com`;
-  const options: ExecOptions = {};
-
-  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
-}
-
-export function enableStackdriverLoggingAPI(externalContext: any, cb: Function): void {
-  const {
-  } = externalContext;
-
-  const command = `gcloud beta services enable logging.googleapis.com`;
-  const options: ExecOptions = {};
-
-  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
-}
-
-export function enableKubernetesEngineAPI(externalContext: any, cb: Function): void {
-  const {
-  } = externalContext;
-
-  const command = `gcloud beta services enable container.googleapis.com`;
-  const options: ExecOptions = {};
-
-  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
-}
-
-export function createRedis(externalContext: any, cb: Function): void {
-  const {
-    PROJECT_ID,
-    REDIS_CONTAINER_IMAGE,
-    REDIS_INSTANCE_NAME,
-    REDIS_ZONE
-  } = externalContext;
-
-  //fixme: --project=${PROJECT_ID}
-  const command = `gcloud beta compute instances create-with-container ${REDIS_INSTANCE_NAME} --machine-type=g1-small --zone=${REDIS_ZONE} --container-image=${REDIS_CONTAINER_IMAGE}`;
-  const options: ExecOptions = {};
-
-  return runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
-    return cb(error, externalContext);
-  });
-}
-
-export function getRedisInternalIP(externalContext: any, cb: Function): void {
-  const {
-    PROJECT_ID,
-    REDIS_CONTAINER_IMAGE,
-    REDIS_INSTANCE_NAME,
-    REDIS_ZONE
-  } = externalContext;
-
-  //fixme: --project=${PROJECT_ID}
-  const command = `gcloud compute instances describe ${REDIS_INSTANCE_NAME} --zone=${REDIS_ZONE}`;
-  const options: any = {pathToCheck: 'networkInterfaces.0.networkIP'};
-
-  return runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
-    console.log('\n', result.stdout, '\n');
-
-    try {
-      const { networkInterfaces: [{ networkIP, subnetwork }] } = JSON.parse(result.stdout);
-      console.log('\nREDIS INTERNAL IP:', networkIP, '\n');
-      externalContext.REDIS_HOST = networkIP;
-      externalContext.REDIS_SUBNETWORK = subnetwork;
-    } catch (_error) {
-      return cb(_error, externalContext);
-    }
-
-    return cb(error, externalContext);
-  });
-}
-
-export function reserveRedisInternalIP(externalContext: any, cb: Function): void {
-  const {
-    PROJECT_ID,
-    REDIS_HOST,
-    REDIS_SUBNETWORK,
-    COMPUTED_VARIABLES: {
-      REDIS_REGION,
-      ENVIRONMENT,
-      VERSION
-    }
-  } = externalContext;
-
-  const ADDRESS_NAME = `${ENVIRONMENT}-redis-address-${VERSION}`;
-  //fixme: REGION, --project=${PROJECT_ID}
-  const command = `gcloud compute addresses create ${ADDRESS_NAME} --region=${REDIS_REGION} --subnet ${REDIS_SUBNETWORK} --addresses ${REDIS_HOST}`;
-  const options: ExecOptions = {};
-  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
-}
-
-export function createMongo(externalContext: any, cb: Function): void {
-  const {
-    MONGO_ZONE,
-    PROJECT_ID,
-    MONGO_PORT,
-    MONGO_CONTAINER_IMAGE,
-    MONGO_INSTANCE_NAME
-  } = externalContext;
-
-  //fixme: --project=${PROJECT_ID}
-  const command = `gcloud beta compute instances create-with-container ${MONGO_INSTANCE_NAME} --machine-type=n1-highmem-2 --zone=${MONGO_ZONE} --container-image=${MONGO_CONTAINER_IMAGE}`;
-  const options: ExecOptions = {};
-
-  return runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
-    return cb(error, externalContext);
-  });
-}
-
-export function getMongoInternalIP(externalContext: any, cb: Function): void {
-  const {
-    MONGO_ZONE,
-    PROJECT_ID,
-    MONGO_PORT,
-    MONGO_DB,
-    MONGO_URL,
-    MONGO_CONTAINER_IMAGE,
-    MONGO_INSTANCE_NAME
-  } = externalContext;
-
-  //fixme: --project=${PROJECT_ID}
-  const command = `gcloud compute instances describe ${MONGO_INSTANCE_NAME} --zone=${MONGO_ZONE}`;
-  const options: any = {pathToCheck: 'networkInterfaces.0.networkIP'};
-  
-  return runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
-    console.log('\n', result.stdout, '\n');
-    
-    try {
-      const { networkInterfaces: [{ networkIP, subnetwork }] } = JSON.parse(result.stdout);
-      externalContext.MONGO_HOST = networkIP;
-      externalContext.MONGO_SUBNETWORK = subnetwork;
-      externalContext.MONGODB_URL = MONGO_URL || `mongodb://${externalContext.MONGO_HOST}:${MONGO_PORT}/${MONGO_DB}`;
-      console.log('\nMONGO INTERNAL IP:', externalContext.MONGO_HOST, '\n');
-      console.log('\nMONGO URL:', externalContext.MONGODB_URL, '\n');
-    } catch (_error) {
-      return cb(_error, externalContext);
-    }
-    
-
-    return cb(error, externalContext);
-  });
-}
-
-export function reserveMongoInternalIP(externalContext: any, cb: Function): void {
-  const {
-    PROJECT_ID,
-    MONGO_HOST,
-    MONGO_SUBNETWORK,
-    COMPUTED_VARIABLES: {
-      MONGO_REGION,
-      ENVIRONMENT,
-      VERSION
-    }
-  } = externalContext;
-
-  const ADDRESS_NAME = `${ENVIRONMENT}-mongo-address-${VERSION}`;
-  //fixme: REGION, --project=${PROJECT_ID}
-  const command = `gcloud compute addresses create ${ADDRESS_NAME} --region ${MONGO_REGION} --subnet ${MONGO_SUBNETWORK} --addresses ${MONGO_HOST}`;
-  const options: ExecOptions = {};
-  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
-}
-
 export function buildImageTM(externalContext: any, cb: Function): void {
   const {
     TM_INSTANCE_VARIABLES: {
@@ -260,7 +88,7 @@ export function buildImageTM(externalContext: any, cb: Function): void {
       IMAGE_URL,
       PORT
     },
-    MONGODB_URL,
+    MONGO_URL,
     REDIS_HOST,
     COMPUTED_VARIABLES
   } = externalContext;
@@ -268,7 +96,7 @@ export function buildImageTM(externalContext: any, cb: Function): void {
   const dockerArguments: DockerBuildArgumentsTM = Object.assign({
     PORT,
     REDIS_HOST,
-    MONGODB_URL,
+    MONGO_URL,
     MACHINE_SUFFIX,
     THRASHING_MACHINE: true
   }, COMPUTED_VARIABLES);
