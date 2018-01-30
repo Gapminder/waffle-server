@@ -2,7 +2,7 @@ export interface DockerBuildArguments extends Dictionary<string|number|boolean> 
   PORT: number;
   REDIS_HOST: string;
   REDIS_PORT: number;
-  MONGODB_URL: string;
+  MONGO_URL: string;
   DEFAULT_USER_PASSWORD: string;
   PATH_TO_DDF_REPOSITORIES: string;
   NEW_RELIC_LICENSE_KEY: string;

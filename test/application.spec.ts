@@ -122,7 +122,8 @@ describe('Application', () => {
         longRunningQueriesKillerStub
       );
 
-      sinon.assert.notCalled(warmUpCacheStub);
+      sinon.assert.calledOnce(warmUpCacheStub);
+      sinon.assert.calledWithExactly(warmUpCacheStub, sinon.match.func);
     });
   });
 

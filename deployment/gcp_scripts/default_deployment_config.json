@@ -44,10 +44,10 @@
     "CPU_PERCENT": 40,
 
     "REDIS_CONTAINER_IMAGE": "docker.io/redis:4.0.2",
-    "MONGO_CONTAINER_IMAGE": "docker.io/mongo:3.6",
+    "MONGODB_CONTAINER_IMAGE": "docker.io/mongo:3.6",
 
     "SOURCE_PORT": 80,
-    "DEFAULT_MONGO_PORT": 27017,
+    "DEFAULT_MONGODB_PORT": 27017,
 
     "CREATE_CLUSTER__ALLOWED_PARAMS": [
       "DISK_SIZE",
@@ -60,5 +60,11 @@
       "MAX_NODES",
       "MIN_NODES"
     ]
-  }
+  },
+  "DEFAULT_GCP_API": [
+    "compute.googleapis.com",
+    "containerregistry.googleapis.com",
+    "logging.googleapis.com",
+    "container.googleapis.com"
+  ]
 }

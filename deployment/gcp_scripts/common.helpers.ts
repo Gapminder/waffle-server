@@ -148,3 +148,7 @@ export function getContextInstance(externalContext: any, MACHINE_SUFFIX: string 
     MACHINE_SUFFIX
   };
 }
+
+export function wrapCommandAPI() {
+  
+}

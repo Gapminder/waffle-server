@@ -48,10 +48,6 @@ export class Application {
   }
 
   private warmup(): Promise<void> {
-    if (!this.config.THRASHING_MACHINE) {
-      return Promise.resolve();
-    }
-
     return util.promisify(this.warmupUtils.warmUpCache)()
       .then((warmedQueriesAmount: number) => {
           logger.info(`Attempt to warm up the cache is has been completed. Amount of executed queries: ${warmedQueriesAmount}`);
