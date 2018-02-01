@@ -39,10 +39,10 @@ export function removeRedis(externalContext: any, cb: Function): void {
 export function releaseRedisInternalIP(externalContext: any, cb: Function): void {
   const {
     PROJECT_ID,
-    REDIS_REGION,
     COMPUTED_VARIABLES: {
       ENVIRONMENT,
-      VERSION
+      VERSION,
+      REDIS_REGION
     }
   } = externalContext;
 
@@ -70,10 +70,10 @@ export function removeMongo(externalContext: any, cb: Function): void {
 export function releaseMongoInternalIP(externalContext: any, cb: Function): void {
   const {
     PROJECT_ID,
-    MONGO_REGION,
     COMPUTED_VARIABLES: {
       ENVIRONMENT,
-      VERSION
+      VERSION,
+      MONGO_REGION
     }
   } = externalContext;
 
@@ -116,10 +116,10 @@ export function denyHttpTM(externalContext: any, cb: Function): void {
 export function releaseExternalIP(externalContext: any, cb: Function): void {
   const {
     PROJECT_ID,
-    TM_REGION,
     COMPUTED_VARIABLES: {
       ENVIRONMENT,
-      VERSION
+      VERSION,
+      TM_REGION
     }
   } = externalContext;
 
@@ -132,9 +132,9 @@ export function releaseExternalIP(externalContext: any, cb: Function): void {
 }
 
 export function removeCluster(externalContext: any, cb: Function): void {
-  const { PROJECT_ID, ZONE, CLUSTER_NAME } = externalContext;
+  const { PROJECT_ID, LB_ZONE, CLUSTER_NAME } = externalContext;
 
-  const command = `gcloud container clusters delete ${CLUSTER_NAME} --zone=${ZONE} --project=${PROJECT_ID} --quiet`;
+  const command = `gcloud container clusters delete ${CLUSTER_NAME} --zone=${LB_ZONE} --project=${PROJECT_ID} --quiet`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));

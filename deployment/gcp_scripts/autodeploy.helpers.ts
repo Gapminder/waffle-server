@@ -60,10 +60,10 @@ export function setupAPIs(apisList: string[], options: any, externalContext, cb:
   const {action = 'enable'} = options;
 
   async.eachSeries(apisList, (api: string, _cb: AsyncResultCallback<ExecOutputReturnValue, string>) => {
-    const command = `gcloud beta services ${action} ${api}`;
+    const command = `gcloud services ${action} ${api}`;
     const options: ExecOptions = {};
-  
-    return runShellCommand(command, options, _cb);  
+
+    return runShellCommand(command, options, _cb);
   }, (error: string) => {
     return cb(error, externalContext);
   })
@@ -88,7 +88,7 @@ export function buildImageTM(externalContext: any, cb: Function): void {
       IMAGE_URL,
       PORT
     },
-    MONGO_URL,
+    MONGODB_URL: MONGODB_URL,
     REDIS_HOST,
     COMPUTED_VARIABLES
   } = externalContext;
@@ -96,7 +96,7 @@ export function buildImageTM(externalContext: any, cb: Function): void {
   const dockerArguments: DockerBuildArgumentsTM = Object.assign({
     PORT,
     REDIS_HOST,
-    MONGO_URL,
+    MONGODB_URL,
     MACHINE_SUFFIX,
     THRASHING_MACHINE: true
   }, COMPUTED_VARIABLES);
@@ -184,7 +184,7 @@ export function getTMExternalIP(externalContext: any, cb: Function): void {
   //fixme: --project=${PROJECT_ID}
   const command = `gcloud compute instances describe ${TM_INSTANCE_NAME} --zone=${TM_ZONE}`;
   const options: any = {pathToCheck: 'networkInterfaces.0.accessConfigs.0.natIP'};
-  
+
   return runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
     console.log('\n', result.stdout, '\n');
 
@@ -208,11 +208,12 @@ export function allowHttpTM(externalContext: any, cb: Function): void {
       NODE_NAME: TM_INSTANCE_NAME
     },
     PROJECT_ID,
-    FIREWALL_RULE__ALLOW_HTTP
+    FIREWALL_RULE__ALLOW_HTTP,
+    FIREWALL_RULE__ALLOWED_PORTS
   } = externalContext;
 
   //fixme: --project=${PROJECT_ID}
-  const command = `gcloud compute firewall-rules create ${FIREWALL_RULE__ALLOW_HTTP} --allow=tcp:80,tcp:443 --target-tags=${TM_INSTANCE_NAME}`;
+  const command = `gcloud compute firewall-rules create ${FIREWALL_RULE__ALLOW_HTTP} --allow=${FIREWALL_RULE__ALLOWED_PORTS} --target-tags=${TM_INSTANCE_NAME}`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
@@ -322,7 +323,7 @@ export function printExternalIPs(externalContext: any, cb: Function): void {
 
   const command = `kubectl get service ${LOAD_BALANCER_NAME}`;
   const options: any = {pathToCheck: 'status.loadBalancer.ingress.0.ip'};
-  
+
   runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
     console.log('\n', result.stdout, '\n');
 

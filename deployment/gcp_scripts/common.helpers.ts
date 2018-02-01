@@ -9,7 +9,23 @@ let counter = 0;
 
 interface AsyncResultCallback<T, E> { (err?: E, result?: T): void; }
 
-export function runShellCommand(command: string, options: any, cb: AsyncResultCallback<ExecOutputReturnValue | ChildProcess, string>): void {
+const ENVIRONMENT = 'test';
+const PROJECT_NAME = 'my-cool-project3';
+const PROJECT_ID = `${PROJECT_NAME}-${ENVIRONMENT}`;
+const REGION = 'europe-west1';
+
+const fixtures = [
+  ..._.times(10, String),
+  {code:0, stderr: '', stdout: `{"networkInterfaces":[{"accessConfigs":[{"natIP":"35.205.183.154"}],"subnetwork":"https://www.googleapis.com/compute/beta/projects/${PROJECT_ID}/regions/${REGION}/subnetworks/default","networkIP":"192.127.0.2"}]}`},
+  ..._.times(2, String),
+  {code:0, stderr: '', stdout: `{"networkInterfaces":[{"accessConfigs":[{"natIP":"35.205.183.154"}],"subnetwork":"https://www.googleapis.com/compute/beta/projects/${PROJECT_ID}/regions/${REGION}/subnetworks/default","networkIP":"192.127.0.2"}]}`},
+  ..._.times(6, String),
+  {code:0, stderr: '', stdout: `{"networkInterfaces":[{"accessConfigs":[{"natIP":"35.205.183.154"}],"subnetwork":"https://www.googleapis.com/compute/beta/projects/${PROJECT_ID}/regions/${REGION}/subnetworks/default","networkIP":"192.127.0.2"}]}`},
+  ..._.times(7, String),
+  {code:0, stderr: '', stdout: `{"status": {"loadBalancer": {"ingress": [{"ip": "35.205.145.142"}]}}}`}
+];
+
+export function runShellCommand(command: string, options: any, cb: AsyncResultCallback<ExecOutputReturnValue | ChildProcess | string, string>): void {
 
   let outputParam = '';
   switch(true) {
@@ -27,25 +43,10 @@ export function runShellCommand(command: string, options: any, cb: AsyncResultCa
   }
 
   const wrappedCommand = `${command}${outputParam}`;
+  // console.log('Current fixture: ', fixtures[counter]);
   console.log('RUN COMMAND: ', wrappedCommand, '\n');
-
-  // const ENVIRONMENT = 'test';
-  // const PROJECT_NAME = 'my-cool-project3';
-  // const PROJECT_ID = `${PROJECT_NAME}-${ENVIRONMENT}`;
-  // const REGION = 'europe-west1';
-  // const fixtures = [
-  //   ..._.times(5, String),
-  //   {code:0, stderr: '', stdout: `[{"networkInterfaces":[{"accessConfigs":[{"natIP":"35.205.183.154"}],"subnetwork":"https://www.googleapis.com/compute/beta/projects/${PROJECT_ID}/regions/${REGION}/subnetworks/default","networkIP":"192.127.0.2"}]}]`},
-  //   ..._.times(1, String),
-  //   {code:0, stderr: '', stdout: `[{"networkInterfaces":[{"accessConfigs":[{"natIP":"35.205.183.154"}],"subnetwork":"https://www.googleapis.com/compute/beta/projects/${PROJECT_ID}/regions/${REGION}/subnetworks/default","networkIP":"192.127.0.2"}]}]`},
-  //   ..._.times(5, String),
-  //   {code:0, stderr: '', stdout: `[{"networkInterfaces":[{"accessConfigs":[{"natIP":"35.205.183.154"}],"subnetwork":"https://www.googleapis.com/compute/beta/projects/${PROJECT_ID}/regions/${REGION}/subnetworks/default","networkIP":"192.127.0.2"}]}]`},
-  //   ..._.times(7, String),
-  //   {code:0, stderr: '', stdout: `{"status": {"loadBalancer": {"ingress": [{"ip": "35.205.145.142"}]}}}`}
-  // ];
   // return async.setImmediate(() => cb(null, fixtures[counter++]));
 
-//  const expectedConnectionError = /The\sconnection\sto\sthe\sserver\s(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\swas\srefused/;
   let attemptCounter = 0;
 
   async.retry({

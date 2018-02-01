@@ -56,8 +56,10 @@ RUN npm run tsc
 RUN ln -s /home/waffle-server/logs /var/log/waffle-server
 
 #exposing ports
+EXPOSE ${PORT}
 EXPOSE 3000
 EXPOSE 80
+EXPOSE 443
 EXPOSE 8125/udp 8092/udp 8094
 
 #setup environment variables
