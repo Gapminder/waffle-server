@@ -36,7 +36,7 @@ ws.import/diffs/**/*.txt
 
 settings_gapminder*.txt
 settings_valor.txt
-deployment/gcp_scripts/settings_*.json
+deployment/gcp_scripts/deployment_*.json
 deployment/gcp_scripts/build.*.sh
 deployment/gcp_scripts/*.txt
 dev
