@@ -59,7 +59,9 @@
       "ZONE",
       "MAX_NODES",
       "MIN_NODES"
-    ]
+    ],
+
+    "FIREWALL_RULE__ALLOWED_PORTS": "tcp:80,tcp:443"
   },
   "DEFAULT_GCP_API": [
     "compute.googleapis.com",

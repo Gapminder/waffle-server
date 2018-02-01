@@ -66,7 +66,7 @@ const GCP_VARIABLES = Object.assign({
   NAME_SPACE_NODE: `${ENVIRONMENT}-namespace-${VERSION}`,
   REDIS_INSTANCE_NAME: `${ENVIRONMENT}-redis-${VERSION}`,
   MONGO_INSTANCE_NAME: `${ENVIRONMENT}-mongo-${VERSION}`,
-  MONGO_PORT: STATIC_VARIABLES.MONGO_PORT || DEFAULT_GCP_VARIABLES.DEFAULT_MONGODB_PORT,
+  MONGODB_PORT: STATIC_VARIABLES.MONGODB_PORT || DEFAULT_GCP_VARIABLES.DEFAULT_MONGODB_PORT,
   REPLICAS_NAME: `${ENVIRONMENT}-replicas-${VERSION}`,
   LOAD_BALANCER_NAME: `${ENVIRONMENT}-lb-${VERSION}`,
   FIREWALL_RULE__ALLOW_HTTP: `${ENVIRONMENT}-allow-http-${VERSION}`,
@@ -96,9 +96,9 @@ async.waterfall([
   async.constant(context),
   setDefaultUser,
   setDefaultProject,
-  async.apply(setupAPIs, ['cloudbilling.googleapis.com'], {action: 'enable'}),
+  // async.apply(setupAPIs, ['cloudbilling.googleapis.com'], {action: 'enable'}),
   linkProjectToBilling,
-  async.apply(setupAPIs, DEFAULT_GCP_API, {action: 'enable'}),
+  // async.apply(setupAPIs, DEFAULT_GCP_API, {action: 'enable'}),
   removeCluster,
   releaseExternalIP,
   denyHttpTM,
@@ -109,8 +109,7 @@ async.waterfall([
   removeRedis,
   removeImageNode,
   removeImageTM,
-  async.apply(setupAPIs, ['cloudbilling.googleapis.com', ...DEFAULT_GCP_API], {action: 'disable'}),
-  
+  // async.apply(setupAPIs, [...DEFAULT_GCP_API, 'cloudbilling.googleapis.com'], {action: 'disable'}),  
 ], function (error: string, result: any) {
   if (error) {
     console.error(error);

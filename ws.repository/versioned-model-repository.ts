@@ -7,6 +7,7 @@ export abstract class VersionedModelRepository {
   protected datasetId: any;
   protected version: string;
 
+  /* tslint:disable-next-line */
   public constructor(versionQueryFragment: any, datasetId?: any, version?: string) {
     this.versionQueryFragment = versionQueryFragment;
     this.datasetId = datasetId;
@@ -19,6 +20,7 @@ export abstract class VersionedModelRepository {
     return _.merge.bind(_, {}, this.versionQueryFragment).apply(undefined, args);
   }
 
+  /* tslint:disable-next-line */
   public create(documents: any, onCreated?: Function): any {
     const documentsForStoring = Array.isArray(documents) ? this.setDocumentsId(documents) : this.setDocumentsId([documents]);
     return this._getModel().insertMany(documentsForStoring, onCreated);

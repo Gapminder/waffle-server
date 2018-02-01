@@ -12,6 +12,10 @@ const repositoriesCache = new NodeCache({ checkperiod: HOUR });
 export class VersionedModelRepositoryFactory<REPO extends VersionedModelRepository> {
   private Repository: new (name: string) => REPO;
 
+  public constructor(Repository: new (name: string) => REPO) {
+    this.Repository = Repository;
+  }
+
   private static checkPreconditions(datasetId: any, version: number): void {
     if (!datasetId) {
       throw new Error('datasetId must be given');
@@ -20,10 +24,6 @@ export class VersionedModelRepositoryFactory<REPO extends VersionedModelReposito
     if (!version) {
       throw new Error('dataset version must be given');
     }
-  }
-
-  public constructor(Repository: new (name: string) => REPO) {
-    this.Repository = Repository;
   }
 
   public makeRepository(factoryName: string, versionQueryFragment: any, datasetId?: any, version?: number): REPO {

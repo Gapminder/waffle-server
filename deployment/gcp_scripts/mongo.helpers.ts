@@ -8,15 +8,15 @@ export function setupMongoInstance(externalContext: any, cb: Function): void {
   const {
     MONGO_ZONE,
     PROJECT_ID,
-    MONGO_PORT,
-    MONGO_DB,
-    MONGO_URL,
+    MONGODB_PORT,
     MONGODB_CONTAINER_IMAGE,
     MONGO_INSTANCE_NAME,
     COMPUTED_VARIABLES: {
       MONGO_REGION,
       ENVIRONMENT,
-      VERSION
+      VERSION,
+      MONGODB_NAME,
+      MONGODB_URL
     }
   } = externalContext;
 
@@ -26,13 +26,13 @@ export function setupMongoInstance(externalContext: any, cb: Function): void {
     ENVIRONMENT,
     VERSION,
     MONGO_ZONE,
-    MONGO_PORT,
-    MONGO_DB,
+    MONGODB_PORT,
+    MONGODB_NAME,
     MONGODB_CONTAINER_IMAGE,
     MONGO_INSTANCE_NAME,
     MONGO_HOST: null,
     MONGO_SUBNETWORK: null,
-    MONGO_URL: null
+    MONGODB_URL: null
   };
 
   async.waterfall([
@@ -53,7 +53,7 @@ function createMongo(externalContext: any, cb: Function): void {
   const {
     MONGO_ZONE,
     PROJECT_ID,
-    MONGO_PORT,
+    MONGODB_PORT,
     MONGODB_CONTAINER_IMAGE,
     MONGO_INSTANCE_NAME
   } = externalContext;
@@ -71,9 +71,9 @@ function getMongoInternalIP(externalContext: any, cb: Function): void {
   const {
     MONGO_ZONE,
     PROJECT_ID,
-    MONGO_PORT,
-    MONGO_DB,
-    MONGO_URL,
+    MONGODB_PORT,
+    MONGODB_NAME,
+    MONGODB_URL,
     MONGODB_CONTAINER_IMAGE,
     MONGO_INSTANCE_NAME
   } = externalContext;
@@ -89,7 +89,7 @@ function getMongoInternalIP(externalContext: any, cb: Function): void {
       const { networkInterfaces: [{ networkIP, subnetwork }] } = JSON.parse(result.stdout);
       externalContext.MONGO_HOST = networkIP;
       externalContext.MONGO_SUBNETWORK = subnetwork;
-      externalContext.MONGODB_URL = MONGO_URL || `mongodb://${externalContext.MONGO_HOST}:${MONGO_PORT}/${MONGO_DB}`;
+      externalContext.MONGODB_URL = MONGODB_URL || `mongodb://${externalContext.MONGO_HOST}:${MONGODB_PORT}/${MONGODB_NAME}`;
       console.log('\nMONGO INTERNAL IP:', externalContext.MONGO_HOST, '\n');
       console.log('\nMONGO URL:', externalContext.MONGODB_URL, ', ', externalContext.MONGO_SUBNETWORK, '\n');
     } catch (_error) {
