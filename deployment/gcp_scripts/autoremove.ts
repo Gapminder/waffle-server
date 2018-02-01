@@ -43,7 +43,7 @@ const NODE_ENV = process.env.NODE_ENV || DEFAULT_NODE_ENV;
 const ENVIRONMENT = DEFAULT_ENVIRONMENTS[NODE_ENV] || NODE_ENV;
 const VERSION_TAG = semverRegex().exec(process.env.VERSION)[0];
 const VERSION = VERSION_TAG.replace(/\./g, '-');
-const STATIC_VARIABLES = require(`./settings_gapminder_${ENVIRONMENT}.json`);
+const STATIC_VARIABLES = require(`./deployment_config_${ENVIRONMENT}.json`);
 const DEFAULT_REGION = STATIC_VARIABLES.REGION || DEFAULT_GCP_VARIABLES.DEFAULT_REGION;
 
 console.log(`Parsed version: ${VERSION_TAG}`);
