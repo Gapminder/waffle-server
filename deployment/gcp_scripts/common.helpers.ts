@@ -91,7 +91,7 @@ function isStepShouldBeSkipped(result: string): any {
 
 export function getDockerArguments(dockerArgs: DockerBuildArguments): string {
   return _.transform(dockerArgs, (result: string[], valueArg: string, nameArg: string) => {
-    const wrapper = _.isString(valueArg) ? '"' : '';
+    const wrapper = _.isString(valueArg) || _.isArray(valueArg) ? '"' : '';
     result.push(`--build-arg ${nameArg}=${wrapper}${valueArg}${wrapper}`);
   }, []).join(' ');
 }
@@ -112,23 +112,23 @@ export function getGCloudArguments(gcloudArgs: any): string {
 export function getContextInstance(externalContext: any, MACHINE_SUFFIX: string = 'WS'): GCloudArguments {
   const {
     PROJECT_ID,
-    DEFAULT_IMAGE_NAME_SUFFIXES: _DEFAULT_IMAGE_NAME_SUFFIXES,
-    DEFAULT_MACHINE_TYPES: _DEFAULT_MACHINE_TYPES,
-    COMPUTED_VARIABLES: { NODE_ENV: _NODE_ENV, ENVIRONMENT: _ENVIRONMENT, VERSION: _VERSION, VERSION_TAG: _VERSION_TAG }
+    DEFAULT_IMAGE_NAME_SUFFIXES,
+    DEFAULT_MACHINE_TYPES,
+    COMPUTED_VARIABLES: { NODE_ENV, ENVIRONMENT, VERSION, VERSION_TAG }
   } = externalContext;
 
   const DEFAULT_PORTS = externalContext[`DEFAULT_${MACHINE_SUFFIX}_PORTS`];
-  const IMAGE_NAME_SUFFIX = _DEFAULT_IMAGE_NAME_SUFFIXES[MACHINE_SUFFIX];
-  const IMAGE_NAME = `ws${_ENVIRONMENT}${IMAGE_NAME_SUFFIX}`;
-  const IMAGE_URL = `gcr.io/${PROJECT_ID}/${IMAGE_NAME}:${_VERSION_TAG}`;
+  const IMAGE_NAME_SUFFIX = DEFAULT_IMAGE_NAME_SUFFIXES[MACHINE_SUFFIX];
+  const IMAGE_NAME = `ws${ENVIRONMENT}${IMAGE_NAME_SUFFIX}`;
+  const IMAGE_URL = `gcr.io/${PROJECT_ID}/${IMAGE_NAME}:${VERSION_TAG}`;
 
   return {
     IMAGE_NAME,
     IMAGE_URL,
-    TAG: _VERSION_TAG,
-    PORT: DEFAULT_PORTS[_NODE_ENV],
-    NODE_NAME: `${_ENVIRONMENT}-${IMAGE_NAME_SUFFIX}-${_VERSION}`,
-    MACHINE_TYPE: _DEFAULT_MACHINE_TYPES[MACHINE_SUFFIX],
+    TAG: VERSION_TAG,
+    PORT: DEFAULT_PORTS[NODE_ENV],
+    NODE_NAME: `${ENVIRONMENT}-${IMAGE_NAME_SUFFIX}-${VERSION}`,
+    MACHINE_TYPE: DEFAULT_MACHINE_TYPES[MACHINE_SUFFIX],
     MACHINE_SUFFIX
   };
 }

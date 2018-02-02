@@ -39,10 +39,10 @@ export function removeRedis(externalContext: any, cb: Function): void {
 export function releaseRedisInternalIP(externalContext: any, cb: Function): void {
   const {
     PROJECT_ID,
+    REDIS_REGION,
     COMPUTED_VARIABLES: {
       ENVIRONMENT,
-      VERSION,
-      REDIS_REGION
+      VERSION
     }
   } = externalContext;
 
@@ -70,10 +70,10 @@ export function removeMongo(externalContext: any, cb: Function): void {
 export function releaseMongoInternalIP(externalContext: any, cb: Function): void {
   const {
     PROJECT_ID,
+    MONGO_REGION,
     COMPUTED_VARIABLES: {
       ENVIRONMENT,
-      VERSION,
-      MONGO_REGION
+      VERSION
     }
   } = externalContext;
 
@@ -116,10 +116,10 @@ export function denyHttpTM(externalContext: any, cb: Function): void {
 export function releaseExternalIP(externalContext: any, cb: Function): void {
   const {
     PROJECT_ID,
+    TM_REGION,
     COMPUTED_VARIABLES: {
       ENVIRONMENT,
-      VERSION,
-      TM_REGION
+      VERSION
     }
   } = externalContext;
 

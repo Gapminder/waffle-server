@@ -10,8 +10,8 @@ export function setupRedisInstance(externalContext: any, cb: Function): void {
     REDIS_CONTAINER_IMAGE,
     REDIS_INSTANCE_NAME,
     REDIS_ZONE,
+    REDIS_REGION,
     COMPUTED_VARIABLES: {
-      REDIS_REGION,
       ENVIRONMENT,
       VERSION
     }
@@ -47,11 +47,12 @@ function createRedis(externalContext: any, cb: Function): void {
     PROJECT_ID,
     REDIS_CONTAINER_IMAGE,
     REDIS_INSTANCE_NAME,
+    REDIS_MACHINE_TYPE,
     REDIS_ZONE
   } = externalContext;
 
   //fixme: --project=${PROJECT_ID}
-  const command = `gcloud beta compute instances create-with-container ${REDIS_INSTANCE_NAME} --machine-type=g1-small --zone=${REDIS_ZONE} --container-image=${REDIS_CONTAINER_IMAGE}`;
+  const command = `gcloud beta compute instances create-with-container ${REDIS_INSTANCE_NAME} --machine-type=${REDIS_MACHINE_TYPE} --zone=${REDIS_ZONE} --container-image=${REDIS_CONTAINER_IMAGE}`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
