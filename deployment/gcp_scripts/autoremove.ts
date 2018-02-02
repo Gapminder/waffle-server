@@ -92,32 +92,34 @@ const context = Object.assign(primaryContext, {
   NODE_INSTANCE_VARIABLES: contextNode
 });
 
-export function run (cb: Function): void {
-  async.waterfall([
-    async.constant(context),
-    setDefaultUser,
-    setDefaultProject,
-    // async.apply(setupAPIs, ['cloudbilling.googleapis.com'], {action: 'enable'}),
-    linkProjectToBilling,
-    // async.apply(setupAPIs, DEFAULT_GCP_API, {action: 'enable'}),
-    removeCluster,
-    releaseExternalIP,
-    denyHttpTM,
-    removeTM,
-    releaseMongoInternalIP,
-    removeMongo,
-    releaseRedisInternalIP,
-    removeRedis,
-    removeImageNode,
-    removeImageTM,
-    // async.apply(setupAPIs, [...DEFAULT_GCP_API, 'cloudbilling.googleapis.com'], {action: 'disable'}),
-  ], function (error: string, result: any): void {
-    if (error) {
-      console.error(error);
-      return cb(error);
-    }
+export function run(): Promise<string | null> {
+  return new Promise((resolve: Function, reject: Function) => {
+    async.waterfall([
+      async.constant(context),
+      setDefaultUser,
+      setDefaultProject,
+      // async.apply(setupAPIs, ['cloudbilling.googleapis.com'], {action: 'enable'}),
+      linkProjectToBilling,
+      // async.apply(setupAPIs, DEFAULT_GCP_API, {action: 'enable'}),
+      removeCluster,
+      releaseExternalIP,
+      denyHttpTM,
+      removeTM,
+      releaseMongoInternalIP,
+      removeMongo,
+      releaseRedisInternalIP,
+      removeRedis,
+      removeImageNode,
+      removeImageTM,
+      // async.apply(setupAPIs, [...DEFAULT_GCP_API, 'cloudbilling.googleapis.com'], {action: 'disable'}),
+    ], function (error: string, result: any): void {
+      if (error) {
+        console.error(error);
+        return reject(error);
+      }
 
-    return cb();
+      return resolve();
+    });
   });
 }
 

@@ -2,105 +2,86 @@ import { ChildProcess } from 'child_process';
 import * as _ from 'lodash';
 import * as shell from 'shelljs';
 import * as async from 'async';
-import { ExecOptions, ExecOutputReturnValue } from 'shelljs';
+import { ExecOutputReturnValue } from 'shelljs';
 import { DockerBuildArguments, GCloudArguments } from './interfaces';
-
-let counter = 0;
 
 interface AsyncResultCallback<T, E> { (err?: E, result?: T): void; }
 
-const ENVIRONMENT = 'test';
-const PROJECT_NAME = 'my-cool-project3';
-const PROJECT_ID = `${PROJECT_NAME}-${ENVIRONMENT}`;
-const REGION = 'europe-west1';
-
-const fixtures = [
-  ..._.times(10, String),
-  {code:0, stderr: '', stdout: `{"networkInterfaces":[{"accessConfigs":[{"natIP":"35.205.183.154"}],"subnetwork":"https://www.googleapis.com/compute/beta/projects/${PROJECT_ID}/regions/${REGION}/subnetworks/default","networkIP":"192.127.0.2"}]}`},
-  ..._.times(2, String),
-  {code:0, stderr: '', stdout: `{"networkInterfaces":[{"accessConfigs":[{"natIP":"35.205.183.154"}],"subnetwork":"https://www.googleapis.com/compute/beta/projects/${PROJECT_ID}/regions/${REGION}/subnetworks/default","networkIP":"192.127.0.2"}]}`},
-  ..._.times(6, String),
-  {code:0, stderr: '', stdout: `{"networkInterfaces":[{"accessConfigs":[{"natIP":"35.205.183.154"}],"subnetwork":"https://www.googleapis.com/compute/beta/projects/${PROJECT_ID}/regions/${REGION}/subnetworks/default","networkIP":"192.127.0.2"}]}`},
-  ..._.times(7, String),
-  {code:0, stderr: '', stdout: `{"status": {"loadBalancer": {"ingress": [{"ip": "35.205.145.142"}]}}}`}
-];
-
 export function runShellCommand(command: string, options: any, cb: AsyncResultCallback<ExecOutputReturnValue | ChildProcess | string, string>): void {
 
-  throw new Error('dssdfdsf');
+  // throw new Error('dssdfdsf');
 
-  // let outputParam = '';
-  // switch(true) {
-  //   case _.includes(command, 'gcloud compute') && !_.includes(command, '--quiet'):
-  //     outputParam = ' --format=json';
-  //   break;
-  //   case _.includes(command, 'gcloud beta billing') && !_.includes(command, '--quiet'):
-  //     outputParam = ' --format=json';
-  //   break;
-  //   case _.includes(command, 'kubectl get service') && !_.includes(command, '--quiet'):
-  //     outputParam = ' --output=json';
-  //   break;
-  //   default:
-  //   break;
-  // }
+  let outputParam = '';
+  switch(true) {
+    case _.includes(command, 'gcloud compute') && !_.includes(command, '--quiet'):
+      outputParam = ' --format=json';
+      break;
+    case _.includes(command, 'gcloud beta billing') && !_.includes(command, '--quiet'):
+      outputParam = ' --format=json';
+      break;
+    case _.includes(command, 'kubectl get service') && !_.includes(command, '--quiet'):
+      outputParam = ' --output=json';
+      break;
+    default:
+    break;
+  }
 
-  // const wrappedCommand = `${command}${outputParam}`;
-  // // console.log('Current fixture: ', fixtures[counter]);
-  // console.log('RUN COMMAND: ', wrappedCommand, '\n');
-  // return async.setImmediate(() => cb(null, fixtures[counter++]));
+  const wrappedCommand = `${command}${outputParam}`;
+  // console.log('Current fixture: ', fixtures[counter]);
+  console.log('RUN COMMAND: ', wrappedCommand, '\n');
 
-  // let attemptCounter = 0;
+  let attemptCounter = 0;
 
-  // async.retry({
-  //   times: 10,
-  //   interval: 10000
-  // }, (_cb: AsyncResultCallback<ExecOutputReturnValue | ChildProcess, string>) => {
-  //   const result: ExecOutputReturnValue | ChildProcess = shell.exec(wrappedCommand, options);
-  //   const error: string = shell.error();
-  //   const code: number = (result as ExecOutputReturnValue).code;
-  //   const stderr: string = (result as ExecOutputReturnValue).stderr;
-  //   const stdout: string = (result as ExecOutputReturnValue).stdout;
+  async.retry({
+    times: 10,
+    interval: 10000
+  }, (_cb: AsyncResultCallback<ExecOutputReturnValue | ChildProcess, string>) => {
+    const result: ExecOutputReturnValue | ChildProcess = shell.exec(wrappedCommand, options);
+    const error: string = shell.error();
+    const code: number = (result as ExecOutputReturnValue).code;
+    const stderr: string = (result as ExecOutputReturnValue).stderr;
+    const stdout: string = (result as ExecOutputReturnValue).stdout;
 
-  //   const isErrorShouldBeSkipped = isStepShouldBeSkipped(stderr);
-  //   const isResultShouldBeSkipped = isStepShouldBeSkipped(stdout);
-    
-  //   if (error && !isErrorShouldBeSkipped) {
-  //     console.log(`Attempt ${++attemptCounter} was failed..`);
-  //     return async.setImmediate(() => _cb(`Unexpected error [code=${code}]: ${stderr}`, result));
-  //   }
+    const isErrorShouldBeSkipped = isStepShouldBeSkipped(stderr);
+    const isResultShouldBeSkipped = isStepShouldBeSkipped(stdout);
 
-  //   if (isErrorShouldBeSkipped || isResultShouldBeSkipped) {
-  //     console.log(`SKIP STEP\n`);
-  //     return async.setImmediate(() => _cb(null, result));
-  //   }
+    if (error && !isErrorShouldBeSkipped) {
+      console.log(`Attempt ${++attemptCounter} was failed..`);
+      return async.setImmediate(() => _cb(`Unexpected error [code=${code}]: ${stderr}`, result));
+    }
 
-  //   if (_.isEmpty(stdout)) {
-  //     console.log(`STDOUT IS EMPTY\n`);
-  //     return async.setImmediate(() => _cb(null, result));
-  //   }
+    if (isErrorShouldBeSkipped || isResultShouldBeSkipped) {
+      console.log(`SKIP STEP\n`);
+      return async.setImmediate(() => _cb(null, result));
+    }
 
-  //   if (_.includes(command, 'docker')) {
-  //     console.log(`DOCKER COMMAND\n`);
-  //     return async.setImmediate(() => _cb(null, result));
-  //   }
+    if (_.isEmpty(stdout)) {
+      console.log(`STDOUT IS EMPTY\n`);
+      return async.setImmediate(() => _cb(null, result));
+    }
 
-  //   try {
-  //     const parsedStdout = JSON.parse(stdout);
+    if (_.includes(command, 'docker')) {
+      console.log(`DOCKER COMMAND\n`);
+      return async.setImmediate(() => _cb(null, result));
+    }
 
-  //     if (options.pathToCheck && !_.get(parsedStdout, options.pathToCheck, false)) {
-  //       throw new Error(`No required data by path '${options.pathToCheck}': ${parsedStdout}`);
-  //     }
+    try {
+      const parsedStdout = JSON.parse(stdout);
 
-  //     return async.setImmediate(() => _cb(null, result));
-  //   } catch (_error) {
-  //     console.log(`Attempt ${++attemptCounter} was failed..`);
+      if (options.pathToCheck && !_.get(parsedStdout, options.pathToCheck, false)) {
+        throw new Error(`No required data by path '${options.pathToCheck}': ${parsedStdout}`);
+      }
 
-  //     return async.setImmediate(() => _cb('JSON parse syntax error. Retry to connect again..', result));
-  //   }
-  // }, cb);
+      return async.setImmediate(() => _cb(null, result));
+    } catch (_error) {
+      console.log(`Attempt ${++attemptCounter} was failed..`);
+
+      return async.setImmediate(() => _cb('JSON parse syntax error. Retry to connect again..', result));
+    }
+  }, cb);
 }
 
-function isStepShouldBeSkipped(result) {
+function isStepShouldBeSkipped(result: string): any {
   const skipMarkers = ['already exists', 'scaled', 'AlreadyExists', 'is already in use', 'code=404', 'was not found', 'is not a valid name'];
 
   return _.some(skipMarkers, (item: string) => {
@@ -150,8 +131,4 @@ export function getContextInstance(externalContext: any, MACHINE_SUFFIX: string 
     MACHINE_TYPE: _DEFAULT_MACHINE_TYPES[MACHINE_SUFFIX],
     MACHINE_SUFFIX
   };
-}
-
-export function wrapCommandAPI() {
-  
 }
