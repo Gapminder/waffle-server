@@ -25,7 +25,13 @@ export {
 
 function sendDdfqlRequest(ddfql: any, onResponseReceived: Function): void {
   const encodedDataset = _.has(ddfql, 'dataset') ? { dataset: encodeURIComponent(ddfql.dataset) } : {};
-  ddfql = Object.assign({}, ddfql, { force: true }, encodedDataset);
+  ddfql = Object.assign({}, ddfql, { force: 'true' }, encodedDataset);
+  // ddfql = Object.assign({}, ddfql, encodedDataset);
+
+  // console.log(`/api/ddf/ql?${URLON.stringify(ddfql)}`);
+  /*console.log(`encodedDataset`, encodedDataset);
+  console.log(e2eEnv.datasetName);*/
+
   return wsApi.get(`/api/ddf/ql?${URLON.stringify(ddfql)}`)
   // Here is alternative way of sending ddfql - via encoded JSON
   // return wsApi.get(`/api/ddf/ql?query=${encodeURIComponent(JSON.stringify(ddfql))}`)

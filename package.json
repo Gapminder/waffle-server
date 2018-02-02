@@ -24,6 +24,7 @@
     "e2e:2commit": "COMMIT_INDEX_TO_IMPORT=1 npm run e2e:allCommits",
     "e2e:3commit": "COMMIT_INDEX_TO_IMPORT=2 npm run e2e:allCommits",
     "e2e:4commit": "COMMIT_INDEX_TO_IMPORT=3 npm run e2e:allCommits",
+    "e2e:11commit": "COMMIT_INDEX_TO_IMPORT=10 npm run e2e:allCommits",
     "performance": "HOST_URL=http://localhost PORT=8081 METHOD=GET MONGODB_URL=mongodb://localhost:27017/ws_ddf_test MONGOOSE_DEBUG=true node test/cache-warmup.performance.js",
     "local": "DEFAULT_USER_PASSWORD=123 MONGODB_URL='mongodb://localhost:27017/ws_ddf_local' PORT=3000 NODE_ENV=local ts-node server.ts",
     "start": "pm2 stop all && pm2 delete all && pm2 install pm2-logrotate && pm2 start ecosystem.config.js --name WS --attach",
@@ -63,7 +64,7 @@
     "cron": "1.2.1",
     "csvtojson": "1.1.7",
     "ddf-time-utils": "0.1.8",
-    "ddf-validation": "1.9.7",
+    "ddf-validation": "1.12.0",
     "entities": "1.1.1",
     "express": "4.15.3",
     "express-redis-cache": "1.0.0",
@@ -93,7 +94,7 @@
     "typescript": "2.5.2",
     "urlon": "2.0.1",
     "validator": "6.2.1",
-    "waffle-server-import-cli": "2.6.25",
+    "waffle-server-import-cli": "2.6.26",
     "waffle-server-repo-service": "1.0.7"
   },
   "devDependencies": {

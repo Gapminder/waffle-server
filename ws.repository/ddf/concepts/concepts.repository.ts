@@ -152,9 +152,7 @@ export class ConceptsRepository extends VersionedModelRepository {
     const query = this._composeQuery(subEntityQuery);
     const updateQuery = {
       $set: {
-        languages: {
-          [language.id]: properties
-        }
+        [`languages.${language.id}`]: properties
       }
     };
 
