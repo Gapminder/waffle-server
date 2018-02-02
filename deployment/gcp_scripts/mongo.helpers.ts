@@ -11,8 +11,8 @@ export function setupMongoInstance(externalContext: any, cb: Function): void {
     MONGODB_PORT,
     MONGODB_CONTAINER_IMAGE,
     MONGO_INSTANCE_NAME,
+    MONGO_REGION,    
     COMPUTED_VARIABLES: {
-      MONGO_REGION,
       ENVIRONMENT,
       VERSION,
       MONGODB_NAME,
@@ -55,11 +55,13 @@ function createMongo(externalContext: any, cb: Function): void {
     PROJECT_ID,
     MONGODB_PORT,
     MONGODB_CONTAINER_IMAGE,
+    MONGO_DISK_SIZE,
+    MONGO_MACHINE_TYPE,
     MONGO_INSTANCE_NAME
   } = externalContext;
 
   //fixme: --project=${PROJECT_ID}
-  const command = `gcloud beta compute instances create-with-container ${MONGO_INSTANCE_NAME} --machine-type=n1-highmem-2 --zone=${MONGO_ZONE} --container-image=${MONGODB_CONTAINER_IMAGE}`;
+  const command = `gcloud beta compute instances create-with-container ${MONGO_INSTANCE_NAME} --boot-disk-size=${MONGO_DISK_SIZE} --machine-type=${MONGO_MACHINE_TYPE} --zone=${MONGO_ZONE} --container-image=${MONGODB_CONTAINER_IMAGE}`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {

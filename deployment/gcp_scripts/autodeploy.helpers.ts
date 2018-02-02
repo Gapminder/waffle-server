@@ -88,9 +88,19 @@ export function buildImageTM(externalContext: any, cb: Function): void {
       IMAGE_URL,
       PORT
     },
-    MONGODB_URL: MONGODB_URL,
+    MONGODB_URL,
     REDIS_HOST,
-    COMPUTED_VARIABLES
+    COMPUTED_VARIABLES: {
+      DEFAULT_PROJECT_NAME,
+      DEFAULT_USER_PASSWORD,
+      PATH_TO_DDF_REPOSITORIES,
+      NEW_RELIC_LICENSE_KEY,
+      LOGS_SYNC_DISABLED,
+      INFLUXDB_HOST,
+      INFLUXDB_DATABASE_NAME,
+      INFLUXDB_USER,
+      INFLUXDB_PASSWORD
+    }
   } = externalContext;
 
   const dockerArguments: DockerBuildArgumentsTM = Object.assign({
@@ -98,8 +108,17 @@ export function buildImageTM(externalContext: any, cb: Function): void {
     REDIS_HOST,
     MONGODB_URL,
     MACHINE_SUFFIX,
+    DEFAULT_PROJECT_NAME,
+    DEFAULT_USER_PASSWORD,
+    PATH_TO_DDF_REPOSITORIES,
+    NEW_RELIC_LICENSE_KEY,
+    LOGS_SYNC_DISABLED,
+    INFLUXDB_HOST,
+    INFLUXDB_DATABASE_NAME,
+    INFLUXDB_USER,
+    INFLUXDB_PASSWORD,
     THRASHING_MACHINE: true
-  }, COMPUTED_VARIABLES);
+  });
 
   const commandArgs = getDockerArguments(dockerArguments);
   const command = `docker build --rm -t ${IMAGE_URL} ${commandArgs} .`;
@@ -117,15 +136,34 @@ export function buildImageNode(externalContext: any, cb: Function): void {
     },
     REDIS_HOST,
     MONGODB_URL,
-    COMPUTED_VARIABLES
+    COMPUTED_VARIABLES: {
+      DEFAULT_PROJECT_NAME,
+      DEFAULT_USER_PASSWORD,
+      PATH_TO_DDF_REPOSITORIES,
+      NEW_RELIC_LICENSE_KEY,
+      LOGS_SYNC_DISABLED,
+      INFLUXDB_HOST,
+      INFLUXDB_DATABASE_NAME,
+      INFLUXDB_USER,
+      INFLUXDB_PASSWORD
+    }
   } = externalContext;
 
   const dockerArguments: DockerBuildArguments = Object.assign({
     PORT,
     REDIS_HOST,
     MONGODB_URL,
+    DEFAULT_PROJECT_NAME,
+    DEFAULT_USER_PASSWORD,
+    PATH_TO_DDF_REPOSITORIES,
+    NEW_RELIC_LICENSE_KEY,
+    LOGS_SYNC_DISABLED,
+    INFLUXDB_HOST,
+    INFLUXDB_DATABASE_NAME,
+    INFLUXDB_USER,
+    INFLUXDB_PASSWORD,
     MACHINE_SUFFIX
-  }, COMPUTED_VARIABLES);
+  });
 
   const commandArgs = getDockerArguments(dockerArguments);
   const command = `docker build --rm -t ${IMAGE_URL} ${commandArgs} .`;
@@ -226,8 +264,8 @@ export function promoteTMExternalIP(externalContext: any, cb: Function): void {
       IP_ADDRESS
     },
     PROJECT_ID,
+    TM_REGION,
     COMPUTED_VARIABLES: {
-      TM_REGION,
       ENVIRONMENT,
       VERSION
     }
