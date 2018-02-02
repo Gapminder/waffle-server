@@ -81,35 +81,37 @@ const context = Object.assign(primaryContext, {
   NODE_INSTANCE_VARIABLES: contextNode
 });
 
-async.waterfall([
-  async.constant(context),
-  setDefaultUser,
-  createProject,
-  setDefaultProject,
-  async.apply(setupAPIs, ['cloudbilling.googleapis.com'], {action: 'enable'}),
-  linkProjectToBilling,
-  async.apply(setupAPIs, DEFAULT_GCP_API, {action: 'enable'}),
-  setupRedisInstance,
-  setupMongoInstance,
-  buildImageTM,
-  buildImageNode,
-  pushImageTM,
-  pushImageNode,
-  createTM,
-  getTMExternalIP,
-  promoteTMExternalIP,
-  allowHttpTM,
-  createCluster,
-  createPods,
-  createReplicas,
-  setupAutoscale,
-  setupLoadbalancer,
-  printExternalIPs
-], function (error: string, result: any) {
-  if (error) {
-    console.error(error);
-    process.exit(1);
-  }
+export function run(cb: Function): void {
+  async.waterfall([
+    async.constant(context),
+    setDefaultUser,
+    createProject,
+    setDefaultProject,
+    async.apply(setupAPIs, ['cloudbilling.googleapis.com'], {action: 'enable'}),
+    linkProjectToBilling,
+    async.apply(setupAPIs, DEFAULT_GCP_API, {action: 'enable'}),
+    setupRedisInstance,
+    setupMongoInstance,
+    buildImageTM,
+    buildImageNode,
+    pushImageTM,
+    pushImageNode,
+    createTM,
+    getTMExternalIP,
+    promoteTMExternalIP,
+    allowHttpTM,
+    createCluster,
+    createPods,
+    createReplicas,
+    setupAutoscale,
+    setupLoadbalancer,
+    printExternalIPs
+  ], function (error: string, result: any): void {
+    if (error) {
+      console.error(error);
+      return cb(error);
+    }
 
-  process.exit(0);
-});
+    return cb();
+  });
+}
