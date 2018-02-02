@@ -26,6 +26,10 @@ export class ChangesDescriptor {
     return this._object.gid;
   }
 
+  public get rawData(): any {
+    return {metadata: this._metadata, object: this._object};
+  }
+
   public get changes(): any {
     if (this.isUpdateAction()) {
       return this._object['data-update'];
@@ -99,6 +103,17 @@ export class ChangesDescriptor {
 
   public isUpdateAction(): boolean {
     return ddfImportUtils.UPDATE_ACTIONS.has(this.action);
+  }
+
+  public hasSameResourceRawAndRemovedColumns(anothers: ChangesDescriptor[]): boolean {
+    for (const anAnother of anothers) {
+      if (this.currentResourceRaw === anAnother.currentResourceRaw &&
+        _.isEqual(this.removedColumns, anAnother.removedColumns)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   private _parseResource(resource: DatapackageResource): ParsedConceptResource {

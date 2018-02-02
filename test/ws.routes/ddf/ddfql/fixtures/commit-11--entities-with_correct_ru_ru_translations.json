@@ -1,0 +1,54 @@
+{
+  "headers": [
+    "company",
+    "country",
+    "region"
+  ],
+  "rows": [
+    [
+      "small",
+      null,
+      null
+    ],
+    [
+      "large",
+      null,
+      null
+    ],
+    [
+      "medium",
+      null,
+      null
+    ],
+    [
+      "international_house",
+      "United States of America",
+      "america"
+    ],
+    [
+      "it_cluster",
+      "Sweden",
+      "europe"
+    ],
+    [
+      "mcrsft",
+      "США",
+      "america"
+    ],
+    [
+      "gap",
+      "Швеция",
+      "europe"
+    ],
+    [
+      "valor",
+      "Украина",
+      "europe"
+    ],
+    [
+      "zsoft",
+      "Турция",
+      "asia"
+    ]
+  ]
+}
