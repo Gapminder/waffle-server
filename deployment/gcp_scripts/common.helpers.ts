@@ -27,75 +27,77 @@ const fixtures = [
 
 export function runShellCommand(command: string, options: any, cb: AsyncResultCallback<ExecOutputReturnValue | ChildProcess | string, string>): void {
 
-  let outputParam = '';
-  switch(true) {
-    case _.includes(command, 'gcloud compute') && !_.includes(command, '--quiet'):
-      outputParam = ' --format=json';
-    break;
-    case _.includes(command, 'gcloud beta billing') && !_.includes(command, '--quiet'):
-      outputParam = ' --format=json';
-    break;
-    case _.includes(command, 'kubectl get service') && !_.includes(command, '--quiet'):
-      outputParam = ' --output=json';
-    break;
-    default:
-    break;
-  }
+  throw new Error('dssdfdsf');
 
-  const wrappedCommand = `${command}${outputParam}`;
-  // console.log('Current fixture: ', fixtures[counter]);
-  console.log('RUN COMMAND: ', wrappedCommand, '\n');
+  // let outputParam = '';
+  // switch(true) {
+  //   case _.includes(command, 'gcloud compute') && !_.includes(command, '--quiet'):
+  //     outputParam = ' --format=json';
+  //   break;
+  //   case _.includes(command, 'gcloud beta billing') && !_.includes(command, '--quiet'):
+  //     outputParam = ' --format=json';
+  //   break;
+  //   case _.includes(command, 'kubectl get service') && !_.includes(command, '--quiet'):
+  //     outputParam = ' --output=json';
+  //   break;
+  //   default:
+  //   break;
+  // }
+
+  // const wrappedCommand = `${command}${outputParam}`;
+  // // console.log('Current fixture: ', fixtures[counter]);
+  // console.log('RUN COMMAND: ', wrappedCommand, '\n');
   // return async.setImmediate(() => cb(null, fixtures[counter++]));
 
-  let attemptCounter = 0;
+  // let attemptCounter = 0;
 
-  async.retry({
-    times: 10,
-    interval: 10000
-  }, (_cb: AsyncResultCallback<ExecOutputReturnValue | ChildProcess, string>) => {
-    const result: ExecOutputReturnValue | ChildProcess = shell.exec(wrappedCommand, options);
-    const error: string = shell.error();
-    const code: number = (result as ExecOutputReturnValue).code;
-    const stderr: string = (result as ExecOutputReturnValue).stderr;
-    const stdout: string = (result as ExecOutputReturnValue).stdout;
+  // async.retry({
+  //   times: 10,
+  //   interval: 10000
+  // }, (_cb: AsyncResultCallback<ExecOutputReturnValue | ChildProcess, string>) => {
+  //   const result: ExecOutputReturnValue | ChildProcess = shell.exec(wrappedCommand, options);
+  //   const error: string = shell.error();
+  //   const code: number = (result as ExecOutputReturnValue).code;
+  //   const stderr: string = (result as ExecOutputReturnValue).stderr;
+  //   const stdout: string = (result as ExecOutputReturnValue).stdout;
 
-    const isErrorShouldBeSkipped = isStepShouldBeSkipped(stderr);
-    const isResultShouldBeSkipped = isStepShouldBeSkipped(stdout);
+  //   const isErrorShouldBeSkipped = isStepShouldBeSkipped(stderr);
+  //   const isResultShouldBeSkipped = isStepShouldBeSkipped(stdout);
     
-    if (error && !isErrorShouldBeSkipped) {
-      console.log(`Attempt ${++attemptCounter} was failed..`);
-      return async.setImmediate(() => _cb(`Unexpected error [code=${code}]: ${stderr}`, result));
-    }
+  //   if (error && !isErrorShouldBeSkipped) {
+  //     console.log(`Attempt ${++attemptCounter} was failed..`);
+  //     return async.setImmediate(() => _cb(`Unexpected error [code=${code}]: ${stderr}`, result));
+  //   }
 
-    if (isErrorShouldBeSkipped || isResultShouldBeSkipped) {
-      console.log(`SKIP STEP\n`);
-      return async.setImmediate(() => _cb(null, result));
-    }
+  //   if (isErrorShouldBeSkipped || isResultShouldBeSkipped) {
+  //     console.log(`SKIP STEP\n`);
+  //     return async.setImmediate(() => _cb(null, result));
+  //   }
 
-    if (_.isEmpty(stdout)) {
-      console.log(`STDOUT IS EMPTY\n`);
-      return async.setImmediate(() => _cb(null, result));
-    }
+  //   if (_.isEmpty(stdout)) {
+  //     console.log(`STDOUT IS EMPTY\n`);
+  //     return async.setImmediate(() => _cb(null, result));
+  //   }
 
-    if (_.includes(command, 'docker')) {
-      console.log(`DOCKER COMMAND\n`);
-      return async.setImmediate(() => _cb(null, result));
-    }
+  //   if (_.includes(command, 'docker')) {
+  //     console.log(`DOCKER COMMAND\n`);
+  //     return async.setImmediate(() => _cb(null, result));
+  //   }
 
-    try {
-      const parsedStdout = JSON.parse(stdout);
+  //   try {
+  //     const parsedStdout = JSON.parse(stdout);
 
-      if (options.pathToCheck && !_.get(parsedStdout, options.pathToCheck, false)) {
-        throw new Error(`No required data by path '${options.pathToCheck}': ${parsedStdout}`);
-      }
+  //     if (options.pathToCheck && !_.get(parsedStdout, options.pathToCheck, false)) {
+  //       throw new Error(`No required data by path '${options.pathToCheck}': ${parsedStdout}`);
+  //     }
 
-      return async.setImmediate(() => _cb(null, result));
-    } catch (_error) {
-      console.log(`Attempt ${++attemptCounter} was failed..`);
+  //     return async.setImmediate(() => _cb(null, result));
+  //   } catch (_error) {
+  //     console.log(`Attempt ${++attemptCounter} was failed..`);
 
-      return async.setImmediate(() => _cb('JSON parse syntax error. Retry to connect again..', result));
-    }
-  }, cb);
+  //     return async.setImmediate(() => _cb('JSON parse syntax error. Retry to connect again..', result));
+  //   }
+  // }, cb);
 }
 
 function isStepShouldBeSkipped(result) {
