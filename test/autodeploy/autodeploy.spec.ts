@@ -1,4 +1,5 @@
 import 'mocha';
+import * as fs from 'fs';
 import { expect } from 'chai';
 import * as _ from 'lodash';
 import * as async from 'async';
@@ -43,7 +44,11 @@ let counter = 0;
 
 describe.only('Autoimport Test: runShellCommand', () => {
   let runShellCommandStub;
-  const env = ['development', 'local', 'test', 'production', 'stage', 'dev'];
+  const envFilePath = './deployment/gcp_scripts';
+  const allFiles = fs.readdirSync(envFilePath);
+  const env = allFiles
+    .filter((file: string) => file.match(/deployment_config_/g))
+    .map((fileName: string) => fileName.replace(/^.+_(\w+)\.json$/g, '$1'));
 
   beforeEach(() => {
     runShellCommandStub = sinon.stub(commonHelpers, 'runShellCommand').callsFake(runShellCommandFn);
@@ -55,7 +60,7 @@ describe.only('Autoimport Test: runShellCommand', () => {
   });
 
   env.forEach((testEnv: string) => {
-    it(`${testEnv} env: undefined`, async () => {
+    it(`${testEnv} env: check undefined`, async () => {
       process.env.NODE_ENV = testEnv;
 
       const error = await autodeploy.run();
@@ -65,7 +70,7 @@ describe.only('Autoimport Test: runShellCommand', () => {
       expect(result, result.join('\n')).to.be.an('array').that.is.empty;
     });
 
-    it(`${testEnv} env: null`, async () => {
+    it(`${testEnv} env: check null`, async () => {
       process.env.NODE_ENV = testEnv;
 
       const error = await autodeploy.run();
@@ -75,7 +80,7 @@ describe.only('Autoimport Test: runShellCommand', () => {
       expect(result, result.join('\n')).to.be.an('array').that.is.empty;
     });
 
-    it(`${testEnv} env: empty values`, async () => {
+    it(`${testEnv} env: check empty values`, async () => {
       process.env.NODE_ENV = testEnv;
 
       const error = await autodeploy.run();
