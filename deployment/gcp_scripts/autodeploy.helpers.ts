@@ -1,9 +1,8 @@
 import * as _ from 'lodash';
-import { ExecOptions, ExecOutputReturnValue } from 'shelljs';
 import * as async from 'async';
-
-import { getDockerArguments, getGCloudArguments, runShellCommand } from './common.helpers';
+import { ExecOptions, ExecOutputReturnValue } from 'shelljs';
 import { DockerBuildArguments, DockerBuildArgumentsTM } from './interfaces';
+import { getDockerArguments, getGCloudArguments, runShellCommand } from './common.helpers';
 
 export function setDefaultUser(externalContext: any, cb: Function): void {
   const {
@@ -197,11 +196,13 @@ export function createTM(externalContext: any, cb: Function): void {
       NODE_NAME: TM_INSTANCE_NAME
     },
     TM_ZONE,
+    TM_MACHINE_TYPE,
+    TM_DISK_SIZE,
     PROJECT_ID
   } = externalContext;
 
   //fixme: --project=${PROJECT_ID}
-  const command = `gcloud beta compute instances create-with-container ${TM_INSTANCE_NAME} --tags=${TM_INSTANCE_NAME} --machine-type=n1-highmem-2 --zone=${TM_ZONE} --container-image=${IMAGE_URL}`;
+  const command = `gcloud beta compute instances create-with-container ${TM_INSTANCE_NAME} --tags=${TM_INSTANCE_NAME} --machine-type=${TM_MACHINE_TYPE} --boot-disk-size=${TM_DISK_SIZE} --zone=${TM_ZONE} --container-image=${IMAGE_URL}`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
@@ -281,14 +282,14 @@ export function promoteTMExternalIP(externalContext: any, cb: Function): void {
 
 export function createCluster(externalContext: any, cb: Function): void {
   const {
-    NODE_INSTANCE_VARIABLES: { MACHINE_TYPE },
+    WS_MACHINE_TYPE, WS_DISK_SIZE,
     PROJECT_ID, CLUSTER_NAME, CREATE_CLUSTER__ALLOWED_PARAMS
   } = externalContext;
 
   const gcloudArgs = _.pick(externalContext, CREATE_CLUSTER__ALLOWED_PARAMS);
   const commandArgs = getGCloudArguments(gcloudArgs);
   //fixme: --project=${PROJECT_ID}
-  const command = `gcloud container clusters create ${CLUSTER_NAME} ${commandArgs} --machine-type=${MACHINE_TYPE}`;
+  const command = `gcloud container clusters create ${CLUSTER_NAME} ${commandArgs} --machine-type=${WS_MACHINE_TYPE} --disk-size=${WS_DISK_SIZE}`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));

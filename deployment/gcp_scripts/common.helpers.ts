@@ -1,7 +1,7 @@
-import { ChildProcess } from 'child_process';
 import * as _ from 'lodash';
-import * as shell from 'shelljs';
 import * as async from 'async';
+import * as shell from 'shelljs';
+import { ChildProcess } from 'child_process';
 import { ExecOutputReturnValue } from 'shelljs';
 import { DockerBuildArguments, GCloudArguments } from './interfaces';
 
@@ -121,14 +121,13 @@ export function getContextInstance(externalContext: any, MACHINE_SUFFIX: string 
   const IMAGE_NAME_SUFFIX = DEFAULT_IMAGE_NAME_SUFFIXES[MACHINE_SUFFIX];
   const IMAGE_NAME = `ws${ENVIRONMENT}${IMAGE_NAME_SUFFIX}`;
   const IMAGE_URL = `gcr.io/${PROJECT_ID}/${IMAGE_NAME}:${VERSION_TAG}`;
-
+  
   return {
     IMAGE_NAME,
     IMAGE_URL,
     TAG: VERSION_TAG,
     PORT: DEFAULT_PORTS[NODE_ENV],
     NODE_NAME: `${ENVIRONMENT}-${IMAGE_NAME_SUFFIX}-${VERSION}`,
-    MACHINE_TYPE: DEFAULT_MACHINE_TYPES[MACHINE_SUFFIX],
     MACHINE_SUFFIX
   };
 }

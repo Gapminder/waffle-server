@@ -1,14 +1,16 @@
 import * as _ from 'lodash';
-import { ExecOptions, ExecOutputReturnValue } from 'shelljs';
 import * as async from 'async';
-
 import { runShellCommand } from './common.helpers';
+import { ExecOptions, ExecOutputReturnValue } from 'shelljs';
+
 
 export function setupRedisInstance(externalContext: any, cb: Function): void {
   const {
     PROJECT_ID,
     REDIS_CONTAINER_IMAGE,
     REDIS_INSTANCE_NAME,
+    REDIS_MACHINE_TYPE,
+    REDIS_DISK_SIZE,
     REDIS_ZONE,
     REDIS_REGION,
     COMPUTED_VARIABLES: {
@@ -21,6 +23,8 @@ export function setupRedisInstance(externalContext: any, cb: Function): void {
     PROJECT_ID,
     REDIS_CONTAINER_IMAGE,
     REDIS_INSTANCE_NAME,
+    REDIS_MACHINE_TYPE,
+    REDIS_DISK_SIZE,
     REDIS_ZONE,
     REDIS_REGION,
     ENVIRONMENT,
@@ -48,11 +52,12 @@ function createRedis(externalContext: any, cb: Function): void {
     REDIS_CONTAINER_IMAGE,
     REDIS_INSTANCE_NAME,
     REDIS_MACHINE_TYPE,
+    REDIS_DISK_SIZE,
     REDIS_ZONE
   } = externalContext;
 
   //fixme: --project=${PROJECT_ID}
-  const command = `gcloud beta compute instances create-with-container ${REDIS_INSTANCE_NAME} --machine-type=${REDIS_MACHINE_TYPE} --zone=${REDIS_ZONE} --container-image=${REDIS_CONTAINER_IMAGE}`;
+  const command = `gcloud beta compute instances create-with-container ${REDIS_INSTANCE_NAME} --machine-type=${REDIS_MACHINE_TYPE} --boot-disk-size=${REDIS_DISK_SIZE} --zone=${REDIS_ZONE} --container-image=${REDIS_CONTAINER_IMAGE}`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));

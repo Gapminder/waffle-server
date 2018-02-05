@@ -1,8 +1,8 @@
 import * as _ from 'lodash';
-import { ExecOptions, ExecOutputReturnValue } from 'shelljs';
 import * as async from 'async';
-
 import { runShellCommand } from './common.helpers';
+import { ExecOptions, ExecOutputReturnValue } from 'shelljs';
+
 
 export function setupMongoInstance(externalContext: any, cb: Function): void {
   const {
@@ -11,7 +11,9 @@ export function setupMongoInstance(externalContext: any, cb: Function): void {
     MONGODB_PORT,
     MONGODB_CONTAINER_IMAGE,
     MONGO_INSTANCE_NAME,
-    MONGO_REGION,    
+    MONGO_REGION,
+    MONGO_MACHINE_TYPE,
+    MONGO_DISK_SIZE,
     COMPUTED_VARIABLES: {
       ENVIRONMENT,
       VERSION,
@@ -30,9 +32,11 @@ export function setupMongoInstance(externalContext: any, cb: Function): void {
     MONGODB_NAME,
     MONGODB_CONTAINER_IMAGE,
     MONGO_INSTANCE_NAME,
+    MONGO_MACHINE_TYPE,
+    MONGO_DISK_SIZE,
     MONGO_HOST: null,
     MONGO_SUBNETWORK: null,
-    MONGODB_URL: null
+    MONGODB_URL
   };
 
   async.waterfall([
@@ -86,12 +90,14 @@ function getMongoInternalIP(externalContext: any, cb: Function): void {
   
   return runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
     console.log('\n', result.stdout, '\n');
+    console.log(`\nConfig has mongourl: ${MONGODB_URL}\n`);
     
     try {
       const { networkInterfaces: [{ networkIP, subnetwork }] } = JSON.parse(result.stdout);
       externalContext.MONGO_HOST = networkIP;
       externalContext.MONGO_SUBNETWORK = subnetwork;
       externalContext.MONGODB_URL = MONGODB_URL || `mongodb://${externalContext.MONGO_HOST}:${MONGODB_PORT}/${MONGODB_NAME}`;
+
       console.log('\nMONGO INTERNAL IP:', externalContext.MONGO_HOST, '\n');
       console.log('\nMONGO URL:', externalContext.MONGODB_URL, ', ', externalContext.MONGO_SUBNETWORK, '\n');
     } catch (_error) {
