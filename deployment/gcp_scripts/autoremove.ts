@@ -1,6 +1,8 @@
 import * as _ from 'lodash';
 import * as async from 'async';
 import * as semverRegex from 'semver-regex';
+import { GCloudArguments } from './interfaces';
+import { getContextInstance } from './common.helpers';
 
 import {
   setDefaultProject, setDefaultUser, setupAPIs, linkProjectToBilling
@@ -9,8 +11,6 @@ import {
   denyHttpTM, releaseExternalIP, releaseRedisInternalIP, releaseMongoInternalIP, removeCluster,
   removeImageNode, removeImageTM, removeRedis, removeMongo, removeTM
 } from './autoremove.helpers';
-import { getContextInstance } from './common.helpers';
-import { GCloudArguments } from './interfaces';
 
 // Default variables
 const {
@@ -108,9 +108,9 @@ export function run(): Promise<string | null> {
       async.constant(context),
       setDefaultUser,
       setDefaultProject,
-      // async.apply(setupAPIs, ['cloudbilling.googleapis.com'], {action: 'enable'}),
+      async.apply(setupAPIs, ['cloudbilling.googleapis.com'], {action: 'enable'}),
       linkProjectToBilling,
-      // async.apply(setupAPIs, DEFAULT_GCP_API, {action: 'enable'}),
+      async.apply(setupAPIs, DEFAULT_GCP_API, {action: 'enable'}),
       removeCluster,
       releaseExternalIP,
       denyHttpTM,

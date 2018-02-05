@@ -26,7 +26,7 @@
   },
   "DEFAULT_DISK_SIZES": {
     "TM": "20GB",
-    "WS": "20GB",
+    "WS": 20,
     "MONGO": "30GB",
     "REDIS": "10GB"
   },
@@ -34,14 +34,14 @@
     "TM": "tm",
     "WS": "node"
   },
-  "DEFAULT_MACHINE_SUFFIXES": ["TM", "WS"],
+  "DEFAULT_MACHINE_SUFFIXES": [
+    "TM",
+    "WS"
+  ],
   "DEFAULT_GCP_VARIABLES": {
     "GCLOUD_SERVICE_KEY_STG": "",
-    "DISK_SIZE": 20,
     "ENABLE_AUTOSCALING": true,
-
     "DEFAULT_REGION": "europe-west1",
-
     "MAX_NODES_PER_POOL": 100,
     "MAX_NODES": 5,
     "MIN_NODES": 1,
@@ -50,15 +50,11 @@
     "MIN_NUMBER_REPLICAS": 1,
     "NUMBER_REPLICAS": 1,
     "CPU_PERCENT": 40,
-
     "REDIS_CONTAINER_IMAGE": "docker.io/redis:4.0.2",
     "MONGODB_CONTAINER_IMAGE": "docker.io/mongo:3.6",
-
     "SOURCE_PORT": 80,
     "DEFAULT_MONGODB_PORT": 27017,
-
     "CREATE_CLUSTER__ALLOWED_PARAMS": [
-      "DISK_SIZE",
       "IMAGE_TYPE",
       "MACHINE_TYPE",
       "MAX_NODES_PER_POOL",
@@ -68,7 +64,6 @@
       "MAX_NODES",
       "MIN_NODES"
     ],
-
     "FIREWALL_RULE__ALLOWED_PORTS": "tcp:80,tcp:443"
   },
   "DEFAULT_GCP_API": [
@@ -78,3 +73,4 @@
     "container.googleapis.com"
   ]
 }
+

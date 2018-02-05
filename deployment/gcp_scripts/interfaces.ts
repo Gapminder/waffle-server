@@ -1,3 +1,4 @@
+
 export interface DockerBuildArguments extends Dictionary<string|number|boolean> {
   PORT: number;
   REDIS_HOST: string;
@@ -28,7 +29,6 @@ export interface GCloudArguments {
   NODE_NAME: string;
   PORT: number;
   TAG: string;
-  MACHINE_TYPE: string;
   MACHINE_SUFFIX: string;
   IMAGE_URL: string;
 }

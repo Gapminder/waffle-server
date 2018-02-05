@@ -1,7 +1,9 @@
 import * as async from 'async';
-
+import { GCloudArguments } from './interfaces';
 import {setupRedisInstance} from './redis.helpers';
 import {setupMongoInstance} from './mongo.helpers';
+import { getContextInstance } from './common.helpers';
+
 import {
   setDefaultUser, createProject, setDefaultProject,
   setupAPIs, linkProjectToBilling,
@@ -9,8 +11,6 @@ import {
   createTM, getTMExternalIP, promoteTMExternalIP, allowHttpTM,
   createCluster, createPods, createReplicas, setupAutoscale, setupLoadbalancer, printExternalIPs
 } from './autodeploy.helpers';
-import { getContextInstance } from './common.helpers';
-import { GCloudArguments } from './interfaces';
 
 // Default variables
 const packageJson = require('../../package.json');
@@ -39,6 +39,16 @@ const REDIS_REGION = STATIC_VARIABLES.REDIS_REGION || DEFAULT_REGION;
 const MONGO_REGION = STATIC_VARIABLES.MONGO_REGION || DEFAULT_REGION;
 const TM_REGION = STATIC_VARIABLES.TM_REGION || DEFAULT_REGION;
 const LB_REGION = STATIC_VARIABLES.LB_REGION || DEFAULT_REGION;
+
+const TM_MACHINE_TYPE = STATIC_VARIABLES.TM_MACHINE_TYPE || DEFAULT_MACHINE_TYPES.TM;
+const WS_MACHINE_TYPE = STATIC_VARIABLES.WS_MACHINE_TYPE || DEFAULT_MACHINE_TYPES.WS;
+const REDIS_MACHINE_TYPE = STATIC_VARIABLES.REDIS_MACHINE_TYPE || DEFAULT_MACHINE_TYPES.REDIS;
+const MONGO_MACHINE_TYPE = STATIC_VARIABLES.MONGO_MACHINE_TYPE || DEFAULT_MACHINE_TYPES.MONGO;
+
+const TM_DISK_SIZE = STATIC_VARIABLES.TM_DISK_SIZE || DEFAULT_DISK_SIZES.TM;
+const WS_DISK_SIZE = STATIC_VARIABLES.WS_DISK_SIZE || DEFAULT_DISK_SIZES.WS;
+const REDIS_DISK_SIZE = STATIC_VARIABLES.REDIS_DISK_SIZE || DEFAULT_DISK_SIZES.REDIS;
+const MONGO_DISK_SIZE = STATIC_VARIABLES.MONGO_DISK_SIZE || DEFAULT_DISK_SIZES.MONGO;
 
 const COMPUTED_VARIABLES = Object.assign({
   NODE_ENV,
@@ -69,6 +79,16 @@ const GCP_VARIABLES = Object.assign(DEFAULT_GCP_VARIABLES, {
   TM_REGION,
   LB_REGION,
 
+  TM_MACHINE_TYPE,
+  WS_MACHINE_TYPE,
+  REDIS_MACHINE_TYPE,
+  MONGO_MACHINE_TYPE,
+
+  TM_DISK_SIZE,
+  WS_DISK_SIZE,
+  REDIS_DISK_SIZE,
+  MONGO_DISK_SIZE,
+  
   ZONE: `${ DEFAULT_REGION }-c`,
   REDIS_ZONE: `${ REDIS_REGION }-c`,
   MONGO_ZONE: `${ MONGO_REGION }-c`,
@@ -129,3 +149,4 @@ export function run(): Promise<string | null> {
     });
   });
 }
+

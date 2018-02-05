@@ -1,15 +1,15 @@
 import 'mocha';
 import * as fs from 'fs';
-import { expect } from 'chai';
 import * as _ from 'lodash';
+import { expect } from 'chai';
 import * as async from 'async';
-import { ExecOutputReturnValue } from 'shelljs';
-import { ChildProcess } from 'child_process';
 import * as sinon from 'sinon';
+import { ChildProcess } from 'child_process';
+import { ExecOutputReturnValue } from 'shelljs';
 import * as autodeploy from '../../deployment/gcp_scripts/autodeploy';
-
 import * as commonHelpers from '../../deployment/gcp_scripts/common.helpers';
 import { runShellCommand } from '../../deployment/gcp_scripts/common.helpers';
+
 
 const ENVIRONMENT = 'test';
 const PROJECT_NAME = 'my-cool-project3';
@@ -21,18 +21,21 @@ const fixtures = [
   {
     code: 0,
     stderr: '',
+    /* tslint:disable-next-line */
     stdout: `{"networkInterfaces":[{"accessConfigs":[{"natIP":"35.205.183.154"}],"subnetwork":"https://www.googleapis.com/compute/beta/projects/${PROJECT_ID}/regions/${REGION}/subnetworks/default","networkIP":"192.127.0.2"}]}`
   },
   ..._.times(2, String),
   {
     code: 0,
     stderr: '',
+    /* tslint:disable-next-line */
     stdout: `{"networkInterfaces":[{"accessConfigs":[{"natIP":"35.205.183.154"}],"subnetwork":"https://www.googleapis.com/compute/beta/projects/${PROJECT_ID}/regions/${REGION}/subnetworks/default","networkIP":"192.127.0.2"}]}`
   },
   ..._.times(6, String),
   {
     code: 0,
     stderr: '',
+    /* tslint:disable-next-line */
     stdout: `{"networkInterfaces":[{"accessConfigs":[{"natIP":"35.205.183.154"}],"subnetwork":"https://www.googleapis.com/compute/beta/projects/${PROJECT_ID}/regions/${REGION}/subnetworks/default","networkIP":"192.127.0.2"}]}`
   },
   ..._.times(7, String),
@@ -42,7 +45,7 @@ const fixtures = [
 let allCommands = [];
 let counter = 0;
 
-describe.only('Autoimport Test: runShellCommand', () => {
+describe('Autoimport Test: runShellCommand', () => {
   let runShellCommandStub;
   const envFilePath = './deployment/gcp_scripts';
   const allFiles = fs.readdirSync(envFilePath);
@@ -60,34 +63,25 @@ describe.only('Autoimport Test: runShellCommand', () => {
   });
 
   env.forEach((testEnv: string) => {
-    it(`${testEnv} env: check undefined`, async () => {
+    it(`${testEnv} env: check not allowed values present in commands`, async () => {
       process.env.NODE_ENV = testEnv;
 
       const error = await autodeploy.run();
+      /* tslint:disable-next-line */
       expect(error).to.not.exist;
 
-      const result = allCommands.filter((command: string) => command.includes('undefined'));
-      expect(result, result.join('\n')).to.be.an('array').that.is.empty;
-    });
+      const allUndefineds = allCommands.filter((command: string) => command.includes('undefined'));
+      /* tslint:disable-next-line */
+      expect(allUndefineds, `empty values present on command(s):\n* ${allUndefineds.join('\n* ')}`).to.be.an('array').that.is.empty;
 
-    it(`${testEnv} env: check null`, async () => {
-      process.env.NODE_ENV = testEnv;
+      const allNulls = allCommands.filter((command: string) => command.includes('null'));
+      /* tslint:disable-next-line */
+      expect(allNulls,  `empty values present on command(s):\n* ${allNulls.join('\n* ')}`).to.be.an('array').that.is.empty;
 
-      const error = await autodeploy.run();
-      expect(error).to.not.exist;
+      const allEmptyValues = allCommands.filter((command: string) => command.match(/='\s'|="\s"|=\s|=''|=""/g));
+      /* tslint:disable-next-line */
+      expect(allEmptyValues, `empty values present on command(s):\n* ${allEmptyValues.join('\n* ')}`).to.be.an('array').that.is.empty;
 
-      const result = allCommands.filter((command: string) => command.includes('null'));
-      expect(result, result.join('\n')).to.be.an('array').that.is.empty;
-    });
-
-    it(`${testEnv} env: check empty values`, async () => {
-      process.env.NODE_ENV = testEnv;
-
-      const error = await autodeploy.run();
-      expect(error).to.not.exist;
-
-      const result = allCommands.filter((command: string) => command.match(/='\s'|="\s"|=\s|=''|=""/g));
-      expect(result, result.join('\n')).to.be.an('array').that.is.empty;
     });
   });
 });
