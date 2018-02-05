@@ -1,15 +1,14 @@
 import 'mocha';
-import * as fs from 'fs';
 import * as _ from 'lodash';
 import { expect } from 'chai';
 import * as async from 'async';
 import * as sinon from 'sinon';
 import { ChildProcess } from 'child_process';
 import { ExecOutputReturnValue } from 'shelljs';
-import * as autodeploy from '../../deployment/gcp_scripts/autodeploy';
 import * as commonHelpers from '../../deployment/gcp_scripts/common.helpers';
 import { runShellCommand } from '../../deployment/gcp_scripts/common.helpers';
 
+const { DEFAULT_ENVIRONMENTS } = require('../../deployment/gcp_scripts/default_deployment_config.json');
 
 const ENVIRONMENT = 'test';
 const PROJECT_NAME = 'my-cool-project3';
@@ -47,11 +46,7 @@ let counter = 0;
 
 describe('Autoimport Test: runShellCommand', () => {
   let runShellCommandStub;
-  const envFilePath = './deployment/gcp_scripts';
-  const allFiles = fs.readdirSync(envFilePath);
-  const env = allFiles
-    .filter((file: string) => file.match(/deployment_config_/g))
-    .map((fileName: string) => fileName.replace(/^.+_(\w+)\.json$/g, '$1'));
+  const allEnvs = Object.keys(DEFAULT_ENVIRONMENTS).map((env: string) => DEFAULT_ENVIRONMENTS[env]);
 
   beforeEach(() => {
     runShellCommandStub = sinon.stub(commonHelpers, 'runShellCommand').callsFake(runShellCommandFn);
@@ -62,9 +57,11 @@ describe('Autoimport Test: runShellCommand', () => {
     runShellCommandStub.restore();
   });
 
-  env.forEach((testEnv: string) => {
+  allEnvs.forEach((testEnv: string) => {
     it(`${testEnv} env: check not allowed values present in commands`, async () => {
       process.env.NODE_ENV = testEnv;
+
+      const autodeploy = require('../../deployment/gcp_scripts/autodeploy');
 
       const error = await autodeploy.run();
       /* tslint:disable-next-line */
@@ -76,7 +73,7 @@ describe('Autoimport Test: runShellCommand', () => {
 
       const allNulls = allCommands.filter((command: string) => command.includes('null'));
       /* tslint:disable-next-line */
-      expect(allNulls,  `empty values present on command(s):\n* ${allNulls.join('\n* ')}`).to.be.an('array').that.is.empty;
+      expect(allNulls, `empty values present on command(s):\n* ${allNulls.join('\n* ')}`).to.be.an('array').that.is.empty;
 
       const allEmptyValues = allCommands.filter((command: string) => command.match(/='\s'|="\s"|=\s|=''|=""/g));
       /* tslint:disable-next-line */
