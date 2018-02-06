@@ -109,11 +109,10 @@ function bodyFromUrlAssets(req: express.Request, res: express.Response, next: ex
 }
 
 function getAssetPathDescriptor(pathToDdfRepos: string, datasetAssetPath: string, defaultDataset?: any): any {
-  const {
-    repo: defaultRepo = '',
-    account: defaultAccount = '',
-    branch: defaultBranch = ''
-  } = getRepoInfoFromDataset(defaultDataset) || {};
+  const repoDescriptor: {repo: string, branch: string, account: string} = getRepoInfoFromDataset(defaultDataset) || {};
+  const defaultRepo = repoDescriptor.repo || '';
+  const defaultAccount = repoDescriptor.account || '';
+  const defaultBranch = repoDescriptor.branch || '';
 
   const splittedDatasetAssetPath = datasetAssetPath.split('/');
   const file = splittedDatasetAssetPath.pop();

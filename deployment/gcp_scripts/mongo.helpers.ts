@@ -22,9 +22,18 @@ export function setupMongoInstance(externalContext: any, cb: Function): void {
     }
   } = externalContext;
 
+  if (!_.isEmpty(MONGODB_URL)) {
+    return async.setImmediate(() => {
+      console.log(`SKIP STEP with setuping MongoDB\n`);
+      externalContext.MONGODB_URL = MONGODB_URL;
+
+      return cb(null, externalContext);
+    });
+  }
+
   const context = {
     PROJECT_ID,
-    MONGO_REGION,    
+    MONGO_REGION,
     ENVIRONMENT,
     VERSION,
     MONGO_ZONE,
@@ -44,10 +53,8 @@ export function setupMongoInstance(externalContext: any, cb: Function): void {
     createMongo,
     getMongoInternalIP,
     reserveMongoInternalIP
-  ], (error: string, context: any) => {
-    externalContext.MONGO_HOST = context.MONGO_HOST;
-    externalContext.MONGO_SUBNETWORK = context.MONGO_SUBNETWORK;
-    externalContext.MONGODB_URL = context.MONGODB_URL;
+  ], (error: string, result: any) => {
+    externalContext.MONGODB_URL = result.MONGODB_URL;
 
     return cb(error, externalContext);
   });
@@ -91,7 +98,7 @@ function getMongoInternalIP(externalContext: any, cb: Function): void {
   return runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
     console.log('\n', result.stdout, '\n');
     console.log(`\nConfig has mongourl: ${MONGODB_URL}\n`);
-    
+
     try {
       const { networkInterfaces: [{ networkIP, subnetwork }] } = JSON.parse(result.stdout);
       externalContext.MONGO_HOST = networkIP;
@@ -103,7 +110,6 @@ function getMongoInternalIP(externalContext: any, cb: Function): void {
     } catch (_error) {
       return cb(_error, externalContext);
     }
-    
 
     return cb(error, externalContext);
   });
