@@ -767,7 +767,7 @@ describe('Routes utils', () => {
       sinon.assert.notCalled(jsonSpy);
       sinon.assert.calledOnce(nextSpy);
 
-      sinon.assert.notCalled(createWarmpUpQueryStub);
+      sinon.assert.calledOnce(createWarmpUpQueryStub);
 
       expect(res.use_express_redis_cache).to.equal(true);
       expect(req.rawData.rawDdf).to.equal(rawDdfData);
@@ -803,7 +803,7 @@ describe('Routes utils', () => {
       sinon.assert.notCalled(jsonSpy);
       sinon.assert.calledOnce(nextSpy);
 
-      sinon.assert.notCalled(createWarmpUpQueryStub);
+      sinon.assert.calledOnce(createWarmpUpQueryStub);
 
       expect(res.use_express_redis_cache).to.equal(true);
       expect(req.rawData.rawDdf).to.equal(rawDdfData);
@@ -840,7 +840,7 @@ describe('Routes utils', () => {
       sinon.assert.notCalled(jsonSpy);
       sinon.assert.calledOnce(nextSpy);
 
-      sinon.assert.notCalled(createWarmpUpQueryStub);
+      sinon.assert.calledOnce(createWarmpUpQueryStub);
 
       expect((res as any).use_express_redis_cache).to.equal(true);
       expect(req.rawData.rawDdf).to.equal(rawDdfData);
