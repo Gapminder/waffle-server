@@ -7,6 +7,15 @@ import { DockerBuildArguments, GCloudArguments } from './interfaces';
 
 interface AsyncResultCallback<T, E> { (err?: E, result?: T): void; }
 
+const {
+  DEFAULT_NODE_ENV,
+} = require('./default_deployment_config.json');
+
+
+export function setupEnvironment() {
+  return process.env.NODE_ENV;
+}
+
 export function runShellCommand(command: string, options: any, cb: AsyncResultCallback<ExecOutputReturnValue | ChildProcess | string, string>): void {
 
   // throw new Error('dssdfdsf');
