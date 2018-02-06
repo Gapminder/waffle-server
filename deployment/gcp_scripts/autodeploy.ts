@@ -1,8 +1,8 @@
 import * as async from 'async';
 import { GCloudArguments } from './interfaces';
-import {setupRedisInstance} from './redis.helpers';
-import {setupMongoInstance} from './mongo.helpers';
-import { getContextInstance } from './common.helpers';
+import { setupRedisInstance } from './redis.helpers';
+import { setupMongoInstance } from './mongo.helpers';
+import { getContextInstance, setupEnvironment } from './common.helpers';
 
 import {
   setDefaultUser, createProject, setDefaultProject,
@@ -29,7 +29,7 @@ const {
 
 // Computed variables
 
-const NODE_ENV = process.env.NODE_ENV || DEFAULT_NODE_ENV;
+const NODE_ENV = setupEnvironment() || DEFAULT_NODE_ENV;
 const ENVIRONMENT = DEFAULT_ENVIRONMENTS[NODE_ENV];
 const VERSION_TAG = packageJson.version;
 const VERSION = packageJson.version.replace(/\./g, '-');

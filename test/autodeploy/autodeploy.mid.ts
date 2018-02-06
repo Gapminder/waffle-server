@@ -46,20 +46,25 @@ let counter = 0;
 
 describe('Autoimport Test: runShellCommand', () => {
   let runShellCommandStub;
+  let setupEnvironment;
   const allEnvs = Object.keys(DEFAULT_ENVIRONMENTS).map((env: string) => DEFAULT_ENVIRONMENTS[env]);
+  allEnvs.push('stage', null);
 
   beforeEach(() => {
     runShellCommandStub = sinon.stub(commonHelpers, 'runShellCommand').callsFake(runShellCommandFn);
+    setupEnvironment = sinon.stub(commonHelpers, 'setupEnvironment');
     counter = 0;
     allCommands = [];
   });
+
   afterEach(() => {
     runShellCommandStub.restore();
+    setupEnvironment.restore();
   });
 
-  allEnvs.forEach((testEnv: string) => {
+  allEnvs.forEach((testEnv: string | null) => {
     it(`${testEnv} env: check not allowed values present in commands`, async () => {
-      process.env.NODE_ENV = testEnv;
+      setupEnvironment.returns(testEnv);
 
       const autodeploy = require('../../deployment/gcp_scripts/autodeploy');
 
@@ -103,6 +108,6 @@ function runShellCommandFn(command: string, options: any, cb: AsyncResultCallbac
   const wrappedCommand = `${command}${outputParam}`;
   allCommands.push(wrappedCommand);
   // console.log('Current fixture: ', fixtures[counter]);
-  // console.log('RUN COMMAND: ', wrappedCommand, '\n');
+  console.log('RUN COMMAND: ', wrappedCommand, '\n');
   return async.setImmediate(() => cb(null, fixtures[counter++]));
 }
