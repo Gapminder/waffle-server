@@ -30,7 +30,8 @@ const {
 // Computed variables
 
 function setupEnvironment(): object {
-  const NODE_ENV = process.env.NODE_ENV || DEFAULT_NODE_ENV;
+  // fixme avoid undefined when NODE_ENV was set but not recognized
+  const NODE_ENV = !!(process.env.NODE_ENV && DEFAULT_ENVIRONMENTS[process.env.NODE_ENV]) ? process.env.NODE_ENV : DEFAULT_NODE_ENV;
   const ENVIRONMENT = DEFAULT_ENVIRONMENTS[NODE_ENV];
   const VERSION_TAG = packageJson.version;
   const VERSION = packageJson.version.replace(/\./g, '-');

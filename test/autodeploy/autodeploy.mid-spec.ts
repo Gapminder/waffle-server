@@ -15,29 +15,24 @@ const PROJECT_NAME = 'my-cool-project3';
 const PROJECT_ID = `${PROJECT_NAME}-${ENVIRONMENT}`;
 const REGION = 'europe-west1';
 
+// TODO use 'times' not super cool because mongo setup step could be skipped and then total number of steps will be decreased
+// but anyway this is just strings to imitate output
+// so let's completely stub it for now
+// note that the last output with loadBalancer info is actually printerd only in 'local' env because we setup mongo for this env
 const fixtures = [
-  ..._.times(10, String),
-  {
-    code: 0,
-    stderr: '',
-    /* tslint:disable-next-line */
-    stdout: `{"networkInterfaces":[{"accessConfigs":[{"natIP":"35.205.183.154"}],"subnetwork":"https://www.googleapis.com/compute/beta/projects/${PROJECT_ID}/regions/${REGION}/subnetworks/default","networkIP":"192.127.0.2"}]}`
-  },
-  ..._.times(2, String),
-  {
-    code: 0,
-    stderr: '',
-    /* tslint:disable-next-line */
-    stdout: `{"networkInterfaces":[{"accessConfigs":[{"natIP":"35.205.183.154"}],"subnetwork":"https://www.googleapis.com/compute/beta/projects/${PROJECT_ID}/regions/${REGION}/subnetworks/default","networkIP":"192.127.0.2"}]}`
-  },
-  ..._.times(6, String),
-  {
-    code: 0,
-    stderr: '',
-    /* tslint:disable-next-line */
-    stdout: `{"networkInterfaces":[{"accessConfigs":[{"natIP":"35.205.183.154"}],"subnetwork":"https://www.googleapis.com/compute/beta/projects/${PROJECT_ID}/regions/${REGION}/subnetworks/default","networkIP":"192.127.0.2"}]}`
-  },
-  ..._.times(7, String),
+  ..._.times(28, () => {
+    return {
+      code: 0,
+      stderr: '',
+      stdout: JSON.stringify({
+        networkInterfaces: [{
+          accessConfigs: [{ natIP: '35.205.183.154' }],
+          subnetwork: `https://www.googleapis.com/compute/beta/projects/${PROJECT_ID}/regions/${REGION}/subnetworks/default`,
+          networkIP: '192.127.0.2'
+        }]
+      })
+    };
+  }),
   { code: 0, stderr: '', stdout: `{"status": {"loadBalancer": {"ingress": [{"ip": "35.205.145.142"}]}}}` }
 ];
 
@@ -69,11 +64,11 @@ describe('Autoimport Test: runShellCommand', () => {
 
       const allUndefineds = allCommands.filter((command: string) => command.includes('undefined'));
       /* tslint:disable-next-line */
-      expect(allUndefineds, `empty values present on command(s):\n* ${allUndefineds.join('\n* ')}`).to.be.an('array').that.is.empty;
+      expect(allUndefineds, `'undefined' present on command(s):\n* ${allUndefineds.join('\n* ')}`).to.be.an('array').that.is.empty;
 
       const allNulls = allCommands.filter((command: string) => command.includes('null'));
       /* tslint:disable-next-line */
-      expect(allNulls, `empty values present on command(s):\n* ${allNulls.join('\n* ')}`).to.be.an('array').that.is.empty;
+      expect(allNulls, `'null' present on command(s):\n* ${allNulls.join('\n* ')}`).to.be.an('array').that.is.empty;
 
       const allEmptyValues = allCommands.filter((command: string) => command.match(/='\s'|="\s"|=\s|=''|=""/g));
       /* tslint:disable-next-line */
@@ -103,6 +98,6 @@ function runShellCommandFn(command: string, options: any, cb: AsyncResultCallbac
   const wrappedCommand = `${command}${outputParam}`;
   allCommands.push(wrappedCommand);
   // console.log('Current fixture: ', fixtures[counter]);
-  // console.log('RUN COMMAND: ', wrappedCommand, '\n');
+  console.log('RUN COMMAND: ', wrappedCommand, '\n');
   return async.setImmediate(() => cb(null, fixtures[counter++]));
 }
