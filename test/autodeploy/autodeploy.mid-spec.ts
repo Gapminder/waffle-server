@@ -6,7 +6,7 @@ import * as sinon from 'sinon';
 import { ChildProcess } from 'child_process';
 import { ExecOutputReturnValue } from 'shelljs';
 import * as commonHelpers from '../../deployment/gcp_scripts/common.helpers';
-import { runShellCommand } from '../../deployment/gcp_scripts/common.helpers';
+import * as autoDeploy from '../../deployment/gcp_scripts/autodeploy';
 
 const { DEFAULT_ENVIRONMENTS } = require('../../deployment/gcp_scripts/default_deployment_config.json');
 
@@ -46,29 +46,24 @@ let counter = 0;
 
 describe('Autoimport Test: runShellCommand', () => {
   let runShellCommandStub;
-  let setupEnvironment;
-  const allEnvs = Object.keys(DEFAULT_ENVIRONMENTS).map((env: string) => DEFAULT_ENVIRONMENTS[env]);
+  const allEnvs = Object.keys(DEFAULT_ENVIRONMENTS);
   allEnvs.push('stage', null);
 
   beforeEach(() => {
     runShellCommandStub = sinon.stub(commonHelpers, 'runShellCommand').callsFake(runShellCommandFn);
-    setupEnvironment = sinon.stub(commonHelpers, 'setupEnvironment');
     counter = 0;
     allCommands = [];
   });
 
   afterEach(() => {
     runShellCommandStub.restore();
-    setupEnvironment.restore();
   });
 
   allEnvs.forEach((testEnv: string | null) => {
     it(`${testEnv} env: check not allowed values present in commands`, async () => {
-      setupEnvironment.returns(testEnv);
+      process.env.NODE_ENV = testEnv;
 
-      const autodeploy = require('../../deployment/gcp_scripts/autodeploy');
-
-      const error = await autodeploy.run();
+      const error = await autoDeploy.run();
       /* tslint:disable-next-line */
       expect(error).to.not.exist;
 
@@ -108,6 +103,6 @@ function runShellCommandFn(command: string, options: any, cb: AsyncResultCallbac
   const wrappedCommand = `${command}${outputParam}`;
   allCommands.push(wrappedCommand);
   // console.log('Current fixture: ', fixtures[counter]);
-  console.log('RUN COMMAND: ', wrappedCommand, '\n');
+  // console.log('RUN COMMAND: ', wrappedCommand, '\n');
   return async.setImmediate(() => cb(null, fixtures[counter++]));
 }
