@@ -11,11 +11,6 @@ const {
   DEFAULT_NODE_ENV,
 } = require('./default_deployment_config.json');
 
-
-export function setupEnvironment() {
-  return process.env.NODE_ENV;
-}
-
 export function runShellCommand(command: string, options: any, cb: AsyncResultCallback<ExecOutputReturnValue | ChildProcess | string, string>): void {
 
   // throw new Error('dssdfdsf');
@@ -130,7 +125,7 @@ export function getContextInstance(externalContext: any, MACHINE_SUFFIX: string 
   const IMAGE_NAME_SUFFIX = DEFAULT_IMAGE_NAME_SUFFIXES[MACHINE_SUFFIX];
   const IMAGE_NAME = `ws${ENVIRONMENT}${IMAGE_NAME_SUFFIX}`;
   const IMAGE_URL = `gcr.io/${PROJECT_ID}/${IMAGE_NAME}:${VERSION_TAG}`;
-  
+
   return {
     IMAGE_NAME,
     IMAGE_URL,
