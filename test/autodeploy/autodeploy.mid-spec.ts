@@ -8,7 +8,78 @@ import { ExecOutputReturnValue } from 'shelljs';
 import * as commonHelpers from '../../deployment/gcp_scripts/common.helpers';
 import * as autoDeploy from '../../deployment/gcp_scripts/autodeploy';
 
-const { DEFAULT_ENVIRONMENTS } = require('../../deployment/gcp_scripts/default_deployment_config.json');
+const { DEFAULT_ENVIRONMENTS, DEFAULT_NODE_ENV } = require('../../deployment/gcp_scripts/default_deployment_config.json');
+
+
+let allCommands = [];
+let counter = 0;
+
+describe('Autoimport Test: runShellCommand', () => {
+  let runShellCommandStub;
+  const allEnvs = Object.keys(DEFAULT_ENVIRONMENTS);
+
+  beforeEach(() => {
+    runShellCommandStub = sinon.stub(commonHelpers, 'runShellCommand').callsFake(runShellCommandFn);
+    counter = 0;
+    allCommands = [];
+  });
+
+  afterEach(() => {
+    runShellCommandStub.restore();
+  });
+
+  allEnvs.forEach((testEnv: string | null) => {
+    it(`${testEnv} env: check not allowed values present in commands`, async () => {
+      process.env.NODE_ENV = testEnv;
+
+      const error = await autoDeploy.run();
+      /* tslint:disable-next-line */
+      expect(error).to.not.exist;
+
+      const allCommandsWithEnv = allCommands.filter((command: string) => command.includes('environment'));
+      allCommandsWithEnv.forEach((command: string) => {
+        return expect(command, `wrong NODE_ENV in command:\n* ${command}`).to.contain(`environment=${DEFAULT_ENVIRONMENTS[testEnv]}`);
+      });
+
+      const allUndefineds = allCommands.filter((command: string) => command.includes('undefined'));
+      /* tslint:disable-next-line */
+      expect(allUndefineds, `'undefined' present on command(s):\n* ${allUndefineds.join('\n* ')}`).to.be.an('array').that.is.empty;
+
+      const allNulls = allCommands.filter((command: string) => command.includes('null'));
+      /* tslint:disable-next-line */
+      expect(allNulls, `'null' present on command(s):\n* ${allNulls.join('\n* ')}`).to.be.an('array').that.is.empty;
+
+      const allEmptyValues = allCommands.filter((command: string) => command.match(/='\s'|="\s"|=\s|=''|=""/g));
+      /* tslint:disable-next-line */
+      expect(allEmptyValues, `empty values present on command(s):\n* ${allEmptyValues.join('\n* ')}`).to.be.an('array').that.is.empty;
+
+    });
+  });
+
+  it(`use default env when NODE_ENV wasn't set`, async () => {
+    if (process.env.NODE_ENV) {
+      delete process.env.NODE_ENV;
+    }
+
+    await autoDeploy.run();
+
+    const allCommandsWithEnv = allCommands.filter((command: string) => command.includes('environment'));
+    allCommandsWithEnv.forEach((command: string) => {
+      return expect(command, `wrong NODE_ENV in command:\n* ${command}`).to.contain(`environment=${DEFAULT_ENVIRONMENTS[DEFAULT_NODE_ENV]}`);
+    });
+  });
+
+  it(`use default env when NODE_ENV was set but wasn't recognized`, async () => {
+    process.env.NODE_ENV = 'null';
+
+    await autoDeploy.run();
+
+    const allCommandsWithEnv = allCommands.filter((command: string) => command.includes('environment'));
+    allCommandsWithEnv.forEach((command: string) => {
+      return expect(command, `wrong NODE_ENV in command:\n* ${command}`).to.contain(`environment=${DEFAULT_ENVIRONMENTS[DEFAULT_NODE_ENV]}`);
+    });
+  });
+});
 
 const ENVIRONMENT = 'test';
 const PROJECT_NAME = 'my-cool-project3';
@@ -35,49 +106,6 @@ const fixtures = [
   }),
   { code: 0, stderr: '', stdout: `{"status": {"loadBalancer": {"ingress": [{"ip": "35.205.145.142"}]}}}` }
 ];
-
-let allCommands = [];
-let counter = 0;
-
-describe('Autoimport Test: runShellCommand', () => {
-  let runShellCommandStub;
-  const allEnvs = Object.keys(DEFAULT_ENVIRONMENTS);
-  allEnvs.push('stage', null);
-
-  beforeEach(() => {
-    runShellCommandStub = sinon.stub(commonHelpers, 'runShellCommand').callsFake(runShellCommandFn);
-    counter = 0;
-    allCommands = [];
-  });
-
-  afterEach(() => {
-    runShellCommandStub.restore();
-  });
-
-  allEnvs.forEach((testEnv: string | null) => {
-    it(`${testEnv} env: check not allowed values present in commands`, async () => {
-      process.env.NODE_ENV = testEnv;
-
-      const error = await autoDeploy.run();
-      /* tslint:disable-next-line */
-      expect(error).to.not.exist;
-
-      const allUndefineds = allCommands.filter((command: string) => command.includes('undefined'));
-      /* tslint:disable-next-line */
-      expect(allUndefineds, `'undefined' present on command(s):\n* ${allUndefineds.join('\n* ')}`).to.be.an('array').that.is.empty;
-
-      const allNulls = allCommands.filter((command: string) => command.includes('null'));
-      /* tslint:disable-next-line */
-      expect(allNulls, `'null' present on command(s):\n* ${allNulls.join('\n* ')}`).to.be.an('array').that.is.empty;
-
-      const allEmptyValues = allCommands.filter((command: string) => command.match(/='\s'|="\s"|=\s|=''|=""/g));
-      /* tslint:disable-next-line */
-      expect(allEmptyValues, `empty values present on command(s):\n* ${allEmptyValues.join('\n* ')}`).to.be.an('array').that.is.empty;
-
-    });
-  });
-});
-
 
 function runShellCommandFn(command: string, options: any, cb: AsyncResultCallback<ExecOutputReturnValue | ChildProcess | string, string>): void {
   let outputParam = '';
