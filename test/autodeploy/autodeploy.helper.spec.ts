@@ -3,199 +3,157 @@ import { expect } from 'chai';
 import * as sinon from 'sinon';
 import * as commonHelpers from '../../deployment/gcp_scripts/common.helpers';
 import * as autoDeployHelpers from '../../deployment/gcp_scripts/autodeploy.helpers';
-import { ChildProcess } from 'child_process';
-import { ExecOutputReturnValue } from 'shelljs';
-import * as async from 'async';
+import { expectNoEmptyParamsInCommand, hasFlag } from './testUtils';
 
-let expectedError: string | null = null;
+const sandbox = sinon.sandbox.create();
 
-function runShellCommandFn(command: string, options: any, cb: AsyncResultCallback<ExecOutputReturnValue | ChildProcess | string, string>): void {
-  return async.setImmediate(() => cb(expectedError, command));
-}
+describe('Autodeploy.helper Commands', () => {
 
-describe('setup', () => {
-  let runShellCommandStub;
+  afterEach(() => sandbox.restore());
 
-  beforeEach(() => {
-    expectedError = null;
-    runShellCommandStub = sinon.stub(commonHelpers, 'runShellCommand').callsFake(runShellCommandFn);
-  });
-
-  afterEach(() => {
-    runShellCommandStub.restore();
-  });
-
-
-  describe('setDefaultUser Command', () => {
-    const externalContextStub = { COMPUTED_VARIABLES: { OWNER_ACCOUNT: 'test.owner.account' } };
-
-    it('create command and pass to runShellCommand', (done: Function) => {
-      const expectedOwnerAccount = externalContextStub.COMPUTED_VARIABLES.OWNER_ACCOUNT;
-      const expectedOptions = {};
-
-      autoDeployHelpers.setDefaultUser(externalContextStub, (error: string, externalContext: any) => {
-        sinon.assert.calledWith(runShellCommandStub, sinon.match(expectedOwnerAccount), expectedOptions);
-
-        expect(error).to.be.an('null');
-        expect(externalContext).to.equal(externalContextStub);
-        done();
-      });
-    });
-
-    it('pass error in callback', (done: Function) => {
-      expectedError = 'ERROR';
-
-      autoDeployHelpers.setDefaultUser(externalContextStub, (error: string, externalContext: any) => {
-        expect(error).to.equal(expectedError);
-        expect(externalContext).to.equal(externalContextStub);
-        done();
-      });
-    });
-  });
-
-  describe('createProject Command', () => {
-    const externalContextStub = {
+  it('createProject: use FOLDER_ID as folder flag', (done: Function) => {
+    const runShellCommandStub = sandbox.stub(commonHelpers, 'runShellCommand').callsArgWithAsync(2, null);
+    const expectedContext = {
       PROJECT_ID: 'TEST_PROJECT_ID',
-      FOLDER_ID: 'TEST_FOLDER_ID',
-      PROJECT_LABELS: 'TEST_PROJECT_LABELS'
+      PROJECT_NAME: 'TEST_PROJECT_NAME',
+      PROJECT_LABELS: 'TEST_PROJECT_NAME',
+      FOLDER_ID: 'TEST_FOLDER_ID'
     };
 
-    it('use FOLDER_ID as folder flag', (done: Function) => {
-      const expectedCommand = `gcloud projects create ${externalContextStub.PROJECT_ID} --folder=${externalContextStub.FOLDER_ID} --labels=${externalContextStub.PROJECT_LABELS} --name=${externalContextStub.PROJECT_ID} --enable-cloud-apis`;
-      const expectedOptions = {};
+    autoDeployHelpers.createProject({ ...expectedContext }, (error: string, externalContext: any) => {
 
-      autoDeployHelpers.createProject(externalContextStub, (error: string, externalContext: any) => {
-        sinon.assert.calledWith(runShellCommandStub, expectedCommand, expectedOptions);
+      sinon.assert.calledWith(runShellCommandStub, expectNoEmptyParamsInCommand.and(hasFlag('folder')));
+      expect(error).to.be.an('null');
+      expect(externalContext).to.deep.equal(expectedContext);
 
-        expect(error).to.be.an('null');
-        expect(externalContext).to.equal(externalContextStub);
-        done();
-      });
-    });
-
-    it('folder flag is ignored when folderId was NOT set', (done: Function) => {
-      const externalContextWithoutFolderID = { ...externalContextStub };
-      delete externalContextWithoutFolderID.FOLDER_ID;
-
-      const expectedCommand = `gcloud projects create ${externalContextStub.PROJECT_ID}  --labels=${externalContextStub.PROJECT_LABELS} --name=${externalContextStub.PROJECT_ID} --enable-cloud-apis`;
-      const expectedOptions = {};
-
-      autoDeployHelpers.createProject(externalContextWithoutFolderID, (error: string, externalContext: any) => {
-        sinon.assert.calledWith(runShellCommandStub, expectedCommand, expectedOptions);
-
-        expect(error).to.be.an('null');
-        expect(externalContext).to.equal(externalContextWithoutFolderID);
-        done();
-      });
-    });
-
-    it('skip the step when project ID is in use by another project', (done: Function) => {
-      expectedError = 'The project ID you specified is already in use by another project';
-      autoDeployHelpers.createProject(externalContextStub, (error: string, externalContext: any) => {
-        expect(error).to.be.an('null');
-        expect(externalContext).to.equal(externalContextStub);
-        done();
-      });
-    });
-
-    it('pass error in callback', (done: Function) => {
-      expectedError = 'ERROR';
-
-      autoDeployHelpers.createProject(externalContextStub, (error: string, externalContext: any) => {
-        expect(error).to.equal(expectedError);
-        expect(externalContext).to.equal(externalContextStub);
-        done();
-      });
+      done();
     });
   });
 
-  describe('setDefaultProject Command', () => {
-    const externalContextStub = {
-      PROJECT_ID: 'TEST_PROJECT_ID'
+  it('createProject: folder flag is ignored when folderId was NOT set', (done: Function) => {
+    const runShellCommandStub = sandbox.stub(commonHelpers, 'runShellCommand').callsArgWithAsync(2, null);
+    const expectedContext = {
+      PROJECT_ID: 'TEST_PROJECT_ID',
+      PROJECT_NAME: 'TEST_PROJECT_NAME',
+      PROJECT_LABELS: 'TEST_PROJECT_NAME'
     };
 
-    it('create command and pass to runShellCommand', (done: Function) => {
-      const expectedProjectID = externalContextStub.PROJECT_ID;
-      const expectedOptions = {};
+    autoDeployHelpers.createProject({ ...expectedContext }, (error: string, externalContext: any) => {
 
-      autoDeployHelpers.setDefaultProject(externalContextStub, (error: string, externalContext: any) => {
-        sinon.assert.calledWith(runShellCommandStub, sinon.match(expectedProjectID), expectedOptions);
+      sinon.assert.calledWith(runShellCommandStub, expectNoEmptyParamsInCommand);
+      expect(error).to.be.an('null');
+      expect(externalContext).to.deep.equal(expectedContext);
 
-        expect(error).to.be.an('null');
-        expect(externalContext).to.equal(externalContextStub);
-        done();
-      });
-    });
-
-    it('pass error in callback', (done: Function) => {
-      expectedError = 'ERROR';
-
-      autoDeployHelpers.setDefaultProject(externalContextStub, (error: string, externalContext: any) => {
-        expect(error).to.equal(expectedError);
-        expect(externalContext).to.equal(externalContextStub);
-        done();
-      });
+      done();
     });
   });
 
-  describe('setupAPIs Command', () => {
-    const externalContextStub = { PROJECT_ID: 'TEST_PROJECT_ID' };
+  it('createProject: skip the step when project ID is in use by another project', (done: Function) => {
+    const expectedContext = {
+      PROJECT_NAME: 'TEST_PROJECT_NAME',
+      PROJECT_LABELS: 'TEST_PROJECT_NAME',
+      FOLDER_ID: 'TEST_FOLDER_ID'
+    };
+
+    const expectedError = 'The project ID you specified is already in use by another project';
+    const runShellCommandStub = sandbox.stub(commonHelpers, 'runShellCommand').callsArgWithAsync(2, expectedError);
+
+    autoDeployHelpers.createProject({ ...expectedContext }, (error: string, externalContext: any) => {
+      expect(error).to.be.an('null');
+      expect(externalContext).to.deep.equal(expectedContext);
+      done();
+    });
+  });
+
+  it('setupAPIs: use apisList from patched arguments', (done: Function) => {
+    const runShellCommandStub = sandbox.stub(commonHelpers, 'runShellCommand').callsArgWithAsync(2, null);
+    const expectedContext = {
+      PROJECT_NAME: 'TEST_PROJECT_NAME',
+      PROJECT_LABELS: 'TEST_PROJECT_NAME',
+      FOLDER_ID: 'TEST_FOLDER_ID'
+    };
     const apisListStub = ['cloudbilling.googleapis.com'];
     const apisOptions = { action: 'enable' };
 
-    it('create command and pass to runShellCommand', (done: Function) => {
-      const expectedCommand = `gcloud services ${apisOptions.action} ${apisListStub[0]}`;
-      const expectedOptions = {};
+    autoDeployHelpers.setupAPIs(apisListStub, apisOptions, { ...expectedContext }, (error: string, externalContext: any) => {
 
-      autoDeployHelpers.setupAPIs(apisListStub, apisOptions, externalContextStub, (error: string, externalContext: any) => {
-        sinon.assert.calledWith(runShellCommandStub, expectedCommand, expectedOptions);
+      sinon.assert.calledWith(runShellCommandStub, expectNoEmptyParamsInCommand);
+      expect(error).to.be.an('null');
+      expect(externalContext).to.deep.equal(expectedContext);
 
-        expect(error).to.be.an('null');
-        expect(externalContext).to.equal(externalContextStub);
-        done();
-      });
-    });
-
-    it('pass error in callback', (done: Function) => {
-      expectedError = 'ERROR';
-
-      autoDeployHelpers.setupAPIs(apisListStub, apisOptions, externalContextStub, (error: string, externalContext: any) => {
-        expect(error).to.equal(expectedError);
-        expect(externalContext).to.equal(externalContextStub);
-        done();
-      });
+      done();
     });
   });
 
-  describe('linkProjectToBilling Command', () => {
-    const externalContextStub = {
-      PROJECT_ID: 'TEST_PROJECT_ID',
-      COMPUTED_VARIABLES: {
-        BILLING_ACCOUNT: 'TEST_BILLING_ACCOUNT'
-      }
+  it('getTMExternalIP: use natIP', (done: Function) => {
+    const ip = '11.11.11.111';
+    const runShellCommandResult = {
+      stdout: JSON.stringify({
+        networkInterfaces: [{
+          accessConfigs: [{ natIP: ip }]
+        }]
+      })
     };
+    const initialContext = {
+      TM_INSTANCE_VARIABLES: {
+        IMAGE_URL: 'TEST_IMAGE_URL',
+        NODE_NAME: 'TM_INSTANCE_NAME'
+      },
+      TM_ZONE: 'TEST_TM_ZONE',
+      PROJECT_ID: 'TEST_PROJECT_ID'
+    };
+    const expectedContext = {
+      TM_INSTANCE_VARIABLES: {
+        IMAGE_URL: 'TEST_IMAGE_URL',
+        NODE_NAME: 'TM_INSTANCE_NAME',
+        IP_ADDRESS: ip // this should be added
+      },
+      TM_ZONE: 'TEST_TM_ZONE',
+      PROJECT_ID: 'TEST_PROJECT_ID'
+    };
+    const expectedOptions = { pathToCheck: 'networkInterfaces.0.accessConfigs.0.natIP' };
 
-    it('create command and pass to runShellCommand', (done: Function) => {
-      const expectedCommand = `gcloud beta billing projects link ${externalContextStub.PROJECT_ID} --billing-account=${externalContextStub.COMPUTED_VARIABLES.BILLING_ACCOUNT}`;
-      const expectedOptions = {};
+    const runShellCommandStub = sandbox.stub(commonHelpers, 'runShellCommand').callsArgWithAsync(2, null, runShellCommandResult);
+    autoDeployHelpers.getTMExternalIP(initialContext, (error: string, externalContext: any) => {
 
-      autoDeployHelpers.linkProjectToBilling(externalContextStub, (error: string, externalContext: any) => {
-        sinon.assert.calledWith(runShellCommandStub, expectedCommand, expectedOptions);
+      sinon.assert.calledWith(runShellCommandStub, expectNoEmptyParamsInCommand, expectedOptions);
+      expect(error).to.be.an('null');
+      expect(externalContext).to.deep.equal(expectedContext);
 
-        expect(error).to.be.an('null');
-        expect(externalContext).to.equal(externalContextStub);
-        done();
-      });
+      done();
     });
+  });
 
-    it('pass error in callback', (done: Function) => {
-      expectedError = 'ERROR';
+  it('printExternalIPs: return loadBalancer ip address', (done: Function) => {
+    const ip = '22.22.22.22';
+    const runShellCommandResult = {
+      stdout: JSON.stringify({
+        status: {
+          loadBalancer: { ingress: [{ ip }] }
+        },
+        networkInterfaces: [{
+          accessConfigs: [{ natIP: '35.205.183.154' }],
+          subnetwork: `https://www.googleapis.com/compute/beta/projects/regions/subnetworks/default`,
+          networkIP: '192.127.0.2'
+        }]
+      })
+    };
+    const initialContext = {
+      TM_INSTANCE_VARIABLES: {
+        IP_ADDRESS: 'TM_IP_ADDRESS'
+      },
+      LOAD_BALANCER_NAME: 'TEST_TM_ZONE'
+    };
+    const expectedContext = ip;
 
-      autoDeployHelpers.linkProjectToBilling(externalContextStub, (error: string, externalContext: any) => {
-        expect(error).to.equal(expectedError);
-        expect(externalContext).to.equal(externalContextStub);
-        done();
-      });
+    const runShellCommandStub = sandbox.stub(commonHelpers, 'runShellCommand').callsArgWithAsync(2, null, runShellCommandResult);
+    autoDeployHelpers.printExternalIPs(initialContext, (error: string, externalContext: any) => {
+
+      sinon.assert.calledWith(runShellCommandStub, expectNoEmptyParamsInCommand);
+      expect(error).to.be.an('null');
+      expect(externalContext).to.deep.equal(expectedContext);
+
+      done();
     });
   });
 

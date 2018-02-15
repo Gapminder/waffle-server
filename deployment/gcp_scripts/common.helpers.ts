@@ -73,14 +73,14 @@ export function runShellCommand(command: string, options: any, cb: AsyncResultCa
       const parsedStdout = JSON.parse(stdout);
 
       if (options.pathToCheck && !_.get(parsedStdout, options.pathToCheck, false)) {
-        throw new Error(`No required data by path '${options.pathToCheck}': ${parsedStdout}`);
+        throw new Error(`No required data by path '${options.pathToCheck}': ${stdout}`);
       }
 
       return async.setImmediate(() => _cb(null, result));
     } catch (_error) {
       console.log(`Attempt ${++attemptCounter} was failed..`);
 
-      return async.setImmediate(() => _cb('JSON parse syntax error. Retry to connect again..', result));
+      return async.setImmediate(() => _cb(`JSON parse syntax error: ${_error.message}. Retry to connect again..`, result));
     }
   }, cb);
 }

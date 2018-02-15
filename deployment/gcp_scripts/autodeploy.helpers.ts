@@ -27,14 +27,6 @@ export function createProject(externalContext: any, cb: Function): void {
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string) => {
-    if (_.isNil(error) && 0) {
-      console.error(
-        `\nAPI [compute.googleapis.com] not enabled on project [${PROJECT_ID}]. Link billing account at https://console.cloud.google.com/billing/linkedaccount?project=${PROJECT_ID}\n\n`,
-        `Please enable Google Container Registry API in Cloud Console at https://console.cloud.google.com/apis/api/containerregistry.googleapis.com/overview?project=${PROJECT_ID}\n`
-      );
-      return cb('ATTENTION: Don\'t forget enabling all needed permissions', externalContext);
-    }
-
     if (_.includes(error, 'The project ID you specified is already in use by another project')) {
       console.log('RESULT: So, skipping the step..\n');
       return cb(null, externalContext);
@@ -225,19 +217,22 @@ export function getTMExternalIP(externalContext: any, cb: Function): void {
   const options: any = {pathToCheck: 'networkInterfaces.0.accessConfigs.0.natIP'};
 
   return runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
-    console.log('\n', result.stdout, '\n');
+    if (error) {
+      return cb(error, externalContext);
+    }
 
     try {
+      console.log('\n', result.stdout, '\n');
       const { networkInterfaces: [{ accessConfigs: [{ natIP: networkIP }] }] } = JSON.parse(result.stdout);
       console.log('\nTM EXTERNAL IP:', networkIP, '\n');
 
       externalContext.TM_INSTANCE_VARIABLES.IP_ADDRESS = networkIP;
 
     } catch (_error) {
-      return cb(_error, externalContext);
+      return cb(_error.message, externalContext);
     }
 
-    return cb(error, externalContext);
+    return cb(null, externalContext);
   });
 }
 
