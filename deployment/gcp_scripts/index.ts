@@ -4,15 +4,19 @@ import { run as runUnpublish } from './autoremove';
 (async function (): Promise<void> {
   let error;
 
-  if (process.env.GCP_STACK_ACTION === 'deploy') {
-    error = await runDeploy();
-  } else if (process.env.GCP_STACK_ACTION === 'unpublish') {
-    error = await runUnpublish();
-  }
+  console.log(`Running process: ${process.env.GCP_STACK_ACTION}`);
 
-  if (error) {
+  try {
+    if (process.env.GCP_STACK_ACTION === 'deploy') {
+      await runDeploy();  
+    }
+    
+    if (process.env.GCP_STACK_ACTION === 'unpublish') {
+      await runUnpublish();
+    }  
+
+    process.exit(0);
+  } catch (error) {
     process.exit(1);
   }
-
-  process.exit(0);
 })();

@@ -113,6 +113,12 @@ export function getGCloudArguments(gcloudArgs: any): string {
   }, []).join(' ');
 }
 
+export function getMongoArguments(mongoArgs: Dictionary<string>): string {
+  return _.transform(mongoArgs, (result: string[], valueArg: string, nameArg: string) => {
+    result.push(`${_.snakeCase(nameArg)}=${valueArg}`);
+  }, []).join('#&&#');
+}
+
 export function getContextInstance(externalContext: any, MACHINE_SUFFIX: string = 'WS'): GCloudArguments {
   const {
     PROJECT_ID,
