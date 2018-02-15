@@ -10,9 +10,9 @@
   "main": "server.js",
   "scripts": {
     "lint": "tslint  -e **/node_modules/**/* -e **/test/**/* -e **/test/* --project tsconfig.json --config tslint.json ./**/*.ts",
-    "test": "npm run tsc && npm run mid && npm run spec && npm run e2e",
-    "premid": "npm run tsc",
-    "mid": "mocha --exit --reporter mochawesome --reporter-options reportDir=specReports,reportFilename=specReport --timeout 20000 --require ts-node/register 'test/**/*.mid-spec.ts'",
+    "test": "npm run tsc && npm run integration && npm run spec && npm run e2e",
+    "preintegration": "npm run tsc",
+    "integration": "mocha --exit --reporter mochawesome --reporter-options reportDir=specReports,reportFilename=specReport --timeout 20000 --require ts-node/register 'test/**/*.int-spec.ts'",
     "prespec": "npm run tsc",
     "spec": "mocha --exit --reporter mocha-minimalist-reporter --reporter-options reportDir=specReports,reportFilename=specReport --timeout 20000 --require ts-node/register 'test/**/*.spec.ts'",
     "spec:verbose": "mocha --exit --reporter mochawesome --reporter-options reportDir=specReports,reportFilename=specReport --timeout 20000 --require ts-node/register 'test/**/*.spec.ts'",
