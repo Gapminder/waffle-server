@@ -27,12 +27,10 @@ const {
   DEFAULT_GCP_API
 } = require('./default_deployment_config.json');
 
-// Computed variables
-
 function setupEnvironment(): object {
-  // fixme avoid undefined when NODE_ENV was set but not recognized
-  const NODE_ENV = DEFAULT_ENVIRONMENTS[process.env.NODE_ENV] ? process.env.NODE_ENV : DEFAULT_NODE_ENV;
-  const ENVIRONMENT = DEFAULT_ENVIRONMENTS[NODE_ENV];
+  // Computed variables
+  const NODE_ENV = process.env.NODE_ENV || DEFAULT_NODE_ENV;
+  const ENVIRONMENT = DEFAULT_ENVIRONMENTS[NODE_ENV] || NODE_ENV;
   const VERSION_TAG = packageJson.version;
   const VERSION = packageJson.version.replace(/\./g, '-');
   const STATIC_VARIABLES = require(`./deployment_config_${ENVIRONMENT}.json`);
@@ -61,7 +59,7 @@ function setupEnvironment(): object {
     VERSION_TAG
   }, STATIC_VARIABLES);
 
-// gcloud variables
+  // gcloud variables
   const GCP_VARIABLES = Object.assign(DEFAULT_GCP_VARIABLES, {
     PROJECT_ID: `${ENVIRONMENT}-${STATIC_VARIABLES.DEFAULT_PROJECT_NAME}`,
     PROJECT_LABELS: `environment=${ENVIRONMENT}`,
@@ -70,6 +68,7 @@ function setupEnvironment(): object {
     REDIS_INSTANCE_NAME: `${ENVIRONMENT}-redis-${VERSION}`,
     MONGO_INSTANCE_NAME: `${ENVIRONMENT}-mongo-${VERSION}`,
     MONGODB_PORT: STATIC_VARIABLES.MONGODB_PORT || DEFAULT_GCP_VARIABLES.DEFAULT_MONGODB_PORT,
+    MONGODB_SSH_KEY: STATIC_VARIABLES.MONGODB_SSH_KEY,
     REPLICAS_NAME: `${ENVIRONMENT}-replicas-${VERSION}`,
     LOAD_BALANCER_NAME: `${ENVIRONMENT}-lb-${VERSION}`,
     FIREWALL_RULE__ALLOW_HTTP: `${ENVIRONMENT}-allow-http-${VERSION}`,
@@ -97,7 +96,7 @@ function setupEnvironment(): object {
     TM_ZONE: `${ TM_REGION }-c`,
     LB_ZONE: `${ LB_REGION }-c`,
 
-    MACHINE_TYPES: Object.assign({}, DEFAULT_MACHINE_TYPES,)
+    MACHINE_TYPES: Object.assign({}, DEFAULT_MACHINE_TYPES)
   });
 
   const primaryContext = Object.assign({

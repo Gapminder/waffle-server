@@ -12,7 +12,6 @@ const { DEFAULT_ENVIRONMENTS, DEFAULT_NODE_ENV } = require('../../deployment/gcp
 
 
 let allCommands = [];
-let counter = 0;
 
 describe('Autoimport Test: runShellCommand', () => {
   let runShellCommandStub;
@@ -20,7 +19,6 @@ describe('Autoimport Test: runShellCommand', () => {
 
   beforeEach(() => {
     runShellCommandStub = sinon.stub(commonHelpers, 'runShellCommand').callsFake(runShellCommandFn);
-    counter = 0;
     allCommands = [];
   });
 
@@ -36,9 +34,9 @@ describe('Autoimport Test: runShellCommand', () => {
       /* tslint:disable-next-line */
       expect(error).to.not.exist;
 
-      const allCommandsWithEnv = allCommands.filter((command: string) => command.includes('environment'));
+      const allCommandsWithEnv = getAllCommandsWhichShouldBeWithEnvironment(allCommands);
       allCommandsWithEnv.forEach((command: string) => {
-        return expect(command, `wrong NODE_ENV in command:\n* ${command}`).to.contain(`environment=${DEFAULT_ENVIRONMENTS[testEnv]}`);
+        return expect(command, `wrong ENVIRONMENT in command:\n* ${command}`).to.contain(DEFAULT_ENVIRONMENTS[testEnv]);
       });
 
       const allUndefineds = allCommands.filter((command: string) => command.includes('undefined'));
@@ -49,7 +47,7 @@ describe('Autoimport Test: runShellCommand', () => {
       /* tslint:disable-next-line */
       expect(allNulls, `'null' present on command(s):\n* ${allNulls.join('\n* ')}`).to.be.an('array').that.is.empty;
 
-      const allEmptyValues = allCommands.filter((command: string) => command.match(/='\s'|="\s"|=\s|=''|=""/g));
+      const allEmptyValues = allCommands.filter((command: string) => command.match(/=('\s+'|"\s+"|\s+|''|"")(\s+|$)/g));
       /* tslint:disable-next-line */
       expect(allEmptyValues, `empty values present on command(s):\n* ${allEmptyValues.join('\n* ')}`).to.be.an('array').that.is.empty;
 
@@ -63,20 +61,20 @@ describe('Autoimport Test: runShellCommand', () => {
 
     await autoDeploy.run();
 
-    const allCommandsWithEnv = allCommands.filter((command: string) => command.includes('environment'));
+    const allCommandsWithEnv = getAllCommandsWhichShouldBeWithEnvironment(allCommands);
     allCommandsWithEnv.forEach((command: string) => {
-      return expect(command, `wrong NODE_ENV in command:\n* ${command}`).to.contain(`environment=${DEFAULT_ENVIRONMENTS[DEFAULT_NODE_ENV]}`);
+      return expect(command, `wrong ENVIRONMENT in command:\n* ${command}`).to.contain(DEFAULT_ENVIRONMENTS[DEFAULT_NODE_ENV]);
     });
   });
 
   it(`use default env when NODE_ENV was set but wasn't recognized`, async () => {
-    process.env.NODE_ENV = 'null';
+    process.env.NODE_ENV = 'stage';
 
     await autoDeploy.run();
 
-    const allCommandsWithEnv = allCommands.filter((command: string) => command.includes('environment'));
+    const allCommandsWithEnv = getAllCommandsWhichShouldBeWithEnvironment(allCommands);
     allCommandsWithEnv.forEach((command: string) => {
-      return expect(command, `wrong NODE_ENV in command:\n* ${command}`).to.contain(`environment=${DEFAULT_ENVIRONMENTS[DEFAULT_NODE_ENV]}`);
+      return expect(command, `wrong ENVIRONMENT in command:\n* ${command}`).to.contain(process.env.NODE_ENV);
     });
   });
 });
@@ -86,26 +84,28 @@ const PROJECT_NAME = 'my-cool-project3';
 const PROJECT_ID = `${PROJECT_NAME}-${ENVIRONMENT}`;
 const REGION = 'europe-west1';
 
+function getAllCommandsWhichShouldBeWithEnvironment (_allCommands: string[]): string[] {
+  return _.reject(_allCommands, (command: string) => command.match(/config|services/gi));
+}
+
 // TODO use 'times' not super cool because mongo setup step could be skipped and then total number of steps will be decreased
 // but anyway this is just strings to imitate output
 // so let's completely stub it for now
 // note that the last output with loadBalancer info is actually printerd only in 'local' env because we setup mongo for this env
-const fixtures = [
-  ..._.times(28, () => {
-    return {
-      code: 0,
-      stderr: '',
-      stdout: JSON.stringify({
-        networkInterfaces: [{
-          accessConfigs: [{ natIP: '35.205.183.154' }],
-          subnetwork: `https://www.googleapis.com/compute/beta/projects/${PROJECT_ID}/regions/${REGION}/subnetworks/default`,
-          networkIP: '192.127.0.2'
-        }]
-      })
-    };
-  }),
-  { code: 0, stderr: '', stdout: `{"status": {"loadBalancer": {"ingress": [{"ip": "35.205.145.142"}]}}}` }
-];
+const commandStdoutFixture = {
+  code: 0,
+  stderr: '',
+  stdout: JSON.stringify({
+    status: {
+      loadBalancer: {ingress: [{ip: '35.205.145.142'}]}
+    },
+    networkInterfaces: [{
+      accessConfigs: [{ natIP: '35.205.183.154' }],
+      subnetwork: `https://www.googleapis.com/compute/beta/projects/${PROJECT_ID}/regions/${REGION}/subnetworks/default`,
+      networkIP: '192.127.0.2'
+    }]
+  })
+};
 
 function runShellCommandFn(command: string, options: any, cb: AsyncResultCallback<ExecOutputReturnValue | ChildProcess | string, string>): void {
   let outputParam = '';
@@ -127,5 +127,5 @@ function runShellCommandFn(command: string, options: any, cb: AsyncResultCallbac
   allCommands.push(wrappedCommand);
   // console.log('Current fixture: ', fixtures[counter]);
   console.log('RUN COMMAND: ', wrappedCommand, '\n');
-  return async.setImmediate(() => cb(null, fixtures[counter++]));
+  return async.setImmediate(() => cb(null, commandStdoutFixture));
 }
