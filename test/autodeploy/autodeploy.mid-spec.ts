@@ -34,6 +34,7 @@ describe('Autoimport Test: runShellCommand', () => {
   allEnvs.forEach((testEnv: string | null) => {
 
     it(`#${testEnv || 'default'} env: check not allowed values present in commands`, async () => {
+
       if (process.env.NODE_ENV) {
         delete process.env.NODE_ENV;
       }

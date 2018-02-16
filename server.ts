@@ -21,6 +21,8 @@ import { usersRepository } from './ws.repository/ddf/users/users.repository';
 
 reposService.logger = logger;
 
+process.setMaxListeners(0);
+
 process.on('uncaughtException', function (reason: Error): void {
   logger.error(reason);
 });

@@ -1173,7 +1173,7 @@ describe('Dataset Transactions Service', () => {
       sinon.assert.calledOnce(DatasetTrackerSpy);
       sinon.assert.calledWith(DatasetTrackerSpy, externalContext.datasetName);
 
-      sinon.restore(DatasetTracker.get);
+      DatasetTrackerSpy.restore();
 
       done();
     });
@@ -1228,7 +1228,7 @@ describe('Dataset Transactions Service', () => {
       sinon.assert.calledOnce(DatasetTrackerStub);
       sinon.assert.calledWith(DatasetTrackerStub, externalContext.datasetName);
 
-      sinon.restore(DatasetTracker.get);
+      DatasetTrackerStub.restore();
 
       done();
     });
