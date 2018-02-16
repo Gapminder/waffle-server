@@ -11,11 +11,18 @@ import * as autoDeploy from '../../deployment/gcp_scripts/autodeploy';
 const { DEFAULT_ENVIRONMENTS, DEFAULT_NODE_ENV } = require('../../deployment/gcp_scripts/default_deployment_config.json');
 
 
+// Example: TEST_ENVIRONMENTS=local npm run integration
+// Example: TEST_ENVIRONMENTS=local,development npm run integration
+// Example: npm run integration
 const TEST_ENVIRONMENTS = process.env.TEST_ENVIRONMENTS ? process.env.TEST_ENVIRONMENTS.split(',') : [];
+
 let allCommands = [];
 
 describe('Autoimport Test: runShellCommand', () => {
   let runShellCommandStub;
+  // Get list of all reserved environments (development,local,prod,test)
+  // concat with default environment (development) and stage (or any other name)
+  // filter all environments what we want to check, or check all environments by default
   const allEnvs = _.chain(DEFAULT_ENVIRONMENTS)
     .keys()
     .concat([null, 'stage'])
@@ -32,9 +39,9 @@ describe('Autoimport Test: runShellCommand', () => {
   });
 
   allEnvs.forEach((testEnv: string | null) => {
-
-    it(`#${testEnv || 'default'} env: check not allowed values present in commands`, async () => {
-
+    // if it is step for testEnv === null, then name of the test should be reflected in test name
+    const testName = _.isNil(testEnv) ? 'default' : testEnv;
+    it(`*** ${testName.toUpperCase()} env: check not allowed values present in commands`, async () => {
       if (process.env.NODE_ENV) {
         delete process.env.NODE_ENV;
       }
@@ -48,8 +55,15 @@ describe('Autoimport Test: runShellCommand', () => {
       expect(error).to.not.exist;
 
       const allCommandsWithEnv = getAllCommandsWhichShouldBeWithEnvironment(allCommands);
+
+      // Notice: Don't move this block, because testEnv should be set as process.env.NODE_ENV according to the stored value in allEnvs
+      // If testEnv is null, then it should be set as DEFAULT_NODE_ENV from default config
+      testEnv = _.isNil(testEnv) ? DEFAULT_NODE_ENV : testEnv;
+      // If testEnv isn't included in the list of default environments, then use it as is
+      const actualTestEnv = DEFAULT_ENVIRONMENTS[testEnv] || testEnv;
+
       allCommandsWithEnv.forEach((command: string) => {
-        return expect(command, `wrong ENVIRONMENT in command:\n* ${command}`).to.contain(DEFAULT_ENVIRONMENTS[testEnv || DEFAULT_NODE_ENV] || testEnv);
+        return expect(command, `wrong ENVIRONMENT in command:\n* ${command}`).to.contain(actualTestEnv);
       });
 
       const allUndefineds = allCommands.filter((command: string) => command.includes('undefined'));
