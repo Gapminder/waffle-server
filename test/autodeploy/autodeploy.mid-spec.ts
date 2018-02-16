@@ -11,11 +11,16 @@ import * as autoDeploy from '../../deployment/gcp_scripts/autodeploy';
 const { DEFAULT_ENVIRONMENTS, DEFAULT_NODE_ENV } = require('../../deployment/gcp_scripts/default_deployment_config.json');
 
 
+const TEST_ENVIRONMENTS = process.env.TEST_ENVIRONMENTS ? process.env.TEST_ENVIRONMENTS.split(',') : [];
 let allCommands = [];
 
 describe('Autoimport Test: runShellCommand', () => {
   let runShellCommandStub;
-  const allEnvs = Object.keys(DEFAULT_ENVIRONMENTS);
+  const allEnvs = _.chain(DEFAULT_ENVIRONMENTS)
+    .keys()
+    .concat([null, 'stage'])
+    .filter((env: string) => _.isEmpty(TEST_ENVIRONMENTS) ? true : _.includes(TEST_ENVIRONMENTS, env))
+    .value();
 
   beforeEach(() => {
     runShellCommandStub = sinon.stub(commonHelpers, 'runShellCommand').callsFake(runShellCommandFn);
@@ -27,8 +32,15 @@ describe('Autoimport Test: runShellCommand', () => {
   });
 
   allEnvs.forEach((testEnv: string | null) => {
-    it(`${testEnv} env: check not allowed values present in commands`, async () => {
-      process.env.NODE_ENV = testEnv;
+
+    it(`#${testEnv || 'default'} env: check not allowed values present in commands`, async () => {
+      if (process.env.NODE_ENV) {
+        delete process.env.NODE_ENV;
+      }
+
+      if (testEnv) {
+        process.env.NODE_ENV = testEnv;
+      }
 
       const error = await autoDeploy.run();
       /* tslint:disable-next-line */
@@ -36,7 +48,7 @@ describe('Autoimport Test: runShellCommand', () => {
 
       const allCommandsWithEnv = getAllCommandsWhichShouldBeWithEnvironment(allCommands);
       allCommandsWithEnv.forEach((command: string) => {
-        return expect(command, `wrong ENVIRONMENT in command:\n* ${command}`).to.contain(DEFAULT_ENVIRONMENTS[testEnv]);
+        return expect(command, `wrong ENVIRONMENT in command:\n* ${command}`).to.contain(DEFAULT_ENVIRONMENTS[testEnv || DEFAULT_NODE_ENV] || testEnv);
       });
 
       const allUndefineds = allCommands.filter((command: string) => command.includes('undefined'));
@@ -52,30 +64,7 @@ describe('Autoimport Test: runShellCommand', () => {
       expect(allEmptyValues, `empty values present on command(s):\n* ${allEmptyValues.join('\n* ')}`).to.be.an('array').that.is.empty;
 
     });
-  });
 
-  it(`use default env when NODE_ENV wasn't set`, async () => {
-    if (process.env.NODE_ENV) {
-      delete process.env.NODE_ENV;
-    }
-
-    await autoDeploy.run();
-
-    const allCommandsWithEnv = getAllCommandsWhichShouldBeWithEnvironment(allCommands);
-    allCommandsWithEnv.forEach((command: string) => {
-      return expect(command, `wrong ENVIRONMENT in command:\n* ${command}`).to.contain(DEFAULT_ENVIRONMENTS[DEFAULT_NODE_ENV]);
-    });
-  });
-
-  it(`use default env when NODE_ENV was set but wasn't recognized`, async () => {
-    process.env.NODE_ENV = 'stage';
-
-    await autoDeploy.run();
-
-    const allCommandsWithEnv = getAllCommandsWhichShouldBeWithEnvironment(allCommands);
-    allCommandsWithEnv.forEach((command: string) => {
-      return expect(command, `wrong ENVIRONMENT in command:\n* ${command}`).to.contain(process.env.NODE_ENV);
-    });
   });
 });
 

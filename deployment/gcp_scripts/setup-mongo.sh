@@ -8,19 +8,20 @@ export LOG_PATH=/var/log/mongodb/
 mkdir -p $LOG_PATH
 touch $LOG_PATH/mongo-runner-script.log
 
-mkdir -p /data/db
-
 export MONGO_USER=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/mongo_user" -H "Metadata-Flavor: Google")
 export MONGO_USER_ROLE=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/mongo_user_role" -H "Metadata-Flavor: Google")
 export MONGO_PASSWORD=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/mongo_password" -H "Metadata-Flavor: Google")
 export MONGO_DB=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/mongo_db" -H "Metadata-Flavor: Google")
-export MONGO_PORT=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/mongo_db" -H "Metadata-Flavor: Google")
+# export MONGO_PORT=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/mongo_db" -H "Metadata-Flavor: Google")
+# export MONGO_DB_PATH=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/mongo_db" -H "Metadata-Flavor: Google")
 
-mongod --bind_ip 127.0.0.1 --port ${MONGO_PORT} &
+mkdir -p ${MONGO_DB_PATH:-/data/db}
+
+service mongod start
 
 while [ $(systemctl is-active mongod) = "inactive" ]; do
     sleep 1
-    echo "Service inactive. Trying." >> $LOG_PATH/mongo-runner-script.log
+    echo "Service is inactive. Trying." >> $LOG_PATH/mongo-runner-script.log
 done
 
-mongo --host 127.0.0.1:${MONGO_PORT} ${MONGO_DB} --eval "db.dropAllUsers(); db.createUser({user: '${MONGO_USER}', pwd: '${MONGO_PASSWORD}', roles: [{role: '$MONGO_USER_ROLE', db: '${MONGO_DB}'}]})"
+mongo ${MONGO_DB} --eval "db.dropAllUsers(); db.createUser({user: '${MONGO_USER}', pwd: '${MONGO_PASSWORD}', roles: [{role: '$MONGO_USER_ROLE', db: '${MONGO_DB}'}]})"
