@@ -71,7 +71,8 @@ function createMongo(externalContext: any, cb: Function): void {
     ENVIRONMENT,
     MONGO_ZONE,
     PROJECT_ID,
-    MONGODB_PORT,
+    // MONGODB_PORT,
+    MONGODB_NAME,
     MONGODB_CONTAINER_IMAGE,
     MONGODB_SSH_KEY,
     MONGO_DISK_SIZE,
@@ -83,8 +84,8 @@ function createMongo(externalContext: any, cb: Function): void {
     MONGO_USER_ROLE: 'readWrite',
     MONGO_USER: 'new-user',
     MONGO_PASSWORD: 'new-user-password',
-    MONGO_DB: 'test-db',
-    mongo_PORT: MONGODB_PORT
+    MONGO_DB: MONGODB_NAME,
+    // MONGO_PORT: MONGODB_PORT
   };
 
   if (MONGODB_SSH_KEY) {
