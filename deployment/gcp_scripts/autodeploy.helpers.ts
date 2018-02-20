@@ -5,6 +5,9 @@ import { DockerBuildArguments, DockerBuildArgumentsTM } from './interfaces';
 import { getDockerArguments, getGCloudArguments, runShellCommand } from './common.helpers';
 import { logger } from '../../ws.config/log';
 
+export const pathToLoadBalancerIP = 'status.loadBalancer.ingress.0.ip';
+export const pathToTMNetworkIP = 'networkInterfaces.0.accessConfigs.0.natIP';
+
 export function setDefaultUser(externalContext: any, cb: Function): void {
   const {
     COMPUTED_VARIABLES: { OWNER_ACCOUNT }
@@ -48,8 +51,8 @@ export function setDefaultProject(externalContext: any, cb: Function): void {
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
-export function setupAPIs(apisList: string[], options: any, externalContext, cb: Function): void {
-  const {action = 'enable'} = options;
+export function setupAPIs(apisList: string[], options: any, externalContext: any, cb: Function): void {
+  const { action = 'enable' } = options;
 
   async.eachSeries(apisList, (api: string, _cb: AsyncResultCallback<ExecOutputReturnValue, string>) => {
     const command = `gcloud services ${action} ${api}`;
@@ -196,7 +199,7 @@ export function createTM(externalContext: any, cb: Function): void {
     PROJECT_ID
   } = externalContext;
 
-  //fixme: --project=${PROJECT_ID}
+  // fixme: --project=${PROJECT_ID}
   const command = `gcloud beta compute instances create-with-container ${TM_INSTANCE_NAME} --tags=${TM_INSTANCE_NAME} --machine-type=${TM_MACHINE_TYPE} --boot-disk-size=${TM_DISK_SIZE} --zone=${TM_ZONE} --container-image=${IMAGE_URL}`;
   const options: ExecOptions = {};
 
@@ -215,9 +218,9 @@ export function getTMExternalIP(externalContext: any, cb: Function): void {
     PROJECT_ID
   } = externalContext;
 
-  //fixme: --project=${PROJECT_ID}
+  // fixme: --project=${PROJECT_ID}
   const command = `gcloud compute instances describe ${TM_INSTANCE_NAME} --zone=${TM_ZONE}`;
-  const options: any = {pathToCheck: 'networkInterfaces.0.accessConfigs.0.natIP'};
+  const options: any = { pathsToCheck: [pathToTMNetworkIP] };
 
   return runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
     if (error) {
@@ -226,10 +229,12 @@ export function getTMExternalIP(externalContext: any, cb: Function): void {
 
     try {
       logger.info('\n', result.stdout, '\n');
-      const { networkInterfaces: [{ accessConfigs: [{ natIP: networkIP }] }] } = JSON.parse(result.stdout);
-      logger.info('\nTM EXTERNAL IP:', networkIP, '\n');
 
-      externalContext.TM_INSTANCE_VARIABLES.IP_ADDRESS = networkIP;
+      const parsedStdout = JSON.parse(result.stdout);
+
+      externalContext.TM_INSTANCE_VARIABLES.IP_ADDRESS = _.get(parsedStdout, pathToTMNetworkIP, false);
+
+      logger.info('\nTM EXTERNAL IP:', externalContext.TM_INSTANCE_VARIABLES.IP_ADDRESS, '\n');
 
     } catch (_error) {
       return cb(_error.message, externalContext);
@@ -249,7 +254,7 @@ export function allowHttpTM(externalContext: any, cb: Function): void {
     FIREWALL_RULE__ALLOWED_PORTS
   } = externalContext;
 
-  //fixme: --project=${PROJECT_ID}
+  // fixme: --project=${PROJECT_ID}
   const command = `gcloud compute firewall-rules create ${FIREWALL_RULE__ALLOW_HTTP} --allow=${FIREWALL_RULE__ALLOWED_PORTS} --target-tags=${TM_INSTANCE_NAME}`;
   const options: ExecOptions = {};
 
@@ -271,7 +276,7 @@ export function promoteTMExternalIP(externalContext: any, cb: Function): void {
   } = externalContext;
 
   const ADDRESS_NAME = `${ENVIRONMENT}-tm-address-${VERSION}`;
-  //fixme: REGION, --project=${PROJECT_ID}
+  // fixme: REGION, --project=${PROJECT_ID}
   const command = `gcloud compute addresses create ${ADDRESS_NAME} --addresses ${IP_ADDRESS} --region ${TM_REGION}`;
   const options: ExecOptions = {};
 
@@ -286,7 +291,7 @@ export function createCluster(externalContext: any, cb: Function): void {
 
   const gcloudArgs = _.pick(externalContext, CREATE_CLUSTER__ALLOWED_PARAMS);
   const commandArgs = getGCloudArguments(gcloudArgs);
-  //fixme: --project=${PROJECT_ID}
+  // fixme: --project=${PROJECT_ID}
   const command = `gcloud container clusters create ${CLUSTER_NAME} ${commandArgs} --machine-type=${WS_MACHINE_TYPE} --disk-size=${WS_DISK_SIZE}`;
   const options: ExecOptions = {};
 
@@ -360,19 +365,18 @@ export function printExternalIPs(externalContext: any, cb: Function): void {
   } = externalContext;
 
   const command = `kubectl get service ${LOAD_BALANCER_NAME}`;
-  const options: any = {pathToCheck: 'status.loadBalancer.ingress.0.ip'};
+  const options: any = { pathsToCheck: [pathToLoadBalancerIP] };
 
   runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
-    if(error) {
-      // fixme
-      return cb(error);
+    if (error) {
+      return cb(error, externalContext);
     }
 
     try {
       logger.info('\n', result.stdout, '\n');
 
       const parsedResult = JSON.parse(result.stdout);
-      const LOAD_BALANCER_IP_ADDRESS = _.get(parsedResult, 'status.loadBalancer.ingress.0.ip', null);
+      const LOAD_BALANCER_IP_ADDRESS = _.get(parsedResult, pathToLoadBalancerIP, null);
 
       logger.info('\nRESULTS: \n', `TM: ${TM_IP_ADDRESS}\n`, `LB: ${LOAD_BALANCER_IP_ADDRESS}\n`);
 

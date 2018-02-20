@@ -5,6 +5,8 @@ import * as commonHelpers from '../../deployment/gcp_scripts/common.helpers';
 import * as autoDeployHelpers from '../../deployment/gcp_scripts/autodeploy.helpers';
 import { expectNoEmptyParamsInCommand, hasFlag } from './testUtils';
 
+import { pathToLoadBalancerIP, pathToTMNetworkIP } from '../../deployment/gcp_scripts/autodeploy.helpers';
+
 const sandbox = sinon.createSandbox();
 
 describe('Autodeploy.helper Commands', () => {
@@ -128,42 +130,13 @@ describe('Autodeploy.helper Commands', () => {
       TM_ZONE: 'TEST_TM_ZONE',
       PROJECT_ID: 'TEST_PROJECT_ID'
     };
-    const expectedOptions = { pathToCheck: 'networkInterfaces.0.accessConfigs.0.natIP' };
+    const expectedOptions = { pathsToCheck: [pathToTMNetworkIP] };
 
     const runShellCommandStub = sandbox.stub(commonHelpers, 'runShellCommand').callsArgWithAsync(2, null, runShellCommandResult);
     autoDeployHelpers.getTMExternalIP(initialContext, (error: string, externalContext: any) => {
 
       sinon.assert.calledWith(runShellCommandStub, expectNoEmptyParamsInCommand, expectedOptions);
       expect(error).to.be.an('null');
-      expect(externalContext).to.deep.equal(expectedContext);
-
-      done();
-    });
-  });
-
-  it('getTMExternalIP: throw if no value in JSON; context not changed', (done: Function) => {
-    const runShellCommandResult = {
-      stdout: JSON.stringify({
-        networkInterfaces: [{
-          NOaccessConfigs: [{ natIP: '1' }]
-        }]
-      })
-    };
-    const expectedContext = {
-      TM_INSTANCE_VARIABLES: {
-        IMAGE_URL: 'TEST_IMAGE_URL',
-        NODE_NAME: 'TM_INSTANCE_NAME'
-      },
-      TM_ZONE: 'TEST_TM_ZONE',
-      PROJECT_ID: 'TEST_PROJECT_ID'
-    };
-    const expectedOptions = { pathToCheck: 'networkInterfaces.0.accessConfigs.0.natIP' };
-
-    const runShellCommandStub = sandbox.stub(commonHelpers, 'runShellCommand').callsArgWithAsync(2, null, runShellCommandResult);
-    autoDeployHelpers.getTMExternalIP({ ...expectedContext }, (error: string, externalContext: any) => {
-
-      sinon.assert.calledWith(runShellCommandStub, expectNoEmptyParamsInCommand, expectedOptions);
-      expect(error).to.equal(`Cannot read property 'Symbol(Symbol.iterator)' of undefined`);
       expect(externalContext).to.deep.equal(expectedContext);
 
       done();
@@ -187,7 +160,7 @@ describe('Autodeploy.helper Commands', () => {
       TM_ZONE: 'TEST_TM_ZONE',
       PROJECT_ID: 'TEST_PROJECT_ID'
     };
-    const expectedOptions = { pathToCheck: 'networkInterfaces.0.accessConfigs.0.natIP' };
+    const expectedOptions = { pathsToCheck: [pathToTMNetworkIP] };
     const runShellCommandStub = sandbox.stub(commonHelpers, 'runShellCommand').callsArgWithAsync(2, expectedError, runShellCommandResult);
 
     autoDeployHelpers.getTMExternalIP({ ...expectedContext }, (error: string, externalContext: any) => {
@@ -210,7 +183,7 @@ describe('Autodeploy.helper Commands', () => {
       TM_ZONE: 'TEST_TM_ZONE',
       PROJECT_ID: 'TEST_PROJECT_ID'
     };
-    const expectedOptions = { pathToCheck: 'networkInterfaces.0.accessConfigs.0.natIP' };
+    const expectedOptions = { pathsToCheck: [pathToTMNetworkIP] };
     const runShellCommandStub = sandbox.stub(commonHelpers, 'runShellCommand').callsArgWithAsync(2, null, runShellCommandResult);
 
     autoDeployHelpers.getTMExternalIP({ ...expectedContext }, (error: string, externalContext: any) => {
@@ -244,40 +217,14 @@ describe('Autodeploy.helper Commands', () => {
       LOAD_BALANCER_NAME: 'TEST_TM_ZONE'
     };
     const expectedContext = ip;
+    const expectedOptions = { pathsToCheck: [pathToLoadBalancerIP] };
 
     const runShellCommandStub = sandbox.stub(commonHelpers, 'runShellCommand').callsArgWithAsync(2, null, runShellCommandResult);
     autoDeployHelpers.printExternalIPs(initialContext, (error: string, externalContext: any) => {
 
-      sinon.assert.calledWith(runShellCommandStub, expectNoEmptyParamsInCommand);
+      sinon.assert.calledWith(runShellCommandStub, expectNoEmptyParamsInCommand, expectedOptions);
       expect(error).to.be.an('null');
       expect(externalContext).to.deep.equal(expectedContext);
-
-      done();
-    });
-  });
-
-  // fixme
-  xit('printExternalIPs: error when json path is incorrect', (done: Function) => {
-    const runShellCommandResult = {
-      stdout: JSON.stringify({
-        status: {
-          loadBalancer: { ingress: [{ NOip: '111' }] }
-        }
-      })
-    };
-    const expectContext = {
-      TM_INSTANCE_VARIABLES: {
-        IP_ADDRESS: 'TM_IP_ADDRESS'
-      },
-      LOAD_BALANCER_NAME: 'TEST_TM_ZONE'
-    };
-
-    const runShellCommandStub = sandbox.stub(commonHelpers, 'runShellCommand').callsArgWithAsync(2, null, runShellCommandResult);
-    autoDeployHelpers.printExternalIPs({ ...expectContext }, (error: string, externalContext: any) => {
-
-      sinon.assert.calledWith(runShellCommandStub, expectNoEmptyParamsInCommand);
-      expect(error).to.be.an('null');
-      expect(externalContext).to.deep.equal(expectContext);
 
       done();
     });
