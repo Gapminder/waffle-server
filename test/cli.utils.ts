@@ -54,9 +54,7 @@ function _runDatasetImport(repo: Repo, onIncrementalUpdateDone: Function): void 
     }
 
     const allowedCommits = _.drop(commits, commitIndexToStartImport);
-    // todo: turn back if needed
-    // const finishCommitIndex = commitIndexToStartImport ? 3 - commitIndexToStartImport : _.size(allowedCommits);
-    const finishCommitIndex = _.size(allowedCommits);
+    const finishCommitIndex = commitIndexToStartImport ? 3 - commitIndexToStartImport : _.size(allowedCommits);
     const cliOptions = _.extend({
       from: _.first(allowedCommits),
       to: _.get(allowedCommits, `${finishCommitIndex}`)

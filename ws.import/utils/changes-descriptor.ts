@@ -105,17 +105,6 @@ export class ChangesDescriptor {
     return ddfImportUtils.UPDATE_ACTIONS.has(this.action);
   }
 
-  public hasSameResourceRawAndRemovedColumns(anothers: ChangesDescriptor[]): boolean {
-    for (const anAnother of anothers) {
-      if (this.currentResourceRaw === anAnother.currentResourceRaw &&
-        _.isEqual(this.removedColumns, anAnother.removedColumns)) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
   private _parseResource(resource: DatapackageResource): ParsedConceptResource {
     if (this.describes(constants.CONCEPTS)) {
       return datapackageParser.parseConceptsResource(resource);

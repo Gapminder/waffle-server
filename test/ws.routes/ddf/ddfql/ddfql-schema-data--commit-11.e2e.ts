@@ -16,8 +16,13 @@ import * as fixtureConceptsWithCorrectRuTranslations
   from './fixtures/commit-11--concepts-with_correct_ru_ru_translations.json';
 
 const INDEX_OF_TENTH_COMMIT = 10;
+const COMMIT_INDEX_TO_IMPORT = process.env.COMMIT_INDEX_TO_IMPORT || 0;
 
 describe('State Version 11 (11th commit)', function() {
+  if (COMMIT_INDEX_TO_IMPORT) {
+    return;
+  }
+
   before((done: Function) => {
     cliUtils.getCommitByGithubUrl(e2eEnv.repo, INDEX_OF_TENTH_COMMIT, (error: Error, commit: string) => {
       if (error) {

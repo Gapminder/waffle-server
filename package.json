@@ -27,7 +27,6 @@
     "e2e:2commit": "COMMIT_INDEX_TO_IMPORT=1 npm run e2e:allCommits",
     "e2e:3commit": "COMMIT_INDEX_TO_IMPORT=2 npm run e2e:allCommits",
     "e2e:4commit": "COMMIT_INDEX_TO_IMPORT=3 npm run e2e:allCommits",
-    "e2e:11commit": "COMMIT_INDEX_TO_IMPORT=10 npm run e2e:allCommits",
     "performance": "HOST_URL=http://localhost PORT=8081 METHOD=GET MONGODB_URL=mongodb://localhost:27017/ws_ddf_test MONGOOSE_DEBUG=true node test/cache-warmup.performance.js",
     "local": "DEFAULT_USER_PASSWORD=123 MONGODB_URL='mongodb://localhost:27017/ws_ddf_local' PORT=3000 NODE_ENV=local ts-node server.ts",
     "start": "pm2 stop all && pm2 delete all && pm2 install pm2-logrotate && pm2 start ecosystem.config.js --name WS --attach",
