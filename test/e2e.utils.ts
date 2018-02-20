@@ -25,7 +25,7 @@ export {
 
 function sendDdfqlRequest(ddfql: any, onResponseReceived: Function): void {
   const encodedDataset = _.has(ddfql, 'dataset') ? { dataset: encodeURIComponent(ddfql.dataset) } : {};
-  ddfql = Object.assign({}, ddfql, { force: 'true' }, encodedDataset);
+  ddfql = Object.assign({}, ddfql, { force: true }, encodedDataset);
   // ddfql = Object.assign({}, ddfql, encodedDataset);
 
   // console.log(`/api/ddf/ql?${URLON.stringify(ddfql)}`);
