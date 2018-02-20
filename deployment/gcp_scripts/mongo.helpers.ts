@@ -2,7 +2,10 @@ import * as _ from 'lodash';
 import * as async from 'async';
 import { getGCloudArguments, getMongoArguments, runShellCommand } from './common.helpers';
 import { ExecOptions, ExecOutputReturnValue } from 'shelljs';
+import { logger } from '../../ws.config/log';
 
+export const pathToMongoNetworkIP = 'networkInterfaces.0.networkIP';
+export const pathToMongoSubnetwork = 'networkInterfaces.0.subnetwork';
 
 export function setupMongoInstance(externalContext: any, cb: Function): void {
   const {
@@ -143,10 +146,11 @@ function getMongoInternalIP(externalContext: any, cb: Function): void {
 
   //fixme: --project=${PROJECT_ID}
   const command = `gcloud compute instances describe ${MONGO_INSTANCE_NAME} --zone=${MONGO_ZONE}`;
-  const options: any = {pathToCheck: 'networkInterfaces.0.networkIP'};
+  const options: any = { pathsToCheck: [pathToMongoNetworkIP, pathToMongoSubnetwork] };
 
   return runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
-    console.log('\n', result.stdout, '\n');
+    logger.info('\n', result.stdout, '\n');
+    logger.info(`\nConfig has mongourl: ${MONGODB_URL}\n`);
 
     try {
       const { networkInterfaces: [{ networkIP, subnetwork }] } = JSON.parse(result.stdout);
@@ -154,8 +158,8 @@ function getMongoInternalIP(externalContext: any, cb: Function): void {
       externalContext.MONGO_SUBNETWORK = subnetwork;
       externalContext.MONGODB_URL = `mongodb://${MONGODB_USER}:${MONGODB_PASSWORD}@${externalContext.MONGO_HOST}:${MONGODB_PORT}/${MONGODB_NAME}`;
 
-      console.log('\nMONGO INTERNAL IP:', externalContext.MONGO_HOST, '\n');
-      console.log('\nMONGO URL:', externalContext.MONGODB_URL, ', ', externalContext.MONGO_SUBNETWORK, '\n');
+      logger.info('\nMONGO INTERNAL IP:', externalContext.MONGO_HOST, '\n');
+      logger.info('\nMONGO URL:', externalContext.MONGODB_URL, ', ', externalContext.MONGO_SUBNETWORK, '\n');
     } catch (_error) {
       return cb(_error, externalContext);
     }

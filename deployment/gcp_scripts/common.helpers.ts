@@ -5,11 +5,12 @@ import { ChildProcess } from 'child_process';
 import { ExecOutputReturnValue } from 'shelljs';
 import { DockerBuildArguments, GCloudArguments } from './interfaces';
 import { logger } from '../../ws.config/log';
+import { constants } from '../../ws.utils/constants';
 
 interface AsyncResultCallback<T, E> { (err?: E, result?: T): void; }
 
 const {
-  DEFAULT_NODE_ENV,
+  DEFAULT_NODE_ENV
 } = require('./default_deployment_config.json');
 
 export function runShellCommand(command: string, options: any, cb: AsyncResultCallback<ExecOutputReturnValue | ChildProcess | string, string>): void {
@@ -38,8 +39,8 @@ export function runShellCommand(command: string, options: any, cb: AsyncResultCa
   let attemptCounter = 0;
 
   async.retry({
-    times: 10,
-    interval: 10000
+    times: constants.AUTODEPLOY_RETRY_TIMES,
+    interval: constants.AUTODEPLOY_RETRY_INTERVAL
   }, (_cb: AsyncResultCallback<ExecOutputReturnValue | ChildProcess, string>) => {
     const result: ExecOutputReturnValue | ChildProcess = shell.exec(wrappedCommand, options);
     const error: string = shell.error();
@@ -73,8 +74,12 @@ export function runShellCommand(command: string, options: any, cb: AsyncResultCa
     try {
       const parsedStdout = JSON.parse(stdout);
 
-      if (options.pathToCheck && !_.get(parsedStdout, options.pathToCheck, false)) {
-        throw new Error(`No required data by path '${options.pathToCheck}': ${stdout}`);
+      if (options.pathsToCheck) {
+        const missingPaths = options.pathsToCheck.filter((path: string) => !_.get(parsedStdout, path, false));
+
+        if (missingPaths.length) {
+          throw new Error(`No required data by paths: "${missingPaths.join('", "')}" : ${stdout}`);
+        }
       }
 
       return async.setImmediate(() => _cb(null, result));

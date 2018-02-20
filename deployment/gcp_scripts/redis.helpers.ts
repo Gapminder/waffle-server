@@ -2,7 +2,10 @@ import * as _ from 'lodash';
 import * as async from 'async';
 import { runShellCommand } from './common.helpers';
 import { ExecOptions, ExecOutputReturnValue } from 'shelljs';
+import { logger } from '../../ws.config/log';
 
+export const pathToRedisNetworkIP = 'networkInterfaces.0.networkIP';
+export const pathToRedisSubnetwork = 'networkInterfaces.0.subnetwork';
 
 export function setupRedisInstance(externalContext: any, cb: Function): void {
   const {
@@ -73,14 +76,14 @@ function getRedisInternalIP(externalContext: any, cb: Function): void {
 
   //fixme: --project=${PROJECT_ID}
   const command = `gcloud compute instances describe ${REDIS_INSTANCE_NAME} --zone=${REDIS_ZONE}`;
-  const options: any = {pathToCheck: 'networkInterfaces.0.networkIP'};
+  const options: any = { pathsToCheck: [pathToRedisNetworkIP, pathToRedisSubnetwork] };
 
   return runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
-    console.log('\n', result.stdout, '\n');
+    logger.info('\n', result.stdout, '\n');
 
     try {
       const { networkInterfaces: [{ networkIP, subnetwork }] } = JSON.parse(result.stdout);
-      console.log('\nREDIS INTERNAL IP:', networkIP, ', ',subnetwork, '\n');
+      logger.info('\nREDIS INTERNAL IP:', networkIP, ', ',subnetwork, '\n');
       externalContext.REDIS_HOST = networkIP;
       externalContext.REDIS_SUBNETWORK = subnetwork;
     } catch (_error) {
@@ -105,6 +108,6 @@ function reserveRedisInternalIP(externalContext: any, cb: Function): void {
   //fixme: REGION, --project=${PROJECT_ID}
   const command = `gcloud compute addresses create ${ADDRESS_NAME} --region=${REDIS_REGION} --subnet ${REDIS_SUBNETWORK} --addresses ${REDIS_HOST}`;
   const options: ExecOptions = {};
-  
+
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
