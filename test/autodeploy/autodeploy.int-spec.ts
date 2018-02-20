@@ -10,6 +10,7 @@ import * as autoDeploy from '../../deployment/gcp_scripts/autodeploy';
 
 const { DEFAULT_ENVIRONMENTS, DEFAULT_NODE_ENV } = require('../../deployment/gcp_scripts/default_deployment_config.json');
 
+const sandbox = sinon.createSandbox();
 
 // Example: TEST_ENVIRONMENTS=local npm run integration
 // Example: TEST_ENVIRONMENTS=local,development npm run integration
@@ -30,12 +31,12 @@ describe('Autoimport Test: runShellCommand', () => {
     .value();
 
   beforeEach(() => {
-    runShellCommandStub = sinon.stub(commonHelpers, 'runShellCommand').callsFake(runShellCommandFn);
+    runShellCommandStub = sandbox.stub(commonHelpers, 'runShellCommand').callsFake(runShellCommandFn);
     allCommands = [];
   });
 
   afterEach(() => {
-    runShellCommandStub.restore();
+    sandbox.restore();
   });
 
   allEnvs.forEach((testEnv: string | null) => {

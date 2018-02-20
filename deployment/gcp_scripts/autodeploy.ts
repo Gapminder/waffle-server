@@ -3,6 +3,7 @@ import { GCloudArguments } from './interfaces';
 import { setupRedisInstance } from './redis.helpers';
 import { setupMongoInstance } from './mongo.helpers';
 import { getContextInstance } from './common.helpers';
+import { logger } from '../../ws.config/log';
 
 import {
   setDefaultUser, createProject, setDefaultProject,
@@ -144,7 +145,7 @@ export function run(): Promise<string | null> {
       printExternalIPs
     ], function (error: string, result: any): void {
       if (error) {
-        console.error(error);
+        logger.error(error);
         return reject(error);
       }
 
