@@ -4,6 +4,7 @@ import * as shell from 'shelljs';
 import { ChildProcess } from 'child_process';
 import { ExecOutputReturnValue } from 'shelljs';
 import { DockerBuildArguments, GCloudArguments } from './interfaces';
+import { logger } from '../../ws.config/log';
 
 interface AsyncResultCallback<T, E> { (err?: E, result?: T): void; }
 
@@ -31,8 +32,8 @@ export function runShellCommand(command: string, options: any, cb: AsyncResultCa
   }
 
   const wrappedCommand = `${command}${outputParam}`;
-  // console.log('Current fixture: ', fixtures[counter]);
-  console.log('RUN COMMAND: ', wrappedCommand, '\n');
+  // logger.info('Current fixture: ', fixtures[counter]);
+  logger.info('RUN COMMAND: ', wrappedCommand, '\n');
 
   let attemptCounter = 0;
 
@@ -50,22 +51,22 @@ export function runShellCommand(command: string, options: any, cb: AsyncResultCa
     const isResultShouldBeSkipped = isStepShouldBeSkipped(stdout);
 
     if (error && !isErrorShouldBeSkipped) {
-      console.log(`Attempt ${++attemptCounter} was failed..`);
+      logger.info(`Attempt ${++attemptCounter} was failed..`);
       return async.setImmediate(() => _cb(`Unexpected error [code=${code}]: ${stderr}`, result));
     }
 
     if (isErrorShouldBeSkipped || isResultShouldBeSkipped) {
-      console.log(`SKIP STEP\n`);
+      logger.info(`SKIP STEP\n`);
       return async.setImmediate(() => _cb(null, result));
     }
 
     if (_.isEmpty(stdout)) {
-      console.log(`STDOUT IS EMPTY\n`);
+      logger.info(`STDOUT IS EMPTY\n`);
       return async.setImmediate(() => _cb(null, result));
     }
 
     if (_.includes(command, 'docker')) {
-      console.log(`DOCKER COMMAND\n`);
+      logger.info(`DOCKER COMMAND\n`);
       return async.setImmediate(() => _cb(null, result));
     }
 
@@ -78,7 +79,7 @@ export function runShellCommand(command: string, options: any, cb: AsyncResultCa
 
       return async.setImmediate(() => _cb(null, result));
     } catch (_error) {
-      console.log(`Attempt ${++attemptCounter} was failed..`);
+      logger.info(`Attempt ${++attemptCounter} was failed..`);
 
       return async.setImmediate(() => _cb(`JSON parse syntax error: ${_error.message}. Retry to connect again..`, result));
     }
@@ -102,7 +103,7 @@ export function getDockerArguments(dockerArgs: DockerBuildArguments): string {
 
 export function getGCloudArguments(gcloudArgs: any): string {
   return _.transform(gcloudArgs, (result: string[], valueArg: string | number | boolean, nameArg: string) => {
-    // console.log('\n', nameArg, valueArg, _.isBoolean(valueArg), _.isNil(valueArg), '\n');
+    // logger.info('\n', nameArg, valueArg, _.isBoolean(valueArg), _.isNil(valueArg), '\n');
     if (_.isBoolean(valueArg) || _.isNil(valueArg)) {
       result.push(`--${_.kebabCase(nameArg)}`);
       return;

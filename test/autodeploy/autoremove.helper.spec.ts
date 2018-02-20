@@ -6,7 +6,7 @@ import * as commonHelpers from '../../deployment/gcp_scripts/common.helpers';
 import * as autoRemoveHelpers from '../../deployment/gcp_scripts/autoremove.helpers';
 import { expectNoEmptyParamsInCommand } from './testUtils';
 
-const sandbox = sinon.sandbox.create();
+const sandbox = sinon.createSandbox();
 
 describe('Autoremove.helper Commands', () => {
   let runShellCommandStub;

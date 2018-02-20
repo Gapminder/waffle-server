@@ -3,6 +3,7 @@ import * as async from 'async';
 import { ExecOptions, ExecOutputReturnValue } from 'shelljs';
 import { DockerBuildArguments, DockerBuildArgumentsTM } from './interfaces';
 import { getDockerArguments, getGCloudArguments, runShellCommand } from './common.helpers';
+import { logger } from '../../ws.config/log';
 
 export function setDefaultUser(externalContext: any, cb: Function): void {
   const {
@@ -28,7 +29,7 @@ export function createProject(externalContext: any, cb: Function): void {
 
   return runShellCommand(command, options, (error: string) => {
     if (_.includes(error, 'The project ID you specified is already in use by another project')) {
-      console.log('RESULT: So, skipping the step..\n');
+      logger.info('RESULT: So, skipping the step..\n');
       return cb(null, externalContext);
     }
 
@@ -224,9 +225,9 @@ export function getTMExternalIP(externalContext: any, cb: Function): void {
     }
 
     try {
-      console.log('\n', result.stdout, '\n');
+      logger.info('\n', result.stdout, '\n');
       const { networkInterfaces: [{ accessConfigs: [{ natIP: networkIP }] }] } = JSON.parse(result.stdout);
-      console.log('\nTM EXTERNAL IP:', networkIP, '\n');
+      logger.info('\nTM EXTERNAL IP:', networkIP, '\n');
 
       externalContext.TM_INSTANCE_VARIABLES.IP_ADDRESS = networkIP;
 
@@ -362,17 +363,22 @@ export function printExternalIPs(externalContext: any, cb: Function): void {
   const options: any = {pathToCheck: 'status.loadBalancer.ingress.0.ip'};
 
   runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
-    console.log('\n', result.stdout, '\n');
+    if(error) {
+      // fixme
+      return cb(error);
+    }
 
     try {
+      logger.info('\n', result.stdout, '\n');
+
       const parsedResult = JSON.parse(result.stdout);
       const LOAD_BALANCER_IP_ADDRESS = _.get(parsedResult, 'status.loadBalancer.ingress.0.ip', null);
 
-      console.log('\nRESULTS: \n', `TM: ${TM_IP_ADDRESS}\n`, `LB: ${LOAD_BALANCER_IP_ADDRESS}\n`, `MONGO URI: ${MONGODB_URL}`);
+      logger.info('\nRESULTS: \n', `TM: ${TM_IP_ADDRESS}\n`, `LB: ${LOAD_BALANCER_IP_ADDRESS}\n`);
 
       return cb(null, LOAD_BALANCER_IP_ADDRESS);
     } catch (_error) {
-      console.error('JSON parse syntax error with LOAD_BALANCER_IP_ADDRESS. Retry to connect again..');
+      logger.error('JSON parse syntax error with LOAD_BALANCER_IP_ADDRESS. Retry to connect again..');
 
       return cb();
     }
