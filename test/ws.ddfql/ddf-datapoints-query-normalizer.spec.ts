@@ -3,18 +3,23 @@ import 'mocha';
 import * as _ from 'lodash';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
-import * as sinonTest from 'sinon-test';
 import * as conceptUtils from '../../ws.import/utils/concepts.utils';
 import * as ddfQueryUtils from '../../ws.ddfql/ddf-query-utils';
 import * as ddfQueryNormalizer from '../../ws.ddfql/ddf-datapoints-query-normalizer';
 
-const sandbox = sinonTest.configureTest(sinon);
+const sandbox = sinon.createSandbox();
 
 const concepts = Object.freeze([
   { gid: 'time', originId: '27a3470d3a8c9b37009b9bf9', properties: { concept_type: 'time' } },
   { gid: 'quarter', originId: '77a3471d3a8c9b37009b9bf0', properties: { concept_type: 'quarter' } },
   { gid: 'geo', originId: '17a3470d3a8c9b37009b9bf9', properties: { concept_type: 'entity_domain' } },
-  { gid: 'country', originId: '17a3470d3a8c9b37009b9bf9-country', properties: { concept_type: 'entity_set' }, domain: '17a3470d3a8c9b37009b9bf9', type: 'entity_set' },
+  {
+    gid: 'country',
+    originId: '17a3470d3a8c9b37009b9bf9-country',
+    properties: { concept_type: 'entity_set' },
+    domain: '17a3470d3a8c9b37009b9bf9',
+    type: 'entity_set'
+  },
   { gid: 'latitude', properties: { concept_type: 'measure' } },
   { gid: 'population', originId: '37a3470d3a8c9b37009b9bf9', properties: { concept_type: 'measure' } },
   { gid: 'life_expectancy', originId: '47a3470d3a8c9b37009b9bf9', properties: { concept_type: 'measure' } },
@@ -37,7 +42,10 @@ const options = Object.freeze({
 });
 
 describe('ddf datapoints query normalizer - queries simplification', () => {
-  it('should normalize where and join clauses for full example', sandbox(function () {
+
+  afterEach(() => sandbox.restore());
+
+  it('should normalize where and join clauses for full example', () => {
     const selectKey = ['geo', 'time'];
     options.domainGidsFromQuery.push(...ddfQueryUtils.getDomainGidsFromQuery(selectKey, options.conceptsByGids, options.conceptsByOriginIds));
 
@@ -200,9 +208,9 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     };
 
     expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options)).to.deep.equal(normalizedDdfql);
-  }));
+  });
 
-  it('should normalize where and join clauses for entity_set example', sandbox(function () {
+  it('should normalize where and join clauses for entity_set example', () => {
     const selectKey = ['country', 'time'];
     options.domainGidsFromQuery.push(...ddfQueryUtils.getDomainGidsFromQuery(selectKey, options.conceptsByGids, options.conceptsByOriginIds));
 
@@ -295,14 +303,14 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     };
 
     let numParsedLinks = 0;
-    this.stub(_, 'random').callsFake(() => {
+    sandbox.stub(_, 'random').callsFake(() => {
       return ++numParsedLinks;
     });
 
     expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options)).to.deep.equal(normalizedDdfql);
-  }));
+  });
 
-  it('should create links in join section for entities filter', sandbox(function () {
+  it('should create links in join section for entities filter', () => {
     const ddfql = {
       select: {
         key: ['geo', 'quarter'],
@@ -385,15 +393,15 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     };
 
     let numParsedLinks = 0;
-    this.stub(_, 'random').callsFake(() => {
+    sandbox.stub(_, 'random').callsFake(() => {
       return ++numParsedLinks;
     });
 
     const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options);
     expect(actualDdfql).to.deep.equal(normalizedDdfql);
-  }));
+  });
 
-  it('should normalize query without where and join clauses', sandbox(function () {
+  it('should normalize query without where and join clauses', () => {
     const ddfql = {
       from: 'datapoints',
       select: {
@@ -425,15 +433,15 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     };
 
     let numParsedLinks = 0;
-    this.stub(_, 'random').callsFake(() => {
+    sandbox.stub(_, 'random').callsFake(() => {
       return ++numParsedLinks;
     });
 
     const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options);
     expect(actualDdfql).to.deep.equal(normalizedDdfql);
-  }));
+  });
 
-  it('should parse `{"join": "where": {"is--country": true}}` in where clause', sandbox(function () {
+  it('should parse `{"join": "where": {"is--country": true}}` in where clause', () => {
     const ddfql = {
       from: 'datapoints',
       select: {
@@ -507,15 +515,15 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     };
 
     let numParsedLinks = 0;
-    this.stub(_, 'random').callsFake(() => {
+    sandbox.stub(_, 'random').callsFake(() => {
       return ++numParsedLinks;
     });
 
     const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options);
     expect(actualDdfql).to.deep.equal(normalizedDdfql);
-  }));
+  });
 
-  it('should parse `{"join": "where": {"country.is--country": true}}` in where clause', sandbox(function () {
+  it('should parse `{"join": "where": {"country.is--country": true}}` in where clause', () => {
     const selectKey = ['country', 'time'];
     options.domainGidsFromQuery.push(...ddfQueryUtils.getDomainGidsFromQuery(selectKey, options.conceptsByGids, options.conceptsByOriginIds));
 
@@ -599,15 +607,15 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     };
 
     let numParsedLinks = 0;
-    this.stub(_, 'random').callsFake(() => {
+    sandbox.stub(_, 'random').callsFake(() => {
       return ++numParsedLinks;
     });
 
     const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options);
     expect(actualDdfql).to.deep.equal(normalizedDdfql);
-  }));
+  });
 
-  it('should parse and normalize query with country and time domains', sandbox(function () {
+  it('should parse and normalize query with country and time domains', () => {
     const selectKey = ['country', 'time'];
     options.domainGidsFromQuery.push(...ddfQueryUtils.getDomainGidsFromQuery(selectKey, options.conceptsByGids, options.conceptsByOriginIds));
 
@@ -680,15 +688,15 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     };
 
     let numParsedLinks = 0;
-    this.stub(_, 'random').callsFake(() => {
+    sandbox.stub(_, 'random').callsFake(() => {
       return ++numParsedLinks;
     });
 
     const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options);
     expect(actualDdfql).to.deep.equal(normalizedDdfql);
-  }));
+  });
 
-  it('should parse and normalize query with project and company domains', sandbox(function () {
+  it('should parse and normalize query with project and company domains', () => {
     const selectKey = ['company', 'project'];
     options.domainGidsFromQuery.push(...ddfQueryUtils.getDomainGidsFromQuery(selectKey, options.conceptsByGids, options.conceptsByOriginIds));
 
@@ -756,17 +764,20 @@ describe('ddf datapoints query normalizer - queries simplification', () => {
     };
 
     let numParsedLinks = 0;
-    this.stub(_, 'random').callsFake(() => {
+    sandbox.stub(_, 'random').callsFake(() => {
       return ++numParsedLinks;
     });
 
     const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options);
     expect(actualDdfql).to.deep.equal(normalizedDdfql);
-  }));
+  });
 });
 
 describe('ddf datapoints query normalizer - different time types', () => {
-  it('should be parsed QUARTER time type', sandbox(function () {
+
+  afterEach(() => sandbox.restore());
+
+  it('should be parsed QUARTER time type', () => {
     const ddfql = {
       select: {
         key: ['geo', 'time'],
@@ -839,9 +850,9 @@ describe('ddf datapoints query normalizer - different time types', () => {
     };
 
     expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options)).to.deep.equal(normalizedDdfql);
-  }));
+  });
 
-  it('should be parsed YEAR time type', sandbox(function () {
+  it('should be parsed YEAR time type', () => {
     const ddfql = {
       select: {
         key: ['geo', 'time'],
@@ -914,9 +925,9 @@ describe('ddf datapoints query normalizer - different time types', () => {
     };
 
     expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options)).to.deep.equal(normalizedDdfql);
-  }));
+  });
 
-  it('should be parsed WEEK time type', sandbox(function () {
+  it('should be parsed WEEK time type', () => {
     const ddfql = {
       select: {
         key: ['geo', 'time'],
@@ -999,9 +1010,9 @@ describe('ddf datapoints query normalizer - different time types', () => {
     };
 
     expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options)).to.deep.equal(normalizedDdfql);
-  }));
+  });
 
-  it('should be parsed DATE time type', sandbox(function () {
+  it('should be parsed DATE time type', () => {
     const ddfql = {
       select: {
         key: ['geo', 'time'],
@@ -1087,9 +1098,9 @@ describe('ddf datapoints query normalizer - different time types', () => {
     };
 
     expect(ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options)).to.deep.equal(normalizedDdfql);
-  }));
+  });
 
-  it('should normalized queries for quarters range', sandbox(function () {
+  it('should normalized queries for quarters range', () => {
     const ddfql = {
       select: {
         key: ['geo', 'quarter'],
@@ -1157,11 +1168,14 @@ describe('ddf datapoints query normalizer - different time types', () => {
 
     const actualDdfql = ddfQueryNormalizer.normalizeDatapointDdfQuery(ddfql, options);
     expect(actualDdfql).to.be.deep.equal(normalizedDdfql);
-  }));
+  });
 });
 
 describe('ddf datapoints query normalizer - substitute links', () => {
-  it('should substitute concept placeholders with ids', sandbox(function () {
+
+  afterEach(() => sandbox.restore());
+
+  it('should substitute concept placeholders with ids', () => {
     const normalizedDdfql = {
       select: {
         key: ['geo', 'time'],
@@ -1287,9 +1301,9 @@ describe('ddf datapoints query normalizer - substitute links', () => {
     };
 
     expect(ddfQueryNormalizer.substituteDatapointConceptsWithIds(normalizedDdfql, options)).to.deep.equal(normalizedDdfqlWithSubstitutedConcepts);
-  }));
+  });
 
-  it('should substitute join link in where clause', sandbox(function () {
+  it('should substitute join link in where clause', () => {
     const linksInJoinToValues = {
       $geo: [
         '27a3470d3a8c9b37009b9bf9',
@@ -1462,9 +1476,9 @@ describe('ddf datapoints query normalizer - substitute links', () => {
     };
 
     expect(ddfQueryNormalizer.substituteDatapointJoinLinks(normalizedDdfql, linksInJoinToValues)).to.deep.equal(normalizedDdfqlWithSubstitutedJoinLinks);
-  }));
+  });
 
-  it('should substitute join link in where clause and remove parents for empty entities list', sandbox(function () {
+  it('should substitute join link in where clause and remove parents for empty entities list', () => {
     const linksInJoinToValues = {
       $geo: [],
       $time: [
@@ -1631,5 +1645,5 @@ describe('ddf datapoints query normalizer - substitute links', () => {
     };
 
     expect(ddfQueryNormalizer.substituteDatapointJoinLinks(normalizedDdfql, linksInJoinToValues)).to.deep.equal(normalizedDdfqlWithSubstitutedJoinLinks);
-  }));
+  });
 });

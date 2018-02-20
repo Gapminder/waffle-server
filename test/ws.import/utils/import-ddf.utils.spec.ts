@@ -1,7 +1,6 @@
 import '../../../ws.repository';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
-import * as sinonTest from 'sinon-test';
 import { config } from '../../../ws.config/config';
 import * as ddfImportUtils from '../../../ws.import/utils/import-ddf.utils';
 import * as reposService from '../../../ws.services/repos.service';
@@ -13,10 +12,13 @@ import { DatasetTransactionsRepository } from '../../../ws.repository/ddf/datase
 import { DatasetsRepository } from '../../../ws.repository/ddf/datasets/datasets.repository';
 import { logger } from '../../../ws.config/log';
 
-const sandbox = sinonTest.configureTest(sinon);
+const sandbox = sinon.createSandbox();
 
 describe('Ddf import utils', () => {
-  it('gets all concepts', sandbox(function (done: Function) {
+
+  afterEach(() => sandbox.restore());
+
+  it('gets all concepts', (done: Function) => {
     const context = {
       dataset: {
         _id: 'dsId'
@@ -53,8 +55,8 @@ describe('Ddf import utils', () => {
       }
     ];
 
-    const findAllPopulatedStub = this.stub().callsArgWithAsync(0, null, foundConcepts);
-    const latestVersionStub = this.stub(ConceptsRepositoryFactory, 'latestVersion').returns({findAllPopulated: findAllPopulatedStub});
+    const findAllPopulatedStub = sandbox.stub().callsArgWithAsync(0, null, foundConcepts);
+    const latestVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'latestVersion').returns({ findAllPopulated: findAllPopulatedStub });
 
     ddfImportUtils.getAllConcepts(context, (error, externalContext) => {
       expect(error).to.not.exist;
@@ -104,9 +106,9 @@ describe('Ddf import utils', () => {
 
       done();
     });
-  }));
+  });
 
-  it('cannot get all concepts: error while db access', sandbox(function (done: Function) {
+  it('cannot get all concepts: error while db access', (done: Function) => {
     const context = {
       dataset: {
         _id: 'dsId'
@@ -118,16 +120,16 @@ describe('Ddf import utils', () => {
 
     const expectedError = '[Error]: db access error';
 
-    const findAllPopulatedStub = this.stub().callsArgWithAsync(0, expectedError);
-    this.stub(ConceptsRepositoryFactory, 'latestVersion').returns({findAllPopulated: findAllPopulatedStub});
+    const findAllPopulatedStub = sandbox.stub().callsArgWithAsync(0, expectedError);
+    sandbox.stub(ConceptsRepositoryFactory, 'latestVersion').returns({ findAllPopulated: findAllPopulatedStub });
 
     ddfImportUtils.getAllConcepts(context, (error) => {
       expect(error).to.equal(expectedError);
       done();
     });
-  }));
+  });
 
-  it('gets all previous concepts', sandbox(function (done: Function) {
+  it('gets all previous concepts', (done: Function) => {
     const context = {
       dataset: {
         _id: 'dsId'
@@ -152,8 +154,8 @@ describe('Ddf import utils', () => {
       }
     ];
 
-    const findAllPopulatedStub = this.stub().callsArgWithAsync(0, null, foundConcepts);
-    const currentVersionStub = this.stub(ConceptsRepositoryFactory, 'currentVersion').returns({findAllPopulated: findAllPopulatedStub});
+    const findAllPopulatedStub = sandbox.stub().callsArgWithAsync(0, null, foundConcepts);
+    const currentVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'currentVersion').returns({ findAllPopulated: findAllPopulatedStub });
 
     ddfImportUtils.getAllPreviousConcepts(context, (error, externalContext) => {
       expect(error).to.not.exist;
@@ -175,9 +177,9 @@ describe('Ddf import utils', () => {
       });
       done();
     });
-  }));
+  });
 
-  it('cannot get all previous concepts: fails while accessing db', sandbox(function (done: Function) {
+  it('cannot get all previous concepts: fails while accessing db', (done: Function) => {
     const context = {
       dataset: {
         _id: 'dsId'
@@ -189,27 +191,27 @@ describe('Ddf import utils', () => {
 
     const expectedError = '[Error]: db access error';
 
-    const findAllPopulatedStub = this.stub().callsArgWithAsync(0, expectedError);
-    this.stub(ConceptsRepositoryFactory, 'currentVersion').returns({findAllPopulated: findAllPopulatedStub});
+    const findAllPopulatedStub = sandbox.stub().callsArgWithAsync(0, expectedError);
+    sandbox.stub(ConceptsRepositoryFactory, 'currentVersion').returns({ findAllPopulated: findAllPopulatedStub });
 
     ddfImportUtils.getAllPreviousConcepts(context, (error) => {
       expect(error).to.equal(expectedError);
       done();
     });
-  }));
+  });
 
-  it('clones ddf repo', sandbox(function (done: Function) {
+  it('clones ddf repo', (done: Function) => {
     const context = {
       github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git',
       commit: 'fafafaf'
     };
 
-    const repoInfo = {pathToRepo: '/path/to/repo'};
+    const repoInfo = { pathToRepo: '/path/to/repo' };
 
-    const expectedContext = Object.assign({}, context, {repoInfo});
+    const expectedContext = Object.assign({}, context, { repoInfo });
 
-    const cloneRepoStub = this.stub(reposService, 'cloneRepo').callsArgWithAsync(2, null, repoInfo);
-    this.stub(logger, 'info');
+    const cloneRepoStub = sandbox.stub(reposService, 'cloneRepo').callsArgWithAsync(2, null, repoInfo);
+    sandbox.stub(logger, 'info');
 
     ddfImportUtils.cloneDdfRepo(context, (error, externalContext) => {
       expect(error).to.not.exist;
@@ -219,9 +221,9 @@ describe('Ddf import utils', () => {
 
       done();
     });
-  }));
+  });
 
-  it('fails while cloning ddf repo', sandbox(function (done: Function) {
+  it('fails while cloning ddf repo', (done: Function) => {
     const expectedError = '[Error]: repo cloning error';
 
     const context = {
@@ -229,16 +231,16 @@ describe('Ddf import utils', () => {
       commit: 'fafafaf'
     };
 
-    this.stub(reposService, 'cloneRepo').callsArgWithAsync(2, expectedError);
-    this.stub(logger, 'info');
+    sandbox.stub(reposService, 'cloneRepo').callsArgWithAsync(2, expectedError);
+    sandbox.stub(logger, 'info');
 
     ddfImportUtils.cloneDdfRepo(context, (error) => {
       expect(error).to.equal(expectedError);
       done();
     });
-  }));
+  });
 
-  it('fails while generating diff for dataset update: diff error has happened', sandbox(function (done: Function) {
+  it('fails while generating diff for dataset update: diff error has happened', (done: Function) => {
     const expectedError = '[Error]: diff error';
 
     const context = {
@@ -247,16 +249,16 @@ describe('Ddf import utils', () => {
       hashTo: 'fffffff'
     };
 
-    this.stub(wsCli, 'generateDiff').callsArgWithAsync(1, expectedError);
-    this.stub(logger, 'info');
+    sandbox.stub(wsCli, 'generateDiff').callsArgWithAsync(1, expectedError);
+    sandbox.stub(logger, 'info');
 
     ddfImportUtils.generateDiffForDatasetUpdate(context, (error) => {
       expect(error).to.equal(expectedError);
       done();
     });
-  }));
+  });
 
-  it('generates diff for dataset update', sandbox(function (done: Function) {
+  it('generates diff for dataset update', (done: Function) => {
     const context = {
       github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git',
       hashFrom: 'fafafaf',
@@ -273,8 +275,8 @@ describe('Ddf import utils', () => {
       pathToLangDiff: diffResult.lang
     });
 
-    const generateDiffStub = this.stub(wsCli, 'generateDiff').callsArgWithAsync(1, null, diffResult);
-    this.stub(logger, 'info');
+    const generateDiffStub = sandbox.stub(wsCli, 'generateDiff').callsArgWithAsync(1, null, diffResult);
+    sandbox.stub(logger, 'info');
 
     ddfImportUtils.generateDiffForDatasetUpdate(context, (error, externalContext) => {
       expect(error).to.not.exist;
@@ -290,15 +292,15 @@ describe('Ddf import utils', () => {
 
       done();
     });
-  }));
+  });
 
-  it('resolves path to ddf folder asynchronously', sandbox(function (done: Function) {
+  it('resolves path to ddf folder asynchronously', (done: Function) => {
     const context = {
       datasetName: 'dsName'
     };
 
     const pathToDdf = '/path/to/ddf';
-    const getPathToRepoStub = this.stub(reposService, 'getPathToRepo').returns(pathToDdf);
+    const getPathToRepoStub = sandbox.stub(reposService, 'getPathToRepo').returns(pathToDdf);
 
     ddfImportUtils.resolvePathToDdfFolder(context, (error, externalContext) => {
       expect(error).to.not.exist;
@@ -307,9 +309,9 @@ describe('Ddf import utils', () => {
       sinon.assert.alwaysCalledWith(getPathToRepoStub, context.datasetName);
       done();
     });
-  }));
+  });
 
-  it('fails parsing datapackage.json', sandbox(function (done: Function) {
+  it('fails parsing datapackage.json', (done: Function) => {
     const expectedError = '[Error]: datapackage parsing has failed';
 
     const context = {
@@ -317,38 +319,38 @@ describe('Ddf import utils', () => {
     };
 
     const pathToDdf = '/path/to/ddf';
-    const getPathToRepoStub = this.stub(reposService, 'getPathToRepo').returns(pathToDdf);
-    const loadDatapackageStub = this.stub(datapackageParser, 'loadDatapackage').callsArgWithAsync(1, expectedError);
-    this.stub(logger, 'info');
+    const getPathToRepoStub = sandbox.stub(reposService, 'getPathToRepo').returns(pathToDdf);
+    const loadDatapackageStub = sandbox.stub(datapackageParser, 'loadDatapackage').callsArgWithAsync(1, expectedError);
+    sandbox.stub(logger, 'info');
 
     ddfImportUtils.getDatapackage(context, (error, externalContext) => {
       expect(error).to.equal(expectedError);
       done();
     });
-  }));
+  });
 
-  it('fails parsing datapackage.json', sandbox(function (done: Function) {
+  it('fails parsing datapackage.json', (done: Function) => {
     const context = {
       datasetName: 'dsName'
     };
 
-    const expectedDatapackage = {resources: {}};
+    const expectedDatapackage = { resources: {} };
 
     const pathToDdf = '/path/to/ddf';
-    const getPathToRepoStub = this.stub(reposService, 'getPathToRepo').returns(pathToDdf);
-    const loadDatapackageStub = this.stub(datapackageParser, 'loadDatapackage').callsArgWithAsync(1, null, expectedDatapackage);
+    const getPathToRepoStub = sandbox.stub(reposService, 'getPathToRepo').returns(pathToDdf);
+    const loadDatapackageStub = sandbox.stub(datapackageParser, 'loadDatapackage').callsArgWithAsync(1, null, expectedDatapackage);
 
     ddfImportUtils.getDatapackage(context, (error, externalContext) => {
       expect(error).to.not.exist;
 
-      sinon.assert.alwaysCalledWith(loadDatapackageStub, {folder: pathToDdf});
+      sinon.assert.alwaysCalledWith(loadDatapackageStub, { folder: pathToDdf });
 
       expect(externalContext.datapackage).to.equal(expectedDatapackage);
       done();
     });
-  }));
+  });
 
-  it('fails searching for a previous transaction', sandbox(function (done: Function) {
+  it('fails searching for a previous transaction', (done: Function) => {
     const expectedError = '[Error]: failed while searching transaction';
 
     const context = {
@@ -357,17 +359,17 @@ describe('Ddf import utils', () => {
       }
     };
 
-    const findLatestCompletedByDatasetStub = this.stub(DatasetTransactionsRepository, 'findLatestCompletedByDataset').callsArgWithAsync(1, expectedError);
-    this.stub(logger, 'info');
+    const findLatestCompletedByDatasetStub = sandbox.stub(DatasetTransactionsRepository, 'findLatestCompletedByDataset').callsArgWithAsync(1, expectedError);
+    sandbox.stub(logger, 'info');
 
     ddfImportUtils.findPreviousTransaction(context, (error, externalContext) => {
       expect(error).to.equal(expectedError);
       done();
     });
-  }));
+  });
 
-  it('finds previous transaction', sandbox(function (done: Function) {
-    const previousTransaction = {_id: 'txId'};
+  it('finds previous transaction', (done: Function) => {
+    const previousTransaction = { _id: 'txId' };
 
     const context = {
       dataset: {
@@ -375,8 +377,8 @@ describe('Ddf import utils', () => {
       }
     };
 
-    const findLatestCompletedByDatasetStub = this.stub(DatasetTransactionsRepository, 'findLatestCompletedByDataset').callsArgWithAsync(1, null, previousTransaction);
-    this.stub(logger, 'info');
+    const findLatestCompletedByDatasetStub = sandbox.stub(DatasetTransactionsRepository, 'findLatestCompletedByDataset').callsArgWithAsync(1, null, previousTransaction);
+    sandbox.stub(logger, 'info');
 
     ddfImportUtils.findPreviousTransaction(context, (error, externalContext) => {
       expect(error).to.not.exist;
@@ -386,9 +388,9 @@ describe('Ddf import utils', () => {
 
       done();
     });
-  }));
+  });
 
-  it('fails creating a transaction', sandbox(function (done: Function) {
+  it('fails creating a transaction', (done: Function) => {
     const expectedError = '[Error]: fails creating a transaction';
 
     const context = {
@@ -398,17 +400,17 @@ describe('Ddf import utils', () => {
       commit: 'fffffff'
     };
 
-    const createStub = this.stub(DatasetTransactionsRepository, 'create').callsArgWithAsync(1, expectedError);
-    this.stub(logger, 'info');
+    const createStub = sandbox.stub(DatasetTransactionsRepository, 'create').callsArgWithAsync(1, expectedError);
+    sandbox.stub(logger, 'info');
 
     ddfImportUtils.createTransaction(context, (error, externalContext) => {
       expect(error).to.equal(expectedError);
       done();
     });
-  }));
+  });
 
-  it('creates a transaction', sandbox(function (done: Function) {
-    const createdTransaction = {_id: 'txId'};
+  it('creates a transaction', (done: Function) => {
+    const createdTransaction = { _id: 'txId' };
 
     const context = {
       user: {
@@ -418,9 +420,9 @@ describe('Ddf import utils', () => {
     };
 
     const createStub =
-      this.stub(DatasetTransactionsRepository, 'create')
+      sandbox.stub(DatasetTransactionsRepository, 'create')
         .callsArgWithAsync(1, null, createdTransaction);
-    this.stub(logger, 'info');
+    sandbox.stub(logger, 'info');
 
     ddfImportUtils.createTransaction(context, (error, externalContext) => {
       expect(error).to.not.exist;
@@ -435,9 +437,9 @@ describe('Ddf import utils', () => {
 
       done();
     });
-  }));
+  });
 
-  it('fails closing a transaction', sandbox(function (done: Function) {
+  it('fails closing a transaction', (done: Function) => {
     const expectedError = '[Error]: fails closing a transaction';
 
     const context = {
@@ -447,16 +449,16 @@ describe('Ddf import utils', () => {
       }
     };
 
-    const createStub = this.stub(DatasetTransactionsRepository, 'closeTransaction').callsArgWithAsync(1, expectedError);
-    this.stub(logger, 'info');
+    const createStub = sandbox.stub(DatasetTransactionsRepository, 'closeTransaction').callsArgWithAsync(1, expectedError);
+    sandbox.stub(logger, 'info');
 
     ddfImportUtils.closeTransaction(context, (error, externalContext) => {
       expect(error).to.equal(expectedError);
       done();
     });
-  }));
+  });
 
-  it('closes a transaction', sandbox(function (done: Function) {
+  it('closes a transaction', (done: Function) => {
     const context = {
       transaction: {
         _id: 'txId',
@@ -464,8 +466,8 @@ describe('Ddf import utils', () => {
       }
     };
 
-    const closeTransactionStub = this.stub(DatasetTransactionsRepository, 'closeTransaction').callsArgWithAsync(1, null);
-    this.stub(logger, 'info');
+    const closeTransactionStub = sandbox.stub(DatasetTransactionsRepository, 'closeTransaction').callsArgWithAsync(1, null);
+    sandbox.stub(logger, 'info');
 
     ddfImportUtils.closeTransaction(context, (error) => {
       expect(error).to.not.exist;
@@ -477,9 +479,9 @@ describe('Ddf import utils', () => {
       });
       done();
     });
-  }));
+  });
 
-  it('fails creating dataset because of db error', sandbox(function (done: Function) {
+  it('fails creating dataset because of db error', (done: Function) => {
     const expectedError = '[Error]: fails creating dataset because of db error';
 
     const context = {
@@ -495,16 +497,16 @@ describe('Ddf import utils', () => {
       isDatasetPrivate: true
     };
 
-    const createStub = this.stub(DatasetsRepository, 'create').callsArgWithAsync(1, expectedError);
-    this.stub(logger, 'info');
+    const createStub = sandbox.stub(DatasetsRepository, 'create').callsArgWithAsync(1, expectedError);
+    sandbox.stub(logger, 'info');
 
     ddfImportUtils.createDataset(context, (error) => {
       expect(error).to.equal(expectedError);
       done();
     });
-  }));
+  });
 
-  it('fails creating dataset because empty result was returned', sandbox(function (done: Function) {
+  it('fails creating dataset because empty result was returned', (done: Function) => {
     const expectedError = 'Dataset was not created due to some issues';
 
     const context = {
@@ -520,16 +522,16 @@ describe('Ddf import utils', () => {
       isDatasetPrivate: true
     };
 
-    const createStub = this.stub(DatasetsRepository, 'create').callsArgWithAsync(1, null, null);
-    this.stub(logger, 'info');
+    const createStub = sandbox.stub(DatasetsRepository, 'create').callsArgWithAsync(1, null, null);
+    sandbox.stub(logger, 'info');
 
     ddfImportUtils.createDataset(context, (error) => {
       expect(error).to.equal(expectedError);
       done();
     });
-  }));
+  });
 
-  it('fails creating dataset because empty result was returned', sandbox(function (done: Function) {
+  it('fails creating dataset because empty result was returned', (done: Function) => {
     const context = {
       datasetName: 'dsName',
       github: 'github:...',
@@ -548,42 +550,42 @@ describe('Ddf import utils', () => {
       name: 'dsName'
     };
 
-    const createStub = this.stub(DatasetsRepository, 'create').callsArgWithAsync(1, null, expectedDataset);
+    const createStub = sandbox.stub(DatasetsRepository, 'create').callsArgWithAsync(1, null, expectedDataset);
 
     ddfImportUtils.createDataset(context, (error, externalContext) => {
       expect(error).to.not.exist;
       expect(externalContext.dataset).to.deep.equal(expectedDataset);
       done();
     });
-  }));
+  });
 
-  it('fails while searching for a dataset: db error has occurred', sandbox(function (done: Function) {
+  it('fails while searching for a dataset: db error has occurred', (done: Function) => {
     const expectedError = '[Error] db error has occurred';
 
     const context = {};
-    this.stub(DatasetsRepository, 'findByName').callsArgWithAsync(1, expectedError);
-    this.stub(logger, 'info');
+    sandbox.stub(DatasetsRepository, 'findByName').callsArgWithAsync(1, expectedError);
+    sandbox.stub(logger, 'info');
 
     ddfImportUtils.findDataset(context, (error, externalContext) => {
       expect(error).to.equal(expectedError);
       done();
     });
-  }));
+  });
 
-  it('fails while searching for a dataset: was not found', sandbox(function (done: Function) {
+  it('fails while searching for a dataset: was not found', (done: Function) => {
     const expectedError = 'Dataset was not found';
 
     const context = {};
-    this.stub(DatasetsRepository, 'findByName').callsArgWithAsync(1, null, null);
-    this.stub(logger, 'info');
+    sandbox.stub(DatasetsRepository, 'findByName').callsArgWithAsync(1, null, null);
+    sandbox.stub(logger, 'info');
 
     ddfImportUtils.findDataset(context, (error, externalContext) => {
       expect(error).to.equal(expectedError);
       done();
     });
-  }));
+  });
 
-  it('finds a dataset by name', sandbox(function (done: Function) {
+  it('finds a dataset by name', (done: Function) => {
     const context = {
       datasetName: 'dsName'
     };
@@ -593,17 +595,17 @@ describe('Ddf import utils', () => {
       name: context.datasetName
     };
 
-    this.stub(DatasetsRepository, 'findByName').callsArgWithAsync(1, null, expectedDataset);
-    this.stub(logger, 'info');
+    sandbox.stub(DatasetsRepository, 'findByName').callsArgWithAsync(1, null, expectedDataset);
+    sandbox.stub(logger, 'info');
 
     ddfImportUtils.findDataset(context, (error, externalContext) => {
       expect(error).to.not.exist;
       expect(externalContext.dataset).to.deep.equal(expectedDataset);
       done();
     });
-  }));
+  });
 
-  it('fails establishing transaction for a dataset', sandbox(function (done: Function) {
+  it('fails establishing transaction for a dataset', (done: Function) => {
     const expectedError = '[Error] transaction establishment error';
 
     const context = {
@@ -615,16 +617,16 @@ describe('Ddf import utils', () => {
       }
     };
 
-    this.stub(DatasetTransactionsRepository, 'establishForDataset').callsArgWithAsync(1, expectedError);
-    this.stub(logger, 'info');
+    sandbox.stub(DatasetTransactionsRepository, 'establishForDataset').callsArgWithAsync(1, expectedError);
+    sandbox.stub(logger, 'info');
 
     ddfImportUtils.establishTransactionForDataset(context, (error) => {
       expect(error).to.equal(expectedError);
       done();
     });
-  }));
+  });
 
-  it('establishes a transaction for a dataset', sandbox(function (done: Function) {
+  it('establishes a transaction for a dataset', (done: Function) => {
     const context = {
       transaction: {
         _id: 'txId'
@@ -634,22 +636,22 @@ describe('Ddf import utils', () => {
       }
     };
 
-    const establishForDatasetStub = this.stub(DatasetTransactionsRepository, 'establishForDataset').callsArgWithAsync(1, null, context);
-    this.stub(logger, 'info');
+    const establishForDatasetStub = sandbox.stub(DatasetTransactionsRepository, 'establishForDataset').callsArgWithAsync(1, null, context);
+    sandbox.stub(logger, 'info');
 
     ddfImportUtils.establishTransactionForDataset(context, (error) => {
       expect(error).to.not.exist;
 
       sinon.assert.calledOnce(establishForDatasetStub);
 
-      const options = {transactionId: context.transaction._id, datasetId: context.dataset._id};
+      const options = { transactionId: context.transaction._id, datasetId: context.dataset._id };
       sinon.assert.calledWithExactly(establishForDatasetStub, options, sinon.match.func);
 
       done();
     });
-  }));
+  });
 
-  it('fails updating transaction languages', sandbox(function (done: Function) {
+  it('fails updating transaction languages', (done: Function) => {
     const expectedError = '[Error] fails updating transaction languages';
 
     const context = {
@@ -663,38 +665,38 @@ describe('Ddf import utils', () => {
       }
     };
 
-    this.stub(DatasetTransactionsRepository, 'updateLanguages').callsArgWithAsync(1, expectedError);
-    this.stub(logger, 'info');
+    sandbox.stub(DatasetTransactionsRepository, 'updateLanguages').callsArgWithAsync(1, expectedError);
+    sandbox.stub(logger, 'info');
 
     ddfImportUtils.updateTransactionLanguages(context, (error) => {
       expect(error).to.equal(expectedError);
       done();
     });
-  }));
+  });
 
-  it('fails updating transaction languages', sandbox(function (done: Function) {
+  it('fails updating transaction languages', (done: Function) => {
     const context = {
       transaction: {
         _id: 'txId'
       },
       datapackage: {
         translations: [
-          {id: 'nl-nl'}
+          { id: 'nl-nl' }
         ]
       }
     };
 
-    const updateLanguagesStub = this.stub(DatasetTransactionsRepository, 'updateLanguages').callsArgWithAsync(1, null, context);
+    const updateLanguagesStub = sandbox.stub(DatasetTransactionsRepository, 'updateLanguages').callsArgWithAsync(1, null, context);
 
     ddfImportUtils.updateTransactionLanguages(context, (error) => {
       expect(error).to.not.exist;
 
-      const options = {transactionId: context.transaction._id, languages: ['nl-nl']};
+      const options = { transactionId: context.transaction._id, languages: ['nl-nl'] };
       sinon.assert.calledWithExactly(updateLanguagesStub, options, sinon.match.func);
 
       done();
     });
-  }));
+  });
 
   describe('cloneImportedDdfRepos', () => {
     let originalThreshingMachine = config.THRASHING_MACHINE;
@@ -707,16 +709,16 @@ describe('Ddf import utils', () => {
       config.THRASHING_MACHINE = originalThreshingMachine;
     });
 
-    it('should start clone all dataset available in db', sandbox(function (): any {
+    it('should start clone all dataset available in db', () => {
       const stubDatasets = [
-        {path: '#1'},
-        {path: '#2'},
-        {path: '#3'}
+        { path: '#1' },
+        { path: '#2' },
+        { path: '#3' }
       ];
 
-      const findAllStub = this.stub(DatasetsRepository, 'findAll').returns(Promise.resolve(stubDatasets));
-      const cloneRepoStub = this.stub(reposService, 'cloneRepo').callsArgWithAsync(2, null);
-      this.stub(logger, 'info');
+      const findAllStub = sandbox.stub(DatasetsRepository, 'findAll').returns(Promise.resolve(stubDatasets));
+      const cloneRepoStub = sandbox.stub(reposService, 'cloneRepo').callsArgWithAsync(2, null);
+      sandbox.stub(logger, 'info');
 
       return ddfImportUtils.cloneImportedDdfRepos().then(() => {
         sinon.assert.calledOnce(findAllStub);
@@ -727,21 +729,21 @@ describe('Ddf import utils', () => {
 
         sinon.assert.callCount(cloneRepoStub, stubDatasets.length);
       });
-    }));
+    });
 
-    it('should start clone all dataset available in db', sandbox(function (): any {
+    it('should start clone all dataset available in db', () => {
       const stubDatasets = [
-        {path: '#1'},
-        {path: '#2'},
-        {path: '#3'}
+        { path: '#1' },
+        { path: '#2' },
+        { path: '#3' }
       ];
 
       const expectedError = 'Cannot clone repo';
 
-      const findAllStub = this.stub(DatasetsRepository, 'findAll').returns(Promise.resolve(stubDatasets));
-      const cloneRepoStub = this.stub(reposService, 'cloneRepo').callsArgWithAsync(2, expectedError);
+      const findAllStub = sandbox.stub(DatasetsRepository, 'findAll').returns(Promise.resolve(stubDatasets));
+      const cloneRepoStub = sandbox.stub(reposService, 'cloneRepo').callsArgWithAsync(2, expectedError);
 
-      const errorStub = this.stub(logger, 'error');
+      const errorStub = sandbox.stub(logger, 'error');
 
       return ddfImportUtils.cloneImportedDdfRepos().then(() => {
         sinon.assert.called(errorStub);
@@ -750,25 +752,25 @@ describe('Ddf import utils', () => {
         sinon.assert.called(findAllStub);
         sinon.assert.called(cloneRepoStub);
       });
-    }));
+    });
 
-    it('should not clone repos on non Threshing machine', sandbox(function (): any {
+    it('should not clone repos on non Threshing machine', () => {
       config.THRASHING_MACHINE = false;
 
       const stubDatasets = [
-        {path: '#1'},
-        {path: '#2'},
-        {path: '#3'}
+        { path: '#1' },
+        { path: '#2' },
+        { path: '#3' }
       ];
 
-      const findAllStub = this.stub(DatasetsRepository, 'findAll').returns(Promise.resolve(stubDatasets));
-      const cloneRepoStub = this.stub(reposService, 'cloneRepo').callsArgWithAsync(2, null);
-      this.stub(logger, 'info');
+      const findAllStub = sandbox.stub(DatasetsRepository, 'findAll').returns(Promise.resolve(stubDatasets));
+      const cloneRepoStub = sandbox.stub(reposService, 'cloneRepo').callsArgWithAsync(2, null);
+      sandbox.stub(logger, 'info');
 
       return ddfImportUtils.cloneImportedDdfRepos().then(() => {
         sinon.assert.notCalled(findAllStub);
         sinon.assert.notCalled(cloneRepoStub);
       });
-    }));
+    });
   });
 });

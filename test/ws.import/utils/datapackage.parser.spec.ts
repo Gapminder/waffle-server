@@ -1,11 +1,10 @@
 import * as _ from 'lodash';
 import * as fs from 'fs';
 import * as sinon from 'sinon';
-import * as sinonTest from 'sinon-test';
-import {expect} from 'chai';
+import { expect } from 'chai';
 import * as datapackageParser from '../../../ws.import/utils/datapackage.parser';
 
-const sandbox = sinonTest.configureTest(sinon);
+const sandbox = sinon.createSandbox();
 
 const entitiesResource = {
   path: 'ddf--entities--company--company_scale.csv',
@@ -116,20 +115,23 @@ const datapackageStub = {
 };
 
 describe('Datapackage Parser', () => {
-  it('should respond with an error if file cannot be read', sandbox(function () {
+
+  afterEach(() => sandbox.restore());
+
+  it('should respond with an error if file cannot be read', () => {
     const expectedError = 'Boo!';
 
-    const readFileStub = this.stub(fs, 'readFile').callsFake((pathToDatapackage, encoding, done) => {
+    const readFileStub = sandbox.stub(fs, 'readFile').callsFake((pathToDatapackage, encoding, done) => {
       done(expectedError);
     });
 
-    datapackageParser.loadDatapackage({folder: 'foo', file: 'bar'}, (error) => {
+    datapackageParser.loadDatapackage({ folder: 'foo', file: 'bar' }, (error) => {
       expect(error).to.equal(expectedError);
       sinon.assert.calledWith(readFileStub, 'foo/bar', 'utf-8');
     });
-  }));
+  });
 
-  it('should parse datapackage resources', sandbox(function () {
+  it('should parse datapackage resources', () => {
     const expectedResources = [
       {
         path: 'ddf--concepts.csv',
@@ -186,11 +188,11 @@ describe('Datapackage Parser', () => {
       }
     ];
 
-    const readFileStub = this.stub(fs, 'readFile').callsFake((pathToDatapackage, encoding, done) => {
+    const readFileStub = sandbox.stub(fs, 'readFile').callsFake((pathToDatapackage, encoding, done) => {
       done(null, JSON.stringify(datapackageStub));
     });
 
-    datapackageParser.loadDatapackage({folder: 'foo'}, (error, datapackage) => {
+    datapackageParser.loadDatapackage({ folder: 'foo' }, (error, datapackage) => {
       expect(error).to.not.exist;
       expect(datapackage).to.not.be.null;
 
@@ -200,41 +202,41 @@ describe('Datapackage Parser', () => {
 
       sinon.assert.calledWith(readFileStub, 'foo/datapackage.json', 'utf-8');
     });
-  }));
+  });
 
-  it('should detect concepts resource by primary key', function () {
+  it('should detect concepts resource by primary key', () => {
     expect(datapackageParser.isConceptsResource(['concept'])).to.be.true;
   });
 
-  it('should detect not concepts resource by primary key', function () {
+  it('should detect not concepts resource by primary key', () => {
     expect(datapackageParser.isConceptsResource('concept')).to.be.false;
     expect(datapackageParser.isConceptsResource([])).to.be.false;
     expect(datapackageParser.isConceptsResource(['concept', 'bla'])).to.be.false;
     expect(datapackageParser.isConceptsResource(['bla'])).to.be.false;
   });
 
-  it('should detect entities resource by primary key', function () {
+  it('should detect entities resource by primary key', () => {
     expect(datapackageParser.isEntitiesResource(['country'])).to.be.true;
   });
 
-  it('should detect not entities resource by primary key', function () {
+  it('should detect not entities resource by primary key', () => {
     expect(datapackageParser.isEntitiesResource('bla')).to.be.false;
     expect(datapackageParser.isEntitiesResource([])).to.be.false;
     expect(datapackageParser.isEntitiesResource(['concept', 'bla'])).to.be.false;
     expect(datapackageParser.isEntitiesResource(['concept'])).to.be.false;
   });
 
-  it('should detect datapoints resource by primary key', function () {
+  it('should detect datapoints resource by primary key', () => {
     expect(datapackageParser.isDatapointsResource(['population', 'gini'])).to.be.true;
   });
 
-  it('should detect not datapoints resource by primary key', function () {
+  it('should detect not datapoints resource by primary key', () => {
     expect(datapackageParser.isDatapointsResource('bla')).to.be.false;
     expect(datapackageParser.isDatapointsResource([])).to.be.false;
     expect(datapackageParser.isDatapointsResource(['population'])).to.be.false;
   });
 
-  it('should parse entities resource', function () {
+  it('should parse entities resource', () => {
     const parsedResource = datapackageParser.parseEntitiesResource(entitiesResource);
 
     expect(parsedResource.type).to.equal('entities');
@@ -245,7 +247,7 @@ describe('Datapackage Parser', () => {
     expect(parsedResource.fields).to.deep.equal(['company_scale', 'full_name_changed', 'is--company_scale']);
   });
 
-  it('should parse concepts resource', function () {
+  it('should parse concepts resource', () => {
     const parsedResource = datapackageParser.parseConceptsResource(conceptsResource);
 
     expect(parsedResource.type).to.equal('concepts');
@@ -253,7 +255,7 @@ describe('Datapackage Parser', () => {
     expect(parsedResource.primaryKey).to.deep.equal(['concept']);
   });
 
-  it('should parse datapoints resource', function () {
+  it('should parse datapoints resource', () => {
     const parsedResource = datapackageParser.parseDatapointsResource(datapointsResource);
 
     expect(parsedResource.type).to.equal('datapoints');

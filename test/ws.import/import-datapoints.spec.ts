@@ -6,16 +6,18 @@ import * as hi from 'highland';
 import * as proxyquire from 'proxyquire';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
-import * as sinonTest from 'sinon-test';
 import { constants } from '../../ws.utils/constants';
 import * as datapoints from './fixtures/datapoints.json';
 import * as allEntities from './fixtures/allEntities.json';
 import { logger } from '../../ws.config/log';
 
-const sandbox = sinonTest.configureTest(sinon);
+const sandbox = sinon.createSandbox();
 
-describe('datapoints import', function () {
-  it('should not be any error', sandbox(function (done: Function) {
+describe('datapoints import', () => {
+
+  afterEach(() => sandbox.restore());
+
+  it('should not be any error', (done: Function) => {
     const dimensions = {
       geo: { gid: 'geo', properties: {} },
       time: { gid: 'time', properties: {} }
@@ -124,7 +126,7 @@ describe('datapoints import', function () {
       '../ws.utils/file': fileUtils
     }).createDatapoints;
 
-    const loggerInfoStub = this.stub(logger, 'info');
+    const loggerInfoStub = sandbox.stub(logger, 'info');
 
     return importDatapoints(context, (error, externalContext) => {
       expect(error).to.be.null;
@@ -134,5 +136,5 @@ describe('datapoints import', function () {
 
       return done();
     });
-  }));
+  });
 });
