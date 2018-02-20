@@ -3,6 +3,7 @@ import * as async from 'async';
 import * as semverRegex from 'semver-regex';
 import { GCloudArguments } from './interfaces';
 import { getContextInstance } from './common.helpers';
+import { logger } from '../../ws.config/log';
 
 import {
   setDefaultProject, setDefaultUser, setupAPIs, linkProjectToBilling
@@ -31,16 +32,16 @@ export function run(): Promise<string | null> {
   const _VERSION = process.env.VERSION;
 
   if (_.isNil(_VERSION)) {
-    console.error('Variable VERSION was not defined!');
+    logger.error('Variable VERSION was not defined!');
     process.exit(2);
   }
 
   if (_.isString(_VERSION) && !semverRegex().test(_VERSION)) {
-    console.error('Variable VERSION should match semver!');
+    logger.error('Variable VERSION should match semver!');
     process.exit(3);
   }
 
-  console.log(`You give '${_VERSION}' version. Are you sure you want to delete it?`);
+  logger.info(`You give '${_VERSION}' version. Are you sure you want to delete it?`);
 
   const NODE_ENV = process.env.NODE_ENV || DEFAULT_NODE_ENV;
   const ENVIRONMENT = DEFAULT_ENVIRONMENTS[NODE_ENV] || NODE_ENV;
@@ -53,7 +54,7 @@ export function run(): Promise<string | null> {
   const TM_REGION = STATIC_VARIABLES.TM_REGION || DEFAULT_REGION;
   const LB_REGION = STATIC_VARIABLES.LB_REGION || DEFAULT_REGION;
 
-  console.log(`Parsed version: ${VERSION_TAG}`);
+  logger.info(`Parsed version: ${VERSION_TAG}`);
 
   const COMPUTED_VARIABLES = Object.assign({
     NODE_ENV,
@@ -126,7 +127,7 @@ export function run(): Promise<string | null> {
       // async.apply(setupAPIs, [...DEFAULT_GCP_API, 'cloudbilling.googleapis.com'], {action: 'disable'}),
     ], function (error: string, result: any): void {
       if (error) {
-        console.error(error);
+        logger.error(error);
         return reject(error);
       }
 
