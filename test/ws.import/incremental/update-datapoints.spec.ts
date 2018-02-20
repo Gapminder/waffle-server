@@ -2,7 +2,6 @@ import '../../../ws.repository';
 
 import * as path from 'path';
 import * as sinon from 'sinon';
-import * as sinonTest from 'sinon-test';
 import { expect } from 'chai';
 
 import * as fileUtils from '../../../ws.utils/file';
@@ -11,7 +10,7 @@ import { updateDatapoints } from '../../../ws.import/incremental/update-datapoin
 import { logger } from '../../../ws.config/log';
 import { DatapointsRepositoryFactory } from '../../../ws.repository/ddf/data-points/data-points.repository';
 
-const sandbox = sinonTest.configureTest(sinon);
+const sandbox = sinon.createSandbox();
 
 const context = {
   pathToDatasetDiff: path.resolve(__dirname, './fixtures/result--VS-work--ddf--ws-testing--master--output.txt'),
@@ -99,9 +98,9 @@ const context = {
 
 const segregatedEntities = {
   byGid: {
-    ws: {originId: 'wsOriginId'},
-    gap: {originId: 'gapOriginId'},
-    mcrsft: {originId: 'mcrsftOriginId'},
+    ws: { originId: 'wsOriginId' },
+    gap: { originId: 'gapOriginId' },
+    mcrsft: { originId: 'mcrsftOriginId' },
     1975: {
       originId: '1975OriginId'
     },
@@ -133,7 +132,7 @@ const segregatedEntities = {
 
 const segregatedPreviousEntities = {
   groupedByGid: {
-    mic: [{originId: 'micOriginId'}]
+    mic: [{ originId: 'micOriginId' }]
   }
 };
 
@@ -144,30 +143,32 @@ describe('Datapoints incremental update flow', () => {
     readTextFileByLineAsJsonStreamOriginal = fileUtils.readTextFileByLineAsJsonStream.bind(fileUtils);
   });
 
-  it('creates newly added datapoints', sandbox(function (done: Function) {
-    this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
-    this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
+  afterEach(() => sandbox.restore());
 
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToDiff: string) => {
+  it('creates newly added datapoints', (done: Function) => {
+    sandbox.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
+    sandbox.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
+
+    sandbox.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToDiff: string) => {
       return readTextFileByLineAsJsonStreamOriginal(pathToDiff)
-        .filter(({metadata}) => {
+        .filter(({ metadata }) => {
           return metadata.action === 'create';
         });
     });
 
-    const createEntitiesFoundInDatapointsSaverWithCacheStub = this.stub(datapointsUtils, 'createEntitiesFoundInDatapointsSaverWithCache').returns((datapoints) => {
+    const createEntitiesFoundInDatapointsSaverWithCacheStub = sandbox.stub(datapointsUtils, 'createEntitiesFoundInDatapointsSaverWithCache').returns((datapoints) => {
       return Promise.resolve(datapoints);
     });
 
     const collectedDatapoints = [];
-    const saveDatapointsAndEntitiesFoundInThemStub = this.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem').callsFake((saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
+    const saveDatapointsAndEntitiesFoundInThemStub = sandbox.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem').callsFake((saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
       return datapointsFoundEntitiesStream
         .tap((datapointsWithFoundEntities) => {
           collectedDatapoints.push(datapointsWithFoundEntities);
         });
     });
 
-    const loggerInfoStub = this.stub(logger, 'info');
+    const loggerInfoStub = sandbox.stub(logger, 'info');
 
     updateDatapoints(context, (errors, externalContext) => {
       expect(errors).to.not.exist;
@@ -291,25 +292,25 @@ describe('Datapoints incremental update flow', () => {
 
       done();
     });
-  }));
+  });
 
-  it('updates existing datapoints', sandbox(function (done: Function) {
-    this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
-    this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
+  it('updates existing datapoints', (done: Function) => {
+    sandbox.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
+    sandbox.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
 
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToDiff: string) => {
+    sandbox.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToDiff: string) => {
       return readTextFileByLineAsJsonStreamOriginal(pathToDiff)
-        .filter(({metadata}) => {
+        .filter(({ metadata }) => {
           return metadata.action === 'change';
         });
     });
 
-    this.stub(datapointsUtils, 'createEntitiesFoundInDatapointsSaverWithCache').returns((datapoints) => {
+    sandbox.stub(datapointsUtils, 'createEntitiesFoundInDatapointsSaverWithCache').returns((datapoints) => {
       return Promise.resolve(datapoints);
     });
 
     const collectedDatapoints = [];
-    this.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem').callsFake((saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
+    sandbox.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem').callsFake((saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
       return datapointsFoundEntitiesStream
         .tap((datapointsWithFoundEntities) => {
           collectedDatapoints.push(datapointsWithFoundEntities);
@@ -331,13 +332,13 @@ describe('Datapoints incremental update flow', () => {
       }
     };
 
-    this.stub(DatapointsRepositoryFactory, 'latestExceptCurrentVersion').returns({
+    sandbox.stub(DatapointsRepositoryFactory, 'latestExceptCurrentVersion').returns({
       closeDatapointByMeasureAndDimensions: (options, callback) => {
         callback(null, measureToDatapoint[options.measureOriginId]);
       }
     });
 
-    const loggerInfoStub = this.stub(logger, 'info');
+    const loggerInfoStub = sandbox.stub(logger, 'info');
 
     updateDatapoints(context, (errors, externalContext) => {
       expect(errors).to.not.exist;
@@ -424,39 +425,39 @@ describe('Datapoints incremental update flow', () => {
 
       done();
     });
-  }));
+  });
 
-  it('updates existing datapoints: datapoint to close was not found - this should be logged', sandbox(function (done: Function) {
-    this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
-    this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
+  it('updates existing datapoints: datapoint to close was not found - this should be logged', (done: Function) => {
+    sandbox.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
+    sandbox.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
 
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToDiff: string) => {
+    sandbox.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToDiff: string) => {
       return readTextFileByLineAsJsonStreamOriginal(pathToDiff)
-        .filter(({metadata}) => {
+        .filter(({ metadata }) => {
           return metadata.action === 'change';
         });
     });
 
-    this.stub(datapointsUtils, 'createEntitiesFoundInDatapointsSaverWithCache').returns((datapoints) => {
+    sandbox.stub(datapointsUtils, 'createEntitiesFoundInDatapointsSaverWithCache').returns((datapoints) => {
       return Promise.resolve(datapoints);
     });
 
     const collectedDatapoints = [];
-    this.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem').callsFake((saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
+    sandbox.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem').callsFake((saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
       return datapointsFoundEntitiesStream
         .tap((datapointsWithFoundEntities) => {
           collectedDatapoints.push(datapointsWithFoundEntities);
         });
     });
 
-    this.stub(DatapointsRepositoryFactory, 'latestExceptCurrentVersion').returns({
+    sandbox.stub(DatapointsRepositoryFactory, 'latestExceptCurrentVersion').returns({
       closeDatapointByMeasureAndDimensions: (options, callback) => {
         callback();
       }
     });
 
-    const loggerErrorStub = this.stub(logger, 'error');
-    const loggerInfoStub = this.stub(logger, 'info');
+    const loggerErrorStub = sandbox.stub(logger, 'error');
+    const loggerInfoStub = sandbox.stub(logger, 'info');
 
     updateDatapoints(context, (errors, externalContext) => {
       expect(errors).to.not.exist;
@@ -478,25 +479,25 @@ describe('Datapoints incremental update flow', () => {
 
       done();
     });
-  }));
+  });
 
-  it('updates existing datapoints: error had happened while closing datapoint', sandbox(function (done: Function) {
-    this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
-    this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
+  it('updates existing datapoints: error had happened while closing datapoint', (done: Function) => {
+    sandbox.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
+    sandbox.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
 
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToDiff: string) => {
+    sandbox.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToDiff: string) => {
       return readTextFileByLineAsJsonStreamOriginal(pathToDiff)
-        .filter(({metadata}) => {
+        .filter(({ metadata }) => {
           return metadata.action === 'change';
         });
     });
 
-    this.stub(datapointsUtils, 'createEntitiesFoundInDatapointsSaverWithCache').returns((datapoints) => {
+    sandbox.stub(datapointsUtils, 'createEntitiesFoundInDatapointsSaverWithCache').returns((datapoints) => {
       return Promise.resolve(datapoints);
     });
 
     const collectedDatapoints = [];
-    this.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem').callsFake((saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
+    sandbox.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem').callsFake((saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
       return datapointsFoundEntitiesStream
         .tap((datapointsWithFoundEntities) => {
           collectedDatapoints.push(datapointsWithFoundEntities);
@@ -505,13 +506,13 @@ describe('Datapoints incremental update flow', () => {
 
     const expectedError = 'Boo!';
 
-    this.stub(DatapointsRepositoryFactory, 'latestExceptCurrentVersion').returns({
+    sandbox.stub(DatapointsRepositoryFactory, 'latestExceptCurrentVersion').returns({
       closeDatapointByMeasureAndDimensions: (options, callback) => {
         callback(expectedError);
       }
     });
 
-    const loggerInfoStub = this.stub(logger, 'info');
+    const loggerInfoStub = sandbox.stub(logger, 'info');
 
     updateDatapoints(context, (errors, externalContext) => {
       expect(errors).to.deep.equal([expectedError]);
@@ -523,37 +524,37 @@ describe('Datapoints incremental update flow', () => {
 
       done();
     });
-  }));
+  });
 
-  it('remove existing datapoints', sandbox(function (done: Function) {
-    this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
-    this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
+  it('remove existing datapoints', (done: Function) => {
+    sandbox.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
+    sandbox.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
 
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToDiff: string) => {
+    sandbox.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToDiff: string) => {
       return readTextFileByLineAsJsonStreamOriginal(pathToDiff)
-        .filter(({metadata}) => {
+        .filter(({ metadata }) => {
           return metadata.action === 'remove';
         });
     });
 
-    this.stub(datapointsUtils, 'createEntitiesFoundInDatapointsSaverWithCache').returns((datapoints) => {
+    sandbox.stub(datapointsUtils, 'createEntitiesFoundInDatapointsSaverWithCache').returns((datapoints) => {
       return Promise.resolve(datapoints);
     });
 
     const collectedDatapoints = [];
-    this.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem').callsFake((saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
+    sandbox.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem').callsFake((saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
       return datapointsFoundEntitiesStream
         .tap((datapointsWithFoundEntities) => {
           collectedDatapoints.push(datapointsWithFoundEntities);
         });
     });
 
-    const closeDatapointByMeasureAndDimensionsStub = this.stub().callsArgWithAsync(1, null, {});
-    this.stub(DatapointsRepositoryFactory, 'latestExceptCurrentVersion').returns({
+    const closeDatapointByMeasureAndDimensionsStub = sandbox.stub().callsArgWithAsync(1, null, {});
+    sandbox.stub(DatapointsRepositoryFactory, 'latestExceptCurrentVersion').returns({
       closeDatapointByMeasureAndDimensions: closeDatapointByMeasureAndDimensionsStub
     });
 
-    const loggerInfoStub = this.stub(logger, 'info');
+    const loggerInfoStub = sandbox.stub(logger, 'info');
 
     updateDatapoints(context, (errors, externalContext) => {
       expect(errors).to.not.exist;
@@ -597,38 +598,38 @@ describe('Datapoints incremental update flow', () => {
 
       done();
     });
-  }));
+  });
 
-  it('remove existing datapoints: datapoint to close was not found - this should be logged', sandbox(function (done: Function) {
-    this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
-    this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
+  it('remove existing datapoints: datapoint to close was not found - this should be logged', (done: Function) => {
+    sandbox.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
+    sandbox.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
 
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToDiff: string) => {
+    sandbox.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToDiff: string) => {
       return readTextFileByLineAsJsonStreamOriginal(pathToDiff)
-        .filter(({metadata}) => {
+        .filter(({ metadata }) => {
           return metadata.action === 'remove';
         });
     });
 
-    this.stub(datapointsUtils, 'createEntitiesFoundInDatapointsSaverWithCache').returns((datapoints) => {
+    sandbox.stub(datapointsUtils, 'createEntitiesFoundInDatapointsSaverWithCache').returns((datapoints) => {
       return Promise.resolve(datapoints);
     });
 
     const collectedDatapoints = [];
-    this.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem').callsFake((saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
+    sandbox.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem').callsFake((saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
       return datapointsFoundEntitiesStream
         .tap((datapointsWithFoundEntities) => {
           collectedDatapoints.push(datapointsWithFoundEntities);
         });
     });
 
-    const closeDatapointByMeasureAndDimensionsStub = this.stub().callsArgWithAsync(1, null, null);
-    this.stub(DatapointsRepositoryFactory, 'latestExceptCurrentVersion').returns({
+    const closeDatapointByMeasureAndDimensionsStub = sandbox.stub().callsArgWithAsync(1, null, null);
+    sandbox.stub(DatapointsRepositoryFactory, 'latestExceptCurrentVersion').returns({
       closeDatapointByMeasureAndDimensions: closeDatapointByMeasureAndDimensionsStub
     });
 
-    const loggerErrorStub = this.stub(logger, 'error');
-    const loggerInfoStub = this.stub(logger, 'info');
+    const loggerErrorStub = sandbox.stub(logger, 'error');
+    const loggerInfoStub = sandbox.stub(logger, 'info');
 
     updateDatapoints(context, (errors, externalContext) => {
       expect(errors).to.not.exist;
@@ -643,25 +644,25 @@ describe('Datapoints incremental update flow', () => {
 
       done();
     });
-  }));
+  });
 
-  it('remove existing datapoints: error had happened while closing datapoint', sandbox(function (done: Function) {
-    this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
-    this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
+  it('remove existing datapoints: error had happened while closing datapoint', (done: Function) => {
+    sandbox.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(segregatedEntities));
+    sandbox.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(segregatedPreviousEntities));
 
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToDiff: string) => {
+    sandbox.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToDiff: string) => {
       return readTextFileByLineAsJsonStreamOriginal(pathToDiff)
-        .filter(({metadata}) => {
+        .filter(({ metadata }) => {
           return metadata.action === 'remove';
         });
     });
 
-    this.stub(datapointsUtils, 'createEntitiesFoundInDatapointsSaverWithCache').returns((datapoints) => {
+    sandbox.stub(datapointsUtils, 'createEntitiesFoundInDatapointsSaverWithCache').returns((datapoints) => {
       return Promise.resolve(datapoints);
     });
 
     const collectedDatapoints = [];
-    this.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem').callsFake((saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
+    sandbox.stub(datapointsUtils, 'saveDatapointsAndEntitiesFoundInThem').callsFake((saveEntitiesFoundInDatapoints, externalContextFrozen, datapointsFoundEntitiesStream) => {
       return datapointsFoundEntitiesStream
         .tap((datapointsWithFoundEntities) => {
           collectedDatapoints.push(datapointsWithFoundEntities);
@@ -669,12 +670,12 @@ describe('Datapoints incremental update flow', () => {
     });
 
     const expectedError = 'Boo!';
-    const closeDatapointByMeasureAndDimensionsStub = this.stub().callsArgWithAsync(1, expectedError);
-    this.stub(DatapointsRepositoryFactory, 'latestExceptCurrentVersion').returns({
+    const closeDatapointByMeasureAndDimensionsStub = sandbox.stub().callsArgWithAsync(1, expectedError);
+    sandbox.stub(DatapointsRepositoryFactory, 'latestExceptCurrentVersion').returns({
       closeDatapointByMeasureAndDimensions: closeDatapointByMeasureAndDimensionsStub
     });
 
-    const loggerInfoStub = this.stub(logger, 'info');
+    const loggerInfoStub = sandbox.stub(logger, 'info');
 
     updateDatapoints(context, (errors, externalContext) => {
       expect(errors).to.deep.equal([expectedError]);
@@ -686,5 +687,5 @@ describe('Datapoints incremental update flow', () => {
 
       done();
     });
-  }));
+  });
 });

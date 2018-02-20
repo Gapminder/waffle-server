@@ -1,5 +1,4 @@
 import * as sinon from 'sinon';
-import * as sinonTest from 'sinon-test';
 import { expect } from 'chai';
 
 import '../../ws.repository';
@@ -10,14 +9,17 @@ import * as datapointsService from '../../ws.services/datapoints.service';
 import * as ddfQueryValidator from '../../ws.ddfql/ddf-query-validator';
 import * as commonService from '../../ws.services/common.service';
 import * as conceptsService from '../../ws.services/concepts.service';
-import * as entitiesService from '../../ws.services/entities.service';
 import { getConcepts } from '../../ws.services/concepts.service';
+import * as entitiesService from '../../ws.services/entities.service';
 import { logger } from '../../ws.config/log';
 
-const sandbox = sinonTest.configureTest(sinon);
+const sandbox = sinon.createSandbox();
 
 describe('Datapoints service', () => {
-  it('cannot collect datapoints by ddfql: concepts not found', sandbox(function (done: Function) {
+
+  afterEach(() => sandbox.restore());
+
+  it('cannot collect datapoints by ddfql: concepts not found', (done: Function) => {
     const expectedError = '[Error]: concepts not found';
 
     const context = {
@@ -34,17 +36,20 @@ describe('Datapoints service', () => {
       version: 1111111
     };
 
-    this.stub(ddfQueryValidator, 'validateDdfQueryAsync').callsArgWithAsync(1, null, context);
-    this.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, Object.assign({}, context, {dataset: {}, transaction: {}}));
-    this.stub(conceptsService, 'getConcepts').callsArgWithAsync(1, expectedError);
+    sandbox.stub(ddfQueryValidator, 'validateDdfQueryAsync').callsArgWithAsync(1, null, context);
+    sandbox.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, Object.assign({}, context, {
+      dataset: {},
+      transaction: {}
+    }));
+    sandbox.stub(conceptsService, 'getConcepts').callsArgWithAsync(1, expectedError);
 
     datapointsService.collectDatapointsByDdfql(context, (error) => {
       expect(error).to.equal(expectedError);
       done();
     });
-  }));
+  });
 
-  it('cannot collect datapoints by ddfql: there is no projection in query', sandbox(function (done: Function) {
+  it('cannot collect datapoints by ddfql: there is no projection in query', (done: Function) => {
     const expectedError = `You didn't select any column`;
 
     const context = {
@@ -64,17 +69,17 @@ describe('Datapoints service', () => {
       concepts: {}
     };
 
-    this.stub(ddfQueryValidator, 'validateDdfQueryAsync').callsArgWithAsync(1, null, context);
-    this.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, context);
-    this.stub(conceptsService, 'getConcepts').callsArgWithAsync(1, null, context);
+    sandbox.stub(ddfQueryValidator, 'validateDdfQueryAsync').callsArgWithAsync(1, null, context);
+    sandbox.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, context);
+    sandbox.stub(conceptsService, 'getConcepts').callsArgWithAsync(1, null, context);
 
     datapointsService.collectDatapointsByDdfql(context, (error) => {
       expect(error).to.equal(expectedError);
       done();
     });
-  }));
+  });
 
-  it('cannot collect datapoints by ddfql: not existing columns requested in value projection', sandbox(function (done: Function) {
+  it('cannot collect datapoints by ddfql: not existing columns requested in value projection', (done: Function) => {
     const expectedError = `You choose select column(s) 'population' which aren't present in choosen dataset`;
 
     const context = {
@@ -92,21 +97,21 @@ describe('Datapoints service', () => {
       transaction: {},
       dataset: {},
       concepts: [
-        {gid: 'geo'}
+        { gid: 'geo' }
       ]
     };
 
-    this.stub(ddfQueryValidator, 'validateDdfQueryAsync').callsArgWithAsync(1, null, context);
-    this.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, context);
-    this.stub(conceptsService, 'getConcepts').callsArgWithAsync(1, null, context);
+    sandbox.stub(ddfQueryValidator, 'validateDdfQueryAsync').callsArgWithAsync(1, null, context);
+    sandbox.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, context);
+    sandbox.stub(conceptsService, 'getConcepts').callsArgWithAsync(1, null, context);
 
     datapointsService.collectDatapointsByDdfql(context, (error) => {
       expect(error).to.equal(expectedError);
       done();
     });
-  }));
+  });
 
-  it('cannot collect datapoints by ddfql: not existing columns requested in key projection', sandbox(function (done: Function) {
+  it('cannot collect datapoints by ddfql: not existing columns requested in key projection', (done: Function) => {
     const expectedError = `Your choose key column(s) 'year, age' which aren't present in choosen dataset`;
 
     const context = {
@@ -124,22 +129,22 @@ describe('Datapoints service', () => {
       transaction: {},
       dataset: {},
       concepts: [
-        {gid: 'geo'},
-        {gid: 'population'}
+        { gid: 'geo' },
+        { gid: 'population' }
       ]
     };
 
-    this.stub(ddfQueryValidator, 'validateDdfQueryAsync').callsArgWithAsync(1, null, context);
-    this.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, context);
-    this.stub(conceptsService, 'getConcepts').callsArgWithAsync(1, null, context);
+    sandbox.stub(ddfQueryValidator, 'validateDdfQueryAsync').callsArgWithAsync(1, null, context);
+    sandbox.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, context);
+    sandbox.stub(conceptsService, 'getConcepts').callsArgWithAsync(1, null, context);
 
     datapointsService.collectDatapointsByDdfql(context, (error) => {
       expect(error).to.equal(expectedError);
       done();
     });
-  }));
+  });
 
-  it('cannot collect datapoints by ddfql: fails while searching entities by concepts', sandbox(function (done: Function) {
+  it('cannot collect datapoints by ddfql: fails while searching entities by concepts', (done: Function) => {
     const expectedError = 'Boo!';
 
     const context = {
@@ -159,30 +164,30 @@ describe('Datapoints service', () => {
         _id: 'dsId'
       },
       concepts: [
-        {gid: 'geo'},
-        {gid: 'year'},
-        {gid: 'age'},
-        {gid: 'population', type: 'measure'}
+        { gid: 'geo' },
+        { gid: 'year' },
+        { gid: 'age' },
+        { gid: 'population', type: 'measure' }
       ]
     };
 
     const geoEntities = [
-      {gid: 'usa', originId: 'usaId'}
+      { gid: 'usa', originId: 'usaId' }
     ];
 
     const ageEntities = [
-      {gid: '21', originId: '21Id'}
+      { gid: '21', originId: '21Id' }
     ];
 
     const yearEntities = [
-      {gid: '1918', originId: '1918Id'}
+      { gid: '1918', originId: '1918Id' }
     ];
 
-    this.stub(ddfQueryValidator, 'validateDdfQueryAsync').callsArgWithAsync(1, null, context);
-    this.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, context);
-    this.stub(conceptsService, 'getConcepts').callsArgWithAsync(1, null, context);
+    sandbox.stub(ddfQueryValidator, 'validateDdfQueryAsync').callsArgWithAsync(1, null, context);
+    sandbox.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, context);
+    sandbox.stub(conceptsService, 'getConcepts').callsArgWithAsync(1, null, context);
 
-    const getEntitiesStub = this.stub(entitiesService, 'getEntities');
+    const getEntitiesStub = sandbox.stub(entitiesService, 'getEntities');
     getEntitiesStub.onFirstCall()
       .callsArgWithAsync(1, expectedError);
 
@@ -190,9 +195,9 @@ describe('Datapoints service', () => {
       expect(error).to.equal(expectedError);
       done();
     });
-  }));
+  });
 
-  it('cannot collect datapoints by ddfql: fails cause no measures were found for datapoints', sandbox(function (done: Function) {
+  it('cannot collect datapoints by ddfql: fails cause no measures were found for datapoints', (done: Function) => {
     const expectedError = 'Measure should present in select property';
 
     const context = {
@@ -212,47 +217,47 @@ describe('Datapoints service', () => {
         _id: 'dsId'
       },
       concepts: [
-        {gid: 'geo'},
-        {gid: 'year'},
-        {gid: 'age'},
-        {gid: 'population'}
+        { gid: 'geo' },
+        { gid: 'year' },
+        { gid: 'age' },
+        { gid: 'population' }
       ]
     };
 
     const geoEntities = [
-      {gid: 'usa', originId: 'usaId'}
+      { gid: 'usa', originId: 'usaId' }
     ];
 
     const ageEntities = [
-      {gid: '21', originId: '21Id'}
+      { gid: '21', originId: '21Id' }
     ];
 
     const yearEntities = [
-      {gid: '1918', originId: '1918Id'}
+      { gid: '1918', originId: '1918Id' }
     ];
 
-    this.stub(ddfQueryValidator, 'validateDdfQueryAsync').callsArgWithAsync(1, null, context);
-    this.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, context);
-    this.stub(conceptsService, 'getConcepts').callsArgWithAsync(1, null, context);
-    this.stub(logger, 'error');
+    sandbox.stub(ddfQueryValidator, 'validateDdfQueryAsync').callsArgWithAsync(1, null, context);
+    sandbox.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, context);
+    sandbox.stub(conceptsService, 'getConcepts').callsArgWithAsync(1, null, context);
+    sandbox.stub(logger, 'error');
 
-    const getEntitiesStub = this.stub(entitiesService, 'getEntities');
+    const getEntitiesStub = sandbox.stub(entitiesService, 'getEntities');
     getEntitiesStub.onFirstCall()
-      .callsArgWithAsync(1, null, {entities: geoEntities});
+      .callsArgWithAsync(1, null, { entities: geoEntities });
 
     getEntitiesStub.onSecondCall()
-      .callsArgWithAsync(1, null, {entities: yearEntities});
+      .callsArgWithAsync(1, null, { entities: yearEntities });
 
     getEntitiesStub.onThirdCall()
-      .callsArgWithAsync(1, null, {entities: ageEntities});
+      .callsArgWithAsync(1, null, { entities: ageEntities });
 
     datapointsService.collectDatapointsByDdfql(context, (error) => {
       expect(error).to.equal(expectedError);
       done();
     });
-  }));
+  });
 
-  it('cannot collect datapoints by ddfql: fails searching entities for join clause', sandbox(function (done: Function) {
+  it('cannot collect datapoints by ddfql: fails searching entities for join clause', (done: Function) => {
     const expectedError = '[Error]: entities projection';
 
     const context = {
@@ -272,50 +277,50 @@ describe('Datapoints service', () => {
         _id: 'dsId'
       },
       concepts: [
-        {gid: 'geo'},
-        {gid: 'year'},
-        {gid: 'age'},
-        {gid: 'population', type: 'measure'}
+        { gid: 'geo' },
+        { gid: 'year' },
+        { gid: 'age' },
+        { gid: 'population', type: 'measure' }
       ]
     };
 
     const geoEntities = [
-      {gid: 'usa', originId: 'usaId'}
+      { gid: 'usa', originId: 'usaId' }
     ];
 
     const ageEntities = [
-      {gid: '21', originId: '21Id'}
+      { gid: '21', originId: '21Id' }
     ];
 
     const yearEntities = [
-      {gid: '1918', originId: '1918Id'}
+      { gid: '1918', originId: '1918Id' }
     ];
 
-    const findEntityPropertiesByQueryStub = this.stub().callsArgWithAsync(1, expectedError);
-    this.stub(EntitiesRepositoryFactory, 'currentVersion').returns({ findEntityPropertiesByQuery: findEntityPropertiesByQueryStub });
+    const findEntityPropertiesByQueryStub = sandbox.stub().callsArgWithAsync(1, expectedError);
+    sandbox.stub(EntitiesRepositoryFactory, 'currentVersion').returns({ findEntityPropertiesByQuery: findEntityPropertiesByQueryStub });
 
-    this.stub(ddfQueryValidator, 'validateDdfQueryAsync').callsArgWithAsync(1, null, context);
-    this.stub(ddfqlNormalizer, 'normalizeDatapoints').returns({join: {$year: {}}});
-    this.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, context);
-    this.stub(conceptsService, 'getConcepts').callsArgWithAsync(1, null, context);
+    sandbox.stub(ddfQueryValidator, 'validateDdfQueryAsync').callsArgWithAsync(1, null, context);
+    sandbox.stub(ddfqlNormalizer, 'normalizeDatapoints').returns({ join: { $year: {} } });
+    sandbox.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, context);
+    sandbox.stub(conceptsService, 'getConcepts').callsArgWithAsync(1, null, context);
 
-    const getEntitiesStub = this.stub(entitiesService, 'getEntities');
+    const getEntitiesStub = sandbox.stub(entitiesService, 'getEntities');
     getEntitiesStub.onFirstCall()
-      .callsArgWithAsync(1, null, {entities: geoEntities});
+      .callsArgWithAsync(1, null, { entities: geoEntities });
 
     getEntitiesStub.onSecondCall()
-      .callsArgWithAsync(1, null, {entities: yearEntities});
+      .callsArgWithAsync(1, null, { entities: yearEntities });
 
     getEntitiesStub.onThirdCall()
-      .callsArgWithAsync(1, null, {entities: ageEntities});
+      .callsArgWithAsync(1, null, { entities: ageEntities });
 
     datapointsService.collectDatapointsByDdfql(context, (error) => {
       expect(error).to.equal(expectedError);
       done();
     });
-  }));
+  });
 
-  it('cannot collect datapoints by ddfql: mongo query generated from the join clause is invalid', sandbox(function (done: Function) {
+  it('cannot collect datapoints by ddfql: mongo query generated from the join clause is invalid', (done: Function) => {
     const expectedError = '[Error]: generated mongo query is not valid';
 
     const queryValidationResult = {
@@ -340,48 +345,48 @@ describe('Datapoints service', () => {
         _id: 'dsId'
       },
       concepts: [
-        {gid: 'geo'},
-        {gid: 'year'},
-        {gid: 'age'},
-        {gid: 'population', type: 'measure'}
+        { gid: 'geo' },
+        { gid: 'year' },
+        { gid: 'age' },
+        { gid: 'population', type: 'measure' }
       ]
     };
 
     const geoEntities = [
-      {gid: 'usa', originId: 'usaId'}
+      { gid: 'usa', originId: 'usaId' }
     ];
 
     const ageEntities = [
-      {gid: '21', originId: '21Id'}
+      { gid: '21', originId: '21Id' }
     ];
 
     const yearEntities = [
-      {gid: '1918', originId: '1918Id'}
+      { gid: '1918', originId: '1918Id' }
     ];
 
-    this.stub(ddfQueryValidator, 'validateDdfQueryAsync').callsArgWithAsync(1, null, context);
-    this.stub(ddfQueryValidator, 'validateMongoQuery').returns(queryValidationResult);
-    this.stub(ddfqlNormalizer, 'normalizeDatapoints').returns({join: {$year: {}}});
-    this.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, context);
-    this.stub(conceptsService, 'getConcepts').callsArgWithAsync(1, null, context);
+    sandbox.stub(ddfQueryValidator, 'validateDdfQueryAsync').callsArgWithAsync(1, null, context);
+    sandbox.stub(ddfQueryValidator, 'validateMongoQuery').returns(queryValidationResult);
+    sandbox.stub(ddfqlNormalizer, 'normalizeDatapoints').returns({ join: { $year: {} } });
+    sandbox.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, context);
+    sandbox.stub(conceptsService, 'getConcepts').callsArgWithAsync(1, null, context);
 
-    const getEntitiesStub = this.stub(entitiesService, 'getEntities');
+    const getEntitiesStub = sandbox.stub(entitiesService, 'getEntities');
     getEntitiesStub.onFirstCall()
-      .callsArgWithAsync(1, null, {entities: geoEntities});
+      .callsArgWithAsync(1, null, { entities: geoEntities });
 
     getEntitiesStub.onSecondCall()
-      .callsArgWithAsync(1, null, {entities: yearEntities});
+      .callsArgWithAsync(1, null, { entities: yearEntities });
 
     getEntitiesStub.onThirdCall()
-      .callsArgWithAsync(1, null, {entities: ageEntities});
+      .callsArgWithAsync(1, null, { entities: ageEntities });
 
     datapointsService.collectDatapointsByDdfql(context, (error) => {
       expect(error).to.equal(expectedError);
       done();
     });
-  }));
+  });
 
-  it('cannot collect datapoints by ddfql: final mongo query generated from the whole ddfql query is invalid', sandbox(function (done: Function) {
+  it('cannot collect datapoints by ddfql: final mongo query generated from the whole ddfql query is invalid', (done: Function) => {
     const expectedError = '[Error]: generated mongo query is not valid';
 
     const queryValidationResult = {
@@ -406,55 +411,55 @@ describe('Datapoints service', () => {
         _id: 'dsId'
       },
       concepts: [
-        {gid: 'geo'},
-        {gid: 'year'},
-        {gid: 'age'},
-        {gid: 'population', type: 'measure'}
+        { gid: 'geo' },
+        { gid: 'year' },
+        { gid: 'age' },
+        { gid: 'population', type: 'measure' }
       ]
     };
 
     const geoEntities = [
-      {gid: 'usa', originId: 'usaId'}
+      { gid: 'usa', originId: 'usaId' }
     ];
 
     const ageEntities = [
-      {gid: '21', originId: '21Id'}
+      { gid: '21', originId: '21Id' }
     ];
 
     const yearEntities = [
-      {gid: '1918', originId: '1918Id'}
+      { gid: '1918', originId: '1918Id' }
     ];
 
-    const findEntityPropertiesByQueryStub = this.stub().callsArgWithAsync(1, null, geoEntities);
-    this.stub(EntitiesRepositoryFactory, 'currentVersion').returns({ findEntityPropertiesByQuery: findEntityPropertiesByQueryStub });
+    const findEntityPropertiesByQueryStub = sandbox.stub().callsArgWithAsync(1, null, geoEntities);
+    sandbox.stub(EntitiesRepositoryFactory, 'currentVersion').returns({ findEntityPropertiesByQuery: findEntityPropertiesByQueryStub });
 
-    this.stub(ddfQueryValidator, 'validateDdfQueryAsync').callsArgWithAsync(1, null, context);
+    sandbox.stub(ddfQueryValidator, 'validateDdfQueryAsync').callsArgWithAsync(1, null, context);
 
-    const validateMongoQueryStub = this.stub(ddfQueryValidator, 'validateMongoQuery').returns(queryValidationResult);
-    validateMongoQueryStub.onFirstCall().returns({valid: true});
+    const validateMongoQueryStub = sandbox.stub(ddfQueryValidator, 'validateMongoQuery').returns(queryValidationResult);
+    validateMongoQueryStub.onFirstCall().returns({ valid: true });
     validateMongoQueryStub.onSecondCall().returns(queryValidationResult);
 
-    this.stub(ddfqlNormalizer, 'normalizeDatapoints').returns({join: {$year: {}}});
-    this.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, context);
-    this.stub(conceptsService, 'getConcepts').callsArgWithAsync(1, null, context);
+    sandbox.stub(ddfqlNormalizer, 'normalizeDatapoints').returns({ join: { $year: {} } });
+    sandbox.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, context);
+    sandbox.stub(conceptsService, 'getConcepts').callsArgWithAsync(1, null, context);
 
-    const getEntitiesStub = this.stub(entitiesService, 'getEntities');
+    const getEntitiesStub = sandbox.stub(entitiesService, 'getEntities');
     getEntitiesStub.onFirstCall()
-      .callsArgWithAsync(1, null, {entities: geoEntities});
+      .callsArgWithAsync(1, null, { entities: geoEntities });
 
     getEntitiesStub.onSecondCall()
-      .callsArgWithAsync(1, null, {entities: yearEntities});
+      .callsArgWithAsync(1, null, { entities: yearEntities });
 
     getEntitiesStub.onThirdCall()
-      .callsArgWithAsync(1, null, {entities: ageEntities});
+      .callsArgWithAsync(1, null, { entities: ageEntities });
 
     datapointsService.collectDatapointsByDdfql(context, (error) => {
       expect(error).to.equal(expectedError);
       done();
     });
-  }));
+  });
 
-  it('cannot collect datapoints by ddfql: fails searching for datapoints', sandbox(function (done: Function) {
+  it('cannot collect datapoints by ddfql: fails searching for datapoints', (done: Function) => {
     const expectedError = '[Error]: cannot find datapoints';
 
     const context = {
@@ -474,55 +479,55 @@ describe('Datapoints service', () => {
         _id: 'dsId'
       },
       concepts: [
-        {gid: 'geo'},
-        {gid: 'year'},
-        {gid: 'age'},
-        {gid: 'population', type: 'measure'}
+        { gid: 'geo' },
+        { gid: 'year' },
+        { gid: 'age' },
+        { gid: 'population', type: 'measure' }
       ]
     };
 
     const geoEntities = [
-      {gid: 'usa', originId: 'usaId'}
+      { gid: 'usa', originId: 'usaId' }
     ];
 
     const ageEntities = [
-      {gid: '21', originId: '21Id'}
+      { gid: '21', originId: '21Id' }
     ];
 
     const yearEntities = [
-      {gid: '1918', originId: '1918Id'}
+      { gid: '1918', originId: '1918Id' }
     ];
 
-    const findEntityPropertiesByQueryStub = this.stub().callsArgWithAsync(1, null, geoEntities);
-    this.stub(EntitiesRepositoryFactory, 'currentVersion').returns({ findEntityPropertiesByQuery: findEntityPropertiesByQueryStub });
+    const findEntityPropertiesByQueryStub = sandbox.stub().callsArgWithAsync(1, null, geoEntities);
+    sandbox.stub(EntitiesRepositoryFactory, 'currentVersion').returns({ findEntityPropertiesByQuery: findEntityPropertiesByQueryStub });
 
-    const findByQueryStub = this.stub().callsArgWithAsync(1, expectedError);
-    this.stub(DatapointsRepositoryFactory, 'currentVersion').returns({ findByQuery: findByQueryStub });
+    const findByQueryStub = sandbox.stub().callsArgWithAsync(1, expectedError);
+    sandbox.stub(DatapointsRepositoryFactory, 'currentVersion').returns({ findByQuery: findByQueryStub });
 
-    this.stub(ddfQueryValidator, 'validateDdfQueryAsync').callsArgWithAsync(1, null, context);
-    this.stub(ddfQueryValidator, 'validateMongoQuery').returns({valid: true});
+    sandbox.stub(ddfQueryValidator, 'validateDdfQueryAsync').callsArgWithAsync(1, null, context);
+    sandbox.stub(ddfQueryValidator, 'validateMongoQuery').returns({ valid: true });
 
-    this.stub(ddfqlNormalizer, 'normalizeDatapoints').returns({join: {$year: {}}});
-    this.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, context);
-    this.stub(conceptsService, 'getConcepts').callsArgWithAsync(1, null, context);
+    sandbox.stub(ddfqlNormalizer, 'normalizeDatapoints').returns({ join: { $year: {} } });
+    sandbox.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, context);
+    sandbox.stub(conceptsService, 'getConcepts').callsArgWithAsync(1, null, context);
 
-    const getEntitiesStub = this.stub(entitiesService, 'getEntities');
+    const getEntitiesStub = sandbox.stub(entitiesService, 'getEntities');
     getEntitiesStub.onFirstCall()
-      .callsArgWithAsync(1, null, {entities: geoEntities});
+      .callsArgWithAsync(1, null, { entities: geoEntities });
 
     getEntitiesStub.onSecondCall()
-      .callsArgWithAsync(1, null, {entities: yearEntities});
+      .callsArgWithAsync(1, null, { entities: yearEntities });
 
     getEntitiesStub.onThirdCall()
-      .callsArgWithAsync(1, null, {entities: ageEntities});
+      .callsArgWithAsync(1, null, { entities: ageEntities });
 
     datapointsService.collectDatapointsByDdfql(context, (error) => {
       expect(error).to.equal(expectedError);
       done();
     });
-  }));
+  });
 
-  it('collects datapoints by ddfql', sandbox(function (done: Function) {
+  it('collects datapoints by ddfql', (done: Function) => {
     const context = {
       user: {},
       select: ['population'],
@@ -536,10 +541,10 @@ describe('Datapoints service', () => {
         },
         where: {
           $and: [
-            {year: '$year'}
+            { year: '$year' }
           ]
         },
-        join: {$year: {}}
+        join: { $year: {} }
       },
       sort: {},
       groupBy: {},
@@ -551,57 +556,57 @@ describe('Datapoints service', () => {
         _id: 'dsId'
       },
       concepts: [
-        {gid: 'geo'},
-        {gid: 'year'},
-        {gid: 'age'},
-        {gid: 'population', type: 'measure'}
+        { gid: 'geo' },
+        { gid: 'year' },
+        { gid: 'age' },
+        { gid: 'population', type: 'measure' }
       ]
     };
 
     const datapoints = [
-      {value: 7},
-      {value: 8},
-      {value: 9}
+      { value: 7 },
+      { value: 8 },
+      { value: 9 }
     ];
 
     const geoEntities = [
-      {gid: 'usa', originId: 'usaId'}
+      { gid: 'usa', originId: 'usaId' }
     ];
 
     const ageEntities = [
-      {gid: '21', originId: '21Id'}
+      { gid: '21', originId: '21Id' }
     ];
 
     const yearEntities = [
-      {gid: '1918', originId: '1918Id'}
+      { gid: '1918', originId: '1918Id' }
     ];
 
-    const findEntityPropertiesByQueryStub = this.stub().callsArgWithAsync(1, null, geoEntities);
-    const currentVersionEntitiesStub = this.stub(EntitiesRepositoryFactory, 'currentVersion').returns({ findEntityPropertiesByQuery: findEntityPropertiesByQueryStub });
+    const findEntityPropertiesByQueryStub = sandbox.stub().callsArgWithAsync(1, null, geoEntities);
+    const currentVersionEntitiesStub = sandbox.stub(EntitiesRepositoryFactory, 'currentVersion').returns({ findEntityPropertiesByQuery: findEntityPropertiesByQueryStub });
 
-    const findByQueryStub = this.stub().callsArgWithAsync(1, null, datapoints);
-    const currentVersionDatapointsStub = this.stub(DatapointsRepositoryFactory, 'currentVersion').returns({ findByQuery: findByQueryStub });
+    const findByQueryStub = sandbox.stub().callsArgWithAsync(1, null, datapoints);
+    const currentVersionDatapointsStub = sandbox.stub(DatapointsRepositoryFactory, 'currentVersion').returns({ findByQuery: findByQueryStub });
 
-    const validateDdfQueryAsyncStub = this.stub(ddfQueryValidator, 'validateDdfQueryAsync').callsArgWithAsync(1, null, context);
-    const validateMongoQueryStub = this.stub(ddfQueryValidator, 'validateMongoQuery').returns({valid: true});
+    const validateDdfQueryAsyncStub = sandbox.stub(ddfQueryValidator, 'validateDdfQueryAsync').callsArgWithAsync(1, null, context);
+    const validateMongoQueryStub = sandbox.stub(ddfQueryValidator, 'validateMongoQuery').returns({ valid: true });
 
-    const substituteDatapointJoinLinksStub = this.stub(ddfqlNormalizer, 'substituteDatapointJoinLinks').returns(context.query);
-    const normalizeDatapointsStub = this.stub(ddfqlNormalizer, 'normalizeDatapoints').returns(context.query);
+    const substituteDatapointJoinLinksStub = sandbox.stub(ddfqlNormalizer, 'substituteDatapointJoinLinks').returns(context.query);
+    const normalizeDatapointsStub = sandbox.stub(ddfqlNormalizer, 'normalizeDatapoints').returns(context.query);
 
-    const findDefaultDatasetAndTransactionStub = this.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, context);
-    const getConceptsStub = this.stub(conceptsService, 'getConcepts').callsArgWithAsync(1, null, context);
+    const findDefaultDatasetAndTransactionStub = sandbox.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, context);
+    const getConceptsStub = sandbox.stub(conceptsService, 'getConcepts').callsArgWithAsync(1, null, context);
 
-    const getEntitiesStub = this.stub(entitiesService, 'getEntities');
+    const getEntitiesStub = sandbox.stub(entitiesService, 'getEntities');
     getEntitiesStub.onFirstCall()
-      .callsArgWithAsync(1, null, {entities: geoEntities});
+      .callsArgWithAsync(1, null, { entities: geoEntities });
 
     getEntitiesStub.onSecondCall()
-      .callsArgWithAsync(1, null, {entities: yearEntities});
+      .callsArgWithAsync(1, null, { entities: yearEntities });
 
     getEntitiesStub.onThirdCall()
-      .callsArgWithAsync(1, null, {entities: ageEntities});
+      .callsArgWithAsync(1, null, { entities: ageEntities });
 
-    this.stub(logger, 'info');
+    sandbox.stub(logger, 'info');
 
     datapointsService.collectDatapointsByDdfql(context, (error, externalContext) => {
       expect(error).to.not.exist;
@@ -631,5 +636,5 @@ describe('Datapoints service', () => {
 
       done();
     });
-  }));
+  });
 });

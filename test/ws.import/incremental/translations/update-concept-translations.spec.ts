@@ -1,7 +1,6 @@
 import '../../../../ws.repository';
 
 import * as sinon from 'sinon';
-import * as sinonTest from 'sinon-test';
 import { expect } from 'chai';
 
 import { constants } from '../../../../ws.utils/constants';
@@ -10,7 +9,7 @@ import { updateConceptsTranslations } from '../../../../ws.import/incremental/tr
 import * as ddfMappers from '../../../../ws.import/utils/ddf-mappers';
 import { ConceptsRepositoryFactory } from '../../../../ws.repository/ddf/concepts/concepts.repository';
 
-const sandbox = sinonTest.configureTest(sinon);
+const sandbox = sinon.createSandbox();
 
 const externalContext = {
   transaction: {
@@ -24,8 +23,11 @@ const externalContext = {
 };
 
 describe('Concepts Translations Update Plugin', () => {
-  it('creates a proper context for the plugin', sandbox(function (done: Function) {
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
+
+  afterEach(() => sandbox.restore());
+
+  it('creates a proper context for the plugin', (done: Function) => {
+    sandbox.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       expect(Object.isFrozen(externalContextFrozen)).to.equal(true, 'context should be frozen');
 
       expect(externalContextFrozen.transaction).to.equal(externalContext.transaction);
@@ -39,10 +41,10 @@ describe('Concepts Translations Update Plugin', () => {
     updateConceptsTranslations(externalContext, () => {
       done();
     });
-  }));
+  });
 
-  it('creates a proper plugin', sandbox(function (done: Function) {
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
+  it('creates a proper plugin', (done: Function) => {
+    sandbox.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       expect(plugin.dataType).to.equal(constants.CONCEPTS);
       expect(plugin.repositoryFactory).to.equal(ConceptsRepositoryFactory);
       expect(plugin.makeTranslationTargetBasedOnItsClosedVersion).to.be.instanceOf(Function);
@@ -55,33 +57,33 @@ describe('Concepts Translations Update Plugin', () => {
     updateConceptsTranslations(externalContext, () => {
       done();
     });
-  }));
+  });
 
-  it('makes a query to fetch translation target', sandbox(function (done: Function) {
+  it('makes a query to fetch translation target', (done: Function) => {
     const changesDescriptor = {
       gid: 'gid'
     };
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
+    sandbox.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       const query = plugin.makeQueryToFetchTranslationTarget(changesDescriptor, null);
 
-      expect(query).to.deep.equal({gid: changesDescriptor.gid});
+      expect(query).to.deep.equal({ gid: changesDescriptor.gid });
       callback();
     });
 
     updateConceptsTranslations(externalContext, () => {
       done();
     });
-  }));
+  });
 
-  it('processes translation before update', sandbox(function (done: Function) {
+  it('processes translation before update', (done: Function) => {
     const translationToProcess = {
       prop: 'value'
     };
 
-    const transformConceptPropertiesStub = this.stub(ddfMappers, 'transformConceptProperties').returns(translationToProcess);
+    const transformConceptPropertiesStub = sandbox.stub(ddfMappers, 'transformConceptProperties').returns(translationToProcess);
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
+    sandbox.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       const processedTranslation = plugin.processTranslationBeforeUpdate(translationToProcess);
 
       sinon.assert.calledOnce(transformConceptPropertiesStub);
@@ -94,9 +96,9 @@ describe('Concepts Translations Update Plugin', () => {
     updateConceptsTranslations(externalContext, () => {
       done();
     });
-  }));
+  });
 
-  it('makes translation target based on its closed version', sandbox(function (done: Function) {
+  it('makes translation target based on its closed version', (done: Function) => {
     const closedTarget = {
       originId: 'originId',
       domain: 'domain',
@@ -116,9 +118,9 @@ describe('Concepts Translations Update Plugin', () => {
 
     const mappedConceptsFake = {};
 
-    const mapDdfConceptsToWsModelStub = this.stub(ddfMappers, 'mapDdfConceptsToWsModel').returns(mappedConceptsFake);
+    const mapDdfConceptsToWsModelStub = sandbox.stub(ddfMappers, 'mapDdfConceptsToWsModel').returns(mappedConceptsFake);
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
+    sandbox.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       const newTarget = plugin.makeTranslationTargetBasedOnItsClosedVersion(closedTarget, context);
 
       sinon.assert.calledOnce(mapDdfConceptsToWsModelStub);
@@ -136,5 +138,5 @@ describe('Concepts Translations Update Plugin', () => {
     updateConceptsTranslations(externalContext, () => {
       done();
     });
-  }));
+  });
 });

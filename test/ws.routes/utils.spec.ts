@@ -6,7 +6,6 @@ import * as passport from 'passport';
 import * as express from 'express';
 
 import * as sinon from 'sinon';
-import * as sinonTest from 'sinon-test';
 import { expect } from 'chai';
 import * as proxyquire from 'proxyquire';
 
@@ -20,7 +19,7 @@ import { constants } from '../../ws.utils/constants';
 
 import * as commonService from '../../ws.services/common.service';
 
-const sandbox = sinonTest.configureTest(sinon);
+const sandbox = sinon.createSandbox();
 
 describe('Routes utils', () => {
   const ORIGINAL_PATH_TO_DDF_REPOSITORIES = config.PATH_TO_DDF_REPOSITORIES;
@@ -33,7 +32,10 @@ describe('Routes utils', () => {
   });
 
   describe('Dataset accessibility check', () => {
-    it('should send unsuccessful response with an error happened during dataset searching', sandbox(function (done: Function) {
+
+    afterEach(() => sandbox.restore());
+
+    it('should send unsuccessful response with an error happened during dataset searching', (done: Function) => {
       const errorMessage = 'Searching error!';
       const expectedDatasetName = 'fake/dataset';
 
@@ -53,7 +55,7 @@ describe('Routes utils', () => {
           dataset: expectedDatasetName
         }
       };
-      const loggerErrorStub = this.stub(logger, 'error');
+      const loggerErrorStub = sandbox.stub(logger, 'error');
 
       const res = {
         json: (response) => {
@@ -70,7 +72,7 @@ describe('Routes utils', () => {
       };
 
       routeUtils.checkDatasetAccessibility(req, res, next);
-    }));
+    });
 
     it('should call next middleware if no dataset name was found', (done) => {
       const req: any = {};
@@ -305,6 +307,9 @@ describe('Routes utils', () => {
   });
 
   describe('Cache config', () => {
+
+    afterEach(() => sandbox.restore());
+
     it('should generate correct cache key', (done) => {
       const expectedCachePrefix = 'MyPrefix';
       const expectedMethod = 'GET';
@@ -378,7 +383,10 @@ describe('Routes utils', () => {
   });
 
   describe('Parse query from url and populate request body with a result', () => {
-    it('should parse query as json if "query" param given in url', sandbox(function (done: Function) {
+
+    afterEach(() => sandbox.restore());
+
+    it('should parse query as json if "query" param given in url', (done: Function) => {
       const ddfql = {
         from: 'entities',
         select: {
@@ -396,7 +404,7 @@ describe('Routes utils', () => {
 
       const res: any = {};
 
-      const loggerInfoStub = this.stub(logger, 'info');
+      const loggerInfoStub = sandbox.stub(logger, 'info');
 
       const next = () => {
         const rawDdfQuery = { queryRaw, type: 'JSON' };
@@ -410,16 +418,16 @@ describe('Routes utils', () => {
       };
 
       routeUtils.bodyFromUrlQuery(req, res, next);
-    }));
+    });
 
-    it('should respond with an error when it is impossible to parse json', sandbox(function (done: Function) {
+    it('should respond with an error when it is impossible to parse json', (done: Function) => {
       const req: any = {
         query: {
           query: 'bla'
         }
       };
 
-      const loggerInfoStub = this.stub(logger, 'info');
+      const loggerInfoStub = sandbox.stub(logger, 'info');
 
       const res: any = {
         json: (response: any) => {
@@ -435,12 +443,12 @@ describe('Routes utils', () => {
       const next = () => {
         expect.fail(null, null, 'Should not call next middleware');
       };
-      this.stub(logger, 'error');
+      sandbox.stub(logger, 'error');
 
       routeUtils.bodyFromUrlQuery(req, res, next);
-    }));
+    });
 
-    it('should parse query as urlon if "query" param is not given in url', sandbox(function (done: Function) {
+    it('should parse query as urlon if "query" param is not given in url', (done: Function) => {
       const ddfql = {
         from: 'entities',
         select: {
@@ -457,7 +465,7 @@ describe('Routes utils', () => {
 
       const res: any = {};
 
-      const loggerInfoStub = this.stub(logger, 'info');
+      const loggerInfoStub = sandbox.stub(logger, 'info');
 
       const next = () => {
         const rawDdfQuery = { queryRaw, type: 'URLON' };
@@ -469,9 +477,9 @@ describe('Routes utils', () => {
       };
 
       routeUtils.bodyFromUrlQuery(req, res, next);
-    }));
+    });
 
-    it('should respond with an error when it is impossible to parse urlon', sandbox(function (done: Function) {
+    it('should respond with an error when it is impossible to parse urlon', (done: Function) => {
       const req: any = {
         query: {},
         url: '/api/ddf/ql/?%20%'
@@ -479,8 +487,8 @@ describe('Routes utils', () => {
 
       const queryRaw = url.parse(req.url).query;
 
-      const loggerInfoStub = this.stub(logger, 'info');
-      this.stub(logger, 'error');
+      const loggerInfoStub = sandbox.stub(logger, 'info');
+      sandbox.stub(logger, 'error');
 
       const res: any = {
         json: (response: any) => {
@@ -497,9 +505,9 @@ describe('Routes utils', () => {
       };
 
       routeUtils.bodyFromUrlQuery(req, res, next);
-    }));
+    });
 
-    it('assumes that dataset passed in urlon ddfql is encoded with encodeURIComponent', sandbox(function (done: Function) {
+    it('assumes that dataset passed in urlon ddfql is encoded with encodeURIComponent', (done: Function) => {
       const ddfql = {
         from: 'entities',
         dataset: 'VS-work%2Fddf--ws-testing%23master-twin-for-e2e',
@@ -517,7 +525,7 @@ describe('Routes utils', () => {
 
       const res = {};
 
-      const loggerInfoStub = this.stub(logger, 'info');
+      const loggerInfoStub = sandbox.stub(logger, 'info');
 
       const next = () => {
         expect(req.body.dataset).to.equal('VS-work/ddf--ws-testing#master-twin-for-e2e');
@@ -527,9 +535,9 @@ describe('Routes utils', () => {
       };
 
       routeUtils.bodyFromUrlQuery(req, res as express.Response, next);
-    }));
+    });
 
-    it('assumes that dataset passed in urlon ddfql is encoded with encodeURIComponent: dataset value is coerced to string', sandbox(function (done: Function) {
+    it('assumes that dataset passed in urlon ddfql is encoded with encodeURIComponent: dataset value is coerced to string', (done: Function) => {
       const ddfql = {
         from: 'entities',
         dataset: 42,
@@ -547,7 +555,7 @@ describe('Routes utils', () => {
 
       const res = {};
 
-      const loggerInfoStub = this.stub(logger, 'info');
+      const loggerInfoStub = sandbox.stub(logger, 'info');
 
       const next = () => {
         expect(req.body.dataset).to.equal('42');
@@ -557,9 +565,9 @@ describe('Routes utils', () => {
       };
 
       routeUtils.bodyFromUrlQuery(req, res as express.Response, next);
-    }));
+    });
 
-    it('should respond with an error when it is impossible to decode dataset in urlon query with decodeURIComponent', sandbox(function (done: Function) {
+    it('should respond with an error when it is impossible to decode dataset in urlon query with decodeURIComponent', (done: Function) => {
       const req = {
         query: {},
         url: '/api/ddf/ql/?_from=entities&dataset=%&select_key@=company'
@@ -567,8 +575,8 @@ describe('Routes utils', () => {
 
       const queryRaw = url.parse(req.url).query;
 
-      const loggerInfoStub = this.stub(logger, 'info');
-      this.stub(logger, 'error');
+      const loggerInfoStub = sandbox.stub(logger, 'info');
+      sandbox.stub(logger, 'error');
 
       const res = {
         json: (response) => {
@@ -585,15 +593,18 @@ describe('Routes utils', () => {
       };
 
       routeUtils.bodyFromUrlQuery(req as any, res as any, next);
-    }));
+    });
   });
 
   describe('RouteUtils.respondWithRawDdf', () => {
-    it('should flush redis cache if error occured', sandbox(function () {
+
+    afterEach(() => sandbox.restore());
+
+    it('should flush redis cache if error occured', () => {
       const expectedError = 'Boo!';
       const expectedErrorResponse = { success: false, error: 'Boo!' };
 
-      const loggerStub = this.stub(logger, 'error');
+      const loggerStub = sandbox.stub(logger, 'error');
       const anyQuery = {};
 
       const req: any = {
@@ -601,14 +612,14 @@ describe('Routes utils', () => {
         url: 'doesn\'t matter'
       };
 
-      const jsonSpy = this.spy();
-      const statusStub = this.stub();
-      const nextSpy = this.spy();
+      const jsonSpy = sandbox.spy();
+      const statusStub = sandbox.stub();
+      const nextSpy = sandbox.spy();
 
       const res: any = {
         use_express_redis_cache: true,
-        status(... args: any[]): any {
-          statusStub(... args);
+        status(...args: any[]): any {
+          statusStub(...args);
           return this;
         },
         json: jsonSpy
@@ -627,9 +638,9 @@ describe('Routes utils', () => {
 
       sinon.assert.calledTwice(loggerStub);
       sinon.assert.calledWithExactly(loggerStub, expectedError);
-    }));
+    });
 
-    it('should respond with raw data (data that came from db)', sandbox(function () {
+    it('should respond with raw data (data that came from db)', () => {
       const anyQuery = {};
 
       const req: any = {
@@ -637,8 +648,8 @@ describe('Routes utils', () => {
         url: 'doesn\'t matter'
       };
 
-      const jsonSpy = this.spy();
-      const nextSpy = this.spy();
+      const jsonSpy = sandbox.spy();
+      const nextSpy = sandbox.spy();
 
       const res: any = {
         use_express_redis_cache: true,
@@ -654,9 +665,9 @@ describe('Routes utils', () => {
 
       expect(res.use_express_redis_cache).to.equal(true);
       expect(req.rawData.rawDdf).to.equal(rawDdfData);
-    }));
+    });
 
-    it('should store query for which data will be returned in db (for the subsequernt warmups)', sandbox(function (): void {
+    it('should store query for which data will be returned in db (for the subsequernt warmups)', () => {
       const ddfQuery = {
         rawDdfQuery: {
           docsAmount: 0,
@@ -672,16 +683,16 @@ describe('Routes utils', () => {
         url: 'doesn\'t matter'
       };
 
-      const jsonSpy = this.spy();
-      const nextSpy = this.spy();
+      const jsonSpy = sandbox.spy();
+      const nextSpy = sandbox.spy();
 
       const res: any = {
         use_express_redis_cache: true,
         json: jsonSpy
       };
 
-      const debugStub = this.stub(logger, 'debug');
-      const createWarmpUpQueryStub = this.stub(RecentDdfqlQueriesRepository, 'create').callsFake((query, done) => {
+      const debugStub = sandbox.stub(logger, 'debug');
+      const createWarmpUpQueryStub = sandbox.stub(RecentDdfqlQueriesRepository, 'create').callsFake((query, done) => {
         done(null, ddfQuery.rawDdfQuery);
       });
 
@@ -699,9 +710,9 @@ describe('Routes utils', () => {
 
       expect(res.use_express_redis_cache).to.equal(true);
       expect(req.rawData.rawDdf).to.equal(rawDdfData);
-    }));
+    });
 
-    it('should log error if it is happened while sroring warmup query', sandbox(function () {
+    it('should log error if it is happened while sroring warmup query', () => {
       const expectedError = 'Boo!';
 
       const ddfQuery = {
@@ -715,17 +726,17 @@ describe('Routes utils', () => {
         url: 'doesn\'t matter'
       };
 
-      const jsonSpy = this.spy();
-      const nextSpy = this.spy();
+      const jsonSpy = sandbox.spy();
+      const nextSpy = sandbox.spy();
 
       const res: any = {
         use_express_redis_cache: true,
         json: jsonSpy
       };
 
-      const debugStub = this.stub(logger, 'debug');
+      const debugStub = sandbox.stub(logger, 'debug');
 
-      this.stub(RecentDdfqlQueriesRepository, 'create').callsFake((query, done) => {
+      sandbox.stub(RecentDdfqlQueriesRepository, 'create').callsFake((query, done) => {
         done(expectedError);
       });
 
@@ -735,9 +746,9 @@ describe('Routes utils', () => {
       sinon.assert.calledWith(debugStub, expectedError);
 
       sinon.assert.calledOnce(nextSpy);
-    }));
+    });
 
-    it('should store warmup query if it was sent with dataset property', sandbox(function (): void {
+    it('should store warmup query if it was sent with dataset property', () => {
       const ddfQuery = {
         dataset: 'dataset',
         rawDdfQuery: {
@@ -751,15 +762,15 @@ describe('Routes utils', () => {
         url: 'doesn\'t matter'
       };
 
-      const jsonSpy = this.spy();
-      const nextSpy = this.spy();
+      const jsonSpy = sandbox.spy();
+      const nextSpy = sandbox.spy();
 
       const res: any = {
         use_express_redis_cache: true,
         json: jsonSpy
       };
 
-      const createWarmpUpQueryStub = this.stub(RecentDdfqlQueriesRepository, 'create');
+      const createWarmpUpQueryStub = sandbox.stub(RecentDdfqlQueriesRepository, 'create');
 
       const rawDdfData = [];
       routeUtils.respondWithRawDdf(ddfQuery, req, res, nextSpy)(null, rawDdfData);
@@ -771,9 +782,9 @@ describe('Routes utils', () => {
 
       expect(res.use_express_redis_cache).to.equal(true);
       expect(req.rawData.rawDdf).to.equal(rawDdfData);
-    }));
+    });
 
-    it('should store warmup query if it was sent with version property', sandbox(function (): void {
+    it('should store warmup query if it was sent with version property', () => {
       const ddfQuery = {
         rawDdfQuery: {
           docsAmount: 5464554643,
@@ -787,15 +798,15 @@ describe('Routes utils', () => {
         url: 'doesn\'t matter'
       };
 
-      const jsonSpy = this.spy();
-      const nextSpy = this.spy();
+      const jsonSpy = sandbox.spy();
+      const nextSpy = sandbox.spy();
 
       const res: any = {
         use_express_redis_cache: true,
         json: jsonSpy
       };
 
-      const createWarmpUpQueryStub = this.stub(RecentDdfqlQueriesRepository, 'create');
+      const createWarmpUpQueryStub = sandbox.stub(RecentDdfqlQueriesRepository, 'create');
 
       const rawDdfData = [];
       routeUtils.respondWithRawDdf(ddfQuery, req, res, nextSpy)(null, rawDdfData);
@@ -807,9 +818,9 @@ describe('Routes utils', () => {
 
       expect(res.use_express_redis_cache).to.equal(true);
       expect(req.rawData.rawDdf).to.equal(rawDdfData);
-    }));
+    });
 
-    it('should store warmup query if it was sent with format property', sandbox(function (): void {
+    it('should store warmup query if it was sent with format property', () => {
       const ddfQuery = {
         rawDdfQuery: {
           docsAmount: 12,
@@ -823,8 +834,8 @@ describe('Routes utils', () => {
         url: 'doesn\'t matter'
       };
 
-      const jsonSpy = this.spy();
-      const nextSpy = this.spy();
+      const jsonSpy = sandbox.spy();
+      const nextSpy = sandbox.spy();
 
       const res = {
         use_express_redis_cache: true,
@@ -832,7 +843,7 @@ describe('Routes utils', () => {
         status: null
       };
 
-      const createWarmpUpQueryStub = this.stub(RecentDdfqlQueriesRepository, 'create');
+      const createWarmpUpQueryStub = sandbox.stub(RecentDdfqlQueriesRepository, 'create');
 
       const rawDdfData = [];
       routeUtils.respondWithRawDdf(ddfQuery, req as any, res as any, nextSpy)(null, rawDdfData);
@@ -844,11 +855,14 @@ describe('Routes utils', () => {
 
       expect((res as any).use_express_redis_cache).to.equal(true);
       expect(req.rawData.rawDdf).to.equal(rawDdfData);
-    }));
+    });
   });
 
   describe('Token authentication', () => {
-    it('should return token authentication middleware', sandbox(function () {
+
+    afterEach(() => sandbox.restore());
+
+    it('should return token authentication middleware', () => {
       const req = {} as express.Request;
       const res = {} as express.Response;
       const next = () => {
@@ -856,8 +870,8 @@ describe('Routes utils', () => {
       const middleware = () => {
       };
 
-      const tokenAuthSpy = this.stub().returns(middleware);
-      const passportAuthStub = this.stub(passport, 'authenticate').callsFake(() => {
+      const tokenAuthSpy = sandbox.stub().returns(middleware);
+      const passportAuthStub = sandbox.stub(passport, 'authenticate').callsFake(() => {
         return tokenAuthSpy;
       });
 
@@ -870,13 +884,16 @@ describe('Routes utils', () => {
 
       sinon.assert.calledOnce(tokenAuthSpy);
       sinon.assert.calledWith(tokenAuthSpy);
-    }));
+    });
   });
 
   describe('Response types', () => {
-    it('should produce error response from string', sandbox(function () {
 
-      const loggerErrorStub = this.stub(logger, 'error');
+    afterEach(() => sandbox.restore());
+
+    it('should produce error response from string', () => {
+
+      const loggerErrorStub = sandbox.stub(logger, 'error');
 
       const expectedError = 'Boo!';
       const response = routeUtils.toErrorResponse(expectedError);
@@ -886,10 +903,10 @@ describe('Routes utils', () => {
 
       sinon.assert.calledOnce(loggerErrorStub);
       sinon.assert.calledWithExactly(loggerErrorStub, expectedError);
-    }));
+    });
 
-    it('should produce error response from Error', sandbox(function () {
-      const loggerErrorStub = this.stub(logger, 'error');
+    it('should produce error response from Error', () => {
+      const loggerErrorStub = sandbox.stub(logger, 'error');
 
       const expectedError = Error('Boo!');
       const response = routeUtils.toErrorResponse(expectedError);
@@ -899,7 +916,7 @@ describe('Routes utils', () => {
 
       sinon.assert.calledOnce(loggerErrorStub);
       sinon.assert.calledWithExactly(loggerErrorStub, expectedError);
-    }));
+    });
 
     it('should produce message response', function () {
       const expectedMsg = 'Hello!';
@@ -919,21 +936,24 @@ describe('Routes utils', () => {
   });
 
   describe('Ensure WS-CLI that speaks to WS has supported version', () => {
-    it('checks that requests from CLI with unsupported version are invalid', sandbox(function () {
-      const header = this.stub().returns('2.5.24');
+
+    afterEach(() => sandbox.restore());
+
+    it('checks that requests from CLI with unsupported version are invalid', () => {
+      const header = sandbox.stub().returns('2.5.24');
       const req: any = {
         header
       };
 
-      const json = this.spy();
+      const json = sandbox.spy();
       const res: any = {
         json
       };
 
-      const next = this.spy();
+      const next = sandbox.spy();
 
-      this.stub(config, 'getWsCliVersionSupported').returns('2.5.23');
-      this.stub(logger, 'error');
+      sandbox.stub(config, 'getWsCliVersionSupported').returns('2.5.23');
+      sandbox.stub(logger, 'error');
 
       routeUtils.ensureCliVersion(req, res, next);
 
@@ -943,78 +963,81 @@ describe('Routes utils', () => {
         success: false,
         error: `Please, change your WS-CLI version from 2.5.24 to 2.5.23`
       });
-    }));
+    });
 
-    it('checks that requests from CLI with invalid version are invalid', sandbox(function () {
-      const header = this.stub().returns('bla');
+    it('checks that requests from CLI with invalid version are invalid', () => {
+      const header = sandbox.stub().returns('bla');
       const req: any = {
         header
       };
 
-      const json = this.spy();
+      const json = sandbox.spy();
       const res: any = {
         json
       };
 
-      const next = this.spy();
+      const next = sandbox.spy();
 
-      this.stub(config, 'getWsCliVersionSupported').returns('2.5.23');
-      this.stub(logger, 'error');
+      sandbox.stub(config, 'getWsCliVersionSupported').returns('2.5.23');
+      sandbox.stub(logger, 'error');
 
       routeUtils.ensureCliVersion(req, res, next);
 
       sinon.assert.notCalled(next);
       sinon.assert.calledOnce(json);
       sinon.assert.calledWith(json, { success: false, error: `Please, change your WS-CLI version from bla to 2.5.23` });
-    }));
+    });
 
-    it('responds with an error when WS-CLI version from client is not given', sandbox(function () {
-      const header = this.stub().returns(undefined);
+    it('responds with an error when WS-CLI version from client is not given', () => {
+      const header = sandbox.stub().returns(undefined);
       const req: any = {
         header
       };
 
-      const json = this.spy();
+      const json = sandbox.spy();
       const res: any = {
         json
       };
 
-      const next = this.spy();
+      const next = sandbox.spy();
 
-      this.stub(config, 'getWsCliVersionSupported').returns('2.5.23');
-      this.stub(logger, 'error');
+      sandbox.stub(config, 'getWsCliVersionSupported').returns('2.5.23');
+      sandbox.stub(logger, 'error');
 
       routeUtils.ensureCliVersion(req, res, next);
 
       sinon.assert.notCalled(next);
       sinon.assert.calledOnce(json);
       sinon.assert.calledWith(json, { success: false, error: 'This url can be accessed only from WS-CLI' });
-    }));
+    });
 
-    it('checks that requests from CLI with supported version are valid', sandbox(function () {
-      const header = this.stub().returns('2.5.24');
+    it('checks that requests from CLI with supported version are valid', () => {
+      const header = sandbox.stub().returns('2.5.24');
       const req: any = {
         header
       };
 
-      const json = this.spy();
+      const json = sandbox.spy();
       const res: any = {
         json
       };
 
-      const next = this.spy();
+      const next = sandbox.spy();
 
-      this.stub(config, 'getWsCliVersionSupported').returns('2.5.24');
+      sandbox.stub(config, 'getWsCliVersionSupported').returns('2.5.24');
 
       routeUtils.ensureCliVersion(req, res, next);
 
       sinon.assert.notCalled(json);
       sinon.assert.calledOnce(next);
-    }));
+    });
   });
 
   describe('bodyFromUrlAssets - Parses a request body based asset url requested. Populates the body with a dataset and a dataset_access_token', () => {
-    it(`doesn't handles routes that start not with ${constants.ASSETS_ROUTE_BASE_PATH}`, sandbox(function (done: Function): any {
+
+    afterEach(() => sandbox.restore());
+
+    it(`doesn't handles routes that start not with ${constants.ASSETS_ROUTE_BASE_PATH}`, (done: Function) => {
       const req: any = {
         baseUrl: 'foo'
       };
@@ -1026,12 +1049,12 @@ describe('Routes utils', () => {
         expect(res).to.deep.equal({});
         done();
       });
-    }));
+    });
 
-    it(`fails when malformed url was given to the "assets" endpoint`, sandbox(function (): any {
-      const jsonSpy = this.spy();
-      const nextSpy = this.spy();
-      this.stub(logger, 'error');
+    it(`fails when malformed url was given to the "assets" endpoint`, () => {
+      const jsonSpy = sandbox.spy();
+      const nextSpy = sandbox.spy();
+      sandbox.stub(logger, 'error');
 
       const req: any = {
         originalUrl: `${constants.ASSETS_ROUTE_BASE_PATH}/%E0%A4%A`,
@@ -1051,12 +1074,12 @@ describe('Routes utils', () => {
       expect(res._status).to.equal(400);
       sinon.assert.calledWith(jsonSpy, { success: false, error: 'Malformed url was given' });
       sinon.assert.notCalled(nextSpy);
-    }));
+    });
 
-    it(`fails when given url contains relative path segments like "." or ".."`, sandbox(function (): any {
-      const jsonSpy = this.spy();
-      const nextSpy = this.spy();
-      this.stub(logger, 'error');
+    it(`fails when given url contains relative path segments like "." or ".."`, () => {
+      const jsonSpy = sandbox.spy();
+      const nextSpy = sandbox.spy();
+      sandbox.stub(logger, 'error');
 
       const req: any = {
         originalUrl: `${constants.ASSETS_ROUTE_BASE_PATH}/../foo/./bar/../baz.json`,
@@ -1079,15 +1102,15 @@ describe('Routes utils', () => {
         error: 'You cannot use relative path constraints like "." or ".." in the asset path'
       });
       sinon.assert.notCalled(nextSpy);
-    }));
+    });
 
-    it(`fails when asset was requested for the default dataset and dataset was not found`, sandbox(function (done: Function): any {
+    it(`fails when asset was requested for the default dataset and dataset was not found`, (done: Function) => {
       const expectedError = 'Default dataset not found';
 
-      const nextSpy = this.spy();
-      this.stub(logger, 'error');
+      const nextSpy = sandbox.spy();
+      sandbox.stub(logger, 'error');
 
-      this.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, expectedError);
+      sandbox.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, expectedError);
 
       const req: any = {
         originalUrl: `${constants.ASSETS_ROUTE_BASE_PATH}/default/assets/foo.json`,
@@ -1112,19 +1135,19 @@ describe('Routes utils', () => {
       };
 
       routeUtils.bodyFromUrlAssets(req, res, nextSpy);
-    }));
+    });
 
-    it(`fails when client is trying to access an asset under directory other then "assets"`, sandbox(function (done: Function): any {
+    it(`fails when client is trying to access an asset under directory other then "assets"`, (done: Function) => {
       const expectedError = `You cannot access directories other than "${constants.ASSETS_EXPECTED_DIR}"`;
 
-      const nextSpy = this.spy();
-      this.stub(logger, 'error');
+      const nextSpy = sandbox.spy();
+      sandbox.stub(logger, 'error');
 
       const defaultDataset: any = {
         name: 'open-numbers/globalis#development'
       };
 
-      this.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, { dataset: defaultDataset });
+      sandbox.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, { dataset: defaultDataset });
 
       const req: any = {
         originalUrl: `${constants.ASSETS_ROUTE_BASE_PATH}/default/SECURED/foo.json`,
@@ -1149,14 +1172,14 @@ describe('Routes utils', () => {
       };
 
       routeUtils.bodyFromUrlAssets(req, res, nextSpy);
-    }));
+    });
 
-    it(`parses an asset request url in order to get an asset descriptor: default dataset on master branch has been requested`, sandbox(function (done: Function): any {
+    it(`parses an asset request url in order to get an asset descriptor: default dataset on master branch has been requested`, (done: Function) => {
       const defaultDataset: any = {
         name: 'open-numbers/globalis'
       };
 
-      this.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, { dataset: defaultDataset });
+      sandbox.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, { dataset: defaultDataset });
 
       const req: any = {
         query: {
@@ -1188,10 +1211,10 @@ describe('Routes utils', () => {
 
         done();
       });
-    }));
+    });
 
-    it(`parses an asset request url in order to get an asset descriptor: custom dataset has been requested`, sandbox(function (done: Function): any {
-      this.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, 'don\'t care what kind of error is here in case of non default dataset asset request');
+    it(`parses an asset request url in order to get an asset descriptor: custom dataset has been requested`, (done: Function) => {
+      sandbox.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, 'don\'t care what kind of error is here in case of non default dataset asset request');
 
       const req: any = {
         query: {
@@ -1223,6 +1246,6 @@ describe('Routes utils', () => {
 
         done();
       });
-    }));
+    });
   });
 });

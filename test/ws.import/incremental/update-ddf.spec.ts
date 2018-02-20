@@ -2,7 +2,6 @@ import '../../../ws.config/db.config';
 import '../../../ws.repository';
 import * as _ from 'lodash';
 import * as sinon from 'sinon';
-import * as sinonTest from 'sinon-test';
 import { expect } from 'chai';
 import * as createDatasetSchema from '../../../ws.import/import-dataset-schema';
 import * as updateConceptsTranslations from '../../../ws.import/incremental/translations/update-concept-translations';
@@ -15,10 +14,13 @@ import * as updateEntities from '../../../ws.import/incremental/update-entities'
 import * as ddfImportUtils from '../../../ws.import/utils/import-ddf.utils';
 import { logger } from '../../../ws.config/log';
 
-const sandbox = sinonTest.configureTest(sinon);
+const sandbox = sinon.createSandbox();
 
 describe('Dataset incremental update', () => {
-  it('should update dataset', sandbox(function (done: Function) {
+
+  afterEach(() => sandbox.restore());
+
+  it('should update dataset', (done: Function) => {
     // *** Prepared Data
     const options = {
       user: {
@@ -30,7 +32,7 @@ describe('Dataset incremental update', () => {
       hashFrom: 'AAAAAAA',
       hashTo: 'BBBBBBB',
       datasetName: 'dataset',
-      lifecycleHooks: this.spy()
+      lifecycleHooks: sandbox.spy()
     };
 
     // *** Expected Data
@@ -60,71 +62,71 @@ describe('Dataset incremental update', () => {
     const expectedError = null;
 
     // *** Stubbed functions
-    const resolvePathToDdfFolderStub = this.stub(ddfImportUtils, 'resolvePathToDdfFolder');
+    const resolvePathToDdfFolderStub = sandbox.stub(ddfImportUtils, 'resolvePathToDdfFolder');
     resolvePathToDdfFolderStub.callsArgWithAsync(indexOfCallback, expectedError, options);
 
-    const createTransactionStub = this.stub(ddfImportUtils, 'createTransaction');
+    const createTransactionStub = sandbox.stub(ddfImportUtils, 'createTransaction');
     createTransactionStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions1);
 
-    const findDatasetStub = this.stub(ddfImportUtils, 'findDataset');
+    const findDatasetStub = sandbox.stub(ddfImportUtils, 'findDataset');
     findDatasetStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
 
-    const establishTransactionForDatasetStub = this.stub(ddfImportUtils, 'establishTransactionForDataset');
+    const establishTransactionForDatasetStub = sandbox.stub(ddfImportUtils, 'establishTransactionForDataset');
     establishTransactionForDatasetStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
 
-    const findPreviousTransactionStub = this.stub(ddfImportUtils, 'findPreviousTransaction');
+    const findPreviousTransactionStub = sandbox.stub(ddfImportUtils, 'findPreviousTransaction');
     findPreviousTransactionStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
 
-    const lifecycleHookStub = this.stub();
+    const lifecycleHookStub = sandbox.stub();
     lifecycleHookStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
 
-    const activateLifecycleHookStub = this.stub(ddfImportUtils, 'activateLifecycleHook');
+    const activateLifecycleHookStub = sandbox.stub(ddfImportUtils, 'activateLifecycleHook');
     activateLifecycleHookStub.returns(lifecycleHookStub);
 
-    const cloneDdfRepoStub = this.stub(ddfImportUtils, 'cloneDdfRepo');
+    const cloneDdfRepoStub = sandbox.stub(ddfImportUtils, 'cloneDdfRepo');
     cloneDdfRepoStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
 
-    const validateDdfRepoStub = this.stub(ddfImportUtils, 'validateDdfRepo');
+    const validateDdfRepoStub = sandbox.stub(ddfImportUtils, 'validateDdfRepo');
     validateDdfRepoStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
 
-    const getDatapackageStub = this.stub(ddfImportUtils, 'getDatapackage');
+    const getDatapackageStub = sandbox.stub(ddfImportUtils, 'getDatapackage');
     getDatapackageStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
 
-    const generateDiffForDatasetUpdateStub = this.stub(ddfImportUtils, 'generateDiffForDatasetUpdate');
+    const generateDiffForDatasetUpdateStub = sandbox.stub(ddfImportUtils, 'generateDiffForDatasetUpdate');
     generateDiffForDatasetUpdateStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
 
-    const getAllConceptsStub = this.stub(ddfImportUtils, 'getAllConcepts');
+    const getAllConceptsStub = sandbox.stub(ddfImportUtils, 'getAllConcepts');
     getAllConceptsStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
 
-    const getAllPreviousConceptsStub = this.stub(ddfImportUtils, 'getAllPreviousConcepts');
+    const getAllPreviousConceptsStub = sandbox.stub(ddfImportUtils, 'getAllPreviousConcepts');
     getAllPreviousConceptsStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
 
-    const closeTransactionStub = this.stub(ddfImportUtils, 'closeTransaction');
+    const closeTransactionStub = sandbox.stub(ddfImportUtils, 'closeTransaction');
     closeTransactionStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
 
-    const updateConceptsStub = this.stub(updateConcepts, 'updateConcepts');
+    const updateConceptsStub = sandbox.stub(updateConcepts, 'updateConcepts');
     updateConceptsStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
 
-    const updateEntitiesStub = this.stub(updateEntities, 'updateEntities');
+    const updateEntitiesStub = sandbox.stub(updateEntities, 'updateEntities');
     updateEntitiesStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
 
-    const updateDatapointsStub = this.stub(updateDatapoints, 'updateDatapoints');
+    const updateDatapointsStub = sandbox.stub(updateDatapoints, 'updateDatapoints');
     updateDatapointsStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
 
-    const updateConceptsTranslationsStub = this.stub(updateConceptsTranslations, 'updateConceptsTranslations');
+    const updateConceptsTranslationsStub = sandbox.stub(updateConceptsTranslations, 'updateConceptsTranslations');
     updateConceptsTranslationsStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
 
-    const updateEntitiesTranslationStub = this.stub(updateEntitiesTranslation, 'updateEntitiesTranslation');
+    const updateEntitiesTranslationStub = sandbox.stub(updateEntitiesTranslation, 'updateEntitiesTranslation');
     updateEntitiesTranslationStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
 
-    const updateDatapointsTranslationsStub = this.stub(updateDatapointsTranslations, 'updateDatapointsTranslations');
+    const updateDatapointsTranslationsStub = sandbox.stub(updateDatapointsTranslations, 'updateDatapointsTranslations');
     updateDatapointsTranslationsStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
 
-    const createDatasetSchemaStub = this.stub(createDatasetSchema, 'createDatasetSchema');
+    const createDatasetSchemaStub = sandbox.stub(createDatasetSchema, 'createDatasetSchema');
     createDatasetSchemaStub.callsArgWithAsync(indexOfCallback, expectedError, extendedOptions2);
 
     // *** Assertions
-    const onDatasetUpdatedSpy = this.spy(() => {
+    const onDatasetUpdatedSpy = sandbox.spy(() => {
       sinon.assert.calledOnce(activateLifecycleHookStub);
       sinon.assert.calledOnce(resolvePathToDdfFolderStub);
       sinon.assert.calledOnce(createTransactionStub);
@@ -151,12 +153,12 @@ describe('Dataset incremental update', () => {
 
       return done();
     });
-    this.stub(logger, 'info');
+    sandbox.stub(logger, 'info');
 
     updateDdf(options, onDatasetUpdatedSpy);
-  }));
+  });
 
-  it('should respond with an error when smth went wrong during the process of establishing transaction for dataset', sandbox(function (done: Function) {
+  it('should respond with an error when smth went wrong during the process of establishing transaction for dataset', (done: Function) => {
     // *** Prepared Data
     const options = {
       user: {
@@ -168,7 +170,7 @@ describe('Dataset incremental update', () => {
       hashFrom: 'AAAAAAA',
       hashTo: 'BBBBBBB',
       datasetName: 'dataset',
-      lifecycleHooks: this.spy()
+      lifecycleHooks: sandbox.spy()
     };
 
     // *** Expected Data
@@ -197,41 +199,41 @@ describe('Dataset incremental update', () => {
     const expectedError2 = 'Boo!';
 
     // *** Stubbed functions
-    const resolvePathToDdfFolderStub = this.stub(ddfImportUtils, 'resolvePathToDdfFolder');
+    const resolvePathToDdfFolderStub = sandbox.stub(ddfImportUtils, 'resolvePathToDdfFolder');
     resolvePathToDdfFolderStub.callsArgWithAsync(indexOfCallback, expectedError1, options);
 
-    const createTransactionStub = this.stub(ddfImportUtils, 'createTransaction');
+    const createTransactionStub = sandbox.stub(ddfImportUtils, 'createTransaction');
     createTransactionStub.callsArgWithAsync(indexOfCallback, expectedError1, extendedOptions1);
 
-    const findDatasetStub = this.stub(ddfImportUtils, 'findDataset');
+    const findDatasetStub = sandbox.stub(ddfImportUtils, 'findDataset');
     findDatasetStub.callsArgWithAsync(indexOfCallback, expectedError1, extendedOptions2);
 
-    const establishTransactionForDatasetStub = this.stub(ddfImportUtils, 'establishTransactionForDataset');
+    const establishTransactionForDatasetStub = sandbox.stub(ddfImportUtils, 'establishTransactionForDataset');
     establishTransactionForDatasetStub.callsArgWithAsync(indexOfCallback, expectedError2, extendedOptions2);
 
-    const findPreviousTransactionStub = this.stub(ddfImportUtils, 'findPreviousTransaction');
-    const lifecycleHookStub = this.stub();
+    const findPreviousTransactionStub = sandbox.stub(ddfImportUtils, 'findPreviousTransaction');
+    const lifecycleHookStub = sandbox.stub();
 
-    const activateLifecycleHookStub = this.stub(ddfImportUtils, 'activateLifecycleHook');
+    const activateLifecycleHookStub = sandbox.stub(ddfImportUtils, 'activateLifecycleHook');
     activateLifecycleHookStub.returns(lifecycleHookStub);
 
-    const cloneDdfRepoStub = this.stub(ddfImportUtils, 'cloneDdfRepo');
-    const validateDdfRepoStub = this.stub(ddfImportUtils, 'validateDdfRepo');
-    const getDatapackageStub = this.stub(ddfImportUtils, 'getDatapackage');
-    const generateDiffForDatasetUpdateStub = this.stub(ddfImportUtils, 'generateDiffForDatasetUpdate');
-    const getAllConceptsStub = this.stub(ddfImportUtils, 'getAllConcepts');
-    const getAllPreviousConceptsStub = this.stub(ddfImportUtils, 'getAllPreviousConcepts');
-    const updateConceptsStub = this.stub(updateConcepts, 'updateConcepts');
-    const updateEntitiesStub = this.stub(updateEntities, 'updateEntities');
-    const updateDatapointsStub = this.stub(updateDatapoints, 'updateDatapoints');
-    const updateConceptsTranslationsStub = this.stub(updateConceptsTranslations, 'updateConceptsTranslations');
-    const updateEntitiesTranslationStub = this.stub(updateEntitiesTranslation, 'updateEntitiesTranslation');
-    const updateDatapointsTranslationsStub = this.stub(updateDatapointsTranslations, 'updateDatapointsTranslations');
-    const createDatasetSchemaStub = this.stub(createDatasetSchema, 'createDatasetSchema');
-    const closeTransactionStub = this.stub(ddfImportUtils, 'closeTransaction');
+    const cloneDdfRepoStub = sandbox.stub(ddfImportUtils, 'cloneDdfRepo');
+    const validateDdfRepoStub = sandbox.stub(ddfImportUtils, 'validateDdfRepo');
+    const getDatapackageStub = sandbox.stub(ddfImportUtils, 'getDatapackage');
+    const generateDiffForDatasetUpdateStub = sandbox.stub(ddfImportUtils, 'generateDiffForDatasetUpdate');
+    const getAllConceptsStub = sandbox.stub(ddfImportUtils, 'getAllConcepts');
+    const getAllPreviousConceptsStub = sandbox.stub(ddfImportUtils, 'getAllPreviousConcepts');
+    const updateConceptsStub = sandbox.stub(updateConcepts, 'updateConcepts');
+    const updateEntitiesStub = sandbox.stub(updateEntities, 'updateEntities');
+    const updateDatapointsStub = sandbox.stub(updateDatapoints, 'updateDatapoints');
+    const updateConceptsTranslationsStub = sandbox.stub(updateConceptsTranslations, 'updateConceptsTranslations');
+    const updateEntitiesTranslationStub = sandbox.stub(updateEntitiesTranslation, 'updateEntitiesTranslation');
+    const updateDatapointsTranslationsStub = sandbox.stub(updateDatapointsTranslations, 'updateDatapointsTranslations');
+    const createDatasetSchemaStub = sandbox.stub(createDatasetSchema, 'createDatasetSchema');
+    const closeTransactionStub = sandbox.stub(ddfImportUtils, 'closeTransaction');
 
     // *** Assertions
-    const onDatasetUpdatedSpy = this.spy(() => {
+    const onDatasetUpdatedSpy = sandbox.spy(() => {
       sinon.assert.calledOnce(activateLifecycleHookStub);
       sinon.assert.calledOnce(resolvePathToDdfFolderStub);
       sinon.assert.calledOnce(createTransactionStub);
@@ -258,12 +260,12 @@ describe('Dataset incremental update', () => {
 
       return done();
     });
-    this.stub(logger, 'info');
+    sandbox.stub(logger, 'info');
 
     updateDdf(options, onDatasetUpdatedSpy);
-  }));
+  });
 
-  it('should respond with an error when smth went wrong during the process of creating transaction', sandbox(function (done: Function) {
+  it('should respond with an error when smth went wrong during the process of creating transaction', (done: Function) => {
     // *** Prepared Data
     const options = {
       user: {
@@ -275,7 +277,7 @@ describe('Dataset incremental update', () => {
       hashFrom: 'AAAAAAA',
       hashTo: 'BBBBBBB',
       datasetName: 'dataset',
-      lifecycleHooks: this.spy()
+      lifecycleHooks: sandbox.spy()
     };
 
     // *** Expected Data
@@ -290,37 +292,37 @@ describe('Dataset incremental update', () => {
     const expectedError2 = 'Boo!';
 
     // *** Stubbed functions
-    const resolvePathToDdfFolderStub = this.stub(ddfImportUtils, 'resolvePathToDdfFolder');
+    const resolvePathToDdfFolderStub = sandbox.stub(ddfImportUtils, 'resolvePathToDdfFolder');
     resolvePathToDdfFolderStub.callsArgWithAsync(indexOfCallback, expectedError1, options);
 
-    const createTransactionStub = this.stub(ddfImportUtils, 'createTransaction');
+    const createTransactionStub = sandbox.stub(ddfImportUtils, 'createTransaction');
     createTransactionStub.callsArgWithAsync(indexOfCallback, expectedError2, options);
 
-    const findDatasetStub = this.stub(ddfImportUtils, 'findDataset');
-    const establishTransactionForDatasetStub = this.stub(ddfImportUtils, 'establishTransactionForDataset');
-    const findPreviousTransactionStub = this.stub(ddfImportUtils, 'findPreviousTransaction');
-    const lifecycleHookStub = this.stub();
+    const findDatasetStub = sandbox.stub(ddfImportUtils, 'findDataset');
+    const establishTransactionForDatasetStub = sandbox.stub(ddfImportUtils, 'establishTransactionForDataset');
+    const findPreviousTransactionStub = sandbox.stub(ddfImportUtils, 'findPreviousTransaction');
+    const lifecycleHookStub = sandbox.stub();
 
-    const activateLifecycleHookStub = this.stub(ddfImportUtils, 'activateLifecycleHook');
+    const activateLifecycleHookStub = sandbox.stub(ddfImportUtils, 'activateLifecycleHook');
     activateLifecycleHookStub.returns(lifecycleHookStub);
 
-    const cloneDdfRepoStub = this.stub(ddfImportUtils, 'cloneDdfRepo');
-    const validateDdfRepoStub = this.stub(ddfImportUtils, 'validateDdfRepo');
-    const getDatapackageStub = this.stub(ddfImportUtils, 'getDatapackage');
-    const generateDiffForDatasetUpdateStub = this.stub(ddfImportUtils, 'generateDiffForDatasetUpdate');
-    const getAllConceptsStub = this.stub(ddfImportUtils, 'getAllConcepts');
-    const getAllPreviousConceptsStub = this.stub(ddfImportUtils, 'getAllPreviousConcepts');
-    const updateConceptsStub = this.stub(updateConcepts, 'updateConcepts');
-    const updateEntitiesStub = this.stub(updateEntities, 'updateEntities');
-    const updateDatapointsStub = this.stub(updateDatapoints, 'updateDatapoints');
-    const updateConceptsTranslationsStub = this.stub(updateConceptsTranslations, 'updateConceptsTranslations');
-    const updateEntitiesTranslationStub = this.stub(updateEntitiesTranslation, 'updateEntitiesTranslation');
-    const updateDatapointsTranslationsStub = this.stub(updateDatapointsTranslations, 'updateDatapointsTranslations');
-    const createDatasetSchemaStub = this.stub(createDatasetSchema, 'createDatasetSchema');
-    const closeTransactionStub = this.stub(ddfImportUtils, 'closeTransaction');
+    const cloneDdfRepoStub = sandbox.stub(ddfImportUtils, 'cloneDdfRepo');
+    const validateDdfRepoStub = sandbox.stub(ddfImportUtils, 'validateDdfRepo');
+    const getDatapackageStub = sandbox.stub(ddfImportUtils, 'getDatapackage');
+    const generateDiffForDatasetUpdateStub = sandbox.stub(ddfImportUtils, 'generateDiffForDatasetUpdate');
+    const getAllConceptsStub = sandbox.stub(ddfImportUtils, 'getAllConcepts');
+    const getAllPreviousConceptsStub = sandbox.stub(ddfImportUtils, 'getAllPreviousConcepts');
+    const updateConceptsStub = sandbox.stub(updateConcepts, 'updateConcepts');
+    const updateEntitiesStub = sandbox.stub(updateEntities, 'updateEntities');
+    const updateDatapointsStub = sandbox.stub(updateDatapoints, 'updateDatapoints');
+    const updateConceptsTranslationsStub = sandbox.stub(updateConceptsTranslations, 'updateConceptsTranslations');
+    const updateEntitiesTranslationStub = sandbox.stub(updateEntitiesTranslation, 'updateEntitiesTranslation');
+    const updateDatapointsTranslationsStub = sandbox.stub(updateDatapointsTranslations, 'updateDatapointsTranslations');
+    const createDatasetSchemaStub = sandbox.stub(createDatasetSchema, 'createDatasetSchema');
+    const closeTransactionStub = sandbox.stub(ddfImportUtils, 'closeTransaction');
 
     // *** Assertions
-    const onDatasetUpdatedSpy = this.spy(() => {
+    const onDatasetUpdatedSpy = sandbox.spy(() => {
       sinon.assert.calledOnce(activateLifecycleHookStub);
       sinon.assert.calledOnce(resolvePathToDdfFolderStub);
       sinon.assert.calledOnce(createTransactionStub);
@@ -349,23 +351,24 @@ describe('Dataset incremental update', () => {
     });
 
     updateDdf(options, onDatasetUpdatedSpy);
-  }));
+  });
 
-  it('should not fail when error has happened and transaction is not yet created', sandbox(function (done: Function) {
+  it('should not fail when error has happened and transaction is not yet created', (done: Function) => {
     const context = {
       isDatasetPrivate: false,
       github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git',
       commit: 'aaaaaaa',
-      user: {email: 'dev@gapminder.org'},
+      user: { email: 'dev@gapminder.org' },
       lifecycleHooks: {
-        onTransactionCreated: () => {}
+        onTransactionCreated: () => {
+        }
       }
     };
 
     const expectedError = 'Boo!';
 
-    const resolvePathToDdfFolderStub = this.stub(ddfImportUtils, 'resolvePathToDdfFolder').callsArgWithAsync(1, expectedError, context);
-    this.stub(logger, 'info');
+    const resolvePathToDdfFolderStub = sandbox.stub(ddfImportUtils, 'resolvePathToDdfFolder').callsArgWithAsync(1, expectedError, context);
+    sandbox.stub(logger, 'info');
 
     updateDdf(context, (error, externalContext) => {
       expect(error).to.equal(expectedError);
@@ -376,5 +379,5 @@ describe('Dataset incremental update', () => {
       sinon.assert.calledOnce(resolvePathToDdfFolderStub);
       done();
     });
-  }));
+  });
 });

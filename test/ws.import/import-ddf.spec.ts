@@ -1,8 +1,7 @@
 import '../../ws.repository';
 
 import * as sinon from 'sinon';
-import * as sinonTest from 'sinon-test';
-import {expect} from 'chai';
+import { expect } from 'chai';
 
 import * as ddfImportUtils from '../../ws.import/utils/import-ddf.utils';
 import * as createEntitiesModule from '../../ws.import/import-entities';
@@ -19,10 +18,13 @@ import * as reposService from '../../ws.services/repos.service';
 import {logger} from '../../ws.config/log';
 import {config} from '../../ws.config/config';
 
-const sandbox = sinonTest.configureTest(sinon);
+const sandbox = sinon.createSandbox();
 
 describe('Import ddf dataset from git repository', () => {
-  it('should import dataset successfully', sandbox(function (done: Function) {
+
+  afterEach(() => sandbox.restore());
+
+  it('should import dataset successfully', (done: Function) => {
     const context = {
       isDatasetPrivate: false,
       github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git',
@@ -30,7 +32,7 @@ describe('Import ddf dataset from git repository', () => {
       commit: 'aaaaaaa',
       user: {email: 'dev@gapminder.org'},
       lifecycleHooks: {
-        onTransactionCreated: this.spy()
+        onTransactionCreated: sandbox.spy()
       },
       transaction: {
         _id: 'txId',
@@ -38,21 +40,21 @@ describe('Import ddf dataset from git repository', () => {
       }
     };
 
-    const resolvePathToDdfFolderStub = this.stub(ddfImportUtils, 'resolvePathToDdfFolder').callsArgWithAsync(1, null, context);
-    const createTransactionStub = this.stub(ddfImportUtils, 'createTransaction').callsArgWithAsync(1, null, context);
-    const createDatasetStub = this.stub(ddfImportUtils, 'createDataset').callsArgWithAsync(1, null, context);
-    const establishTransactionForDatasetStub = this.stub(ddfImportUtils, 'establishTransactionForDataset').callsArgWithAsync(1, null, context);
-    const cloneDdfRepoStub = this.stub(ddfImportUtils, 'cloneDdfRepo').callsArgWithAsync(1, null, context);
-    const validateDdfRepoStub = this.stub(ddfImportUtils, 'validateDdfRepo').callsArgWithAsync(1, null, context);
-    const getDatapackageStub = this.stub(ddfImportUtils, 'getDatapackage').callsArgWithAsync(1, null, context);
-    const updateTransactionLanguagesStub = this.stub(ddfImportUtils, 'updateTransactionLanguages').callsArgWithAsync(1, null, context);
-    const createConceptsStub = this.stub(createConceptsModule, 'createConcepts').callsArgWithAsync(1, null, context);
-    const createEntitiesStub = this.stub(createEntitiesModule, 'createEntities').callsArgWithAsync(1, null, context);
-    const createDatapointsStub = this.stub(createDatapointsModule, 'createDatapoints').callsArgWithAsync(1, null, context);
-    const createTranslationsStub = this.stub(createTranslationsModule, 'createTranslations').callsArgWithAsync(1, null, context);
-    const createDatasetSchemaStub = this.stub(createDatasetSchemaModule, 'createDatasetSchema').callsArgWithAsync(1, null, context);
-    const closeTransactionStub = this.stub(ddfImportUtils, 'closeTransaction').callsArgWithAsync(1, null, context);
-    this.stub(logger, 'info');
+    const resolvePathToDdfFolderStub = sandbox.stub(ddfImportUtils, 'resolvePathToDdfFolder').callsArgWithAsync(1, null, context);
+    const createTransactionStub = sandbox.stub(ddfImportUtils, 'createTransaction').callsArgWithAsync(1, null, context);
+    const createDatasetStub = sandbox.stub(ddfImportUtils, 'createDataset').callsArgWithAsync(1, null, context);
+    const establishTransactionForDatasetStub = sandbox.stub(ddfImportUtils, 'establishTransactionForDataset').callsArgWithAsync(1, null, context);
+    const cloneDdfRepoStub = sandbox.stub(ddfImportUtils, 'cloneDdfRepo').callsArgWithAsync(1, null, context);
+    const validateDdfRepoStub = sandbox.stub(ddfImportUtils, 'validateDdfRepo').callsArgWithAsync(1, null, context);
+    const getDatapackageStub = sandbox.stub(ddfImportUtils, 'getDatapackage').callsArgWithAsync(1, null, context);
+    const updateTransactionLanguagesStub = sandbox.stub(ddfImportUtils, 'updateTransactionLanguages').callsArgWithAsync(1, null, context);
+    const createConceptsStub = sandbox.stub(createConceptsModule, 'createConcepts').callsArgWithAsync(1, null, context);
+    const createEntitiesStub = sandbox.stub(createEntitiesModule, 'createEntities').callsArgWithAsync(1, null, context);
+    const createDatapointsStub = sandbox.stub(createDatapointsModule, 'createDatapoints').callsArgWithAsync(1, null, context);
+    const createTranslationsStub = sandbox.stub(createTranslationsModule, 'createTranslations').callsArgWithAsync(1, null, context);
+    const createDatasetSchemaStub = sandbox.stub(createDatasetSchemaModule, 'createDatasetSchema').callsArgWithAsync(1, null, context);
+    const closeTransactionStub = sandbox.stub(ddfImportUtils, 'closeTransaction').callsArgWithAsync(1, null, context);
+    sandbox.stub(logger, 'info');
 
     importService.importDdf(context, (error, externalContext) => {
       expect(error).to.not.exist;
@@ -82,9 +84,9 @@ describe('Import ddf dataset from git repository', () => {
 
       done();
     });
-  }));
+  });
 
-  it('should fail if error occurred during import', sandbox(function (done: Function) {
+  it('should fail if error occurred during import', (done: Function) => {
     const context = {
       isDatasetPrivate: false,
       github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git',
@@ -98,8 +100,8 @@ describe('Import ddf dataset from git repository', () => {
     };
 
     const expectedError = 'Boo!';
-    this.stub(ddfImportUtils, 'resolvePathToDdfFolder').callsArgWithAsync(1, expectedError, context);
-    this.stub(logger, 'info');
+    sandbox.stub(ddfImportUtils, 'resolvePathToDdfFolder').callsArgWithAsync(1, expectedError, context);
+    sandbox.stub(logger, 'info');
 
     importService.importDdf(context, (error, externalContext) => {
       expect(error).to.equal(expectedError);
@@ -111,9 +113,9 @@ describe('Import ddf dataset from git repository', () => {
 
       done();
     });
-  }));
+  });
 
-  it('should fail with transaction id if it was already created when error had happened', sandbox(function (done: Function) {
+  it('should fail with transaction id if it was already created when error had happened', (done: Function) => {
     const context = {
       isDatasetPrivate: false,
       github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git',
@@ -132,10 +134,10 @@ describe('Import ddf dataset from git repository', () => {
 
     const expectedError = 'Boo!';
 
-    const resolvePathToDdfFolderStub = this.stub(ddfImportUtils, 'resolvePathToDdfFolder').callsArgWithAsync(1, null, context);
-    const createTransactionStub = this.stub(ddfImportUtils, 'createTransaction').callsArgWithAsync(1, null, context);
-    const createDatasetStub = this.stub(ddfImportUtils, 'createDataset').callsArgWithAsync(1, expectedError, context);
-    this.stub(logger, 'info');
+    const resolvePathToDdfFolderStub = sandbox.stub(ddfImportUtils, 'resolvePathToDdfFolder').callsArgWithAsync(1, null, context);
+    const createTransactionStub = sandbox.stub(ddfImportUtils, 'createTransaction').callsArgWithAsync(1, null, context);
+    const createDatasetStub = sandbox.stub(ddfImportUtils, 'createDataset').callsArgWithAsync(1, expectedError, context);
+    sandbox.stub(logger, 'info');
 
     importService.importDdf(context, (error, externalContext) => {
       expect(error).to.equal(expectedError);
@@ -151,9 +153,9 @@ describe('Import ddf dataset from git repository', () => {
 
       done();
     });
-  }));
+  });
 
-  it('should not fail when error has happened and transaction is not yet created', sandbox(function (done: Function) {
+  it('should not fail when error has happened and transaction is not yet created', (done: Function) => {
     const context = {
       isDatasetPrivate: false,
       github: 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git',
@@ -167,8 +169,8 @@ describe('Import ddf dataset from git repository', () => {
 
     const expectedError = 'Boo!';
 
-    const resolvePathToDdfFolderStub = this.stub(ddfImportUtils, 'resolvePathToDdfFolder').callsArgWithAsync(1, expectedError, context);
-    this.stub(logger, 'info');
+    const resolvePathToDdfFolderStub = sandbox.stub(ddfImportUtils, 'resolvePathToDdfFolder').callsArgWithAsync(1, expectedError, context);
+    sandbox.stub(logger, 'info');
 
     importService.importDdf(context, (error, externalContext) => {
       expect(error).to.equal(expectedError);
@@ -179,7 +181,7 @@ describe('Import ddf dataset from git repository', () => {
       sinon.assert.calledOnce(resolvePathToDdfFolderStub);
       done();
     });
-  }));
+  });
 });
 
 describe('importService.importDdfRepos', () => {
