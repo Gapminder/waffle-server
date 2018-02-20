@@ -1,13 +1,15 @@
 import '../../../ws.repository';
 import * as sinon from 'sinon';
-import * as sinonTest from 'sinon-test';
 import { expect } from 'chai';
 import { ChangesDescriptor } from '../../../ws.import/utils/changes-descriptor';
 
-const sandbox = sinonTest.configureTest(sinon);
+const sandbox = sinon.createSandbox();
 
 describe('Changes descriptor', () => {
-  it('should get gid', sandbox(function () {
+
+  afterEach(() => sandbox.restore());
+
+  it('should get gid', () => {
     const descriptor = new ChangesDescriptor({
       object: {
         gid: 'foundation',
@@ -20,9 +22,9 @@ describe('Changes descriptor', () => {
     });
 
     expect(descriptor.gid).to.equal('xsoft');
-  }));
+  });
 
-  it('should get concept of changed object', sandbox(function () {
+  it('should get concept of changed object', () => {
     const descriptor = new ChangesDescriptor({
       object: {
         gid: 'foundation',
@@ -35,9 +37,9 @@ describe('Changes descriptor', () => {
     });
 
     expect(descriptor.concept).to.equal('foundation');
-  }));
+  });
 
-  it('should seek for a concept in primaryKey in case of object creation', sandbox(function () {
+  it('should seek for a concept in primaryKey in case of object creation', () => {
     const descriptor = new ChangesDescriptor({
       object: {
         gid: 'NOT_USED',
@@ -70,9 +72,9 @@ describe('Changes descriptor', () => {
     });
 
     expect(descriptor.concept).to.equal('foundation');
-  }));
+  });
 
-  it('extracts original object (state before changes): object is being updated', sandbox(function () {
+  it('extracts original object (state before changes): object is being updated', () => {
     const descriptor = new ChangesDescriptor({
       object: {
         gid: 'foundation',
@@ -114,9 +116,9 @@ describe('Changes descriptor', () => {
       'is--foundation': true,
       full_name_changed: 'bla'
     });
-  }));
+  });
 
-  it('extracts original object (state before changes): entity is being removed', sandbox(function () {
+  it('extracts original object (state before changes): entity is being removed', () => {
     const descriptor = new ChangesDescriptor({
       object: {
         gid: 'foundation',
@@ -158,9 +160,9 @@ describe('Changes descriptor', () => {
       'is--foundation': true,
       full_name_changed: 'bla'
     });
-  }));
+  });
 
-  it('extracts original object (state before changes): create action does not use data-origin property', sandbox(function () {
+  it('extracts original object (state before changes): create action does not use data-origin property', () => {
 
     const changes = {
       object: {
@@ -196,5 +198,5 @@ describe('Changes descriptor', () => {
     const descriptor = new ChangesDescriptor(changes);
 
     expect(descriptor.original).to.deep.equal(changes.object);
-  }));
+  });
 });

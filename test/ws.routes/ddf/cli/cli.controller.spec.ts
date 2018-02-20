@@ -1,9 +1,8 @@
 import '../../../../ws.repository';
-import {expect} from 'chai';
+import { expect } from 'chai';
 import * as sinon from 'sinon';
-import * as sinonTest from 'sinon-test';
-import {setTimeout} from 'timers';
-import {logger} from '../../../../ws.config/log';
+import { setTimeout } from 'timers';
+import { logger } from '../../../../ws.config/log';
 import * as cliController from '../../../../ws.routes/ddf/cli/cli.controller';
 import * as routeUtils from '../../../../ws.routes/utils';
 import * as authService from '../../../../ws.services/auth.service';
@@ -15,19 +14,22 @@ import * as cacheUtils from '../../../../ws.utils/cache-warmup';
 import * as cliApi from 'waffle-server-import-cli';
 import * as ddfImportUtils from '../../../../ws.import/utils/import-ddf.utils';
 
-const sandbox = sinonTest.configureTest(sinon);
+const sandbox = sinon.createSandbox();
 
 describe('WS-CLI controller', () => {
 
-  describe('Import Dataset', function() {
-    it('should respond with an error when error happened during import and server didn\'t send response yet', sandbox(function () {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
-      const expectedError = {message: 'Boo!'};
-      const expectedResponse = {success: false, error: 'Boo!'};
+  describe('Import Dataset', () => {
 
-      const loggerStub = this.stub(logger, 'error');
-      const cliServiceStub = this.stub(cliService, 'importDataset').callsFake((params, onImported) => onImported(expectedError));
-      const resJsonSpy = this.spy();
+    afterEach(() => sandbox.restore());
+
+    it('should respond with an error when error happened during import and server didn\'t send response yet', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
+      const expectedError = { message: 'Boo!' };
+      const expectedResponse = { success: false, error: 'Boo!' };
+
+      const loggerStub = sandbox.stub(logger, 'error');
+      const cliServiceStub = sandbox.stub(cliService, 'importDataset').callsFake((params, onImported) => onImported(expectedError));
+      const resJsonSpy = sandbox.spy();
 
       const req = {
         body: {}
@@ -50,14 +52,14 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledOnce(loggerStub);
       sinon.assert.calledWith(loggerStub, expectedError);
 
-    }));
+    });
 
-    it('should log an error when it occurred during import and server did send response already', sandbox(function () {
-      const expectedError = {message: 'Boo!'};
+    it('should log an error when it occurred during import and server did send response already', () => {
+      const expectedError = { message: 'Boo!' };
 
-      const loggerStub = this.stub(logger, 'error');
-      const cliServiceStub = this.stub(cliService, 'importDataset').callsFake((params, onImported) => onImported(expectedError));
-      const resJsonSpy = this.spy();
+      const loggerStub = sandbox.stub(logger, 'error');
+      const cliServiceStub = sandbox.stub(cliService, 'importDataset').callsFake((params, onImported) => onImported(expectedError));
+      const resJsonSpy = sandbox.spy();
 
       const req = {
         body: {}
@@ -74,17 +76,17 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledOnce(cliServiceStub);
       sinon.assert.calledOnce(loggerStub);
       sinon.assert.calledWith(loggerStub, expectedError);
-    }));
+    });
 
-    it('should log that import succeeded', sandbox(function () {
-      const loggerStub = this.stub(logger, 'info');
-      const resJsonSpy = this.spy();
+    it('should log that import succeeded', () => {
+      const loggerStub = sandbox.stub(logger, 'info');
+      const resJsonSpy = sandbox.spy();
 
       const github = 'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git';
       const commit = '8744022391f4c6518b0d070e3b85ff12b7884dd2';
 
       const expectedMessage = `finished import for dataset '${github}' and commit '${commit}'`;
-      const cliServiceStub = this.stub(cliService, 'importDataset').callsFake((params, onImported) => onImported());
+      const cliServiceStub = sandbox.stub(cliService, 'importDataset').callsFake((params, onImported) => onImported());
 
       const req = {
         body: {
@@ -112,15 +114,15 @@ describe('WS-CLI controller', () => {
 
       expect(params.lifecycleHooks).to.include.keys('onTransactionCreated');
       expect(params.lifecycleHooks.onTransactionCreated).to.be.instanceof(Function);
-    }));
+    });
 
-    it('should release connection once transaction was created for import process', sandbox(function() {
-      const toMessageResponseSpy = this.spy(routeUtils, 'toMessageResponse');
+    it('should release connection once transaction was created for import process', () => {
+      const toMessageResponseSpy = sandbox.spy(routeUtils, 'toMessageResponse');
       const expectedMessage = 'Dataset importing is in progress ...';
-      const expectedResponse = {success: true, message: expectedMessage};
+      const expectedResponse = { success: true, message: expectedMessage };
 
-      const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'importDataset').callsFake((params) => {
+      const resJsonSpy = sandbox.spy();
+      const cliServiceStub = sandbox.stub(cliService, 'importDataset').callsFake((params) => {
         params.lifecycleHooks.onTransactionCreated();
       });
 
@@ -140,13 +142,13 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toMessageResponseSpy);
       sinon.assert.calledWithExactly(toMessageResponseSpy, expectedMessage);
-    }));
+    });
 
-    it('should do nothing if response was already sent and transaction was created after', sandbox(function () {
-      const toMessageResponseSpy = this.spy(routeUtils, 'toMessageResponse');
+    it('should do nothing if response was already sent and transaction was created after', () => {
+      const toMessageResponseSpy = sandbox.spy(routeUtils, 'toMessageResponse');
 
-      const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'importDataset').callsFake((params) => {
+      const resJsonSpy = sandbox.spy();
+      const cliServiceStub = sandbox.stub(cliService, 'importDataset').callsFake((params) => {
         params.lifecycleHooks.onTransactionCreated();
       });
 
@@ -164,17 +166,20 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledOnce(cliServiceStub);
       sinon.assert.notCalled(resJsonSpy);
       sinon.assert.notCalled(toMessageResponseSpy);
-    }));
+    });
   });
 
-  describe('Clean cache', function() {
-    it('should clean cache', sandbox(function () {
-      const toMessageResponseSpy = this.spy(routeUtils, 'toMessageResponse');
-      const expectedMessage = 'Cache is clean';
-      const expectedResponse = {success: true, message: expectedMessage};
+  describe('Clean cache', () => {
 
-      const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'cleanDdfRedisCache').callsFake((onCleaned) => onCleaned(null));
+    afterEach(() => sandbox.restore());
+
+    it('should clean cache', () => {
+      const toMessageResponseSpy = sandbox.spy(routeUtils, 'toMessageResponse');
+      const expectedMessage = 'Cache is clean';
+      const expectedResponse = { success: true, message: expectedMessage };
+
+      const resJsonSpy = sandbox.spy();
+      const cliServiceStub = sandbox.stub(cliService, 'cleanDdfRedisCache').callsFake((onCleaned) => onCleaned(null));
 
       const req = {
         user: {
@@ -193,16 +198,16 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toMessageResponseSpy);
       sinon.assert.calledWithExactly(toMessageResponseSpy, expectedMessage);
-    }));
+    });
 
-    it('should not clean cache cause user is not authenticated', sandbox(function () {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should not clean cache cause user is not authenticated', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'There is no authenticated user to get its datasets';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'cleanDdfRedisCache');
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
+      const cliServiceStub = sandbox.stub(cliService, 'cleanDdfRedisCache');
 
       const req = {};
       const res = {
@@ -218,16 +223,16 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should respond with an error if cache clean failed', sandbox(function () {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should respond with an error if cache clean failed', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'cleanDdfRedisCache').callsFake((onCleaned) => onCleaned(expectedError));
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
+      const cliServiceStub = sandbox.stub(cliService, 'cleanDdfRedisCache').callsFake((onCleaned) => onCleaned(expectedError));
 
       const req = {
         user: {
@@ -248,16 +253,19 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
   });
 
-  describe('Clean repos folder', function() {
-    it('should clean and clone without errors', sandbox(function (done: Function): void {
-      const toMessageResponseSpy = this.spy(routeUtils, 'toMessageResponse');
-      const expectedMessage = 'Repos folder was cleaned and cloned successfully';
-      const expectedResponse = {success: true, message: expectedMessage};
+  describe('Clean repos folder', () => {
 
-      const resJsonSpy = this.stub().callsFake((result: any) => {
+    afterEach(() => sandbox.restore());
+
+    it('should clean and clone without errors', (done: Function) => {
+      const toMessageResponseSpy = sandbox.spy(routeUtils, 'toMessageResponse');
+      const expectedMessage = 'Repos folder was cleaned and cloned successfully';
+      const expectedResponse = { success: true, message: expectedMessage };
+
+      const resJsonSpy = sandbox.stub().callsFake((result: any) => {
         expect(result).to.be.deep.equal(expectedResponse);
 
         sinon.assert.calledOnce(cliServiceStub);
@@ -267,9 +275,9 @@ describe('WS-CLI controller', () => {
 
         return done();
       });
-      const cliServiceStub = this.stub(cliApi, 'cleanRepos').callsArgWithAsync(1, null);
-      const ddfImportUtilsStub = this.stub(ddfImportUtils, 'cloneImportedDdfRepos').callsFake(() => Promise.resolve());
-      this.stub(logger, 'info');
+      const cliServiceStub = sandbox.stub(cliApi, 'cleanRepos').callsArgWithAsync(1, null);
+      const ddfImportUtilsStub = sandbox.stub(ddfImportUtils, 'cloneImportedDdfRepos').callsFake(() => Promise.resolve());
+      sandbox.stub(logger, 'info');
 
       const req = {
         user: {
@@ -282,14 +290,14 @@ describe('WS-CLI controller', () => {
       };
 
       cliController.cleanRepos(req, res);
-    }));
+    });
 
-    it('should clean without errors, but cloning was failed', sandbox(function (done: Function): void {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should clean without errors, but cloning was failed', (done: Function) => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Repos folder was cleaned and cloned successfully';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const resJsonSpy = this.stub().callsFake((result: any) => {
+      const resJsonSpy = sandbox.stub().callsFake((result: any) => {
         expect(result).to.be.deep.equal(expectedResponse);
 
         sinon.assert.calledOnce(cliServiceStub);
@@ -299,8 +307,8 @@ describe('WS-CLI controller', () => {
 
         return done();
       });
-      const cliServiceStub = this.stub(cliApi, 'cleanRepos').callsArgWithAsync(1, null);
-      const ddfImportUtilsStub = this.stub(ddfImportUtils, 'cloneImportedDdfRepos').callsFake(() => Promise.reject(expectedError));
+      const cliServiceStub = sandbox.stub(cliApi, 'cleanRepos').callsArgWithAsync(1, null);
+      const ddfImportUtilsStub = sandbox.stub(ddfImportUtils, 'cloneImportedDdfRepos').callsFake(() => Promise.reject(expectedError));
 
       const req = {
         user: {
@@ -313,16 +321,16 @@ describe('WS-CLI controller', () => {
       };
 
       cliController.cleanRepos(req, res);
-    }));
+    });
 
-    it('should not clean repos folder cause user is not authenticated', sandbox(function () {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should not clean repos folder cause user is not authenticated', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'There is no authenticated user to make this action';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliApi, 'cleanRepos');
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
+      const cliServiceStub = sandbox.stub(cliApi, 'cleanRepos');
 
       const req = {};
       const res = {
@@ -338,16 +346,16 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should respond with an error if repos folder cleaning was failed', sandbox(function () {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should respond with an error if repos folder cleaning was failed', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliApi, 'cleanRepos').callsFake((path, onCleaned) => onCleaned(expectedError));
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
+      const cliServiceStub = sandbox.stub(cliApi, 'cleanRepos').callsFake((path, onCleaned) => onCleaned(expectedError));
 
       const req = {
         user: {
@@ -368,17 +376,20 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
   });
 
-  describe('Authenticate user', function() {
-    it('should log an error when email is absent in req.body', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
-      const expectedError = 'Email was not provided';
-      const expectedResponse = {success: false, error: expectedError};
+  describe('Authenticate user', () => {
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
+    afterEach(() => sandbox.restore());
+
+    it('should log an error when email is absent in req.body', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'Email was not provided';
+      const expectedResponse = { success: false, error: expectedError };
+
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
 
       const req: any = {
         body: {}
@@ -396,15 +407,15 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should log an error when password is absent in req.body', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should log an error when password is absent in req.body', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Password was not provided';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
 
       const req: any = {
         body: {
@@ -424,16 +435,16 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should log an error when throw error during authenticating user', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should log an error when throw error during authenticating user', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
-      const authServiceStub = this.stub(authService, 'authenticate').callsFake(({email, password}, onAuthenticated) => {
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
+      const authServiceStub = sandbox.stub(authService, 'authenticate').callsFake(({ email, password }, onAuthenticated) => {
         return onAuthenticated(expectedError);
       });
 
@@ -458,16 +469,16 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should authenticate user', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
-      const toDataResponseStub = this.spy(routeUtils, 'toDataResponse');
+    it('should authenticate user', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
+      const toDataResponseStub = sandbox.spy(routeUtils, 'toDataResponse');
       const expectedData = '111';
-      const expectedResponse = {success: true, data: {token: expectedData}};
+      const expectedResponse = { success: true, data: { token: expectedData } };
 
-      const resJsonSpy = this.spy();
-      const authServiceStub = this.stub(authService, 'authenticate').callsFake(({email, password}, onAuthenticated) => {
+      const resJsonSpy = sandbox.spy();
+      const authServiceStub = sandbox.stub(authService, 'authenticate').callsFake(({ email, password }, onAuthenticated) => {
         return onAuthenticated(null, expectedData);
       });
 
@@ -490,21 +501,23 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.notCalled(toErrorResponseSpy);
       sinon.assert.calledOnce(toDataResponseStub);
-      sinon.assert.calledWithExactly(toDataResponseStub, {token: expectedData});
-    }));
+      sinon.assert.calledWithExactly(toDataResponseStub, { token: expectedData });
+    });
   });
 
-  describe('Get state of the latest Transaction', function() {
-    it('should log an error when unauthenticated user request state of the latest transaction', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+  describe('Get state of the latest Transaction', () => {
+
+    afterEach(() => sandbox.restore());
+
+    it('should log an error when unauthenticated user request state of the latest transaction', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Unauthenticated user cannot perform CLI operations';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
 
-      const req = {
-      };
+      const req = {};
 
       const res = {
         json: resJsonSpy
@@ -518,15 +531,15 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should log an error when dataset name is absent in req.query', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should log an error when dataset name is absent in req.query', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'No dataset name was given';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
 
       const req = {
         user: {
@@ -548,16 +561,16 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should log an error when transaction service coulnd\'t get status of the latest transaction', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should log an error when transaction service coulnd\'t get status of the latest transaction', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
-      const transactionsServiceStub = this.stub(transactionsService, 'getStatusOfLatestTransactionByDatasetName').callsFake((datasetName, user, onStatusGot) => {
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
+      const transactionsServiceStub = sandbox.stub(transactionsService, 'getStatusOfLatestTransactionByDatasetName').callsFake((datasetName, user, onStatusGot) => {
         return onStatusGot(expectedError);
       });
 
@@ -585,16 +598,16 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should get state of the latest transaction', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
-      const toDataResponseStub = this.spy(routeUtils, 'toDataResponse');
+    it('should get state of the latest transaction', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
+      const toDataResponseStub = sandbox.spy(routeUtils, 'toDataResponse');
       const expectedData = 'Complete';
-      const expectedResponse = {success: true, data: expectedData};
+      const expectedResponse = { success: true, data: expectedData };
 
-      const resJsonSpy = this.spy();
-      const transactionsServiceStub = this.stub(transactionsService, 'getStatusOfLatestTransactionByDatasetName').callsFake((datasetName, user, onStatusGot) => {
+      const resJsonSpy = sandbox.spy();
+      const transactionsServiceStub = sandbox.stub(transactionsService, 'getStatusOfLatestTransactionByDatasetName').callsFake((datasetName, user, onStatusGot) => {
         return onStatusGot(null, expectedData);
       });
 
@@ -621,20 +634,22 @@ describe('WS-CLI controller', () => {
       sinon.assert.notCalled(toErrorResponseSpy);
       sinon.assert.calledOnce(toDataResponseStub);
       sinon.assert.calledWithExactly(toDataResponseStub, expectedData);
-    }));
+    });
   });
 
-  describe('Activate rollback', function() {
-    it('should log an error when unauthenticated user request activation rollback of the latest transaction', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+  describe('Activate rollback', () => {
+
+    afterEach(() => sandbox.restore());
+
+    it('should log an error when unauthenticated user request activation rollback of the latest transaction', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Unauthenticated user cannot perform CLI operations';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
 
-      const req = {
-      };
+      const req = {};
 
       const res = {
         json: resJsonSpy
@@ -648,15 +663,15 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should log an error when dataset name is absent in req.body', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should log an error when dataset name is absent in req.body', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'No dataset name was given';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
 
       const req = {
         user: {
@@ -678,16 +693,16 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should log an error when transaction service coulnd\'t activate rollback of the latest transaction', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should log an error when transaction service coulnd\'t activate rollback of the latest transaction', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
-      const transactionsServiceStub = this.stub(transactionsService, 'rollbackFailedTransactionFor').callsFake((datasetName, user, onRollbackActivated) => {
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
+      const transactionsServiceStub = sandbox.stub(transactionsService, 'rollbackFailedTransactionFor').callsFake((datasetName, user, onRollbackActivated) => {
         return onRollbackActivated(expectedError);
       });
 
@@ -715,16 +730,16 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should activate rollback of the latest transaction', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
-      const toMessageResponseStub = this.spy(routeUtils, 'toMessageResponse');
+    it('should activate rollback of the latest transaction', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
+      const toMessageResponseStub = sandbox.spy(routeUtils, 'toMessageResponse');
       const expectedMessage = 'Rollback completed successfully';
-      const expectedResponse = {success: true, message: expectedMessage};
+      const expectedResponse = { success: true, message: expectedMessage };
 
-      const resJsonSpy = this.spy();
-      const transactionsServiceStub = this.stub(transactionsService, 'rollbackFailedTransactionFor').callsFake((datasetName, user, onRollbackActivated) => {
+      const resJsonSpy = sandbox.spy();
+      const transactionsServiceStub = sandbox.stub(transactionsService, 'rollbackFailedTransactionFor').callsFake((datasetName, user, onRollbackActivated) => {
         return onRollbackActivated(null);
       });
 
@@ -751,20 +766,22 @@ describe('WS-CLI controller', () => {
       sinon.assert.notCalled(toErrorResponseSpy);
       sinon.assert.calledOnce(toMessageResponseStub);
       sinon.assert.calledWithExactly(toMessageResponseStub, expectedMessage);
-    }));
+    });
   });
 
-  describe('Removal Dataset Controller', function() {
-    it('should log an error when unauthenticated user request remove dataset', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+  describe('Removal Dataset Controller', () => {
+
+    afterEach(() => sandbox.restore());
+
+    it('should log an error when unauthenticated user request remove dataset', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'There is no authenticated user to remove dataset';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
 
-      const req = {
-      };
+      const req = {};
 
       const res = {
         json: resJsonSpy
@@ -778,15 +795,15 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should log an error when dataset name is absent in req.body', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should log an error when dataset name is absent in req.body', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'No dataset name was given';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
 
       const req = {
         user: {
@@ -808,17 +825,17 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should log an error when dataset service coulnd\'t remove choosen dataset', sandbox(function() {
-      const toMessageResponseSpy = this.spy(routeUtils, 'toMessageResponse');
+    it('should log an error when dataset service coulnd\'t remove choosen dataset', () => {
+      const toMessageResponseSpy = sandbox.spy(routeUtils, 'toMessageResponse');
       const expectedError = 'Boo!';
       const expectedMessage = 'Dataset is being deleted ...';
-      const expectedResponse = {success: true, message: expectedMessage};
+      const expectedResponse = { success: true, message: expectedMessage };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
-      const datasetsServiceStub = this.stub(datasetsService, 'removeDatasetData').callsFake((datasetName, user, onDatasetRemoved) => {
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
+      const datasetsServiceStub = sandbox.stub(datasetsService, 'removeDatasetData').callsFake((datasetName, user, onDatasetRemoved) => {
         return onDatasetRemoved(expectedError);
       });
 
@@ -846,17 +863,17 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toMessageResponseSpy);
       sinon.assert.calledWithExactly(toMessageResponseSpy, expectedMessage);
-    }));
+    });
 
-    it('should remove dataset', sandbox(function(done: Function) {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
-      const toMessageResponseSpy = this.spy(routeUtils, 'toMessageResponse');
+    it('should remove dataset', (done: Function) => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
+      const toMessageResponseSpy = sandbox.spy(routeUtils, 'toMessageResponse');
       const expectedInfoMessage = 'Dataset has been deleted successfully';
       const expectedMessage = 'Dataset is being deleted ...';
-      const expectedResponse = {success: true, message: expectedMessage};
+      const expectedResponse = { success: true, message: expectedMessage };
 
-      const resJsonSpy = this.spy();
-      const datasetsServiceStub = this.stub(datasetsService, 'removeDatasetData').callsFake((datasetName, user, onDatasetRemoved) => {
+      const resJsonSpy = sandbox.spy();
+      const datasetsServiceStub = sandbox.stub(datasetsService, 'removeDatasetData').callsFake((datasetName, user, onDatasetRemoved) => {
         return setTimeout(onDatasetRemoved, 1);
       });
 
@@ -874,7 +891,7 @@ describe('WS-CLI controller', () => {
         json: resJsonSpy
       };
 
-      const loggerStub = this.stub(logger, 'info').callsFake(() => {
+      const loggerStub = sandbox.stub(logger, 'info').callsFake(() => {
         sinon.assert.calledOnce(loggerStub);
         sinon.assert.calledWithExactly(loggerStub, expectedInfoMessage);
         sinon.assert.calledOnce(datasetsServiceStub);
@@ -890,20 +907,22 @@ describe('WS-CLI controller', () => {
       });
 
       cliController.removeDataset(req, res);
-    }));
+    });
   });
 
-  describe('Get available Datasets and Versions', function() {
-    it('should log an error when unauthenticated user request activation rollback of the latest transaction', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+  describe('Get available Datasets and Versions', () => {
+
+    afterEach(() => sandbox.restore());
+
+    it('should log an error when unauthenticated user request activation rollback of the latest transaction', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'There is no authenticated user to get its datasets';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
 
-      const req = {
-      };
+      const req = {};
 
       const res = {
         json: resJsonSpy
@@ -917,16 +936,16 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should log an error when cli service coulnd\'t activate rollback of the latest transaction', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should log an error when cli service coulnd\'t activate rollback of the latest transaction', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'getAvailableDatasetsAndVersions').callsFake((user, onDatasetAndVersionsGot) => {
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
+      const cliServiceStub = sandbox.stub(cliService, 'getAvailableDatasetsAndVersions').callsFake((user, onDatasetAndVersionsGot) => {
         return onDatasetAndVersionsGot(expectedError);
       });
 
@@ -951,18 +970,18 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should get available datasets and versions', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
-      const toDataResponseStub = this.spy(routeUtils, 'toDataResponse');
+    it('should get available datasets and versions', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
+      const toDataResponseStub = sandbox.spy(routeUtils, 'toDataResponse');
       const expectedMessage = `finished getting available datasets and versions`;
       const expectedData = [];
-      const expectedResponse = {success: true, data: expectedData};
+      const expectedResponse = { success: true, data: expectedData };
 
-      const loggerStub = this.stub(logger, 'info');
-      const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'getAvailableDatasetsAndVersions').callsFake((user, onDatasetAndVersionsGot) => {
+      const loggerStub = sandbox.stub(logger, 'info');
+      const resJsonSpy = sandbox.spy();
+      const cliServiceStub = sandbox.stub(cliService, 'getAvailableDatasetsAndVersions').callsFake((user, onDatasetAndVersionsGot) => {
         return onDatasetAndVersionsGot(null, expectedData);
       });
 
@@ -991,17 +1010,20 @@ describe('WS-CLI controller', () => {
       sinon.assert.notCalled(toErrorResponseSpy);
       sinon.assert.calledOnce(toDataResponseStub);
       sinon.assert.calledWithExactly(toDataResponseStub, expectedData);
-    }));
+    });
   });
 
-  describe('Update Dataset incrementally', function() {
-    it('should log an error when unauthenticated user tries to update dataset incrementally', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
-      const expectedError = 'Unauthenticated user cannot perform CLI operations';
-      const expectedResponse = {success: false, error: expectedError};
+  describe('Update Dataset incrementally', () => {
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
+    afterEach(() => sandbox.restore());
+
+    it('should log an error when unauthenticated user tries to update dataset incrementally', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'Unauthenticated user cannot perform CLI operations';
+      const expectedResponse = { success: false, error: expectedError };
+
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
 
       const req = {
         query: {}
@@ -1019,15 +1041,15 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should log an error when hashFrom url is absent in req.body', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should log an error when hashFrom url is absent in req.body', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Start commit for update was not given';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
 
       const req = {
         user: {
@@ -1049,15 +1071,15 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should log an error when hashTo url is absent in req.body', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should log an error when hashTo url is absent in req.body', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'End commit for update was not given';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
 
       const req = {
         user: {
@@ -1081,15 +1103,15 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should log an error when github url is absent in req.body', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should log an error when github url is absent in req.body', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Repository github url was not given';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
 
       const req = {
         user: {
@@ -1114,17 +1136,17 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should log an error when cli service coulnd\'t update dataset incrementally and response header was not sent', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should log an error when cli service coulnd\'t update dataset incrementally and response header was not sent', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedGithubUrl = 'git@github.com:Gapminder/waffle-server.git#stage';
       const expectedError = 'Boo!';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'updateIncrementally').callsFake((options, onDatasetUpdated) => {
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
+      const cliServiceStub = sandbox.stub(cliService, 'updateIncrementally').callsFake((options, onDatasetUpdated) => {
         return onDatasetUpdated(expectedError);
       });
 
@@ -1163,16 +1185,16 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should log an error when cli service coulnd\'t update dataset incrementally and response header was sent', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should log an error when cli service coulnd\'t update dataset incrementally and response header was sent', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedGithubUrl = 'git@github.com:Gapminder/waffle-server.git#stage';
       const expectedError = 'Boo!';
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'updateIncrementally').callsFake((options, onDatasetUpdated) => {
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
+      const cliServiceStub = sandbox.stub(cliService, 'updateIncrementally').callsFake((options, onDatasetUpdated) => {
         return onDatasetUpdated(expectedError);
       });
 
@@ -1209,19 +1231,19 @@ describe('WS-CLI controller', () => {
       expect(actualOptions.lifecycleHooks.onTransactionCreated).to.be.an.instanceof(Function);
       sinon.assert.notCalled(resJsonSpy);
       sinon.assert.notCalled(toErrorResponseSpy);
-    }));
+    });
 
-    it('should get commit of latest dataset version', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
-      const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
+    it('should get commit of latest dataset version', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
+      const toDataResponseSpy = sandbox.spy(routeUtils, 'toDataResponse');
       const expectedGithubUrl = 'git@github.com:Gapminder/waffle-server.git#stage';
       const expectedHashFrom = 'AAAAAAA';
       const expectedHashTo = 'BBBBBBB';
       const expectedMessage = `finished import for dataset '${expectedGithubUrl}' and commit '${expectedHashTo}'`;
 
-      const loggerStub = this.stub(logger, 'info');
-      const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'updateIncrementally').callsFake((options, onDatasetUpdated) => {
+      const loggerStub = sandbox.stub(logger, 'info');
+      const resJsonSpy = sandbox.spy();
+      const cliServiceStub = sandbox.stub(cliService, 'updateIncrementally').callsFake((options, onDatasetUpdated) => {
         options.lifecycleHooks.onTransactionCreated();
         return onDatasetUpdated(null);
       });
@@ -1260,22 +1282,22 @@ describe('WS-CLI controller', () => {
       sinon.assert.notCalled(resJsonSpy);
       sinon.assert.notCalled(toErrorResponseSpy);
       sinon.assert.notCalled(toDataResponseSpy);
-    }));
+    });
 
-    it('should get commit of latest dataset version', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
-      const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
-      const toMessageResponseSpy = this.spy(routeUtils, 'toMessageResponse');
+    it('should get commit of latest dataset version', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
+      const toDataResponseSpy = sandbox.spy(routeUtils, 'toDataResponse');
+      const toMessageResponseSpy = sandbox.spy(routeUtils, 'toMessageResponse');
       const expectedGithubUrl = 'git@github.com:Gapminder/waffle-server.git#stage';
       const expectedHashFrom = 'AAAAAAA';
       const expectedHashTo = 'BBBBBBB';
       const expectedInfoMessage = `finished import for dataset '${expectedGithubUrl}' and commit '${expectedHashTo}'`;
       const expectedMessage = 'Dataset updating is in progress ...';
-      const expectedResponse = {success: true, message: expectedMessage};
+      const expectedResponse = { success: true, message: expectedMessage };
 
-      const loggerStub = this.stub(logger, 'info');
-      const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'updateIncrementally').callsFake((options, onDatasetUpdated) => {
+      const loggerStub = sandbox.stub(logger, 'info');
+      const resJsonSpy = sandbox.spy();
+      const cliServiceStub = sandbox.stub(cliService, 'updateIncrementally').callsFake((options, onDatasetUpdated) => {
         options.lifecycleHooks.onTransactionCreated();
         return onDatasetUpdated(null);
       });
@@ -1317,17 +1339,20 @@ describe('WS-CLI controller', () => {
       sinon.assert.notCalled(toDataResponseSpy);
       sinon.assert.calledOnce(toMessageResponseSpy);
       sinon.assert.calledWithExactly(toMessageResponseSpy, expectedMessage);
-    }));
+    });
   });
 
-  describe('Get commit of the latest Dataset Version', function() {
-    it('should log an error when unauthenticated user request commit of the latest dataset version', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
-      const expectedError = 'Unauthenticated user cannot perform CLI operations';
-      const expectedResponse = {success: false, error: expectedError};
+  describe('Get commit of the latest Dataset Version', () => {
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
+    afterEach(() => sandbox.restore());
+
+    it('should log an error when unauthenticated user request commit of the latest dataset version', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'Unauthenticated user cannot perform CLI operations';
+      const expectedResponse = { success: false, error: expectedError };
+
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
 
       const req = {
         query: {}
@@ -1345,15 +1370,15 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should log an error when github url is absent in req.query', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should log an error when github url is absent in req.query', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Repository github url was not given';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
 
       const req = {
         user: {
@@ -1375,17 +1400,17 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should log an error when cli service coulnd\'t get commit of the latest dataset version', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should log an error when cli service coulnd\'t get commit of the latest dataset version', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedGithubUrl = 'github:url';
       const expectedError = 'Boo!';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'getCommitOfLatestDatasetVersion').callsFake((github, user, onCommitGot) => {
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
+      const cliServiceStub = sandbox.stub(cliService, 'getCommitOfLatestDatasetVersion').callsFake((github, user, onCommitGot) => {
         return onCommitGot(expectedError);
       });
 
@@ -1413,11 +1438,11 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should get commit of latest dataset version', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
-      const toDataResponseStub = this.spy(routeUtils, 'toDataResponse');
+    it('should get commit of latest dataset version', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
+      const toDataResponseStub = sandbox.spy(routeUtils, 'toDataResponse');
       const expectedGithubUrl = 'github:url';
       const expectedCommit = 'AAAAAAA';
       const expectedDatasetName = 'dataset';
@@ -1441,9 +1466,9 @@ describe('WS-CLI controller', () => {
         }
       };
 
-      const loggerStub = this.stub(logger, 'info');
-      const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'getCommitOfLatestDatasetVersion').callsFake((github, user, onCommitListGot) => {
+      const loggerStub = sandbox.stub(logger, 'info');
+      const resJsonSpy = sandbox.spy();
+      const cliServiceStub = sandbox.stub(cliService, 'getCommitOfLatestDatasetVersion').callsFake((github, user, onCommitListGot) => {
         return onCommitListGot(null, result);
       });
 
@@ -1472,17 +1497,20 @@ describe('WS-CLI controller', () => {
       sinon.assert.notCalled(toErrorResponseSpy);
       sinon.assert.calledOnce(toDataResponseStub);
       sinon.assert.calledWithExactly(toDataResponseStub, expectedData);
-    }));
+    });
   });
 
-  describe('Set default Dataset', function() {
-    it('should log an error when unauthenticated user tries to set default dataset', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
-      const expectedError = 'There is no authenticated user to get its datasets';
-      const expectedResponse = {success: false, error: expectedError};
+  describe('Set default Dataset', function () {
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
+    afterEach(() => sandbox.restore());
+
+    it('should log an error when unauthenticated user tries to set default dataset', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
+      const expectedError = 'There is no authenticated user to get its datasets';
+      const expectedResponse = { success: false, error: expectedError };
+
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
 
       const req = {
         body: {}
@@ -1500,15 +1528,15 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should log an error when dataset name is absent in req.body', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should log an error when dataset name is absent in req.body', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Dataset name was not provided';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
 
       const req = {
         user: {
@@ -1530,15 +1558,15 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should log an error when hash commit is absent in req.body', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should log an error when hash commit is absent in req.body', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Transaction commit was not provided';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
 
       const req = {
         user: {
@@ -1562,16 +1590,16 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should respond an error when cli service coulnd\'t set transaction as default one', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should respond an error when cli service coulnd\'t set transaction as default one', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'setTransactionAsDefault').callsFake((userId, datasetName, transactionCommit, onDatasetUpdated) => {
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
+      const cliServiceStub = sandbox.stub(cliService, 'setTransactionAsDefault').callsFake((userId, datasetName, transactionCommit, onDatasetUpdated) => {
         return onDatasetUpdated(expectedError);
       });
 
@@ -1600,19 +1628,19 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should respond an error when cli service coulnd\'t clean redis cache', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should respond an error when cli service coulnd\'t clean redis cache', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
-      const setTransactionAsDefaultStub = this.stub(cliService, 'setTransactionAsDefault').callsFake((userId, datasetName, transactionCommit, onDatasetUpdated) => {
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
+      const setTransactionAsDefaultStub = sandbox.stub(cliService, 'setTransactionAsDefault').callsFake((userId, datasetName, transactionCommit, onDatasetUpdated) => {
         return onDatasetUpdated();
       });
-      const cleanDdfRedisCacheStub = this.stub(cliService, 'cleanDdfRedisCache').callsFake((onCacheCleaned) => {
+      const cleanDdfRedisCacheStub = sandbox.stub(cliService, 'cleanDdfRedisCache').callsFake((onCacheCleaned) => {
         return onCacheCleaned(expectedError);
       });
 
@@ -1642,27 +1670,27 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should log an error when cli service coulnd\'t warm up cache', sandbox(function() {
-      const toDataResponse = this.spy(routeUtils, 'toDataResponse');
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should log an error when cli service coulnd\'t warm up cache', () => {
+      const toDataResponse = sandbox.spy(routeUtils, 'toDataResponse');
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
       const expectedData = {
         dataset: 'datasetName',
         transaction: 'AAAAAAA'
       };
-      const expectedResponse = {success: true, data: expectedData};
+      const expectedResponse = { success: true, data: expectedData };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
-      const setTransactionAsDefaultStub = this.stub(cliService, 'setTransactionAsDefault').callsFake((userId, datasetName, transactionCommit, onDatasetUpdated: Function) => {
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
+      const setTransactionAsDefaultStub = sandbox.stub(cliService, 'setTransactionAsDefault').callsFake((userId, datasetName, transactionCommit, onDatasetUpdated: Function) => {
         return onDatasetUpdated(null, expectedData);
       });
-      const cleanDdfRedisCacheStub = this.stub(cliService, 'cleanDdfRedisCache').callsFake((onCacheCleaned: Function) => {
+      const cleanDdfRedisCacheStub = sandbox.stub(cliService, 'cleanDdfRedisCache').callsFake((onCacheCleaned: Function) => {
         return onCacheCleaned();
       });
-      const cacheUtilsStub = this.stub(cacheUtils, 'warmUpCache').callsFake((onCacheWarmedUp: Function) => {
+      const cacheUtilsStub = sandbox.stub(cacheUtils, 'warmUpCache').callsFake((onCacheWarmedUp: Function) => {
         return onCacheWarmedUp(expectedError);
       });
 
@@ -1693,27 +1721,27 @@ describe('WS-CLI controller', () => {
       sinon.assert.notCalled(toErrorResponseSpy);
       sinon.assert.calledOnce(toDataResponse);
       sinon.assert.calledWithExactly(toDataResponse, expectedData);
-    }));
+    });
 
-    it('should set default transaction for public dataset', sandbox(function() {
-      const toDataResponse = this.spy(routeUtils, 'toDataResponse');
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should set default transaction for public dataset', () => {
+      const toDataResponse = sandbox.spy(routeUtils, 'toDataResponse');
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Cache is warmed up.';
       const expectedData = {
         dataset: 'datasetName',
         transaction: 'AAAAAAA'
       };
-      const expectedResponse = {success: true, data: expectedData};
+      const expectedResponse = { success: true, data: expectedData };
 
-      const loggerStub = this.stub(logger, 'info');
-      const resJsonSpy = this.spy();
-      const setTransactionAsDefaultStub = this.stub(cliService, 'setTransactionAsDefault').callsFake((userId, datasetName, transactionCommit, onDatasetUpdated: Function) => {
+      const loggerStub = sandbox.stub(logger, 'info');
+      const resJsonSpy = sandbox.spy();
+      const setTransactionAsDefaultStub = sandbox.stub(cliService, 'setTransactionAsDefault').callsFake((userId, datasetName, transactionCommit, onDatasetUpdated: Function) => {
         return onDatasetUpdated(null, expectedData);
       });
-      const cleanDdfRedisCacheStub = this.stub(cliService, 'cleanDdfRedisCache').callsFake((onCacheCleaned: Function) => {
+      const cleanDdfRedisCacheStub = sandbox.stub(cliService, 'cleanDdfRedisCache').callsFake((onCacheCleaned: Function) => {
         return onCacheCleaned();
       });
-      const cacheUtilsStub = this.stub(cacheUtils, 'warmUpCache').callsFake((onCacheWarmedUp: Function) => {
+      const cacheUtilsStub = sandbox.stub(cacheUtils, 'warmUpCache').callsFake((onCacheWarmedUp: Function) => {
         return onCacheWarmedUp();
       });
 
@@ -1745,17 +1773,20 @@ describe('WS-CLI controller', () => {
       sinon.assert.notCalled(toErrorResponseSpy);
       sinon.assert.calledOnce(toDataResponse);
       sinon.assert.calledWithExactly(toDataResponse, expectedData);
-    }));
+    });
   });
 
-  describe('Get Datasets', function() {
-    it('should get the list of available datasets for authenticated user', sandbox(function () {
-      const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
-      const expectedData = [];
-      const expectedResponse = {success: true, data: expectedData};
+  describe('Get Datasets', function () {
 
-      const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'findDatasetsWithVersions').callsFake((userId, onCleaned) => onCleaned(null, expectedData));
+    afterEach(() => sandbox.restore());
+
+    it('should get the list of available datasets for authenticated user', () => {
+      const toDataResponseSpy = sandbox.spy(routeUtils, 'toDataResponse');
+      const expectedData = [];
+      const expectedResponse = { success: true, data: expectedData };
+
+      const resJsonSpy = sandbox.spy();
+      const cliServiceStub = sandbox.stub(cliService, 'findDatasetsWithVersions').callsFake((userId, onCleaned) => onCleaned(null, expectedData));
 
       const req = {
         user: {
@@ -1775,16 +1806,16 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toDataResponseSpy);
       sinon.assert.calledWithExactly(toDataResponseSpy, expectedData);
-    }));
+    });
 
-    it('should respond with an error if user is not authenticated', sandbox(function () {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should respond with an error if user is not authenticated', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'There is no authenticated user to get its datasets';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'findDatasetsWithVersions');
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
+      const cliServiceStub = sandbox.stub(cliService, 'findDatasetsWithVersions');
 
       const req = {};
       const res = {
@@ -1800,16 +1831,16 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should respond with an error if receiving available datasets got failed', sandbox(function () {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should respond with an error if receiving available datasets got failed', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'findDatasetsWithVersions').callsFake((userId, onCleaned) => onCleaned(expectedError));
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
+      const cliServiceStub = sandbox.stub(cliService, 'findDatasetsWithVersions').callsFake((userId, onCleaned) => onCleaned(expectedError));
 
       const req = {
         user: {
@@ -1831,13 +1862,16 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
   });
 
-  describe('Get state of Dataset removal', function() {
-    it('should fetch removal state of dataset that is being removed', sandbox(function (done: Function) {
-      const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+  describe('Get state of Dataset removal', () => {
+
+    afterEach(() => sandbox.restore());
+
+    it('should fetch removal state of dataset that is being removed', (done: Function) => {
+      const toDataResponseSpy = sandbox.spy(routeUtils, 'toDataResponse');
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
 
       const removalStatus = {
         concepts: 42,
@@ -1845,7 +1879,7 @@ describe('WS-CLI controller', () => {
         datapoints: 42
       };
 
-      const getRemovalStateForDatasetStub = this.stub(datasetsService, 'getRemovalStateForDataset');
+      const getRemovalStateForDatasetStub = sandbox.stub(datasetsService, 'getRemovalStateForDataset');
       getRemovalStateForDatasetStub
         .onFirstCall().callsArgWith(2, null, removalStatus);
 
@@ -1872,16 +1906,16 @@ describe('WS-CLI controller', () => {
       };
 
       cliController.getStateOfDatasetRemoval(req, res);
-    }));
+    });
 
-    it('should respond with an error if smth went wrong during status fetching', sandbox(function (done: Function) {
-      const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should respond with an error if smth went wrong during status fetching', (done: Function) => {
+      const toDataResponseSpy = sandbox.spy(routeUtils, 'toDataResponse');
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
 
       const expectedError = 'Boo!';
 
-      const loggerStub = this.stub(logger, 'error');
-      const getRemovalStateForDatasetStub = this.stub(datasetsService, 'getRemovalStateForDataset');
+      const loggerStub = sandbox.stub(logger, 'error');
+      const getRemovalStateForDatasetStub = sandbox.stub(datasetsService, 'getRemovalStateForDataset');
       getRemovalStateForDatasetStub
         .onFirstCall().callsArgWith(2, expectedError, null);
 
@@ -1910,18 +1944,17 @@ describe('WS-CLI controller', () => {
       };
 
       cliController.getStateOfDatasetRemoval(req, res);
-    }));
+    });
 
-    it('should respond with an error if dataset name was not provided in request', sandbox(function (done: Function) {
-      const loggerStub = this.stub(logger, 'error');
-      const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should respond with an error if dataset name was not provided in request', (done: Function) => {
+      const loggerStub = sandbox.stub(logger, 'error');
+      const toDataResponseSpy = sandbox.spy(routeUtils, 'toDataResponse');
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
 
       const expectedError = 'No dataset name was given';
 
       const req = {
-        query: {
-        },
+        query: {},
         user: {
           name: 'fake'
         }
@@ -1941,12 +1974,12 @@ describe('WS-CLI controller', () => {
       };
 
       cliController.getStateOfDatasetRemoval(req, res);
-    }));
+    });
 
-    it('should respond with an error if user is not authenticated', sandbox(function (done: Function) {
-      const loggerStub = this.stub(logger, 'error');
-      const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should respond with an error if user is not authenticated', (done: Function) => {
+      const loggerStub = sandbox.stub(logger, 'error');
+      const toDataResponseSpy = sandbox.spy(routeUtils, 'toDataResponse');
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
 
       const expectedError = 'Unauthenticated user cannot perform CLI operations';
 
@@ -1966,19 +1999,22 @@ describe('WS-CLI controller', () => {
       };
 
       cliController.getStateOfDatasetRemoval(req, res);
-    }));
+    });
   });
 
-  describe('Get removable Datasets', function() {
-    it('should get the list of removable datasets for authenticated user', sandbox(function () {
-      const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
+  describe('Get removable Datasets', () => {
+
+    afterEach(() => sandbox.restore());
+
+    it('should get the list of removable datasets for authenticated user', () => {
+      const toDataResponseSpy = sandbox.spy(routeUtils, 'toDataResponse');
       const expectedInfoMessage = `finished getting removable datasets`;
       const expectedData = [];
-      const expectedResponse = {success: true, data: expectedData};
+      const expectedResponse = { success: true, data: expectedData };
 
-      const loggerStub = this.stub(logger, 'info');
-      const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'getRemovableDatasets').callsFake((userId, onCleaned) => onCleaned(null, expectedData));
+      const loggerStub = sandbox.stub(logger, 'info');
+      const resJsonSpy = sandbox.spy();
+      const cliServiceStub = sandbox.stub(cliService, 'getRemovableDatasets').callsFake((userId, onCleaned) => onCleaned(null, expectedData));
 
       const req = {
         user: {
@@ -2000,16 +2036,16 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toDataResponseSpy);
       sinon.assert.calledWithExactly(toDataResponseSpy, expectedData);
-    }));
+    });
 
-    it('should respond with an error if user is not authenticated', sandbox(function () {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should respond with an error if user is not authenticated', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'There is no authenticated user to get its datasets';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'getRemovableDatasets');
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
+      const cliServiceStub = sandbox.stub(cliService, 'getRemovableDatasets');
 
       const req = {};
       const res = {
@@ -2025,16 +2061,16 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should respond with an error if receiving removable datasets got failed', sandbox(function () {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should respond with an error if receiving removable datasets got failed', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'getRemovableDatasets').callsFake((userId, onCleaned) => onCleaned(expectedError));
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
+      const cliServiceStub = sandbox.stub(cliService, 'getRemovableDatasets').callsFake((userId, onCleaned) => onCleaned(expectedError));
 
       const req = {
         user: {
@@ -2056,19 +2092,22 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
   });
 
-  describe('Get private Datasets', function() {
-    it('should get the list of private datasets for authenticated user', sandbox(function () {
-      const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
+  describe('Get private Datasets', () => {
+
+    afterEach(() => sandbox.restore());
+
+    it('should get the list of private datasets for authenticated user', () => {
+      const toDataResponseSpy = sandbox.spy(routeUtils, 'toDataResponse');
       const expectedInfoMessage = `finished getting private datasets`;
       const expectedData = [];
-      const expectedResponse = {success: true, data: expectedData};
+      const expectedResponse = { success: true, data: expectedData };
 
-      const loggerStub = this.stub(logger, 'info');
-      const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'getPrivateDatasets').callsFake((userId, onCleaned) => onCleaned(null, expectedData));
+      const loggerStub = sandbox.stub(logger, 'info');
+      const resJsonSpy = sandbox.spy();
+      const cliServiceStub = sandbox.stub(cliService, 'getPrivateDatasets').callsFake((userId, onCleaned) => onCleaned(null, expectedData));
 
       const req = {
         user: {
@@ -2090,16 +2129,16 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toDataResponseSpy);
       sinon.assert.calledWithExactly(toDataResponseSpy, expectedData);
-    }));
+    });
 
-    it('should respond with an error if user is not authenticated', sandbox(function () {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should respond with an error if user is not authenticated', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'There is no authenticated user to get its datasets';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'getPrivateDatasets');
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
+      const cliServiceStub = sandbox.stub(cliService, 'getPrivateDatasets');
 
       const req = {};
       const res = {
@@ -2115,16 +2154,16 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should respond with an error if receiving private datasets got failed', sandbox(function () {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should respond with an error if receiving private datasets got failed', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'getPrivateDatasets').callsFake((userId, onCleaned) => onCleaned(expectedError));
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
+      const cliServiceStub = sandbox.stub(cliService, 'getPrivateDatasets').callsFake((userId, onCleaned) => onCleaned(expectedError));
 
       const req = {
         user: {
@@ -2146,20 +2185,22 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
   });
 
-  describe('Generate Dataset access token', function() {
-    it('should respond with an error when unauthenticated user request to generate dataset access token', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+  describe('Generate Dataset access token', () => {
+
+    afterEach(() => sandbox.restore());
+
+    it('should respond with an error when unauthenticated user request to generate dataset access token', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Unauthenticated user cannot perform CLI operations';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
 
-      const req = {
-      };
+      const req = {};
 
       const res = {
         json: resJsonSpy
@@ -2173,15 +2214,15 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should respond with an error when dataset name is absent in req.body', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should respond with an error when dataset name is absent in req.body', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'No dataset name was given';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
 
       const req = {
         user: {
@@ -2203,16 +2244,16 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should respond with an error when cli service coulnd\'t set access token for given dataset', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should respond with an error when cli service coulnd\'t set access token for given dataset', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'setAccessTokenForDataset').callsFake((datasetName, userId, onDatasetRemoved) => {
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
+      const cliServiceStub = sandbox.stub(cliService, 'setAccessTokenForDataset').callsFake((datasetName, userId, onDatasetRemoved) => {
         return onDatasetRemoved(expectedError);
       });
 
@@ -2240,17 +2281,17 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should respond with an error when cli service couln\'t find dataset', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should respond with an error when cli service couln\'t find dataset', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Cannot generate access token for given dataset';
-      const expectedResponse = {success: false, error: expectedError};
+      const expectedResponse = { success: false, error: expectedError };
 
-      const loggerErrorStub = this.stub(logger, 'error');
-      const loggerWarnStub = this.stub(logger, 'warn');
-      const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'setAccessTokenForDataset').callsFake((datasetName, userId, onDatasetRemoved) => {
+      const loggerErrorStub = sandbox.stub(logger, 'error');
+      const loggerWarnStub = sandbox.stub(logger, 'warn');
+      const resJsonSpy = sandbox.spy();
+      const cliServiceStub = sandbox.stub(cliService, 'setAccessTokenForDataset').callsFake((datasetName, userId, onDatasetRemoved) => {
         return onDatasetRemoved(null, null);
       });
 
@@ -2282,22 +2323,22 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedError);
-    }));
+    });
 
-    it('should generate dataset access token', sandbox(function() {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
-      const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
+    it('should generate dataset access token', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
+      const toDataResponseSpy = sandbox.spy(routeUtils, 'toDataResponse');
       const expectedData = {
         _id: 'AAAAA',
         name: 'dataset',
         accessToken: 'TTTTTTTTT'
       };
-      const expectedResponse = {success: true, data: {accessToken: expectedData.accessToken}};
+      const expectedResponse = { success: true, data: { accessToken: expectedData.accessToken } };
 
-      const loggerErrorStub = this.stub(logger, 'error');
-      const loggerWarnStub = this.stub(logger, 'warn');
-      const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'setAccessTokenForDataset').callsFake((datasetName, userId, onDatasetRemoved) => {
+      const loggerErrorStub = sandbox.stub(logger, 'error');
+      const loggerWarnStub = sandbox.stub(logger, 'warn');
+      const resJsonSpy = sandbox.spy();
+      const cliServiceStub = sandbox.stub(cliService, 'setAccessTokenForDataset').callsFake((datasetName, userId, onDatasetRemoved) => {
         return onDatasetRemoved(null, expectedData);
       });
 
@@ -2325,19 +2366,22 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.notCalled(toErrorResponseSpy);
       sinon.assert.calledOnce(toDataResponseSpy);
-      sinon.assert.calledWithExactly(toDataResponseSpy, {accessToken: expectedData.accessToken});
-    }));
+      sinon.assert.calledWithExactly(toDataResponseSpy, { accessToken: expectedData.accessToken });
+    });
   });
 
-  describe('Get Datasets in progress', function() {
-    it('should not fetch datasets in progress cause user is not authenticated', sandbox(function () {
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
-      const expectedMessage = 'There is no authenticated user to get its datasets';
-      const expectedResponse = {success: false, error: expectedMessage};
+  describe('Get Datasets in progress', () => {
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'cleanDdfRedisCache');
+    afterEach(() => sandbox.restore());
+
+    it('should not fetch datasets in progress cause user is not authenticated', () => {
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
+      const expectedMessage = 'There is no authenticated user to get its datasets';
+      const expectedResponse = { success: false, error: expectedMessage };
+
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
+      const cliServiceStub = sandbox.stub(cliService, 'cleanDdfRedisCache');
 
       const req = {};
       const res = {
@@ -2353,21 +2397,21 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedMessage);
-    }));
+    });
 
-    it('should fetch datasets that are currently in progress (being deleted, updated or imported)', sandbox(function () {
-      const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
+    it('should fetch datasets that are currently in progress (being deleted, updated or imported)', () => {
+      const toDataResponseSpy = sandbox.spy(routeUtils, 'toDataResponse');
       const expectedData = [{
         name: 'dataset.name',
         githubUrl: 'dataset.path'
       }];
       const expectedMessage = 'finished getting private datasets is progress';
 
-      const expectedResponse = {success: true, data: expectedData};
+      const expectedResponse = { success: true, data: expectedData };
 
-      const loggerStub = this.stub(logger, 'info');
-      const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'getDatasetsInProgress').callsFake((userId, onFound) => {
+      const loggerStub = sandbox.stub(logger, 'info');
+      const resJsonSpy = sandbox.spy();
+      const cliServiceStub = sandbox.stub(cliService, 'getDatasetsInProgress').callsFake((userId, onFound) => {
         return onFound(null, expectedData);
       });
 
@@ -2392,17 +2436,17 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toDataResponseSpy);
       sinon.assert.calledWithExactly(toDataResponseSpy, expectedData);
-    }));
+    });
 
-    it('should respond with an error if trying to get datasets in progress got the error', sandbox(function () {
-      const toDataResponseSpy = this.spy(routeUtils, 'toDataResponse');
-      const toErrorResponseSpy = this.spy(routeUtils, 'toErrorResponse');
+    it('should respond with an error if trying to get datasets in progress got the error', () => {
+      const toDataResponseSpy = sandbox.spy(routeUtils, 'toDataResponse');
+      const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedMessage = 'Boo!';
-      const expectedResponse = {success: false, error: expectedMessage};
+      const expectedResponse = { success: false, error: expectedMessage };
 
-      const loggerStub = this.stub(logger, 'error');
-      const resJsonSpy = this.spy();
-      const cliServiceStub = this.stub(cliService, 'getDatasetsInProgress').callsFake((userId, onFound) => {
+      const loggerStub = sandbox.stub(logger, 'error');
+      const resJsonSpy = sandbox.spy();
+      const cliServiceStub = sandbox.stub(cliService, 'getDatasetsInProgress').callsFake((userId, onFound) => {
         return onFound(expectedMessage);
       });
 
@@ -2427,6 +2471,7 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.calledOnce(toErrorResponseSpy);
       sinon.assert.calledWithExactly(toErrorResponseSpy, expectedMessage);
-    }));
+    });
   });
-});
+})
+;
