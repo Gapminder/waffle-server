@@ -1,18 +1,17 @@
 import '../../../ws.repository';
-import {expect} from 'chai';
+import { expect } from 'chai';
 import * as _ from 'lodash';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import * as sinonTest from 'sinon-test';
-import {logger} from '../../../ws.config/log';
+import { logger } from '../../../ws.config/log';
 
 import * as updateService from '../../../ws.import/incremental/update-entities';
-import {EntitiesRepositoryFactory} from '../../../ws.repository/ddf/entities/entities.repository';
+import { EntitiesRepositoryFactory } from '../../../ws.repository/ddf/entities/entities.repository';
 
 const datasetId = 'DATASETID';
 const version = 1111111;
 
-const sandbox = sinonTest.configureTest(sinon);
+const sandbox = sinon.createSandbox();
 
 const domain = {
   _id: 'DOMAINID',
@@ -20,7 +19,7 @@ const domain = {
   domain: null,
   from: version - 1,
   gid: 'company',
-  languages: {  },
+  languages: {},
   originId: 'DOMAINID',
   properties: {
     concept: 'company',
@@ -39,7 +38,7 @@ const set1 = {
   domain,
   from: version - 1,
   gid: 'company_size',
-  languages: {  },
+  languages: {},
   originId: 'ENTITYSETID',
   properties: {
     concept: 'company_size',
@@ -58,7 +57,7 @@ const set2 = {
   domain,
   from: version,
   gid: 'company_scale',
-  languages: {  },
+  languages: {},
   originId: 'ENTITYSETID',
   properties: {
     concept: 'company_scale',
@@ -77,7 +76,7 @@ const set3 = {
   domain,
   from: version,
   gid: 'english_speaking',
-  languages: {  },
+  languages: {},
   originId: 'ENTITYSETID2',
   properties: {
     concept: 'english_speaking',
@@ -96,7 +95,7 @@ const set4 = {
   domain: null,
   from: version,
   gid: 'region',
-  languages: {  },
+  languages: {},
   originId: 'ENTITYSETID3',
   properties: {
     concept: 'region',
@@ -117,8 +116,8 @@ const externalContextFixture: any = {
     _id: 'TRANSACTIONID',
     createdAt: version
   },
-  previousConcepts: {company_size: set1},
-  concepts: {company: domain, company_scale: set2, english_speaking: set3, region: set4},
+  previousConcepts: { company_size: set1 },
+  concepts: { company: domain, company_scale: set2, english_speaking: set3, region: set4 },
   timeConcepts: [],
   datasetId,
   version
@@ -130,9 +129,9 @@ const expectedCreatedEntities = [
     domain: 'DOMAINID',
     from: 1111111,
     gid: 'small',
-    languages: {  },
+    languages: {},
     originId: null,
-    parsedProperties: {  },
+    parsedProperties: {},
     properties: { company_scale: 'small', full_name_changed: 'Not very big', 'is--company_scale': true },
     sets: ['ENTITYSETID'],
     sources: ['ddf--entities--company--company_scale.csv']
@@ -141,9 +140,9 @@ const expectedCreatedEntities = [
     domain: 'DOMAINID',
     from: 1111111,
     gid: 'large',
-    languages: {  },
+    languages: {},
     originId: null,
-    parsedProperties: {  },
+    parsedProperties: {},
     properties: { company_scale: 'large', full_name_changed: 'Very Big', 'is--company_scale': true },
     sets: ['ENTITYSETID'],
     sources: ['ddf--entities--company--company_scale.csv']
@@ -152,9 +151,9 @@ const expectedCreatedEntities = [
     domain: 'DOMAINID',
     from: 1111111,
     gid: 'medium',
-    languages: {  },
+    languages: {},
     originId: null,
-    parsedProperties: {  },
+    parsedProperties: {},
     properties: { company_scale: 'medium', full_name_changed: 'medium', 'is--company_scale': true },
     sets: ['ENTITYSETID'],
     sources: ['ddf--entities--company--company_scale.csv']
@@ -173,21 +172,24 @@ const entitiesRepository = {
 };
 
 describe('Update Entities', function () {
-  it('should create new and remove old entities from fixture', sandbox(function (done: Function) {
-    const originExternalContext = _.defaults({pathToDatasetDiff: path.resolve(__dirname, './fixtures/full-diff-entities.txt')}, externalContextFixture);
+
+  afterEach(() => sandbox.restore());
+
+  it('should create new and remove old entities from fixture', (done: Function) => {
+    const originExternalContext = _.defaults({ pathToDatasetDiff: path.resolve(__dirname, './fixtures/full-diff-entities.txt') }, externalContextFixture);
     const expectedError = null;
     const expectedCloseOneByQueryCallCount = 3;
     const expectedloggerDebugCallCount = 6;
 
-    const loggerDebugStub = this.stub(logger, 'debug');
-    const loggerInfoStub = this.stub(logger, 'info');
-    const loggerErrorStub = this.stub(logger, 'error');
+    const loggerDebugStub = sandbox.stub(logger, 'debug');
+    const loggerInfoStub = sandbox.stub(logger, 'info');
+    const loggerErrorStub = sandbox.stub(logger, 'error');
 
-    const createStub = this.stub(entitiesRepository, 'create').callsArgWithAsync(1, expectedError);
-    const versionAgnosticStub = this.stub(EntitiesRepositoryFactory, 'versionAgnostic').returns(entitiesRepository);
+    const createStub = sandbox.stub(entitiesRepository, 'create').callsArgWithAsync(1, expectedError);
+    const versionAgnosticStub = sandbox.stub(EntitiesRepositoryFactory, 'versionAgnostic').returns(entitiesRepository);
 
-    const closeOneByQueryStub = this.stub(entitiesRepository, 'closeOneByQuery').callsArgWithAsync(1, expectedError);
-    const latestVersionStub = this.stub(EntitiesRepositoryFactory, 'latestVersion').returns(entitiesRepository);
+    const closeOneByQueryStub = sandbox.stub(entitiesRepository, 'closeOneByQuery').callsArgWithAsync(1, expectedError);
+    const latestVersionStub = sandbox.stub(EntitiesRepositoryFactory, 'latestVersion').returns(entitiesRepository);
 
     return updateService.updateEntities(originExternalContext, (error, externalContext) => {
       expect(error).to.not.exist;
@@ -257,22 +259,22 @@ describe('Update Entities', function () {
 
       return done();
     });
-  }));
+  });
 
-  it('should interrupt with error when entity was not found for closing', sandbox(function(done: Function) {
-    const originExternalContext = _.defaults({pathToDatasetDiff: path.resolve(__dirname, './fixtures/full-diff-entities.txt')}, externalContextFixture);
+  it('should interrupt with error when entity was not found for closing', (done: Function) => {
+    const originExternalContext = _.defaults({ pathToDatasetDiff: path.resolve(__dirname, './fixtures/full-diff-entities.txt') }, externalContextFixture);
     const expectedError = 'Boo!';
     const expectedloggerDebugCallCount = 6;
 
-    const loggerDebugStub = this.stub(logger, 'debug');
-    const loggerInfoStub = this.stub(logger, 'info');
-    const loggerErrorStub = this.stub(logger, 'error');
+    const loggerDebugStub = sandbox.stub(logger, 'debug');
+    const loggerInfoStub = sandbox.stub(logger, 'info');
+    const loggerErrorStub = sandbox.stub(logger, 'error');
 
-    const createStub = this.stub(entitiesRepository, 'create').callsArgWithAsync(1);
-    const versionAgnosticStub = this.stub(EntitiesRepositoryFactory, 'versionAgnostic').returns(entitiesRepository);
+    const createStub = sandbox.stub(entitiesRepository, 'create').callsArgWithAsync(1);
+    const versionAgnosticStub = sandbox.stub(EntitiesRepositoryFactory, 'versionAgnostic').returns(entitiesRepository);
 
-    const closeOneByQueryStub = this.stub(entitiesRepository, 'closeOneByQuery').callsArgWithAsync(1, expectedError);
-    const latestVersionStub = this.stub(EntitiesRepositoryFactory, 'latestVersion').returns(entitiesRepository);
+    const closeOneByQueryStub = sandbox.stub(entitiesRepository, 'closeOneByQuery').callsArgWithAsync(1, expectedError);
+    const latestVersionStub = sandbox.stub(EntitiesRepositoryFactory, 'latestVersion').returns(entitiesRepository);
 
     return updateService.updateEntities(originExternalContext, (error, externalContext) => {
       expect(error).to.be.deep.equal([expectedError]);
@@ -341,24 +343,24 @@ describe('Update Entities', function () {
 
       return done();
     });
-  }));
+  });
 
-  it('should log message when entity was closed without errors', sandbox(function(done: Function) {
-    const originExternalContext = _.defaults({pathToDatasetDiff: path.resolve(__dirname, './fixtures/full-diff-entities.txt')}, externalContextFixture);
+  it('should log message when entity was closed without errors', (done: Function) => {
+    const originExternalContext = _.defaults({ pathToDatasetDiff: path.resolve(__dirname, './fixtures/full-diff-entities.txt') }, externalContextFixture);
     const expectedError = null;
-    const expectedEntity = {_id: 'ENTITYID', originId: 'ENTITYID'};
+    const expectedEntity = { _id: 'ENTITYID', originId: 'ENTITYID' };
     const expectedCloseOneByQueryCallCount = 3;
     const expectedloggerDebugCallCount = 9;
 
-    const loggerDebugStub = this.stub(logger, 'debug');
-    const loggerInfoStub = this.stub(logger, 'info');
-    const loggerErrorStub = this.stub(logger, 'error');
+    const loggerDebugStub = sandbox.stub(logger, 'debug');
+    const loggerInfoStub = sandbox.stub(logger, 'info');
+    const loggerErrorStub = sandbox.stub(logger, 'error');
 
-    const createStub = this.stub(entitiesRepository, 'create').callsArgWithAsync(1, expectedError);
-    const versionAgnosticStub = this.stub(EntitiesRepositoryFactory, 'versionAgnostic').returns(entitiesRepository);
+    const createStub = sandbox.stub(entitiesRepository, 'create').callsArgWithAsync(1, expectedError);
+    const versionAgnosticStub = sandbox.stub(EntitiesRepositoryFactory, 'versionAgnostic').returns(entitiesRepository);
 
-    const closeOneByQueryStub = this.stub(entitiesRepository, 'closeOneByQuery').callsArgWithAsync(1, expectedError, expectedEntity);
-    const latestVersionStub = this.stub(EntitiesRepositoryFactory, 'latestVersion').returns(entitiesRepository);
+    const closeOneByQueryStub = sandbox.stub(entitiesRepository, 'closeOneByQuery').callsArgWithAsync(1, expectedError, expectedEntity);
+    const latestVersionStub = sandbox.stub(EntitiesRepositoryFactory, 'latestVersion').returns(entitiesRepository);
 
     return updateService.updateEntities(originExternalContext, (error, externalContext) => {
       expect(error).to.not.exist;
@@ -437,18 +439,17 @@ describe('Update Entities', function () {
 
       return done();
     });
-  }));
+  });
 
-  it('should update entities without errors', sandbox(function(done: Function) {
-    const originExternalContext = _.defaults({pathToDatasetDiff: path.resolve(__dirname, './fixtures/updated-entities.txt')}, externalContextFixture);
+  it('should update entities without errors', (done: Function) => {
+    const originExternalContext = _.defaults({ pathToDatasetDiff: path.resolve(__dirname, './fixtures/updated-entities.txt') }, externalContextFixture);
     const expectedEntity = {
       _id: 'ENTITYID',
       originId: 'ENTITYID',
       properties: {},
       sources: ['ddf--entities--company--company_scale.csv'],
       languages: {
-        'nl-nl': {
-        }
+        'nl-nl': {}
       }
     };
     const expectedEntityGap = _.extend({}, expectedEntity, {
@@ -462,19 +463,19 @@ describe('Update Entities', function () {
     const expectedloggerDebugCallCount = 12;
     const expectedVersionAgnosticCallCount = 4;
 
-    const loggerDebugStub = this.stub(logger, 'debug');
-    const loggerInfoStub = this.stub(logger, 'info');
-    const loggerErrorStub = this.stub(logger, 'error');
+    const loggerDebugStub = sandbox.stub(logger, 'debug');
+    const loggerInfoStub = sandbox.stub(logger, 'info');
+    const loggerErrorStub = sandbox.stub(logger, 'error');
 
-    const createStub = this.stub(entitiesRepository, 'create').callsArgWithAsync(1, null);
-    const versionAgnosticStub = this.stub(EntitiesRepositoryFactory, 'versionAgnostic').returns(entitiesRepository);
+    const createStub = sandbox.stub(entitiesRepository, 'create').callsArgWithAsync(1, null);
+    const versionAgnosticStub = sandbox.stub(EntitiesRepositoryFactory, 'versionAgnostic').returns(entitiesRepository);
 
-    const closeOneByQueryStub = this.stub(entitiesRepository, 'closeOneByQuery');
+    const closeOneByQueryStub = sandbox.stub(entitiesRepository, 'closeOneByQuery');
     closeOneByQueryStub.onFirstCall().callsArgWithAsync(1, null, expectedEntityGap);
     closeOneByQueryStub.onCall(1).callsArgWithAsync(1, null, expectedEntity);
     closeOneByQueryStub.onCall(2).callsArgWithAsync(1, null, expectedEntity);
     closeOneByQueryStub.onCall(3).callsArgWithAsync(1, null, expectedEntity);
-    const latestVersionStub = this.stub(EntitiesRepositoryFactory, 'latestVersion').returns(entitiesRepository);
+    const latestVersionStub = sandbox.stub(EntitiesRepositoryFactory, 'latestVersion').returns(entitiesRepository);
 
     return updateService.updateEntities(originExternalContext, (error, externalContext) => {
       expect(error).to.not.exist;
@@ -491,9 +492,24 @@ describe('Update Entities', function () {
       expect(loggerDebugStub.args[2][1]).to.be.equal(3);
       expect(loggerDebugStub.args[2][2]).to.not.exist;
 
-      const expectedQuery1 = {domain: 'DOMAINID', 'properties.english_speaking': 'gap', sets: ['ENTITYSETID2'], sources: 'ddf--entities--company--english_speaking.csv'};
-      const expectedQuery2 = {domain: 'ENTITYSETID3', 'properties.region': 'america', sets: [], sources: 'ddf--entities--region.csv'};
-      const expectedQuery3 = {domain: 'ENTITYSETID3', 'properties.region': 'europe', sets: [], sources: 'ddf--entities--region.csv'};
+      const expectedQuery1 = {
+        domain: 'DOMAINID',
+        'properties.english_speaking': 'gap',
+        sets: ['ENTITYSETID2'],
+        sources: 'ddf--entities--company--english_speaking.csv'
+      };
+      const expectedQuery2 = {
+        domain: 'ENTITYSETID3',
+        'properties.region': 'america',
+        sets: [],
+        sources: 'ddf--entities--region.csv'
+      };
+      const expectedQuery3 = {
+        domain: 'ENTITYSETID3',
+        'properties.region': 'europe',
+        sets: [],
+        sources: 'ddf--entities--region.csv'
+      };
 
       expect(loggerDebugStub.args[3][0]).to.be.equal('Closing entity by query: ');
       expect(loggerDebugStub.args[3][1]).to.be.deep.equal(expectedQuery1);
@@ -630,5 +646,5 @@ describe('Update Entities', function () {
 
       return done();
     });
-  }));
+  });
 });

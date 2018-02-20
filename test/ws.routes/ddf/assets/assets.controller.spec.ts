@@ -1,14 +1,16 @@
 import { expect } from 'chai';
 import * as sinon from 'sinon';
-import * as sinonTest from 'sinon-test';
 
 import * as AssetsController from '../../../../ws.routes/ddf/assets/assets.controller';
 import { constants } from '../../../../ws.utils/constants';
 
-const sandbox = sinonTest.configureTest(sinon);
+const sandbox = sinon.createSandbox();
 
 describe('AssetsController', () => {
-  it('sends 404 when there is no assetPathDescriptor attached to the request body', sandbox(function (done: Function): any {
+
+  afterEach(() => sandbox.restore());
+
+  it('sends 404 when there is no assetPathDescriptor attached to the request body', (done: Function) => {
     const req: any = {};
     const res: any = {
       _status: -1,
@@ -23,9 +25,9 @@ describe('AssetsController', () => {
     };
 
     AssetsController.serveAsset(req, res);
-  }));
+  });
 
-  it('sends file when there is a valid assetPathDescriptor in the request body', sandbox(function (): any {
+  it('sends file when there is a valid assetPathDescriptor in the request body', () => {
     const req: any = {
       body: {
         assetPathDescriptor: {
@@ -36,8 +38,8 @@ describe('AssetsController', () => {
     };
 
     const res: any = {
-      setHeader: this.stub(),
-      sendFile: this.stub()
+      setHeader: sandbox.stub(),
+      sendFile: sandbox.stub()
     };
 
     AssetsController.serveAsset(req, res);
@@ -46,6 +48,6 @@ describe('AssetsController', () => {
     sinon.assert.calledOnce(res.sendFile);
 
     sinon.assert.calledWith(res.setHeader, 'Content-Disposition', `attachment; filename=deathStar.json`);
-    sinon.assert.calledWith(res.sendFile, '/far/far/galaxy/deathStar.json', {maxAge: constants.ASSETS_CACHE_CONTROL_MAX_AGE_IN_MILLIS});
-  }));
+    sinon.assert.calledWith(res.sendFile, '/far/far/galaxy/deathStar.json', { maxAge: constants.ASSETS_CACHE_CONTROL_MAX_AGE_IN_MILLIS });
+  });
 });

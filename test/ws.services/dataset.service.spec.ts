@@ -3,31 +3,28 @@ import 'mocha';
 import '../../ws.repository';
 import '../../ws.config/db.config';
 
-import {expect} from 'chai';
+import { expect } from 'chai';
 import * as _ from 'lodash';
 import * as sinon from 'sinon';
-import * as sinonTest from 'sinon-test';
 import * as proxyquire from 'proxyquire';
 
-import {DatasetsRepository} from '../../ws.repository/ddf/datasets/datasets.repository';
-import {DatasetTransactionsRepository} from '../../ws.repository/ddf/dataset-transactions/dataset-transactions.repository';
+import { DatasetsRepository } from '../../ws.repository/ddf/datasets/datasets.repository';
+import { DatasetTransactionsRepository } from '../../ws.repository/ddf/dataset-transactions/dataset-transactions.repository';
 
-import {DatasetSchemaRepository} from '../../ws.repository/ddf/dataset-index/dataset-index.repository';
-import {ConceptsRepositoryFactory} from '../../ws.repository/ddf/concepts/concepts.repository';
-import {EntitiesRepositoryFactory} from '../../ws.repository/ddf/entities/entities.repository';
-import {DatapointsRepositoryFactory} from '../../ws.repository/ddf/data-points/data-points.repository';
+import { DatasetSchemaRepository } from '../../ws.repository/ddf/dataset-index/dataset-index.repository';
+import { ConceptsRepositoryFactory } from '../../ws.repository/ddf/concepts/concepts.repository';
+import { EntitiesRepositoryFactory } from '../../ws.repository/ddf/entities/entities.repository';
+import { DatapointsRepositoryFactory } from '../../ws.repository/ddf/data-points/data-points.repository';
 
 import * as datasetsService from '../../ws.services/datasets.service';
-import {logger} from '../../ws.config/log';
-
-import {DatasetTracker} from '../../ws.services/datasets-tracker';
-
 import * as datasetService from '../../ws.services/datasets.service';
-import set = Reflect.set;
+import { logger } from '../../ws.config/log';
+
+import { DatasetTracker } from '../../ws.services/datasets-tracker';
 
 const shouldNotCall = () => expect.fail(null, null, 'This function should not be called');
 
-const sandbox = sinonTest.configureTest(sinon);
+const sandbox = sinon.createSandbox();
 
 const datasetsRepositoryPath = '../ws.repository/ddf/datasets/datasets.repository';
 const transactionsRepositoryPath = '../ws.repository/ddf/dataset-transactions/dataset-transactions.repository';
@@ -74,7 +71,7 @@ const datasetsRepository = {
 
 const transactionsRepository = {
   findDefault: (options: any, onTransactionFound: Function) => {
-    expect(options).to.deep.equal({datasetId: expectedRemovableDataset._id});
+    expect(options).to.deep.equal({ datasetId: expectedRemovableDataset._id });
     return onTransactionFound();
   },
   removeAllByDataset: (datasetId: string, onTransactionsRemoved: Function) => {
@@ -89,21 +86,21 @@ describe('Remove Dataset Service', () => {
   let loggerInfoStub;
 
   beforeEach(() => {
-    loggerInfoStub = sinon.stub(logger, 'info');
+    loggerInfoStub = sandbox.stub(logger, 'info');
   });
 
   afterEach(() => {
-    loggerInfoStub.restore();
+    sandbox.restore();
   });
 
-  it('should return error when something went wrong during trying to find dataset', sandbox(function (done: Function) {
-    const findByNameStub = this.stub(DatasetsRepository, 'findByName').callsArgWithAsync(1, expectedError);
+  it('should return error when something went wrong during trying to find dataset', (done: Function) => {
+    const findByNameStub = sandbox.stub(DatasetsRepository, 'findByName').callsArgWithAsync(1, expectedError);
 
-    const lockStub = this.stub(DatasetsRepository, 'lock');
-    const unlockStub = this.stub(DatasetsRepository, 'unlock').callsArgWithAsync(1, null, {});
-    const removeByIdStub = this.stub(DatasetsRepository, 'removeById');
-    const findDefaultStub = this.stub(DatasetTransactionsRepository, 'findDefault');
-    const removeAllByDatasetStub = this.stub(DatasetTransactionsRepository, 'removeAllByDataset');
+    const lockStub = sandbox.stub(DatasetsRepository, 'lock');
+    const unlockStub = sandbox.stub(DatasetsRepository, 'unlock').callsArgWithAsync(1, null, {});
+    const removeByIdStub = sandbox.stub(DatasetsRepository, 'removeById');
+    const findDefaultStub = sandbox.stub(DatasetTransactionsRepository, 'findDefault');
+    const removeAllByDatasetStub = sandbox.stub(DatasetTransactionsRepository, 'removeAllByDataset');
 
     datasetsService.removeDatasetData(expectedDatasetPath, expectedOwnerUser, (error) => {
       expect(error).to.be.equal(expectedError);
@@ -121,16 +118,16 @@ describe('Remove Dataset Service', () => {
 
       return done();
     });
-  }));
+  });
 
-  it('should return error when remove non-existed dataset', sandbox(function (done: Function) {
-    const findByNameStub = this.stub(DatasetsRepository, 'findByName').callsArgWithAsync(1, null, null);
+  it('should return error when remove non-existed dataset', (done: Function) => {
+    const findByNameStub = sandbox.stub(DatasetsRepository, 'findByName').callsArgWithAsync(1, null, null);
 
-    const lockStub = this.stub(DatasetsRepository, 'lock');
-    const unlockStub = this.stub(DatasetsRepository, 'unlock').callsArgWithAsync(1, null, {});
-    const removeByIdStub = this.stub(DatasetsRepository, 'removeById');
-    const findDefaultStub = this.stub(DatasetTransactionsRepository, 'findDefault');
-    const removeAllByDatasetStub = this.stub(DatasetTransactionsRepository, 'removeAllByDataset');
+    const lockStub = sandbox.stub(DatasetsRepository, 'lock');
+    const unlockStub = sandbox.stub(DatasetsRepository, 'unlock').callsArgWithAsync(1, null, {});
+    const removeByIdStub = sandbox.stub(DatasetsRepository, 'removeById');
+    const findDefaultStub = sandbox.stub(DatasetTransactionsRepository, 'findDefault');
+    const removeAllByDatasetStub = sandbox.stub(DatasetTransactionsRepository, 'removeAllByDataset');
 
     datasetsService.removeDatasetData(expectedDatasetPath, expectedOwnerUser, (error) => {
       expect(error).to.be.equal(`Dataset was not found for the given name: ${expectedDatasetPath}`);
@@ -148,16 +145,16 @@ describe('Remove Dataset Service', () => {
 
       return done();
     });
-  }));
+  });
 
-  it('should return error when not owner tries to remove dataset', sandbox(function (done: Function) {
-    const findByNameStub = this.stub(DatasetsRepository, 'findByName').callsArgWithAsync(1, null, expectedRemovableDataset);
+  it('should return error when not owner tries to remove dataset', (done: Function) => {
+    const findByNameStub = sandbox.stub(DatasetsRepository, 'findByName').callsArgWithAsync(1, null, expectedRemovableDataset);
 
-    const lockStub = this.stub(DatasetsRepository, 'lock');
-    const unlockStub = this.stub(DatasetsRepository, 'unlock').callsArgWithAsync(1, null, {});
-    const removeByIdStub = this.stub(DatasetsRepository, 'removeById');
-    const findDefaultStub = this.stub(DatasetTransactionsRepository, 'findDefault');
-    const removeAllByDatasetStub = this.stub(DatasetTransactionsRepository, 'removeAllByDataset');
+    const lockStub = sandbox.stub(DatasetsRepository, 'lock');
+    const unlockStub = sandbox.stub(DatasetsRepository, 'unlock').callsArgWithAsync(1, null, {});
+    const removeByIdStub = sandbox.stub(DatasetsRepository, 'removeById');
+    const findDefaultStub = sandbox.stub(DatasetTransactionsRepository, 'findDefault');
+    const removeAllByDatasetStub = sandbox.stub(DatasetTransactionsRepository, 'removeAllByDataset');
 
     datasetsService.removeDatasetData(expectedDatasetPath, expectedNotOwnerUser, (error) => {
       expect(error).to.be.equal(`You cannot perform operations on dataset which is not created by you.`);
@@ -175,9 +172,9 @@ describe('Remove Dataset Service', () => {
 
       return done();
     });
-  }));
+  });
 
-  it('should return error when something went wrong during trying to lock dataset', function (done: Function) {
+  it('should return error when something went wrong during trying to lock dataset', (done: Function) => {
     const findByName = (datasetName: string, onDatasetFound: Function) => {
       return onDatasetFound(null, expectedRemovableDataset);
     };
@@ -191,11 +188,19 @@ describe('Remove Dataset Service', () => {
       return onDatasetFound(null, expectedRemovableDataset);
     };
 
-    const DatasetsRepositoryStub = _.defaults({findByName, lock, unlock, removeById: shouldNotCall}, datasetsRepository);
-    const DatasetTransactionsRepositoryStub = _.defaults({findDefault: shouldNotCall, removeAllByDataset: shouldNotCall}, transactionsRepository);
+    const DatasetsRepositoryStub = _.defaults({
+      findByName,
+      lock,
+      unlock,
+      removeById: shouldNotCall
+    }, datasetsRepository);
+    const DatasetTransactionsRepositoryStub = _.defaults({
+      findDefault: shouldNotCall,
+      removeAllByDataset: shouldNotCall
+    }, transactionsRepository);
     const datasetsService = proxyquire('../../ws.services/datasets.service', {
-      [datasetsRepositoryPath]: {DatasetsRepository: DatasetsRepositoryStub},
-      [transactionsRepositoryPath]: {DatasetTransactionsRepository: DatasetTransactionsRepositoryStub}
+      [datasetsRepositoryPath]: { DatasetsRepository: DatasetsRepositoryStub },
+      [transactionsRepositoryPath]: { DatasetTransactionsRepository: DatasetTransactionsRepositoryStub }
     });
 
     datasetsService.removeDatasetData(expectedDatasetPath, expectedOwnerUser, (error) => {
@@ -218,11 +223,19 @@ describe('Remove Dataset Service', () => {
       return onDatasetFound(null, expectedRemovableDataset);
     };
 
-    const DatasetsRepositoryStub = _.defaults({findByName, lock, unlock, removeById: shouldNotCall}, datasetsRepository);
-    const DatasetTransactionsRepositoryStub = _.defaults({findDefault: shouldNotCall, removeAllByDataset: shouldNotCall}, transactionsRepository);
+    const DatasetsRepositoryStub = _.defaults({
+      findByName,
+      lock,
+      unlock,
+      removeById: shouldNotCall
+    }, datasetsRepository);
+    const DatasetTransactionsRepositoryStub = _.defaults({
+      findDefault: shouldNotCall,
+      removeAllByDataset: shouldNotCall
+    }, transactionsRepository);
     const datasetsService = proxyquire('../../ws.services/datasets.service', {
-      [datasetsRepositoryPath]: {DatasetsRepository: DatasetsRepositoryStub},
-      [transactionsRepositoryPath]: {DatasetTransactionsRepository: DatasetTransactionsRepositoryStub}
+      [datasetsRepositoryPath]: { DatasetsRepository: DatasetsRepositoryStub },
+      [transactionsRepositoryPath]: { DatasetTransactionsRepository: DatasetTransactionsRepositoryStub }
     });
 
     datasetsService.removeDatasetData(expectedDatasetName, expectedOwnerUser, (error) => {
@@ -231,7 +244,7 @@ describe('Remove Dataset Service', () => {
     });
   });
 
-  it('should return error when something went wrong during trying to find default transaction for current dataset', function (done: Function) {
+  it('should return error when something went wrong during trying to find default transaction for current dataset', (done: Function) => {
     const findByName = (datasetName: string, onDatasetFound: Function) => {
       return onDatasetFound(null, expectedRemovableDataset);
     };
@@ -242,7 +255,7 @@ describe('Remove Dataset Service', () => {
     };
 
     const findDefault = (options: any, onTransactionFound: Function) => {
-      expect(options).to.deep.equal({datasetId: expectedRemovableDataset._id});
+      expect(options).to.deep.equal({ datasetId: expectedRemovableDataset._id });
       return onTransactionFound(expectedError);
     };
 
@@ -250,12 +263,20 @@ describe('Remove Dataset Service', () => {
       return onDatasetFound(null, expectedRemovableDataset);
     };
 
-    const DatasetsRepositoryStub = _.defaults({findByName, lock, unlock, removeById: shouldNotCall}, datasetsRepository);
-    const DatasetTransactionsRepositoryStub = _.defaults({findDefault, removeAllByDataset: shouldNotCall}, transactionsRepository);
+    const DatasetsRepositoryStub = _.defaults({
+      findByName,
+      lock,
+      unlock,
+      removeById: shouldNotCall
+    }, datasetsRepository);
+    const DatasetTransactionsRepositoryStub = _.defaults({
+      findDefault,
+      removeAllByDataset: shouldNotCall
+    }, transactionsRepository);
 
     const datasetsService = proxyquire('../../ws.services/datasets.service', {
-      [datasetsRepositoryPath]: {DatasetsRepository: DatasetsRepositoryStub},
-      [transactionsRepositoryPath]: {DatasetTransactionsRepository: DatasetTransactionsRepositoryStub}
+      [datasetsRepositoryPath]: { DatasetsRepository: DatasetsRepositoryStub },
+      [transactionsRepositoryPath]: { DatasetTransactionsRepository: DatasetTransactionsRepositoryStub }
     });
 
     datasetsService.removeDatasetData(expectedDatasetPath, expectedOwnerUser, (error) => {
@@ -264,7 +285,7 @@ describe('Remove Dataset Service', () => {
     });
   });
 
-  it('should return error when something went wrong during trying to unlock dataset', function (done: Function) {
+  it('should return error when something went wrong during trying to unlock dataset', (done: Function) => {
     const expectedTansactions = {
       _id: '581375e0c217aa1a36712f0e',
       commit: '1234567',
@@ -280,19 +301,19 @@ describe('Remove Dataset Service', () => {
     };
 
     const findDefault = (options, onTransactionFound: Function) => {
-      expect(options).to.deep.equal({datasetId: expectedRemovableDataset._id});
+      expect(options).to.deep.equal({ datasetId: expectedRemovableDataset._id });
       return onTransactionFound(null, expectedTansactions);
     };
 
-    const DatasetsRepositoryStub = _.defaults({unlock, removeById: shouldNotCall}, datasetsRepository);
+    const DatasetsRepositoryStub = _.defaults({ unlock, removeById: shouldNotCall }, datasetsRepository);
     const DatasetTransactionsRepositoryStub = _.defaults({
       findDefault,
       removeAllByDataset: shouldNotCall
     }, transactionsRepository);
 
     const datasetsService = proxyquire('../../ws.services/datasets.service', {
-      [datasetsRepositoryPath]: {DatasetsRepository: DatasetsRepositoryStub},
-      [transactionsRepositoryPath]: {DatasetTransactionsRepository: DatasetTransactionsRepositoryStub}
+      [datasetsRepositoryPath]: { DatasetsRepository: DatasetsRepositoryStub },
+      [transactionsRepositoryPath]: { DatasetTransactionsRepository: DatasetTransactionsRepositoryStub }
     });
 
     datasetsService.removeDatasetData(expectedDatasetName, expectedOwnerUser, (error) => {
@@ -301,7 +322,7 @@ describe('Remove Dataset Service', () => {
     });
   });
 
-  it('should return error when dataset has default version', function (done: Function) {
+  it('should return error when dataset has default version', (done: Function) => {
     const expectedTansactions = {
       _id: '581375e0c217aa1a36712f0e',
       commit: '1234567',
@@ -312,7 +333,7 @@ describe('Remove Dataset Service', () => {
     };
 
     const findDefault = (options: any, onTransactionFound: Function) => {
-      expect(options).to.deep.equal({datasetId: expectedRemovableDataset._id});
+      expect(options).to.deep.equal({ datasetId: expectedRemovableDataset._id });
       return onTransactionFound(null, expectedTansactions);
     };
 
@@ -320,12 +341,15 @@ describe('Remove Dataset Service', () => {
       return onDatasetFound(null, expectedRemovableDataset);
     };
 
-    const DatasetsRepositoryStub = _.defaults({removeById: shouldNotCall, unlock}, datasetsRepository);
-    const DatasetTransactionsRepositoryStub = _.defaults({findDefault, removeAllByDataset: shouldNotCall}, transactionsRepository);
+    const DatasetsRepositoryStub = _.defaults({ removeById: shouldNotCall, unlock }, datasetsRepository);
+    const DatasetTransactionsRepositoryStub = _.defaults({
+      findDefault,
+      removeAllByDataset: shouldNotCall
+    }, transactionsRepository);
 
     const datasetsService = proxyquire('../../ws.services/datasets.service', {
-      [datasetsRepositoryPath]: {DatasetsRepository: DatasetsRepositoryStub},
-      [transactionsRepositoryPath]: {DatasetTransactionsRepository: DatasetTransactionsRepositoryStub}
+      [datasetsRepositoryPath]: { DatasetsRepository: DatasetsRepositoryStub },
+      [transactionsRepositoryPath]: { DatasetTransactionsRepository: DatasetTransactionsRepositoryStub }
     });
 
     datasetsService.removeDatasetData(expectedDatasetName, expectedOwnerUser, (error) => {
@@ -334,14 +358,14 @@ describe('Remove Dataset Service', () => {
     });
   });
 
-  it('should return error when something went wrong during trying to remove all documents from collection datasetindexes', sandbox(function (done: Function) {
+  it('should return error when something went wrong during trying to remove all documents from collection datasetindexes', function (done: Function) {
     this.timeout(20000);
 
-    const lockStub = this.stub(DatasetsRepository, 'lock').callsArgWithAsync(1, null, expectedRemovableDataset);
-    const unlockStub = this.stub(DatasetsRepository, 'unlock').callsArgWithAsync(1, null, {});
-    const findDefaultStub = this.stub(DatasetTransactionsRepository, 'findDefault').callsArgWithAsync(1);
-    const findByNameStub = this.stub(DatasetsRepository, 'findByName').callsArgWithAsync(1, null, expectedRemovableDataset);
-    const removeByDatasetStub = this.stub(DatasetSchemaRepository, 'removeByDataset').callsArgWithAsync(1, expectedError);
+    const lockStub = sandbox.stub(DatasetsRepository, 'lock').callsArgWithAsync(1, null, expectedRemovableDataset);
+    const unlockStub = sandbox.stub(DatasetsRepository, 'unlock').callsArgWithAsync(1, null, {});
+    const findDefaultStub = sandbox.stub(DatasetTransactionsRepository, 'findDefault').callsArgWithAsync(1);
+    const findByNameStub = sandbox.stub(DatasetsRepository, 'findByName').callsArgWithAsync(1, null, expectedRemovableDataset);
+    const removeByDatasetStub = sandbox.stub(DatasetSchemaRepository, 'removeByDataset').callsArgWithAsync(1, expectedError);
 
     const datapointsRepository = {
       findIdsByDatasetAndLimit: _.noop,
@@ -350,8 +374,8 @@ describe('Remove Dataset Service', () => {
 
     const expectedDatapoints = [];
 
-    const findIdsByDatasetAndLimitStub = this.stub(datapointsRepository, 'findIdsByDatasetAndLimit').callsArgWithAsync(2, null, expectedDatapoints);
-    const datapointsVersionAgnosticStub = this.stub(DatapointsRepositoryFactory, 'versionAgnostic').returns(datapointsRepository);
+    const findIdsByDatasetAndLimitStub = sandbox.stub(datapointsRepository, 'findIdsByDatasetAndLimit').callsArgWithAsync(2, null, expectedDatapoints);
+    const datapointsVersionAgnosticStub = sandbox.stub(DatapointsRepositoryFactory, 'versionAgnostic').returns(datapointsRepository);
 
     datasetsService.removeDatasetData(expectedDatasetName, expectedOwnerUser, (error) => {
       expect(error).to.be.equal(expectedError);
@@ -362,7 +386,7 @@ describe('Remove Dataset Service', () => {
       sinon.assert.calledWith(lockStub, expectedDatasetName);
 
       sinon.assert.calledOnce(findDefaultStub);
-      sinon.assert.calledWith(findDefaultStub, {datasetId: expectedRemovableDataset._id});
+      sinon.assert.calledWith(findDefaultStub, { datasetId: expectedRemovableDataset._id });
 
       sinon.assert.calledOnce(findByNameStub);
       sinon.assert.calledWith(findByNameStub, expectedDatasetName);
@@ -378,15 +402,15 @@ describe('Remove Dataset Service', () => {
 
       return done();
     });
-  }));
+  });
 
-  it('should return error when something went wrong during trying to remove all transactions for current dataset', sandbox(function (done: Function) {
-    const lockedDataset = _.defaults({isLocked: true}, expectedRemovableDataset);
+  it('should return error when something went wrong during trying to remove all transactions for current dataset', (done: Function) => {
+    const lockedDataset = _.defaults({ isLocked: true }, expectedRemovableDataset);
 
-    const lockStub = this.stub(DatasetsRepository, 'lock').callsArgWithAsync(1, null, lockedDataset);
-    const unlockStub = this.stub(DatasetsRepository, 'unlock').callsArgWithAsync(1, null, {});
-    const findByNameStub = this.stub(DatasetsRepository, 'findByName').callsArgWithAsync(1, null, expectedRemovableDataset);
-    const removeByIdStub = this.stub(DatasetsRepository, 'removeById');
+    const lockStub = sandbox.stub(DatasetsRepository, 'lock').callsArgWithAsync(1, null, lockedDataset);
+    const unlockStub = sandbox.stub(DatasetsRepository, 'unlock').callsArgWithAsync(1, null, {});
+    const findByNameStub = sandbox.stub(DatasetsRepository, 'findByName').callsArgWithAsync(1, null, expectedRemovableDataset);
+    const removeByIdStub = sandbox.stub(DatasetsRepository, 'removeById');
     const conceptsRepository = {
       removeByDataset: _.noop
     };
@@ -398,24 +422,24 @@ describe('Remove Dataset Service', () => {
       removeByIds: _.noop
     };
 
-    const expectedDatapoints = [{_id: 'DATAPOINTID1'}, {_id: 'DATAPOINTID2'}];
+    const expectedDatapoints = [{ _id: 'DATAPOINTID1' }, { _id: 'DATAPOINTID2' }];
 
-    const conceptsRemoveByDatasetStub = this.stub(conceptsRepository, 'removeByDataset').callsArgWithAsync(1, null, {result: {n: 5}});
-    const entitiesRemoveByDatasetStub = this.stub(entitiesRepository, 'removeByDataset').callsArgWithAsync(1, null, {result: {n: 5}});
-    const removeByIdsStub = this.stub(datapointsRepository, 'removeByIds').callsArgWithAsync(1);
-    const findIdsByDatasetAndLimitStub = this.stub(datapointsRepository, 'findIdsByDatasetAndLimit');
+    const conceptsRemoveByDatasetStub = sandbox.stub(conceptsRepository, 'removeByDataset').callsArgWithAsync(1, null, { result: { n: 5 } });
+    const entitiesRemoveByDatasetStub = sandbox.stub(entitiesRepository, 'removeByDataset').callsArgWithAsync(1, null, { result: { n: 5 } });
+    const removeByIdsStub = sandbox.stub(datapointsRepository, 'removeByIds').callsArgWithAsync(1);
+    const findIdsByDatasetAndLimitStub = sandbox.stub(datapointsRepository, 'findIdsByDatasetAndLimit');
     findIdsByDatasetAndLimitStub
       .onFirstCall().callsArgWithAsync(2, null, expectedDatapoints)
       .onSecondCall().callsArgWithAsync(2, null, []);
 
-    const conceptsVersionAgnosticStub = this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns(conceptsRepository);
-    const entitiesVersionAgnosticStub = this.stub(EntitiesRepositoryFactory, 'versionAgnostic').returns(entitiesRepository);
-    const datapointsVersionAgnosticStub = this.stub(DatapointsRepositoryFactory, 'versionAgnostic').returns(datapointsRepository);
+    const conceptsVersionAgnosticStub = sandbox.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns(conceptsRepository);
+    const entitiesVersionAgnosticStub = sandbox.stub(EntitiesRepositoryFactory, 'versionAgnostic').returns(entitiesRepository);
+    const datapointsVersionAgnosticStub = sandbox.stub(DatapointsRepositoryFactory, 'versionAgnostic').returns(datapointsRepository);
 
-    const findDefaultStub = this.stub(DatasetTransactionsRepository, 'findDefault').callsArgWithAsync(1, null, null);
-    const removeAllByDatasetStub = this.stub(DatasetTransactionsRepository, 'removeAllByDataset').callsArgWithAsync(1, expectedError);
+    const findDefaultStub = sandbox.stub(DatasetTransactionsRepository, 'findDefault').callsArgWithAsync(1, null, null);
+    const removeAllByDatasetStub = sandbox.stub(DatasetTransactionsRepository, 'removeAllByDataset').callsArgWithAsync(1, expectedError);
 
-    const removeByDatasetStub = this.stub(DatasetSchemaRepository, 'removeByDataset').callsArgWithAsync(1, null);
+    const removeByDatasetStub = sandbox.stub(DatasetSchemaRepository, 'removeByDataset').callsArgWithAsync(1, null);
 
     datasetService.removeDatasetData(expectedDatasetName, expectedOwnerUser, (error: any) => {
       expect(error).to.be.equal(expectedError);
@@ -445,7 +469,7 @@ describe('Remove Dataset Service', () => {
       sinon.assert.calledWith(findIdsByDatasetAndLimitStub, expectedRemovableDataset._id, DATAPOINTS_TO_REMOVE_CHUNK_SIZE);
 
       sinon.assert.calledOnce(findDefaultStub);
-      sinon.assert.calledWith(findDefaultStub, {datasetId: expectedRemovableDataset._id});
+      sinon.assert.calledWith(findDefaultStub, { datasetId: expectedRemovableDataset._id });
 
       sinon.assert.calledOnce(removeAllByDatasetStub);
       sinon.assert.calledWith(removeAllByDatasetStub, expectedRemovableDataset._id);
@@ -461,13 +485,13 @@ describe('Remove Dataset Service', () => {
 
       return done();
     });
-  }));
+  });
 
-  it('should return error when something went wrong while trying to remove a dataset', sandbox(function (done: Function) {
-    this.stub(DatasetsRepository, 'removeById').callsArgWithAsync(1, expectedError);
-    this.stub(DatasetsRepository, 'unlock').callsArgWithAsync(1, null, expectedRemovableDataset);
-    this.stub(DatasetsRepository, 'lock').callsArgWithAsync(1, null, expectedRemovableDataset);
-    this.stub(DatasetsRepository, 'findByName').callsArgWithAsync(1, null, expectedRemovableDataset);
+  it('should return error when something went wrong while trying to remove a dataset', (done: Function) => {
+    sandbox.stub(DatasetsRepository, 'removeById').callsArgWithAsync(1, expectedError);
+    sandbox.stub(DatasetsRepository, 'unlock').callsArgWithAsync(1, null, expectedRemovableDataset);
+    sandbox.stub(DatasetsRepository, 'lock').callsArgWithAsync(1, null, expectedRemovableDataset);
+    sandbox.stub(DatasetsRepository, 'findByName').callsArgWithAsync(1, null, expectedRemovableDataset);
 
     const conceptsRepository = {
       removeByDataset: _.noop
@@ -480,19 +504,19 @@ describe('Remove Dataset Service', () => {
       removeByIds: _.noop
     };
 
-    this.stub(conceptsRepository, 'removeByDataset').callsArgWithAsync(1, null, {result: {n: 5}});
-    this.stub(entitiesRepository, 'removeByDataset').callsArgWithAsync(1, null, {result: {n: 5}});
-    this.stub(datapointsRepository, 'removeByIds').callsArgWithAsync(1);
-    this.stub(datapointsRepository, 'findIdsByDatasetAndLimit').callsArgWithAsync(2, null, []);
+    sandbox.stub(conceptsRepository, 'removeByDataset').callsArgWithAsync(1, null, { result: { n: 5 } });
+    sandbox.stub(entitiesRepository, 'removeByDataset').callsArgWithAsync(1, null, { result: { n: 5 } });
+    sandbox.stub(datapointsRepository, 'removeByIds').callsArgWithAsync(1);
+    sandbox.stub(datapointsRepository, 'findIdsByDatasetAndLimit').callsArgWithAsync(2, null, []);
 
-    this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns(conceptsRepository);
-    this.stub(EntitiesRepositoryFactory, 'versionAgnostic').returns(entitiesRepository);
-    this.stub(DatapointsRepositoryFactory, 'versionAgnostic').returns(datapointsRepository);
+    sandbox.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns(conceptsRepository);
+    sandbox.stub(EntitiesRepositoryFactory, 'versionAgnostic').returns(entitiesRepository);
+    sandbox.stub(DatapointsRepositoryFactory, 'versionAgnostic').returns(datapointsRepository);
 
-    this.stub(DatasetSchemaRepository, 'removeByDataset').callsArgWithAsync(1, null);
+    sandbox.stub(DatasetSchemaRepository, 'removeByDataset').callsArgWithAsync(1, null);
 
-    this.stub(DatasetTransactionsRepository, 'findDefault').callsArgWithAsync(1, null);
-    this.stub(DatasetTransactionsRepository, 'removeAllByDataset').callsArgWithAsync(1, null);
+    sandbox.stub(DatasetTransactionsRepository, 'findDefault').callsArgWithAsync(1, null);
+    sandbox.stub(DatasetTransactionsRepository, 'removeAllByDataset').callsArgWithAsync(1, null);
 
     datasetsService.removeDatasetData(expectedDatasetName, expectedOwnerUser, (error) => {
       expect(error).to.be.equal(expectedError);
@@ -500,13 +524,13 @@ describe('Remove Dataset Service', () => {
       sinon.assert.calledWithExactly(loggerInfoStub, `Removing datapoints`, 0);
       return done();
     });
-  }));
+  });
 
-  it('should remove dataset without errors', sandbox(function (done: Function): void {
-    this.stub(DatasetsRepository, 'removeById').callsArgWithAsync(1, null);
-    this.stub(DatasetsRepository, 'unlock').callsArgWithAsync(1, null, expectedRemovableDataset);
-    this.stub(DatasetsRepository, 'lock').callsArgWithAsync(1, null, expectedRemovableDataset);
-    this.stub(DatasetsRepository, 'findByName').callsArgWithAsync(1, null, expectedRemovableDataset);
+  it('should remove dataset without errors', (done: Function) => {
+    sandbox.stub(DatasetsRepository, 'removeById').callsArgWithAsync(1, null);
+    sandbox.stub(DatasetsRepository, 'unlock').callsArgWithAsync(1, null, expectedRemovableDataset);
+    sandbox.stub(DatasetsRepository, 'lock').callsArgWithAsync(1, null, expectedRemovableDataset);
+    sandbox.stub(DatasetsRepository, 'findByName').callsArgWithAsync(1, null, expectedRemovableDataset);
 
     const conceptsRepository = {
       removeByDataset: _.noop
@@ -519,19 +543,19 @@ describe('Remove Dataset Service', () => {
       removeByIds: _.noop
     };
 
-    this.stub(conceptsRepository, 'removeByDataset').callsArgWithAsync(1, null, {result: {n: 5}});
-    this.stub(entitiesRepository, 'removeByDataset').callsArgWithAsync(1, null, {result: {n: 5}});
-    this.stub(datapointsRepository, 'removeByIds').callsArgWithAsync(1);
-    this.stub(datapointsRepository, 'findIdsByDatasetAndLimit').callsArgWithAsync(2, null, []);
+    sandbox.stub(conceptsRepository, 'removeByDataset').callsArgWithAsync(1, null, { result: { n: 5 } });
+    sandbox.stub(entitiesRepository, 'removeByDataset').callsArgWithAsync(1, null, { result: { n: 5 } });
+    sandbox.stub(datapointsRepository, 'removeByIds').callsArgWithAsync(1);
+    sandbox.stub(datapointsRepository, 'findIdsByDatasetAndLimit').callsArgWithAsync(2, null, []);
 
-    this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns(conceptsRepository);
-    this.stub(EntitiesRepositoryFactory, 'versionAgnostic').returns(entitiesRepository);
-    this.stub(DatapointsRepositoryFactory, 'versionAgnostic').returns(datapointsRepository);
+    sandbox.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns(conceptsRepository);
+    sandbox.stub(EntitiesRepositoryFactory, 'versionAgnostic').returns(entitiesRepository);
+    sandbox.stub(DatapointsRepositoryFactory, 'versionAgnostic').returns(datapointsRepository);
 
-    this.stub(DatasetSchemaRepository, 'removeByDataset').callsArgWithAsync(1, null);
+    sandbox.stub(DatasetSchemaRepository, 'removeByDataset').callsArgWithAsync(1, null);
 
-    this.stub(DatasetTransactionsRepository, 'findDefault').callsArgWithAsync(1, null);
-    this.stub(DatasetTransactionsRepository, 'removeAllByDataset').callsArgWithAsync(1, null);
+    sandbox.stub(DatasetTransactionsRepository, 'findDefault').callsArgWithAsync(1, null);
+    sandbox.stub(DatasetTransactionsRepository, 'removeAllByDataset').callsArgWithAsync(1, null);
 
     datasetsService.removeDatasetData(expectedDatasetName, expectedOwnerUser, (error) => {
       expect(error).to.be.null;
@@ -539,38 +563,38 @@ describe('Remove Dataset Service', () => {
       sinon.assert.calledWithExactly(loggerInfoStub, `Removing datapoints`, 0);
       return done();
     });
-  }));
+  });
 
-  it('should fail removing datapoints on error', sandbox(function (done: Function) {
+  it('should fail removing datapoints on error', (done: Function) => {
 
     const expectedError = 'Boo!';
 
-    const lockStub = this.stub(DatasetsRepository, 'lock').callsFake(datasetsRepository.lock);
-    const unlockStub = this.stub(DatasetsRepository, 'unlock').callsFake(datasetsRepository.unlock);
-    const findByNameStub = this.stub(DatasetsRepository, 'findByName').callsFake(datasetsRepository.findByName);
-    const removeByIdStub = this.stub(DatasetsRepository, 'removeById').callsFake(datasetsRepository.removeById);
-    const findDefaultStub = this.stub(DatasetTransactionsRepository, 'findDefault').callsFake(transactionsRepository.findDefault);
-    const removeAllByDatasetStub = this.stub(DatasetTransactionsRepository, 'removeAllByDataset').callsFake(transactionsRepository.removeAllByDataset);
+    const lockStub = sandbox.stub(DatasetsRepository, 'lock').callsFake(datasetsRepository.lock);
+    const unlockStub = sandbox.stub(DatasetsRepository, 'unlock').callsFake(datasetsRepository.unlock);
+    const findByNameStub = sandbox.stub(DatasetsRepository, 'findByName').callsFake(datasetsRepository.findByName);
+    const removeByIdStub = sandbox.stub(DatasetsRepository, 'removeById').callsFake(datasetsRepository.removeById);
+    const findDefaultStub = sandbox.stub(DatasetTransactionsRepository, 'findDefault').callsFake(transactionsRepository.findDefault);
+    const removeAllByDatasetStub = sandbox.stub(DatasetTransactionsRepository, 'removeAllByDataset').callsFake(transactionsRepository.removeAllByDataset);
 
-    this.stub(ConceptsRepositoryFactory, 'versionAgnostic').callsFake(() => {
+    sandbox.stub(ConceptsRepositoryFactory, 'versionAgnostic').callsFake(() => {
       return {
         removeByDataset: (datasetId, done) => {
-          done(null, {result: {n: 12}});
+          done(null, { result: { n: 12 } });
         }
       };
     });
 
-    this.stub(EntitiesRepositoryFactory, 'versionAgnostic').callsFake(() => {
+    sandbox.stub(EntitiesRepositoryFactory, 'versionAgnostic').callsFake(() => {
       return {
         removeByDataset: (datasetId, done) => {
-          done(null, {result: {n: 42}});
+          done(null, { result: { n: 42 } });
         }
       };
     });
 
-    this.stub(DatasetSchemaRepository, 'removeByDataset').callsArgWithAsync(1);
+    sandbox.stub(DatasetSchemaRepository, 'removeByDataset').callsArgWithAsync(1);
 
-    this.stub(DatapointsRepositoryFactory, 'versionAgnostic').callsFake(() => {
+    sandbox.stub(DatapointsRepositoryFactory, 'versionAgnostic').callsFake(() => {
       return {
         findIdsByDatasetAndLimit: (datasetId, limit, done) => {
           done(expectedError);
@@ -578,7 +602,7 @@ describe('Remove Dataset Service', () => {
       };
     });
 
-    const loggerErrorStub = this.stub(logger, 'error');
+    const loggerErrorStub = sandbox.stub(logger, 'error');
 
     datasetsService.removeDatasetData(expectedDatasetName, expectedOwnerUser, (error) => {
       expect(error).to.equal(expectedError);
@@ -592,7 +616,7 @@ describe('Remove Dataset Service', () => {
       sinon.assert.notCalled(removeByIdStub);
 
       sinon.assert.calledOnce(findDefaultStub);
-      sinon.assert.calledWith(findDefaultStub, {datasetId: expectedRemovableDataset._id});
+      sinon.assert.calledWith(findDefaultStub, { datasetId: expectedRemovableDataset._id });
 
       sinon.assert.notCalled(removeAllByDatasetStub);
 
@@ -607,29 +631,29 @@ describe('Remove Dataset Service', () => {
 
       return done();
     });
-  }));
+  });
 
-  it('should consider datapoints removal successful if no more datapoints returned from db', sandbox(function (done: Function) {
+  it('should consider datapoints removal successful if no more datapoints returned from db', (done: Function) => {
 
-    const lockStub = this.stub(DatasetsRepository, 'lock').callsFake(datasetsRepository.lock);
-    const unlockStub = this.stub(DatasetsRepository, 'unlock').callsFake(datasetsRepository.unlock);
-    const findByNameStub = this.stub(DatasetsRepository, 'findByName').callsFake(datasetsRepository.findByName);
-    const removeByIdStub = this.stub(DatasetsRepository, 'removeById').callsFake(datasetsRepository.removeById);
-    const findDefaultStub = this.stub(DatasetTransactionsRepository, 'findDefault').callsFake(transactionsRepository.findDefault);
-    const removeAllByDatasetStub = this.stub(DatasetTransactionsRepository, 'removeAllByDataset').callsFake(transactionsRepository.removeAllByDataset);
+    const lockStub = sandbox.stub(DatasetsRepository, 'lock').callsFake(datasetsRepository.lock);
+    const unlockStub = sandbox.stub(DatasetsRepository, 'unlock').callsFake(datasetsRepository.unlock);
+    const findByNameStub = sandbox.stub(DatasetsRepository, 'findByName').callsFake(datasetsRepository.findByName);
+    const removeByIdStub = sandbox.stub(DatasetsRepository, 'removeById').callsFake(datasetsRepository.removeById);
+    const findDefaultStub = sandbox.stub(DatasetTransactionsRepository, 'findDefault').callsFake(transactionsRepository.findDefault);
+    const removeAllByDatasetStub = sandbox.stub(DatasetTransactionsRepository, 'removeAllByDataset').callsFake(transactionsRepository.removeAllByDataset);
 
-    this.stub(ConceptsRepositoryFactory, 'versionAgnostic').callsFake(() => {
+    sandbox.stub(ConceptsRepositoryFactory, 'versionAgnostic').callsFake(() => {
       return {
         removeByDataset: (datasetId, done) => {
-          done(null, {result: {n: 42}});
+          done(null, { result: { n: 42 } });
         }
       };
     });
 
-    this.stub(EntitiesRepositoryFactory, 'versionAgnostic').callsFake(() => {
+    sandbox.stub(EntitiesRepositoryFactory, 'versionAgnostic').callsFake(() => {
       return {
         removeByDataset: (datasetId, done) => {
-          done(null, {result: {n: 42}});
+          done(null, { result: { n: 42 } });
         }
       };
     });
@@ -640,13 +664,13 @@ describe('Remove Dataset Service', () => {
       }
     };
 
-    const findIdsByDatasetAndLimitStub = this.stub(datapointsRepository, 'findIdsByDatasetAndLimit').callsArgWithAsync(2, null, []);
+    const findIdsByDatasetAndLimitStub = sandbox.stub(datapointsRepository, 'findIdsByDatasetAndLimit').callsArgWithAsync(2, null, []);
 
-    this.stub(DatapointsRepositoryFactory, 'versionAgnostic').callsFake(() => {
+    sandbox.stub(DatapointsRepositoryFactory, 'versionAgnostic').callsFake(() => {
       return datapointsRepository;
     });
 
-    const removeByDatasetStub = this.stub(DatasetSchemaRepository, 'removeByDataset').callsArgWithAsync(1, null);
+    const removeByDatasetStub = sandbox.stub(DatasetSchemaRepository, 'removeByDataset').callsArgWithAsync(1, null);
 
     datasetsService.removeDatasetData(expectedDatasetName, expectedOwnerUser, (error) => {
       expect(error).to.not.exist;
@@ -666,10 +690,10 @@ describe('Remove Dataset Service', () => {
       sinon.assert.calledWith(findByNameStub, expectedDatasetName);
 
       sinon.assert.calledOnce(findDefaultStub);
-      sinon.assert.calledWith(findDefaultStub, {datasetId: expectedRemovableDataset._id});
+      sinon.assert.calledWith(findDefaultStub, { datasetId: expectedRemovableDataset._id });
 
       sinon.assert.calledOnce(removeAllByDatasetStub);
-      sinon.assert.calledWith(findDefaultStub, {datasetId: expectedRemovableDataset._id});
+      sinon.assert.calledWith(findDefaultStub, { datasetId: expectedRemovableDataset._id });
 
       sinon.assert.calledOnce(findIdsByDatasetAndLimitStub);
       sinon.assert.calledWith(findIdsByDatasetAndLimitStub, expectedRemovableDataset._id, 50000);
@@ -682,37 +706,37 @@ describe('Remove Dataset Service', () => {
 
       return done();
     });
-  }));
+  });
 
-  it('should respond with an error if it has happened during datapoints removal', sandbox(function (done: Function) {
+  it('should respond with an error if it has happened during datapoints removal', (done: Function) => {
 
     const expectedError = 'Boo!';
     const expectedFoundDatapointsIds = ['1', '2'];
 
-    const lockStub = this.stub(DatasetsRepository, 'lock').callsFake(datasetsRepository.lock);
-    const unlockStub = this.stub(DatasetsRepository, 'unlock').callsFake(datasetsRepository.unlock);
-    const findByNameStub = this.stub(DatasetsRepository, 'findByName').callsFake(datasetsRepository.findByName);
-    const removeByIdStub = this.stub(DatasetsRepository, 'removeById').callsFake(datasetsRepository.removeById);
-    const findDefaultStub = this.stub(DatasetTransactionsRepository, 'findDefault').callsFake(transactionsRepository.findDefault);
-    const removeAllByDatasetStub = this.stub(DatasetTransactionsRepository, 'removeAllByDataset').callsFake(transactionsRepository.removeAllByDataset);
+    const lockStub = sandbox.stub(DatasetsRepository, 'lock').callsFake(datasetsRepository.lock);
+    const unlockStub = sandbox.stub(DatasetsRepository, 'unlock').callsFake(datasetsRepository.unlock);
+    const findByNameStub = sandbox.stub(DatasetsRepository, 'findByName').callsFake(datasetsRepository.findByName);
+    const removeByIdStub = sandbox.stub(DatasetsRepository, 'removeById').callsFake(datasetsRepository.removeById);
+    const findDefaultStub = sandbox.stub(DatasetTransactionsRepository, 'findDefault').callsFake(transactionsRepository.findDefault);
+    const removeAllByDatasetStub = sandbox.stub(DatasetTransactionsRepository, 'removeAllByDataset').callsFake(transactionsRepository.removeAllByDataset);
 
-    this.stub(ConceptsRepositoryFactory, 'versionAgnostic').callsFake(() => {
+    sandbox.stub(ConceptsRepositoryFactory, 'versionAgnostic').callsFake(() => {
       return {
         removeByDataset: (datasetId, done) => {
-          done(null, {result: {n: 42}});
+          done(null, { result: { n: 42 } });
         }
       };
     });
 
-    this.stub(EntitiesRepositoryFactory, 'versionAgnostic').callsFake(() => {
+    sandbox.stub(EntitiesRepositoryFactory, 'versionAgnostic').callsFake(() => {
       return {
         removeByDataset: (datasetId, done) => {
-          done(null, {result: {n: 42}});
+          done(null, { result: { n: 42 } });
         }
       };
     });
 
-    this.stub(DatasetSchemaRepository, 'removeByDataset').callsArgWithAsync(1);
+    sandbox.stub(DatasetSchemaRepository, 'removeByDataset').callsArgWithAsync(1);
 
     const datapointsRepository = {
       findIdsByDatasetAndLimit: () => {
@@ -721,10 +745,10 @@ describe('Remove Dataset Service', () => {
       }
     };
 
-    const removeByIdsStub = this.stub(datapointsRepository, 'removeByIds').callsArgWithAsync(1, expectedError);
-    const findIdsByDatasetAndLimitStub = this.stub(datapointsRepository, 'findIdsByDatasetAndLimit').callsArgWithAsync(2, null, expectedFoundDatapointsIds);
+    const removeByIdsStub = sandbox.stub(datapointsRepository, 'removeByIds').callsArgWithAsync(1, expectedError);
+    const findIdsByDatasetAndLimitStub = sandbox.stub(datapointsRepository, 'findIdsByDatasetAndLimit').callsArgWithAsync(2, null, expectedFoundDatapointsIds);
 
-    this.stub(DatapointsRepositoryFactory, 'versionAgnostic').callsFake(() => {
+    sandbox.stub(DatapointsRepositoryFactory, 'versionAgnostic').callsFake(() => {
       return datapointsRepository;
     });
 
@@ -740,7 +764,7 @@ describe('Remove Dataset Service', () => {
       sinon.assert.notCalled(removeByIdStub);
 
       sinon.assert.calledOnce(findDefaultStub);
-      sinon.assert.calledWith(findDefaultStub, {datasetId: expectedRemovableDataset._id});
+      sinon.assert.calledWith(findDefaultStub, { datasetId: expectedRemovableDataset._id });
 
       sinon.assert.notCalled(removeAllByDatasetStub);
 
@@ -758,19 +782,19 @@ describe('Remove Dataset Service', () => {
 
       return done();
     });
-  }));
+  });
 
-  it('should respond with an error if it happens during concepts removal', sandbox(function (done: Function) {
+  it('should respond with an error if it happens during concepts removal', (done: Function) => {
     const expectedError = 'Concepts boo!';
 
-    const lockStub = this.stub(DatasetsRepository, 'lock').callsFake(datasetsRepository.lock);
-    const unlockStub = this.stub(DatasetsRepository, 'unlock').callsFake(datasetsRepository.unlock);
-    const findDefaultStub = this.stub(DatasetTransactionsRepository, 'findDefault').callsFake(transactionsRepository.findDefault);
-    const findByNameStub = this.stub(DatasetsRepository, 'findByName').callsFake(datasetsRepository.findByName);
+    const lockStub = sandbox.stub(DatasetsRepository, 'lock').callsFake(datasetsRepository.lock);
+    const unlockStub = sandbox.stub(DatasetsRepository, 'unlock').callsFake(datasetsRepository.unlock);
+    const findDefaultStub = sandbox.stub(DatasetTransactionsRepository, 'findDefault').callsFake(transactionsRepository.findDefault);
+    const findByNameStub = sandbox.stub(DatasetsRepository, 'findByName').callsFake(datasetsRepository.findByName);
 
-    this.stub(ConceptsRepositoryFactory, 'versionAgnostic').callsFake(() => {
+    sandbox.stub(ConceptsRepositoryFactory, 'versionAgnostic').callsFake(() => {
       return {
-        removeByDataset: this.stub().callsArgWithAsync(1, expectedError)
+        removeByDataset: sandbox.stub().callsArgWithAsync(1, expectedError)
       };
     });
 
@@ -781,7 +805,7 @@ describe('Remove Dataset Service', () => {
       sinon.assert.calledWith(lockStub, expectedDatasetName);
 
       sinon.assert.calledOnce(findDefaultStub);
-      sinon.assert.calledWith(findDefaultStub, {datasetId: expectedRemovableDataset._id});
+      sinon.assert.calledWith(findDefaultStub, { datasetId: expectedRemovableDataset._id });
 
       sinon.assert.calledOnce(findByNameStub);
       sinon.assert.calledWith(findByNameStub, expectedDatasetName);
@@ -791,23 +815,23 @@ describe('Remove Dataset Service', () => {
 
       return done();
     });
-  }));
+  });
 
-  it('should respond with an error if it happens during entities removal', sandbox(function (done: Function) {
+  it('should respond with an error if it happens during entities removal', (done: Function) => {
     const expectedError = 'Entities boo!';
 
-    const lockStub = this.stub(DatasetsRepository, 'lock').callsArgWithAsync(1, null, expectedRemovableDataset);
-    const unlockStub = this.stub(DatasetsRepository, 'unlock').callsArgWithAsync(1, null);
-    const findByNameStub = this.stub(DatasetsRepository, 'findByName').callsArgWithAsync(1, null, expectedRemovableDataset);
+    const lockStub = sandbox.stub(DatasetsRepository, 'lock').callsArgWithAsync(1, null, expectedRemovableDataset);
+    const unlockStub = sandbox.stub(DatasetsRepository, 'unlock').callsArgWithAsync(1, null);
+    const findByNameStub = sandbox.stub(DatasetsRepository, 'findByName').callsArgWithAsync(1, null, expectedRemovableDataset);
 
-    this.stub(DatasetTransactionsRepository, 'findDefault').callsArgWithAsync(1, null);
+    sandbox.stub(DatasetTransactionsRepository, 'findDefault').callsArgWithAsync(1, null);
 
-    this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({
-      removeByDataset: this.stub().callsArgWithAsync(1, null, {result: {n: 42}})
+    sandbox.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({
+      removeByDataset: sandbox.stub().callsArgWithAsync(1, null, { result: { n: 42 } })
     });
 
-    this.stub(EntitiesRepositoryFactory, 'versionAgnostic').returns({
-      removeByDataset: this.stub().callsArgWithAsync(1, expectedError)
+    sandbox.stub(EntitiesRepositoryFactory, 'versionAgnostic').returns({
+      removeByDataset: sandbox.stub().callsArgWithAsync(1, expectedError)
     });
 
     datasetsService.removeDatasetData(expectedDatasetName, expectedOwnerUser, (error) => {
@@ -824,26 +848,26 @@ describe('Remove Dataset Service', () => {
 
       done();
     });
-  }));
+  });
 
-  it('should remove datapoints recursively', sandbox(function (done: Function) {
+  it('should remove datapoints recursively', (done: Function) => {
     const expectedFoundDatapointsIds = ['1', '2'];
 
-    const lockStub = this.stub(DatasetsRepository, 'lock').callsFake(datasetsRepository.lock);
-    const findByNameStub = this.stub(DatasetsRepository, 'findByName').callsFake(datasetsRepository.findByName);
-    const removeByIdStub = this.stub(DatasetsRepository, 'removeById').callsFake(datasetsRepository.removeById);
-    const findDefaultStub = this.stub(DatasetTransactionsRepository, 'findDefault').callsFake(transactionsRepository.findDefault);
-    const removeAllByDatasetStub = this.stub(DatasetTransactionsRepository, 'removeAllByDataset').callsFake(transactionsRepository.removeAllByDataset);
+    const lockStub = sandbox.stub(DatasetsRepository, 'lock').callsFake(datasetsRepository.lock);
+    const findByNameStub = sandbox.stub(DatasetsRepository, 'findByName').callsFake(datasetsRepository.findByName);
+    const removeByIdStub = sandbox.stub(DatasetsRepository, 'removeById').callsFake(datasetsRepository.removeById);
+    const findDefaultStub = sandbox.stub(DatasetTransactionsRepository, 'findDefault').callsFake(transactionsRepository.findDefault);
+    const removeAllByDatasetStub = sandbox.stub(DatasetTransactionsRepository, 'removeAllByDataset').callsFake(transactionsRepository.removeAllByDataset);
 
-    this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({
-      removeByDataset: this.stub().callsArgWithAsync(1, null, {result: {n: 42}})
+    sandbox.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({
+      removeByDataset: sandbox.stub().callsArgWithAsync(1, null, { result: { n: 42 } })
     });
 
-    this.stub(EntitiesRepositoryFactory, 'versionAgnostic').returns({
-      removeByDataset: this.stub().callsArgWithAsync(1, null, {result: {n: 42}})
+    sandbox.stub(EntitiesRepositoryFactory, 'versionAgnostic').returns({
+      removeByDataset: sandbox.stub().callsArgWithAsync(1, null, { result: { n: 42 } })
     });
 
-    this.stub(DatasetSchemaRepository, 'removeByDataset').callsArgWithAsync(1);
+    sandbox.stub(DatasetSchemaRepository, 'removeByDataset').callsArgWithAsync(1);
 
     const datapointsRepository = {
       findIdsByDatasetAndLimit: () => {
@@ -852,14 +876,14 @@ describe('Remove Dataset Service', () => {
       }
     };
 
-    const removeByIdsStub = this.stub(datapointsRepository, 'removeByIds').callsArgWithAsync(1);
+    const removeByIdsStub = sandbox.stub(datapointsRepository, 'removeByIds').callsArgWithAsync(1);
 
-    const findIdsByDatasetAndLimitStub = this.stub(datapointsRepository, 'findIdsByDatasetAndLimit');
+    const findIdsByDatasetAndLimitStub = sandbox.stub(datapointsRepository, 'findIdsByDatasetAndLimit');
     findIdsByDatasetAndLimitStub
       .onFirstCall().callsArgWith(2, null, expectedFoundDatapointsIds)
       .onSecondCall().callsArgWith(2, null, []);
 
-    this.stub(DatapointsRepositoryFactory, 'versionAgnostic').callsFake(() => {
+    sandbox.stub(DatapointsRepositoryFactory, 'versionAgnostic').callsFake(() => {
       return datapointsRepository;
     });
 
@@ -882,7 +906,7 @@ describe('Remove Dataset Service', () => {
       sinon.assert.calledWith(removeByIdStub, expectedRemovableDataset._id);
 
       sinon.assert.calledOnce(findDefaultStub);
-      sinon.assert.calledWith(findDefaultStub, {datasetId: expectedRemovableDataset._id});
+      sinon.assert.calledWith(findDefaultStub, { datasetId: expectedRemovableDataset._id });
 
       sinon.assert.calledOnce(removeAllByDatasetStub);
       sinon.assert.calledWith(removeAllByDatasetStub, expectedRemovableDataset._id);
@@ -892,27 +916,27 @@ describe('Remove Dataset Service', () => {
 
       return done();
     });
-  }));
+  });
 
-  it('should track dataset removal statistics', sandbox(function (done: Function) {
+  it('should track dataset removal statistics', (done: Function) => {
     const expectedFoundDatapointsIds = ['1', '2'];
 
-    const lockStub = this.stub(DatasetsRepository, 'lock').callsFake(datasetsRepository.lock);
-    const unlockStub = this.stub(DatasetsRepository, 'unlock').callsFake(datasetsRepository.unlock);
-    const findByNameStub = this.stub(DatasetsRepository, 'findByName').callsFake(datasetsRepository.findByName);
-    const removeByIdStub = this.stub(DatasetsRepository, 'removeById').callsFake(datasetsRepository.removeById);
-    const findDefaultStub = this.stub(DatasetTransactionsRepository, 'findDefault').callsFake(transactionsRepository.findDefault);
-    const removeAllByDatasetStub = this.stub(DatasetTransactionsRepository, 'removeAllByDataset').callsFake(transactionsRepository.removeAllByDataset);
+    const lockStub = sandbox.stub(DatasetsRepository, 'lock').callsFake(datasetsRepository.lock);
+    const unlockStub = sandbox.stub(DatasetsRepository, 'unlock').callsFake(datasetsRepository.unlock);
+    const findByNameStub = sandbox.stub(DatasetsRepository, 'findByName').callsFake(datasetsRepository.findByName);
+    const removeByIdStub = sandbox.stub(DatasetsRepository, 'removeById').callsFake(datasetsRepository.removeById);
+    const findDefaultStub = sandbox.stub(DatasetTransactionsRepository, 'findDefault').callsFake(transactionsRepository.findDefault);
+    const removeAllByDatasetStub = sandbox.stub(DatasetTransactionsRepository, 'removeAllByDataset').callsFake(transactionsRepository.removeAllByDataset);
 
-    this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({
-      removeByDataset: this.stub().callsArgWithAsync(1, null, {result: {n: 12}})
+    sandbox.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({
+      removeByDataset: sandbox.stub().callsArgWithAsync(1, null, { result: { n: 12 } })
     });
 
-    this.stub(EntitiesRepositoryFactory, 'versionAgnostic').returns({
-      removeByDataset: this.stub().callsArgWithAsync(1, null, {result: {n: 42}})
+    sandbox.stub(EntitiesRepositoryFactory, 'versionAgnostic').returns({
+      removeByDataset: sandbox.stub().callsArgWithAsync(1, null, { result: { n: 42 } })
     });
 
-    this.stub(DatasetSchemaRepository, 'removeByDataset').callsArgWithAsync(1);
+    sandbox.stub(DatasetSchemaRepository, 'removeByDataset').callsArgWithAsync(1);
 
     const datapointsRepository = {
       findIdsByDatasetAndLimit: () => {
@@ -921,18 +945,19 @@ describe('Remove Dataset Service', () => {
       }
     };
 
-    this.stub(datapointsRepository, 'removeByIds').callsArgWithAsync(1);
+    sandbox.stub(datapointsRepository, 'removeByIds').callsArgWithAsync(1);
 
-    const findIdsByDatasetAndLimitStub = this.stub(datapointsRepository, 'findIdsByDatasetAndLimit');
+    const findIdsByDatasetAndLimitStub = sandbox.stub(datapointsRepository, 'findIdsByDatasetAndLimit');
     findIdsByDatasetAndLimitStub
       .onFirstCall().callsArgWith(2, null, expectedFoundDatapointsIds)
       .onSecondCall().callsArgWith(2, null, []);
 
-    this.stub(DatapointsRepositoryFactory, 'versionAgnostic').callsFake(() => {
+    sandbox.stub(DatapointsRepositoryFactory, 'versionAgnostic').callsFake(() => {
       return datapointsRepository;
     });
 
-    const clearStatsForDatasetStub = this.stub(DatasetTracker, 'clean').returns();
+    // const clearStatsForDatasetStub = sandbox.stub(DatasetTracker, 'clean').returns();
+    const clearStatsForDatasetStub = sandbox.stub(DatasetTracker, 'clean');
 
     datasetsService.removeDatasetData(expectedDatasetName, expectedOwnerUser, (error) => {
       expect(error).to.not.exist;
@@ -959,7 +984,7 @@ describe('Remove Dataset Service', () => {
         sinon.assert.calledWith(removeByIdStub, expectedRemovableDataset._id);
 
         sinon.assert.calledOnce(findDefaultStub);
-        sinon.assert.calledWith(findDefaultStub, {datasetId: expectedRemovableDataset._id});
+        sinon.assert.calledWith(findDefaultStub, { datasetId: expectedRemovableDataset._id });
 
         sinon.assert.calledOnce(removeAllByDatasetStub);
         sinon.assert.calledWith(removeAllByDatasetStub, expectedRemovableDataset._id);
@@ -971,9 +996,9 @@ describe('Remove Dataset Service', () => {
         return done();
       });
     });
-  }));
+  });
 
-  it('should grab information about dataset removal process', sandbox(function (done: Function) {
+  it('should grab information about dataset removal process', (done: Function) => {
     const datasetName = 'datasetName';
     const user = {
       _id: 'user42'
@@ -984,7 +1009,7 @@ describe('Remove Dataset Service', () => {
       createdBy: 'user42'
     };
 
-    const findByNameStub = this.stub(DatasetsRepository, 'findByName');
+    const findByNameStub = sandbox.stub(DatasetsRepository, 'findByName');
     findByNameStub.onFirstCall().callsArgWithAsync(1, null, dataset);
 
     DatasetTracker.track(datasetName);
@@ -1000,9 +1025,9 @@ describe('Remove Dataset Service', () => {
       DatasetTracker.clean(datasetName);
       done();
     });
-  }));
+  });
 
-  it('should respond with an error if it has happened while grabbing information about dataset removal process', sandbox(function (done: Function) {
+  it('should respond with an error if it has happened while grabbing information about dataset removal process', (done: Function) => {
     const datasetName = 'datasetName';
     const user = {
       _id: 'user42'
@@ -1010,7 +1035,7 @@ describe('Remove Dataset Service', () => {
 
     const expectedError = 'Boo!';
 
-    const findByNameStub = this.stub(DatasetsRepository, 'findByName').callsArgWithAsync(1, expectedError);
+    const findByNameStub = sandbox.stub(DatasetsRepository, 'findByName').callsArgWithAsync(1, expectedError);
 
     datasetsService.getRemovalStateForDataset(datasetName, user, (error, removalState) => {
       expect(removalState).to.not.exist;
@@ -1021,36 +1046,36 @@ describe('Remove Dataset Service', () => {
 
       done();
     });
-  }));
+  });
 
-  it(`shouldn't find dataset with versions: error while user searching`, sandbox(function(done: Function) {
+  it(`shouldn't find dataset with versions: error while user searching`, (done: Function) => {
     const expectedError = 'User search has failed';
-    this.stub(DatasetsRepository, 'findByUser').callsArgWithAsync(1, expectedError);
+    sandbox.stub(DatasetsRepository, 'findByUser').callsArgWithAsync(1, expectedError);
 
     datasetsService.findDatasetsWithVersions(null, (error) => {
       expect(error).to.equal(expectedError);
       done();
     });
-  }));
+  });
 
-  it(`shouldn't find dataset with versions: error while completed transactions searching`, sandbox(function(done: Function) {
+  it(`shouldn't find dataset with versions: error while completed transactions searching`, (done: Function) => {
     const datasets = [
-      {_id: 'ds1'},
-      {_id: 'ds2'}
+      { _id: 'ds1' },
+      { _id: 'ds2' }
     ];
 
     const expectedError = 'Completed transactions searching error';
 
-    this.stub(DatasetsRepository, 'findByUser').callsArgWithAsync(1, null, datasets);
-    this.stub(DatasetTransactionsRepository, 'findAllCompletedByDataset').callsArgWithAsync(1, expectedError);
+    sandbox.stub(DatasetsRepository, 'findByUser').callsArgWithAsync(1, null, datasets);
+    sandbox.stub(DatasetTransactionsRepository, 'findAllCompletedByDataset').callsArgWithAsync(1, expectedError);
 
     datasetsService.findDatasetsWithVersions(null, (error) => {
       expect(error).to.equal(expectedError);
       done();
     });
-  }));
+  });
 
-  it(`should find dataset with versions`, sandbox(function (done: Function) {
+  it(`should find dataset with versions`, (done: Function) => {
     const datasets = [
       {
         _id: 'ds1',
@@ -1087,8 +1112,8 @@ describe('Remove Dataset Service', () => {
       }
     ];
 
-    this.stub(DatasetsRepository, 'findByUser').callsArgWithAsync(1, null, datasets);
-    const findAllCompletedByDatasetStub = this.stub(DatasetTransactionsRepository, 'findAllCompletedByDataset');
+    sandbox.stub(DatasetsRepository, 'findByUser').callsArgWithAsync(1, null, datasets);
+    const findAllCompletedByDatasetStub = sandbox.stub(DatasetTransactionsRepository, 'findAllCompletedByDataset');
     findAllCompletedByDatasetStub
       .withArgs('ds1', sinon.match.func)
       .callsArgWithAsync(1, null, transactionsDs1);
@@ -1134,5 +1159,5 @@ describe('Remove Dataset Service', () => {
       ]);
       done();
     });
-  }));
+  });
 });

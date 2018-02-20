@@ -6,7 +6,7 @@ import * as Config from '../ws.config';
 import * as Routes from '../ws.routes';
 import { logger } from '../ws.config/log';
 
-let sandbox = sinon.sandbox.create();
+let sandbox = sinon.createSandbox();
 
 describe('Application', () => {
   afterEach(() => {

@@ -1,7 +1,6 @@
 import * as _ from 'lodash';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import * as sinonTest from 'sinon-test';
 import { expect } from 'chai';
 import { logger } from '../../../../ws.config/log';
 
@@ -11,7 +10,7 @@ import { constants } from '../../../../ws.utils/constants';
 
 import { createTranslationsUpdater } from '../../../../ws.import/incremental/translations/update-translations-flow';
 
-const sandbox = sinonTest.configureTest(sinon);
+const sandbox = sinon.createSandbox();
 
 const externalContext: any = {
   pathToLangDiff: path.resolve(__dirname, './fixtures/translations-diff.txt'),
@@ -59,7 +58,10 @@ const translations: any = {
 };
 
 describe('Translations processing (common flow for entities, datapoints and concepts)', () => {
-  it('should create new translations for an entity that was updated in scope of current transaction', sandbox(function (done: Function) {
+
+  afterEach(() => sandbox.restore());
+
+  it('should create new translations for an entity that was updated in scope of current transaction', (done: Function) => {
     const translationTarget: any = {
       _id: '_id',
       originId: 'originId',
@@ -67,36 +69,36 @@ describe('Translations processing (common flow for entities, datapoints and conc
     };
 
     const repoStub: any = {
-      findTargetForTranslation: this.stub().callsArgWithAsync(1, null, translationTarget),
+      findTargetForTranslation: sandbox.stub().callsArgWithAsync(1, null, translationTarget),
       create: _.noop,
       removeTranslation: _.noop,
-      addTranslation: this.stub().callsArgWith(1),
-      closeOneByQuery: this.spy()
+      addTranslation: sandbox.stub().callsArgWith(1),
+      closeOneByQuery: sandbox.spy()
     };
 
     const translationTargetQuery = 'FAKE QUERY (AND OF COURSE NOT VALID MONGO QUERY)';
 
     const entitiesPlugin: any = {
       dataType: constants.ENTITIES,
-      transformStreamBeforeActionSegregation: this.stub().returnsArg(0),
-      transformStreamBeforeChangesApplied: this.stub().returnsArg(0),
-      enrichContext: this.stub().returnsArg(2),
-      processTranslationBeforeUpdate: this.stub().returnsArg(0),
-      makeQueryToFetchTranslationTarget: this.stub().returns(translationTargetQuery),
+      transformStreamBeforeActionSegregation: sandbox.stub().returnsArg(0),
+      transformStreamBeforeChangesApplied: sandbox.stub().returnsArg(0),
+      enrichContext: sandbox.stub().returnsArg(2),
+      processTranslationBeforeUpdate: sandbox.stub().returnsArg(0),
+      makeQueryToFetchTranslationTarget: sandbox.stub().returns(translationTargetQuery),
       makeTranslationTargetBasedOnItsClosedVersion: _.noop,
       repositoryFactory: {
-        currentVersion: this.stub().returns(repoStub),
-        latestVersion: this.stub().returns(repoStub)
+        currentVersion: sandbox.stub().returns(repoStub),
+        latestVersion: sandbox.stub().returns(repoStub)
       }
     };
 
     const originalReadTextFileByLineAsJsonStream = fileUtils.readTextFileByLineAsJsonStream.bind(fileUtils);
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToFile) => {
+    sandbox.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToFile) => {
       return originalReadTextFileByLineAsJsonStream(pathToFile)
         .filter((obj) => obj.metadata.action === 'create');
     });
 
-    const loggerInfoStub = this.stub(logger, 'info');
+    const loggerInfoStub = sandbox.stub(logger, 'info');
 
     // ACT -------------------------------------------------------------------------------------------------------------
 
@@ -112,7 +114,7 @@ describe('Translations processing (common flow for entities, datapoints and conc
       sinon.assert.callCount(repoStub.addTranslation, 5);
 
       translations.created.forEach((translation) => {
-        sinon.assert.calledWith(repoStub.addTranslation, {id: translationTarget._id, language: 'nl-nl', translation});
+        sinon.assert.calledWith(repoStub.addTranslation, { id: translationTarget._id, language: 'nl-nl', translation });
       });
 
       sinon.assert.calledWith(repoStub.findTargetForTranslation, translationTargetQuery);
@@ -140,22 +142,22 @@ describe('Translations processing (common flow for entities, datapoints and conc
       sinon.assert.notCalled(repoStub.closeOneByQuery);
       done();
     });
-  }));
+  });
 
-  it('should create new translations for an entity that was not changed in scope of the current transaction (only translations for it were updated)', sandbox(function (done: Function) {
+  it('should create new translations for an entity that was not changed in scope of the current transaction (only translations for it were updated)', (done: Function) => {
     const translationTarget: any = {
       _id: '_id',
       originId: 'originId',
       from: 42424242
     };
 
-    const closeOneByQueryStub = this.stub();
+    const closeOneByQueryStub = sandbox.stub();
 
     const repoStub: any = {
-      findTargetForTranslation: this.stub().callsArgWithAsync(1, null, translationTarget),
-      create: this.stub().callsArgAsync(1),
+      findTargetForTranslation: sandbox.stub().callsArgWithAsync(1, null, translationTarget),
+      create: sandbox.stub().callsArgAsync(1),
       removeTranslation: _.noop,
-      addTranslation: this.stub().callsArgAsync(1),
+      addTranslation: sandbox.stub().callsArgAsync(1),
       closeOneByQuery: (query, callback) => {
         closeOneByQueryStub(query);
         callback(null, {});
@@ -166,26 +168,26 @@ describe('Translations processing (common flow for entities, datapoints and conc
 
     const entitiesPlugin: any = {
       dataType: constants.ENTITIES,
-      transformStreamBeforeActionSegregation: this.stub().returnsArg(0),
-      transformStreamBeforeChangesApplied: this.stub().returnsArg(0),
-      enrichContext: this.stub().returnsArg(2),
-      processTranslationBeforeUpdate: this.stub().returnsArg(0),
-      makeQueryToFetchTranslationTarget: this.stub().returns(translationTargetQuery),
-      makeTranslationTargetBasedOnItsClosedVersion: this.stub().returnsArg(0),
+      transformStreamBeforeActionSegregation: sandbox.stub().returnsArg(0),
+      transformStreamBeforeChangesApplied: sandbox.stub().returnsArg(0),
+      enrichContext: sandbox.stub().returnsArg(2),
+      processTranslationBeforeUpdate: sandbox.stub().returnsArg(0),
+      makeQueryToFetchTranslationTarget: sandbox.stub().returns(translationTargetQuery),
+      makeTranslationTargetBasedOnItsClosedVersion: sandbox.stub().returnsArg(0),
       repositoryFactory: {
-        currentVersion: this.stub().returns(repoStub),
-        latestVersion: this.stub().returns(repoStub)
+        currentVersion: sandbox.stub().returns(repoStub),
+        latestVersion: sandbox.stub().returns(repoStub)
       }
     };
 
     const originalReadTextFileByLineAsJsonStream = fileUtils.readTextFileByLineAsJsonStream.bind(fileUtils);
 
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToFile) => {
+    sandbox.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToFile) => {
       return originalReadTextFileByLineAsJsonStream(pathToFile)
         .filter((obj) => obj.metadata.action === 'create');
     });
 
-    const loggerInfoStub = this.stub(logger, 'info');
+    const loggerInfoStub = sandbox.stub(logger, 'info');
 
     // ACT -------------------------------------------------------------------------------------------------------------
 
@@ -200,7 +202,7 @@ describe('Translations processing (common flow for entities, datapoints and conc
       sinon.assert.callCount(closeOneByQueryStub, 5);
 
       translations.created.forEach((translation) => {
-        sinon.assert.calledWith(repoStub.create, {languages: {'nl-nl': translation}});
+        sinon.assert.calledWith(repoStub.create, { languages: { 'nl-nl': translation } });
       });
 
       sinon.assert.calledWith(repoStub.findTargetForTranslation, translationTargetQuery);
@@ -220,9 +222,9 @@ describe('Translations processing (common flow for entities, datapoints and conc
 
       done();
     });
-  }));
+  });
 
-  it('stops translations processing if error occurred while creating new version of translations target with translations added', sandbox(function (done: Function) {
+  it('stops translations processing if error occurred while creating new version of translations target with translations added', (done: Function) => {
     const translationTarget: any = {
       _id: '_id',
       originId: 'originId',
@@ -232,30 +234,30 @@ describe('Translations processing (common flow for entities, datapoints and conc
     const expectedError = 'Boo!';
 
     const repoStub: any = {
-      findTargetForTranslation: this.stub().callsArgWithAsync(1, null, translationTarget),
+      findTargetForTranslation: sandbox.stub().callsArgWithAsync(1, null, translationTarget),
       create: _.noop,
       removeTranslation: _.noop,
       addTranslation: _.noop,
-      closeOneByQuery: this.stub().callsArgWith(1, expectedError)
+      closeOneByQuery: sandbox.stub().callsArgWith(1, expectedError)
     };
 
     const entitiesPlugin: any = {
       dataType: constants.ENTITIES,
-      makeQueryToFetchTranslationTarget: this.stub().returns('FAKE QUERY (AND OF COURSE NOT VALID MONGO QUERY)'),
-      makeTranslationTargetBasedOnItsClosedVersion: this.stub().returnsArg(0),
+      makeQueryToFetchTranslationTarget: sandbox.stub().returns('FAKE QUERY (AND OF COURSE NOT VALID MONGO QUERY)'),
+      makeTranslationTargetBasedOnItsClosedVersion: sandbox.stub().returnsArg(0),
       repositoryFactory: {
-        currentVersion: this.stub().returns(repoStub),
-        latestVersion: this.stub().returns(repoStub)
+        currentVersion: sandbox.stub().returns(repoStub),
+        latestVersion: sandbox.stub().returns(repoStub)
       }
     };
 
     const originalReadTextFileByLineAsJsonStream = fileUtils.readTextFileByLineAsJsonStream.bind(fileUtils);
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToFile) => {
+    sandbox.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToFile) => {
       return originalReadTextFileByLineAsJsonStream(pathToFile)
         .filter((obj) => obj.metadata.action === 'create');
     });
 
-    const loggerInfoStub = this.stub(logger, 'info');
+    const loggerInfoStub = sandbox.stub(logger, 'info');
 
     createTranslationsUpdater(entitiesPlugin, externalContext, (error: string, context: any) => {
       expect(error).to.deep.equal([expectedError]);
@@ -264,9 +266,9 @@ describe('Translations processing (common flow for entities, datapoints and conc
       sinon.assert.calledWithExactly(loggerInfoStub, `Start translations updating process for:`, entitiesPlugin.dataType);
       done();
     });
-  }));
+  });
 
-  it('stops translations processing translation target was not found, simply because we cannot translate NON EXISTENT THING', sandbox(function (done: Function) {
+  it('stops translations processing translation target was not found, simply because we cannot translate NON EXISTENT THING', (done: Function) => {
     const translationTarget: any = {
       _id: '_id',
       originId: 'originId',
@@ -274,31 +276,31 @@ describe('Translations processing (common flow for entities, datapoints and conc
     };
 
     const repoStub: any = {
-      findTargetForTranslation: this.stub().callsArgWithAsync(1, null, translationTarget),
-      create: this.spy(),
-      removeTranslation: this.spy(),
-      addTranslation: this.spy(),
-      closeOneByQuery: this.stub().callsArgWith(1, null, null)
+      findTargetForTranslation: sandbox.stub().callsArgWithAsync(1, null, translationTarget),
+      create: sandbox.spy(),
+      removeTranslation: sandbox.spy(),
+      addTranslation: sandbox.spy(),
+      closeOneByQuery: sandbox.stub().callsArgWith(1, null, null)
     };
 
     const entitiesPlugin: any = {
       dataType: constants.ENTITIES,
-      makeQueryToFetchTranslationTarget: this.stub().returns('FAKE QUERY (AND OF COURSE NOT VALID MONGO QUERY)'),
-      makeTranslationTargetBasedOnItsClosedVersion: this.stub().returnsArg(0),
+      makeQueryToFetchTranslationTarget: sandbox.stub().returns('FAKE QUERY (AND OF COURSE NOT VALID MONGO QUERY)'),
+      makeTranslationTargetBasedOnItsClosedVersion: sandbox.stub().returnsArg(0),
       repositoryFactory: {
-        currentVersion: this.stub().returns(repoStub),
-        latestVersion: this.stub().returns(repoStub)
+        currentVersion: sandbox.stub().returns(repoStub),
+        latestVersion: sandbox.stub().returns(repoStub)
       }
     };
 
     const originalReadTextFileByLineAsJsonStream = fileUtils.readTextFileByLineAsJsonStream.bind(fileUtils);
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToFile) => {
+    sandbox.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToFile) => {
       return originalReadTextFileByLineAsJsonStream(pathToFile)
         .filter((obj) => obj.metadata.action === 'create');
     });
 
-    const loggerInfoStub = this.stub(logger, 'info');
-    const loggerWarnStub = this.stub(logger, 'warn');
+    const loggerInfoStub = sandbox.stub(logger, 'info');
+    const loggerWarnStub = sandbox.stub(logger, 'warn');
 
     createTranslationsUpdater(entitiesPlugin, externalContext, (error: string, context: any) => {
       expect(error).to.not.exist;
@@ -315,36 +317,36 @@ describe('Translations processing (common flow for entities, datapoints and conc
       sinon.assert.calledWithExactly(loggerWarnStub, 'Translation target was not closed - VERY suspicious at this point of translations update flow!');
       done();
     });
-  }));
+  });
 
-  it('stops translations processing when error occurred during translation target search', sandbox(function (done: Function) {
+  it('stops translations processing when error occurred during translation target search', (done: Function) => {
     const expectedError = 'Boo!';
 
     const repoStub: any = {
-      findTargetForTranslation: this.stub().callsArgWithAsync(1, expectedError),
-      create: this.spy(),
-      removeTranslation: this.spy(),
-      addTranslation: this.spy(),
-      closeOneByQuery: this.spy()
+      findTargetForTranslation: sandbox.stub().callsArgWithAsync(1, expectedError),
+      create: sandbox.spy(),
+      removeTranslation: sandbox.spy(),
+      addTranslation: sandbox.spy(),
+      closeOneByQuery: sandbox.spy()
     };
 
     const entitiesPlugin: any = {
       dataType: constants.ENTITIES,
-      makeQueryToFetchTranslationTarget: this.stub().returns('FAKE QUERY (AND OF COURSE NOT VALID MONGO QUERY)'),
+      makeQueryToFetchTranslationTarget: sandbox.stub().returns('FAKE QUERY (AND OF COURSE NOT VALID MONGO QUERY)'),
       makeTranslationTargetBasedOnItsClosedVersion: _.noop,
       repositoryFactory: {
-        currentVersion: this.stub().returns(repoStub),
-        latestVersion: this.stub().returns(repoStub)
+        currentVersion: sandbox.stub().returns(repoStub),
+        latestVersion: sandbox.stub().returns(repoStub)
       }
     };
 
     const originalReadTextFileByLineAsJsonStream = fileUtils.readTextFileByLineAsJsonStream.bind(fileUtils);
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToFile) => {
+    sandbox.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToFile) => {
       return originalReadTextFileByLineAsJsonStream(pathToFile)
         .filter((obj) => obj.metadata.action === 'create');
     });
 
-    const loggerInfoStub = this.stub(logger, 'info');
+    const loggerInfoStub = sandbox.stub(logger, 'info');
 
     createTranslationsUpdater(entitiesPlugin, externalContext, (error: string, context: any) => {
       expect(error).to.deep.equal([expectedError]);
@@ -359,34 +361,34 @@ describe('Translations processing (common flow for entities, datapoints and conc
 
       done();
     });
-  }));
+  });
 
-  it('stops translations processing if it is impossible to find a translation target', sandbox(function (done: Function) {
+  it('stops translations processing if it is impossible to find a translation target', (done: Function) => {
     const repoStub: any = {
-      findTargetForTranslation: this.stub().callsArgWithAsync(1, null, null),
-      create: this.spy(),
-      removeTranslation: this.spy(),
-      addTranslation: this.spy(),
-      closeOneByQuery: this.spy()
+      findTargetForTranslation: sandbox.stub().callsArgWithAsync(1, null, null),
+      create: sandbox.spy(),
+      removeTranslation: sandbox.spy(),
+      addTranslation: sandbox.spy(),
+      closeOneByQuery: sandbox.spy()
     };
 
     const entitiesPlugin: any = {
       dataType: constants.ENTITIES,
-      makeQueryToFetchTranslationTarget: this.stub().returns('FAKE QUERY (AND OF COURSE NOT VALID MONGO QUERY)'),
+      makeQueryToFetchTranslationTarget: sandbox.stub().returns('FAKE QUERY (AND OF COURSE NOT VALID MONGO QUERY)'),
       makeTranslationTargetBasedOnItsClosedVersion: _.noop,
       repositoryFactory: {
-        currentVersion: this.stub().returns(repoStub),
-        latestVersion: this.stub().returns(repoStub)
+        currentVersion: sandbox.stub().returns(repoStub),
+        latestVersion: sandbox.stub().returns(repoStub)
       }
     };
 
     const originalReadTextFileByLineAsJsonStream = fileUtils.readTextFileByLineAsJsonStream.bind(fileUtils);
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToFile) => {
+    sandbox.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToFile) => {
       return originalReadTextFileByLineAsJsonStream(pathToFile)
         .filter((obj) => obj.metadata.action === 'create');
     });
 
-    const loggerInfoStub = this.stub(logger, 'info');
+    const loggerInfoStub = sandbox.stub(logger, 'info');
 
     createTranslationsUpdater(entitiesPlugin, externalContext, (error: string, context: any) => {
       expect(error).to.not.exist;
@@ -401,9 +403,9 @@ describe('Translations processing (common flow for entities, datapoints and conc
 
       done();
     });
-  }));
+  });
 
-  it('should remove translations for an entity that was removed in scope of current transaction', sandbox(function (done: Function) {
+  it('should remove translations for an entity that was removed in scope of current transaction', (done: Function) => {
     const translationTarget: any = {
       _id: '_id',
       originId: 'originId',
@@ -411,34 +413,34 @@ describe('Translations processing (common flow for entities, datapoints and conc
     };
 
     const repoStub: any = {
-      findTargetForTranslation: this.stub().callsArgWithAsync(1, null, translationTarget),
-      create: this.spy(),
-      removeTranslation: this.stub().callsArgWithAsync(1),
-      addTranslation: this.stub().callsArgWith(1),
-      closeOneByQuery: this.spy()
+      findTargetForTranslation: sandbox.stub().callsArgWithAsync(1, null, translationTarget),
+      create: sandbox.spy(),
+      removeTranslation: sandbox.stub().callsArgWithAsync(1),
+      addTranslation: sandbox.stub().callsArgWith(1),
+      closeOneByQuery: sandbox.spy()
     };
 
     const translationTargetQuery = 'FAKE QUERY (AND OF COURSE NOT VALID MONGO QUERY)';
 
     const entitiesPlugin: any = {
       dataType: constants.ENTITIES,
-      processTranslationBeforeUpdate: this.stub().returnsArg(0),
-      enrichContext: this.stub().returnsArg(2),
-      makeQueryToFetchTranslationTarget: this.stub().returns(translationTargetQuery),
-      makeTranslationTargetBasedOnItsClosedVersion: this.spy(),
+      processTranslationBeforeUpdate: sandbox.stub().returnsArg(0),
+      enrichContext: sandbox.stub().returnsArg(2),
+      makeQueryToFetchTranslationTarget: sandbox.stub().returns(translationTargetQuery),
+      makeTranslationTargetBasedOnItsClosedVersion: sandbox.spy(),
       repositoryFactory: {
-        currentVersion: this.stub().returns(repoStub),
-        latestVersion: this.stub().returns(repoStub)
+        currentVersion: sandbox.stub().returns(repoStub),
+        latestVersion: sandbox.stub().returns(repoStub)
       }
     };
 
     const originalReadTextFileByLineAsJsonStream = fileUtils.readTextFileByLineAsJsonStream.bind(fileUtils);
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToFile) => {
+    sandbox.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToFile) => {
       return originalReadTextFileByLineAsJsonStream(pathToFile)
         .filter((obj) => obj.metadata.action === 'remove');
     });
 
-    const loggerInfoStub = this.stub(logger, 'info');
+    const loggerInfoStub = sandbox.stub(logger, 'info');
 
     // ACT -------------------------------------------------------------------------------------------------------------
 
@@ -451,7 +453,7 @@ describe('Translations processing (common flow for entities, datapoints and conc
       sinon.assert.calledOnce(repoStub.removeTranslation);
 
       sinon.assert.calledWith(entitiesPlugin.repositoryFactory.latestVersion, externalContext.datasetId, externalContext.version);
-      sinon.assert.calledWith(repoStub.removeTranslation, {originId: translationTarget.originId, language: 'nl-nl'});
+      sinon.assert.calledWith(repoStub.removeTranslation, { originId: translationTarget.originId, language: 'nl-nl' });
       sinon.assert.calledWith(repoStub.findTargetForTranslation, translationTargetQuery);
 
       sinon.assert.calledWith(entitiesPlugin.enrichContext, {
@@ -476,9 +478,9 @@ describe('Translations processing (common flow for entities, datapoints and conc
       sinon.assert.calledWithExactly(loggerInfoStub, `Start translations updating process for:`, entitiesPlugin.dataType);
       done();
     });
-  }));
+  });
 
-  it('should remove translations for an entity that was removed not in scope of the current transaction', sandbox(function (done: Function) {
+  it('should remove translations for an entity that was removed not in scope of the current transaction', (done: Function) => {
     const translationTarget: any = {
       _id: '_id',
       originId: 'originId',
@@ -493,34 +495,34 @@ describe('Translations processing (common flow for entities, datapoints and conc
     };
 
     const repoStub: any = {
-      findTargetForTranslation: this.stub().callsArgWithAsync(1, null, translationTarget),
-      create: this.stub().callsArgAsync(1),
-      removeTranslation: this.spy(),
-      addTranslation: this.stub().callsArgWith(1),
-      closeOneByQuery: this.stub().callsArgWithAsync(1, null, closedTranslationTarget)
+      findTargetForTranslation: sandbox.stub().callsArgWithAsync(1, null, translationTarget),
+      create: sandbox.stub().callsArgAsync(1),
+      removeTranslation: sandbox.spy(),
+      addTranslation: sandbox.stub().callsArgWith(1),
+      closeOneByQuery: sandbox.stub().callsArgWithAsync(1, null, closedTranslationTarget)
     };
 
     const translationTargetQuery = 'FAKE QUERY (AND OF COURSE NOT VALID MONGO QUERY)';
 
     const entitiesPlugin: any = {
       dataType: constants.ENTITIES,
-      processTranslationBeforeUpdate: this.stub().returnsArg(0),
-      enrichContext: this.stub().returnsArg(2),
-      makeQueryToFetchTranslationTarget: this.stub().returns(translationTargetQuery),
-      makeTranslationTargetBasedOnItsClosedVersion: this.stub().returnsArg(0),
+      processTranslationBeforeUpdate: sandbox.stub().returnsArg(0),
+      enrichContext: sandbox.stub().returnsArg(2),
+      makeQueryToFetchTranslationTarget: sandbox.stub().returns(translationTargetQuery),
+      makeTranslationTargetBasedOnItsClosedVersion: sandbox.stub().returnsArg(0),
       repositoryFactory: {
-        currentVersion: this.stub().returns(repoStub),
-        latestVersion: this.stub().returns(repoStub)
+        currentVersion: sandbox.stub().returns(repoStub),
+        latestVersion: sandbox.stub().returns(repoStub)
       }
     };
 
     const originalReadTextFileByLineAsJsonStream = fileUtils.readTextFileByLineAsJsonStream.bind(fileUtils);
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToFile) => {
+    sandbox.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToFile) => {
       return originalReadTextFileByLineAsJsonStream(pathToFile)
         .filter((obj) => obj.metadata.action === 'remove');
     });
 
-    const loggerInfoStub = this.stub(logger, 'info');
+    const loggerInfoStub = sandbox.stub(logger, 'info');
 
     // ACT -------------------------------------------------------------------------------------------------------------
 
@@ -558,9 +560,9 @@ describe('Translations processing (common flow for entities, datapoints and conc
       sinon.assert.calledWithExactly(loggerInfoStub, `Start translations updating process for:`, entitiesPlugin.dataType);
       done();
     });
-  }));
+  });
 
-  it('should not remove translations from target when error occurred during target searching', sandbox(function (done: Function) {
+  it('should not remove translations from target when error occurred during target searching', (done: Function) => {
     const translationTarget: any = {
       _id: '_id',
       originId: 'originId',
@@ -569,34 +571,34 @@ describe('Translations processing (common flow for entities, datapoints and conc
 
     const expectedError = 'Boo!';
     const repoStub: any = {
-      findTargetForTranslation: this.stub().callsArgWithAsync(1, null, translationTarget),
-      create: this.spy(),
-      removeTranslation: this.spy(),
-      addTranslation: this.spy(),
-      closeOneByQuery: this.stub().callsArgWithAsync(1, expectedError)
+      findTargetForTranslation: sandbox.stub().callsArgWithAsync(1, null, translationTarget),
+      create: sandbox.spy(),
+      removeTranslation: sandbox.spy(),
+      addTranslation: sandbox.spy(),
+      closeOneByQuery: sandbox.stub().callsArgWithAsync(1, expectedError)
     };
 
     const translationTargetQuery = 'FAKE QUERY (AND OF COURSE NOT VALID MONGO QUERY)';
 
     const entitiesPlugin: any = {
       dataType: constants.ENTITIES,
-      processTranslationBeforeUpdate: this.stub().returnsArg(0),
-      enrichContext: this.stub().returnsArg(2),
-      makeQueryToFetchTranslationTarget: this.stub().returns(translationTargetQuery),
-      makeTranslationTargetBasedOnItsClosedVersion: this.spy(),
+      processTranslationBeforeUpdate: sandbox.stub().returnsArg(0),
+      enrichContext: sandbox.stub().returnsArg(2),
+      makeQueryToFetchTranslationTarget: sandbox.stub().returns(translationTargetQuery),
+      makeTranslationTargetBasedOnItsClosedVersion: sandbox.spy(),
       repositoryFactory: {
-        currentVersion: this.stub().returns(repoStub),
-        latestVersion: this.stub().returns(repoStub)
+        currentVersion: sandbox.stub().returns(repoStub),
+        latestVersion: sandbox.stub().returns(repoStub)
       }
     };
 
     const originalReadTextFileByLineAsJsonStream = fileUtils.readTextFileByLineAsJsonStream.bind(fileUtils);
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToFile) => {
+    sandbox.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToFile) => {
       return originalReadTextFileByLineAsJsonStream(pathToFile)
         .filter((obj) => obj.metadata.action === 'remove');
     });
 
-    const loggerInfoStub = this.stub(logger, 'info');
+    const loggerInfoStub = sandbox.stub(logger, 'info');
 
     // ACT -------------------------------------------------------------------------------------------------------------
 
@@ -604,7 +606,7 @@ describe('Translations processing (common flow for entities, datapoints and conc
       expect(error).to.deep.equal([expectedError]);
       expect(context).to.equal(externalContext);
 
-      sinon.assert.calledWith(repoStub.closeOneByQuery, {originId: translationTarget.originId});
+      sinon.assert.calledWith(repoStub.closeOneByQuery, { originId: translationTarget.originId });
       sinon.assert.calledWith(repoStub.findTargetForTranslation, translationTargetQuery);
 
       sinon.assert.notCalled(repoStub.removeTranslation);
@@ -613,9 +615,9 @@ describe('Translations processing (common flow for entities, datapoints and conc
       sinon.assert.calledWithExactly(loggerInfoStub, `Start translations updating process for:`, entitiesPlugin.dataType);
       done();
     });
-  }));
+  });
 
-  it('should stops removing translation if translation target was not found', sandbox(function (done: Function) {
+  it('should stops removing translation if translation target was not found', (done: Function) => {
     const translationTarget: any = {
       _id: '_id',
       originId: 'originId',
@@ -623,42 +625,42 @@ describe('Translations processing (common flow for entities, datapoints and conc
     };
 
     const repoStub: any = {
-      findTargetForTranslation: this.stub().callsArgWithAsync(1, null, translationTarget),
-      create: this.spy(),
-      removeTranslation: this.spy(),
-      addTranslation: this.spy(),
-      closeOneByQuery: this.stub().callsArgWithAsync(1)
+      findTargetForTranslation: sandbox.stub().callsArgWithAsync(1, null, translationTarget),
+      create: sandbox.spy(),
+      removeTranslation: sandbox.spy(),
+      addTranslation: sandbox.spy(),
+      closeOneByQuery: sandbox.stub().callsArgWithAsync(1)
     };
 
     const translationTargetQuery = 'FAKE QUERY (AND OF COURSE NOT VALID MONGO QUERY)';
 
     const entitiesPlugin: any = {
       dataType: constants.ENTITIES,
-      processTranslationBeforeUpdate: this.stub().returnsArg(0),
-      enrichContext: this.stub().returnsArg(2),
-      makeQueryToFetchTranslationTarget: this.stub().returns(translationTargetQuery),
-      makeTranslationTargetBasedOnItsClosedVersion: this.spy(),
+      processTranslationBeforeUpdate: sandbox.stub().returnsArg(0),
+      enrichContext: sandbox.stub().returnsArg(2),
+      makeQueryToFetchTranslationTarget: sandbox.stub().returns(translationTargetQuery),
+      makeTranslationTargetBasedOnItsClosedVersion: sandbox.spy(),
       repositoryFactory: {
-        currentVersion: this.stub().returns(repoStub),
-        latestVersion: this.stub().returns(repoStub)
+        currentVersion: sandbox.stub().returns(repoStub),
+        latestVersion: sandbox.stub().returns(repoStub)
       }
     };
 
     const originalReadTextFileByLineAsJsonStream = fileUtils.readTextFileByLineAsJsonStream.bind(fileUtils);
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToFile) => {
+    sandbox.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToFile) => {
       return originalReadTextFileByLineAsJsonStream(pathToFile)
         .filter((obj) => obj.metadata.action === 'remove');
     });
 
-    const loggerInfoStub = this.stub(logger, 'info');
-    const loggerWarnStub = this.stub(logger, 'warn');
+    const loggerInfoStub = sandbox.stub(logger, 'info');
+    const loggerWarnStub = sandbox.stub(logger, 'warn');
 
     // ACT -------------------------------------------------------------------------------------------------------------
     createTranslationsUpdater(entitiesPlugin, externalContext, (error, context) => {
       expect(error).to.not.exist;
       expect(context).to.equal(externalContext);
 
-      sinon.assert.calledWith(repoStub.closeOneByQuery, {originId: translationTarget.originId});
+      sinon.assert.calledWith(repoStub.closeOneByQuery, { originId: translationTarget.originId });
       sinon.assert.calledWith(repoStub.findTargetForTranslation, translationTargetQuery);
 
       sinon.assert.notCalled(repoStub.removeTranslation);
@@ -671,11 +673,14 @@ describe('Translations processing (common flow for entities, datapoints and conc
       sinon.assert.calledWithExactly(loggerWarnStub, 'Translation target was not closed - VERY suspicious at this point of translations update flow!');
       done();
     });
-  }));
+  });
 });
 
 describe('Translations processing: handle "change" events', () => {
-  it('should update existing translations on targets', sandbox(function (done: Function) {
+
+  afterEach(() => sandbox.restore());
+
+  it('should update existing translations on targets', (done: Function) => {
     const translationTarget: any = {
       _id: '_id',
       originId: 'originId',
@@ -689,35 +694,35 @@ describe('Translations processing: handle "change" events', () => {
     };
 
     const repoStub: any = {
-      findTargetForTranslation: this.stub().callsArgWithAsync(1, null, translationTarget),
+      findTargetForTranslation: sandbox.stub().callsArgWithAsync(1, null, translationTarget),
       create: _.noop,
       removeTranslation: _.noop,
-      addTranslation: this.stub().callsArgWith(1),
-      closeOneByQuery: this.spy()
+      addTranslation: sandbox.stub().callsArgWith(1),
+      closeOneByQuery: sandbox.spy()
     };
 
     const translationTargetQuery = 'FAKE QUERY (AND OF COURSE NOT VALID MONGO QUERY)';
 
     const datapointsPlugin: any = {
       dataType: constants.DATAPOINTS,
-      transformStreamBeforeActionSegregation: this.stub().returnsArg(0),
-      transformStreamBeforeChangesApplied: this.stub().returnsArg(0),
-      enrichContext: this.stub().returnsArg(2),
-      makeQueryToFetchTranslationTarget: this.stub().returns(translationTargetQuery),
+      transformStreamBeforeActionSegregation: sandbox.stub().returnsArg(0),
+      transformStreamBeforeChangesApplied: sandbox.stub().returnsArg(0),
+      enrichContext: sandbox.stub().returnsArg(2),
+      makeQueryToFetchTranslationTarget: sandbox.stub().returns(translationTargetQuery),
       makeTranslationTargetBasedOnItsClosedVersion: _.noop,
       repositoryFactory: {
-        currentVersion: this.stub().returns(repoStub),
-        latestVersion: this.stub().returns(repoStub)
+        currentVersion: sandbox.stub().returns(repoStub),
+        latestVersion: sandbox.stub().returns(repoStub)
       }
     };
 
     const originalReadTextFileByLineAsJsonStream = fileUtils.readTextFileByLineAsJsonStream.bind(fileUtils);
-    this.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToFile) => {
+    sandbox.stub(fileUtils, 'readTextFileByLineAsJsonStream').callsFake((pathToFile) => {
       return originalReadTextFileByLineAsJsonStream(pathToFile)
         .filter((obj) => obj.metadata.action === 'change');
     });
 
-    const loggerInfoStub = this.stub(logger, 'info');
+    const loggerInfoStub = sandbox.stub(logger, 'info');
 
     // ACT -------------------------------------------------------------------------------------------------------------
 
@@ -733,7 +738,7 @@ describe('Translations processing: handle "change" events', () => {
 
       sinon.assert.calledWith(repoStub.findTargetForTranslation, translationTargetQuery);
 
-      const expectedTranslation = _.extend({yahoo: 'was'}, translations.changed[0]);
+      const expectedTranslation = _.extend({ yahoo: 'was' }, translations.changed[0]);
       sinon.assert.calledWith(repoStub.addTranslation, {
         id: translationTarget._id,
         language: 'nl-nl',
@@ -755,5 +760,5 @@ describe('Translations processing: handle "change" events', () => {
       sinon.assert.notCalled(repoStub.closeOneByQuery);
       done();
     });
-  }));
+  });
 });

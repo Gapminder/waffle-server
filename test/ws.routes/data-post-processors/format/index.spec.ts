@@ -1,30 +1,32 @@
 import '../../../../ws.repository';
 
 import * as sinon from 'sinon';
-import * as sinonTest from 'sinon-test';
-import {expect} from 'chai';
+import { expect } from 'chai';
 import * as proxyquire from 'proxyquire';
 import * as stream from 'stream';
 import * as hi from 'highland';
-import {constants} from '../../../../ws.utils/constants';
+import { constants } from '../../../../ws.utils/constants';
 import * as routesUtils from '../../../../ws.routes/utils';
-import {logger} from '../../../../ws.config/log';
+import { logger } from '../../../../ws.config/log';
 
-const sandbox = sinonTest.configureTest(sinon);
+const sandbox = sinon.createSandbox();
 
 const indexFormatProcessorPath = '../../../../ws.routes/data-post-processors/format';
 const formatProcessorPath = './format.processor';
 
 describe('Format Post Processor', () => {
-  it('should respond with an error if formatting failed', sandbox(function () {
+
+  afterEach(() => sandbox.restore());
+
+  it('should respond with an error if formatting failed', () => {
 
     const expectedError = 'Boo!';
     const expectedErrorResponse = {success: false, error: expectedError};
 
-    const loggerStub = this.stub(logger, 'error');
-    const toErrorResponseSpy = this.spy(routesUtils, 'toErrorResponse');
+    const loggerStub = sandbox.stub(logger, 'error');
+    const toErrorResponseSpy = sandbox.spy(routesUtils, 'toErrorResponse');
 
-    const jsonSpy = this.spy();
+    const jsonSpy = sandbox.spy();
 
     const req = {
       query: {
@@ -61,11 +63,11 @@ describe('Format Post Processor', () => {
 
     sinon.assert.calledOnce(toErrorResponseSpy);
     sinon.assert.calledWith(toErrorResponseSpy, expectedError);
-  }));
+  });
 
-  it('should send response as data with Content-Type and Content-Disposition set according to given formatType: csv', sandbox(function () {
-    const sendSpy = this.spy();
-    const setHeaderSpy = this.spy();
+  it('should send response as data with Content-Type and Content-Disposition set according to given formatType: csv', () => {
+    const sendSpy = sandbox.spy();
+    const setHeaderSpy = sandbox.spy();
 
     const expectedMimeType = 'application/csv';
     const expectedFormattedData = [];
@@ -102,11 +104,11 @@ describe('Format Post Processor', () => {
 
     sinon.assert.calledOnce(sendSpy);
     sinon.assert.calledWith(sendSpy, expectedFormattedData);
-  }));
+  });
 
-  it('should send response as data with Content-Type and Content-Disposition set according to given formatType: wsJson', sandbox(function () {
-    const sendSpy = this.spy();
-    const setSpy = this.spy();
+  it('should send response as data with Content-Type and Content-Disposition set according to given formatType: wsJson', () => {
+    const sendSpy = sandbox.spy();
+    const setSpy = sandbox.spy();
 
     const expectedMimeType = 'application/json; charset=utf-8';
     const expectedFormattedData = [];
@@ -142,11 +144,11 @@ describe('Format Post Processor', () => {
 
     sinon.assert.calledOnce(sendSpy);
     sinon.assert.calledWith(sendSpy, expectedFormattedData);
-  }));
+  });
 
-  it('should send response as data with default Content-Type if formatType was not given explicitly', sandbox(function () {
-    const sendSpy = this.spy();
-    const setSpy = this.spy();
+  it('should send response as data with default Content-Type if formatType was not given explicitly', () => {
+    const sendSpy = sandbox.spy();
+    const setSpy = sandbox.spy();
 
     const expectedMimeType = 'application/json; charset=utf-8';
     const expectedFormattedData = [];
@@ -182,14 +184,14 @@ describe('Format Post Processor', () => {
 
     sinon.assert.calledOnce(sendSpy);
     sinon.assert.calledWith(sendSpy, expectedFormattedData);
-  }));
+  });
 
-  it('should stream response if formatter returned data as stream', sandbox(function () {
-    const setHeaderSpy = this.spy();
+  it('should stream response if formatter returned data as stream', () => {
+    const setHeaderSpy = sandbox.spy();
 
     const expectedMimeType = 'application/json; charset=utf-8';
 
-    const pipeSpy = this.spy();
+    const pipeSpy = sandbox.spy();
     const expectedFormattedData = {
       pipe: pipeSpy
     };
@@ -226,9 +228,9 @@ describe('Format Post Processor', () => {
 
     sinon.assert.calledOnce(pipeSpy);
     sinon.assert.calledWith(pipeSpy, res);
-  }));
+  });
 
-  it('should hi.stream response if formatter returned data as hi.stream', sandbox(function () {
+  it('should hi.stream response if formatter returned data as hi.stream', () => {
     const expectedMimeType = 'application/json; charset=utf-8';
     const expectedObject = {};
 
@@ -238,8 +240,8 @@ describe('Format Post Processor', () => {
       ddfDataType: constants.CONCEPTS
     };
 
-    const jsonSpy = this.spy();
-    const setHeaderSpy = this.spy();
+    const jsonSpy = sandbox.spy();
+    const setHeaderSpy = sandbox.spy();
 
     const res = {
       json: jsonSpy,
@@ -265,9 +267,9 @@ describe('Format Post Processor', () => {
     sinon.assert.calledOnce(setHeaderSpy);
     sinon.assert.calledWith(setHeaderSpy, 'Content-Type', expectedMimeType);
 
-  }));
+  });
 
-  it('should hi.stream response if formatter returned data as hi.stream', sandbox(function () {
+  it('should hi.stream response if formatter returned data as hi.stream', () => {
     const expectedMimeType = 'application/json; charset=utf-8';
     const expectedObject = {};
     const expectedErrorMessage = 'ALARM!!!';
@@ -282,15 +284,15 @@ describe('Format Post Processor', () => {
       ddfDataType: constants.CONCEPTS
     };
 
-    const jsonSpy = this.spy();
-    const setHeaderSpy = this.spy();
+    const jsonSpy = sandbox.spy();
+    const setHeaderSpy = sandbox.spy();
 
     const res = {
       json: jsonSpy,
       setHeader: setHeaderSpy
     };
 
-    const loggerStub = this.stub(logger, 'error');
+    const loggerStub = sandbox.stub(logger, 'error');
 
     const formatter = proxyquire(indexFormatProcessorPath, {
       [formatProcessorPath]: {
@@ -316,5 +318,5 @@ describe('Format Post Processor', () => {
     sinon.assert.calledOnce(loggerStub);
     sinon.assert.calledWith(loggerStub, expectedErrorMessage);
 
-  }));
+  });
 });

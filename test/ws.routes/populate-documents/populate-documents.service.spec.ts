@@ -2,24 +2,25 @@ import '../../../ws.config/db.config';
 import '../../../ws.repository/index';
 
 import * as _ from 'lodash';
-import {expect} from 'chai';
+import { expect } from 'chai';
 import * as sinon from 'sinon';
-import * as sinonTest from 'sinon-test';
-import {ConceptsRepositoryFactory} from '../../../ws.repository/ddf/concepts/concepts.repository';
-import {EntitiesRepositoryFactory} from '../../../ws.repository/ddf/entities/entities.repository';
-import {DatapointsRepositoryFactory} from '../../../ws.repository/ddf/data-points/data-points.repository';
+import { ConceptsRepositoryFactory } from '../../../ws.repository/ddf/concepts/concepts.repository';
+import { EntitiesRepositoryFactory } from '../../../ws.repository/ddf/entities/entities.repository';
+import { DatapointsRepositoryFactory } from '../../../ws.repository/ddf/data-points/data-points.repository';
 import * as datasetTransactionService from '../../../ws.services/dataset-transactions.service';
-import {logger} from '../../../ws.config/log';
+import { logger } from '../../../ws.config/log';
 import * as populateDocumentsService from '../../../ws.routes/populate-documents/populate-documents.service';
 
-const sandbox = sinonTest.configureTest(sinon);
+const sandbox = sinon.createSandbox();
 
 describe('Populate documents service testing', () => {
 
-  it('should return an error: Error was happened during getting dataset and transaction documents', sandbox(function (done: Function) {
-    const context = {datasetName: 'datasetName', commit: 'commit'};
+  afterEach(() => sandbox.restore());
+
+  it('should return an error: Error was happened during getting dataset and transaction documents', (done: Function) => {
+    const context = { datasetName: 'datasetName', commit: 'commit' };
     const expectedError = 'Boo!';
-    const findDefaultDatasetAndTransactionStub = this.stub(datasetTransactionService, 'findDefaultDatasetAndTransaction').callsFake((datasetName, commit, onFound) => {
+    const findDefaultDatasetAndTransactionStub = sandbox.stub(datasetTransactionService, 'findDefaultDatasetAndTransaction').callsFake((datasetName, commit, onFound) => {
       onFound(expectedError);
     });
 
@@ -32,12 +33,12 @@ describe('Populate documents service testing', () => {
 
       done();
     });
-  }));
+  });
 
-  it('should return an error: Dataset and Transaction were not found', sandbox(function (done: Function) {
-    const context = {datasetName: 'datasetName', commit: 'commit'};
+  it('should return an error: Dataset and Transaction were not found', (done: Function) => {
+    const context = { datasetName: 'datasetName', commit: 'commit' };
     const expectedError = 'Dataset and Transaction were not found.';
-    const findDefaultDatasetAndTransactionStub = this.stub(datasetTransactionService, 'findDefaultDatasetAndTransaction').callsFake((datasetName, commit, onFound) => {
+    const findDefaultDatasetAndTransactionStub = sandbox.stub(datasetTransactionService, 'findDefaultDatasetAndTransaction').callsFake((datasetName, commit, onFound) => {
       onFound();
     });
 
@@ -50,12 +51,12 @@ describe('Populate documents service testing', () => {
 
       done();
     });
-  }));
+  });
 
-  it('should return an error: Dataset was not found', sandbox(function (done: Function) {
-    const context = {datasetName: 'datasetName', commit: 'commit'};
+  it('should return an error: Dataset was not found', (done: Function) => {
+    const context = { datasetName: 'datasetName', commit: 'commit' };
     const expectedError = 'Dataset was not found.';
-    const findDefaultDatasetAndTransactionStub = this.stub(datasetTransactionService, 'findDefaultDatasetAndTransaction').callsFake((datasetName, commit, onFound) => {
+    const findDefaultDatasetAndTransactionStub = sandbox.stub(datasetTransactionService, 'findDefaultDatasetAndTransaction').callsFake((datasetName, commit, onFound) => {
       onFound(null, {});
     });
 
@@ -68,13 +69,13 @@ describe('Populate documents service testing', () => {
 
       done();
     });
-  }));
+  });
 
-  it('should return an error: Transaction was not found', sandbox(function (done: Function) {
-    const context = {datasetName: 'datasetName', commit: 'commit'};
+  it('should return an error: Transaction was not found', (done: Function) => {
+    const context = { datasetName: 'datasetName', commit: 'commit' };
     const expectedError = 'Transaction was not found.';
-    const findDefaultDatasetAndTransactionStub = this.stub(datasetTransactionService, 'findDefaultDatasetAndTransaction').callsFake((datasetName, commit, onFound) => {
-      onFound(null, {dataset: {}});
+    const findDefaultDatasetAndTransactionStub = sandbox.stub(datasetTransactionService, 'findDefaultDatasetAndTransaction').callsFake((datasetName, commit, onFound) => {
+      onFound(null, { dataset: {} });
     });
 
     populateDocumentsService.getDocumentsByQuery(context, (error, documents) => {
@@ -86,20 +87,20 @@ describe('Populate documents service testing', () => {
 
       done();
     });
-  }));
+  });
 
-  it('should return an error: Error was happened during getting documents from concepts repository by query', sandbox(function (done: Function) {
-    const dataset = {_id: 'AAA'};
-    const transaction = {createdAt: 123};
-    const context = {datasetName: 'datasetName', commit: 'commit', collection: 'concepts', query: {}};
+  it('should return an error: Error was happened during getting documents from concepts repository by query', (done: Function) => {
+    const dataset = { _id: 'AAA' };
+    const transaction = { createdAt: 123 };
+    const context = { datasetName: 'datasetName', commit: 'commit', collection: 'concepts', query: {} };
     const expectedError = 'Boo!';
-    const findDefaultDatasetAndTransactionStub = this.stub(datasetTransactionService, 'findDefaultDatasetAndTransaction').callsFake((datasetName, commit, onFound) => {
-      return onFound(null, {dataset, transaction});
+    const findDefaultDatasetAndTransactionStub = sandbox.stub(datasetTransactionService, 'findDefaultDatasetAndTransaction').callsFake((datasetName, commit, onFound) => {
+      return onFound(null, { dataset, transaction });
     });
-    const findConceptsByQueryStub = this.stub();
+    const findConceptsByQueryStub = sandbox.stub();
     findConceptsByQueryStub.withArgs(context.query).onFirstCall().callsArgWith(1, expectedError);
-    const currentVersionStub = this.stub(ConceptsRepositoryFactory, 'currentVersion').callsFake(() => {
-      return {findConceptsByQuery: findConceptsByQueryStub};
+    const currentVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'currentVersion').callsFake(() => {
+      return { findConceptsByQuery: findConceptsByQueryStub };
     });
 
     populateDocumentsService.getDocumentsByQuery(context, (error, documents) => {
@@ -117,20 +118,20 @@ describe('Populate documents service testing', () => {
 
       done();
     });
-  }));
+  });
 
-  it('should return an error: Error was happened during getting documents from entities repository by query', sandbox(function (done: Function) {
-    const dataset = {_id: 'AAA'};
-    const transaction = {createdAt: 123};
-    const context = {datasetName: 'datasetName', commit: 'commit', collection: 'entities', query: {}};
+  it('should return an error: Error was happened during getting documents from entities repository by query', (done: Function) => {
+    const dataset = { _id: 'AAA' };
+    const transaction = { createdAt: 123 };
+    const context = { datasetName: 'datasetName', commit: 'commit', collection: 'entities', query: {} };
     const expectedError = 'Boo!';
-    const findDefaultDatasetAndTransactionStub = this.stub(datasetTransactionService, 'findDefaultDatasetAndTransaction').callsFake((datasetName, commit, onFound) => {
-      return onFound(null, {dataset, transaction});
+    const findDefaultDatasetAndTransactionStub = sandbox.stub(datasetTransactionService, 'findDefaultDatasetAndTransaction').callsFake((datasetName, commit, onFound) => {
+      return onFound(null, { dataset, transaction });
     });
-    const findEntityPropertiesByQueryStub = this.stub();
+    const findEntityPropertiesByQueryStub = sandbox.stub();
     findEntityPropertiesByQueryStub.withArgs(context.query).onFirstCall().callsArgWith(1, expectedError);
-    const currentVersionStub = this.stub(EntitiesRepositoryFactory, 'currentVersion').callsFake(() => {
-      return {findEntityPropertiesByQuery: findEntityPropertiesByQueryStub};
+    const currentVersionStub = sandbox.stub(EntitiesRepositoryFactory, 'currentVersion').callsFake(() => {
+      return { findEntityPropertiesByQuery: findEntityPropertiesByQueryStub };
     });
 
     populateDocumentsService.getDocumentsByQuery(context, (error, documents) => {
@@ -148,20 +149,20 @@ describe('Populate documents service testing', () => {
 
       done();
     });
-  }));
+  });
 
-  it('should return an error: Error was happened during getting documents from datapoints repository by query', sandbox(function (done: Function) {
-    const dataset = {_id: 'AAA'};
-    const transaction = {createdAt: 123};
-    const context = {datasetName: 'datasetName', commit: 'commit', collection: 'datapoints', query: {}};
+  it('should return an error: Error was happened during getting documents from datapoints repository by query', (done: Function) => {
+    const dataset = { _id: 'AAA' };
+    const transaction = { createdAt: 123 };
+    const context = { datasetName: 'datasetName', commit: 'commit', collection: 'datapoints', query: {} };
     const expectedError = 'Boo!';
-    const findDefaultDatasetAndTransactionStub = this.stub(datasetTransactionService, 'findDefaultDatasetAndTransaction').callsFake((datasetName, commit, onFound) => {
-      return onFound(null, {dataset, transaction});
+    const findDefaultDatasetAndTransactionStub = sandbox.stub(datasetTransactionService, 'findDefaultDatasetAndTransaction').callsFake((datasetName, commit, onFound) => {
+      return onFound(null, { dataset, transaction });
     });
-    const findByQueryStub = this.stub();
+    const findByQueryStub = sandbox.stub();
     findByQueryStub.withArgs(context.query).onFirstCall().callsArgWith(1, expectedError);
-    const currentVersionStub = this.stub(DatapointsRepositoryFactory, 'currentVersion').callsFake(() => {
-      return {findByQuery: findByQueryStub};
+    const currentVersionStub = sandbox.stub(DatapointsRepositoryFactory, 'currentVersion').callsFake(() => {
+      return { findByQuery: findByQueryStub };
     });
 
     populateDocumentsService.getDocumentsByQuery(context, (error, documents) => {
@@ -179,20 +180,20 @@ describe('Populate documents service testing', () => {
 
       done();
     });
-  }));
+  });
 
-  it('should return an empty array: Concepts were not found by query', sandbox(function (done: Function) {
-    const dataset = {_id: 'AAA'};
-    const transaction = {createdAt: 123};
-    const context = {datasetName: 'datasetName', commit: 'commit', collection: 'concepts', query: {}};
+  it('should return an empty array: Concepts were not found by query', (done: Function) => {
+    const dataset = { _id: 'AAA' };
+    const transaction = { createdAt: 123 };
+    const context = { datasetName: 'datasetName', commit: 'commit', collection: 'concepts', query: {} };
     const expectedDocuments = [];
-    const findDefaultDatasetAndTransactionStub = this.stub(datasetTransactionService, 'findDefaultDatasetAndTransaction').callsFake((datasetName, commit, onFound) => {
-      return onFound(null, {dataset, transaction});
+    const findDefaultDatasetAndTransactionStub = sandbox.stub(datasetTransactionService, 'findDefaultDatasetAndTransaction').callsFake((datasetName, commit, onFound) => {
+      return onFound(null, { dataset, transaction });
     });
-    const findConceptsByQueryStub = this.stub();
+    const findConceptsByQueryStub = sandbox.stub();
     findConceptsByQueryStub.withArgs(context.query).onFirstCall().callsArgWith(1, null, expectedDocuments);
-    const currentVersionStub = this.stub(ConceptsRepositoryFactory, 'currentVersion').callsFake(() => {
-      return {findConceptsByQuery: findConceptsByQueryStub};
+    const currentVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'currentVersion').callsFake(() => {
+      return { findConceptsByQuery: findConceptsByQueryStub };
     });
 
     populateDocumentsService.getDocumentsByQuery(context, (error, documents) => {
@@ -210,29 +211,29 @@ describe('Populate documents service testing', () => {
 
       done();
     });
-  }));
+  });
 
-  it('should return an error: Error was happened during getting documents from concepts repository by subquery', sandbox(function (done: Function) {
-    const dataset = {_id: 'AAA'};
-    const transaction = {createdAt: 123};
-    const context = {datasetName: 'datasetName', commit: 'commit', collection: 'concepts', query: {}};
-    const concept = {domain: 'BBB', sets: []};
-    const domain = {originId: 'BBB', domain: null};
+  it('should return an error: Error was happened during getting documents from concepts repository by subquery', (done: Function) => {
+    const dataset = { _id: 'AAA' };
+    const transaction = { createdAt: 123 };
+    const context = { datasetName: 'datasetName', commit: 'commit', collection: 'concepts', query: {} };
+    const concept = { domain: 'BBB', sets: [] };
+    const domain = { originId: 'BBB', domain: null };
     const documents = [
       concept,
       domain
     ];
     const expectedError = 'Boo!';
-    const subquery = {originId: {$in: [domain.originId]}};
-    const findDefaultDatasetAndTransactionStub = this.stub(datasetTransactionService, 'findDefaultDatasetAndTransaction').callsFake((datasetName, commit, onFound) => {
-      return onFound(null, {dataset, transaction});
+    const subquery = { originId: { $in: [domain.originId] } };
+    const findDefaultDatasetAndTransactionStub = sandbox.stub(datasetTransactionService, 'findDefaultDatasetAndTransaction').callsFake((datasetName, commit, onFound) => {
+      return onFound(null, { dataset, transaction });
     });
-    const findConceptsByQueryStub = this.stub();
+    const findConceptsByQueryStub = sandbox.stub();
     findConceptsByQueryStub
       .onFirstCall().callsArgWithAsync(1, null, documents)
       .onSecondCall().callsArgWithAsync(1, expectedError);
-    const conceptsRepository = {findConceptsByQuery: findConceptsByQueryStub};
-    const currentVersionStub = this.stub(ConceptsRepositoryFactory, 'currentVersion').callsFake(() => {
+    const conceptsRepository = { findConceptsByQuery: findConceptsByQueryStub };
+    const currentVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'currentVersion').callsFake(() => {
       return conceptsRepository;
     });
 
@@ -252,30 +253,30 @@ describe('Populate documents service testing', () => {
 
       done();
     });
-  }));
+  });
 
-  it('should return an error: Original document has reference to a document which wasn\'t found', sandbox(function (done: Function) {
-    const dataset = {_id: 'AAA'};
-    const transaction = {createdAt: 123};
-    const context = {datasetName: 'datasetName', commit: 'commit', collection: 'concepts', query: {}};
-    const concept = {domain: 'BBB', sets: []};
-    const domain = {originId: 'BBB', domain: null};
+  it('should return an error: Original document has reference to a document which wasn\'t found', (done: Function) => {
+    const dataset = { _id: 'AAA' };
+    const transaction = { createdAt: 123 };
+    const context = { datasetName: 'datasetName', commit: 'commit', collection: 'concepts', query: {} };
+    const concept = { domain: 'BBB', sets: [] };
+    const domain = { originId: 'BBB', domain: null };
     const documents = [
       concept,
       domain
     ];
-    const loggerStub = this.stub(logger, 'error');
+    const loggerStub = sandbox.stub(logger, 'error');
     const expectedError = 'Original document has reference to a document which wasn\'t found';
-    const subquery = {originId: {$in: [domain.originId]}};
-    const findDefaultDatasetAndTransactionStub = this.stub(datasetTransactionService, 'findDefaultDatasetAndTransaction').callsFake((datasetName, commit, onFound) => {
-      return onFound(null, {dataset, transaction});
+    const subquery = { originId: { $in: [domain.originId] } };
+    const findDefaultDatasetAndTransactionStub = sandbox.stub(datasetTransactionService, 'findDefaultDatasetAndTransaction').callsFake((datasetName, commit, onFound) => {
+      return onFound(null, { dataset, transaction });
     });
-    const findConceptsByQueryStub = this.stub();
+    const findConceptsByQueryStub = sandbox.stub();
     findConceptsByQueryStub
       .onFirstCall().callsArgWithAsync(1, null, documents)
       .onSecondCall().callsArgWithAsync(1, null, []);
-    const conceptsRepository = {findConceptsByQuery: findConceptsByQueryStub};
-    const currentVersionStub = this.stub(ConceptsRepositoryFactory, 'currentVersion').callsFake(() => {
+    const conceptsRepository = { findConceptsByQuery: findConceptsByQueryStub };
+    const currentVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'currentVersion').callsFake(() => {
       return conceptsRepository;
     });
 
@@ -294,34 +295,34 @@ describe('Populate documents service testing', () => {
       sinon.assert.calledWith(currentVersionStub, dataset._id, transaction.createdAt);
 
       sinon.assert.calledOnce(loggerStub);
-      sinon.assert.calledWithMatch(loggerStub, {obj: concept}, 'Original document has reference to a document which wasn\'t found');
+      sinon.assert.calledWithMatch(loggerStub, { obj: concept }, 'Original document has reference to a document which wasn\'t found');
 
       done();
     });
-  }));
+  });
 
-  it('should return an error: Original document has only one value, but returns from db more than one', sandbox(function (done: Function) {
-    const dataset = {_id: 'AAA'};
-    const transaction = {createdAt: 123};
-    const context = {datasetName: 'datasetName', commit: 'commit', collection: 'concepts', query: {}};
-    const concept = {domain: 'BBB', sets: []};
-    const domain = {originId: 'BBB', domain: null};
+  it('should return an error: Original document has only one value, but returns from db more than one', (done: Function) => {
+    const dataset = { _id: 'AAA' };
+    const transaction = { createdAt: 123 };
+    const context = { datasetName: 'datasetName', commit: 'commit', collection: 'concepts', query: {} };
+    const concept = { domain: 'BBB', sets: [] };
+    const domain = { originId: 'BBB', domain: null };
     const documents = [
       concept,
       domain
     ];
     const expectedError = 'Original document has only one value, but returns from db more than one';
-    const subquery = {originId: {$in: [domain.originId]}};
-    const loggerStub = this.stub(logger, 'error');
-    const findDefaultDatasetAndTransactionStub = this.stub(datasetTransactionService, 'findDefaultDatasetAndTransaction').callsFake((datasetName, commit, onFound) => {
-      return onFound(null, {dataset, transaction});
+    const subquery = { originId: { $in: [domain.originId] } };
+    const loggerStub = sandbox.stub(logger, 'error');
+    const findDefaultDatasetAndTransactionStub = sandbox.stub(datasetTransactionService, 'findDefaultDatasetAndTransaction').callsFake((datasetName, commit, onFound) => {
+      return onFound(null, { dataset, transaction });
     });
-    const findConceptsByQueryStub = this.stub();
+    const findConceptsByQueryStub = sandbox.stub();
     findConceptsByQueryStub
       .onFirstCall().callsArgWithAsync(1, null, documents)
       .onSecondCall().callsArgWithAsync(1, null, [domain, domain]);
-    const conceptsRepository = {findConceptsByQuery: findConceptsByQueryStub};
-    const currentVersionStub = this.stub(ConceptsRepositoryFactory, 'currentVersion').callsFake(() => {
+    const conceptsRepository = { findConceptsByQuery: findConceptsByQueryStub };
+    const currentVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'currentVersion').callsFake(() => {
       return conceptsRepository;
     });
 
@@ -340,36 +341,36 @@ describe('Populate documents service testing', () => {
       sinon.assert.calledWith(currentVersionStub, dataset._id, transaction.createdAt);
 
       sinon.assert.calledOnce(loggerStub);
-      sinon.assert.calledWithMatch(loggerStub, {obj: concept}, 'Original document has only one value, but returns from db more than one');
+      sinon.assert.calledWithMatch(loggerStub, { obj: concept }, 'Original document has only one value, but returns from db more than one');
 
       done();
     });
-  }));
+  });
 
-  it('should return an array of documents: Concepts were populated successfully', sandbox(function (done: Function) {
-    const dataset = {_id: 'AAA'};
-    const transaction = {createdAt: 123};
-    const context = {datasetName: 'datasetName', commit: 'commit', collection: 'concepts', query: {}};
-    const concept = {domain: 'BBB', sets: []};
-    const domain = {originId: 'BBB', domain: null};
+  it('should return an array of documents: Concepts were populated successfully', (done: Function) => {
+    const dataset = { _id: 'AAA' };
+    const transaction = { createdAt: 123 };
+    const context = { datasetName: 'datasetName', commit: 'commit', collection: 'concepts', query: {} };
+    const concept = { domain: 'BBB', sets: [] };
+    const domain = { originId: 'BBB', domain: null };
     const documents = [
       concept,
       domain
     ];
     const expectedDocuments = [
-      _.defaults({domain}, concept),
+      _.defaults({ domain }, concept),
       domain
     ];
-    const subquery = {originId: {$in: [domain.originId]}};
-    const findDefaultDatasetAndTransactionStub = this.stub(datasetTransactionService, 'findDefaultDatasetAndTransaction').callsFake((datasetName, commit, onFound) => {
-      return onFound(null, {dataset, transaction});
+    const subquery = { originId: { $in: [domain.originId] } };
+    const findDefaultDatasetAndTransactionStub = sandbox.stub(datasetTransactionService, 'findDefaultDatasetAndTransaction').callsFake((datasetName, commit, onFound) => {
+      return onFound(null, { dataset, transaction });
     });
-    const findConceptsByQueryStub = this.stub();
+    const findConceptsByQueryStub = sandbox.stub();
     findConceptsByQueryStub
       .onFirstCall().callsArgWithAsync(1, null, documents)
       .onSecondCall().callsArgWithAsync(1, null, [domain]);
-    const conceptsRepository = {findConceptsByQuery: findConceptsByQueryStub};
-    const currentVersionStub = this.stub(ConceptsRepositoryFactory, 'currentVersion').callsFake(() => {
+    const conceptsRepository = { findConceptsByQuery: findConceptsByQueryStub };
+    const currentVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'currentVersion').callsFake(() => {
       return conceptsRepository;
     });
 
@@ -389,37 +390,37 @@ describe('Populate documents service testing', () => {
 
       done();
     });
-  }));
+  });
 
-  it('should return an array of documents: Entities were populated successfully', sandbox(function (done: Function) {
-    const dataset = {_id: 'AAA'};
-    const transaction = {createdAt: 123};
-    const context = {datasetName: 'datasetName', commit: 'commit', collection: 'entities', query: {}};
-    const domain = {originId: 'DDD', domain: null};
-    const set1 = {originId: 'SSS1', domain: 'DDD'};
-    const set2 = {originId: 'SSS2', domain: 'DDD'};
-    const entity = {originId: 'EEE', domain: 'DDD', sets: ['SSS1', 'SSS2']};
+  it('should return an array of documents: Entities were populated successfully', (done: Function) => {
+    const dataset = { _id: 'AAA' };
+    const transaction = { createdAt: 123 };
+    const context = { datasetName: 'datasetName', commit: 'commit', collection: 'entities', query: {} };
+    const domain = { originId: 'DDD', domain: null };
+    const set1 = { originId: 'SSS1', domain: 'DDD' };
+    const set2 = { originId: 'SSS2', domain: 'DDD' };
+    const entity = { originId: 'EEE', domain: 'DDD', sets: ['SSS1', 'SSS2'] };
     const documents = [entity];
-    const expectedDocuments = [_.defaults({domain, sets: [set1, set2]}, entity)];
-    const subquery1 = {originId: {$in: [domain.originId]}};
-    const subquery2 = {originId: {$in: [set1.originId, set2.originId]}};
-    const findDefaultDatasetAndTransactionStub = this.stub(datasetTransactionService, 'findDefaultDatasetAndTransaction').callsFake((datasetName, commit, onFound) => {
-      return onFound(null, {dataset, transaction});
+    const expectedDocuments = [_.defaults({ domain, sets: [set1, set2] }, entity)];
+    const subquery1 = { originId: { $in: [domain.originId] } };
+    const subquery2 = { originId: { $in: [set1.originId, set2.originId] } };
+    const findDefaultDatasetAndTransactionStub = sandbox.stub(datasetTransactionService, 'findDefaultDatasetAndTransaction').callsFake((datasetName, commit, onFound) => {
+      return onFound(null, { dataset, transaction });
     });
-    const findEntityPropertiesByQueryStub = this.stub();
+    const findEntityPropertiesByQueryStub = sandbox.stub();
     findEntityPropertiesByQueryStub
       .onFirstCall().callsArgWithAsync(1, null, documents);
-    const findConceptsByQueryStub = this.stub();
+    const findConceptsByQueryStub = sandbox.stub();
     findConceptsByQueryStub
       .onFirstCall().callsArgWithAsync(1, null, [domain])
       .onSecondCall().callsArgWithAsync(1, null, [set1, set2]);
 
-    const conceptsRepository = {findConceptsByQuery: findConceptsByQueryStub};
-    const entitiesRepository = {findEntityPropertiesByQuery: findEntityPropertiesByQueryStub};
-    const entitiesRepositoryCurrentVersionStub = this.stub(EntitiesRepositoryFactory, 'currentVersion').callsFake(() => {
+    const conceptsRepository = { findConceptsByQuery: findConceptsByQueryStub };
+    const entitiesRepository = { findEntityPropertiesByQuery: findEntityPropertiesByQueryStub };
+    const entitiesRepositoryCurrentVersionStub = sandbox.stub(EntitiesRepositoryFactory, 'currentVersion').callsFake(() => {
       return entitiesRepository;
     });
-    const conceptsRepositoryCurrentVersionStub = this.stub(ConceptsRepositoryFactory, 'currentVersion').callsFake(() => {
+    const conceptsRepositoryCurrentVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'currentVersion').callsFake(() => {
       return conceptsRepository;
     });
 
@@ -445,33 +446,33 @@ describe('Populate documents service testing', () => {
 
       done();
     });
-  }));
+  });
 
   //TODO
-  xit('should return an array of documents: Datapoints were populated successfully', sandbox(function (done: Function) {
-    const dataset = {_id: 'AAA'};
-    const transaction = {createdAt: 123};
-    const context = {datasetName: 'datasetName', commit: 'commit', collection: 'concepts', query: {}};
-    const concept = {domain: 'BBB', sets: []};
-    const domain = {originId: 'BBB', domain: null};
+  xit('should return an array of documents: Datapoints were populated successfully', (done: Function) => {
+    const dataset = { _id: 'AAA' };
+    const transaction = { createdAt: 123 };
+    const context = { datasetName: 'datasetName', commit: 'commit', collection: 'concepts', query: {} };
+    const concept = { domain: 'BBB', sets: [] };
+    const domain = { originId: 'BBB', domain: null };
     const documents = [
       concept,
       domain
     ];
     const expectedDocuments = [
-      _.defaults({domain}, concept),
+      _.defaults({ domain }, concept),
       domain
     ];
-    const subquery = {originId: {$in: [domain.originId]}};
-    const findDefaultDatasetAndTransactionStub = this.stub(datasetTransactionService, 'findDefaultDatasetAndTransaction').callsFake((datasetName, commit, onFound) => {
-      return onFound(null, {dataset, transaction});
+    const subquery = { originId: { $in: [domain.originId] } };
+    const findDefaultDatasetAndTransactionStub = sandbox.stub(datasetTransactionService, 'findDefaultDatasetAndTransaction').callsFake((datasetName, commit, onFound) => {
+      return onFound(null, { dataset, transaction });
     });
-    const findConceptsByQueryStub = this.stub();
+    const findConceptsByQueryStub = sandbox.stub();
     findConceptsByQueryStub
       .onFirstCall().callsArgWithAsync(1, null, documents)
       .onSecondCall().callsArgWithAsync(1, null, [domain]);
-    const conceptsRepository = {findConceptsByQuery: findConceptsByQueryStub};
-    const currentVersionStub = this.stub(ConceptsRepositoryFactory, 'currentVersion').callsFake(() => {
+    const conceptsRepository = { findConceptsByQuery: findConceptsByQueryStub };
+    const currentVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'currentVersion').callsFake(() => {
       return conceptsRepository;
     });
 
@@ -491,6 +492,6 @@ describe('Populate documents service testing', () => {
 
       done();
     });
-  }));
+  });
 
 });

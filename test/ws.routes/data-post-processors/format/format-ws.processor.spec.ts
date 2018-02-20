@@ -1,6 +1,5 @@
-import {expect} from 'chai';
+import { expect } from 'chai';
 import * as sinon from 'sinon';
-import * as sinonTest from 'sinon-test';
 import '../../../../ws.repository';
 import {
   mapConcepts,
@@ -11,11 +10,14 @@ import {
 
 import * as commonService from '../../../../ws.services/common.service';
 
-const sandbox = sinonTest.configureTest(sinon);
+const sandbox = sinon.createSandbox();
 
 describe('Format WS Processor', () => {
   describe('Datapoints formatting', () => {
-    it('should invoke map an empty array of datapoints by format-ws processor', sandbox(function (done: Function) {
+
+    afterEach(() => sandbox.restore());
+
+    it('should invoke map an empty array of datapoints by format-ws processor', (done: Function) => {
       const data = {
         concepts: [],
         entities: [],
@@ -35,37 +37,57 @@ describe('Format WS Processor', () => {
         expect(result).to.be.deep.equal(expectedData);
         return done();
       });
-    }));
+    });
 
-    it('should invoke mapping a few datapoints by format-ws processor', sandbox(function (done: Function) {
+    it('should invoke mapping a few datapoints by format-ws processor', (done: Function) => {
       const data = {
         concepts: [
-          {gid: 'population', originId: 'C1'},
-          {gid: 'time', originId: 'C2'},
-          {gid: 'geo', originId: 'C3'},
-          {gid: 'country', domain: 'C3', originId: 'C4'},
-          {gid: 'population2', originId: 'C5'}
+          { gid: 'population', originId: 'C1' },
+          { gid: 'time', originId: 'C2' },
+          { gid: 'geo', originId: 'C3' },
+          { gid: 'country', domain: 'C3', originId: 'C4' },
+          { gid: 'population2', originId: 'C5' }
         ],
         entities: [
-          {gid: 'usa', originId: 'E1', domain: 'C3', sets: ['C4']},
-          {gid: 'ukraine', originId: 'E2', domain: 'C3', sets: ['C4']},
-          {gid: '2000', originId: 'E3', domain: 'C2', sets: []},
-          {gid: '1800', originId: 'E4', domain: 'C2', sets: []},
-          {gid: '1900', originId: 'E5', domain: 'C2', sets: []},
-          {gid: '2100', originId: 'E6', domain: 'C2', sets: []}
+          { gid: 'usa', originId: 'E1', domain: 'C3', sets: ['C4'] },
+          { gid: 'ukraine', originId: 'E2', domain: 'C3', sets: ['C4'] },
+          { gid: '2000', originId: 'E3', domain: 'C2', sets: [] },
+          { gid: '1800', originId: 'E4', domain: 'C2', sets: [] },
+          { gid: '1900', originId: 'E5', domain: 'C2', sets: [] },
+          { gid: '2100', originId: 'E6', domain: 'C2', sets: [] }
         ],
         datasetName: 'DatasetName',
         datasetVersionCommit: 'Version',
         headers: ['population', 'country', 'time', 'population2'],
         datapoints: [
-          {indicators: [{properties: {population: '123'}, measure: 'C1'}], _id: ['E2', 'E3']},
-          {indicators: [{properties: {population: '234'}, measure: 'C1'}, {properties: {population2: '234'}, measure: 'C5'}], _id: ['E3', 'E1']},
-          {indicators: [{properties: {population: '345'}, measure: 'C1'}, {properties: {population2: '345'}, measure: 'C5'}], _id: ['E2', 'E4']},
-          {indicators: [{properties: {population: '456'}, measure: 'C1'}, {properties: {population2: '456'}, measure: 'C5'}], _id: ['E1', 'E4']},
-          {indicators: [{properties: {population2: '567'}, measure: 'C5'}, {properties: {population: '567'}, measure: 'C1'}], _id: ['E5', 'E1']},
-          {indicators: [{properties: {population: '678'}, measure: 'C1'}], _id: ['E5', 'E2']},
-          {indicators: [{properties: {population2: '678'}, measure: 'C5'}], _id: ['E6', 'E2']},
-          {indicators: [{properties: {population2: '678'}, measure: 'C5'}], _id: ['E6', 'E1']}
+          { indicators: [{ properties: { population: '123' }, measure: 'C1' }], _id: ['E2', 'E3'] },
+          {
+            indicators: [{ properties: { population: '234' }, measure: 'C1' }, {
+              properties: { population2: '234' },
+              measure: 'C5'
+            }], _id: ['E3', 'E1']
+          },
+          {
+            indicators: [{ properties: { population: '345' }, measure: 'C1' }, {
+              properties: { population2: '345' },
+              measure: 'C5'
+            }], _id: ['E2', 'E4']
+          },
+          {
+            indicators: [{ properties: { population: '456' }, measure: 'C1' }, {
+              properties: { population2: '456' },
+              measure: 'C5'
+            }], _id: ['E1', 'E4']
+          },
+          {
+            indicators: [{ properties: { population2: '567' }, measure: 'C5' }, {
+              properties: { population: '567' },
+              measure: 'C1'
+            }], _id: ['E5', 'E1']
+          },
+          { indicators: [{ properties: { population: '678' }, measure: 'C1' }], _id: ['E5', 'E2'] },
+          { indicators: [{ properties: { population2: '678' }, measure: 'C5' }], _id: ['E6', 'E2'] },
+          { indicators: [{ properties: { population2: '678' }, measure: 'C5' }], _id: ['E6', 'E1'] }
         ],
         query: {}
       };
@@ -89,40 +111,60 @@ describe('Format WS Processor', () => {
         expect(result).to.be.deep.equal(expectedData);
         return done();
       });
-    }));
+    });
 
-    it('should invoke map a few datapoints by format-ws processor with ordering', sandbox(function (done: Function) {
+    it('should invoke map a few datapoints by format-ws processor with ordering', (done: Function) => {
       const data = {
         concepts: [
-          {gid: 'population', originId: 'C1'},
-          {gid: 'time', originId: 'C2'},
-          {gid: 'geo', originId: 'C3'},
-          {gid: 'country', domain: 'C3', originId: 'C4'},
-          {gid: 'population2', originId: 'C5'}
+          { gid: 'population', originId: 'C1' },
+          { gid: 'time', originId: 'C2' },
+          { gid: 'geo', originId: 'C3' },
+          { gid: 'country', domain: 'C3', originId: 'C4' },
+          { gid: 'population2', originId: 'C5' }
         ],
         entities: [
-          {gid: 'usa', originId: 'E1', domain: 'C3', sets: ['C4']},
-          {gid: 'ukraine', originId: 'E2', domain: 'C3', sets: ['C4']},
-          {gid: '2000', originId: 'E3', domain: 'C2', sets: []},
-          {gid: '1800', originId: 'E4', domain: 'C2', sets: []},
-          {gid: '1900', originId: 'E5', domain: 'C2', sets: []},
-          {gid: '2100', originId: 'E6', domain: 'C2', sets: []}
+          { gid: 'usa', originId: 'E1', domain: 'C3', sets: ['C4'] },
+          { gid: 'ukraine', originId: 'E2', domain: 'C3', sets: ['C4'] },
+          { gid: '2000', originId: 'E3', domain: 'C2', sets: [] },
+          { gid: '1800', originId: 'E4', domain: 'C2', sets: [] },
+          { gid: '1900', originId: 'E5', domain: 'C2', sets: [] },
+          { gid: '2100', originId: 'E6', domain: 'C2', sets: [] }
         ],
         datasetName: 'DatasetName',
         datasetVersionCommit: 'Version',
         headers: ['population', 'country', 'time', 'population2'],
         datapoints: [
-          {indicators: [{properties: {population: '123'}, measure: 'C1'}], _id: ['E2', 'E3']},
-          {indicators: [{properties: {population2: '234'}, measure: 'C5'}, {properties: {population: '234'}, measure: 'C1'}], _id: ['E3', 'E1']},
-          {indicators: [{properties: {population2: '345'}, measure: 'C5'}, {properties: {population: '345'}, measure: 'C1'}], _id: ['E2', 'E4']},
-          {indicators: [{properties: {population2: '456'}, measure: 'C5'}, {properties: {population: '456'}, measure: 'C1'}], _id: ['E1', 'E4']},
-          {indicators: [{properties: {population: '567'}, measure: 'C1'}, {properties: {population2: '567'}, measure: 'C5'}], _id: ['E5', 'E1']},
-          {indicators: [{properties: {population: '678'}, measure: 'C1'}], _id: ['E5', 'E2']},
-          {indicators: [{properties: {population2: '678'}, measure: 'C5'}], _id: ['E6', 'E2']},
-          {indicators: [{properties: {population2: '678'}, measure: 'C5'}], _id: ['E6', 'E1']}
+          { indicators: [{ properties: { population: '123' }, measure: 'C1' }], _id: ['E2', 'E3'] },
+          {
+            indicators: [{ properties: { population2: '234' }, measure: 'C5' }, {
+              properties: { population: '234' },
+              measure: 'C1'
+            }], _id: ['E3', 'E1']
+          },
+          {
+            indicators: [{ properties: { population2: '345' }, measure: 'C5' }, {
+              properties: { population: '345' },
+              measure: 'C1'
+            }], _id: ['E2', 'E4']
+          },
+          {
+            indicators: [{ properties: { population2: '456' }, measure: 'C5' }, {
+              properties: { population: '456' },
+              measure: 'C1'
+            }], _id: ['E1', 'E4']
+          },
+          {
+            indicators: [{ properties: { population: '567' }, measure: 'C1' }, {
+              properties: { population2: '567' },
+              measure: 'C5'
+            }], _id: ['E5', 'E1']
+          },
+          { indicators: [{ properties: { population: '678' }, measure: 'C1' }], _id: ['E5', 'E2'] },
+          { indicators: [{ properties: { population2: '678' }, measure: 'C5' }], _id: ['E6', 'E2'] },
+          { indicators: [{ properties: { population2: '678' }, measure: 'C5' }], _id: ['E6', 'E1'] }
         ],
         query: {
-          order_by: [{country: 'asc'}, {time: 'desc'}]
+          order_by: [{ country: 'asc' }, { time: 'desc' }]
         }
       };
       const expectedData = {
@@ -145,37 +187,60 @@ describe('Format WS Processor', () => {
         expect(result).to.be.deep.equal(expectedData);
         return done();
       });
-    }));
+    });
 
-    it('should invoke map a few datapoints by format-ws processor with translations', sandbox(function (done: Function) {
+    it('should invoke map a few datapoints by format-ws processor with translations', (done: Function) => {
       const data = {
         concepts: [
-          {gid: 'population', originId: 'C1'},
-          {gid: 'time', originId: 'C2'},
-          {gid: 'geo', originId: 'C3'},
-          {gid: 'country', domain: 'C3', originId: 'C4'},
-          {gid: 'population2', originId: 'C5'},
-          {gid: 'name', originId: 'C6'}
+          { gid: 'population', originId: 'C1' },
+          { gid: 'time', originId: 'C2' },
+          { gid: 'geo', originId: 'C3' },
+          { gid: 'country', domain: 'C3', originId: 'C4' },
+          { gid: 'population2', originId: 'C5' },
+          { gid: 'name', originId: 'C6' }
         ],
         entities: [
-          {gid: 'usa', originId: 'E1', domain: 'C3', sets: ['C4']},
-          {gid: 'ukraine', originId: 'E2', domain: 'C3', sets: ['C4']},
-          {gid: '2000', originId: 'E3', domain: 'C2', sets: []},
-          {gid: '1800', originId: 'E4', domain: 'C2', sets: []},
-          {gid: '1900', originId: 'E5', domain: 'C2', sets: []},
-          {gid: '2100', originId: 'E6', domain: 'C2', sets: []}
+          { gid: 'usa', originId: 'E1', domain: 'C3', sets: ['C4'] },
+          { gid: 'ukraine', originId: 'E2', domain: 'C3', sets: ['C4'] },
+          { gid: '2000', originId: 'E3', domain: 'C2', sets: [] },
+          { gid: '1800', originId: 'E4', domain: 'C2', sets: [] },
+          { gid: '1900', originId: 'E5', domain: 'C2', sets: [] },
+          { gid: '2100', originId: 'E6', domain: 'C2', sets: [] }
         ],
         datasetName: 'DatasetName',
         language: 'nl-nl',
         datasetVersionCommit: 'Version',
         headers: ['population', 'country', 'time', 'name'],
         datapoints: [
-          {indicators: [{properties: {population: '123'}, measure: 'C1'}, {properties: { name: 'Population' }, measure: 'C6', languages: {'nl-nl': {name: 'Bevolking'}}}], _id: ['E2', 'E3']},
-          {indicators: [{properties: { name: 'Population' }, measure: 'C6', languages: {'nl-nl': {name: 'Bevolking'}}}, {properties: {population: '234'}, measure: 'C1'}], _id: ['E3', 'E1']},
-          {indicators: [{properties: {population: '345'}, measure: 'C1'}, {properties: { name: 'Dimensions' }, measure: 'C6', languages: {'nl-nl': {name: 'Dimensies'}}}], _id: ['E2', 'E4']},
-          {indicators: [{properties: { name: null }, measure: 'C6'}, {properties: {population: '456'}, measure: 'C1'}], _id: ['E1', 'E4']},
-          {indicators: [{properties: {population: '567'}, measure: 'C1'}], _id: ['E5', 'E1']},
-          {indicators: [{properties: {population: '678'}, measure: 'C1'}], _id: ['E5', 'E2']}
+          {
+            indicators: [{ properties: { population: '123' }, measure: 'C1' }, {
+              properties: { name: 'Population' },
+              measure: 'C6',
+              languages: { 'nl-nl': { name: 'Bevolking' } }
+            }], _id: ['E2', 'E3']
+          },
+          {
+            indicators: [{
+              properties: { name: 'Population' },
+              measure: 'C6',
+              languages: { 'nl-nl': { name: 'Bevolking' } }
+            }, { properties: { population: '234' }, measure: 'C1' }], _id: ['E3', 'E1']
+          },
+          {
+            indicators: [{ properties: { population: '345' }, measure: 'C1' }, {
+              properties: { name: 'Dimensions' },
+              measure: 'C6',
+              languages: { 'nl-nl': { name: 'Dimensies' } }
+            }], _id: ['E2', 'E4']
+          },
+          {
+            indicators: [{ properties: { name: null }, measure: 'C6' }, {
+              properties: { population: '456' },
+              measure: 'C1'
+            }], _id: ['E1', 'E4']
+          },
+          { indicators: [{ properties: { population: '567' }, measure: 'C1' }], _id: ['E5', 'E1'] },
+          { indicators: [{ properties: { population: '678' }, measure: 'C1' }], _id: ['E5', 'E2'] }
         ],
         query: {}
       };
@@ -199,10 +264,13 @@ describe('Format WS Processor', () => {
         expect(result).to.be.deep.equal(expectedData);
         return done();
       });
-    }));
+    });
   });
 
   describe('Concepts formatting', () => {
+
+    afterEach(() => sandbox.restore());
+
     it('should format concept in WS-JSON: empty input', () => {
       const result = mapConcepts({
         concepts: [],
@@ -221,7 +289,7 @@ describe('Format WS Processor', () => {
       });
     });
 
-    it('should format concept in WS-JSON', sandbox(function (): void {
+    it('should format concept in WS-JSON', () => {
       const concept1 = {
         gid: 'name',
         properties: {
@@ -274,10 +342,10 @@ describe('Format WS Processor', () => {
       };
 
       expect(result).to.deep.equal(expectedResponse);
-    }));
+    });
 
-    it('should format concept in WS-JSON: should translate given concepts according to given lang', sandbox(function (): void {
-      const translateDocumentStub = this.stub(commonService, 'translateDocument').callsFake((concept, lang) => {
+    it('should format concept in WS-JSON: should translate given concepts according to given lang', () => {
+      const translateDocumentStub = sandbox.stub(commonService, 'translateDocument').callsFake((concept, lang) => {
         return concept.properties;
       });
 
@@ -338,7 +406,7 @@ describe('Format WS Processor', () => {
       sinon.assert.calledTwice(translateDocumentStub);
       sinon.assert.calledWith(translateDocumentStub, concept1, 'ar-SA');
       sinon.assert.calledWith(translateDocumentStub, concept2, 'ar-SA');
-    }));
+    });
 
     it('should format concept in WS-JSON: response contains dataset and version from which data is gathered', () => {
       const result = mapConcepts({
@@ -408,7 +476,7 @@ describe('Format WS Processor', () => {
       expect(result).to.deep.equal(expectedResponse);
     });
 
-    it('should format concept in WS-JSON: response should have ordered data according to the provided ordering', sandbox(function () {
+    it('should format concept in WS-JSON: response should have ordered data according to the provided ordering', () => {
       const concept1 = {
         gid: 'name',
         properties: {
@@ -436,7 +504,7 @@ describe('Format WS Processor', () => {
         datasetName: '',
         datasetVersionCommit: '',
         query: {
-          order_by: [{url: 'desc'}]
+          order_by: [{ url: 'desc' }]
         }
       });
 
@@ -463,10 +531,13 @@ describe('Format WS Processor', () => {
       };
 
       expect(result).to.deep.equal(expectedResponse);
-    }));
+    });
   });
 
   describe('Entities formatting', () => {
+
+    afterEach(() => sandbox.restore());
+
     it('should format entities in WS-JSON: empty input', () => {
       const result = mapEntities({
         entities: [],
@@ -578,8 +649,8 @@ describe('Format WS Processor', () => {
       expect(result).to.deep.equal(expectedResponse);
     });
 
-    it('should format entities in WS-JSON: entity should be translated', sandbox(function () {
-      const translateDocumentStub = this.stub(commonService, 'translateDocument').callsFake((entity, lang) => {
+    it('should format entities in WS-JSON: entity should be translated', () => {
+      const translateDocumentStub = sandbox.stub(commonService, 'translateDocument').callsFake((entity, lang) => {
         return entity.properties;
       });
 
@@ -631,7 +702,7 @@ describe('Format WS Processor', () => {
       sinon.assert.calledTwice(translateDocumentStub);
       sinon.assert.calledWith(translateDocumentStub, ukr, 'ar-SA');
       sinon.assert.calledWith(translateDocumentStub, dza, 'ar-SA');
-    }));
+    });
 
     it('should format entities in WS-JSON: entity from entity_set is returned for entity_domain request', () => {
       const result = mapEntities({
@@ -703,7 +774,7 @@ describe('Format WS Processor', () => {
         datasetName: 'bla/bla',
         datasetVersionCommit: '1a1a1a1',
         query: {
-          order_by: [{country: 'asc'}]
+          order_by: [{ country: 'asc' }]
         }
       });
 
@@ -731,6 +802,9 @@ describe('Format WS Processor', () => {
   });
 
   describe('Schema formatting', () => {
+
+    afterEach(() => sandbox.restore());
+
     it('should format schema to WS-JSON: empty data', () => {
       const data = {
         datasetName: '',
@@ -791,7 +865,7 @@ describe('Format WS Processor', () => {
     it('should format schema to WS-JSON: use aliases', () => {
       const data = {
         datasetName: 'bla/bla',
-        aliases: {min: 'min(value)'},
+        aliases: { min: 'min(value)' },
         datasetVersionCommit: 'aaaaaaa',
         headers: ['key', 'value', 'min'],
         schema: [
@@ -830,9 +904,9 @@ describe('Format WS Processor', () => {
       const data = {
         datasetName: 'bla/bla',
         query: {
-          order_by: [{'min(value)': 'desc'}]
+          order_by: [{ 'min(value)': 'desc' }]
         },
-        aliases: {min: 'min(value)'},
+        aliases: { min: 'min(value)' },
         datasetVersionCommit: 'aaaaaaa',
         headers: ['key', 'value', 'min'],
         schema: [
