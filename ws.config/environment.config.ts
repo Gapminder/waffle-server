@@ -49,8 +49,9 @@ const environment = Object.freeze({
 
   PATH_TO_DDF_REPOSITORIES: path.join(__dirname, '../ws.import/repos'),
   PATH_TO_DIFF_DDF_RESULT_FILE: path.join(__dirname, '../ws.import/diffs'),
+  DEFAULT_DATASETS: [],
 
   CLEAN_EXPORT: false
 });
 
-export { environment };
+export {environment};

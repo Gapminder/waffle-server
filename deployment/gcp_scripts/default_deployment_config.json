@@ -54,6 +54,7 @@
     "MONGODB_CONTAINER_IMAGE": "docker.io/mongo:3.6",
     "SOURCE_PORT": 80,
     "DEFAULT_MONGODB_PORT": 27017,
+    "DEFAULT_MONGODB_PATH": "/data/db",
     "CREATE_CLUSTER__ALLOWED_PARAMS": [
       "IMAGE_TYPE",
       "MACHINE_TYPE",

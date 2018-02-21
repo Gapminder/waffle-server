@@ -17,7 +17,7 @@ describe('Application', () => {
     sandbox.stub(Config, 'configureWaffleServer');
     sandbox.stub(Routes, 'registerRoutes');
 
-    const cloneImportedDdfReposStub = sandbox.stub();
+    const importDdfReposStub = sandbox.stub();
     const makeDefaultUserStub = sandbox.stub();
     const warmUpCacheStub = sandbox.stub();
     const longRunningQueriesKillerStub = sandbox.stub();
@@ -27,9 +27,9 @@ describe('Application', () => {
     const serviceLocator: any = {
       getApplication: () => ({ listen: { bind: () => listenStub.callsArgWithAsync(1) } }),
       get: (serviceName: string) => {
-        if (serviceName === 'importUtils') {
+        if (serviceName === 'importService') {
           return {
-            cloneImportedDdfRepos: cloneImportedDdfReposStub.resolves()
+            importDdfRepos: importDdfReposStub.resolves()
           };
         }
 
@@ -59,9 +59,9 @@ describe('Application', () => {
 
     return application.run().then(() => {
       sinon.assert.callOrder(
-        cloneImportedDdfReposStub,
-        listenStub,
         makeDefaultUserStub,
+        listenStub,
+        importDdfReposStub,
         warmUpCacheStub,
         longRunningQueriesKillerStub
       );
@@ -75,7 +75,7 @@ describe('Application', () => {
     sandbox.stub(Config, 'configureWaffleServer');
     sandbox.stub(Routes, 'registerRoutes');
 
-    const cloneImportedDdfReposStub = sandbox.stub();
+    const importDdfReposStub = sandbox.stub();
     const makeDefaultUserStub = sandbox.stub();
     const warmUpCacheStub = sandbox.stub();
     const longRunningQueriesKillerStub = sandbox.stub();
@@ -84,9 +84,9 @@ describe('Application', () => {
     const serviceLocator: any = {
       getApplication: () => ({ listen: { bind: () => listenStub.callsArgWithAsync(1) } }),
       get: (serviceName: string) => {
-        if (serviceName === 'importUtils') {
+        if (serviceName === 'importService') {
           return {
-            cloneImportedDdfRepos: cloneImportedDdfReposStub.resolves()
+            importDdfRepos: importDdfReposStub.resolves()
           };
         }
 
@@ -116,9 +116,10 @@ describe('Application', () => {
 
     return application.run().then(() => {
       sinon.assert.callOrder(
-        cloneImportedDdfReposStub,
-        listenStub,
         makeDefaultUserStub,
+        listenStub,
+        importDdfReposStub,
+        warmUpCacheStub,
         longRunningQueriesKillerStub
       );
 
@@ -131,7 +132,7 @@ describe('Application', () => {
     sandbox.stub(Config, 'configureWaffleServer');
     sandbox.stub(Routes, 'registerRoutes');
 
-    const cloneImportedDdfReposStub = sandbox.stub();
+    const importDdfReposStub = sandbox.stub();
     const makeDefaultUserStub = sandbox.stub();
     const warmUpCacheStub = sandbox.stub();
     const longRunningQueriesKillerStub = sandbox.stub();
@@ -141,9 +142,9 @@ describe('Application', () => {
     const serviceLocator: any = {
       getApplication: () => ({ listen: { bind: () => listenStub.callsArgWithAsync(1) } }),
       get: (serviceName: string) => {
-        if (serviceName === 'importUtils') {
+        if (serviceName === 'importService') {
           return {
-            cloneImportedDdfRepos: cloneImportedDdfReposStub.resolves()
+            importDdfRepos: importDdfReposStub.resolves()
           };
         }
 
@@ -173,9 +174,10 @@ describe('Application', () => {
 
     return application.run().then(() => {
       sinon.assert.callOrder(
-        cloneImportedDdfReposStub,
-        listenStub,
         makeDefaultUserStub,
+        listenStub,
+        importDdfReposStub,
+        warmUpCacheStub,
         longRunningQueriesKillerStub
       );
 
@@ -188,7 +190,7 @@ describe('Application', () => {
     sandbox.stub(Config, 'configureWaffleServer');
     sandbox.stub(Routes, 'registerRoutes');
 
-    const cloneImportedDdfReposStub = sandbox.stub();
+    const importDdfReposStub = sandbox.stub();
     const makeDefaultUserStub = sandbox.stub();
     const warmUpCacheStub = sandbox.stub();
     const longRunningQueriesKillerStub = sandbox.stub();
@@ -197,9 +199,9 @@ describe('Application', () => {
     const serviceLocator: any = {
       getApplication: () => ({ listen: { bind: () => listenStub.callsArgWithAsync(1) } }),
       get: (serviceName: string) => {
-        if (serviceName === 'importUtils') {
+        if (serviceName === 'importService') {
           return {
-            cloneImportedDdfRepos: cloneImportedDdfReposStub.resolves()
+            importDdfRepos: importDdfReposStub.resolves()
           };
         }
 
@@ -228,6 +230,14 @@ describe('Application', () => {
     const application = new Application(serviceLocator);
 
     return application.run().catch((error: any) => {
+      sinon.assert.callOrder(
+        makeDefaultUserStub,
+        listenStub,
+        importDdfReposStub,
+        warmUpCacheStub,
+        longRunningQueriesKillerStub
+      );
+
       expect(error).to.equal('Long running queries killer failed to start');
     });
   });
