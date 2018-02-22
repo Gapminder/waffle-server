@@ -77,7 +77,7 @@ export function run(): Promise<string | null> {
     REPLICAS_NAME: `${ENVIRONMENT}-replicas-${VERSION}`,
     LOAD_BALANCER_NAME: `${ENVIRONMENT}-lb-${VERSION}`,
     FIREWALL_RULE__ALLOW_HTTP: `${ENVIRONMENT}-allow-http-${VERSION}`,
-    
+
     REGION: DEFAULT_REGION,
     REDIS_REGION,
     MONGO_REGION,

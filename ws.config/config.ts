@@ -30,7 +30,11 @@ const config: any = {
   // { error: 0, warn: 1, info: 2, verbose: 3, debug: 4, silly: 5 }
   LOG_LEVEL: process.env.LOG_LEVEL || DEFAULT_CONFIG.LOG_LEVEL,
   DEFAULT_USER_PASSWORD: process.env.DEFAULT_USER_PASSWORD,
-  THRASHING_MACHINE: process.env.THRASHING_MACHINE
+  THRASHING_MACHINE: process.env.THRASHING_MACHINE,
+  DEFAULT_VERSION: process.env.DEFAULT_VERSION,
+  DEFAULT_DATASETS: process.env.DEFAULT_DATASETS
+    ? process.env.DEFAULT_DATASETS.split(',')
+    : DEFAULT_CONFIG.DEFAULT_DATASETS
 };
 
 config.IS_PRODUCTION = PRODUCTION_ENVS.has(config.NODE_ENV);
