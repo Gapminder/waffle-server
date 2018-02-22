@@ -5,6 +5,7 @@ import * as schemaQueryNormalizer from '../ws.ddfql/ddf-schema-query-normalizer'
 import { DatasetSchemaRepository } from '../ws.repository/ddf/dataset-index/dataset-index.repository';
 import * as ddfQueryValidator from '../ws.ddfql/ddf-query-validator';
 import { ValidateQueryModel } from '../ws.ddfql/ddf-query-validator';
+import { AsyncResultCallback } from 'async';
 
 export {
   findSchemaByDdfql
