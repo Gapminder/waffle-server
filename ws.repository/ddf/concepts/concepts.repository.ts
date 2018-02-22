@@ -6,6 +6,7 @@ import { VersionedModelRepository } from '../../versioned-model-repository';
 import { VersionedModelRepositoryFactory } from '../../versioned-model-repository-factory';
 import { constants } from '../../../ws.utils/constants';
 import { logger } from '../../../ws.config/log';
+import { AsyncResultArrayCallback } from 'async';
 
 const Concepts = model('Concepts');
 

@@ -6,6 +6,8 @@ import { VersionedModelRepositoryFactory } from '../../versioned-model-repositor
 import { VersionedModelRepository } from '../../versioned-model-repository';
 import { constants } from '../../../ws.utils/constants';
 import { logger } from '../../../ws.config/log';
+import { Dictionary } from 'lodash';
+import { AsyncResultArrayCallback } from 'async';
 
 const Entities = model('Entities');
 const Concepts = model('Concepts');

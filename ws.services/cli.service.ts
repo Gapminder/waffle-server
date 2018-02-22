@@ -12,6 +12,7 @@ import * as securityUtils from '../ws.utils/security';
 import * as transactionsService from './dataset-transactions.service';
 import * as datasetsService from './datasets.service';
 import * as reposService from './repos.service';
+import { AsyncResultCallback } from 'async';
 
 export {
   importDataset,

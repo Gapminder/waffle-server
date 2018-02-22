@@ -1,3 +1,4 @@
+import { Dictionary } from 'lodash';
 
 export interface DockerBuildArguments extends Dictionary<string|number|boolean> {
   PORT: number;

@@ -13,6 +13,7 @@ import { cache, statusCodesExpirationConfig } from '../../../ws.utils/redis-cach
 import { logger } from '../../../ws.config/log';
 import * as routeUtils from '../../utils';
 import { ServiceLocator } from '../../../ws.service-locator/index';
+import { AsyncResultCallback } from 'async';
 
 function createDdfqlController(serviceLocator: ServiceLocator): Application {
   const app = serviceLocator.getApplication();

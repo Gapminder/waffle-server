@@ -11,6 +11,7 @@ import * as entitiesUtils from '../utils/entities.utils';
 import * as ddfImportUtils from '../utils/import-ddf.utils';
 import {EntitiesRepositoryFactory} from '../../ws.repository/ddf/entities/entities.repository';
 import { DatasetTracker } from '../../ws.services/datasets-tracker';
+import { ErrorCallback } from 'async';
 
 export {
   startEntitiesUpdate as updateEntities
