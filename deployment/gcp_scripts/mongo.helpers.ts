@@ -3,6 +3,7 @@ import * as async from 'async';
 import { getGCloudArguments, getMongoArguments, runShellCommand } from './common.helpers';
 import { ExecOptions, ExecOutputReturnValue } from 'shelljs';
 import { logger } from '../../ws.config/log';
+import { pathToTMNetworkIP } from './autodeploy.helpers';
 
 export const pathToMongoNetworkIP = 'networkInterfaces.0.networkIP';
 export const pathToMongoSubnetwork = 'networkInterfaces.0.subnetwork';
@@ -150,12 +151,12 @@ function getMongoInternalIP(externalContext: any, cb: Function): void {
 
   return runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
     logger.info('\n', result.stdout, '\n');
-    logger.info(`\nConfig has mongourl: ${MONGODB_URL}\n`);
 
     try {
-      const { networkInterfaces: [{ networkIP, subnetwork }] } = JSON.parse(result.stdout);
-      externalContext.MONGO_HOST = networkIP;
-      externalContext.MONGO_SUBNETWORK = subnetwork;
+      const parsedStdout = JSON.parse(result.stdout);
+
+      externalContext.MONGO_HOST = _.get(parsedStdout, pathToMongoNetworkIP, false);
+      externalContext.MONGO_SUBNETWORK = _.get(parsedStdout, pathToMongoSubnetwork, false);
       externalContext.MONGODB_URL = `mongodb://${MONGODB_USER}:${MONGODB_PASSWORD}@${externalContext.MONGO_HOST}:${MONGODB_PORT}/${MONGODB_NAME}`;
 
       logger.info('\nMONGO INTERNAL IP:', externalContext.MONGO_HOST, '\n');

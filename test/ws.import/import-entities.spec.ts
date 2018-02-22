@@ -16,7 +16,7 @@ describe('entities import', function () {
 
   afterEach(() => sandbox.restore());
 
-  it('should not be any error', function (done: Function) {
+  it('should not be any error', (done: Function) => {
     const entitySetsOriginIds = ['583eb88d7fc6e74f7b4c3ce7', '583eb88d7fc6e74f7b4c3ce8'];
     const sets = {
       country: { gid: 'country', originId: entitySetsOriginIds[0] },
