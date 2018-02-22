@@ -10,6 +10,7 @@ import { DatapointsRepositoryFactory } from '../ws.repository/ddf/data-points/da
 import { DatasetSchemaRepository } from '../ws.repository/ddf/dataset-index/dataset-index.repository';
 import { MongooseCallback } from '../ws.repository/repository.types';
 import { logger } from '../ws.config/log';
+import { AsyncResultCallback } from 'async';
 
 export {
   setLastError,

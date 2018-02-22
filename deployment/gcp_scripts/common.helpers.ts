@@ -6,6 +6,7 @@ import { ExecOutputReturnValue } from 'shelljs';
 import { DockerBuildArguments, GCloudArguments } from './interfaces';
 import { logger } from '../../ws.config/log';
 import { constants } from '../../ws.utils/constants';
+import { Dictionary } from 'async';
 
 interface AsyncResultCallback<T, E> { (err?: E, result?: T): void; }
 

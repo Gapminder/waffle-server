@@ -7,6 +7,7 @@ import { ChildProcess } from 'child_process';
 import { ExecOutputReturnValue } from 'shelljs';
 import * as commonHelpers from '../../deployment/gcp_scripts/common.helpers';
 import * as autoDeploy from '../../deployment/gcp_scripts/autodeploy';
+import { AsyncResultCallback } from 'async';
 
 const { DEFAULT_ENVIRONMENTS, DEFAULT_NODE_ENV } = require('../../deployment/gcp_scripts/default_deployment_config.json');
 

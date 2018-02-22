@@ -4,6 +4,7 @@ import { ExecOptions, ExecOutputReturnValue } from 'shelljs';
 import { DockerBuildArguments, DockerBuildArgumentsTM } from './interfaces';
 import { getDockerArguments, getGCloudArguments, runShellCommand } from './common.helpers';
 import { logger } from '../../ws.config/log';
+import { AsyncResultCallback } from 'async';
 
 export const pathToLoadBalancerIP = 'status.loadBalancer.ingress.0.ip';
 export const pathToTMNetworkIP = 'networkInterfaces.0.accessConfigs.0.natIP';
