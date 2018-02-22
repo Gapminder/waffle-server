@@ -98,7 +98,8 @@ export function buildImageTM(externalContext: any, cb: Function): void {
       INFLUXDB_HOST,
       INFLUXDB_DATABASE_NAME,
       INFLUXDB_USER,
-      INFLUXDB_PASSWORD
+      INFLUXDB_PASSWORD,
+      DEFAULT_DATASETS
     }
   } = externalContext;
 
@@ -116,6 +117,7 @@ export function buildImageTM(externalContext: any, cb: Function): void {
     INFLUXDB_DATABASE_NAME,
     INFLUXDB_USER,
     INFLUXDB_PASSWORD,
+    DEFAULT_DATASETS,
     THRASHING_MACHINE: true
   });
 
@@ -357,6 +359,7 @@ export function printExternalIPs(externalContext: any, cb: Function): void {
     TM_INSTANCE_VARIABLES: {
       IP_ADDRESS: TM_IP_ADDRESS
     },
+    MONGODB_URL,
     LOAD_BALANCER_NAME
   } = externalContext;
 
@@ -370,7 +373,7 @@ export function printExternalIPs(externalContext: any, cb: Function): void {
       const parsedResult = JSON.parse(result.stdout);
       const LOAD_BALANCER_IP_ADDRESS = _.get(parsedResult, 'status.loadBalancer.ingress.0.ip', null);
 
-      console.log('\nRESULTS: \n', `TM: ${TM_IP_ADDRESS}\n`, `LB: ${LOAD_BALANCER_IP_ADDRESS}\n`);
+      console.log('\nRESULTS: \n', `TM: ${TM_IP_ADDRESS}\n`, `LB: ${LOAD_BALANCER_IP_ADDRESS}\n`, `MONGO URI: ${MONGODB_URL}`);
 
       return cb(null, LOAD_BALANCER_IP_ADDRESS);
     } catch (_error) {

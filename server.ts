@@ -8,6 +8,7 @@ import './ws.repository';
 
 import * as WarmupUtils from './ws.utils/cache-warmup';
 import * as ImportUtils from './ws.import/utils/import-ddf.utils';
+import * as ImportService from './ws.import/import-ddf';
 
 import { reposService } from 'waffle-server-repo-service';
 import { UsersService } from './ws.services/users.service';
@@ -31,6 +32,7 @@ connectToDb((error: any, db: Connection) => {
 
   const serviceLocator = ServiceLocator.create(express());
   serviceLocator.set('config', config);
+  serviceLocator.set('importService', ImportService);
   serviceLocator.set('importUtils', ImportUtils);
   serviceLocator.set('warmupUtils', WarmupUtils);
   serviceLocator.set('usersService', new UsersService(usersRepository));
