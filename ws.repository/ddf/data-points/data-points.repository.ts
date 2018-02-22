@@ -149,9 +149,7 @@ class DataPointsRepository extends VersionedModelRepository {
     const query = this._composeQuery(subDatapointQuery);
     const updateQuery = {
       $set: {
-        languages: {
-          [language.id]: properties
-        }
+        [`languages.${language.id}`]: properties
       }
     };
 

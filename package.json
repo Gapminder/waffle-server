@@ -63,7 +63,7 @@
     "cron": "1.2.1",
     "csvtojson": "1.1.7",
     "ddf-time-utils": "0.1.8",
-    "ddf-validation": "1.9.7",
+    "ddf-validation": "1.12.0",
     "entities": "1.1.1",
     "express": "4.15.3",
     "express-redis-cache": "1.0.0",
@@ -93,7 +93,7 @@
     "typescript": "2.5.2",
     "urlon": "2.0.1",
     "validator": "6.2.1",
-    "waffle-server-import-cli": "2.6.25",
+    "waffle-server-import-cli": "2.6.26",
     "waffle-server-repo-service": "1.0.7"
   },
   "devDependencies": {

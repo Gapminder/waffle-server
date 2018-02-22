@@ -21,6 +21,7 @@ export abstract class VersionedModelRepository {
 
   public create(documents: any, onCreated?: Function): any {
     const documentsForStoring = Array.isArray(documents) ? this.setDocumentsId(documents) : this.setDocumentsId([documents]);
+
     return this._getModel().insertMany(documentsForStoring, onCreated);
   }
 
