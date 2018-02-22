@@ -200,29 +200,31 @@ describe('importService.importDdfRepos', () => {
   afterEach(() => {
     config.THRASHING_MACHINE = originalThreshingMachine;
     config.DEFAULT_DATASETS = defaultDatasets;
+
+    sandbox.restore();
   });
 
-  it('should start import all dataset from config in db', sandbox(function (): any {
-    const cloneStub = this.stub(reposService, 'cloneRepo');
+  it('should start import all dataset from config in db', () => {
+    const cloneStub = sandbox.stub(reposService, 'cloneRepo');
     cloneStub
       .onFirstCall().callsArgWithAsync(2, null)
       .onSecondCall().callsArgWithAsync(2, null)
       .onThirdCall().callsArgWithAsync(2, null)
       .threw();
-    const getRepoNameForDatasetStub = this.stub(reposService, 'getRepoNameForDataset');
+    const getRepoNameForDatasetStub = sandbox.stub(reposService, 'getRepoNameForDataset');
     getRepoNameForDatasetStub
       .onFirstCall().returns(config.DEFAULT_DATASETS[0])
       .onSecondCall().returns(config.DEFAULT_DATASETS[1])
       .onThirdCall().returns(config.DEFAULT_DATASETS[2])
       .threw();
-    const getCommitsByGithubUrlStub = this.stub(cliUtils, 'getCommitsByGithubUrl');
+    const getCommitsByGithubUrlStub = sandbox.stub(cliUtils, 'getCommitsByGithubUrl');
     getCommitsByGithubUrlStub
       .onFirstCall().callsArgWithAsync(1, null, ['aaaaaaa'])
       .onSecondCall().callsArgWithAsync(1, null, ['bbbbbbb'])
       .onThirdCall().callsArgWithAsync(1, null, ['ccccccc'])
       .threw();
-    const importDatasetStub = this.stub(cliService, 'importDataset').callsArgWithAsync(1, null);
-    this.stub(logger, 'info');
+    const importDatasetStub = sandbox.stub(cliService, 'importDataset').callsArgWithAsync(1, null);
+    sandbox.stub(logger, 'info');
 
     return importService.importDdfRepos().then(() => {
       sinon.assert.calledThrice(cloneStub);
@@ -235,31 +237,31 @@ describe('importService.importDdfRepos', () => {
 
       sinon.assert.callCount(importDatasetStub, config.DEFAULT_DATASETS.length);
     });
-  }));
+  });
 
-  it('should import only 2 datasets due to the error for getting commits list', sandbox(function (): any {
+  it('should import only 2 datasets due to the error for getting commits list', () => {
     const expectedError = 'Cannot get repo commits list';
 
-    const cloneStub = this.stub(reposService, 'cloneRepo');
+    const cloneStub = sandbox.stub(reposService, 'cloneRepo');
     cloneStub
       .onFirstCall().callsArgWithAsync(2, null)
       .onSecondCall().callsArgWithAsync(2, null)
       .threw();
-    const getRepoNameForDatasetStub = this.stub(reposService, 'getRepoNameForDataset');
+    const getRepoNameForDatasetStub = sandbox.stub(reposService, 'getRepoNameForDataset');
     getRepoNameForDatasetStub
       .onFirstCall().returns(config.DEFAULT_DATASETS[0])
       .onSecondCall().returns(config.DEFAULT_DATASETS[1])
       .onThirdCall().returns(config.DEFAULT_DATASETS[2])
       .threw();
-    const getCommitsByGithubUrlStub = this.stub(cliUtils, 'getCommitsByGithubUrl');
+    const getCommitsByGithubUrlStub = sandbox.stub(cliUtils, 'getCommitsByGithubUrl');
     getCommitsByGithubUrlStub
       .onFirstCall().callsArgWithAsync(1, expectedError)
       .onSecondCall().callsArgWithAsync(1, null, ['bbbbbbb'])
       .onThirdCall().callsArgWithAsync(1, null, ['ccccccc'])
       .threw();
-    const importDatasetStub = this.stub(cliService, 'importDataset').callsArgWithAsync(1, null);
+    const importDatasetStub = sandbox.stub(cliService, 'importDataset').callsArgWithAsync(1, null);
 
-    const errorStub = this.stub(logger, 'error');
+    const errorStub = sandbox.stub(logger, 'error');
 
     return importService.importDdfRepos().then(() => {
       sinon.assert.calledOnce(errorStub);
@@ -272,32 +274,32 @@ describe('importService.importDdfRepos', () => {
       sinon.assert.calledWith(importDatasetStub, sinon.match({datasetName: '#2', github: '#2', commit: 'bbbbbbb'}), sinon.match.func);
       sinon.assert.calledWith(importDatasetStub, sinon.match({datasetName: '#3', github: '#3', commit: 'ccccccc'}), sinon.match.func);
     });
-  }));
+  });
 
-  it('shouldn\'t import any dataset due to the import error', sandbox(function (): any {
+  it('shouldn\'t import any dataset due to the import error', () => {
     const expectedError = 'Cannot import dataset';
 
-    const cloneStub = this.stub(reposService, 'cloneRepo');
+    const cloneStub = sandbox.stub(reposService, 'cloneRepo');
     cloneStub
       .onFirstCall().callsArgWithAsync(2, null)
       .onSecondCall().callsArgWithAsync(2, null)
       .onThirdCall().callsArgWithAsync(2, null)
       .threw();
-    const getRepoNameForDatasetStub = this.stub(reposService, 'getRepoNameForDataset');
+    const getRepoNameForDatasetStub = sandbox.stub(reposService, 'getRepoNameForDataset');
     getRepoNameForDatasetStub
       .onFirstCall().returns(config.DEFAULT_DATASETS[0])
       .onSecondCall().returns(config.DEFAULT_DATASETS[1])
       .onThirdCall().returns(config.DEFAULT_DATASETS[2])
       .threw();
-    const getCommitsByGithubUrlStub = this.stub(cliUtils, 'getCommitsByGithubUrl');
+    const getCommitsByGithubUrlStub = sandbox.stub(cliUtils, 'getCommitsByGithubUrl');
     getCommitsByGithubUrlStub
       .onFirstCall().callsArgWithAsync(1, null, ['aaaaaaa'])
       .onSecondCall().callsArgWithAsync(1, null, ['bbbbbbb'])
       .onThirdCall().callsArgWithAsync(1, null, ['ccccccc'])
       .threw();
-    const importDatasetStub = this.stub(cliService, 'importDataset').callsArgWithAsync(1, expectedError);
+    const importDatasetStub = sandbox.stub(cliService, 'importDataset').callsArgWithAsync(1, expectedError);
 
-    const errorStub = this.stub(logger, 'error');
+    const errorStub = sandbox.stub(logger, 'error');
 
     return importService.importDdfRepos().then(() => {
       sinon.assert.calledThrice(errorStub);
@@ -311,16 +313,16 @@ describe('importService.importDdfRepos', () => {
       sinon.assert.calledWith(importDatasetStub, sinon.match({datasetName: '#2', github: '#2', commit: 'bbbbbbb'}), sinon.match.func);
       sinon.assert.calledWith(importDatasetStub, sinon.match({datasetName: '#3', github: '#3', commit: 'ccccccc'}), sinon.match.func);
     });
-  }));
+  });
 
-  it('should not import any repos', sandbox(function (): any {
+  it('should not import any repos', () => {
     config.THRASHING_MACHINE = false;
 
-    const cloneStub = this.stub(reposService, 'cloneRepo');
-    const getRepoNameForDatasetStub = this.stub(reposService, 'getRepoNameForDataset');
-    const getCommitsByGithubUrlStub = this.stub(cliUtils, 'getCommitsByGithubUrl');
-    const importDatasetStub = this.stub(cliService, 'importDataset');
-    this.stub(logger, 'info');
+    const cloneStub = sandbox.stub(reposService, 'cloneRepo');
+    const getRepoNameForDatasetStub = sandbox.stub(reposService, 'getRepoNameForDataset');
+    const getCommitsByGithubUrlStub = sandbox.stub(cliUtils, 'getCommitsByGithubUrl');
+    const importDatasetStub = sandbox.stub(cliService, 'importDataset');
+    sandbox.stub(logger, 'info');
 
     return importService.importDdfRepos().then(() => {
       sinon.assert.notCalled(cloneStub);
@@ -328,5 +330,5 @@ describe('importService.importDdfRepos', () => {
       sinon.assert.notCalled(getCommitsByGithubUrlStub);
       sinon.assert.notCalled(importDatasetStub);
     });
-  }));
+  });
 });

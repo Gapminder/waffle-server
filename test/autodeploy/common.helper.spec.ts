@@ -54,7 +54,7 @@ describe('Common.helpers Tests', () => {
 
     const actual = commonHelpers.getMongoArguments(testArgs as any);
 
-    expect(actual).equal(`number=${testArgs.NUMBER}#&&#string=${testArgs.STRING}#&&#boolean=${testArgs.BOOLEAN}#&&#snake_case=${testArgs['snake-case']}`);
+    expect(actual).equal(`number=${testArgs.NUMBER},string=${testArgs.STRING},boolean=${testArgs.BOOLEAN},snake-case=${testArgs['snake-case']}`);
 
     done();
   });
