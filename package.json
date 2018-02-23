@@ -5,13 +5,13 @@
     "host": "localhost"
   },
   "name": "Waffle-Server",
-  "version": "2.12.4",
+  "version": "2.12.5",
   "description": "Server for keeping and serving ddf data",
   "main": "server.js",
   "scripts": {
     "lint": "tslint  -e **/node_modules/**/* -e **/test/**/* -e **/test/* --project tsconfig.json --config tslint.json ./**/*.ts",
     "test": "npm run tsc && npm run integration && npm run spec && npm run e2e",
-    "preintegration": "npm run tsc",
+    "preintegration": "npm run tsc && ts-node test/autodeploy/testUtils/update-deployment-configs.ts",
     "integration": "mocha --exit --reporter mochawesome --reporter-options reportDir=specReports,reportFilename=specReport --timeout 20000 --require ts-node/register 'test/**/*.int-spec.ts'",
     "prespec": "npm run tsc",
     "spec": "mocha --exit --reporter mocha-minimalist-reporter --reporter-options reportDir=specReports,reportFilename=specReport --timeout 20000 --require ts-node/register 'test/**/*.spec.ts'",

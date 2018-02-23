@@ -4,6 +4,7 @@ import { setupRedisInstance } from './redis.helpers';
 import { setupMongoInstance } from './mongo.helpers';
 import { getContextInstance } from './common.helpers';
 import { logger } from '../../ws.config/log';
+import { DEFAULT_CONFIG } from './deployment_config.default';
 
 import {
   setDefaultUser, createProject, setDefaultProject,
@@ -17,6 +18,7 @@ import {
 const packageJson = require('../../package.json');
 const {
   DEFAULT_NODE_ENV,
+  DEFAULT_PATH_TO_CONFIG_FILE,
   DEFAULT_ENVIRONMENTS,
   DEFAULT_TM_PORTS,
   DEFAULT_WS_PORTS,
@@ -26,7 +28,7 @@ const {
   DEFAULT_MACHINE_SUFFIXES,
   DEFAULT_GCP_VARIABLES,
   DEFAULT_GCP_API
-} = require('./default_deployment_config.json');
+} = DEFAULT_CONFIG;
 
 function setupEnvironment(): object {
   // Computed variables
@@ -34,7 +36,7 @@ function setupEnvironment(): object {
   const ENVIRONMENT = DEFAULT_ENVIRONMENTS[NODE_ENV] || NODE_ENV;
   const VERSION_TAG = packageJson.version;
   const VERSION = packageJson.version.replace(/\./g, '-');
-  const STATIC_VARIABLES = require(`./deployment_config_${ENVIRONMENT}.json`);
+  const STATIC_VARIABLES = require(`${DEFAULT_PATH_TO_CONFIG_FILE}${ENVIRONMENT}.json`);
   const DEFAULT_REGION = STATIC_VARIABLES.REGION || DEFAULT_GCP_VARIABLES.DEFAULT_REGION;
   const REDIS_REGION = STATIC_VARIABLES.REDIS_REGION || DEFAULT_REGION;
   const MONGO_REGION = STATIC_VARIABLES.MONGO_REGION || DEFAULT_REGION;

@@ -4,6 +4,7 @@ import * as semverRegex from 'semver-regex';
 import { GCloudArguments } from './interfaces';
 import { getContextInstance } from './common.helpers';
 import { logger } from '../../ws.config/log';
+import { DEFAULT_CONFIG } from './deployment_config.default';
 
 import {
   setDefaultProject, setDefaultUser, setupAPIs, linkProjectToBilling
@@ -24,7 +25,7 @@ const {
   DEFAULT_MACHINE_SUFFIXES,
   DEFAULT_GCP_VARIABLES,
   DEFAULT_GCP_API
-} = require('./default_deployment_config.json');
+} = DEFAULT_CONFIG;
 
 export function run(): Promise<string | null> {
 

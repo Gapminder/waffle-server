@@ -12,7 +12,7 @@ interface AsyncResultCallback<T, E> { (err?: E, result?: T): void; }
 
 const {
   DEFAULT_NODE_ENV
-} = require('./default_deployment_config.json');
+} = require('./deployment_config.default');
 
 export function runShellCommand(command: string, options: any, cb: AsyncResultCallback<ExecOutputReturnValue | ChildProcess | string, string>): void {
 
