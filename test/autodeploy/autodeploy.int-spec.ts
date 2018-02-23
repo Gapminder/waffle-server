@@ -1,15 +1,19 @@
 import 'mocha';
 import * as _ from 'lodash';
-import { expect } from 'chai';
+import {expect} from 'chai';
 import * as async from 'async';
+import {AsyncResultCallback} from 'async';
 import * as sinon from 'sinon';
-import { ChildProcess } from 'child_process';
-import { ExecOutputReturnValue } from 'shelljs';
+import {ChildProcess} from 'child_process';
+import {ExecOutputReturnValue} from 'shelljs';
+import * as path from 'path';
+
+import { DEFAULT_CONFIG } from '../../deployment/gcp_scripts/deployment_config.default';
+
 import * as commonHelpers from '../../deployment/gcp_scripts/common.helpers';
 import * as autoDeploy from '../../deployment/gcp_scripts/autodeploy';
-import { AsyncResultCallback } from 'async';
 
-const { DEFAULT_ENVIRONMENTS, DEFAULT_NODE_ENV } = require('../../deployment/gcp_scripts/default_deployment_config.json');
+const {DEFAULT_ENVIRONMENTS, DEFAULT_NODE_ENV} = DEFAULT_CONFIG;
 
 const sandbox = sinon.createSandbox();
 
@@ -22,6 +26,8 @@ let allCommands = [];
 
 describe('Autoimport Test: runShellCommand', () => {
   let runShellCommandStub;
+  const DEFAULT_PATH_TO_CONFIG_FILE = path.resolve('/test/autodeploy/fixtures/deployment_config_');
+
   // Get list of all reserved environments (development,local,prod,test)
   // concat with default environment (development) and stage (or any other name)
   // filter all environments what we want to check, or check all environments by default
@@ -44,6 +50,8 @@ describe('Autoimport Test: runShellCommand', () => {
     // if it is step for testEnv === null, then name of the test should be reflected in test name
     const testName = _.isNil(testEnv) ? 'default' : testEnv;
     it(`*** ${testName.toUpperCase()} env: check not allowed values present in commands`, async () => {
+      sandbox.stub(DEFAULT_CONFIG, 'DEFAULT_PATH_TO_CONFIG_FILE').value(DEFAULT_PATH_TO_CONFIG_FILE);
+
       if (process.env.NODE_ENV) {
         delete process.env.NODE_ENV;
       }
@@ -90,7 +98,7 @@ const PROJECT_NAME = 'my-cool-project3';
 const PROJECT_ID = `${PROJECT_NAME}-${ENVIRONMENT}`;
 const REGION = 'europe-west1';
 
-function getAllCommandsWhichShouldBeWithEnvironment (_allCommands: string[]): string[] {
+function getAllCommandsWhichShouldBeWithEnvironment(_allCommands: string[]): string[] {
   return _.reject(_allCommands, (command: string) => command.match(/config|services/gi));
 }
 
@@ -106,7 +114,7 @@ const commandStdoutFixture = {
       loadBalancer: {ingress: [{ip: '35.205.145.142'}]}
     },
     networkInterfaces: [{
-      accessConfigs: [{ natIP: '35.205.183.154' }],
+      accessConfigs: [{natIP: '35.205.183.154'}],
       subnetwork: `https://www.googleapis.com/compute/beta/projects/${PROJECT_ID}/regions/${REGION}/subnetworks/default`,
       networkIP: '192.127.0.2'
     }]
