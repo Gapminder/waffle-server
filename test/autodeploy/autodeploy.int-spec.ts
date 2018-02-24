@@ -1,6 +1,5 @@
 import 'mocha';
 import * as _ from 'lodash';
-import {expect} from 'chai';
 import * as async from 'async';
 import {AsyncResultCallback} from 'async';
 import * as sinon from 'sinon';
@@ -12,6 +11,11 @@ import { DEFAULT_CONFIG } from '../../deployment/gcp_scripts/deployment_config.d
 
 import * as commonHelpers from '../../deployment/gcp_scripts/common.helpers';
 import * as autoDeploy from '../../deployment/gcp_scripts/autodeploy';
+
+const chai = require('chai');
+const chaiMatchers = require('./testUtils/chaiJsMatchers');
+chai.use(chaiMatchers);
+const expect = chai.expect;
 
 const {DEFAULT_ENVIRONMENTS, DEFAULT_NODE_ENV} = DEFAULT_CONFIG;
 
@@ -76,18 +80,7 @@ describe('Autoimport Test: runShellCommand', () => {
         return expect(command, `wrong ENVIRONMENT in command:\n* ${command}`).to.contain(actualTestEnv);
       });
 
-      const allUndefineds = allCommands.filter((command: string) => command.includes('undefined'));
-      /* tslint:disable-next-line */
-      expect(allUndefineds, `'undefined' present on command(s):\n* ${allUndefineds.join('\n* ')}`).to.be.an('array').that.is.empty;
-
-      const allNulls = allCommands.filter((command: string) => command.includes('null'));
-      /* tslint:disable-next-line */
-      expect(allNulls, `'null' present on command(s):\n* ${allNulls.join('\n* ')}`).to.be.an('array').that.is.empty;
-
-      const allEmptyValues = allCommands.filter((command: string) => command.match(/=('\s+'|"\s+"|\s+|''|"")(\s+|$)/g));
-      /* tslint:disable-next-line */
-      expect(allEmptyValues, `empty values present on command(s):\n* ${allEmptyValues.join('\n* ')}`).to.be.an('array').that.is.empty;
-
+      expect(allCommands).not.to.have.undefinedNullOrEmptyValues;
     });
 
   });
