@@ -26,7 +26,7 @@ let allCommands = [];
 
 describe('Autoimport Test: runShellCommand', () => {
   let runShellCommandStub;
-  const DEFAULT_PATH_TO_CONFIG_FILE = path.resolve('/test/autodeploy/fixtures/deployment_config_');
+  const DEFAULT_PATH_TO_CONFIG_FILE = path.resolve('./test/autodeploy/fixtures/deployment_config_');
 
   // Get list of all reserved environments (development,local,prod,test)
   // concat with default environment (development) and stage (or any other name)

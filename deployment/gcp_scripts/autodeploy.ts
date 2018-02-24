@@ -18,7 +18,6 @@ import {
 const packageJson = require('../../package.json');
 const {
   DEFAULT_NODE_ENV,
-  DEFAULT_PATH_TO_CONFIG_FILE,
   DEFAULT_ENVIRONMENTS,
   DEFAULT_TM_PORTS,
   DEFAULT_WS_PORTS,
@@ -31,6 +30,8 @@ const {
 } = DEFAULT_CONFIG;
 
 function setupEnvironment(): object {
+  const {DEFAULT_PATH_TO_CONFIG_FILE} = DEFAULT_CONFIG; // placed it here for testing purpose
+
   // Computed variables
   const NODE_ENV = process.env.NODE_ENV || DEFAULT_NODE_ENV;
   const ENVIRONMENT = DEFAULT_ENVIRONMENTS[NODE_ENV] || NODE_ENV;
