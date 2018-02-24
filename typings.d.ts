@@ -6,3 +6,13 @@ declare module '*.json' {
 declare module 'synchronize' {
   export function syncFn(fn: Function): any;
 }
+
+declare module 'chai' {
+  global {
+      export namespace Chai {
+          interface Assertion {
+              responseText(expectedText: string): Promise<void>;
+          }
+      }
+  }
+}
