@@ -26,12 +26,12 @@ module.exports = function (_chai, utils) {
       allNulls.matchedCommands.length ||
       allEmptyValues.matchedCommands.length
       , 'not mutch sense using "undefinedNullOrEmptyValues" assertion without ".not" flag before the command'
-      , compileErrorMessage(allCommands, [allUndefineds, allNulls, allEmptyValues])
+      , compileErrorMessage([allUndefineds, allNulls, allEmptyValues])
     );
   });
 };
 
-function compileErrorMessage(allCommands: string[], allValues: any): string {
+function compileErrorMessage(allValues: any): string {
   let errorMessage = '';
 
   const parseFlags = (commands: string[], comparator?: string | RegExp): string[][] => commands.map(
@@ -43,7 +43,7 @@ function compileErrorMessage(allCommands: string[], allValues: any): string {
   const wrapMessage = (value: ForbiddenValue) => {
     return `\n* ${value.name} found in arg(s):\
     \n::: ${parseFlags(value.matchedCommands, value.comparator).join('\n::: ')}\
-    \n full command(s):\n::: ${value.matchedCommands.join('\n::: ')}`
+    \n full command(s):\n::: ${value.matchedCommands.join('\n::: ')}`;
   };
 
   allValues.forEach((value: ForbiddenValue) => {
