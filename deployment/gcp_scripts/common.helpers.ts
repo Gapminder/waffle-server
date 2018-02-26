@@ -19,7 +19,7 @@ export function runShellCommand(command: string, options: any, cb: AsyncResultCa
   // throw new Error('dssdfdsf');
 
   let outputParam = '';
-  switch(true) {
+  switch (true) {
     case _.includes(command, 'gcloud compute') && !_.includes(command, '--quiet'):
       outputParam = ' --format=json';
       break;
@@ -30,7 +30,7 @@ export function runShellCommand(command: string, options: any, cb: AsyncResultCa
       outputParam = ' --output=json';
       break;
     default:
-    break;
+      break;
   }
 
   const wrappedCommand = `${command}${outputParam}`;
@@ -79,7 +79,7 @@ export function runShellCommand(command: string, options: any, cb: AsyncResultCa
         const missingPaths = options.pathsToCheck.filter((path: string) => !_.get(parsedStdout, path, false));
 
         if (missingPaths.length) {
-          throw new Error(`No required data by paths: "${missingPaths.join('", "')}" : ${stdout}`);
+          return async.setImmediate(() => _cb(`No required data by paths: "${missingPaths.join('", "')}" : ${stdout}`, result));
         }
       }
 
