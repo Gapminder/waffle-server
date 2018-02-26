@@ -4,16 +4,14 @@ import '../../ws.repository';
 import '../../ws.config/db.config';
 
 import * as _ from 'lodash';
-import {expect} from 'chai';
+import { expect } from 'chai';
 import * as sinon from 'sinon';
-import * as sinonTest from 'sinon-test';
 import * as proxyquire from 'proxyquire';
 
 import * as datasetTransactionsService from '../../ws.services/dataset-transactions.service';
 import * as datasetsService from '../../ws.services/datasets.service';
 import { DatasetTracker } from '../../ws.services/datasets-tracker';
 import { DatasetTransactionsRepository } from '../../ws.repository/ddf/dataset-transactions/dataset-transactions.repository';
-import { logger } from '../../ws.config/log';
 
 const datasetTransactionsServicePath = '../../ws.services/dataset-transactions.service';
 const datasetServicePath = './datasets.service';
@@ -26,13 +24,17 @@ const datapointsRepositoryPath = '../ws.repository/ddf/data-points/data-points.r
 
 const shouldNotCall = () => expect.fail(null, null, 'This function should not be called');
 
-const sandbox = sinonTest.configureTest(sinon);
+const sandbox = sinon.createSandbox();
 
 describe('Dataset Transactions Service', () => {
 
+  afterEach(() => sandbox.restore());
+
   describe('Getting default dataset and transaction - Dataset name and transaction commit are given', () => {
 
-    it('should treat given dataset as default when it was provided along with commit', (done) => {
+    afterEach(() => sandbox.restore());
+
+    it('should treat given dataset as default when it was provided along with commit', (done: Function) => {
       const expectedCommit = 'ab76c6a';
       const expectedDatasetName = 'iam/myDataset';
       const inputCommit = 'ab76c6a99e10a1035b4fbb82cb72fe82de5cec9f';
@@ -58,7 +60,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should respond with an error when it occurred during dataset searching', (done) => {
+    it('should respond with an error when it occurred during dataset searching', (done: Function) => {
       const expectedDatasetName = 'iam/myDataset';
       const inputCommit = 'ab76c6a99e10a1035b4fbb82cb72fe82de5cec9f';
       const datasetSearchingError = 'Error during dataset searching';
@@ -77,7 +79,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should respond with an error when dataset was not found', (done) => {
+    it('should respond with an error when dataset was not found', (done: Function) => {
       const expectedDatasetName = 'iam/myDataset';
       const inputCommit = 'ab76c6a99e10a1035b4fbb82cb72fe82de5cec9f';
       const datasetSearchingError = `Dataset was not found: ${expectedDatasetName}`;
@@ -96,7 +98,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should respond with an error when default transaction was not found', (done) => {
+    it('should respond with an error when default transaction was not found', (done: Function) => {
       const expectedDatasetName = 'iam/myDataset';
       const inputCommit = 'ab76c6a99e10a1035b4fbb82cb72fe82de5cec9f';
       const expectedCommit = 'ab76c6a';
@@ -121,7 +123,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should respond with an error when transaction is still in progress', (done) => {
+    it('should respond with an error when transaction is still in progress', (done: Function) => {
       const expectedDatasetName = 'iam/myDataset';
       const inputCommit = 'ab76c6a99e10a1035b4fbb82cb72fe82de5cec9f';
       const expectedCommit = 'ab76c6a';
@@ -146,7 +148,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should respond with an error when transaction has errors', (done) => {
+    it('should respond with an error when transaction has errors', (done: Function) => {
       const expectedDatasetName = 'iam/myDataset';
       const inputCommit = 'ab76c6a99e10a1035b4fbb82cb72fe82de5cec9f';
       const expectedCommit = 'ab76c6a';
@@ -171,7 +173,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should respond with an error when error occurred during transaction searching', (done) => {
+    it('should respond with an error when error occurred during transaction searching', (done: Function) => {
       const expectedDatasetName = 'iam/myDataset';
       const inputCommit = 'ab76c6a99e10a1035b4fbb82cb72fe82de5cec9f';
       const transactionSearchingError = `Boom!`;
@@ -198,7 +200,9 @@ describe('Dataset Transactions Service', () => {
 
   describe('Getting default dataset and transaction - Only dataset name is given', () => {
 
-    it('should respond with an error when it occurred during dataset searching', (done) => {
+    afterEach(() => sandbox.restore());
+
+    it('should respond with an error when it occurred during dataset searching', (done: Function) => {
       const expectedDatasetName = 'iam/myDataset';
       const datasetSearchingError = 'Error during dataset searching';
 
@@ -216,7 +220,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should respond with an error when dataset was not found', (done) => {
+    it('should respond with an error when dataset was not found', (done: Function) => {
       const expectedDatasetName = 'iam/myDataset';
       const datasetSearchingError = `Dataset was not found: ${expectedDatasetName}`;
 
@@ -234,7 +238,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should respond with an error when error occurred while searching default transaction', (done) => {
+    it('should respond with an error when error occurred while searching default transaction', (done: Function) => {
       const expectedDatasetName = 'iam/myDataset';
       const expectedDatasetId = 'datasetId';
       const transactionSearchingError = `'Error happened while searching for a default transaction'`;
@@ -259,7 +263,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should respond with default dataset and transaction when default transaction was found', (done) => {
+    it('should respond with default dataset and transaction when default transaction was found', (done: Function) => {
       const expectedDatasetName = 'iam/myDataset';
       const expectedDatasetId = 'datasetId';
       const expectedCommit = 'ab76c6a';
@@ -286,7 +290,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should search for latest completed transaction when no default found for given dataset', (done) => {
+    it('should search for latest completed transaction when no default found for given dataset', (done: Function) => {
       const expectedDatasetName = 'iam/myDataset';
       const expectedDatasetId = 'datasetId';
 
@@ -318,7 +322,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should fail when error occurred while searching for latest completed transaction if no default exists', (done) => {
+    it('should fail when error occurred while searching for latest completed transaction if no default exists', (done: Function) => {
       const expectedDatasetName = 'iam/myDataset';
       const expectedDatasetId = 'datasetId';
       const transactionError = 'Boom!';
@@ -347,7 +351,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should fail when transaction found is still in progress for given dataset', (done) => {
+    it('should fail when transaction found is still in progress for given dataset', (done: Function) => {
       const expectedDatasetName = 'iam/myDataset';
       const expectedDatasetId = 'datasetId';
       const transactionError = 'No versions were found for the given dataset';
@@ -376,7 +380,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should fail when transaction found has lastError set for given dataset', (done) => {
+    it('should fail when transaction found has lastError set for given dataset', (done: Function) => {
       const expectedDatasetName = 'iam/myDataset';
       const expectedDatasetId = 'datasetId';
       const transactionError = 'No versions were found for the given dataset';
@@ -408,7 +412,9 @@ describe('Dataset Transactions Service', () => {
 
   describe('Getting default dataset and transaction - Only transaction commit is given', () => {
 
-    it('should fail when error happened while searching for default transaction', (done) => {
+    afterEach(() => sandbox.restore());
+
+    it('should fail when error happened while searching for default transaction', (done: Function) => {
       const expectedCommit = 'aaaaa42';
       const expectedError = 'Boom!';
 
@@ -428,7 +434,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should fail when default transaction was not found because default dataset was not set', (done) => {
+    it('should fail when default transaction was not found because default dataset was not set', (done: Function) => {
       const expectedCommit = 'aaaaa42';
       const expectedError = `Default dataset was not set`;
 
@@ -448,7 +454,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should find transaction by commit in the dataset which is currently default', (done) => {
+    it('should find transaction by commit in the dataset which is currently default', (done: Function) => {
       const expectedCommit = 'aaaaa42';
       const expectedDatasetId = 'expectedDatasetId';
 
@@ -477,7 +483,9 @@ describe('Dataset Transactions Service', () => {
 
   describe('Getting default dataset and transaction - Neither commit nor datasetName are given', () => {
 
-    it('should fail when error happened while searching for default transaction', (done) => {
+    afterEach(() => sandbox.restore());
+
+    it('should fail when error happened while searching for default transaction', (done: Function) => {
       const expectedError = 'Boom!';
 
       const datasetTransactionsService = proxyquire(datasetTransactionsServicePath, {
@@ -496,7 +504,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should fail when not latest completed transaction was found', (done) => {
+    it('should fail when not latest completed transaction was found', (done: Function) => {
       const expectedError = 'Default dataset was not set';
 
       const datasetTransactionsService = proxyquire(datasetTransactionsServicePath, {
@@ -515,7 +523,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should found default dataset and transaction', (done) => {
+    it('should found default dataset and transaction', (done: Function) => {
       const expectedError = 'Default dataset was not set';
       const expectedDatasetId = 'expectedDatasetId';
       const expectedTransactionId = 'expectedTransactionId';
@@ -540,6 +548,8 @@ describe('Dataset Transactions Service', () => {
   });
 
   describe('Rollback failed transaction', () => {
+
+    afterEach(() => sandbox.restore());
 
     const expectedError = 'Something went wrong';
     const expectedDatasetId = 'expectedDatasetId';
@@ -630,7 +640,7 @@ describe('Dataset Transactions Service', () => {
       }
     };
 
-    it('should fail when error happened while dataset ownership validating', (done) => {
+    it('should fail when error happened while dataset ownership validating', (done: Function) => {
       const findDatasetByNameAndValidateOwnership = (externalContext, onDatasetValidated) => {
         expect(externalContext.datasetName).to.be.equal(expectedDatasetName);
         expect(externalContext.user).to.be.equal(expectedUser);
@@ -651,7 +661,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should fail when error happened while failed transaction search', (done) => {
+    it('should fail when error happened while failed transaction search', (done: Function) => {
       const findLatestFailedByDataset = (datasetId, onFailedTransactionFound) => {
         expect(datasetId).to.be.equal(expectedDatasetId);
 
@@ -671,7 +681,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should fail when failed transaction was not found', (done) => {
+    it('should fail when failed transaction was not found', (done: Function) => {
       const findLatestFailedByDataset = (datasetId, onFailedTransactionFound) => {
         expect(datasetId).to.be.equal(expectedDatasetId);
 
@@ -691,7 +701,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should fail when error happened while dataset force locking', (done) => {
+    it('should fail when error happened while dataset force locking', (done: Function) => {
       const forceLock = (datasetName, onDatasetLocked) => {
         expect(datasetName).to.be.equal(expectedDatasetName);
 
@@ -868,6 +878,8 @@ describe('Dataset Transactions Service', () => {
 
   describe('Set default dataset', () => {
 
+    afterEach(() => sandbox.restore());
+
     const expectedError = 'Something went wrong';
     const expectedDatasetId = 'expectedDatasetId';
     const expectedDatasetName = 'expectedDatasetName';
@@ -898,7 +910,7 @@ describe('Dataset Transactions Service', () => {
       }
     };
 
-    it('should fail when error happened while failed dataset search by datasetName and userId', (done) => {
+    it('should fail when error happened while failed dataset search by datasetName and userId', (done: Function) => {
       const findByNameAndUser = (datasetName, userId, onDatasetFound) => {
         expect(datasetName).to.be.equal(expectedDatasetName);
         expect(userId).to.be.equal(expectedUserId);
@@ -919,7 +931,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should fail when isn\'t found dataset by datasetName and userId', (done) => {
+    it('should fail when isn\'t found dataset by datasetName and userId', (done: Function) => {
       const findByNameAndUser = (datasetName, userId, onDatasetFound) => {
         expect(datasetName).to.be.equal(expectedDatasetName);
         expect(userId).to.be.equal(expectedUserId);
@@ -940,7 +952,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should fail when dataset is private', (done) => {
+    it('should fail when dataset is private', (done: Function) => {
       const findByNameAndUser = (datasetName, userId, onDatasetFound) => {
         expect(datasetName).to.be.equal(expectedDatasetName);
         expect(userId).to.be.equal(expectedUserId);
@@ -961,7 +973,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should fail when error happened while failed transaction search by datasetId and transactionCommit', (done) => {
+    it('should fail when error happened while failed transaction search by datasetId and transactionCommit', (done: Function) => {
       const findByDatasetAndCommit = (datasetId, transactionCommit, onDatasetFound) => {
         expect(datasetId).to.be.equal(expectedDatasetId);
         expect(transactionCommit).to.be.equal(expectedTransactionCommit);
@@ -982,7 +994,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should fail when isn\'t found transaction', (done) => {
+    it('should fail when isn\'t found transaction', (done: Function) => {
       const findByDatasetAndCommit = (datasetId, transactionCommit, onDatasetFound) => {
         expect(datasetId).to.be.equal(expectedDatasetId);
         expect(transactionCommit).to.be.equal(expectedTransactionCommit);
@@ -1003,7 +1015,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should fail when is found opened transaction', (done) => {
+    it('should fail when is found opened transaction', (done: Function) => {
       const findByDatasetAndCommit = (datasetId, transactionCommit, onDatasetFound) => {
         expect(datasetId).to.be.equal(expectedDatasetId);
         expect(transactionCommit).to.be.equal(expectedTransactionCommit);
@@ -1024,7 +1036,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should fail when is found opened transaction', (done) => {
+    it('should fail when is found opened transaction', (done: Function) => {
       const findByDatasetAndCommit = (datasetId, transactionCommit, onDatasetFound) => {
         expect(datasetId).to.be.equal(expectedDatasetId);
         expect(transactionCommit).to.be.equal(expectedTransactionCommit);
@@ -1045,7 +1057,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should fail when is found corrupted transaction', (done) => {
+    it('should fail when is found corrupted transaction', (done: Function) => {
       const findByDatasetAndCommit = (datasetId, transactionCommit, onDatasetFound) => {
         expect(datasetId).to.be.equal(expectedDatasetId);
         expect(transactionCommit).to.be.equal(expectedTransactionCommit);
@@ -1065,7 +1077,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should fail when error happened while set transaction as default', (done) => {
+    it('should fail when error happened while set transaction as default', (done: Function) => {
       const setAsDefault = (userId, datasetId, transactionId, onDatasetFound) => {
         expect(userId).to.be.equal(expectedUserId);
         expect(datasetId).to.be.equal(expectedDatasetId);
@@ -1086,7 +1098,7 @@ describe('Dataset Transactions Service', () => {
       });
     });
 
-    it('should set choosen transaction as default', (done) => {
+    it('should set choosen transaction as default', (done: Function) => {
       const setAsDefault = (userId, datasetId, transactionId, onDatasetFound) => {
         expect(userId).to.be.equal(expectedUserId);
         expect(datasetId).to.be.equal(expectedDatasetId);
@@ -1112,19 +1124,19 @@ describe('Dataset Transactions Service', () => {
     });
   });
 
-  it('should set last error', sandbox(function () {
-    const setLastErrorSpy = this.spy(DatasetTransactionsRepository, 'setLastError');
+  it('should set last error', () => {
+    const setLastErrorSpy = sandbox.spy(DatasetTransactionsRepository, 'setLastError');
 
     const transactionId = 'txId';
     const lastErrorMessage = 'Boo!';
-    const onErrorSet = this.spy();
+    const onErrorSet = sandbox.spy();
     datasetTransactionsService.setLastError(transactionId, lastErrorMessage, onErrorSet);
 
     sinon.assert.calledOnce(setLastErrorSpy);
     sinon.assert.calledWith(setLastErrorSpy, transactionId, lastErrorMessage, onErrorSet);
-  }));
+  });
 
-  it('should get latest transaction status by dataset name', sandbox(function (done: Function) {
+  it('should get latest transaction status by dataset name', (done: Function) => {
     const externalContext = {
       datasetId: 'dsId',
       datasetName: 'dsName'
@@ -1147,13 +1159,13 @@ describe('Dataset Transactions Service', () => {
       email: 'dev@gapminder.org'
     };
 
-    const DatasetTrackerSpy = this.spy(DatasetTracker, 'get');
+    const DatasetTrackerSpy = sandbox.spy(DatasetTracker, 'get');
 
     const findDatasetByNameAndValidateOwnershipStub =
-      this.stub(datasetsService, 'findDatasetByNameAndValidateOwnership')
+      sandbox.stub(datasetsService, 'findDatasetByNameAndValidateOwnership')
         .callsArgWith(1, null, externalContext);
 
-    this.stub(DatasetTransactionsRepository, 'findLatestByDataset').callsArgWithAsync(1, null, latestTransaction);
+    sandbox.stub(DatasetTransactionsRepository, 'findLatestByDataset').callsArgWithAsync(1, null, latestTransaction);
 
     datasetTransactionsService.getStatusOfLatestTransactionByDatasetName(externalContext.datasetName, user, (error, status) => {
       expect(error).to.not.exist;
@@ -1173,13 +1185,13 @@ describe('Dataset Transactions Service', () => {
       sinon.assert.calledOnce(DatasetTrackerSpy);
       sinon.assert.calledWith(DatasetTrackerSpy, externalContext.datasetName);
 
-      sinon.restore(DatasetTracker.get);
+      DatasetTrackerSpy.restore();
 
       done();
     });
-  }));
+  });
 
-  it('should determine transaction progress', sandbox(function (done: Function) {
+  it('should determine transaction progress', (done: Function) => {
     const externalContext = {
       datasetId: 'dsId',
       datasetName: 'dsName'
@@ -1202,14 +1214,14 @@ describe('Dataset Transactions Service', () => {
       email: 'dev@gapminder.org'
     };
 
-    const getStateStub = this.stub().returns(expectedModifiedObjects);
+    const getStateStub = sandbox.stub().returns(expectedModifiedObjects);
 
-    const DatasetTrackerStub = this.stub(DatasetTracker, 'get').callsFake(() => {
+    const DatasetTrackerStub = sandbox.stub(DatasetTracker, 'get').callsFake(() => {
       return {getState: getStateStub};
     });
 
-    this.stub(datasetsService, 'findDatasetByNameAndValidateOwnership').callsArgWith(1, null, externalContext);
-    this.stub(DatasetTransactionsRepository, 'findLatestByDataset').callsArgWithAsync(1, null, latestTransaction);
+    sandbox.stub(datasetsService, 'findDatasetByNameAndValidateOwnership').callsArgWith(1, null, externalContext);
+    sandbox.stub(DatasetTransactionsRepository, 'findLatestByDataset').callsArgWithAsync(1, null, latestTransaction);
 
     datasetTransactionsService.getStatusOfLatestTransactionByDatasetName(externalContext.datasetName, user, (error, status) => {
       expect(error).to.not.exist;
@@ -1228,41 +1240,41 @@ describe('Dataset Transactions Service', () => {
       sinon.assert.calledOnce(DatasetTrackerStub);
       sinon.assert.calledWith(DatasetTrackerStub, externalContext.datasetName);
 
-      sinon.restore(DatasetTracker.get);
+      DatasetTrackerStub.restore();
 
       done();
     });
-  }));
+  });
 
-  it('shouldn\'t get latest transaction status by dataset name: fail because of dataset ownership check', sandbox(function (done: Function) {
+  it('shouldn\'t get latest transaction status by dataset name: fail because of dataset ownership check', (done: Function) => {
     const expectedError = 'Ownership check failed';
-    this.stub(datasetsService, 'findDatasetByNameAndValidateOwnership').callsArgWith(1, expectedError);
+    sandbox.stub(datasetsService, 'findDatasetByNameAndValidateOwnership').callsArgWith(1, expectedError);
 
     datasetTransactionsService.getStatusOfLatestTransactionByDatasetName(null, null, (error) => {
       expect(error).to.equal(expectedError);
       done();
     });
-  }));
+  });
 
-  it('shouldn\'t get latest transaction status by dataset name: fail finding latest transaction', sandbox(function (done: Function) {
+  it('shouldn\'t get latest transaction status by dataset name: fail finding latest transaction', (done: Function) => {
     const expectedError = 'Latest transaction search failed';
-    this.stub(datasetsService, 'findDatasetByNameAndValidateOwnership').callsArgWith(1, null, {});
-    this.stub(DatasetTransactionsRepository, 'findLatestByDataset').callsArgWithAsync(1, expectedError);
+    sandbox.stub(datasetsService, 'findDatasetByNameAndValidateOwnership').callsArgWith(1, null, {});
+    sandbox.stub(DatasetTransactionsRepository, 'findLatestByDataset').callsArgWithAsync(1, expectedError);
 
     datasetTransactionsService.getStatusOfLatestTransactionByDatasetName(null, null, (error) => {
       expect(error).to.equal(expectedError);
       done();
     });
-  }));
+  });
 
-  it('shouldn\'t get latest transaction status by dataset name: fail cause there is no latest transaction', sandbox(function (done: Function) {
+  it('shouldn\'t get latest transaction status by dataset name: fail cause there is no latest transaction', (done: Function) => {
     const expectedError = `Transaction is absent for dataset: sg`;
-    this.stub(datasetsService, 'findDatasetByNameAndValidateOwnership').callsArgWith(1, null, {datasetName: 'sg'});
-    this.stub(DatasetTransactionsRepository, 'findLatestByDataset').callsArgWithAsync(1, null);
+    sandbox.stub(datasetsService, 'findDatasetByNameAndValidateOwnership').callsArgWith(1, null, {datasetName: 'sg'});
+    sandbox.stub(DatasetTransactionsRepository, 'findLatestByDataset').callsArgWithAsync(1, null);
 
     datasetTransactionsService.getStatusOfLatestTransactionByDatasetName(null, null, (error) => {
       expect(error).to.equal(expectedError);
       done();
     });
-  }));
+  });
 });

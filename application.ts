@@ -13,6 +13,7 @@ export class Application {
   private config: any;
   private warmupUtils: any;
   private importUtils: any;
+  private importService: any;
   private usersService: any;
   private longRunningQueriesKiller: CronJob;
 
@@ -21,6 +22,7 @@ export class Application {
     this.registerRoutes(serviceLocator);
 
     this.importUtils = serviceLocator.get('importUtils');
+    this.importService = serviceLocator.get('importService');
     this.warmupUtils = serviceLocator.get('warmupUtils');
     this.config = serviceLocator.get('config');
     this.usersService = serviceLocator.get('usersService');
@@ -31,10 +33,10 @@ export class Application {
   }
 
   public run(): Promise<void> {
-    return this.importUtils.cloneImportedDdfRepos()
+    return this.usersService.makeDefaultUser()
       .then(() => this.listen(this.config.PORT))
       .then(() => logger.info('\nExpress server listening on port %d in %s mode', this.config.PORT, this.config.NODE_ENV))
-      .then(() => this.usersService.makeDefaultUser())
+      .then(() => this.importService.importDdfRepos())
       .then(() => this.warmup())
       .then(() => this.startLongRunningQueriesKiller());
   }
@@ -48,10 +50,6 @@ export class Application {
   }
 
   private warmup(): Promise<void> {
-    if (!this.config.THRASHING_MACHINE) {
-      return Promise.resolve();
-    }
-
     return util.promisify(this.warmupUtils.warmUpCache)()
       .then((warmedQueriesAmount: number) => {
           logger.info(`Attempt to warm up the cache is has been completed. Amount of executed queries: ${warmedQueriesAmount}`);

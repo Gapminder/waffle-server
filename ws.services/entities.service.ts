@@ -7,6 +7,7 @@ import * as ddfQueryValidator from '../ws.ddfql/ddf-query-validator';
 import { ValidateQueryModel } from '../ws.ddfql/ddf-query-validator';
 
 import { EntitiesRepositoryFactory } from '../ws.repository/ddf/entities/entities.repository';
+import { AsyncResultCallback } from 'async';
 
 export {
   getEntities,

@@ -10,6 +10,7 @@ import * as datapointsUtils from '../utils/datapoints.utils';
 import { ChangesDescriptor } from '../utils/changes-descriptor';
 import { DatapointsRepositoryFactory } from '../../ws.repository/ddf/data-points/data-points.repository';
 import { DatasetTracker } from '../../ws.services/datasets-tracker';
+import { ErrorCallback } from 'async';
 
 export {
   startDatapointsCreation as updateDatapoints

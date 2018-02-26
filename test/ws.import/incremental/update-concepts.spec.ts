@@ -1,17 +1,16 @@
 import '../../../ws.repository';
-import {expect} from 'chai';
+import { expect } from 'chai';
 import * as hi from 'highland';
 import * as _ from 'lodash';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import * as sinonTest from 'sinon-test';
-import {logger} from '../../../ws.config/log';
+import { logger } from '../../../ws.config/log';
 
 import * as updateService from '../../../ws.import/incremental/update-concepts';
-import {ConceptsRepositoryFactory} from '../../../ws.repository/ddf/concepts/concepts.repository';
+import { ConceptsRepositoryFactory } from '../../../ws.repository/ddf/concepts/concepts.repository';
 import * as fileUtils from '../../../ws.utils/file';
 
-const sandbox = sinonTest.configureTest(sinon);
+const sandbox = sinon.createSandbox();
 
 const datasetId = 'DATASETID';
 const version = 1111111;
@@ -43,7 +42,7 @@ const expectedCreatedConcepts = [
     domain: null,
     from: version,
     gid: 'company_scale',
-    languages: {  },
+    languages: {},
     originId: null,
     properties: {
       additional_column: 'updated',
@@ -61,7 +60,7 @@ const expectedCreatedConcepts = [
     domain: null,
     from: version,
     gid: 'company_scale1',
-    languages: {  },
+    languages: {},
     originId: null,
     properties: {
       additional_column: 'updated',
@@ -78,8 +77,11 @@ const expectedCreatedConcepts = [
 ];
 
 describe('Update Concepts', function () {
-  it('should create new and remove old concepts from fixture', sandbox(function (done: Function) {
-    const originExternalContext = _.defaults({pathToDatasetDiff: path.resolve(__dirname, './fixtures/full-diff-concepts.txt')}, externalContextFixture);
+
+  afterEach(() => sandbox.restore());
+
+  it('should create new and remove old concepts from fixture', (done: Function) => {
+    const originExternalContext = _.defaults({ pathToDatasetDiff: path.resolve(__dirname, './fixtures/full-diff-concepts.txt') }, externalContextFixture);
     const expectedError = null;
     const expectedCloseByGidCallCount = 5;
     const expectedAllOpenedInGivenVersionCallCount = 8;
@@ -90,7 +92,7 @@ describe('Update Concepts', function () {
       domain: null,
       from: version - 1,
       gid: 'company',
-      languages: {  },
+      languages: {},
       originId: 'AAA',
       properties: {
         concept: 'company',
@@ -108,7 +110,7 @@ describe('Update Concepts', function () {
       domain: 'AAA',
       from: version - 1,
       gid: 'foundation',
-      languages: {  },
+      languages: {},
       originId: 'BBB',
       properties: {
         concept: 'foundation',
@@ -125,19 +127,19 @@ describe('Update Concepts', function () {
     const expectedDomains = [domain.gid, 'company1'];
     const expectedConcepts = [drillup, domain];
 
-    const loggerStub = this.stub(logger, 'info');
-    const closeByGidStub = this.stub(conceptRepository, 'closeByGid').callsArgWithAsync(1, expectedError);
-    const createStub = this.stub(conceptRepository, 'create').callsArgWithAsync(1, expectedError);
-    const findAllStub = this.stub(conceptRepository, 'findAll').callsArgWithAsync(0, expectedError, expectedConcepts);
-    const findDistinctDrillupsStub = this.stub(conceptRepository, 'findDistinctDrillups').callsArgWithAsync(0, expectedError, expectedDrillups);
-    const findDistinctDomainsStub = this.stub(conceptRepository, 'findDistinctDomains').callsArgWithAsync(0, expectedError, expectedDomains);
-    const addSubsetOfByGidStub = this.stub(conceptRepository, 'addSubsetOfByGid').callsArgWithAsync(1, expectedError, expectedDrillups);
-    const setDomainByGidStub = this.stub(conceptRepository, 'setDomainByGid').callsArgWithAsync(1, expectedError, expectedDomains);
+    const loggerStub = sandbox.stub(logger, 'info');
+    const closeByGidStub = sandbox.stub(conceptRepository, 'closeByGid').callsArgWithAsync(1, expectedError);
+    const createStub = sandbox.stub(conceptRepository, 'create').callsArgWithAsync(1, expectedError);
+    const findAllStub = sandbox.stub(conceptRepository, 'findAll').callsArgWithAsync(0, expectedError, expectedConcepts);
+    const findDistinctDrillupsStub = sandbox.stub(conceptRepository, 'findDistinctDrillups').callsArgWithAsync(0, expectedError, expectedDrillups);
+    const findDistinctDomainsStub = sandbox.stub(conceptRepository, 'findDistinctDomains').callsArgWithAsync(0, expectedError, expectedDomains);
+    const addSubsetOfByGidStub = sandbox.stub(conceptRepository, 'addSubsetOfByGid').callsArgWithAsync(1, expectedError, expectedDrillups);
+    const setDomainByGidStub = sandbox.stub(conceptRepository, 'setDomainByGid').callsArgWithAsync(1, expectedError, expectedDomains);
 
-    const latestExceptCurrentVersionStub = this.stub(ConceptsRepositoryFactory, 'latestExceptCurrentVersion').returns(conceptRepository);
-    const versionAgnosticStub = this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns(conceptRepository);
-    const allOpenedInGivenVersionStub = this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns(conceptRepository);
-    const latestVersionStub = this.stub(ConceptsRepositoryFactory, 'latestVersion').returns(conceptRepository);
+    const latestExceptCurrentVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'latestExceptCurrentVersion').returns(conceptRepository);
+    const versionAgnosticStub = sandbox.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns(conceptRepository);
+    const allOpenedInGivenVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns(conceptRepository);
+    const latestVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'latestVersion').returns(conceptRepository);
 
     return updateService.updateConcepts(originExternalContext, (error, externalContext) => {
       expect(error).to.not.exist;
@@ -172,30 +174,30 @@ describe('Update Concepts', function () {
       sinon.assert.calledTwice(findDistinctDomainsStub);
 
       sinon.assert.calledTwice(addSubsetOfByGidStub);
-      sinon.assert.calledWith(addSubsetOfByGidStub, {gid: 'foundation', parentConceptId: 'BBB'});
+      sinon.assert.calledWith(addSubsetOfByGidStub, { gid: 'foundation', parentConceptId: 'BBB' });
 
       sinon.assert.calledTwice(setDomainByGidStub);
-      sinon.assert.calledWith(setDomainByGidStub, {gid: 'company', domainConceptId: 'AAA'});
+      sinon.assert.calledWith(setDomainByGidStub, { gid: 'company', domainConceptId: 'AAA' });
 
       return done();
     });
-  }));
+  });
 
-  it('should finish main updating process if there is no concepts in file', sandbox(function (done: Function) {
+  it('should finish main updating process if there is no concepts in file', (done: Function) => {
     const expectedError = null;
     const originExternalContext = _.defaults({
       pathToDatasetDiff: path.resolve(__dirname, './fixtures/empty-concepts.txt')
     }, externalContextFixture);
     const expectedAllOpenedInGivenVersionCallCount = 4;
 
-    const loggerStub = this.stub(logger, 'info');
+    const loggerStub = sandbox.stub(logger, 'info');
 
-    const findAllStub = this.stub(conceptRepository, 'findAll').callsArgWithAsync(0, expectedError, []);
-    const findDistinctDrillupsStub = this.stub(conceptRepository, 'findDistinctDrillups').callsArgWithAsync(0, expectedError, []);
-    const findDistinctDomainsStub = this.stub(conceptRepository, 'findDistinctDomains').callsArgWithAsync(0, expectedError, []);
+    const findAllStub = sandbox.stub(conceptRepository, 'findAll').callsArgWithAsync(0, expectedError, []);
+    const findDistinctDrillupsStub = sandbox.stub(conceptRepository, 'findDistinctDrillups').callsArgWithAsync(0, expectedError, []);
+    const findDistinctDomainsStub = sandbox.stub(conceptRepository, 'findDistinctDomains').callsArgWithAsync(0, expectedError, []);
 
-    const allOpenedInGivenVersionStub = this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns(conceptRepository);
-    const latestVersionStub = this.stub(ConceptsRepositoryFactory, 'latestVersion').returns(conceptRepository);
+    const allOpenedInGivenVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns(conceptRepository);
+    const latestVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'latestVersion').returns(conceptRepository);
 
     return updateService.updateConcepts(originExternalContext, (error, externalContext) => {
       expect(error).to.not.exist;
@@ -216,14 +218,14 @@ describe('Update Concepts', function () {
 
       return done();
     });
-  }));
+  });
 
-  it('should interrupt preliminary process if error happens during reading test file by line as json stream', sandbox(function (done: Function) {
-    const originExternalContext = _.defaults({pathToDatasetDiff: path.resolve(__dirname, './fixtures/full-diff-concepts.txt')}, externalContextFixture);
+  it('should interrupt preliminary process if error happens during reading test file by line as json stream', (done: Function) => {
+    const originExternalContext = _.defaults({ pathToDatasetDiff: path.resolve(__dirname, './fixtures/full-diff-concepts.txt') }, externalContextFixture);
     const expectedError = new Error('Boo!');
 
-    const loggerStub = this.stub(logger, 'info');
-    const fileUtilsStub = this.stub(fileUtils, 'readTextFileByLineAsJsonStream').returns(hi.fromError(expectedError));
+    const loggerStub = sandbox.stub(logger, 'info');
+    const fileUtilsStub = sandbox.stub(fileUtils, 'readTextFileByLineAsJsonStream').returns(hi.fromError(expectedError));
 
     return updateService.updateConcepts(originExternalContext, (error) => {
       expect(error).to.be.equal(expectedError);
@@ -236,16 +238,16 @@ describe('Update Concepts', function () {
 
       return done();
     });
-  }));
+  });
 
-  it('should interrupt removing concepts process if error happens during closing concept', sandbox(function (done: Function) {
-    const originExternalContext = _.defaults({pathToDatasetDiff: path.resolve(__dirname, './fixtures/full-diff-concepts.txt')}, externalContextFixture);
+  it('should interrupt removing concepts process if error happens during closing concept', (done: Function) => {
+    const originExternalContext = _.defaults({ pathToDatasetDiff: path.resolve(__dirname, './fixtures/full-diff-concepts.txt') }, externalContextFixture);
     const expectedError = new Error('Boo!');
 
-    const loggerStub = this.stub(logger, 'info');
+    const loggerStub = sandbox.stub(logger, 'info');
 
-    const closeByGidStub = this.stub(conceptRepository, 'closeByGid').callsArgWithAsync(1, expectedError);
-    const latestExceptCurrentVersionStub = this.stub(ConceptsRepositoryFactory, 'latestExceptCurrentVersion').returns(conceptRepository);
+    const closeByGidStub = sandbox.stub(conceptRepository, 'closeByGid').callsArgWithAsync(1, expectedError);
+    const latestExceptCurrentVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'latestExceptCurrentVersion').returns(conceptRepository);
 
     return updateService.updateConcepts(originExternalContext, (error) => {
       expect(error).to.be.equal(expectedError);
@@ -260,19 +262,19 @@ describe('Update Concepts', function () {
 
       return done();
     });
-  }));
+  });
 
-  it('should interrupt creating concepts process when trying create concept with duplicated gid', sandbox(function (done: Function) {
+  it('should interrupt creating concepts process when trying create concept with duplicated gid', (done: Function) => {
     const originExternalContext = _.defaults({
       pathToDatasetDiff: path.resolve(__dirname, './fixtures/create-duplicated-concepts.txt')
     }, externalContextFixture);
     const expectedError = 'All concept gid\'s should be unique within the dataset!';
 
-    const loggerStub = this.stub(logger, 'info');
-    const closeByGidStub = this.stub(conceptRepository, 'closeByGid').callsArgWithAsync(1, expectedError);
-    const latestExceptCurrentVersionStub = this.stub(ConceptsRepositoryFactory, 'latestExceptCurrentVersion').returns(conceptRepository);
-    const createStub = this.stub(conceptRepository, 'create').callsArgWithAsync(1, expectedError);
-    const versionAgnosticStub = this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns(conceptRepository);
+    const loggerStub = sandbox.stub(logger, 'info');
+    const closeByGidStub = sandbox.stub(conceptRepository, 'closeByGid').callsArgWithAsync(1, expectedError);
+    const latestExceptCurrentVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'latestExceptCurrentVersion').returns(conceptRepository);
+    const createStub = sandbox.stub(conceptRepository, 'create').callsArgWithAsync(1, expectedError);
+    const versionAgnosticStub = sandbox.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns(conceptRepository);
 
     return updateService.updateConcepts(originExternalContext, (error) => {
       expect(error).to.be.equal(expectedError);
@@ -287,22 +289,22 @@ describe('Update Concepts', function () {
 
       return done();
     });
-  }));
+  });
 
-  it('should interrupt updating concepts process if error happens during searching drillups', sandbox(function(done: Function) {
+  it('should interrupt updating concepts process if error happens during searching drillups', (done: Function) => {
     const originExternalContext = _.defaults({
       pathToDatasetDiff: path.resolve(__dirname, './fixtures/changed-concepts.txt')
     }, externalContextFixture);
     const expectedError = 'Boo!';
 
-    const loggerStub = this.stub(logger, 'info');
+    const loggerStub = sandbox.stub(logger, 'info');
 
-    const findAllStub = this.stub(conceptRepository, 'findAll').callsArgWithAsync(0, null, []);
-    const findDistinctDrillupsStub = this.stub(conceptRepository, 'findDistinctDrillups').callsArgWithAsync(0, expectedError);
-    const findDistinctDomainsStub = this.stub(conceptRepository, 'findDistinctDomains').callsArgWithAsync(0, expectedError);
+    const findAllStub = sandbox.stub(conceptRepository, 'findAll').callsArgWithAsync(0, null, []);
+    const findDistinctDrillupsStub = sandbox.stub(conceptRepository, 'findDistinctDrillups').callsArgWithAsync(0, expectedError);
+    const findDistinctDomainsStub = sandbox.stub(conceptRepository, 'findDistinctDomains').callsArgWithAsync(0, expectedError);
 
-    const allOpenedInGivenVersionStub = this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns(conceptRepository);
-    const latestVersionStub = this.stub(ConceptsRepositoryFactory, 'latestVersion').returns(conceptRepository);
+    const allOpenedInGivenVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns(conceptRepository);
+    const latestVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'latestVersion').returns(conceptRepository);
 
     return updateService.updateConcepts(originExternalContext, (error) => {
       expect(error).to.be.equal(expectedError);
@@ -322,22 +324,22 @@ describe('Update Concepts', function () {
 
       return done();
     });
-  }));
+  });
 
-  it('should interrupt updating concepts process if error happens during searching domains', sandbox(function(done: Function) {
+  it('should interrupt updating concepts process if error happens during searching domains', (done: Function) => {
     const originExternalContext = _.defaults({
       pathToDatasetDiff: path.resolve(__dirname, './fixtures/changed-concepts.txt')
     }, externalContextFixture);
     const expectedError = 'Boo!';
 
-    const loggerStub = this.stub(logger, 'info');
+    const loggerStub = sandbox.stub(logger, 'info');
 
-    const findAllStub = this.stub(conceptRepository, 'findAll').callsArgWithAsync(0, null, []);
-    const findDistinctDrillupsStub = this.stub(conceptRepository, 'findDistinctDrillups').callsArgWithAsync(0, null);
-    const findDistinctDomainsStub = this.stub(conceptRepository, 'findDistinctDomains').callsArgWithAsync(0, expectedError);
+    const findAllStub = sandbox.stub(conceptRepository, 'findAll').callsArgWithAsync(0, null, []);
+    const findDistinctDrillupsStub = sandbox.stub(conceptRepository, 'findDistinctDrillups').callsArgWithAsync(0, null);
+    const findDistinctDomainsStub = sandbox.stub(conceptRepository, 'findDistinctDomains').callsArgWithAsync(0, expectedError);
 
-    const allOpenedInGivenVersionStub = this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns(conceptRepository);
-    const latestVersionStub = this.stub(ConceptsRepositoryFactory, 'latestVersion').returns(conceptRepository);
+    const allOpenedInGivenVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns(conceptRepository);
+    const latestVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'latestVersion').returns(conceptRepository);
 
     return updateService.updateConcepts(originExternalContext, (error) => {
       expect(error).to.be.equal(expectedError);
@@ -357,25 +359,25 @@ describe('Update Concepts', function () {
 
       return done();
     });
-  }));
+  });
 
-  it('should interrupt updating concepts process if error happens during closing concepts in applying changes to concept flow', sandbox(function(done: Function) {
+  it('should interrupt updating concepts process if error happens during closing concepts in applying changes to concept flow', (done: Function) => {
     const originExternalContext = _.defaults({
       pathToDatasetDiff: path.resolve(__dirname, './fixtures/changed-concepts.txt')
     }, externalContextFixture);
     const expectedError = 'Boo!';
     const expectedAllOpenedInGivenVersionCallCount = 4;
 
-    const loggerStub = this.stub(logger, 'info');
+    const loggerStub = sandbox.stub(logger, 'info');
 
-    const findAllStub = this.stub(conceptRepository, 'findAll').callsArgWithAsync(0, null, []);
-    const findDistinctDrillupsStub = this.stub(conceptRepository, 'findDistinctDrillups').callsArgWithAsync(0, null);
-    const findDistinctDomainsStub = this.stub(conceptRepository, 'findDistinctDomains').callsArgWithAsync(0, null);
-    const closeByGidStub = this.stub(conceptRepository, 'closeByGid').callsArgWithAsync(1, expectedError);
+    const findAllStub = sandbox.stub(conceptRepository, 'findAll').callsArgWithAsync(0, null, []);
+    const findDistinctDrillupsStub = sandbox.stub(conceptRepository, 'findDistinctDrillups').callsArgWithAsync(0, null);
+    const findDistinctDomainsStub = sandbox.stub(conceptRepository, 'findDistinctDomains').callsArgWithAsync(0, null);
+    const closeByGidStub = sandbox.stub(conceptRepository, 'closeByGid').callsArgWithAsync(1, expectedError);
 
-    const allOpenedInGivenVersionStub = this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns(conceptRepository);
-    const latestVersionStub = this.stub(ConceptsRepositoryFactory, 'latestVersion').returns(conceptRepository);
-    const latestExceptCurrentVersionStub = this.stub(ConceptsRepositoryFactory, 'latestExceptCurrentVersion').returns(conceptRepository);
+    const allOpenedInGivenVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns(conceptRepository);
+    const latestVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'latestVersion').returns(conceptRepository);
+    const latestExceptCurrentVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'latestExceptCurrentVersion').returns(conceptRepository);
 
     return updateService.updateConcepts(originExternalContext, (error) => {
       expect(error).to.be.equal(expectedError);
@@ -401,25 +403,25 @@ describe('Update Concepts', function () {
 
       return done();
     });
-  }));
+  });
 
-  it('should log warn message if no concept was found during closing original concept in applying changes to concept flow', sandbox(function(done: Function) {
+  it('should log warn message if no concept was found during closing original concept in applying changes to concept flow', (done: Function) => {
     const originExternalContext = _.defaults({
       pathToDatasetDiff: path.resolve(__dirname, './fixtures/changed-concepts.txt')
     }, externalContextFixture);
     const expectedAllOpenedInGivenVersionCallCount = 8;
 
-    const loggerInfoStub = this.stub(logger, 'info');
-    const loggerDebugStub = this.stub(logger, 'debug');
+    const loggerInfoStub = sandbox.stub(logger, 'info');
+    const loggerDebugStub = sandbox.stub(logger, 'debug');
 
-    const findAllStub = this.stub(conceptRepository, 'findAll').callsArgWithAsync(0, null, []);
-    const findDistinctDrillupsStub = this.stub(conceptRepository, 'findDistinctDrillups').callsArgWithAsync(0, null);
-    const findDistinctDomainsStub = this.stub(conceptRepository, 'findDistinctDomains').callsArgWithAsync(0, null);
-    const closeByGidStub = this.stub(conceptRepository, 'closeByGid').callsArgWithAsync(1, null, null);
+    const findAllStub = sandbox.stub(conceptRepository, 'findAll').callsArgWithAsync(0, null, []);
+    const findDistinctDrillupsStub = sandbox.stub(conceptRepository, 'findDistinctDrillups').callsArgWithAsync(0, null);
+    const findDistinctDomainsStub = sandbox.stub(conceptRepository, 'findDistinctDomains').callsArgWithAsync(0, null);
+    const closeByGidStub = sandbox.stub(conceptRepository, 'closeByGid').callsArgWithAsync(1, null, null);
 
-    const allOpenedInGivenVersionStub = this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns(conceptRepository);
-    const latestVersionStub = this.stub(ConceptsRepositoryFactory, 'latestVersion').returns(conceptRepository);
-    const latestExceptCurrentVersionStub = this.stub(ConceptsRepositoryFactory, 'latestExceptCurrentVersion').returns(conceptRepository);
+    const allOpenedInGivenVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns(conceptRepository);
+    const latestVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'latestVersion').returns(conceptRepository);
+    const latestExceptCurrentVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'latestExceptCurrentVersion').returns(conceptRepository);
 
     return updateService.updateConcepts(originExternalContext, (error, externalContext) => {
       expect(error).to.not.exist;
@@ -448,9 +450,9 @@ describe('Update Concepts', function () {
 
       return done();
     });
-  }));
+  });
 
-  it('should create new concepts versions during applying changes to concept flow', sandbox(function(done: Function) {
+  it('should create new concepts versions during applying changes to concept flow', (done: Function) => {
     const originExternalContext = _.defaults({
       pathToDatasetDiff: path.resolve(__dirname, './fixtures/changed-concepts.txt')
     }, externalContextFixture);
@@ -462,7 +464,7 @@ describe('Update Concepts', function () {
       domain: null,
       from: version - 1,
       gid: 'company',
-      languages: {  },
+      languages: {},
       originId: 'CCC',
       properties: {
         concept: 'company',
@@ -481,7 +483,7 @@ describe('Update Concepts', function () {
       domain: null,
       from: version - 1,
       gid: 'company',
-      languages: {  },
+      languages: {},
       originId: 'AAA',
       properties: {
         concept: 'company',
@@ -500,7 +502,7 @@ describe('Update Concepts', function () {
       domain: 'AAA',
       from: version - 1,
       gid: 'foundation',
-      languages: {  },
+      languages: {},
       originId: 'BBB',
       properties: {
         concept: 'foundation',
@@ -567,22 +569,22 @@ describe('Update Concepts', function () {
       type: 'entity_domain'
     };
 
-    const loggerInfoStub = this.stub(logger, 'info');
+    const loggerInfoStub = sandbox.stub(logger, 'info');
 
-    const findAllStub = this.stub(conceptRepository, 'findAll').callsArgWithAsync(0, null, expectedConcepts);
-    const findDistinctDrillupsStub = this.stub(conceptRepository, 'findDistinctDrillups').callsArgWithAsync(0, null);
-    const findDistinctDomainsStub = this.stub(conceptRepository, 'findDistinctDomains').callsArgWithAsync(0, null);
+    const findAllStub = sandbox.stub(conceptRepository, 'findAll').callsArgWithAsync(0, null, expectedConcepts);
+    const findDistinctDrillupsStub = sandbox.stub(conceptRepository, 'findDistinctDrillups').callsArgWithAsync(0, null);
+    const findDistinctDomainsStub = sandbox.stub(conceptRepository, 'findDistinctDomains').callsArgWithAsync(0, null);
 
-    const closeByGidStub = this.stub(conceptRepository, 'closeByGid');
+    const closeByGidStub = sandbox.stub(conceptRepository, 'closeByGid');
     closeByGidStub.onFirstCall().callsArgWithAsync(1, null, drillup);
     closeByGidStub.onSecondCall().callsArgWithAsync(1, null, domain);
     closeByGidStub.onThirdCall().callsArgWithAsync(1, null, time);
 
-    const createStub = this.stub(conceptRepository, 'create').callsArgWithAsync(1, null);
+    const createStub = sandbox.stub(conceptRepository, 'create').callsArgWithAsync(1, null);
 
-    const allOpenedInGivenVersionStub = this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns(conceptRepository);
-    const latestVersionStub = this.stub(ConceptsRepositoryFactory, 'latestVersion').returns(conceptRepository);
-    const latestExceptCurrentVersionStub = this.stub(ConceptsRepositoryFactory, 'latestExceptCurrentVersion').returns(conceptRepository);
+    const allOpenedInGivenVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns(conceptRepository);
+    const latestVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'latestVersion').returns(conceptRepository);
+    const latestExceptCurrentVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'latestExceptCurrentVersion').returns(conceptRepository);
 
     return updateService.updateConcepts(originExternalContext, (error, externalContext) => {
       expect(error).to.not.exist;
@@ -614,27 +616,27 @@ describe('Update Concepts', function () {
 
       return done();
     });
-  }));
+  });
 
-  it('should interrupt updating concepts process if error happens during finding all concepts in applying updates to concept flow', sandbox(function(done: Function) {
+  it('should interrupt updating concepts process if error happens during finding all concepts in applying updates to concept flow', (done: Function) => {
     const originExternalContext = _.defaults({
       pathToDatasetDiff: path.resolve(__dirname, './fixtures/updated-concepts.txt')
     }, externalContextFixture);
     const expectedError = 'Boo!';
     const expectedAllOpenedInGivenVersionCallCount = 4;
 
-    const loggerStub = this.stub(logger, 'info');
+    const loggerStub = sandbox.stub(logger, 'info');
 
-    const findAllStub = this.stub(conceptRepository, 'findAll');
+    const findAllStub = sandbox.stub(conceptRepository, 'findAll');
     findAllStub.onFirstCall().callsArgWithAsync(0, null, []);
     findAllStub.onSecondCall().callsArgWithAsync(0, expectedError, []);
-    const findDistinctDrillupsStub = this.stub(conceptRepository, 'findDistinctDrillups').callsArgWithAsync(0, null);
-    const findDistinctDomainsStub = this.stub(conceptRepository, 'findDistinctDomains').callsArgWithAsync(0, null);
-    const closeByGidStub = this.stub(conceptRepository, 'closeByGid').callsArgWithAsync(1, null);
+    const findDistinctDrillupsStub = sandbox.stub(conceptRepository, 'findDistinctDrillups').callsArgWithAsync(0, null);
+    const findDistinctDomainsStub = sandbox.stub(conceptRepository, 'findDistinctDomains').callsArgWithAsync(0, null);
+    const closeByGidStub = sandbox.stub(conceptRepository, 'closeByGid').callsArgWithAsync(1, null);
 
-    const allOpenedInGivenVersionStub = this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns(conceptRepository);
-    const latestVersionStub = this.stub(ConceptsRepositoryFactory, 'latestVersion').returns(conceptRepository);
-    const latestExceptCurrentVersionStub = this.stub(ConceptsRepositoryFactory, 'latestExceptCurrentVersion').returns(conceptRepository);
+    const allOpenedInGivenVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns(conceptRepository);
+    const latestVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'latestVersion').returns(conceptRepository);
+    const latestExceptCurrentVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'latestExceptCurrentVersion').returns(conceptRepository);
 
     return updateService.updateConcepts(originExternalContext, (error, externalContext) => {
       expect(error).to.be.equal(expectedError);
@@ -660,9 +662,9 @@ describe('Update Concepts', function () {
 
       return done();
     });
-  }));
+  });
 
-  it('should interrupt updating concepts process if error happens during closing concepts in applying updates to concept flow', sandbox(function(done: Function) {
+  it('should interrupt updating concepts process if error happens during closing concepts in applying updates to concept flow', (done: Function) => {
     const originExternalContext = _.defaults({
       pathToDatasetDiff: path.resolve(__dirname, './fixtures/only-columns-removed-concepts.txt')
     }, externalContextFixture);
@@ -675,7 +677,7 @@ describe('Update Concepts', function () {
       domain: null,
       from: version - 1,
       gid: 'company',
-      languages: {  },
+      languages: {},
       originId: 'AAA',
       properties: {
         concept: 'company',
@@ -694,7 +696,7 @@ describe('Update Concepts', function () {
       domain: 'AAA',
       from: version - 1,
       gid: 'foundation',
-      languages: {  },
+      languages: {},
       originId: 'BBB',
       properties: {
         concept: 'foundation',
@@ -710,22 +712,22 @@ describe('Update Concepts', function () {
     const expectedConcepts = [drillup, domain];
     const expectedUpdatedConcepts = [];
 
-    const loggerStub = this.stub(logger, 'info');
+    const loggerStub = sandbox.stub(logger, 'info');
 
-    const createStub = this.stub(conceptRepository, 'create').callsArgWithAsync(1, null);
-    const findAllStub = this.stub(conceptRepository, 'findAll').callsArgWithAsync(0, null, expectedConcepts);
-    const latestExceptCurrentVersionStub = this.stub(ConceptsRepositoryFactory, 'latestExceptCurrentVersion').returns(conceptRepository);
+    const createStub = sandbox.stub(conceptRepository, 'create').callsArgWithAsync(1, null);
+    const findAllStub = sandbox.stub(conceptRepository, 'findAll').callsArgWithAsync(0, null, expectedConcepts);
+    const latestExceptCurrentVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'latestExceptCurrentVersion').returns(conceptRepository);
 
-    const findDistinctDrillupsStub = this.stub(conceptRepository, 'findDistinctDrillups').callsArgWithAsync(0, null, []);
-    const addSubsetOfByGidStub = this.stub(conceptRepository, 'addSubsetOfByGid').callsArgWithAsync(1, null, []);
+    const findDistinctDrillupsStub = sandbox.stub(conceptRepository, 'findDistinctDrillups').callsArgWithAsync(0, null, []);
+    const addSubsetOfByGidStub = sandbox.stub(conceptRepository, 'addSubsetOfByGid').callsArgWithAsync(1, null, []);
 
-    const findDistinctDomainsStub = this.stub(conceptRepository, 'findDistinctDomains').callsArgWithAsync(0, null, []);
-    const setDomainByGidStub = this.stub(conceptRepository, 'setDomainByGid').callsArgWithAsync(1, null, []);
+    const findDistinctDomainsStub = sandbox.stub(conceptRepository, 'findDistinctDomains').callsArgWithAsync(0, null, []);
+    const setDomainByGidStub = sandbox.stub(conceptRepository, 'setDomainByGid').callsArgWithAsync(1, null, []);
 
-    const closeByIdStub = this.stub(conceptRepository, 'closeById').callsArgWithAsync(1, expectedError);
+    const closeByIdStub = sandbox.stub(conceptRepository, 'closeById').callsArgWithAsync(1, expectedError);
 
-    const latestVersionStub = this.stub(ConceptsRepositoryFactory, 'latestVersion').returns(conceptRepository);
-    const allOpenedInGivenVersionStub = this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns(conceptRepository);
+    const latestVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'latestVersion').returns(conceptRepository);
+    const allOpenedInGivenVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns(conceptRepository);
 
     return updateService.updateConcepts(originExternalContext, (error, externalContext) => {
       expect(error).to.be.equal(expectedError);
@@ -756,9 +758,9 @@ describe('Update Concepts', function () {
 
       return done();
     });
-  }));
+  });
 
-  it('should finish main updating process when concept changes were apllied successfully', sandbox(function(done: Function) {
+  it('should finish main updating process when concept changes were apllied successfully', (done: Function) => {
     const originExternalContext = _.defaults({
       pathToDatasetDiff: path.resolve(__dirname, './fixtures/only-columns-removed-concepts.txt')
     }, externalContextFixture);
@@ -770,7 +772,7 @@ describe('Update Concepts', function () {
       domain: null,
       from: version - 1,
       gid: 'company',
-      languages: {  },
+      languages: {},
       originId: 'AAA',
       properties: {
         concept: 'company',
@@ -789,7 +791,7 @@ describe('Update Concepts', function () {
       domain: 'AAA',
       from: version - 1,
       gid: 'foundation',
-      languages: {  },
+      languages: {},
       originId: 'BBB',
       properties: {
         concept: 'foundation',
@@ -836,24 +838,24 @@ describe('Update Concepts', function () {
       type: 'entity_domain'
     };
 
-    const loggerStub = this.stub(logger, 'info');
+    const loggerStub = sandbox.stub(logger, 'info');
 
-    const createStub = this.stub(conceptRepository, 'create').callsArgWithAsync(1, null);
-    const findAllStub = this.stub(conceptRepository, 'findAll').callsArgWithAsync(0, null, expectedConcepts);
-    const latestExceptCurrentVersionStub = this.stub(ConceptsRepositoryFactory, 'latestExceptCurrentVersion').returns(conceptRepository);
+    const createStub = sandbox.stub(conceptRepository, 'create').callsArgWithAsync(1, null);
+    const findAllStub = sandbox.stub(conceptRepository, 'findAll').callsArgWithAsync(0, null, expectedConcepts);
+    const latestExceptCurrentVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'latestExceptCurrentVersion').returns(conceptRepository);
 
-    const findDistinctDrillupsStub = this.stub(conceptRepository, 'findDistinctDrillups').callsArgWithAsync(0, null, []);
-    const addSubsetOfByGidStub = this.stub(conceptRepository, 'addSubsetOfByGid').callsArgWithAsync(1, null, []);
+    const findDistinctDrillupsStub = sandbox.stub(conceptRepository, 'findDistinctDrillups').callsArgWithAsync(0, null, []);
+    const addSubsetOfByGidStub = sandbox.stub(conceptRepository, 'addSubsetOfByGid').callsArgWithAsync(1, null, []);
 
-    const findDistinctDomainsStub = this.stub(conceptRepository, 'findDistinctDomains').callsArgWithAsync(0, null, []);
-    const setDomainByGidStub = this.stub(conceptRepository, 'setDomainByGid').callsArgWithAsync(1, null, []);
+    const findDistinctDomainsStub = sandbox.stub(conceptRepository, 'findDistinctDomains').callsArgWithAsync(0, null, []);
+    const setDomainByGidStub = sandbox.stub(conceptRepository, 'setDomainByGid').callsArgWithAsync(1, null, []);
 
-    const closeByIdStub = this.stub(conceptRepository, 'closeById');
+    const closeByIdStub = sandbox.stub(conceptRepository, 'closeById');
     closeByIdStub.onFirstCall().callsArgWithAsync(1, null, drillup);
     closeByIdStub.onSecondCall().callsArgWithAsync(1, null, domain);
 
-    const latestVersionStub = this.stub(ConceptsRepositoryFactory, 'latestVersion').returns(conceptRepository);
-    const allOpenedInGivenVersionStub = this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns(conceptRepository);
+    const latestVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'latestVersion').returns(conceptRepository);
+    const allOpenedInGivenVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns(conceptRepository);
 
     return updateService.updateConcepts(originExternalContext, (error, externalContext) => {
       expect(error).to.not.exist;
@@ -887,5 +889,5 @@ describe('Update Concepts', function () {
 
       return done();
     });
-  }));
+  });
 });

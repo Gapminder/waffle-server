@@ -30,7 +30,7 @@ const LOG_MARKERS = {
 const DEFAULT_PORT = 3000;
 
 const environment = Object.freeze({
-  HOST_URL: DEFAULT_HOST_URLS[NODE_ENV] || DEFAULT_HOST_URLS[DEFAULT_NODE_ENV],
+  HOST_URL: DEFAULT_HOST_URLS[NODE_ENV],
   PORT: DEFAULT_PORT,
 
   LOG_MARKER: LOG_MARKERS[NODE_ENV],
@@ -49,8 +49,9 @@ const environment = Object.freeze({
 
   PATH_TO_DDF_REPOSITORIES: path.join(__dirname, '../ws.import/repos'),
   PATH_TO_DIFF_DDF_RESULT_FILE: path.join(__dirname, '../ws.import/diffs'),
+  DEFAULT_DATASETS: [],
 
   CLEAN_EXPORT: false
 });
 
-export { environment };
+export {environment};

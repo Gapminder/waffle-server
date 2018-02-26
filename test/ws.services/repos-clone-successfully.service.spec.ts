@@ -3,35 +3,36 @@ import * as fs from 'fs';
 import 'mocha';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import * as sinonTest from 'sinon-test';
 import { reposService } from 'waffle-server-repo-service';
 import { config } from '../../ws.config/config';
 import { logger } from '../../ws.config/log';
 import * as wsReposService from '../../ws.services/repos.service';
 
 const expect = chai.expect;
-const sandbox = sinonTest.configureTest(sinon);
+const sandbox = sinon.createSandbox();
 const assert = sinon.assert;
 
 describe('repos service 2', () => {
 
-  it('should clone repo successfully when destination dir was not created and commit was given', sandbox(function (done: Function): void {
-    const fetchStub = this.stub(reposService, 'fetch').callsArgWithAsync(1, null);
-    const resetStub = this.stub(reposService, 'reset').callsArgWithAsync(1, null);
-    const checkoutToBranchStub = this.stub(reposService, 'checkoutToBranch').callsArgWithAsync(1, null);
-    const checkoutToCommitStub = this.stub(reposService, 'checkoutToCommit').callsArgWithAsync(1, null);
-    const pullStub = this.stub(reposService, 'pull').callsArgWithAsync(1, null);
-    const cleanStub = this.stub(reposService, 'clean').callsArgWithAsync(1, null);
-    const cloneStub = this.stub(reposService, 'clone').callsArgWithAsync(1, null);
-    const silentCloneStub = this.stub(reposService, 'silentClone').callsArgWithAsync(1, null);
-    const makeDirForceStub = this.stub(reposService, 'makeDirForce').callsArgWithAsync(1, null);
-    const removeDirForceStub = this.stub(reposService, 'removeDirForce').callsArgWithAsync(1, null);
+  afterEach(() => sandbox.restore());
 
-    const existsStub = this.stub(fs, 'exists').callsArgWithAsync(1, false);
+  it('should clone repo successfully when destination dir was not created and commit was given', (done: Function) => {
+    const fetchStub = sandbox.stub(reposService, 'fetch').callsArgWithAsync(1, null);
+    const resetStub = sandbox.stub(reposService, 'reset').callsArgWithAsync(1, null);
+    const checkoutToBranchStub = sandbox.stub(reposService, 'checkoutToBranch').callsArgWithAsync(1, null);
+    const checkoutToCommitStub = sandbox.stub(reposService, 'checkoutToCommit').callsArgWithAsync(1, null);
+    const pullStub = sandbox.stub(reposService, 'pull').callsArgWithAsync(1, null);
+    const cleanStub = sandbox.stub(reposService, 'clean').callsArgWithAsync(1, null);
+    const cloneStub = sandbox.stub(reposService, 'clone').callsArgWithAsync(1, null);
+    const silentCloneStub = sandbox.stub(reposService, 'silentClone').callsArgWithAsync(1, null);
+    const makeDirForceStub = sandbox.stub(reposService, 'makeDirForce').callsArgWithAsync(1, null);
+    const removeDirForceStub = sandbox.stub(reposService, 'removeDirForce').callsArgWithAsync(1, null);
 
-    const infoStub = this.stub(logger, 'info');
-    const errorStub = this.stub(logger, 'error');
-    const debugStub = this.stub(logger, 'debug');
+    const existsStub = sandbox.stub(fs, 'exists').callsArgWithAsync(1, false);
+
+    const infoStub = sandbox.stub(logger, 'info');
+    const errorStub = sandbox.stub(logger, 'error');
+    const debugStub = sandbox.stub(logger, 'debug');
 
     const ddfRepoName = 'ddf--gapminder--systema_globalis';
     const ddfRepoCommitHash = 'bla1234';
@@ -64,27 +65,27 @@ describe('repos service 2', () => {
 
       return done();
     });
-  }));
+  });
 
-  it('should clone repo successfully when destination dir was created but is empty and commit was given', sandbox(function (done: Function): void {
-    const fetchStub = this.stub(reposService, 'fetch').callsArgWithAsync(1, null);
-    const resetStub = this.stub(reposService, 'reset').callsArgWithAsync(1, null);
-    const checkoutToBranchStub = this.stub(reposService, 'checkoutToBranch').callsArgWithAsync(1, null);
-    const checkoutToCommitStub = this.stub(reposService, 'checkoutToCommit').callsArgWithAsync(1, null);
-    const pullStub = this.stub(reposService, 'pull').callsArgWithAsync(1, null);
-    const cleanStub = this.stub(reposService, 'clean').callsArgWithAsync(1, null);
-    const cloneStub = this.stub(reposService, 'clone').callsArgWithAsync(1, null);
-    const silentCloneStub = this.stub(reposService, 'silentClone').callsArgWithAsync(1, null);
-    const makeDirForceStub = this.stub(reposService, 'makeDirForce').callsArgWithAsync(1, null);
-    const removeDirForceStub = this.stub(reposService, 'removeDirForce').callsArgWithAsync(1, null);
+  it('should clone repo successfully when destination dir was created but is empty and commit was given', (done: Function) => {
+    const fetchStub = sandbox.stub(reposService, 'fetch').callsArgWithAsync(1, null);
+    const resetStub = sandbox.stub(reposService, 'reset').callsArgWithAsync(1, null);
+    const checkoutToBranchStub = sandbox.stub(reposService, 'checkoutToBranch').callsArgWithAsync(1, null);
+    const checkoutToCommitStub = sandbox.stub(reposService, 'checkoutToCommit').callsArgWithAsync(1, null);
+    const pullStub = sandbox.stub(reposService, 'pull').callsArgWithAsync(1, null);
+    const cleanStub = sandbox.stub(reposService, 'clean').callsArgWithAsync(1, null);
+    const cloneStub = sandbox.stub(reposService, 'clone').callsArgWithAsync(1, null);
+    const silentCloneStub = sandbox.stub(reposService, 'silentClone').callsArgWithAsync(1, null);
+    const makeDirForceStub = sandbox.stub(reposService, 'makeDirForce').callsArgWithAsync(1, null);
+    const removeDirForceStub = sandbox.stub(reposService, 'removeDirForce').callsArgWithAsync(1, null);
 
-    const existsStub = this.stub(fs, 'exists')
+    const existsStub = sandbox.stub(fs, 'exists')
       .onFirstCall().callsArgWithAsync(1, true)
       .onSecondCall().callsArgWithAsync(1, false);
 
-    const infoStub = this.stub(logger, 'info');
-    const errorStub = this.stub(logger, 'error');
-    const debugStub = this.stub(logger, 'debug');
+    const infoStub = sandbox.stub(logger, 'info');
+    const errorStub = sandbox.stub(logger, 'error');
+    const debugStub = sandbox.stub(logger, 'debug');
 
     const ddfRepoName = 'ddf--gapminder--systema_globalis';
     const ddfRepoCommitHash = 'bla1234';
@@ -116,25 +117,25 @@ describe('repos service 2', () => {
 
       return done();
     });
-  }));
+  });
 
-  it('should clone repo successfully when destination dir was created but isn\'t empty and commit was given', sandbox(function (done: Function): void {
-    const fetchStub = this.stub(reposService, 'fetch').callsArgWithAsync(1, null);
-    const resetStub = this.stub(reposService, 'reset').callsArgWithAsync(1, null);
-    const checkoutToBranchStub = this.stub(reposService, 'checkoutToBranch').callsArgWithAsync(1, null);
-    const checkoutToCommitStub = this.stub(reposService, 'checkoutToCommit').callsArgWithAsync(1, null);
-    const pullStub = this.stub(reposService, 'pull').callsArgWithAsync(1, null);
-    const cleanStub = this.stub(reposService, 'clean').callsArgWithAsync(1, null);
-    const cloneStub = this.stub(reposService, 'clone').callsArgWithAsync(1, null);
-    const silentCloneStub = this.stub(reposService, 'silentClone').callsArgWithAsync(1, null);
-    const makeDirForceStub = this.stub(reposService, 'makeDirForce').callsArgWithAsync(1, null);
-    const removeDirForceStub = this.stub(reposService, 'removeDirForce').callsArgWithAsync(1, null);
+  it('should clone repo successfully when destination dir was created but isn\'t empty and commit was given', (done: Function) => {
+    const fetchStub = sandbox.stub(reposService, 'fetch').callsArgWithAsync(1, null);
+    const resetStub = sandbox.stub(reposService, 'reset').callsArgWithAsync(1, null);
+    const checkoutToBranchStub = sandbox.stub(reposService, 'checkoutToBranch').callsArgWithAsync(1, null);
+    const checkoutToCommitStub = sandbox.stub(reposService, 'checkoutToCommit').callsArgWithAsync(1, null);
+    const pullStub = sandbox.stub(reposService, 'pull').callsArgWithAsync(1, null);
+    const cleanStub = sandbox.stub(reposService, 'clean').callsArgWithAsync(1, null);
+    const cloneStub = sandbox.stub(reposService, 'clone').callsArgWithAsync(1, null);
+    const silentCloneStub = sandbox.stub(reposService, 'silentClone').callsArgWithAsync(1, null);
+    const makeDirForceStub = sandbox.stub(reposService, 'makeDirForce').callsArgWithAsync(1, null);
+    const removeDirForceStub = sandbox.stub(reposService, 'removeDirForce').callsArgWithAsync(1, null);
 
-    const existsStub = this.stub(fs, 'exists').callsArgWithAsync(1, true);
+    const existsStub = sandbox.stub(fs, 'exists').callsArgWithAsync(1, true);
 
-    const infoStub = this.stub(logger, 'info');
-    const errorStub = this.stub(logger, 'error');
-    const debugStub = this.stub(logger, 'debug');
+    const infoStub = sandbox.stub(logger, 'info');
+    const errorStub = sandbox.stub(logger, 'error');
+    const debugStub = sandbox.stub(logger, 'debug');
 
     const ddfRepoName = 'ddf--gapminder--systema_globalis';
     const ddfRepoCommitHash = 'bla1234';
@@ -166,25 +167,25 @@ describe('repos service 2', () => {
 
       return done();
     });
-  }));
+  });
 
-  it('should clone repo successfully when destination dir was not created and commit wasn\'t given', sandbox(function (done: Function): void {
-    const fetchStub = this.stub(reposService, 'fetch').callsArgWithAsync(1, null);
-    const resetStub = this.stub(reposService, 'reset').callsArgWithAsync(1, null);
-    const checkoutToBranchStub = this.stub(reposService, 'checkoutToBranch').callsArgWithAsync(1, null);
-    const checkoutToCommitStub = this.stub(reposService, 'checkoutToCommit').callsArgWithAsync(1, null);
-    const pullStub = this.stub(reposService, 'pull').callsArgWithAsync(1, null);
-    const cleanStub = this.stub(reposService, 'clean').callsArgWithAsync(1, null);
-    const cloneStub = this.stub(reposService, 'clone').callsArgWithAsync(1, null);
-    const silentCloneStub = this.stub(reposService, 'silentClone').callsArgWithAsync(1, null);
-    const makeDirForceStub = this.stub(reposService, 'makeDirForce').callsArgWithAsync(1, null);
-    const removeDirForceStub = this.stub(reposService, 'removeDirForce').callsArgWithAsync(1, null);
+  it('should clone repo successfully when destination dir was not created and commit wasn\'t given', (done: Function) => {
+    const fetchStub = sandbox.stub(reposService, 'fetch').callsArgWithAsync(1, null);
+    const resetStub = sandbox.stub(reposService, 'reset').callsArgWithAsync(1, null);
+    const checkoutToBranchStub = sandbox.stub(reposService, 'checkoutToBranch').callsArgWithAsync(1, null);
+    const checkoutToCommitStub = sandbox.stub(reposService, 'checkoutToCommit').callsArgWithAsync(1, null);
+    const pullStub = sandbox.stub(reposService, 'pull').callsArgWithAsync(1, null);
+    const cleanStub = sandbox.stub(reposService, 'clean').callsArgWithAsync(1, null);
+    const cloneStub = sandbox.stub(reposService, 'clone').callsArgWithAsync(1, null);
+    const silentCloneStub = sandbox.stub(reposService, 'silentClone').callsArgWithAsync(1, null);
+    const makeDirForceStub = sandbox.stub(reposService, 'makeDirForce').callsArgWithAsync(1, null);
+    const removeDirForceStub = sandbox.stub(reposService, 'removeDirForce').callsArgWithAsync(1, null);
 
-    const existsStub = this.stub(fs, 'exists').callsArgWithAsync(1, false);
+    const existsStub = sandbox.stub(fs, 'exists').callsArgWithAsync(1, false);
 
-    const infoStub = this.stub(logger, 'info');
-    const errorStub = this.stub(logger, 'error');
-    const debugStub = this.stub(logger, 'debug');
+    const infoStub = sandbox.stub(logger, 'info');
+    const errorStub = sandbox.stub(logger, 'error');
+    const debugStub = sandbox.stub(logger, 'debug');
 
     const ddfRepoName = 'ddf--gapminder--systema_globalis';
     const ddfRepoCommitHash = null;
@@ -217,27 +218,27 @@ describe('repos service 2', () => {
 
       return done();
     });
-  }));
+  });
 
-  it('should clone repo successfully when destination dir was created but is empty and commit wasn\'t given', sandbox(function (done: Function): void {
-    const fetchStub = this.stub(reposService, 'fetch').callsArgWithAsync(1, null);
-    const resetStub = this.stub(reposService, 'reset').callsArgWithAsync(1, null);
-    const checkoutToBranchStub = this.stub(reposService, 'checkoutToBranch').callsArgWithAsync(1, null);
-    const checkoutToCommitStub = this.stub(reposService, 'checkoutToCommit').callsArgWithAsync(1, null);
-    const pullStub = this.stub(reposService, 'pull').callsArgWithAsync(1, null);
-    const cleanStub = this.stub(reposService, 'clean').callsArgWithAsync(1, null);
-    const cloneStub = this.stub(reposService, 'clone').callsArgWithAsync(1, null);
-    const silentCloneStub = this.stub(reposService, 'silentClone').callsArgWithAsync(1, null);
-    const makeDirForceStub = this.stub(reposService, 'makeDirForce').callsArgWithAsync(1, null);
-    const removeDirForceStub = this.stub(reposService, 'removeDirForce').callsArgWithAsync(1, null);
+  it('should clone repo successfully when destination dir was created but is empty and commit wasn\'t given', (done: Function) => {
+    const fetchStub = sandbox.stub(reposService, 'fetch').callsArgWithAsync(1, null);
+    const resetStub = sandbox.stub(reposService, 'reset').callsArgWithAsync(1, null);
+    const checkoutToBranchStub = sandbox.stub(reposService, 'checkoutToBranch').callsArgWithAsync(1, null);
+    const checkoutToCommitStub = sandbox.stub(reposService, 'checkoutToCommit').callsArgWithAsync(1, null);
+    const pullStub = sandbox.stub(reposService, 'pull').callsArgWithAsync(1, null);
+    const cleanStub = sandbox.stub(reposService, 'clean').callsArgWithAsync(1, null);
+    const cloneStub = sandbox.stub(reposService, 'clone').callsArgWithAsync(1, null);
+    const silentCloneStub = sandbox.stub(reposService, 'silentClone').callsArgWithAsync(1, null);
+    const makeDirForceStub = sandbox.stub(reposService, 'makeDirForce').callsArgWithAsync(1, null);
+    const removeDirForceStub = sandbox.stub(reposService, 'removeDirForce').callsArgWithAsync(1, null);
 
-    const existsStub = this.stub(fs, 'exists')
+    const existsStub = sandbox.stub(fs, 'exists')
       .onFirstCall().callsArgWithAsync(1, true)
       .onSecondCall().callsArgWithAsync(1, false);
 
-    const infoStub = this.stub(logger, 'info');
-    const errorStub = this.stub(logger, 'error');
-    const debugStub = this.stub(logger, 'debug');
+    const infoStub = sandbox.stub(logger, 'info');
+    const errorStub = sandbox.stub(logger, 'error');
+    const debugStub = sandbox.stub(logger, 'debug');
 
     const ddfRepoName = 'ddf--gapminder--systema_globalis';
     const ddfRepoCommitHash = null;
@@ -269,25 +270,25 @@ describe('repos service 2', () => {
 
       return done();
     });
-  }));
+  });
 
-  it('should clone repo successfully when destination dir was created but isn\'t empty and commit wasn\'t given', sandbox(function (done: Function): void {
-    const fetchStub = this.stub(reposService, 'fetch').callsArgWithAsync(1, null);
-    const resetStub = this.stub(reposService, 'reset').callsArgWithAsync(1, null);
-    const checkoutToBranchStub = this.stub(reposService, 'checkoutToBranch').callsArgWithAsync(1, null);
-    const checkoutToCommitStub = this.stub(reposService, 'checkoutToCommit').callsArgWithAsync(1, null);
-    const pullStub = this.stub(reposService, 'pull').callsArgWithAsync(1, null);
-    const cleanStub = this.stub(reposService, 'clean').callsArgWithAsync(1, null);
-    const cloneStub = this.stub(reposService, 'clone').callsArgWithAsync(1, null);
-    const silentCloneStub = this.stub(reposService, 'silentClone').callsArgWithAsync(1, null);
-    const makeDirForceStub = this.stub(reposService, 'makeDirForce').callsArgWithAsync(1, null);
-    const removeDirForceStub = this.stub(reposService, 'removeDirForce').callsArgWithAsync(1, null);
+  it('should clone repo successfully when destination dir was created but isn\'t empty and commit wasn\'t given', (done: Function) => {
+    const fetchStub = sandbox.stub(reposService, 'fetch').callsArgWithAsync(1, null);
+    const resetStub = sandbox.stub(reposService, 'reset').callsArgWithAsync(1, null);
+    const checkoutToBranchStub = sandbox.stub(reposService, 'checkoutToBranch').callsArgWithAsync(1, null);
+    const checkoutToCommitStub = sandbox.stub(reposService, 'checkoutToCommit').callsArgWithAsync(1, null);
+    const pullStub = sandbox.stub(reposService, 'pull').callsArgWithAsync(1, null);
+    const cleanStub = sandbox.stub(reposService, 'clean').callsArgWithAsync(1, null);
+    const cloneStub = sandbox.stub(reposService, 'clone').callsArgWithAsync(1, null);
+    const silentCloneStub = sandbox.stub(reposService, 'silentClone').callsArgWithAsync(1, null);
+    const makeDirForceStub = sandbox.stub(reposService, 'makeDirForce').callsArgWithAsync(1, null);
+    const removeDirForceStub = sandbox.stub(reposService, 'removeDirForce').callsArgWithAsync(1, null);
 
-    const existsStub = this.stub(fs, 'exists').callsArgWithAsync(1, true);
+    const existsStub = sandbox.stub(fs, 'exists').callsArgWithAsync(1, true);
 
-    const infoStub = this.stub(logger, 'info');
-    const errorStub = this.stub(logger, 'error');
-    const debugStub = this.stub(logger, 'debug');
+    const infoStub = sandbox.stub(logger, 'info');
+    const errorStub = sandbox.stub(logger, 'error');
+    const debugStub = sandbox.stub(logger, 'debug');
 
     const ddfRepoName = 'ddf--gapminder--systema_globalis';
     const ddfRepoCommitHash = null;
@@ -319,5 +320,5 @@ describe('repos service 2', () => {
 
       return done();
     });
-  }));
+  });
 });

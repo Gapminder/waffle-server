@@ -8,13 +8,15 @@ import * as proxyquire from 'proxyquire';
 import { expect } from 'chai';
 import * as entities from './fixtures/entities.json';
 import * as sinon from 'sinon';
-import * as sinonTest from 'sinon-test';
 import { logger } from '../../ws.config/log';
 
-const sandbox = sinonTest.configureTest(sinon);
+const sandbox = sinon.createSandbox();
 
 describe('entities import', function () {
-  it('should not be any error', sandbox(function (done: Function) {
+
+  afterEach(() => sandbox.restore());
+
+  it('should not be any error', (done: Function) => {
     const entitySetsOriginIds = ['583eb88d7fc6e74f7b4c3ce7', '583eb88d7fc6e74f7b4c3ce8'];
     const sets = {
       country: { gid: 'country', originId: entitySetsOriginIds[0] },
@@ -123,7 +125,7 @@ describe('entities import', function () {
       }
     }).createEntities;
 
-    const loggerInfoStub = this.stub(logger, 'info');
+    const loggerInfoStub = sandbox.stub(logger, 'info');
 
     return importEntities(context, (error, externalContext) => {
       expect(error).to.be.null;
@@ -133,5 +135,5 @@ describe('entities import', function () {
 
       return done();
     });
-  }));
+  });
 });

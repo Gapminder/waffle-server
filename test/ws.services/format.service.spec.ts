@@ -2,7 +2,6 @@ import 'mocha';
 
 import { expect } from 'chai';
 import * as sinon from 'sinon';
-import * as sinonTest from 'sinon-test';
 import * as hi from 'highland';
 
 import '../../ws.repository';
@@ -11,16 +10,18 @@ import * as wsJsonFormatter from '../../ws.routes/data-post-processors/format/fo
 import * as formatService from '../../ws.services/format.service';
 import { constants } from '../../ws.utils/constants';
 
-const sandbox = sinonTest.configureTest(sinon);
+const sandbox = sinon.createSandbox();
 
 describe('Format Service', () => {
 
-  it('should use WsJson formatter as the default one', function () {
+  afterEach(() => sandbox.restore());
+
+  it('should use WsJson formatter as the default one', () => {
     expect(formatService.wsJson).to.be.instanceof(Function);
     expect(formatService.wsJson).to.equal(formatService.default);
   });
 
-  it('should format datapoints data in WsJson', sandbox(function (done: Function) {
+  it('should format datapoints data in WsJson', (done: Function) => {
     const data = {
       rawDdf: {
         dataset: {
@@ -34,7 +35,7 @@ describe('Format Service', () => {
     };
 
     const expectedDatapointsResponse = { headers: ['name'], rows: ['datapoint'] };
-    const mapDatapointsStub = this.stub(wsJsonFormatter, 'mapDatapoints').returns(expectedDatapointsResponse);
+    const mapDatapointsStub = sandbox.stub(wsJsonFormatter, 'mapDatapoints').returns(expectedDatapointsResponse);
 
     formatService.wsJson(data, (error, formattedData) => {
       expect(error).to.not.exist;
@@ -48,9 +49,9 @@ describe('Format Service', () => {
 
       done();
     });
-  }));
+  });
 
-  it('should format concepts data in WsJson', sandbox(function (done: Function) {
+  it('should format concepts data in WsJson', (done: Function) => {
     const data = {
       rawDdf: {
         dataset: {
@@ -64,7 +65,7 @@ describe('Format Service', () => {
     };
 
     const expectedResponse = { headers: ['name'], rows: ['concept'] };
-    const mapConceptsStub = this.stub(wsJsonFormatter, 'mapConcepts').returns(expectedResponse);
+    const mapConceptsStub = sandbox.stub(wsJsonFormatter, 'mapConcepts').returns(expectedResponse);
 
     formatService.wsJson(data, (error, formattedData) => {
       expect(error).to.not.exist;
@@ -78,9 +79,9 @@ describe('Format Service', () => {
 
       done();
     });
-  }));
+  });
 
-  it('should format entities data in WsJson', sandbox(function (done: Function) {
+  it('should format entities data in WsJson', (done: Function) => {
     const data = {
       rawDdf: {
         dataset: {
@@ -94,7 +95,7 @@ describe('Format Service', () => {
     };
 
     const expectedResponse = { headers: ['name'], rows: ['entity'] };
-    const mapEntitiesStub = this.stub(wsJsonFormatter, 'mapEntities').returns(expectedResponse);
+    const mapEntitiesStub = sandbox.stub(wsJsonFormatter, 'mapEntities').returns(expectedResponse);
 
     formatService.wsJson(data, (error, formattedData) => {
       expect(error).to.not.exist;
@@ -107,9 +108,9 @@ describe('Format Service', () => {
       expect(mapEntitiesStub.args[0][0].datasetVersionCommit).to.equal(data.rawDdf.transaction.commit);
       done();
     });
-  }));
+  });
 
-  it('should format schema data in WsJson', sandbox(function (done: Function) {
+  it('should format schema data in WsJson', (done: Function) => {
     const data = {
       rawDdf: {
         dataset: {
@@ -123,7 +124,7 @@ describe('Format Service', () => {
     };
 
     const expectedResponse = { headers: ['name'], rows: ['schema'] };
-    const mapSchemaStub = this.stub(wsJsonFormatter, 'mapSchema').returns(expectedResponse);
+    const mapSchemaStub = sandbox.stub(wsJsonFormatter, 'mapSchema').returns(expectedResponse);
 
     formatService.wsJson(data, (error, formattedData) => {
       expect(error).to.not.exist;
@@ -136,9 +137,9 @@ describe('Format Service', () => {
       expect(mapSchemaStub.args[0][0].datasetVersionCommit).to.equal(data.rawDdf.transaction.commit);
       done();
     });
-  }));
+  });
 
-  it('should respond with an empty object if data type is unknown', sandbox(function (done: Function) {
+  it('should respond with an empty object if data type is unknown', (done: Function) => {
     const data = {
       rawDdf: {
         dataset: {
@@ -156,14 +157,14 @@ describe('Format Service', () => {
       expect(formattedData).to.deep.equal({});
       done();
     });
-  }));
+  });
 
-  it('should format with empty object by default if data was not given', sandbox(function (done: Function) {
+  it('should format with empty object by default if data was not given', (done: Function) => {
     const data = {
       type: constants.SCHEMA
     };
 
-    const mapSchemaStub = this.stub(wsJsonFormatter, 'mapSchema');
+    const mapSchemaStub = sandbox.stub(wsJsonFormatter, 'mapSchema');
 
     formatService.wsJson(data, (error) => {
       expect(error).to.not.exist;
@@ -173,9 +174,9 @@ describe('Format Service', () => {
       expect(mapSchemaStub.args[0][0]).to.have.ownProperty('datasetVersionCommit');
       done();
     });
-  }));
+  });
 
-  it('should format datapoints data as CSV', sandbox(function (done: Function) {
+  it('should format datapoints data as CSV', (done: Function) => {
     const data = {
       rawDdf: {
         dataset: {
@@ -192,7 +193,7 @@ describe('Format Service', () => {
       headers: ['anno', 'population'],
       rows: [['1900', 20000], ['1901', 30000], ['1902', 40000]]
     }]);
-    this.stub(wsJsonFormatter, 'mapDatapoints').returns(wsJsonFormattedData);
+    sandbox.stub(wsJsonFormatter, 'mapDatapoints').returns(wsJsonFormattedData);
 
     formatService.csv(data, (error: any, formattedData: any) => {
       expect(error).to.not.exist;
@@ -210,5 +211,5 @@ describe('Format Service', () => {
         done();
       });
     });
-  }));
+  });
 });

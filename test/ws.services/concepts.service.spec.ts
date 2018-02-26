@@ -1,5 +1,4 @@
 import * as sinon from 'sinon';
-import * as sinonTest from 'sinon-test';
 import { expect } from 'chai';
 
 import '../../ws.repository';
@@ -9,10 +8,13 @@ import * as ddfQueryValidator from '../../ws.ddfql/ddf-query-validator';
 import * as ddfQueryNormalizer from '../../ws.ddfql/ddf-concepts-query-normalizer';
 import * as commonService from '../../ws.services/common.service';
 
-const sandbox = sinonTest.configureTest(sinon);
+const sandbox = sinon.createSandbox();
 
 describe('Concepts service', () => {
-  it('fails when cannot find requested properties for concepts', sandbox(function (done: Function) {
+
+  afterEach(() => sandbox.restore());
+
+  it('fails when cannot find requested properties for concepts', (done: Function) => {
     const context = {
       dataset: {
         id: 'dsId'
@@ -28,20 +30,20 @@ describe('Concepts service', () => {
 
     const expectedError = '[Error]: concept properties searching';
 
-    const findConceptPropertiesStub = this.stub().callsArgWithAsync(2, expectedError);
+    const findConceptPropertiesStub = sandbox.stub().callsArgWithAsync(2, expectedError);
     const repo = {
       findConceptProperties: findConceptPropertiesStub
     };
 
-    this.stub(ConceptsRepositoryFactory, 'currentVersion').returns(repo);
+    sandbox.stub(ConceptsRepositoryFactory, 'currentVersion').returns(repo);
 
     conceptsService.getConcepts(context, (error) => {
       expect(error).to.equal(expectedError);
       done();
     });
-  }));
+  });
 
-  it('gets concepts from db', sandbox(function (done: Function) {
+  it('gets concepts from db', (done: Function) => {
     const context = {
       dataset: {
         _id: 'dsId'
@@ -57,12 +59,12 @@ describe('Concepts service', () => {
 
     const concepts = [{gid: 'geo'}];
 
-    const findConceptPropertiesStub = this.stub().callsArgWithAsync(2, null, concepts);
+    const findConceptPropertiesStub = sandbox.stub().callsArgWithAsync(2, null, concepts);
     const repo = {
       findConceptProperties: findConceptPropertiesStub
     };
 
-    const currentVersionStub = this.stub(ConceptsRepositoryFactory, 'currentVersion').returns(repo);
+    const currentVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'currentVersion').returns(repo);
 
     conceptsService.getConcepts(context, (error, externalContext) => {
       expect(error).to.not.exist;
@@ -76,9 +78,9 @@ describe('Concepts service', () => {
 
       done();
     });
-  }));
+  });
 
-  it('fails when cannot search for concepts', sandbox(function(done: Function) {
+  it('fails when cannot search for concepts', (done: Function) => {
     const expectedError = '[Error]: fails while searching for concepts';
 
     const context = {
@@ -96,14 +98,14 @@ describe('Concepts service', () => {
       domainGids: ['geo', 'only first gid is taken']
     };
 
-    this.stub(ddfQueryValidator, 'validateDdfQueryAsync').callsArgWithAsync(1, null, context);
-    this.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, context);
+    sandbox.stub(ddfQueryValidator, 'validateDdfQueryAsync').callsArgWithAsync(1, null, context);
+    sandbox.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, context);
 
-    const findConceptsByQueryStub = this.stub().callsArgWithAsync(1, expectedError);
+    const findConceptsByQueryStub = sandbox.stub().callsArgWithAsync(1, expectedError);
     const repo = {
       findConceptsByQuery: findConceptsByQueryStub
     };
-    this.stub(ConceptsRepositoryFactory, 'currentVersion').returns(repo);
+    sandbox.stub(ConceptsRepositoryFactory, 'currentVersion').returns(repo);
 
     conceptsService.collectConceptsByDdfql(context, (error) => {
       expect(error).to.equal(expectedError);
@@ -112,9 +114,9 @@ describe('Concepts service', () => {
       sinon.assert.calledWith(findConceptsByQueryStub, {});
       done();
     });
-  }));
+  });
 
-  it('fails when tries to collect concepts from invalid query', sandbox(function(done: Function) {
+  it('fails when tries to collect concepts from invalid query', (done: Function) =>  {
     const expectedError = '[Error]: mongo query is not valid';
     const queryValidationResult = {
       valid: false,
@@ -136,24 +138,24 @@ describe('Concepts service', () => {
       domainGids: ['geo', 'only first gid is taken']
     };
 
-    this.stub(ddfQueryValidator, 'validateDdfQueryAsync').callsArgWithAsync(1, null, context);
-    this.stub(ddfQueryValidator, 'validateMongoQuery').returns(queryValidationResult);
-    this.stub(ddfQueryNormalizer, 'normalizeConcepts').returns({where: {}});
-    this.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, context);
+    sandbox.stub(ddfQueryValidator, 'validateDdfQueryAsync').callsArgWithAsync(1, null, context);
+    sandbox.stub(ddfQueryValidator, 'validateMongoQuery').returns(queryValidationResult);
+    sandbox.stub(ddfQueryNormalizer, 'normalizeConcepts').returns({where: {}});
+    sandbox.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, context);
 
-    const findConceptsByQueryStub = this.stub().callsArgWithAsync(1, null, {});
+    const findConceptsByQueryStub = sandbox.stub().callsArgWithAsync(1, null, {});
     const repo = {
       findConceptsByQuery: findConceptsByQueryStub
     };
-    this.stub(ConceptsRepositoryFactory, 'currentVersion').returns(repo);
+    sandbox.stub(ConceptsRepositoryFactory, 'currentVersion').returns(repo);
 
     conceptsService.collectConceptsByDdfql(context, (error) => {
       expect(error).to.equal(expectedError);
       done();
     });
-  }));
+  });
 
-  it('collects concepts by ddfql', sandbox(function(done: Function) {
+  it('collects concepts by ddfql', (done: Function) =>  {
     const queryValidationResult = {
       valid: true
     };
@@ -182,16 +184,16 @@ describe('Concepts service', () => {
       {gid: 'bla'}
     ];
 
-    const validateDdfQueryAsyncStub = this.stub(ddfQueryValidator, 'validateDdfQueryAsync').callsArgWithAsync(1, null, context);
-    const validateMongoQueryStub = this.stub(ddfQueryValidator, 'validateMongoQuery').returns(queryValidationResult);
-    const normalizeConceptsStub = this.stub(ddfQueryNormalizer, 'normalizeConcepts').returns(context.query);
-    const findDefaultDatasetAndTransactionStub = this.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, context);
+    const validateDdfQueryAsyncStub = sandbox.stub(ddfQueryValidator, 'validateDdfQueryAsync').callsArgWithAsync(1, null, context);
+    const validateMongoQueryStub = sandbox.stub(ddfQueryValidator, 'validateMongoQuery').returns(queryValidationResult);
+    const normalizeConceptsStub = sandbox.stub(ddfQueryNormalizer, 'normalizeConcepts').returns(context.query);
+    const findDefaultDatasetAndTransactionStub = sandbox.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, context);
 
-    const findConceptsByQueryStub = this.stub();
+    const findConceptsByQueryStub = sandbox.stub();
     findConceptsByQueryStub.onFirstCall().callsArgWithAsync(1, null, allConcepts);
     findConceptsByQueryStub.onSecondCall().callsArgWithAsync(1, null, expectedConcepts);
 
-    const currentVerionsStub = this.stub(ConceptsRepositoryFactory, 'currentVersion').returns({
+    const currentVerionsStub = sandbox.stub(ConceptsRepositoryFactory, 'currentVersion').returns({
       findConceptsByQuery: findConceptsByQueryStub
     });
 
@@ -218,9 +220,9 @@ describe('Concepts service', () => {
 
       done();
     });
-  }));
+  });
 
-  it('collects concepts by ddfql: fails cause is not able to collect concepts using normalized query', sandbox(function(done: Function) {
+  it('collects concepts by ddfql: fails cause is not able to collect concepts using normalized query', (done: Function) =>  {
     const expectedError = 'Boo!';
 
     const queryValidationResult = {
@@ -243,16 +245,16 @@ describe('Concepts service', () => {
       domainGids: ['geo', 'only first gid is taken']
     };
 
-    this.stub(ddfQueryValidator, 'validateDdfQueryAsync').callsArgWithAsync(1, null, context);
-    this.stub(ddfQueryValidator, 'validateMongoQuery').returns(queryValidationResult);
-    this.stub(ddfQueryNormalizer, 'normalizeConcepts').returns(context.query);
-    this.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, context);
+    sandbox.stub(ddfQueryValidator, 'validateDdfQueryAsync').callsArgWithAsync(1, null, context);
+    sandbox.stub(ddfQueryValidator, 'validateMongoQuery').returns(queryValidationResult);
+    sandbox.stub(ddfQueryNormalizer, 'normalizeConcepts').returns(context.query);
+    sandbox.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, context);
 
-    const findConceptsByQueryStub = this.stub();
+    const findConceptsByQueryStub = sandbox.stub();
     findConceptsByQueryStub.onFirstCall().callsArgWithAsync(1, null, []);
     findConceptsByQueryStub.onSecondCall().callsArgWithAsync(1, expectedError);
 
-    this.stub(ConceptsRepositoryFactory, 'currentVersion').returns({
+    sandbox.stub(ConceptsRepositoryFactory, 'currentVersion').returns({
       findConceptsByQuery: findConceptsByQueryStub
     });
 
@@ -260,5 +262,5 @@ describe('Concepts service', () => {
       expect(error).to.equal(expectedError);
       done();
     });
-  }));
+  });
 });
