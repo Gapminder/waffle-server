@@ -13,8 +13,7 @@ import * as commonHelpers from '../../deployment/gcp_scripts/common.helpers';
 import * as autoDeploy from '../../deployment/gcp_scripts/autodeploy';
 
 const chai = require('chai');
-const chaiMatchers = require('./testUtils/chaiJsMatchers');
-chai.use(chaiMatchers);
+chai.use(require('./testUtils/chaiJsMatchers'));
 const expect = chai.expect;
 
 const {DEFAULT_ENVIRONMENTS, DEFAULT_NODE_ENV} = DEFAULT_CONFIG;
@@ -80,6 +79,7 @@ describe('Autoimport Test: runShellCommand', () => {
         return expect(command, `wrong ENVIRONMENT in command:\n* ${command}`).to.contain(actualTestEnv);
       });
 
+      /* tslint:disable-next-line */
       expect(allCommands).not.to.have.undefinedNullOrEmptyValues;
     });
 

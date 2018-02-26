@@ -1,5 +1,3 @@
-import * as chai from 'chai';
-
 class ForbiddenValue {
   public name: string;
   public comparator: string | RegExp;
@@ -23,13 +21,11 @@ module.exports = function (_chai, utils) {
     const allNulls = new ForbiddenValue('null', allCommands.filter((command: string) => command.includes('null')));
     const allEmptyValues = new ForbiddenValue('Empty values', allCommands.filter((command: string) => command.match(pattern)), pattern);
 
-    const fff = !!(allUndefineds.matchedCommands.length && allNulls.matchedCommands.length && allEmptyValues.matchedCommands.length);
-      
     this.assert(
-      allUndefineds.matchedCommands.length || 
-      allNulls.matchedCommands.length || 
+      allUndefineds.matchedCommands.length ||
+      allNulls.matchedCommands.length ||
       allEmptyValues.matchedCommands.length
-      , 'not mutch sense using it without ".not" flag before the command'
+      , 'not mutch sense using "undefinedNullOrEmptyValues" assertion without ".not" flag before the command'
       , compileErrorMessage(allCommands, [allUndefineds, allNulls, allEmptyValues])
     );
   });
@@ -54,7 +50,7 @@ function compileErrorMessage(allCommands: string[], allValues: any): string {
     if (value.matchedCommands.length) {
       errorMessage += wrapMessage(value);
     }
-  })
+  });
 
   return errorMessage;
 }

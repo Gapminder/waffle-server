@@ -16,21 +16,22 @@ import {
 
 // Default variables
 const packageJson = require('../../package.json');
-const {
-  DEFAULT_NODE_ENV,
-  DEFAULT_ENVIRONMENTS,
-  DEFAULT_TM_PORTS,
-  DEFAULT_WS_PORTS,
-  DEFAULT_MACHINE_TYPES,
-  DEFAULT_DISK_SIZES,
-  DEFAULT_IMAGE_NAME_SUFFIXES,
-  DEFAULT_MACHINE_SUFFIXES,
-  DEFAULT_GCP_VARIABLES,
-  DEFAULT_GCP_API
-} = DEFAULT_CONFIG;
 
-function setupEnvironment(): object {
-  const {DEFAULT_PATH_TO_CONFIG_FILE} = DEFAULT_CONFIG; // placed it here for testing purpose
+
+function setupEnvironment(): any {
+  const {
+    DEFAULT_NODE_ENV,
+    DEFAULT_PATH_TO_CONFIG_FILE,
+    DEFAULT_ENVIRONMENTS,
+    DEFAULT_TM_PORTS,
+    DEFAULT_WS_PORTS,
+    DEFAULT_MACHINE_TYPES,
+    DEFAULT_DISK_SIZES,
+    DEFAULT_IMAGE_NAME_SUFFIXES,
+    DEFAULT_MACHINE_SUFFIXES,
+    DEFAULT_GCP_VARIABLES,
+    DEFAULT_GCP_API
+  } = DEFAULT_CONFIG; // placed it here for testing purpose
 
   // Computed variables
   const NODE_ENV = process.env.NODE_ENV || DEFAULT_NODE_ENV;
@@ -114,7 +115,8 @@ function setupEnvironment(): object {
     DEFAULT_MACHINE_TYPES,
     DEFAULT_IMAGE_NAME_SUFFIXES,
     DEFAULT_TM_PORTS,
-    DEFAULT_WS_PORTS
+    DEFAULT_WS_PORTS,
+    DEFAULT_GCP_API
   }, GCP_VARIABLES);
 
   const contextTM: GCloudArguments = getContextInstance(primaryContext, 'TM');
@@ -128,14 +130,15 @@ function setupEnvironment(): object {
 
 export function run(): Promise<string | null> {
   return new Promise((resolve: Function, reject: Function) => {
+    const context = setupEnvironment();
     async.waterfall([
-      async.constant(setupEnvironment()),
+      async.constant(context),
       setDefaultUser,
       createProject,
       setDefaultProject,
       async.apply(setupAPIs, ['cloudbilling.googleapis.com'], { action: 'enable' }),
       linkProjectToBilling,
-      async.apply(setupAPIs, DEFAULT_GCP_API, { action: 'enable' }),
+      async.apply(setupAPIs, context.DEFAULT_GCP_API, { action: 'enable' }),
       setupRedisInstance,
       setupMongoInstance,
       buildImageTM,
