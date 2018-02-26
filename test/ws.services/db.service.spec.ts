@@ -1,16 +1,17 @@
 import { expect } from 'chai';
 import * as sinon from 'sinon';
-import * as sinonTest from 'sinon-test';
 
 import { DbService, Operation } from '../../ws.services/db.service';
-import { Connection } from 'mongoose';
 import { logger } from '../../ws.config/log';
 
-const sandbox = sinonTest.configureTest(sinon);
+const sandbox = sinon.createSandbox();
 
 describe('DbService', () => {
-  it('is ok when there are no long running queries', sandbox(function (): any {
-    const executeDbAdminCommandStub = this.stub().resolves({inprog: []});
+
+  afterEach(() => sandbox.restore());
+
+  it('is ok when there are no long running queries', () => {
+    const executeDbAdminCommandStub = sandbox.stub().resolves({inprog: []});
 
     const fakeDb = {
       executeDbAdminCommand: executeDbAdminCommandStub
@@ -24,30 +25,11 @@ describe('DbService', () => {
       sinon.assert.calledOnce(executeDbAdminCommandStub);
       sinon.assert.calledWith(executeDbAdminCommandStub, { currentOp: 1 });
     });
-  }));
+  });
 
-  it('swallows connection errors and behaves as there are no long running queries', sandbox(function (): any {
-    const executeDbAdminCommandStub = this.stub().rejects('Total domination');
-    this.stub(logger, 'error');
-
-    const fakeDb = {
-      executeDbAdminCommand: executeDbAdminCommandStub
-    };
-
-    const fakeConnection = { db: fakeDb } as any;
-
-    const dbService = new DbService(fakeConnection);
-
-    return dbService.killLongRunningQueries().then((victims: any[]) => {
-      expect(victims).to.be.empty;
-      sinon.assert.calledOnce(executeDbAdminCommandStub);
-      sinon.assert.calledWith(executeDbAdminCommandStub, { currentOp: 1 });
-    });
-  }));
-
-  it('swallows connection errors and behaves as there are no long running queries 2', sandbox(function (): any {
-    const executeDbAdminCommandStub = this.stub().rejects('Total domination');
-    this.stub(logger, 'error');
+  it('swallows connection errors and behaves as there are no long running queries', () => {
+    const executeDbAdminCommandStub = sandbox.stub().rejects('Total domination');
+    sandbox.stub(logger, 'error');
 
     const fakeDb = {
       executeDbAdminCommand: executeDbAdminCommandStub
@@ -62,9 +44,28 @@ describe('DbService', () => {
       sinon.assert.calledOnce(executeDbAdminCommandStub);
       sinon.assert.calledWith(executeDbAdminCommandStub, { currentOp: 1 });
     });
-  }));
+  });
 
-  it('searches only operations of particular type, duration, collection  amongst all the possible operations in mongo', sandbox(function (): any {
+  it('swallows connection errors and behaves as there are no long running queries 2', () => {
+    const executeDbAdminCommandStub = sandbox.stub().rejects('Total domination');
+    sandbox.stub(logger, 'error');
+
+    const fakeDb = {
+      executeDbAdminCommand: executeDbAdminCommandStub
+    };
+
+    const fakeConnection = { db: fakeDb } as any;
+
+    const dbService = new DbService(fakeConnection);
+
+    return dbService.killLongRunningQueries().then((victims: any[]) => {
+      expect(victims).to.be.empty;
+      sinon.assert.calledOnce(executeDbAdminCommandStub);
+      sinon.assert.calledWith(executeDbAdminCommandStub, { currentOp: 1 });
+    });
+  });
+
+  it('searches only operations of particular type, duration, collection  amongst all the possible operations in mongo', () => {
     const operations: Operation[] = [
       {
         active: true,
@@ -104,7 +105,7 @@ describe('DbService', () => {
       }
     ];
 
-    const executeDbAdminCommandStub = this.stub();
+    const executeDbAdminCommandStub = sandbox.stub();
 
     executeDbAdminCommandStub.withArgs({currentOp: 1}).resolves({ inprog: operations });
 
@@ -134,9 +135,9 @@ describe('DbService', () => {
       sinon.assert.calledWith(executeDbAdminCommandStub, { currentOp: 1 });
       sinon.assert.calledWith(executeDbAdminCommandStub, { killOp: 1, op: 44 });
     });
-  }));
+  });
 
-  it('does nothing if assassination attempt failed - just returns empty result', sandbox(function (): any {
+  it('does nothing if assassination attempt failed - just returns empty result', () => {
     const operations: Operation[] = [
       {
         active: true,
@@ -158,8 +159,8 @@ describe('DbService', () => {
       }
     ];
 
-    const executeDbAdminCommandStub = this.stub();
-    this.stub(logger, 'error');
+    const executeDbAdminCommandStub = sandbox.stub();
+    sandbox.stub(logger, 'error');
 
     executeDbAdminCommandStub.withArgs({currentOp: 1}).resolves({ inprog: operations });
 
@@ -189,5 +190,5 @@ describe('DbService', () => {
       sinon.assert.calledWith(executeDbAdminCommandStub, { killOp: 1, op: 43 });
       sinon.assert.calledWith(executeDbAdminCommandStub, { killOp: 1, op: 44 });
     });
-  }));
+  });
 });

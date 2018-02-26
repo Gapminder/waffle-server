@@ -38,6 +38,7 @@ export class ServiceLocator {
     return this.application;
   }
 
+  /* tslint:disable-next-line */
   private constructor(namePrefix: string, application: express.Application) {
     this.application = application;
     this.namePrefix = namePrefix + ServiceLocator.DELIMITER;

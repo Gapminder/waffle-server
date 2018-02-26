@@ -6,6 +6,7 @@ import {ConceptsRepositoryFactory} from '../../ws.repository/ddf/concepts/concep
 import {DatapointsRepositoryFactory} from '../../ws.repository/ddf/data-points/data-points.repository';
 import {EntitiesRepositoryFactory} from '../../ws.repository/ddf/entities/entities.repository';
 import * as datasetTransactionService from '../../ws.services/dataset-transactions.service';
+import { AsyncResultArrayCallback } from 'async';
 
 const populatingPropertiesByCollection = {
   concepts: [

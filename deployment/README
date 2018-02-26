@@ -7,11 +7,13 @@ Directory structure:
   cf_cripts       - automation scripts
   cloudformation  - AWS CloudFormation templates
   haproxy_docker  - HAProxy docker image environment
+  gcp_scripts     - scripts for deploying to GCP
   README          - this file
 
 
 +cloudformation:
 ---------------
+
   ws_ecs_cluster_2_az_ecache_redis_2_nodes_ft.template:
     ECS Cluster for HAProxy
     ECS Cluster for Node
@@ -24,6 +26,7 @@ Directory structure:
 
 +haproxy_docker:
 ----------------
+
   Dockerfile                    - HAProxy dockerfile
   haproxy_gracefull_reload.sh   - script for HAProxy gracefull reload when config is changed. Used by confd
   run.sh                        - docker CMD script.
@@ -119,4 +122,45 @@ Directory structure:
    and 'awsecrops cleanup' after 'awstackops delete_stack'
 
   ** !! VARIABLE SET IN ENV AND SETTINGS FILE SAME TIME WILL BE READED FROM FILE ONLY !! **
+
++gcp_scripts:
+------------
+
+#### Running deployment process manual way
+  ```
+    NODE_ENV=test npm run deploy
+  ```
+
+#### Running unpublish process manual way
+  ```
+    VERSION=2.12.1 NODE_ENV=test npm run unpublish
+  ```
+
+#### Aliases of NODE_ENV's for deploy & unpublish processes
+
+  ```
+    npm run deploy-local
+    npm run deploy-dev
+    npm run deploy-test
+    npm run deploy-stage
+    npm run deploy-prod
+
+    VERSION=X.X.X npm run unpublish-local
+    VERSION=X.X.X npm run unpublish-dev
+    VERSION=X.X.X npm run unpublish-test
+    VERSION=X.X.X npm run unpublish-stage
+    VERSION=X.X.X npm run unpublish-prod
+  ```
+  
+#### Main scripts
+
+  deployment : `deployment/gcp_scripts/autodeploy.ts`
+  unpublish  : `deployment/gcp_scripts/autoremove.ts`
+  
+#### Requirements
+
+  *settings_gapminder_XXX.json   - file with customers settings (*SHOULD BE SETTING UP BEFORE DEPLOY OR UNPUBLISH PROCESSES*)
+  autodeploy.ts                  - script for running deployment process (required: settings_gapminder_XXX.json)
+  autoremove.ts                  - script for running removing stack process (required: settings_gapminder_XXX.json)
+  default_deployment_config.json - default configuration for deployment and removing process
 

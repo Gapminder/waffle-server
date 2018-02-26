@@ -11,6 +11,7 @@ import { ValidateQueryModel } from '../ws.ddfql/ddf-query-validator';
 import { EntitiesRepositoryFactory } from '../ws.repository/ddf/entities/entities.repository';
 import { DatapointsRepositoryFactory } from '../ws.repository/ddf/data-points/data-points.repository';
 import { MongoError } from 'mongodb';
+import { AsyncResultCallback } from 'async';
 
 export {
   collectDatapointsByDdfql

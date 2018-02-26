@@ -2,16 +2,15 @@ import '../../../../ws.repository';
 import * as hi from 'highland';
 import { ChangesDescriptor } from '../../../../ws.import/utils/changes-descriptor';
 import * as sinon from 'sinon';
-import * as sinonTest from 'sinon-test';
 import { expect } from 'chai';
 import { constants } from '../../../../ws.utils/constants';
-import {logger} from '../../../../ws.config/log';
+import { logger } from '../../../../ws.config/log';
 import * as datapointsUtils from '../../../../ws.import/utils/datapoints.utils';
 import * as UpdateTranslationsFlow from '../../../../ws.import/incremental/translations/update-translations-flow';
 import * as UpdateDatapointTranslations from '../../../../ws.import/incremental/translations/update-datapoint-translations';
 import { DatapointsRepositoryFactory } from '../../../../ws.repository/ddf/data-points/data-points.repository';
 
-const sandbox = sinonTest.configureTest(sinon);
+const sandbox = sinon.createSandbox();
 
 const entities = {
   segregatedEntities: {
@@ -51,11 +50,14 @@ const externalContext = {
 };
 
 describe('Datapoints Translations Update Plugin', () => {
-  it('creates a proper context for the plugin', sandbox(function (done: Function) {
-    this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
-    this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
+  afterEach(() => sandbox.restore());
+
+  it('creates a proper context for the plugin', (done: Function) => {
+    sandbox.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
+    sandbox.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
+
+    sandbox.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       expect(externalContextFrozen.datasetId).to.equal(externalContext.dataset._id);
       expect(externalContextFrozen.version).to.equal(externalContext.transaction.createdAt);
       expect(externalContextFrozen.dataset).to.equal(externalContext.dataset);
@@ -73,13 +75,13 @@ describe('Datapoints Translations Update Plugin', () => {
     UpdateDatapointTranslations.updateDatapointsTranslations(externalContext, () => {
       done();
     });
-  }));
+  });
 
-  it('creates a proper plugin', sandbox(function (done: Function) {
-    this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
-    this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
+  it('creates a proper plugin', (done: Function) => {
+    sandbox.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
+    sandbox.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
+    sandbox.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       expect(Object.isFrozen(externalContextFrozen)).to.be.equal(true, 'context should be frozen');
 
       expect(plugin.dataType).to.equal(constants.DATAPOINTS);
@@ -96,11 +98,11 @@ describe('Datapoints Translations Update Plugin', () => {
     UpdateDatapointTranslations.updateDatapointsTranslations(externalContext, () => {
       done();
     });
-  }));
+  });
 
-  it('inferres measures and dimensions for context enrichment', sandbox(function (done: Function) {
-    this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
-    this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
+  it('inferres measures and dimensions for context enrichment', (done: Function) => {
+    sandbox.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
+    sandbox.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
     const measures = {
       population: {}
@@ -114,15 +116,15 @@ describe('Datapoints Translations Update Plugin', () => {
       primaryKey: []
     };
 
-    const getDimensionsAndMeasuresStub = this.stub(datapointsUtils, 'getDimensionsAndMeasures').returns({
+    const getDimensionsAndMeasuresStub = sandbox.stub(datapointsUtils, 'getDimensionsAndMeasures').returns({
       measures,
       dimensions
     });
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
+    sandbox.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       const enrichment = plugin.enrichContext(fakeResource, null, externalContext);
 
-      expect(enrichment).to.deep.equal({measures, dimensions});
+      expect(enrichment).to.deep.equal({ measures, dimensions });
       sinon.assert.calledWith(getDimensionsAndMeasuresStub, fakeResource, externalContext);
 
       callback();
@@ -131,18 +133,18 @@ describe('Datapoints Translations Update Plugin', () => {
     UpdateDatapointTranslations.updateDatapointsTranslations(externalContext, () => {
       done();
     });
-  }));
+  });
 
-  it('transforms stream before translation update actions are segregated: should produce removal ChangeDescriptors for each removed indicator column along with updated indicator values', sandbox(function (done: Function) {
-    this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
-    this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
+  it('transforms stream before translation update actions are segregated: should produce removal ChangeDescriptors for each removed indicator column along with updated indicator values', (done: Function) => {
+    sandbox.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
+    sandbox.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
     const datapointChangeGeneratedByDiff = {
       object: {
         gid: 'company',
         company: 'mic',
-        'data-update': {company: 'mcrsft', anno: '1975', company_size: 'klein', population: 42},
-        'data-origin': {company: 'mic', anno: '1975', company_size: 'klein', population: 43}
+        'data-update': { company: 'mcrsft', anno: '1975', company_size: 'klein', population: 42 },
+        'data-origin': { company: 'mic', anno: '1975', company_size: 'klein', population: 43 }
       },
       metadata: {
         file: {
@@ -150,7 +152,7 @@ describe('Datapoints Translations Update Plugin', () => {
             path: 'ddf--datapoints--company_size--by--company--anno.csv',
             name: 'ddf--datapoints--company_size--by--company--anno',
             schema: {
-              fields: [{name: 'company'}, {name: 'anno'}, {name: 'company_size'}, {name: 'population'}],
+              fields: [{ name: 'company' }, { name: 'anno' }, { name: 'company_size' }, { name: 'population' }],
               primaryKey: ['company', 'anno']
             }
           },
@@ -158,7 +160,7 @@ describe('Datapoints Translations Update Plugin', () => {
             path: 'ddf--datapoints--company_size--by--company--anno.csv',
             name: 'ddf--datapoints--company_size--by--company--anno',
             schema: {
-              fields: [{name: 'company'}, {name: 'anno'}, {name: 'company_size'}, {name: 'population'}],
+              fields: [{ name: 'company' }, { name: 'anno' }, { name: 'company_size' }, { name: 'population' }],
               primaryKey: ['company', 'anno']
             }
           }
@@ -171,7 +173,7 @@ describe('Datapoints Translations Update Plugin', () => {
       }
     };
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
+    sandbox.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
 
       const changes = hi([new ChangesDescriptor(datapointChangeGeneratedByDiff)]);
       plugin.transformStreamBeforeActionSegregation(changes).toArray((result: ChangesDescriptor[]) => {
@@ -180,7 +182,7 @@ describe('Datapoints Translations Update Plugin', () => {
         expect(result[0].language).to.equal('nl-nl');
         expect(result[0].describes(constants.DATAPOINTS)).to.be.true;
         expect(result[0].oldResource).to.exist;
-        expect(result[0].changes).to.deep.equal({company: 'mic', anno: '1975', population: 43});
+        expect(result[0].changes).to.deep.equal({ company: 'mic', anno: '1975', population: 43 });
 
         expect(result[1].action).to.equal('change');
         expect(result[1].language).to.equal('nl-nl');
@@ -200,18 +202,18 @@ describe('Datapoints Translations Update Plugin', () => {
     UpdateDatapointTranslations.updateDatapointsTranslations(externalContext, () => {
       done();
     });
-  }));
+  });
 
-  it('transforms stream before translation update actions are segregated: should produce only removal ChangeDescriptors if the only change done is indicator column removal in datapoint row', sandbox(function (done: Function) {
-    this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
-    this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
+  it('transforms stream before translation update actions are segregated: should produce only removal ChangeDescriptors if the only change done is indicator column removal in datapoint row', (done: Function) => {
+    sandbox.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
+    sandbox.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
     const datapointChangeGeneratedByDiff = {
       object: {
         gid: 'company',
         company: 'mic',
-        'data-update': {company: 'mcrsft', anno: '1975', company_size: 'klein', population: 43},
-        'data-origin': {company: 'mcrsft', anno: '1975', company_size: 'klein', population: 43}
+        'data-update': { company: 'mcrsft', anno: '1975', company_size: 'klein', population: 43 },
+        'data-origin': { company: 'mcrsft', anno: '1975', company_size: 'klein', population: 43 }
       },
       metadata: {
         file: {
@@ -219,7 +221,7 @@ describe('Datapoints Translations Update Plugin', () => {
             path: 'ddf--datapoints--company_size--by--company--anno.csv',
             name: 'ddf--datapoints--company_size--by--company--anno',
             schema: {
-              fields: [{name: 'company'}, {name: 'anno'}, {name: 'company_size'}, {name: 'population'}],
+              fields: [{ name: 'company' }, { name: 'anno' }, { name: 'company_size' }, { name: 'population' }],
               primaryKey: ['company', 'anno']
             }
           },
@@ -227,7 +229,7 @@ describe('Datapoints Translations Update Plugin', () => {
             path: 'ddf--datapoints--company_size--by--company--anno.csv',
             name: 'ddf--datapoints--company_size--by--company--anno',
             schema: {
-              fields: [{name: 'company'}, {name: 'anno'}, {name: 'company_size'}, {name: 'population'}],
+              fields: [{ name: 'company' }, { name: 'anno' }, { name: 'company_size' }, { name: 'population' }],
               primaryKey: ['company', 'anno']
             }
           }
@@ -240,7 +242,7 @@ describe('Datapoints Translations Update Plugin', () => {
       }
     };
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
+    sandbox.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
 
       const changes = hi([new ChangesDescriptor(datapointChangeGeneratedByDiff)]);
       plugin.transformStreamBeforeActionSegregation(changes).toArray((result: ChangesDescriptor[]) => {
@@ -249,7 +251,7 @@ describe('Datapoints Translations Update Plugin', () => {
         expect(result[0].language).to.equal('nl-nl');
         expect(result[0].describes(constants.DATAPOINTS)).to.be.true;
         expect(result[0].oldResource).to.exist;
-        expect(result[0].changes).to.deep.equal({company: 'mcrsft', anno: '1975', population: 43});
+        expect(result[0].changes).to.deep.equal({ company: 'mcrsft', anno: '1975', population: 43 });
         callback();
       });
     });
@@ -257,18 +259,18 @@ describe('Datapoints Translations Update Plugin', () => {
     UpdateDatapointTranslations.updateDatapointsTranslations(externalContext, () => {
       done();
     });
-  }));
+  });
 
-  it('transforms stream before translation update actions are segregated: if indicator given in removedColumns is not known and only columns were removed - no changes descriptors generated', sandbox(function (done: Function) {
-    this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
-    this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
+  it('transforms stream before translation update actions are segregated: if indicator given in removedColumns is not known and only columns were removed - no changes descriptors generated', (done: Function) => {
+    sandbox.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
+    sandbox.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
     const datapointChangeGeneratedByDiff = {
       object: {
         gid: 'company',
         company: 'mic',
-        'data-update': {company: 'mcrsft', anno: '1975', company_size: 'klein', population: 43},
-        'data-origin': {company: 'mcrsft', anno: '1975', company_size: 'klein', population: 43}
+        'data-update': { company: 'mcrsft', anno: '1975', company_size: 'klein', population: 43 },
+        'data-origin': { company: 'mcrsft', anno: '1975', company_size: 'klein', population: 43 }
       },
       metadata: {
         file: {
@@ -276,7 +278,7 @@ describe('Datapoints Translations Update Plugin', () => {
             path: 'ddf--datapoints--company_size--by--company--anno.csv',
             name: 'ddf--datapoints--company_size--by--company--anno',
             schema: {
-              fields: [{name: 'company'}, {name: 'anno'}, {name: 'company_size'}, {name: 'population'}],
+              fields: [{ name: 'company' }, { name: 'anno' }, { name: 'company_size' }, { name: 'population' }],
               primaryKey: ['company', 'anno']
             }
           },
@@ -284,7 +286,7 @@ describe('Datapoints Translations Update Plugin', () => {
             path: 'ddf--datapoints--company_size--by--company--anno.csv',
             name: 'ddf--datapoints--company_size--by--company--anno',
             schema: {
-              fields: [{name: 'company'}, {name: 'anno'}, {name: 'company_size'}, {name: 'population'}],
+              fields: [{ name: 'company' }, { name: 'anno' }, { name: 'company_size' }, { name: 'population' }],
               primaryKey: ['company', 'anno']
             }
           }
@@ -297,7 +299,7 @@ describe('Datapoints Translations Update Plugin', () => {
       }
     };
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
+    sandbox.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
 
       const changes = hi([new ChangesDescriptor(datapointChangeGeneratedByDiff)]);
       plugin.transformStreamBeforeActionSegregation(changes).toArray((result: ChangesDescriptor[]) => {
@@ -309,11 +311,11 @@ describe('Datapoints Translations Update Plugin', () => {
     UpdateDatapointTranslations.updateDatapointsTranslations(externalContext, () => {
       done();
     });
-  }));
+  });
 
-  it('transforms stream before translation update actions are segregated: if coming action is not UPDATE action - then just path changes descriptor through', sandbox(function (done: Function) {
-    this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
-    this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
+  it('transforms stream before translation update actions are segregated: if coming action is not UPDATE action - then just path changes descriptor through', (done: Function) => {
+    sandbox.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
+    sandbox.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
     const datapointChangeGeneratedByDiff = {
       object: {
@@ -328,7 +330,7 @@ describe('Datapoints Translations Update Plugin', () => {
             path: 'ddf--datapoints--company_size--by--company--anno.csv',
             name: 'ddf--datapoints--company_size--by--company--anno',
             schema: {
-              fields: [{name: 'company'}, {name: 'anno'}, {name: 'company_size'}, {name: 'population'}],
+              fields: [{ name: 'company' }, { name: 'anno' }, { name: 'company_size' }, { name: 'population' }],
               primaryKey: ['company', 'anno']
             }
           },
@@ -336,7 +338,7 @@ describe('Datapoints Translations Update Plugin', () => {
             path: 'ddf--datapoints--company_size--by--company--anno.csv',
             name: 'ddf--datapoints--company_size--by--company--anno',
             schema: {
-              fields: [{name: 'company'}, {name: 'anno'}, {name: 'company_size'}, {name: 'population'}],
+              fields: [{ name: 'company' }, { name: 'anno' }, { name: 'company_size' }, { name: 'population' }],
               primaryKey: ['company', 'anno']
             }
           }
@@ -344,7 +346,7 @@ describe('Datapoints Translations Update Plugin', () => {
       }
     };
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
+    sandbox.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
 
       const changesDescriptor = new ChangesDescriptor(datapointChangeGeneratedByDiff);
       const changes = hi([changesDescriptor]);
@@ -358,14 +360,14 @@ describe('Datapoints Translations Update Plugin', () => {
     UpdateDatapointTranslations.updateDatapointsTranslations(externalContext, () => {
       done();
     });
-  }));
+  });
 
-  it('makes a new translation target based on its closed version', sandbox(function (done: Function) {
-    this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
-    this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
+  it('makes a new translation target based on its closed version', (done: Function) => {
+    sandbox.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
+    sandbox.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
-      const closedTarget = constants.MONGO_SPECIAL_FIELDS.reduce((result, field) => Object.assign(result, {[field]: 1}), {});
+    sandbox.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
+      const closedTarget = constants.MONGO_SPECIAL_FIELDS.reduce((result, field) => Object.assign(result, { [field]: 1 }), {});
 
       expect(constants.MONGO_SPECIAL_FIELDS.every((field) => field in closedTarget)).to.equal(true);
 
@@ -381,11 +383,11 @@ describe('Datapoints Translations Update Plugin', () => {
     UpdateDatapointTranslations.updateDatapointsTranslations(externalContext, () => {
       done();
     });
-  }));
+  });
 
-  it('makes a query to fetch translation target based on giving context and changes descriptor', sandbox(function (done: Function) {
-    this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
-    this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
+  it('makes a query to fetch translation target based on giving context and changes descriptor', (done: Function) => {
+    sandbox.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
+    sandbox.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
     const changesDescriptor = new ChangesDescriptor({
       object: {
@@ -410,9 +412,9 @@ describe('Datapoints Translations Update Plugin', () => {
       'originId1',
       'originId2'
     ];
-    const getDimensionsAsEntityOriginIdsStub = this.stub(datapointsUtils, 'getDimensionsAsEntityOriginIds').returns(expectedDimensionsAsOriginIds);
+    const getDimensionsAsEntityOriginIdsStub = sandbox.stub(datapointsUtils, 'getDimensionsAsEntityOriginIds').returns(expectedDimensionsAsOriginIds);
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
+    sandbox.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       const query = plugin.makeQueryToFetchTranslationTarget(changesDescriptor, context);
 
       sinon.assert.calledOnce(getDimensionsAsEntityOriginIdsStub);
@@ -429,11 +431,11 @@ describe('Datapoints Translations Update Plugin', () => {
     UpdateDatapointTranslations.updateDatapointsTranslations(externalContext, () => {
       done();
     });
-  }));
+  });
 
-  it('makes a query to fetch translation target based on giving context and changes descriptor: if no indicator origin is is found - logs this fact', sandbox(function (done: Function) {
-    this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
-    this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
+  it('makes a query to fetch translation target based on giving context and changes descriptor: if no indicator origin is is found - logs this fact', (done: Function) => {
+    sandbox.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
+    sandbox.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
     const changesDescriptor = new ChangesDescriptor({
       object: {
@@ -449,10 +451,10 @@ describe('Datapoints Translations Update Plugin', () => {
       dimensions: []
     };
 
-    this.stub(datapointsUtils, 'getDimensionsAsEntityOriginIds').returns([]);
-    const loggerErrorStub = this.stub(logger, 'error');
+    sandbox.stub(datapointsUtils, 'getDimensionsAsEntityOriginIds').returns([]);
+    const loggerErrorStub = sandbox.stub(logger, 'error');
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
+    sandbox.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       const query = plugin.makeQueryToFetchTranslationTarget(changesDescriptor, context);
 
       sinon.assert.calledOnce(loggerErrorStub);
@@ -463,11 +465,11 @@ describe('Datapoints Translations Update Plugin', () => {
     UpdateDatapointTranslations.updateDatapointsTranslations(externalContext, () => {
       done();
     });
-  }));
+  });
 
-  it('transforms stream before changes are actually applied: streams comes in form of changesDescriptor --> context pairs', sandbox(function (done: Function) {
-    this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
-    this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
+  it('transforms stream before changes are actually applied: streams comes in form of changesDescriptor --> context pairs', (done: Function) => {
+    sandbox.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
+    sandbox.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
     const changesDescriptor = new ChangesDescriptor({
       object: {
@@ -489,8 +491,8 @@ describe('Datapoints Translations Update Plugin', () => {
       }
     };
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
-      const changes = hi([{changesDescriptor, context}]);
+    sandbox.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
+      const changes = hi([{ changesDescriptor, context }]);
 
       plugin.transformStreamBeforeChangesApplied(changes).toArray((result) => {
         expect(result.length).to.equal(2);
@@ -507,11 +509,11 @@ describe('Datapoints Translations Update Plugin', () => {
     UpdateDatapointTranslations.updateDatapointsTranslations(externalContext, () => {
       done();
     });
-  }));
+  });
 
-  it('transforms stream before changes are actually applied: if no indicators in context can be mapped to changes - nothign should be changed', sandbox(function (done: Function) {
-    this.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
-    this.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
+  it('transforms stream before changes are actually applied: if no indicators in context can be mapped to changes - nothign should be changed', (done: Function) => {
+    sandbox.stub(datapointsUtils, 'findAllEntities').returns(Promise.resolve(entities.segregatedEntities));
+    sandbox.stub(datapointsUtils, 'findAllPreviousEntities').returns(Promise.resolve(entities.segregatedPreviousEntities));
 
     const changesDescriptor = new ChangesDescriptor({
       object: {
@@ -530,8 +532,8 @@ describe('Datapoints Translations Update Plugin', () => {
       }
     };
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
-      const changes = hi([{changesDescriptor, context}]);
+    sandbox.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
+      const changes = hi([{ changesDescriptor, context }]);
 
       plugin.transformStreamBeforeChangesApplied(changes).toArray((result) => {
         expect(result.length).to.equal(0);
@@ -542,5 +544,5 @@ describe('Datapoints Translations Update Plugin', () => {
     UpdateDatapointTranslations.updateDatapointsTranslations(externalContext, () => {
       done();
     });
-  }));
+  });
 });

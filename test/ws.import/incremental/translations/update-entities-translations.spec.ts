@@ -1,7 +1,6 @@
 import '../../../../ws.repository';
 
 import * as sinon from 'sinon';
-import * as sinonTest from 'sinon-test';
 import { expect } from 'chai';
 
 import { constants } from '../../../../ws.utils/constants';
@@ -12,7 +11,7 @@ import * as ddfMappers from '../../../../ws.import/utils/ddf-mappers';
 import { EntitiesRepositoryFactory } from '../../../../ws.repository/ddf/entities/entities.repository';
 import { ChangesDescriptor } from '../../../../ws.import/utils/changes-descriptor';
 
-const sandbox = sinonTest.configureTest(sinon);
+const sandbox = sinon.createSandbox();
 
 const externalContext = {
   transaction: {
@@ -36,8 +35,11 @@ const externalContext = {
 };
 
 describe('Entities Translations Update Plugin', () => {
-  it('creates a proper context for the plugin', sandbox(function (done: Function) {
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
+
+  afterEach(() => sandbox.restore());
+
+  it('creates a proper context for the plugin', (done: Function) => {
+    sandbox.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       expect(Object.isFrozen(externalContextFrozen)).to.equal(true, 'context should be frozen');
 
       expect(externalContextFrozen.datasetId).to.equal(externalContext.dataset._id);
@@ -52,10 +54,10 @@ describe('Entities Translations Update Plugin', () => {
     updateEntitiesTranslation(externalContext, () => {
       done();
     });
-  }));
+  });
 
-  it('creates a proper plugin', sandbox(function (done: Function) {
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
+  it('creates a proper plugin', (done: Function) => {
+    sandbox.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       expect(plugin.dataType).to.equal(constants.ENTITIES);
       expect(plugin.repositoryFactory).to.equal(EntitiesRepositoryFactory);
       expect(plugin.enrichContext).to.be.instanceOf(Function);
@@ -69,9 +71,9 @@ describe('Entities Translations Update Plugin', () => {
     updateEntitiesTranslation(externalContext, () => {
       done();
     });
-  }));
+  });
 
-  it('makes query to fetch a translation target', sandbox(function (done: Function) {
+  it('makes query to fetch a translation target', (done: Function) => {
     const changesDescriptor = {
       gid: 'gid'
     };
@@ -84,7 +86,7 @@ describe('Entities Translations Update Plugin', () => {
       filename: 'path/to/translations-file'
     };
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
+    sandbox.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       const query = plugin.makeQueryToFetchTranslationTarget(changesDescriptor, context);
 
       expect(query).to.deep.equal({
@@ -100,9 +102,9 @@ describe('Entities Translations Update Plugin', () => {
     updateEntitiesTranslation(externalContext, () => {
       done();
     });
-  }));
+  });
 
-  it('enriches a context', sandbox(function (done: Function) {
+  it('enriches a context', (done: Function) => {
     const contextFake = {
       foo: 'bar'
     };
@@ -137,9 +139,9 @@ describe('Entities Translations Update Plugin', () => {
       primaryKey: []
     };
 
-    const getSetsAndDomainStub = this.stub(entitiesUtils, 'getSetsAndDomain').returns(setsAndDomainFake);
+    const getSetsAndDomainStub = sandbox.stub(entitiesUtils, 'getSetsAndDomain').returns(setsAndDomainFake);
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
+    sandbox.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       const enrichment = plugin.enrichContext(resourceFake, changesDescriptor, contextFake);
 
       expect(enrichment).to.equal(setsAndDomainFake);
@@ -153,9 +155,9 @@ describe('Entities Translations Update Plugin', () => {
     updateEntitiesTranslation(externalContext, () => {
       done();
     });
-  }));
+  });
 
-  it('makes a translation based on its closed version', sandbox(function (done: Function) {
+  it('makes a translation based on its closed version', (done: Function) => {
     const contextFake = {
       foo: 'bar'
     };
@@ -170,9 +172,9 @@ describe('Entities Translations Update Plugin', () => {
       foo: 'bar'
     };
 
-    const makeEntityBasedOnItsClosedVersionStub = this.stub(entitiesUtils, 'makeEntityBasedOnItsClosedVersion').returns(newTargetFake);
+    const makeEntityBasedOnItsClosedVersionStub = sandbox.stub(entitiesUtils, 'makeEntityBasedOnItsClosedVersion').returns(newTargetFake);
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
+    sandbox.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       const actualNewTarget = plugin.makeTranslationTargetBasedOnItsClosedVersion(closedTarget, contextFake);
 
       expect(actualNewTarget).to.equal(newTargetFake);
@@ -185,9 +187,9 @@ describe('Entities Translations Update Plugin', () => {
     updateEntitiesTranslation(externalContext, () => {
       done();
     });
-  }));
+  });
 
-  it('processes translation before update', sandbox(function (done: Function) {
+  it('processes translation before update', (done: Function) => {
     const context = {
       concepts: {
         gini: {}
@@ -202,9 +204,9 @@ describe('Entities Translations Update Plugin', () => {
       bla: 'yahooo!trans'
     };
 
-    const transformEntityPropertiesStub = this.stub(ddfMappers, 'transformEntityProperties').returns(translationTransformed);
+    const transformEntityPropertiesStub = sandbox.stub(ddfMappers, 'transformEntityProperties').returns(translationTransformed);
 
-    this.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
+    sandbox.stub(UpdateTranslationsFlow, 'createTranslationsUpdater').callsFake((plugin, externalContextFrozen, callback) => {
       const actualTranslationTransformed = plugin.processTranslationBeforeUpdate(translation, context);
 
       expect(actualTranslationTransformed).to.equal(translationTransformed);
@@ -217,5 +219,5 @@ describe('Entities Translations Update Plugin', () => {
     updateEntitiesTranslation(externalContext, () => {
       done();
     });
-  }));
+  });
 });

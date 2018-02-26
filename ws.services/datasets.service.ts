@@ -11,6 +11,7 @@ import { constants } from '../ws.utils/constants';
 import { logger } from '../ws.config/log';
 import { DatasetTracker } from './datasets-tracker';
 import { MongooseCallback } from '../ws.repository/repository.types';
+import { AsyncResultCallback } from 'async';
 
 const DATAPOINTS_TO_REMOVE_CHUNK_SIZE = 50000;
 

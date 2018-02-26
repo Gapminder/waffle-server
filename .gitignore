@@ -30,12 +30,15 @@ dumps
 
 # Directory for GitHub repositories
 ws.import/repos/*
-ws.import/diffs/*.txt
+ws.import/diffs/**/*.txt
 !ws.import/repos/.gitkeep
 !ws.import/diffs/.gitkeep
 
 settings_gapminder*.txt
 settings_valor.txt
+deployment/gcp_scripts/**/deployment_*.json
+deployment/gcp_scripts/**/build.*.sh
+deployment/gcp_scripts/**/*.txt
 dev
 dev.pub
 1.json

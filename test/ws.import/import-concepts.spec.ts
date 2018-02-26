@@ -3,7 +3,6 @@ import '../../ws.repository/';
 import * as hi from 'highland';
 import * as _ from 'lodash';
 import * as sinon from 'sinon';
-import * as sinonTest from 'sinon-test';
 import { expect } from 'chai';
 
 import { logger } from '../../ws.config/log';
@@ -14,7 +13,7 @@ import { ConceptsRepositoryFactory } from '../../ws.repository/ddf/concepts/conc
 import { createConcepts } from '../../ws.import/import-concepts';
 import { constants } from '../../ws.utils/constants';
 
-const sandbox = sinonTest.configureTest(sinon);
+const sandbox = sinon.createSandbox();
 
 const conceptsResource = {
   path: 'ddf--concepts.csv',
@@ -45,7 +44,10 @@ const datapackageStub = {
 };
 
 describe('Import ddf concepts', () => {
-  it('should import concepts', sandbox(function (done: Function) {
+
+  afterEach(() => sandbox.restore());
+
+  it('should import concepts', (done: Function) => {
     const rawConcept = {
       concept: 'company',
       name: 'Company',
@@ -80,20 +82,20 @@ describe('Import ddf concepts', () => {
       type: 'entity_domain'
     };
 
-    const readCsvFileAsStreamStub = this.stub(fileUtils, 'readCsvFileAsStream').returns(hi([rawConcept]));
-    const conceptMapperStub = this.spy(ddfMappers, 'mapDdfConceptsToWsModel');
+    const readCsvFileAsStreamStub = sandbox.stub(fileUtils, 'readCsvFileAsStream').returns(hi([rawConcept]));
+    const conceptMapperStub = sandbox.spy(ddfMappers, 'mapDdfConceptsToWsModel');
 
-    const conceptCreateStub = this.stub().callsArgWithAsync(1, null);
-    this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({ create: conceptCreateStub });
+    const conceptCreateStub = sandbox.stub().callsArgWithAsync(1, null);
+    sandbox.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({ create: conceptCreateStub });
 
-    const getAllConceptsStub = this.stub(ddfImportUtils, 'getAllConcepts').callsFake((externalContext, done) => {
+    const getAllConceptsStub = sandbox.stub(ddfImportUtils, 'getAllConcepts').callsFake((externalContext, done) => {
       externalContext.concepts = { company: {}, year: {} };
       externalContext.timeConcepts = { year: {} };
       done(null, externalContext);
     });
 
-    this.stub(logger, 'info');
-    this.stub(logger, 'warn');
+    sandbox.stub(logger, 'info');
+    sandbox.stub(logger, 'warn');
 
     createConcepts(context, (error, externalContext) => {
       expect(error).to.not.exist;
@@ -128,9 +130,9 @@ describe('Import ddf concepts', () => {
 
       done();
     });
-  }));
+  });
 
-  it('should not import concepts: error raised on csv file reading', sandbox(function (done: Function) {
+  it('should not import concepts: error raised on csv file reading', (done: Function) => {
     const context = {
       pathToDdfFolder: 'some/path',
       transaction: {
@@ -144,11 +146,11 @@ describe('Import ddf concepts', () => {
     };
 
     const expectedError = 'Error while csv reading';
-    this.stub(fileUtils, 'readCsvFileAsStream').returns(hi(Promise.reject(expectedError)));
+    sandbox.stub(fileUtils, 'readCsvFileAsStream').returns(hi(Promise.reject(expectedError)));
 
-    const conceptCreateStub = this.stub().callsArgWithAsync(1, null);
-    this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({ create: conceptCreateStub });
-    this.stub(logger, 'info');
+    const conceptCreateStub = sandbox.stub().callsArgWithAsync(1, null);
+    sandbox.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({ create: conceptCreateStub });
+    sandbox.stub(logger, 'info');
 
     createConcepts(context, (error) => {
       expect(error).to.equal(expectedError);
@@ -156,9 +158,9 @@ describe('Import ddf concepts', () => {
       sinon.assert.notCalled(conceptCreateStub);
       done();
     });
-  }));
+  });
 
-  it('should import concepts: error raised when concept was being saved to mongo', sandbox(function (done: Function) {
+  it('should import concepts: error raised when concept was being saved to mongo', (done: Function) => {
     const rawConcept = {
       concept: 'company',
       name: 'Company',
@@ -178,12 +180,12 @@ describe('Import ddf concepts', () => {
       datapackage: datapackageStub
     };
 
-    this.stub(fileUtils, 'readCsvFileAsStream').returns(hi([rawConcept]));
+    sandbox.stub(fileUtils, 'readCsvFileAsStream').returns(hi([rawConcept]));
 
     const expectedError = 'Cannot save concept to db';
-    const conceptCreateStub = this.stub().callsArgWithAsync(1, expectedError);
-    this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({ create: conceptCreateStub });
-    this.stub(logger, 'info');
+    const conceptCreateStub = sandbox.stub().callsArgWithAsync(1, expectedError);
+    sandbox.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({ create: conceptCreateStub });
+    sandbox.stub(logger, 'info');
 
     createConcepts(context, (error) => {
       expect(error).to.equal(expectedError);
@@ -191,9 +193,9 @@ describe('Import ddf concepts', () => {
       sinon.assert.calledOnce(conceptCreateStub);
       done();
     });
-  }));
+  });
 
-  it('should import concepts: subsets are calculated', sandbox(function (done: Function) {
+  it('should import concepts: subsets are calculated', (done: Function) => {
     const rawConcept = {
       concept: 'company',
       name: 'Company',
@@ -267,21 +269,21 @@ describe('Import ddf concepts', () => {
       }
     ];
 
-    this.stub(fileUtils, 'readCsvFileAsStream').returns(hi([rawConcept, rawConcept2]));
+    sandbox.stub(fileUtils, 'readCsvFileAsStream').returns(hi([rawConcept, rawConcept2]));
 
-    const conceptCreateStub = this.stub().callsArgWithAsync(1, null);
-    this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({ create: conceptCreateStub });
+    const conceptCreateStub = sandbox.stub().callsArgWithAsync(1, null);
+    sandbox.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({ create: conceptCreateStub });
 
-    const addSubsetOfByGidStub = this.stub().callsArgWithAsync(1, null);
-    this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({ addSubsetOfByGid: addSubsetOfByGidStub });
+    const addSubsetOfByGidStub = sandbox.stub().callsArgWithAsync(1, null);
+    sandbox.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({ addSubsetOfByGid: addSubsetOfByGidStub });
 
-    this.stub(ddfImportUtils, 'getAllConcepts').callsFake((externalContext, done) => {
+    sandbox.stub(ddfImportUtils, 'getAllConcepts').callsFake((externalContext, done) => {
       externalContext.concepts = _.keyBy(expectedConceptsToCreate, 'gid');
       externalContext.concepts.company._id = 'companyId';
       externalContext.timeConcepts = {};
       done(null, externalContext);
     });
-    this.stub(logger, 'info');
+    sandbox.stub(logger, 'info');
 
     createConcepts(context, (error) => {
       expect(error).to.not.exist;
@@ -291,9 +293,9 @@ describe('Import ddf concepts', () => {
 
       done();
     });
-  }));
+  });
 
-  it('should import concepts: subsets are calculated aand parent concept is not found', sandbox(function (done: Function) {
+  it('should import concepts: subsets are calculated aand parent concept is not found', (done: Function) => {
     const rawConcept = {
       concept: 'company',
       name: 'Company',
@@ -367,22 +369,22 @@ describe('Import ddf concepts', () => {
       }
     ];
 
-    this.stub(fileUtils, 'readCsvFileAsStream').returns(hi([rawConcept, rawConcept2]));
+    sandbox.stub(fileUtils, 'readCsvFileAsStream').returns(hi([rawConcept, rawConcept2]));
 
-    const conceptCreateStub = this.stub().callsArgWithAsync(1, null);
-    this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({ create: conceptCreateStub });
+    const conceptCreateStub = sandbox.stub().callsArgWithAsync(1, null);
+    sandbox.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({ create: conceptCreateStub });
 
-    const addSubsetOfByGidStub = this.stub().callsArgWithAsync(1, null);
-    this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({ addSubsetOfByGid: addSubsetOfByGidStub });
+    const addSubsetOfByGidStub = sandbox.stub().callsArgWithAsync(1, null);
+    sandbox.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({ addSubsetOfByGid: addSubsetOfByGidStub });
 
-    this.stub(ddfImportUtils, 'getAllConcepts').callsFake((externalContext, done) => {
+    sandbox.stub(ddfImportUtils, 'getAllConcepts').callsFake((externalContext, done) => {
       externalContext.concepts = _.keyBy(expectedConceptsToCreate, 'gid');
       externalContext.concepts.company._id = 'companyId';
       externalContext.timeConcepts = {};
       done(null, externalContext);
     });
-    this.stub(logger, 'info');
-    this.stub(logger, 'warn');
+    sandbox.stub(logger, 'info');
+    sandbox.stub(logger, 'warn');
 
     createConcepts(context, (error) => {
       expect(error).to.not.exist;
@@ -390,9 +392,9 @@ describe('Import ddf concepts', () => {
       sinon.assert.notCalled(addSubsetOfByGidStub);
       done();
     });
-  }));
+  });
 
-  it('should import concepts: domains are calculated', sandbox(function (done: Function) {
+  it('should import concepts: domains are calculated', (done: Function) => {
     const rawConcept = {
       concept: 'company',
       name: 'Company',
@@ -462,21 +464,21 @@ describe('Import ddf concepts', () => {
       }
     ];
 
-    this.stub(fileUtils, 'readCsvFileAsStream').returns(hi([rawConcept, rawConcept2]));
+    sandbox.stub(fileUtils, 'readCsvFileAsStream').returns(hi([rawConcept, rawConcept2]));
 
-    const conceptCreateStub = this.stub().callsArgWithAsync(1, null);
-    this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({ create: conceptCreateStub });
+    const conceptCreateStub = sandbox.stub().callsArgWithAsync(1, null);
+    sandbox.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({ create: conceptCreateStub });
 
-    const setDomainByGidStub = this.stub().callsArgWithAsync(1, null);
-    this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({ setDomainByGid: setDomainByGidStub });
+    const setDomainByGidStub = sandbox.stub().callsArgWithAsync(1, null);
+    sandbox.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({ setDomainByGid: setDomainByGidStub });
 
-    this.stub(ddfImportUtils, 'getAllConcepts').callsFake((externalContext, done) => {
+    sandbox.stub(ddfImportUtils, 'getAllConcepts').callsFake((externalContext, done) => {
       externalContext.concepts = _.keyBy(expectedConceptsToCreate, 'gid');
       externalContext.concepts.company._id = 'companyId';
       externalContext.timeConcepts = {};
       done(null, externalContext);
     });
-    this.stub(logger, 'info');
+    sandbox.stub(logger, 'info');
 
     createConcepts(context, (error) => {
       expect(error).to.not.exist;
@@ -486,9 +488,9 @@ describe('Import ddf concepts', () => {
 
       done();
     });
-  }));
+  });
 
-  it('should import concepts: domains are calculated and domain concept was not found', sandbox(function (done: Function) {
+  it('should import concepts: domains are calculated and domain concept was not found', (done: Function) => {
     const rawConcept = {
       concept: 'company',
       name: 'Company',
@@ -558,22 +560,22 @@ describe('Import ddf concepts', () => {
       }
     ];
 
-    this.stub(fileUtils, 'readCsvFileAsStream').returns(hi([rawConcept, rawConcept2]));
+    sandbox.stub(fileUtils, 'readCsvFileAsStream').returns(hi([rawConcept, rawConcept2]));
 
-    const conceptCreateStub = this.stub().callsArgWithAsync(1, null);
-    this.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({ create: conceptCreateStub });
+    const conceptCreateStub = sandbox.stub().callsArgWithAsync(1, null);
+    sandbox.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({ create: conceptCreateStub });
 
-    const setDomainByGidStub = this.stub().callsArgWithAsync(1, null);
-    this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({ setDomainByGid: setDomainByGidStub });
+    const setDomainByGidStub = sandbox.stub().callsArgWithAsync(1, null);
+    sandbox.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({ setDomainByGid: setDomainByGidStub });
 
-    this.stub(ddfImportUtils, 'getAllConcepts').callsFake((externalContext, done) => {
+    sandbox.stub(ddfImportUtils, 'getAllConcepts').callsFake((externalContext, done) => {
       externalContext.concepts = _.keyBy(expectedConceptsToCreate, 'gid');
       externalContext.concepts.company._id = 'companyId';
       externalContext.timeConcepts = {};
       done(null, externalContext);
     });
-    this.stub(logger, 'info');
-    this.stub(logger, 'warn');
+    sandbox.stub(logger, 'info');
+    sandbox.stub(logger, 'warn');
 
     createConcepts(context, (error) => {
       expect(error).to.not.exist;
@@ -582,5 +584,5 @@ describe('Import ddf concepts', () => {
 
       done();
     });
-  }));
+  });
 });

@@ -3,14 +3,13 @@ import '../../../ws.repository';
 import * as _ from 'lodash';
 import * as hi from 'highland';
 import * as sinon from 'sinon';
-import * as sinonTest from 'sinon-test';
-import {expect} from 'chai';
+import { expect } from 'chai';
 import * as datapointsUtils from '../../../ws.import/utils/datapoints.utils';
-import {DatapointsRepositoryFactory} from '../../../ws.repository/ddf/data-points/data-points.repository';
-import {EntitiesRepositoryFactory} from '../../../ws.repository/ddf/entities/entities.repository';
+import { DatapointsRepositoryFactory } from '../../../ws.repository/ddf/data-points/data-points.repository';
+import { EntitiesRepositoryFactory } from '../../../ws.repository/ddf/entities/entities.repository';
 import * as ddfMappers from '../../../ws.import/utils/ddf-mappers';
 
-const sandbox = sinonTest.configureTest(sinon);
+const sandbox = sinon.createSandbox();
 
 const externalContext = {
   dataset: {
@@ -115,7 +114,10 @@ const datapointsWithFoundEntities = [
 ];
 
 describe('Datapoints Utils', () => {
-  it('it should save datapoints and entities found in them', sandbox(function (done: Function) {
+
+  afterEach(() => sandbox.restore());
+
+  it('it should save datapoints and entities found in them', (done: Function) => {
     const entitiesFoundInDatapoints = {
       1912: {},
       1905: {}
@@ -153,12 +155,12 @@ describe('Datapoints Utils', () => {
 
     const wsDatapoints = [{}];
 
-    const mapDdfDataPointToWsModelStub = this.stub(ddfMappers, 'mapDdfDataPointToWsModel').returns(wsDatapoints);
+    const mapDdfDataPointToWsModelStub = sandbox.stub(ddfMappers, 'mapDdfDataPointToWsModel').returns(wsDatapoints);
 
-    const datapointsCreateStub = this.spy();
-    this.stub(DatapointsRepositoryFactory, 'versionAgnostic').callsFake(() => ({create: datapointsCreateStub}));
+    const datapointsCreateStub = sandbox.spy();
+    sandbox.stub(DatapointsRepositoryFactory, 'versionAgnostic').callsFake(() => ({ create: datapointsCreateStub }));
 
-    const saveEntitiesFoundInDatapoints = this.stub().returns(Promise.resolve(entitiesFoundInDatapoints));
+    const saveEntitiesFoundInDatapoints = sandbox.stub().returns(Promise.resolve(entitiesFoundInDatapoints));
 
     datapointsUtils.saveDatapointsAndEntitiesFoundInThem(saveEntitiesFoundInDatapoints, externalContext, datapointsWithFoundEntitiesStream).done(() => {
       sinon.assert.calledTwice(datapointsCreateStub);
@@ -172,12 +174,11 @@ describe('Datapoints Utils', () => {
 
       done();
     });
-  }));
+  });
 
-  it('should extract dimensions and measures from datapackage resource', function() {
+  it('should extract dimensions and measures from datapackage resource', () => {
     const externalContext = {
-      previousConcepts: {
-      },
+      previousConcepts: {},
       concepts: {
         lines_of_code: {
           originId: 'lines_of_code'
@@ -199,13 +200,16 @@ describe('Datapoints Utils', () => {
       dimensions: ['anno', 'company']
     };
 
-    const {measures, dimensions} = datapointsUtils.getDimensionsAndMeasures(resource, externalContext);
+    const { measures, dimensions } = datapointsUtils.getDimensionsAndMeasures(resource, externalContext);
 
-    expect(measures).to.deep.equal({lines_of_code: externalContext.concepts.lines_of_code});
-    expect(dimensions).to.deep.equal({anno: externalContext.concepts.anno, company: externalContext.concepts.company});
+    expect(measures).to.deep.equal({ lines_of_code: externalContext.concepts.lines_of_code });
+    expect(dimensions).to.deep.equal({
+      anno: externalContext.concepts.anno,
+      company: externalContext.concepts.company
+    });
   });
 
-  it('should extract dimensions and measures from datapackage resource: anno taken from previous concepts', function() {
+  it('should extract dimensions and measures from datapackage resource: anno taken from previous concepts', () => {
     const externalContext = {
       previousConcepts: {
         anno: {
@@ -230,16 +234,18 @@ describe('Datapoints Utils', () => {
       dimensions: ['anno', 'company']
     };
 
-    const {measures, dimensions} = datapointsUtils.getDimensionsAndMeasures(resource, externalContext);
+    const { measures, dimensions } = datapointsUtils.getDimensionsAndMeasures(resource, externalContext);
 
-    expect(measures).to.deep.equal({lines_of_code: externalContext.concepts.lines_of_code});
-    expect(dimensions).to.deep.equal({anno: externalContext.previousConcepts.anno, company: externalContext.concepts.company});
+    expect(measures).to.deep.equal({ lines_of_code: externalContext.concepts.lines_of_code });
+    expect(dimensions).to.deep.equal({
+      anno: externalContext.previousConcepts.anno,
+      company: externalContext.concepts.company
+    });
   });
 
-  it('should throw an error if measures were not found', function() {
+  it('should throw an error if measures were not found', function () {
     const externalContext = {
-      previousConcepts: {
-      },
+      previousConcepts: {},
       concepts: {
         anno: {
           originId: 'anno'
@@ -260,10 +266,9 @@ describe('Datapoints Utils', () => {
     expect(error.message).to.equal(`Measures were not found for indicators: ${resource.indicators} from resource ${resource.path}`);
   });
 
-  it('should throw an error if dimensions were not found', function() {
+  it('should throw an error if dimensions were not found', function () {
     const externalContext = {
-      previousConcepts: {
-      },
+      previousConcepts: {},
       concepts: {
         lines_of_code: {
           originId: 'lines_of_code'
@@ -281,11 +286,11 @@ describe('Datapoints Utils', () => {
     expect(error.message).to.equal(`Dimensions were not found for dimensions: ${resource.dimensions} from resource ${resource.path}`);
   });
 
-  it('should find all entities', sandbox(function() {
-    const thenSegregateEntitiesStub = this.spy();
+  it('should find all entities', () => {
+    const thenSegregateEntitiesStub = sandbox.spy();
 
-    const findAllStub = this.stub().returns({then: thenSegregateEntitiesStub});
-    const latestVersionStub = this.stub(EntitiesRepositoryFactory, 'latestVersion').callsFake(() => {
+    const findAllStub = sandbox.stub().returns({ then: thenSegregateEntitiesStub });
+    const latestVersionStub = sandbox.stub(EntitiesRepositoryFactory, 'latestVersion').callsFake(() => {
       return {
         findAll: findAllStub
       };
@@ -300,13 +305,13 @@ describe('Datapoints Utils', () => {
 
     sinon.assert.calledOnce(thenSegregateEntitiesStub);
     sinon.assert.calledWith(thenSegregateEntitiesStub, datapointsUtils.segregateEntities);
-  }));
+  });
 
-  it('should find all previous entities', sandbox(function() {
-    const thenSegregateEntitiesStub = this.spy();
+  it('should find all previous entities', () => {
+    const thenSegregateEntitiesStub = sandbox.spy();
 
-    const findAllStub = this.stub().returns({then: thenSegregateEntitiesStub});
-    const currentVersionStub = this.stub(EntitiesRepositoryFactory, 'currentVersion').callsFake(() => {
+    const findAllStub = sandbox.stub().returns({ then: thenSegregateEntitiesStub });
+    const currentVersionStub = sandbox.stub(EntitiesRepositoryFactory, 'currentVersion').callsFake(() => {
       return {
         findAll: findAllStub
       };
@@ -330,9 +335,9 @@ describe('Datapoints Utils', () => {
 
     sinon.assert.calledOnce(thenSegregateEntitiesStub);
     sinon.assert.calledWith(thenSegregateEntitiesStub, datapointsUtils.segregateEntities);
-  }));
+  });
 
-  it('should get dimensions as entity origin ids', function () {
+  it('should get dimensions as entity origin ids', () => {
     const datapoint = {
       anno: 1905,
       company: 'gapminder',
@@ -340,7 +345,7 @@ describe('Datapoints Utils', () => {
     };
 
     const context = {
-      dimensions: _.extend({not_existing_dimension: {}}, threeDimensionsContext.dimensions),
+      dimensions: _.extend({ not_existing_dimension: {} }, threeDimensionsContext.dimensions),
       segregatedEntities: {
         groupedByGid: {
           1905: [{
@@ -367,7 +372,7 @@ describe('Datapoints Utils', () => {
 
   it('should segregate entities: on empty entities - empty result', () => {
     const segregatedEntities = datapointsUtils.segregateEntities([]);
-    expect(segregatedEntities).to.deep.equal({bySet: {}, byDomain: {}, byGid: {}, groupedByGid: {}});
+    expect(segregatedEntities).to.deep.equal({ bySet: {}, byDomain: {}, byGid: {}, groupedByGid: {} });
   });
 
   it('should segregate entities', () => {
@@ -382,8 +387,8 @@ describe('Datapoints Utils', () => {
     const entity12 = {
       gid: '12',
       sets: [
-        {originId: 'ageEntitySet1'},
-        {originId: 'ageEntitySet2'}
+        { originId: 'ageEntitySet1' },
+        { originId: 'ageEntitySet2' }
       ]
     };
 
@@ -436,7 +441,7 @@ describe('Datapoints Utils', () => {
     });
   });
 
-  it('should find entities in datapoint: concept as domain', sandbox(function() {
+  it('should find entities in datapoint: concept as domain', () => {
     const context = {
       segregatedEntities: {
         byGid: {
@@ -472,7 +477,7 @@ describe('Datapoints Utils', () => {
     };
 
     const stubEntity = {};
-    const foundEntityMappperStub = this.stub(ddfMappers, 'mapDdfEntityFoundInDatapointToWsModel').returns(stubEntity);
+    const foundEntityMappperStub = sandbox.stub(ddfMappers, 'mapDdfEntityFoundInDatapointToWsModel').returns(stubEntity);
 
     const entities = datapointsUtils.findEntitiesInDatapoint(datapoint.datapoint, context, externalContext);
 
@@ -487,9 +492,9 @@ describe('Datapoints Utils', () => {
     });
     expect(entities.length).to.equal(1);
     expect(entities[0]).to.equal(stubEntity);
-  }));
+  });
 
-  it('should find entities in datapoint', sandbox(function() {
+  it('should find entities in datapoint', () => {
     const context = {
       segregatedEntities: {
         byGid: {
@@ -528,7 +533,7 @@ describe('Datapoints Utils', () => {
     };
 
     const stubEntity = {};
-    const foundEntityMappperStub = this.stub(ddfMappers, 'mapDdfEntityFoundInDatapointToWsModel').returns(stubEntity);
+    const foundEntityMappperStub = sandbox.stub(ddfMappers, 'mapDdfEntityFoundInDatapointToWsModel').returns(stubEntity);
 
     const entities = datapointsUtils.findEntitiesInDatapoint(datapoint.datapoint, context, externalContext);
 
@@ -543,9 +548,9 @@ describe('Datapoints Utils', () => {
     });
     expect(entities.length).to.equal(1);
     expect(entities[0]).to.equal(stubEntity);
-  }));
+  });
 
-  it('should find entities in datapoint: existed entity should not be found', sandbox(function() {
+  it('should find entities in datapoint: existed entity should not be found', () => {
     const context = {
       segregatedEntities: {
         byGid: {
@@ -584,15 +589,15 @@ describe('Datapoints Utils', () => {
       context
     };
 
-    const foundEntityMappperStub = this.stub(ddfMappers, 'mapDdfEntityFoundInDatapointToWsModel');
+    const foundEntityMappperStub = sandbox.stub(ddfMappers, 'mapDdfEntityFoundInDatapointToWsModel');
 
     const entities = datapointsUtils.findEntitiesInDatapoint(datapoint.datapoint, context, externalContext);
 
     sinon.assert.notCalled(foundEntityMappperStub);
     expect(entities.length).to.equal(0);
-  }));
+  });
 
-  it('should create entities found in datapoints and cache already created ones', sandbox(function () {
+  it('should create entities found in datapoints and cache already created ones', () => {
     const entities = [
       {
         gid: '1882'
@@ -607,9 +612,9 @@ describe('Datapoints Utils', () => {
 
     const entitiesByGid = _.keyBy(entities, 'gid');
 
-    const createStub = this.stub().returns(Promise.resolve(_.map(entities, (entity) => ({toObject: () => entity}))));
+    const createStub = sandbox.stub().returns(Promise.resolve(_.map(entities, (entity) => ({ toObject: () => entity }))));
 
-    this.stub(EntitiesRepositoryFactory, 'versionAgnostic').callsFake(() => {
+    sandbox.stub(EntitiesRepositoryFactory, 'versionAgnostic').callsFake(() => {
       return {
         create: createStub
       };
@@ -629,5 +634,5 @@ describe('Datapoints Utils', () => {
 
     createdEntitiesFromCache.then((created) => expect(created).to.deep.equal(entitiesByGid));
     sinon.assert.notCalled(createStub);
-  }));
+  });
 });

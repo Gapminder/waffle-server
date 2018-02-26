@@ -3,7 +3,6 @@ import '../../ws.repository';
 import * as hi from 'highland';
 import * as fs from 'fs';
 import * as sinon from 'sinon';
-import * as sinonTest from 'sinon-test';
 import { expect } from 'chai';
 
 import { createTranslations } from '../../ws.import/import-translations';
@@ -17,7 +16,7 @@ import { ConceptsRepositoryFactory } from '../../ws.repository/ddf/concepts/conc
 import { EntitiesRepositoryFactory } from '../../ws.repository/ddf/entities/entities.repository';
 import { DatapointsRepositoryFactory } from '../../ws.repository/ddf/data-points/data-points.repository';
 
-const sandbox = sinonTest.configureTest(sinon);
+const sandbox = sinon.createSandbox();
 
 const language = {
   id: 'nl-nl',
@@ -76,14 +75,16 @@ describe('Import translations', () => {
       datapackageStub.resources = [];
     });
 
-    it('should import translations for concept', sandbox(function (done: Function) {
-      const addTranslationsForGivenPropertiesSpy = this.stub().returns(Promise.resolve());
-      const allOpenedInGivenVersionStub = this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties: addTranslationsForGivenPropertiesSpy });
+    afterEach(() => sandbox.restore());
 
-      const fsAccessStub = this.stub(fs, 'access').callsArgWithAsync(2);
+    it('should import translations for concept', (done: Function) => {
+      const addTranslationsForGivenPropertiesSpy = sandbox.stub().returns(Promise.resolve());
+      const allOpenedInGivenVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties: addTranslationsForGivenPropertiesSpy });
 
-      const readCsvFileAsStreamStub = this.stub(fileUtils, 'readCsvFileAsStream').returns(hi([conceptTranslation]));
-      this.stub(logger, 'info');
+      const fsAccessStub = sandbox.stub(fs, 'access').callsArgWithAsync(2);
+
+      const readCsvFileAsStreamStub = sandbox.stub(fileUtils, 'readCsvFileAsStream').returns(hi([conceptTranslation]));
+      sandbox.stub(logger, 'info');
 
       createTranslations(context, (errors, externalContext) => {
         expect(errors).to.not.exist;
@@ -109,19 +110,19 @@ describe('Import translations', () => {
 
         done();
       });
-    }));
+    });
 
-    it('should import translations for concept: translation properties are transformed by ddf mapper', sandbox(function (done: Function) {
+    it('should import translations for concept: translation properties are transformed by ddf mapper', (done: Function) => {
       const transformedTranslation = { hello: 'world' };
-      const transformConceptPropertiesStub = this.stub(ddfMappers, 'transformConceptProperties').returns(transformedTranslation);
+      const transformConceptPropertiesStub = sandbox.stub(ddfMappers, 'transformConceptProperties').returns(transformedTranslation);
 
-      const addTranslationsForGivenPropertiesSpy = this.stub().returns(Promise.resolve());
-      this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties: addTranslationsForGivenPropertiesSpy });
+      const addTranslationsForGivenPropertiesSpy = sandbox.stub().returns(Promise.resolve());
+      sandbox.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties: addTranslationsForGivenPropertiesSpy });
 
-      this.stub(fs, 'access').callsArgWithAsync(2);
+      sandbox.stub(fs, 'access').callsArgWithAsync(2);
 
-      this.stub(fileUtils, 'readCsvFileAsStream').returns(hi([conceptTranslation]));
-      this.stub(logger, 'info');
+      sandbox.stub(fileUtils, 'readCsvFileAsStream').returns(hi([conceptTranslation]));
+      sandbox.stub(logger, 'info');
 
       createTranslations(context, (errors, externalContext) => {
         expect(errors).to.not.exist;
@@ -135,16 +136,16 @@ describe('Import translations', () => {
 
         done();
       });
-    }));
+    });
 
-    it('should not import translations for concept if it is impossible to read a file with them', sandbox(function (done: Function) {
-      const addTranslationsForGivenPropertiesSpy = this.stub().returns(Promise.resolve());
-      const allOpenedInGivenVersionStub = this.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties: addTranslationsForGivenPropertiesSpy });
+    it('should not import translations for concept if it is impossible to read a file with them', (done: Function) => {
+      const addTranslationsForGivenPropertiesSpy = sandbox.stub().returns(Promise.resolve());
+      const allOpenedInGivenVersionStub = sandbox.stub(ConceptsRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties: addTranslationsForGivenPropertiesSpy });
 
-      const fsAccessStub = this.stub(fs, 'access').callsArgWithAsync(2, 'Cannot Read File');
+      const fsAccessStub = sandbox.stub(fs, 'access').callsArgWithAsync(2, 'Cannot Read File');
 
-      const readCsvFileAsStreamStub = this.stub(fileUtils, 'readCsvFileAsStream').returns(hi([conceptTranslation]));
-      this.stub(logger, 'info');
+      const readCsvFileAsStreamStub = sandbox.stub(fileUtils, 'readCsvFileAsStream').returns(hi([conceptTranslation]));
+      sandbox.stub(logger, 'info');
 
       createTranslations(context, (errors, externalContext) => {
         expect(errors).to.not.exist;
@@ -160,7 +161,7 @@ describe('Import translations', () => {
 
         done();
       });
-    }));
+    });
   });
 
   describe('Import entities translations', () => {
@@ -197,16 +198,19 @@ describe('Import translations', () => {
       datapackageStub.resources = [];
     });
 
-    it('should import translations for entity', sandbox(function (done: Function): void {
-      const loggerStub = this.stub(logger, 'info');
-      const addTranslationsForGivenPropertiesSpy = this.stub().returns(Promise.resolve());
-      const allOpenedInGivenVersionStub = this.stub(EntitiesRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties: addTranslationsForGivenPropertiesSpy });
+    afterEach(() => sandbox.restore());
 
-      const fsAccessStub = this.stub(fs, 'access').callsArgWithAsync(2);
 
-      const readCsvFileAsStreamStub = this.stub(fileUtils, 'readCsvFileAsStream').returns(hi([entityTranslation]));
+    it('should import translations for entity', (done: Function) => {
+      const loggerStub = sandbox.stub(logger, 'info');
+      const addTranslationsForGivenPropertiesSpy = sandbox.stub().returns(Promise.resolve());
+      const allOpenedInGivenVersionStub = sandbox.stub(EntitiesRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties: addTranslationsForGivenPropertiesSpy });
 
-      const toBooleanSpy = this.spy(ddfImportUtils, 'toBoolean');
+      const fsAccessStub = sandbox.stub(fs, 'access').callsArgWithAsync(2);
+
+      const readCsvFileAsStreamStub = sandbox.stub(fileUtils, 'readCsvFileAsStream').returns(hi([entityTranslation]));
+
+      const toBooleanSpy = sandbox.spy(ddfImportUtils, 'toBoolean');
 
       createTranslations(context, (errors: null, externalContext: any) => {
         expect(errors).to.not.exist;
@@ -240,16 +244,16 @@ describe('Import translations', () => {
 
         done();
       });
-    }));
+    });
 
-    it('should not import translations for entity if it is impossible to read a file with them', sandbox(function (done: Function) {
-      const addTranslationsForGivenPropertiesSpy = this.stub().returns(Promise.resolve());
-      const allOpenedInGivenVersionStub = this.stub(EntitiesRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties: addTranslationsForGivenPropertiesSpy });
+    it('should not import translations for entity if it is impossible to read a file with them', (done: Function) => {
+      const addTranslationsForGivenPropertiesSpy = sandbox.stub().returns(Promise.resolve());
+      const allOpenedInGivenVersionStub = sandbox.stub(EntitiesRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties: addTranslationsForGivenPropertiesSpy });
 
-      const fsAccessStub = this.stub(fs, 'access').callsArgWithAsync(2, 'Cannot Read File');
+      const fsAccessStub = sandbox.stub(fs, 'access').callsArgWithAsync(2, 'Cannot Read File');
 
-      const readCsvFileAsStreamStub = this.stub(fileUtils, 'readCsvFileAsStream').returns(hi([entityTranslation]));
-      this.stub(logger, 'info');
+      const readCsvFileAsStreamStub = sandbox.stub(fileUtils, 'readCsvFileAsStream').returns(hi([entityTranslation]));
+      sandbox.stub(logger, 'info');
 
       createTranslations(context, (errors, externalContext) => {
         expect(errors).to.not.exist;
@@ -265,7 +269,7 @@ describe('Import translations', () => {
 
         done();
       });
-    }));
+    });
   });
 
   describe('Import datapoints translations', () => {
@@ -299,14 +303,17 @@ describe('Import translations', () => {
       datapackageStub.resources = [];
     });
 
-    it('should import translations for datapoint', sandbox(function (done: Function) {
-      const addTranslationsForGivenPropertiesSpy = this.stub().returns(Promise.resolve());
-      const allOpenedInGivenVersionStub = this.stub(DatapointsRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties: addTranslationsForGivenPropertiesSpy });
+    afterEach(() => sandbox.restore());
 
-      const fsAccessStub = this.stub(fs, 'access').callsArgWithAsync(2);
 
-      const readCsvFileAsStreamStub = this.stub(fileUtils, 'readCsvFileAsStream').returns(hi([datapointTranslation]));
-      this.stub(logger, 'info');
+    it('should import translations for datapoint', (done: Function) => {
+      const addTranslationsForGivenPropertiesSpy = sandbox.stub().returns(Promise.resolve());
+      const allOpenedInGivenVersionStub = sandbox.stub(DatapointsRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties: addTranslationsForGivenPropertiesSpy });
+
+      const fsAccessStub = sandbox.stub(fs, 'access').callsArgWithAsync(2);
+
+      const readCsvFileAsStreamStub = sandbox.stub(fileUtils, 'readCsvFileAsStream').returns(hi([datapointTranslation]));
+      sandbox.stub(logger, 'info');
 
       createTranslations(context, (errors, externalContext) => {
         expect(errors).to.not.exist;
@@ -330,16 +337,16 @@ describe('Import translations', () => {
 
         done();
       });
-    }));
+    });
 
-    it('should not import translations for datapoint if it is impossible to read a file with them', sandbox(function (done: Function) {
-      const addTranslationsForGivenPropertiesSpy = this.stub().returns(Promise.resolve());
-      const allOpenedInGivenVersionStub = this.stub(DatapointsRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties: addTranslationsForGivenPropertiesSpy });
+    it('should not import translations for datapoint if it is impossible to read a file with them', (done: Function) => {
+      const addTranslationsForGivenPropertiesSpy = sandbox.stub().returns(Promise.resolve());
+      const allOpenedInGivenVersionStub = sandbox.stub(DatapointsRepositoryFactory, 'allOpenedInGivenVersion').returns({ addTranslationsForGivenProperties: addTranslationsForGivenPropertiesSpy });
 
-      const fsAccessStub = this.stub(fs, 'access').callsArgWithAsync(2, 'Cannot Read File');
+      const fsAccessStub = sandbox.stub(fs, 'access').callsArgWithAsync(2, 'Cannot Read File');
 
-      const readCsvFileAsStreamStub = this.stub(fileUtils, 'readCsvFileAsStream').returns(hi([datapointResource]));
-      this.stub(logger, 'info');
+      const readCsvFileAsStreamStub = sandbox.stub(fileUtils, 'readCsvFileAsStream').returns(hi([datapointResource]));
+      sandbox.stub(logger, 'info');
 
       createTranslations(context, (errors, externalContext) => {
         expect(errors).to.not.exist;
@@ -354,6 +361,6 @@ describe('Import translations', () => {
 
         done();
       });
-    }));
+    });
   });
 });
