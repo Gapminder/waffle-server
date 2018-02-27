@@ -26,6 +26,10 @@ export class ChangesDescriptor {
     return this._object.gid;
   }
 
+  public get rawData(): any {
+    return {metadata: this._metadata, object: this._object};
+  }
+
   public get changes(): any {
     if (this.isUpdateAction()) {
       return this._object['data-update'];
