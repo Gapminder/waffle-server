@@ -163,7 +163,8 @@ const expectedCreatedEntities = [
 const entitiesRepository = {
   closeOneByQuery: _.noop,
   // closeByGid: _.noop,
-  create: _.noop
+  create: _.noop,
+  closeAllByQuery: _.noop
   // findAll: _.noop,
   // findDistinctDrillups: _.noop,
   // findDistinctDomains: _.noop,
@@ -185,11 +186,12 @@ describe('Update Entities', function () {
     const loggerInfoStub = sandbox.stub(logger, 'info');
     const loggerErrorStub = sandbox.stub(logger, 'error');
 
-    const createStub = sandbox.stub(entitiesRepository, 'create').callsArgWithAsync(1, expectedError);
+    const createStub = sandbox.stub(entitiesRepository, 'create').resolves();
     const versionAgnosticStub = sandbox.stub(EntitiesRepositoryFactory, 'versionAgnostic').returns(entitiesRepository);
 
+    const closeAllByQueryStub = sandbox.stub(entitiesRepository, 'closeAllByQuery').callsArgWithAsync(1, expectedError);
     const closeOneByQueryStub = sandbox.stub(entitiesRepository, 'closeOneByQuery').callsArgWithAsync(1, expectedError);
-    const latestVersionStub = sandbox.stub(EntitiesRepositoryFactory, 'latestVersion').returns(entitiesRepository);
+    const latestExceptCurrentVersionStub = sandbox.stub(EntitiesRepositoryFactory, 'latestExceptCurrentVersion').returns(entitiesRepository);
 
     return updateService.updateEntities(originExternalContext, (error, externalContext) => {
       expect(error).to.not.exist;
@@ -249,9 +251,10 @@ describe('Update Entities', function () {
       sinon.assert.calledOnce(createStub);
       sinon.assert.calledWith(createStub, expectedCreatedEntities);
 
-      sinon.assert.calledOnce(latestVersionStub);
-      sinon.assert.calledWithExactly(latestVersionStub, datasetId, version);
+      sinon.assert.calledOnce(latestExceptCurrentVersionStub);
+      sinon.assert.calledWithExactly(latestExceptCurrentVersionStub, datasetId, version);
 
+      sinon.assert.notCalled(closeAllByQueryStub);
       sinon.assert.callCount(closeOneByQueryStub, expectedCloseOneByQueryCallCount);
       expect(closeOneByQueryStub.args[0][0]).to.be.deep.equal(expectedQuery1);
       expect(closeOneByQueryStub.args[1][0]).to.be.deep.equal(expectedQuery2);
@@ -270,11 +273,11 @@ describe('Update Entities', function () {
     const loggerInfoStub = sandbox.stub(logger, 'info');
     const loggerErrorStub = sandbox.stub(logger, 'error');
 
-    const createStub = sandbox.stub(entitiesRepository, 'create').callsArgWithAsync(1);
+    const createStub = sandbox.stub(entitiesRepository, 'create').resolves();
     const versionAgnosticStub = sandbox.stub(EntitiesRepositoryFactory, 'versionAgnostic').returns(entitiesRepository);
 
     const closeOneByQueryStub = sandbox.stub(entitiesRepository, 'closeOneByQuery').callsArgWithAsync(1, expectedError);
-    const latestVersionStub = sandbox.stub(EntitiesRepositoryFactory, 'latestVersion').returns(entitiesRepository);
+    const latestExceptCurrentVersionStub = sandbox.stub(EntitiesRepositoryFactory, 'latestExceptCurrentVersion').returns(entitiesRepository);
 
     return updateService.updateEntities(originExternalContext, (error, externalContext) => {
       expect(error).to.be.deep.equal([expectedError]);
@@ -333,8 +336,8 @@ describe('Update Entities', function () {
       sinon.assert.calledOnce(createStub);
       sinon.assert.calledWith(createStub, expectedCreatedEntities);
 
-      sinon.assert.calledOnce(latestVersionStub);
-      sinon.assert.calledWithExactly(latestVersionStub, datasetId, version);
+      sinon.assert.calledOnce(latestExceptCurrentVersionStub);
+      sinon.assert.calledWithExactly(latestExceptCurrentVersionStub, datasetId, version);
 
       sinon.assert.calledThrice(closeOneByQueryStub);
       expect(closeOneByQueryStub.args[0][0]).to.be.deep.equal(expectedQuery1);
@@ -356,11 +359,11 @@ describe('Update Entities', function () {
     const loggerInfoStub = sandbox.stub(logger, 'info');
     const loggerErrorStub = sandbox.stub(logger, 'error');
 
-    const createStub = sandbox.stub(entitiesRepository, 'create').callsArgWithAsync(1, expectedError);
+    const createStub = sandbox.stub(entitiesRepository, 'create').resolves();
     const versionAgnosticStub = sandbox.stub(EntitiesRepositoryFactory, 'versionAgnostic').returns(entitiesRepository);
 
     const closeOneByQueryStub = sandbox.stub(entitiesRepository, 'closeOneByQuery').callsArgWithAsync(1, expectedError, expectedEntity);
-    const latestVersionStub = sandbox.stub(EntitiesRepositoryFactory, 'latestVersion').returns(entitiesRepository);
+    const latestExceptCurrentVersionStub = sandbox.stub(EntitiesRepositoryFactory, 'latestExceptCurrentVersion').returns(entitiesRepository);
 
     return updateService.updateEntities(originExternalContext, (error, externalContext) => {
       expect(error).to.not.exist;
@@ -429,8 +432,8 @@ describe('Update Entities', function () {
       sinon.assert.calledOnce(createStub);
       sinon.assert.calledWith(createStub, expectedCreatedEntities);
 
-      sinon.assert.calledOnce(latestVersionStub);
-      sinon.assert.calledWithExactly(latestVersionStub, datasetId, version);
+      sinon.assert.calledOnce(latestExceptCurrentVersionStub);
+      sinon.assert.calledWithExactly(latestExceptCurrentVersionStub, datasetId, version);
 
       sinon.assert.callCount(closeOneByQueryStub, expectedCloseOneByQueryCallCount);
       expect(closeOneByQueryStub.args[0][0]).to.be.deep.equal(expectedQuery1);
@@ -467,7 +470,7 @@ describe('Update Entities', function () {
     const loggerInfoStub = sandbox.stub(logger, 'info');
     const loggerErrorStub = sandbox.stub(logger, 'error');
 
-    const createStub = sandbox.stub(entitiesRepository, 'create').callsArgWithAsync(1, null);
+    const createStub = sandbox.stub(entitiesRepository, 'create').resolves();
     const versionAgnosticStub = sandbox.stub(EntitiesRepositoryFactory, 'versionAgnostic').returns(entitiesRepository);
 
     const closeOneByQueryStub = sandbox.stub(entitiesRepository, 'closeOneByQuery');
@@ -475,7 +478,7 @@ describe('Update Entities', function () {
     closeOneByQueryStub.onCall(1).callsArgWithAsync(1, null, expectedEntity);
     closeOneByQueryStub.onCall(2).callsArgWithAsync(1, null, expectedEntity);
     closeOneByQueryStub.onCall(3).callsArgWithAsync(1, null, expectedEntity);
-    const latestVersionStub = sandbox.stub(EntitiesRepositoryFactory, 'latestVersion').returns(entitiesRepository);
+    const latestExceptCurrentVersionStub = sandbox.stub(EntitiesRepositoryFactory, 'latestExceptCurrentVersion').returns(entitiesRepository);
 
     return updateService.updateEntities(originExternalContext, (error, externalContext) => {
       expect(error).to.not.exist;
@@ -636,13 +639,159 @@ describe('Update Entities', function () {
       expect(createStub.args[2][0]).to.be.deep.equal(expectedCreatedEntity3);
       expect(createStub.args[3][0]).to.be.deep.equal(expectedCreatedEntity4);
 
-      sinon.assert.calledOnce(latestVersionStub);
-      sinon.assert.calledWithExactly(latestVersionStub, datasetId, version);
+      sinon.assert.calledOnce(latestExceptCurrentVersionStub);
+      sinon.assert.calledWithExactly(latestExceptCurrentVersionStub, datasetId, version);
 
       sinon.assert.calledThrice(closeOneByQueryStub);
       expect(closeOneByQueryStub.args[0][0]).to.be.deep.equal(expectedQuery1);
       expect(closeOneByQueryStub.args[1][0]).to.be.deep.equal(expectedQuery2);
       expect(closeOneByQueryStub.args[2][0]).to.be.deep.equal(expectedQuery3);
+
+      return done();
+    });
+  });
+
+  it('should update entities with removed columns without errors', (done: Function) => {
+    const originExternalContext = _.defaults({pathToDatasetDiff: path.resolve(__dirname, './fixtures/updated-entities-removed-columns.txt')}, externalContextFixture);
+    const expectedEntity = {
+      _id: 'ENTITYID',
+      originId: 'ENTITYID',
+      properties: {},
+      sources: ['ddf--entities--company--company_scale.csv'],
+      languages: {
+        'nl-nl': {}
+      }
+    };
+    const expectedEntityGap = _.extend({}, expectedEntity, {
+      gid: 'gap',
+      properties: {
+        region: 'gap',
+        'is--region': true,
+        name: 'Gapminder'
+      }
+    });
+    const expectedEntityGap2 = _.extend({}, expectedEntity, {
+      gid: 'gap2',
+      properties: {
+        region: 'gap2',
+        'is--region': true,
+        name: 'Gapminder 2'
+      }
+    });
+    const expectedloggerDebugCallCount = 7;
+    const expectedVersionAgnosticCallCount = 2;
+
+    const loggerDebugStub = sandbox.stub(logger, 'debug');
+    const loggerInfoStub = sandbox.stub(logger, 'info');
+    const loggerErrorStub = sandbox.stub(logger, 'error');
+
+    const createStub = sandbox.stub(entitiesRepository, 'create').resolves();
+    const versionAgnosticStub = sandbox.stub(EntitiesRepositoryFactory, 'versionAgnostic').returns(entitiesRepository);
+
+    const closeOneByQueryStub = sandbox.stub(entitiesRepository, 'closeOneByQuery');
+    closeOneByQueryStub.onFirstCall().callsArgWithAsync(1, null, expectedEntityGap);
+
+    const closeAllByQueryStub = sandbox.stub(entitiesRepository, 'closeAllByQuery');
+    closeAllByQueryStub.onFirstCall().callsArgWithAsync(1, null, [expectedEntityGap2]);
+    const latestExceptCurrentVersionStub = sandbox.stub(EntitiesRepositoryFactory, 'latestExceptCurrentVersion').returns(entitiesRepository);
+
+    return updateService.updateEntities(originExternalContext, (error, externalContext) => {
+      expect(error).to.not.exist;
+      expect(externalContext).to.deep.equal(originExternalContext);
+
+      sinon.assert.callCount(loggerDebugStub, expectedloggerDebugCallCount);
+
+      expect(loggerDebugStub.args[0][0]).to.be.equal('Start process of entities update');
+      expect(loggerDebugStub.args[0][1]).to.not.exist;
+      expect(loggerDebugStub.args[1][0]).to.be.equal('Updating batch of entities. Amount: ');
+      expect(loggerDebugStub.args[1][1]).to.be.equal(1);
+      expect(loggerDebugStub.args[1][2]).to.not.exist;
+
+      const expectedQuery1 = {
+        domain: 'ENTITYSETID3',
+        sets: [],
+        'properties.region': 'america',
+        sources: 'ddf--entities--region.csv'
+      };
+
+      expect(loggerDebugStub.args[2][0]).to.be.equal('Closing entity by query: ');
+      expect(loggerDebugStub.args[2][1]).to.be.deep.equal(expectedQuery1);
+      expect(loggerDebugStub.args[2][2]).to.not.exist;
+      expect(loggerDebugStub.args[3][0]).to.be.equal('Entity was closed. OriginId: ');
+      expect(loggerDebugStub.args[3][1]).to.be.deep.equal('ENTITYID');
+      expect(loggerDebugStub.args[3][2]).to.not.exist;
+      expect(loggerDebugStub.args[4][0]).to.be.equal('Creating updated entity based on its closed version');
+      expect(loggerDebugStub.args[4][1]).to.not.exist;
+      expect(loggerDebugStub.args[5][0]).to.be.equal('Detecting entities with removed columns. Amount: ');
+      expect(loggerDebugStub.args[5][1]).to.be.equal(2);
+      expect(loggerDebugStub.args[5][2]).to.not.exist;
+      expect(loggerDebugStub.args[6][0]).to.be.equal('Creating updated entity based on its closed version');
+      expect(loggerDebugStub.args[6][1]).to.not.exist;
+
+
+      sinon.assert.calledThrice(loggerInfoStub);
+      sinon.assert.calledWithExactly(loggerInfoStub, sinon.match('Start creating entities').or(sinon.match('Start removing entities')).or(sinon.match('Start updating entities')));
+      sinon.assert.notCalled(loggerErrorStub);
+
+      // *** createConcepts
+      sinon.assert.callCount(versionAgnosticStub, expectedVersionAgnosticCallCount);
+      sinon.assert.calledWithExactly(versionAgnosticStub);
+      sinon.assert.callCount(createStub, expectedVersionAgnosticCallCount);
+
+      const expectedCreatedEntity1 = {
+        gid: 'gap',
+        sources: [
+          'ddf--entities--company--company_scale.csv',
+          'ddf--entities--region.csv'
+        ],
+        properties: {
+          region: 'gap',
+          'is--region': 'true',
+          name: 'Gapminder'
+        },
+        parsedProperties: {},
+        originId: 'ENTITYID',
+        languages: {
+          'nl-nl': {}
+        },
+        domain: 'ENTITYSETID3',
+        sets: [],
+        from: 1111111,
+        dataset: 'DATASETID'
+      };
+      const expectedCreatedEntity2 = {
+        gid: 'gap2',
+        sources: [
+          'ddf--entities--company--company_scale.csv',
+          'ddf--entities--region.csv'
+        ],
+        properties: {
+          region: 'gap2',
+          'is--region': 'true',
+          name: 'Gapminder 2'
+        },
+        parsedProperties: {},
+        originId: 'ENTITYID',
+        languages: {
+          'nl-nl': {}
+        },
+        domain: 'ENTITYSETID3',
+        sets: [],
+        from: 1111111,
+        dataset: 'DATASETID'
+      };
+
+      expect(createStub.args[0][0]).to.be.deep.equal(expectedCreatedEntity1);
+      expect(createStub.args[1][0]).to.be.deep.equal(expectedCreatedEntity2);
+
+      sinon.assert.calledTwice(latestExceptCurrentVersionStub);
+      sinon.assert.calledWithExactly(latestExceptCurrentVersionStub, datasetId, version);
+
+      sinon.assert.calledOnce(closeAllByQueryStub);
+
+      const expectedQuery = {domain: 'ENTITYSETID3', sets: [], sources: 'ddf--entities--region.csv'};
+
+      expect(closeAllByQueryStub.args[0][0]).to.be.deep.equal(expectedQuery);
 
       return done();
     });

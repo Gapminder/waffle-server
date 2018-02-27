@@ -1,0 +1,46 @@
+{
+  "headers": [
+    "project",
+    "company",
+    "popular_appeal",
+    "meeting_style",
+    "methodology"
+  ],
+  "rows": [
+    [
+      "ws",
+      "zsoft",
+      "laag",
+      "regelmatig",
+      "worsteling om de bal"
+    ],
+    [
+      "xbox",
+      "mcrsft",
+      "hoog",
+      "brainstorm",
+      "worsteling om de bal"
+    ],
+    [
+      "vizabi",
+      "gap",
+      "normaal",
+      "regelmatig",
+      "kanban"
+    ],
+    [
+      "ws",
+      "gap",
+      "laag",
+      "spel-gebaseerde",
+      "kanban"
+    ],
+    [
+      "ws",
+      "valor",
+      "hoog",
+      "regelmatig",
+      "mager"
+    ]
+  ]
+}

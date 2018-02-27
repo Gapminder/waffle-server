@@ -23,6 +23,7 @@ export abstract class VersionedModelRepository {
   /* tslint:disable-next-line */
   public create(documents: any, onCreated?: Function): any {
     const documentsForStoring = Array.isArray(documents) ? this.setDocumentsId(documents) : this.setDocumentsId([documents]);
+
     return this._getModel().insertMany(documentsForStoring, onCreated);
   }
 

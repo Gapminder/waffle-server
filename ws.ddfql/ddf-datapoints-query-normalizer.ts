@@ -52,6 +52,7 @@ function normalizeDatapoints(query: any, concepts: any): any {
     domainGids,
     domainGidsFromQuery,
     timeConceptsGids: conceptUtils.getTimeConceptGids(safeConcepts),
+    entitySetConceptsGids: conceptUtils.getEntitySetConceptGids(safeConcepts),
     conceptsByGids,
     conceptsByOriginIds
   });
@@ -163,6 +164,10 @@ function ___evaluateNormalizedFilterByEntityFilter(filterValue: any, filterKey: 
 }
 
 function __normalizeJoin(query: any, options: any): void {
+  const queryCopy = _.cloneDeep(query);
+
+  // todo: provide next functionality: map by join, traverse for each of join-where section and get normalizedFilters
+  // main goal is avoid queryCopy and this kind `traverse.get(queryCopy.join, this.parent.parent.path)` of logic
   traverse(query.join).forEach(function (filterValue: any): void {
     /* tslint:disable: no-invalid-this */
     let normalizedFilter = null;
@@ -185,9 +190,17 @@ function __normalizeJoin(query: any, options: any): void {
     const isKeyInDomainsOrSetsList = ddfQueryUtils.isDomainPropertyFilter(this.key, options);
 
     if (isWhereClause && !isTimePropertyFilter && !isEntityPropertyFilter && isKeyInDomainsOrSetsList) {
-      normalizedFilter = {
-        gid: filterValue
-      };
+      const branchWithKey = traverse.get(queryCopy.join, this.parent.parent.path);
+
+      if (this.key !== branchWithKey.key && _.includes(options.entitySetConceptsGids, this.key)) {
+        normalizedFilter = {
+          [`properties.${this.key}`]: filterValue
+        };
+      } else {
+        normalizedFilter = {
+          gid: filterValue
+        };
+      }
     }
 
     if (this.key === 'key') {

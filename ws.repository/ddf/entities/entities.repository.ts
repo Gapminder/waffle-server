@@ -54,6 +54,22 @@ class EntitiesRepository extends VersionedModelRepository {
     return Entities.findOneAndUpdate(query, {$set: {to: this.version}}, {new: true}).lean().exec(done);
   }
 
+  public closeAllByQuery(closeQuery: any, done: Function): any {
+    const query = this._composeQuery(closeQuery);
+
+    Entities.find(query).lean().exec((err: any, entities: any[]) => {
+      if (err) {
+        return done(err);
+      }
+
+      const actions = entities.map((entity: any) => (doneOneEntity: Function) => {
+        this.closeOneByQuery({_id: entity._id}, doneOneEntity);
+      });
+
+      async.parallelLimit(actions as any, 10, done as any);
+    });
+  }
+
   public findTargetForTranslation(params: any, done: Function): Promise<Object> {
     const {domain, sets, gid, sources} = params;
     const query = this._composeQuery({domain, sets, gid, sources});
@@ -124,9 +140,7 @@ class EntitiesRepository extends VersionedModelRepository {
 
     const updateQuery = {
       $set: {
-        languages: {
-          [language.id]: properties
-        }
+        [`languages.${language.id}`]: properties
       }
     };
 
