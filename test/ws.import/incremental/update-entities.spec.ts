@@ -1,12 +1,12 @@
 import '../../../ws.repository';
-import { expect } from 'chai';
+import {expect} from 'chai';
 import * as _ from 'lodash';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { logger } from '../../../ws.config/log';
+import {logger} from '../../../ws.config/log';
 
 import * as updateService from '../../../ws.import/incremental/update-entities';
-import { EntitiesRepositoryFactory } from '../../../ws.repository/ddf/entities/entities.repository';
+import {EntitiesRepositoryFactory} from '../../../ws.repository/ddf/entities/entities.repository';
 
 const datasetId = 'DATASETID';
 const version = 1111111;
@@ -116,8 +116,8 @@ const externalContextFixture: any = {
     _id: 'TRANSACTIONID',
     createdAt: version
   },
-  previousConcepts: { company_size: set1 },
-  concepts: { company: domain, company_scale: set2, english_speaking: set3, region: set4 },
+  previousConcepts: {company_size: set1},
+  concepts: {company: domain, company_scale: set2, english_speaking: set3, region: set4},
   timeConcepts: [],
   datasetId,
   version
@@ -132,7 +132,7 @@ const expectedCreatedEntities = [
     languages: {},
     originId: null,
     parsedProperties: {},
-    properties: { company_scale: 'small', full_name_changed: 'Not very big', 'is--company_scale': true },
+    properties: {company_scale: 'small', full_name_changed: 'Not very big', 'is--company_scale': true},
     sets: ['ENTITYSETID'],
     sources: ['ddf--entities--company--company_scale.csv']
   }, {
@@ -143,7 +143,7 @@ const expectedCreatedEntities = [
     languages: {},
     originId: null,
     parsedProperties: {},
-    properties: { company_scale: 'large', full_name_changed: 'Very Big', 'is--company_scale': true },
+    properties: {company_scale: 'large', full_name_changed: 'Very Big', 'is--company_scale': true},
     sets: ['ENTITYSETID'],
     sources: ['ddf--entities--company--company_scale.csv']
   }, {
@@ -154,7 +154,7 @@ const expectedCreatedEntities = [
     languages: {},
     originId: null,
     parsedProperties: {},
-    properties: { company_scale: 'medium', full_name_changed: 'medium', 'is--company_scale': true },
+    properties: {company_scale: 'medium', full_name_changed: 'medium', 'is--company_scale': true},
     sets: ['ENTITYSETID'],
     sources: ['ddf--entities--company--company_scale.csv']
   }
@@ -172,12 +172,12 @@ const entitiesRepository = {
   // addSubsetOfByGid: _.noop
 };
 
-describe('Update Entities', function () {
+describe('Update Entities', () => {
 
   afterEach(() => sandbox.restore());
 
   it('should create new and remove old entities from fixture', (done: Function) => {
-    const originExternalContext = _.defaults({ pathToDatasetDiff: path.resolve(__dirname, './fixtures/full-diff-entities.txt') }, externalContextFixture);
+    const originExternalContext = _.defaults({pathToDatasetDiff: path.resolve(__dirname, './fixtures/full-diff-entities.txt')}, externalContextFixture);
     const expectedError = null;
     const expectedCloseOneByQueryCallCount = 3;
     const expectedloggerDebugCallCount = 6;
@@ -193,16 +193,9 @@ describe('Update Entities', function () {
     const closeOneByQueryStub = sandbox.stub(entitiesRepository, 'closeOneByQuery').callsArgWithAsync(1, expectedError);
     const latestExceptCurrentVersionStub = sandbox.stub(EntitiesRepositoryFactory, 'latestExceptCurrentVersion').returns(entitiesRepository);
 
-    return updateService.updateEntities(originExternalContext, (error, externalContext) => {
+    return updateService.updateEntities(originExternalContext, (error: string, externalContext: any) => {
       expect(error).to.not.exist;
       expect(externalContext).to.deep.equal(originExternalContext);
-
-      sinon.assert.callCount(loggerDebugStub, expectedloggerDebugCallCount);
-      expect(loggerDebugStub.args[0][0]).to.be.equal('Start process of entities update');
-      expect(loggerDebugStub.args[0][1]).to.not.exist;
-      expect(loggerDebugStub.args[1][0]).to.be.equal('Removing batch of entities. Amount: ');
-      expect(loggerDebugStub.args[1][1]).to.be.equal(3);
-      expect(loggerDebugStub.args[1][2]).to.not.exist;
 
       const expectedQuery1 = {
         domain: 'DOMAINID',
@@ -225,19 +218,15 @@ describe('Update Entities', function () {
         sources: 'ddf--entities--company--company_size.csv'
       };
 
-      expect(loggerDebugStub.args[2][0]).to.be.equal('Closing entity by query: ');
-      expect(loggerDebugStub.args[2][1]).to.be.deep.equal(expectedQuery1);
-      expect(loggerDebugStub.args[2][2]).to.not.exist;
-      expect(loggerDebugStub.args[3][0]).to.be.equal('Closing entity by query: ');
-      expect(loggerDebugStub.args[3][1]).to.be.deep.equal(expectedQuery2);
-      expect(loggerDebugStub.args[3][2]).to.not.exist;
-      expect(loggerDebugStub.args[4][0]).to.be.equal('Closing entity by query: ');
-      expect(loggerDebugStub.args[4][1]).to.be.deep.equal(expectedQuery3);
-      expect(loggerDebugStub.args[4][2]).to.not.exist;
-
-      expect(loggerDebugStub.args[5][0]).to.be.equal('Saving batch of created entities. Amount: ');
-      expect(loggerDebugStub.args[5][1]).to.be.equal(3);
-      expect(loggerDebugStub.args[5][2]).to.not.exist;
+      sinon.assert.callCount(loggerDebugStub, expectedloggerDebugCallCount);
+      sinon.assert.callOrder(
+        loggerDebugStub.withArgs(sinon.match('Start process of entities update')),
+        loggerDebugStub.withArgs(sinon.match('Removing batch of entities. Amount: '), 3),
+        loggerDebugStub.withArgs(sinon.match('Closing entity by query: '), expectedQuery1),
+        loggerDebugStub.withArgs(sinon.match('Closing entity by query: '), expectedQuery2),
+        loggerDebugStub.withArgs(sinon.match('Closing entity by query: '), expectedQuery3),
+        loggerDebugStub.withArgs(sinon.match('Saving batch of created entities. Amount: '), 3)
+      );
 
       sinon.assert.calledThrice(loggerInfoStub);
       sinon.assert.calledWithExactly(loggerInfoStub, sinon.match('Start creating entities').or(sinon.match('Start removing entities')).or(sinon.match('Start updating entities')));
@@ -256,16 +245,18 @@ describe('Update Entities', function () {
 
       sinon.assert.notCalled(closeAllByQueryStub);
       sinon.assert.callCount(closeOneByQueryStub, expectedCloseOneByQueryCallCount);
-      expect(closeOneByQueryStub.args[0][0]).to.be.deep.equal(expectedQuery1);
-      expect(closeOneByQueryStub.args[1][0]).to.be.deep.equal(expectedQuery2);
-      expect(closeOneByQueryStub.args[2][0]).to.be.deep.equal(expectedQuery3);
+      sinon.assert.callOrder(
+        closeOneByQueryStub.withArgs(expectedQuery1),
+        closeOneByQueryStub.withArgs(expectedQuery2),
+        closeOneByQueryStub.withArgs(expectedQuery3)
+      );
 
       return done();
     });
   });
 
   it('should interrupt with error when entity was not found for closing', (done: Function) => {
-    const originExternalContext = _.defaults({ pathToDatasetDiff: path.resolve(__dirname, './fixtures/full-diff-entities.txt') }, externalContextFixture);
+    const originExternalContext = _.defaults({pathToDatasetDiff: path.resolve(__dirname, './fixtures/full-diff-entities.txt')}, externalContextFixture);
     const expectedError = 'Boo!';
     const expectedloggerDebugCallCount = 6;
 
@@ -279,17 +270,7 @@ describe('Update Entities', function () {
     const closeOneByQueryStub = sandbox.stub(entitiesRepository, 'closeOneByQuery').callsArgWithAsync(1, expectedError);
     const latestExceptCurrentVersionStub = sandbox.stub(EntitiesRepositoryFactory, 'latestExceptCurrentVersion').returns(entitiesRepository);
 
-    return updateService.updateEntities(originExternalContext, (error, externalContext) => {
-      expect(error).to.be.deep.equal([expectedError]);
-      expect(externalContext).to.deep.equal(originExternalContext);
-
-      sinon.assert.callCount(loggerDebugStub, expectedloggerDebugCallCount);
-      expect(loggerDebugStub.args[0][0]).to.be.equal('Start process of entities update');
-      expect(loggerDebugStub.args[0][1]).to.not.exist;
-      expect(loggerDebugStub.args[1][0]).to.be.equal('Removing batch of entities. Amount: ');
-      expect(loggerDebugStub.args[1][1]).to.be.equal(3);
-      expect(loggerDebugStub.args[1][2]).to.not.exist;
-
+    return updateService.updateEntities(originExternalContext, (error: string, externalContext: any) => {
       const expectedQuery1 = {
         domain: 'DOMAINID',
         'properties.company_size': 'small',
@@ -311,19 +292,18 @@ describe('Update Entities', function () {
         sources: 'ddf--entities--company--company_size.csv'
       };
 
-      expect(loggerDebugStub.args[2][0]).to.be.equal('Closing entity by query: ');
-      expect(loggerDebugStub.args[2][1]).to.be.deep.equal(expectedQuery1);
-      expect(loggerDebugStub.args[2][2]).to.not.exist;
-      expect(loggerDebugStub.args[3][0]).to.be.equal('Closing entity by query: ');
-      expect(loggerDebugStub.args[3][1]).to.be.deep.equal(expectedQuery2);
-      expect(loggerDebugStub.args[3][2]).to.not.exist;
-      expect(loggerDebugStub.args[4][0]).to.be.equal('Closing entity by query: ');
-      expect(loggerDebugStub.args[4][1]).to.be.deep.equal(expectedQuery3);
-      expect(loggerDebugStub.args[4][2]).to.not.exist;
+      expect(error).to.be.deep.equal([expectedError]);
+      expect(externalContext).to.deep.equal(originExternalContext);
 
-      expect(loggerDebugStub.args[5][0]).to.be.equal('Saving batch of created entities. Amount: ');
-      expect(loggerDebugStub.args[5][1]).to.be.equal(3);
-      expect(loggerDebugStub.args[5][2]).to.not.exist;
+      sinon.assert.callCount(loggerDebugStub, expectedloggerDebugCallCount);
+      sinon.assert.callOrder(
+        loggerDebugStub.withArgs(sinon.match('Start process of entities update')),
+        loggerDebugStub.withArgs(sinon.match('Removing batch of entities. Amount: '), 3),
+        loggerDebugStub.withArgs(sinon.match('Closing entity by query: '), expectedQuery1),
+        loggerDebugStub.withArgs(sinon.match('Closing entity by query: '), expectedQuery2),
+        loggerDebugStub.withArgs(sinon.match('Closing entity by query: '), expectedQuery3),
+        loggerDebugStub.withArgs(sinon.match('Saving batch of created entities. Amount: '), 3)
+      );
 
       sinon.assert.calledThrice(loggerInfoStub);
       sinon.assert.calledWithExactly(loggerInfoStub, sinon.match('Start creating entities').or(sinon.match('Start removing entities')).or(sinon.match('Start updating entities')));
@@ -340,18 +320,20 @@ describe('Update Entities', function () {
       sinon.assert.calledWithExactly(latestExceptCurrentVersionStub, datasetId, version);
 
       sinon.assert.calledThrice(closeOneByQueryStub);
-      expect(closeOneByQueryStub.args[0][0]).to.be.deep.equal(expectedQuery1);
-      expect(closeOneByQueryStub.args[1][0]).to.be.deep.equal(expectedQuery2);
-      expect(closeOneByQueryStub.args[2][0]).to.be.deep.equal(expectedQuery3);
+      sinon.assert.callOrder(
+        closeOneByQueryStub.withArgs(expectedQuery1),
+        closeOneByQueryStub.withArgs(expectedQuery2),
+        closeOneByQueryStub.withArgs(expectedQuery3)
+      );
 
       return done();
     });
   });
 
   it('should log message when entity was closed without errors', (done: Function) => {
-    const originExternalContext = _.defaults({ pathToDatasetDiff: path.resolve(__dirname, './fixtures/full-diff-entities.txt') }, externalContextFixture);
+    const originExternalContext = _.defaults({pathToDatasetDiff: path.resolve(__dirname, './fixtures/full-diff-entities.txt')}, externalContextFixture);
     const expectedError = null;
-    const expectedEntity = { _id: 'ENTITYID', originId: 'ENTITYID' };
+    const expectedEntity = {_id: 'ENTITYID', originId: 'ENTITYID'};
     const expectedCloseOneByQueryCallCount = 3;
     const expectedloggerDebugCallCount = 9;
 
@@ -365,17 +347,7 @@ describe('Update Entities', function () {
     const closeOneByQueryStub = sandbox.stub(entitiesRepository, 'closeOneByQuery').callsArgWithAsync(1, expectedError, expectedEntity);
     const latestExceptCurrentVersionStub = sandbox.stub(EntitiesRepositoryFactory, 'latestExceptCurrentVersion').returns(entitiesRepository);
 
-    return updateService.updateEntities(originExternalContext, (error, externalContext) => {
-      expect(error).to.not.exist;
-      expect(externalContext).to.deep.equal(originExternalContext);
-
-      sinon.assert.callCount(loggerDebugStub, expectedloggerDebugCallCount);
-      expect(loggerDebugStub.args[0][0]).to.be.equal('Start process of entities update');
-      expect(loggerDebugStub.args[0][1]).to.not.exist;
-      expect(loggerDebugStub.args[1][0]).to.be.equal('Removing batch of entities. Amount: ');
-      expect(loggerDebugStub.args[1][1]).to.be.equal(3);
-      expect(loggerDebugStub.args[1][2]).to.not.exist;
-
+    return updateService.updateEntities(originExternalContext, (error: string, externalContext: any) => {
       const expectedQuery1 = {
         domain: 'DOMAINID',
         'properties.company_size': 'small',
@@ -397,29 +369,21 @@ describe('Update Entities', function () {
         sources: 'ddf--entities--company--company_size.csv'
       };
 
-      expect(loggerDebugStub.args[2][0]).to.be.equal('Closing entity by query: ');
-      expect(loggerDebugStub.args[2][1]).to.be.deep.equal(expectedQuery1);
-      expect(loggerDebugStub.args[2][2]).to.not.exist;
-      expect(loggerDebugStub.args[3][0]).to.be.equal('Closing entity by query: ');
-      expect(loggerDebugStub.args[3][1]).to.be.deep.equal(expectedQuery2);
-      expect(loggerDebugStub.args[3][2]).to.not.exist;
-      expect(loggerDebugStub.args[4][0]).to.be.equal('Closing entity by query: ');
-      expect(loggerDebugStub.args[4][1]).to.be.deep.equal(expectedQuery3);
-      expect(loggerDebugStub.args[4][2]).to.not.exist;
+      expect(error).to.not.exist;
+      expect(externalContext).to.deep.equal(originExternalContext);
 
-      expect(loggerDebugStub.args[5][0]).to.be.equal('Saving batch of created entities. Amount: ');
-      expect(loggerDebugStub.args[5][1]).to.be.equal(3);
-      expect(loggerDebugStub.args[5][2]).to.not.exist;
-
-      expect(loggerDebugStub.args[6][0]).to.be.equal('Entity was closed. OriginId: ');
-      expect(loggerDebugStub.args[6][1]).to.be.deep.equal(expectedEntity.originId);
-      expect(loggerDebugStub.args[6][2]).to.not.exist;
-      expect(loggerDebugStub.args[7][0]).to.be.equal('Entity was closed. OriginId: ');
-      expect(loggerDebugStub.args[7][1]).to.be.deep.equal(expectedEntity.originId);
-      expect(loggerDebugStub.args[7][2]).to.not.exist;
-      expect(loggerDebugStub.args[8][0]).to.be.equal('Entity was closed. OriginId: ');
-      expect(loggerDebugStub.args[8][1]).to.be.deep.equal(expectedEntity.originId);
-      expect(loggerDebugStub.args[8][2]).to.not.exist;
+      sinon.assert.callCount(loggerDebugStub, expectedloggerDebugCallCount);
+      sinon.assert.callOrder(
+        loggerDebugStub.withArgs(sinon.match('Start process of entities update')),
+        loggerDebugStub.withArgs(sinon.match('Removing batch of entities. Amount: '), 3),
+        loggerDebugStub.withArgs(sinon.match('Closing entity by query: '), expectedQuery1),
+        loggerDebugStub.withArgs(sinon.match('Closing entity by query: '), expectedQuery2),
+        loggerDebugStub.withArgs(sinon.match('Closing entity by query: '), expectedQuery3),
+        loggerDebugStub.withArgs(sinon.match('Saving batch of created entities. Amount: '), 3),
+        loggerDebugStub.withArgs(sinon.match('Entity was closed. OriginId: '), expectedEntity.originId),
+        loggerDebugStub.withArgs(sinon.match('Entity was closed. OriginId: '), expectedEntity.originId),
+        loggerDebugStub.withArgs(sinon.match('Entity was closed. OriginId: '), expectedEntity.originId)
+      );
 
       sinon.assert.calledThrice(loggerInfoStub);
       sinon.assert.calledWithExactly(loggerInfoStub, sinon.match('Start creating entities').or(sinon.match('Start removing entities')).or(sinon.match('Start updating entities')));
@@ -436,16 +400,18 @@ describe('Update Entities', function () {
       sinon.assert.calledWithExactly(latestExceptCurrentVersionStub, datasetId, version);
 
       sinon.assert.callCount(closeOneByQueryStub, expectedCloseOneByQueryCallCount);
-      expect(closeOneByQueryStub.args[0][0]).to.be.deep.equal(expectedQuery1);
-      expect(closeOneByQueryStub.args[1][0]).to.be.deep.equal(expectedQuery2);
-      expect(closeOneByQueryStub.args[2][0]).to.be.deep.equal(expectedQuery3);
+      sinon.assert.callOrder(
+        closeOneByQueryStub.withArgs(expectedQuery1),
+        closeOneByQueryStub.withArgs(expectedQuery2),
+        closeOneByQueryStub.withArgs(expectedQuery3)
+      );
 
       return done();
     });
   });
 
   it('should update entities without errors', (done: Function) => {
-    const originExternalContext = _.defaults({ pathToDatasetDiff: path.resolve(__dirname, './fixtures/updated-entities.txt') }, externalContextFixture);
+    const originExternalContext = _.defaults({pathToDatasetDiff: path.resolve(__dirname, './fixtures/updated-entities.txt')}, externalContextFixture);
     const expectedEntity = {
       _id: 'ENTITYID',
       originId: 'ENTITYID',
@@ -480,20 +446,9 @@ describe('Update Entities', function () {
     closeOneByQueryStub.onCall(3).callsArgWithAsync(1, null, expectedEntity);
     const latestExceptCurrentVersionStub = sandbox.stub(EntitiesRepositoryFactory, 'latestExceptCurrentVersion').returns(entitiesRepository);
 
-    return updateService.updateEntities(originExternalContext, (error, externalContext) => {
+    return updateService.updateEntities(originExternalContext, (error: string, externalContext: any) => {
       expect(error).to.not.exist;
       expect(externalContext).to.deep.equal(originExternalContext);
-
-      sinon.assert.callCount(loggerDebugStub, expectedloggerDebugCallCount);
-      expect(loggerDebugStub.args[0][0]).to.be.equal('Start process of entities update');
-      expect(loggerDebugStub.args[0][1]).to.not.exist;
-      expect(loggerDebugStub.args[1][0]).to.be.equal('Saving batch of created entities. Amount: ');
-      expect(loggerDebugStub.args[1][1]).to.be.equal(1);
-      expect(loggerDebugStub.args[1][2]).to.not.exist;
-
-      expect(loggerDebugStub.args[2][0]).to.be.equal('Updating batch of entities. Amount: ');
-      expect(loggerDebugStub.args[2][1]).to.be.equal(3);
-      expect(loggerDebugStub.args[2][2]).to.not.exist;
 
       const expectedQuery1 = {
         domain: 'DOMAINID',
@@ -514,33 +469,21 @@ describe('Update Entities', function () {
         sources: 'ddf--entities--region.csv'
       };
 
-      expect(loggerDebugStub.args[3][0]).to.be.equal('Closing entity by query: ');
-      expect(loggerDebugStub.args[3][1]).to.be.deep.equal(expectedQuery1);
-      expect(loggerDebugStub.args[3][2]).to.not.exist;
-      expect(loggerDebugStub.args[4][0]).to.be.equal('Closing entity by query: ');
-      expect(loggerDebugStub.args[4][1]).to.be.deep.equal(expectedQuery2);
-      expect(loggerDebugStub.args[4][2]).to.not.exist;
-      expect(loggerDebugStub.args[5][0]).to.be.equal('Closing entity by query: ');
-      expect(loggerDebugStub.args[5][1]).to.be.deep.equal(expectedQuery3);
-      expect(loggerDebugStub.args[5][2]).to.not.exist;
-
-      expect(loggerDebugStub.args[6][0]).to.be.equal('Entity was closed. OriginId: ');
-      expect(loggerDebugStub.args[6][1]).to.be.deep.equal(expectedEntity.originId);
-      expect(loggerDebugStub.args[6][2]).to.not.exist;
-      expect(loggerDebugStub.args[7][0]).to.be.equal('Creating updated entity based on its closed version');
-      expect(loggerDebugStub.args[7][1]).to.not.exist;
-
-      expect(loggerDebugStub.args[8][0]).to.be.equal('Entity was closed. OriginId: ');
-      expect(loggerDebugStub.args[8][1]).to.be.deep.equal(expectedEntity.originId);
-      expect(loggerDebugStub.args[8][2]).to.not.exist;
-      expect(loggerDebugStub.args[9][0]).to.be.equal('Creating updated entity based on its closed version');
-      expect(loggerDebugStub.args[9][2]).to.not.exist;
-
-      expect(loggerDebugStub.args[10][0]).to.be.equal('Entity was closed. OriginId: ');
-      expect(loggerDebugStub.args[10][1]).to.be.deep.equal(expectedEntity.originId);
-      expect(loggerDebugStub.args[10][2]).to.not.exist;
-      expect(loggerDebugStub.args[11][0]).to.be.equal('Creating updated entity based on its closed version');
-      expect(loggerDebugStub.args[11][2]).to.not.exist;
+      sinon.assert.callCount(loggerDebugStub, expectedloggerDebugCallCount);
+      sinon.assert.callOrder(
+        loggerDebugStub.withArgs(sinon.match('Start process of entities update')),
+        loggerDebugStub.withArgs(sinon.match('Saving batch of created entities. Amount: '), 1),
+        loggerDebugStub.withArgs(sinon.match('Updating batch of entities. Amount: '), 3),
+        loggerDebugStub.withArgs(sinon.match('Closing entity by query: '), expectedQuery1),
+        loggerDebugStub.withArgs(sinon.match('Closing entity by query: '), expectedQuery2),
+        loggerDebugStub.withArgs(sinon.match('Closing entity by query: '), expectedQuery3),
+        loggerDebugStub.withArgs(sinon.match('Entity was closed. OriginId: '), expectedEntity.originId),
+        loggerDebugStub.withArgs(sinon.match('Creating updated entity based on its closed version')),
+        loggerDebugStub.withArgs(sinon.match('Entity was closed. OriginId: '), expectedEntity.originId),
+        loggerDebugStub.withArgs(sinon.match('Creating updated entity based on its closed version')),
+        loggerDebugStub.withArgs(sinon.match('Entity was closed. OriginId: '), expectedEntity.originId),
+        loggerDebugStub.withArgs(sinon.match('Creating updated entity based on its closed version'))
+      );
 
       sinon.assert.calledThrice(loggerInfoStub);
       sinon.assert.calledWithExactly(loggerInfoStub, sinon.match('Start creating entities').or(sinon.match('Start removing entities')).or(sinon.match('Start updating entities')));
@@ -634,18 +577,22 @@ describe('Update Entities', function () {
         dataset: datasetId
       };
 
-      expect(createStub.args[0][0]).to.be.deep.equal([expectedCreatedEntity1]);
-      expect(createStub.args[1][0]).to.be.deep.equal(expectedCreatedEntity2);
-      expect(createStub.args[2][0]).to.be.deep.equal(expectedCreatedEntity3);
-      expect(createStub.args[3][0]).to.be.deep.equal(expectedCreatedEntity4);
+      sinon.assert.callOrder(
+        createStub.withArgs(sinon.match([expectedCreatedEntity1])),
+        createStub.withArgs(sinon.match(expectedCreatedEntity2)),
+        createStub.withArgs(sinon.match(expectedCreatedEntity3)),
+        createStub.withArgs(sinon.match(expectedCreatedEntity4))
+      );
 
       sinon.assert.calledOnce(latestExceptCurrentVersionStub);
       sinon.assert.calledWithExactly(latestExceptCurrentVersionStub, datasetId, version);
 
       sinon.assert.calledThrice(closeOneByQueryStub);
-      expect(closeOneByQueryStub.args[0][0]).to.be.deep.equal(expectedQuery1);
-      expect(closeOneByQueryStub.args[1][0]).to.be.deep.equal(expectedQuery2);
-      expect(closeOneByQueryStub.args[2][0]).to.be.deep.equal(expectedQuery3);
+      sinon.assert.callOrder(
+        closeOneByQueryStub.withArgs(sinon.match(expectedQuery1)),
+        closeOneByQueryStub.withArgs(sinon.match(expectedQuery2)),
+        closeOneByQueryStub.withArgs(sinon.match(expectedQuery3))
+      );
 
       return done();
     });
@@ -695,17 +642,15 @@ describe('Update Entities', function () {
     closeAllByQueryStub.onFirstCall().callsArgWithAsync(1, null, [expectedEntityGap2]);
     const latestExceptCurrentVersionStub = sandbox.stub(EntitiesRepositoryFactory, 'latestExceptCurrentVersion').returns(entitiesRepository);
 
-    return updateService.updateEntities(originExternalContext, (error, externalContext) => {
+    return updateService.updateEntities(originExternalContext, (error: string, externalContext: any) => {
       expect(error).to.not.exist;
       expect(externalContext).to.deep.equal(originExternalContext);
 
       sinon.assert.callCount(loggerDebugStub, expectedloggerDebugCallCount);
-
-      expect(loggerDebugStub.args[0][0]).to.be.equal('Start process of entities update');
-      expect(loggerDebugStub.args[0][1]).to.not.exist;
-      expect(loggerDebugStub.args[1][0]).to.be.equal('Updating batch of entities. Amount: ');
-      expect(loggerDebugStub.args[1][1]).to.be.equal(1);
-      expect(loggerDebugStub.args[1][2]).to.not.exist;
+      sinon.assert.callOrder(
+        loggerDebugStub.withArgs(sinon.match('Start process of entities update')),
+        loggerDebugStub.withArgs(sinon.match('Updating batch of entities. Amount: '), 1)
+      );
 
       const expectedQuery1 = {
         domain: 'ENTITYSETID3',
@@ -714,20 +659,13 @@ describe('Update Entities', function () {
         sources: 'ddf--entities--region.csv'
       };
 
-      expect(loggerDebugStub.args[2][0]).to.be.equal('Closing entity by query: ');
-      expect(loggerDebugStub.args[2][1]).to.be.deep.equal(expectedQuery1);
-      expect(loggerDebugStub.args[2][2]).to.not.exist;
-      expect(loggerDebugStub.args[3][0]).to.be.equal('Entity was closed. OriginId: ');
-      expect(loggerDebugStub.args[3][1]).to.be.deep.equal('ENTITYID');
-      expect(loggerDebugStub.args[3][2]).to.not.exist;
-      expect(loggerDebugStub.args[4][0]).to.be.equal('Creating updated entity based on its closed version');
-      expect(loggerDebugStub.args[4][1]).to.not.exist;
-      expect(loggerDebugStub.args[5][0]).to.be.equal('Detecting entities with removed columns. Amount: ');
-      expect(loggerDebugStub.args[5][1]).to.be.equal(2);
-      expect(loggerDebugStub.args[5][2]).to.not.exist;
-      expect(loggerDebugStub.args[6][0]).to.be.equal('Creating updated entity based on its closed version');
-      expect(loggerDebugStub.args[6][1]).to.not.exist;
-
+      sinon.assert.callOrder(
+        loggerDebugStub.withArgs(sinon.match('Closing entity by query: '), expectedQuery1),
+        loggerDebugStub.withArgs(sinon.match('Entity was closed. OriginId: '), 'ENTITYID'),
+        loggerDebugStub.withArgs(sinon.match('Creating updated entity based on its closed version')),
+        loggerDebugStub.withArgs(sinon.match('Detecting entities with removed columns. Amount: '), 2),
+        loggerDebugStub.withArgs(sinon.match('Creating updated entity based on its closed version'))
+      );
 
       sinon.assert.calledThrice(loggerInfoStub);
       sinon.assert.calledWithExactly(loggerInfoStub, sinon.match('Start creating entities').or(sinon.match('Start removing entities')).or(sinon.match('Start updating entities')));
@@ -781,8 +719,10 @@ describe('Update Entities', function () {
         dataset: 'DATASETID'
       };
 
-      expect(createStub.args[0][0]).to.be.deep.equal(expectedCreatedEntity1);
-      expect(createStub.args[1][0]).to.be.deep.equal(expectedCreatedEntity2);
+      sinon.assert.callOrder(
+        createStub.withArgs(expectedCreatedEntity1),
+        createStub.withArgs(expectedCreatedEntity2)
+      );
 
       sinon.assert.calledTwice(latestExceptCurrentVersionStub);
       sinon.assert.calledWithExactly(latestExceptCurrentVersionStub, datasetId, version);
