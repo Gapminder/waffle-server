@@ -273,4 +273,64 @@ describe('ddf entities query normalizer', () => {
 
     expect(ddfQueryNormalizer.normalizeEntities(ddfql, concepts)).to.deep.equal(normalizedDdfql);
   });
+
+  it('should normalize plain query', () => {
+    const ddfql = {
+      select: {
+        key: ['geo'],
+        value: [
+          'name', '_default', 'world_4region'
+        ]
+      },
+      from: 'entities',
+      where: {
+        'is--country': true,
+        'is--world_4region': true
+      }
+    };
+
+    const normalizedDdfql = {
+      select: {
+        key: [
+          'geo'
+        ],
+        value: [
+          'name',
+          '_default',
+          'world_4region'
+        ]
+      },
+      from: 'entities',
+      where: {
+        $and: [
+          {
+            $or: [
+              {
+                domain: {
+                  $in: [
+                    '17a3470d3a8c9b37009b9bf9'
+                  ]
+                }
+              },
+              {
+                sets: {
+                  $in: [
+                    '17a3470d3a8c9b37009b9bf9'
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            'properties.is--country': true,
+            'properties.is--world_4region': true
+          }
+        ]
+      },
+      join: {},
+      order_by: []
+    };
+
+    expect(ddfQueryNormalizer.normalizeEntities(ddfql, concepts)).to.deep.equal(normalizedDdfql);
+  });
 });

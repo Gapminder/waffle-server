@@ -65,12 +65,7 @@ function replaceValueOnPath(options: any): void {
   const key = options.key;
   const normalizedValue = options.normalizedValue;
   const queryFragment = options.queryFragment;
-
-  const value = _.get(queryFragment, path);
-
-  if (!value) {
-    return;
-  }
+  const value = _.get(queryFragment, path) || queryFragment;
 
   if (options.substituteEntryWithItsContent) {
     const content = value[key];
