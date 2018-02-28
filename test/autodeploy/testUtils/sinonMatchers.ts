@@ -16,7 +16,14 @@ export const expectNoEmptyParamsInCommand: SinonMatcher = sinon.match((value: an
 
 export function hasFlag(flag: string): SinonMatcher {
   return sinon.match((value: any) => {
-    expect(value).to.include(`--${flag}`, `${flag} wasn't met`);
+    const pattern = new RegExp(`--${flag}(\\s|=)`);
+    return expect(value).to.match(pattern, `flag --${flag} wasn't met in command: ${value}`);
+  });
+}
+
+export function withoutArg(arg: string): SinonMatcher {
+  return sinon.match((value: any) => {
+    expect(value).not.to.include(arg, `arg ${arg} was met in command: ${value}`);
 
     return true;
   });

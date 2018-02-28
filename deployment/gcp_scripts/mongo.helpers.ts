@@ -148,9 +148,10 @@ function getMongoInternalIP(externalContext: any, cb: Function): void {
   const options: any = { pathsToCheck: [pathToMongoNetworkIP, pathToMongoSubnetwork] };
 
   return runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
-    logger.info('\n', result.stdout, '\n');
-
+    
     try {
+      logger.info('\n', result.stdout, '\n');
+      
       const parsedStdout = JSON.parse(result.stdout);
 
       externalContext.MONGO_HOST = _.get(parsedStdout, pathToMongoNetworkIP, false);
