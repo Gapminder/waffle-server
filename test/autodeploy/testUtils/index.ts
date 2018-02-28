@@ -1,1 +1,1 @@
-export { expectNoEmptyParamsInCommand, hasFlag } from './sinonMatchers';
+export { expectNoEmptyParamsInCommand, hasFlag, withoutArg } from './sinonMatchers';
