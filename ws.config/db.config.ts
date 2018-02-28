@@ -35,10 +35,10 @@ const mongoOptions = {
   socketTimeoutMS: 300000
 };
 
-const mongooseOptions = { useMongoClient: true };
+// const mongooseOptions = {};
 
 export function connectToDb(onConnected: (error: any, db?: Connection) => void): void {
-  const options: any = config.THRASHING_MACHINE ? Object.assign({}, mongoOptions, mongooseOptions) : mongooseOptions;
+  const options: any = config.THRASHING_MACHINE ? Object.assign({}, mongoOptions) : {};
   mongoose.connect(config.MONGODB_URL, options, (error: any) => {
     if (error) {
       return onConnected(error);

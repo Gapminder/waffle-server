@@ -374,12 +374,12 @@ export function printExternalIPs(externalContext: any, cb: Function): void {
     }
 
     try {
-      logger.info('\n', result.stdout, '\n');
+      logger.info(result.stdout);
 
       const parsedResult = JSON.parse(result.stdout);
       const LOAD_BALANCER_IP_ADDRESS = _.get(parsedResult, pathToLoadBalancerIP, null);
 
-      logger.info('\nRESULTS: \n', `TM: ${TM_IP_ADDRESS}\n`, `LB: ${LOAD_BALANCER_IP_ADDRESS}\n`);
+      logger.info({RESULTS:{ TM: TM_IP_ADDRESS, LB: LOAD_BALANCER_IP_ADDRESS, MONGODB: MONGODB_URL }});
 
       return cb(null, LOAD_BALANCER_IP_ADDRESS);
     } catch (_error) {
