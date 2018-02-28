@@ -9,6 +9,7 @@ import { DEFAULT_CONFIG } from './deployment_config.default';
 import {
   setDefaultProject, setDefaultUser, setupAPIs, linkProjectToBilling
 } from './autodeploy.helpers';
+
 import {
   denyHttpTM, releaseExternalIP, releaseRedisInternalIP, releaseMongoInternalIP, removeCluster,
   removeImageNode, removeImageTM, removeRedis, removeMongo, removeTM
@@ -17,6 +18,7 @@ import {
 // Default variables
 const {
   DEFAULT_NODE_ENV,
+  DEFAULT_PATH_TO_CONFIG_FILE,
   DEFAULT_ENVIRONMENTS,
   DEFAULT_TM_PORTS,
   DEFAULT_WS_PORTS,
@@ -48,7 +50,7 @@ export function run(): Promise<string | null> {
   const ENVIRONMENT = DEFAULT_ENVIRONMENTS[NODE_ENV] || NODE_ENV;
   const VERSION_TAG = semverRegex().exec(process.env.VERSION)[0];
   const VERSION = VERSION_TAG.replace(/\./g, '-');
-  const STATIC_VARIABLES = require(`./deployment_config_${ENVIRONMENT}.json`);
+  const STATIC_VARIABLES = require(`${DEFAULT_PATH_TO_CONFIG_FILE}${ENVIRONMENT}.json`);
   const DEFAULT_REGION = STATIC_VARIABLES.REGION || DEFAULT_GCP_VARIABLES.DEFAULT_REGION;
   const REDIS_REGION = STATIC_VARIABLES.REDIS_REGION || DEFAULT_REGION;
   const MONGO_REGION = STATIC_VARIABLES.MONGO_REGION || DEFAULT_REGION;
