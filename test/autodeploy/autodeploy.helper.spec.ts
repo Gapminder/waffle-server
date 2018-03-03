@@ -1,6 +1,7 @@
 import 'mocha';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
+import _ = require('lodash');
 import * as commonHelpers from '../../deployment/gcp_scripts/common.helpers';
 import * as autoDeployHelpers from '../../deployment/gcp_scripts/autodeploy.helpers';
 import { expectNoEmptyParamsInCommand, hasFlag } from './testUtils';
@@ -152,18 +153,18 @@ describe('Autodeploy.helper Commands', () => {
         }]
       })
     };
-    const expectedContext = {
-      TM_INSTANCE_VARIABLES: {
+    const expectedContext = Object.freeze({
+      TM_INSTANCE_VARIABLES: Object.freeze({
         IMAGE_URL: 'TEST_IMAGE_URL',
         NODE_NAME: 'TM_INSTANCE_NAME'
-      },
+      }),
       TM_ZONE: 'TEST_TM_ZONE',
       PROJECT_ID: 'TEST_PROJECT_ID'
-    };
+    });
     const expectedOptions = { pathsToCheck: [pathToTMNetworkIP] };
     const runShellCommandStub = sandbox.stub(commonHelpers, 'runShellCommand').callsArgWithAsync(2, expectedError, runShellCommandResult);
 
-    autoDeployHelpers.getTMExternalIP({ ...expectedContext }, (error: string, externalContext: any) => {
+    autoDeployHelpers.getTMExternalIP(_.cloneDeep(expectedContext), (error: string, externalContext: any) => {
 
       sinon.assert.calledWith(runShellCommandStub, expectNoEmptyParamsInCommand, expectedOptions);
       expect(error).to.equal(expectedError);
@@ -175,18 +176,18 @@ describe('Autodeploy.helper Commands', () => {
 
   it('getTMExternalIP: error with JSON parse stdout', (done: Function) => {
     const runShellCommandResult = 'json';
-    const expectedContext = {
-      TM_INSTANCE_VARIABLES: {
+    const expectedContext = Object.freeze({
+      TM_INSTANCE_VARIABLES: Object.freeze({
         IMAGE_URL: 'TEST_IMAGE_URL',
         NODE_NAME: 'TM_INSTANCE_NAME'
-      },
+      }),
       TM_ZONE: 'TEST_TM_ZONE',
       PROJECT_ID: 'TEST_PROJECT_ID'
-    };
+    });
     const expectedOptions = { pathsToCheck: [pathToTMNetworkIP] };
     const runShellCommandStub = sandbox.stub(commonHelpers, 'runShellCommand').callsArgWithAsync(2, null, runShellCommandResult);
 
-    autoDeployHelpers.getTMExternalIP({ ...expectedContext }, (error: string, externalContext: any) => {
+    autoDeployHelpers.getTMExternalIP(_.cloneDeep(expectedContext), (error: string, externalContext: any) => {
 
       sinon.assert.calledWith(runShellCommandStub, expectNoEmptyParamsInCommand, expectedOptions);
       expect(error).to.equal('Unexpected token u in JSON at position 0');

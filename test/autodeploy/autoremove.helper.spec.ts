@@ -20,9 +20,8 @@ describe('Autoremove.helper Commands', () => {
   const commands = Object.keys(autoRemoveHelpers);
 
   commands.forEach((command: string) => {
-
     it(`${command} not modified context`, (done: Function) => {
-      const context = {
+      const expectedContext = Object.freeze({
         PROJECT_ID: 'TEST_PROJECT_ID',
         PROJECT_NAME: 'TEST_PROJECT_NAME',
         PROJECT_LABELS: 'TEST_PROJECT_NAME',
@@ -30,7 +29,6 @@ describe('Autoremove.helper Commands', () => {
         REDIS_ZONE: 'TEST_REDIS_ZONE',
         REDIS_REGION: 'TEST_REDIS_REGION',
         MONGO_ZONE: 'TEST_MONGO_ZONE',
-        MONGO_INSTANCE_NAME: 'TEST_MONGO_INSTANCE_NAME',
         MONGO_REGION: 'TEST_MONGO_REGION',
         FOLDER_ID: 'TEST_FOLDER_ID',
         FIREWALL_RULE__ALLOW_HTTP: 'TEST_FIREWALL',
@@ -47,13 +45,12 @@ describe('Autoremove.helper Commands', () => {
         },
         COMPUTED_VARIABLES: {
           ENVIRONMENT: 'TEST_ENVIRONMENT',
-          VERSION: 'TEST_VERSION'
+          VERSION: 'TEST_VERSION',
+          MONGODB_INSTANCE_NAME: 'TEST_MONGO_INSTANCE_NAME',
         }
-      };
-      const expectedContext = _.cloneDeep(context);
+      });
 
-      autoRemoveHelpers[command]({ ...context }, (error: string, externalContext: any) => {
-
+      autoRemoveHelpers[command](expectedContext, (error: string, externalContext: any) => {
         sinon.assert.calledWith(runShellCommandStub, expectNoEmptyParamsInCommand, {});
         expect(error).to.be.an('null');
         expect(externalContext).to.deep.equal(expectedContext);

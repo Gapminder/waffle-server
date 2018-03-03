@@ -81,9 +81,9 @@ function getRedisInternalIP(externalContext: any, cb: Function): void {
   return runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
     
     try {
-      logger.info('\n', result.stdout, '\n');
+      logger.info(result.stdout);
       const { networkInterfaces: [{ networkIP, subnetwork }] } = JSON.parse(result.stdout);
-      logger.info('\nREDIS INTERNAL IP:', networkIP, ', ',subnetwork, '\n');
+      logger.info(`REDIS INTERNAL IP: ${networkIP}, ${subnetwork}`);
       externalContext.REDIS_HOST = networkIP;
       externalContext.REDIS_SUBNETWORK = subnetwork;
     } catch (_error) {

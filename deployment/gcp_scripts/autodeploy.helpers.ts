@@ -8,6 +8,8 @@ import { AsyncResultCallback } from 'async';
 
 export const pathToLoadBalancerIP = 'status.loadBalancer.ingress.0.ip';
 export const pathToTMNetworkIP = 'networkInterfaces.0.accessConfigs.0.natIP';
+export const pathToMongoNetworkIP = 'networkInterfaces.0.networkIP';
+export const pathToMongoSubnetwork = 'networkInterfaces.0.subnetwork';
 
 export function setDefaultUser(externalContext: any, cb: Function): void {
   const {
@@ -33,7 +35,7 @@ export function createProject(externalContext: any, cb: Function): void {
 
   return runShellCommand(command, options, (error: string) => {
     if (_.includes(error, 'The project ID you specified is already in use by another project')) {
-      logger.info('RESULT: So, skipping the step..\n');
+      logger.info('RESULT: So, skipping the step..');
       return cb(null, externalContext);
     }
 
@@ -262,13 +264,13 @@ export function getTMExternalIP(externalContext: any, cb: Function): void {
     }
 
     try {
-      logger.info('\n', result.stdout, '\n');
+      logger.info(result.stdout);
 
       const parsedStdout = JSON.parse(result.stdout);
 
       externalContext.TM_INSTANCE_VARIABLES.IP_ADDRESS = _.get(parsedStdout, pathToTMNetworkIP, false);
 
-      logger.info('\nTM EXTERNAL IP:', externalContext.TM_INSTANCE_VARIABLES.IP_ADDRESS, '\n');
+      logger.info(`TM EXTERNAL IP: ${externalContext.TM_INSTANCE_VARIABLES.IP_ADDRESS}`);
 
     } catch (_error) {
       return cb(_error.message, externalContext);

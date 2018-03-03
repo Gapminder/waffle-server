@@ -65,7 +65,8 @@ export function run(): Promise<string | null> {
     STACK_NAME: `${ENVIRONMENT}-stack-${VERSION}`,
     RELEASE_DATE: (new Date()).toISOString(),
     VERSION,
-    VERSION_TAG
+    VERSION_TAG,
+    MONGODB_INSTANCE_NAME: STATIC_VARIABLES.MONGODB_INSTANCE_NAME || `${ENVIRONMENT}-mongo-${VERSION}`
   }, STATIC_VARIABLES);
 
   // gcloud variables
@@ -76,8 +77,6 @@ export function run(): Promise<string | null> {
     CLUSTER_NAME: `${ENVIRONMENT}-cluster-${VERSION}`,
     NAME_SPACE_NODE: `${ENVIRONMENT}-namespace-${VERSION}`,
     REDIS_INSTANCE_NAME: `${ENVIRONMENT}-redis-${VERSION}`,
-    MONGO_INSTANCE_NAME: `${ENVIRONMENT}-mongo-${VERSION}`,
-    MONGODB_PORT: STATIC_VARIABLES.MONGODB_PORT || DEFAULT_GCP_VARIABLES.DEFAULT_MONGODB_PORT,
     REPLICAS_NAME: `${ENVIRONMENT}-replicas-${VERSION}`,
     LOAD_BALANCER_NAME: `${ENVIRONMENT}-lb-${VERSION}`,
     FIREWALL_RULE__ALLOW_HTTP: `${ENVIRONMENT}-allow-http-${VERSION}`,

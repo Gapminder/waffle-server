@@ -57,10 +57,12 @@ export function removeMongo(externalContext: any, cb: Function): void {
   const {
     MONGO_ZONE,
     PROJECT_ID,
-    MONGO_INSTANCE_NAME
+    COMPUTED_VARIABLES: {
+      MONGODB_INSTANCE_NAME
+    }
   } = externalContext;
 
-  const command = `gcloud beta compute instances delete ${MONGO_INSTANCE_NAME} \
+  const command = `gcloud beta compute instances delete ${MONGODB_INSTANCE_NAME} \
     --delete-disks=all --zone=${MONGO_ZONE} --project=${PROJECT_ID} --quiet`;
   const options: ExecOptions = {};
 

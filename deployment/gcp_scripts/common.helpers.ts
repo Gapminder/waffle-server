@@ -34,7 +34,6 @@ export function runShellCommand(command: string, options: any, cb: AsyncResultCa
   }
 
   const wrappedCommand = `${command}${outputParam}`;
-  // logger.info('Current fixture: ', fixtures[counter]);
   logger.info('RUN COMMAND: ', wrappedCommand, '\n');
 
   let attemptCounter = 0;
@@ -58,17 +57,17 @@ export function runShellCommand(command: string, options: any, cb: AsyncResultCa
     }
 
     if (isErrorShouldBeSkipped || isResultShouldBeSkipped) {
-      logger.info(`SKIP STEP\n`);
+      logger.info(`SKIP STEP`);
       return async.setImmediate(() => _cb(null, result));
     }
 
     if (_.isEmpty(stdout)) {
-      logger.info(`STDOUT IS EMPTY\n`);
+      logger.info(`STDOUT IS EMPTY`);
       return async.setImmediate(() => _cb(null, result));
     }
 
     if (_.includes(command, 'docker')) {
-      logger.info(`DOCKER COMMAND\n`);
+      logger.info(`DOCKER COMMAND`);
       return async.setImmediate(() => _cb(null, result));
     }
 
@@ -109,7 +108,6 @@ export function getDockerArguments(dockerArgs: DockerBuildArguments): string {
 
 export function getGCloudArguments(gcloudArgs: any): string {
   return _.transform(gcloudArgs, (result: string[], valueArg: string | number | boolean, nameArg: string) => {
-    // logger.info('\n', nameArg, valueArg, _.isBoolean(valueArg), _.isNil(valueArg), '\n');
     if (_.isBoolean(valueArg) || _.isNil(valueArg)) {
       result.push(`--${_.kebabCase(nameArg)}`);
       return;
