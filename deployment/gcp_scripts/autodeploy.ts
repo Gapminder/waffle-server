@@ -5,6 +5,7 @@ import { setupMongoInstance } from './mongo.helpers';
 import { getContextInstance } from './common.helpers';
 import { logger } from '../../ws.config/log';
 import { DEFAULT_CONFIG } from './deployment_config.default';
+import * as _ from 'lodash';
 
 import {
   setDefaultUser, createProject, setDefaultProject,
@@ -30,7 +31,8 @@ function setupEnvironment(): any {
     DEFAULT_IMAGE_NAME_SUFFIXES,
     DEFAULT_MACHINE_SUFFIXES,
     DEFAULT_GCP_VARIABLES,
-    DEFAULT_GCP_API
+    DEFAULT_GCP_API,
+    DEFAULT_REQUIRED_PARAMETERS
   } = DEFAULT_CONFIG; // placed it here for testing purpose
 
   // Computed variables
@@ -38,7 +40,16 @@ function setupEnvironment(): any {
   const ENVIRONMENT = DEFAULT_ENVIRONMENTS[NODE_ENV] || NODE_ENV;
   const VERSION_TAG = packageJson.version;
   const VERSION = packageJson.version.replace(/\./g, '-');
-  const STATIC_VARIABLES = require(`${DEFAULT_PATH_TO_CONFIG_FILE}${ENVIRONMENT}.json`);
+  const CONFIG_PATH = `${DEFAULT_PATH_TO_CONFIG_FILE}${ENVIRONMENT}.json`;
+  const STATIC_VARIABLES = require(CONFIG_PATH);
+
+  const givenStaticVariables = _.keys(STATIC_VARIABLES);
+  const requiredStaticVariables = _.difference(DEFAULT_REQUIRED_PARAMETERS, givenStaticVariables);
+
+  if (!_.isEmpty(requiredStaticVariables)) {
+    throw new Error(`Failed to find required variables in file ${CONFIG_PATH}: ${requiredStaticVariables}`);
+  }
+
   const DEFAULT_REGION = STATIC_VARIABLES.REGION || DEFAULT_GCP_VARIABLES.DEFAULT_REGION;
   const REDIS_REGION = STATIC_VARIABLES.REDIS_REGION || DEFAULT_REGION;
   const MONGO_REGION = STATIC_VARIABLES.MONGO_REGION || DEFAULT_REGION;
@@ -71,14 +82,7 @@ function setupEnvironment(): any {
     CLUSTER_NAME: `${ENVIRONMENT}-cluster-${VERSION}`,
     NAME_SPACE_NODE: `${ENVIRONMENT}-namespace-${VERSION}`,
     REDIS_INSTANCE_NAME: `${ENVIRONMENT}-redis-${VERSION}`,
-    MONGO_INSTANCE_NAME: STATIC_VARIABLES.MONGODB_INSTANCE_NAME || `${ENVIRONMENT}-mongo-${VERSION}`,
-
-    MONGODB_PORT: STATIC_VARIABLES.MONGODB_PORT || DEFAULT_GCP_VARIABLES.DEFAULT_MONGODB_PORT,
-    MONGODB_PATH: STATIC_VARIABLES.MONGODB_PATH || DEFAULT_GCP_VARIABLES.DEFAULT_MONGODB_PATH,
-    MONGODB_SSH_KEY: STATIC_VARIABLES.MONGODB_SSH_KEY,
-    MONGODB_USER_ROLE: STATIC_VARIABLES.MONGODB_USER_ROLE,
-    MONGODB_USER: STATIC_VARIABLES.MONGODB_USER,
-    MONGODB_PASSWORD: STATIC_VARIABLES.MONGODB_PASSWORD,
+    MONGODB_INSTANCE_NAME: STATIC_VARIABLES.MONGODB_INSTANCE_NAME || `${ENVIRONMENT}-mongo-${VERSION}`,
 
     REPLICAS_NAME: `${ENVIRONMENT}-replicas-${VERSION}`,
     LOAD_BALANCER_NAME: `${ENVIRONMENT}-lb-${VERSION}`,
@@ -131,6 +135,7 @@ function setupEnvironment(): any {
 export function run(): Promise<string | null> {
   return new Promise((resolve: Function, reject: Function) => {
     const context = setupEnvironment();
+
     async.waterfall([
       async.constant(context),
       setDefaultUser,

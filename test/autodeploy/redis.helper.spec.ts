@@ -36,10 +36,10 @@ describe('Redis.helper Commands', () => {
     REDIS_DISK_SIZE: 320,
     REDIS_ZONE: 'TEST_REDIS_ZONE',
     REDIS_REGION: 'TEST_REDIS_REGION',
-    COMPUTED_VARIABLES: {
+    COMPUTED_VARIABLES: Object.freeze({
       ENVIRONMENT: 'ENVIRONMENT',
       VERSION: 'TEST_VERSION'
-    }
+    })
   });
 
   afterEach(() => sandbox.restore());
@@ -47,7 +47,7 @@ describe('Redis.helper Commands', () => {
   it('setupReisInstance: happy path', (done: Function) => {
     const runShellCommandStub = sandbox
       .stub(commonHelpers, 'runShellCommand')
-      .callsArgWithAsync(2, null, commandStdoutFixture);
+      .callsArgWithAsync(2, null, { ...commandStdoutFixture });
 
     redisHelpers.setupRedisInstance(_.cloneDeep(expectedContext), (error: string, externalContext: any) => {
       sinon.assert.calledThrice(runShellCommandStub);
@@ -87,7 +87,7 @@ describe('Redis.helper Commands', () => {
     const expectedOptions = { pathsToCheck: [pathToRedisNetworkIP, pathToRedisSubnetwork] };
     const runShellCommandStub = sandbox
       .stub(commonHelpers, 'runShellCommand')
-      .callsArgWithAsync(2, null, commandStdoutFixture);
+      .callsArgWithAsync(2, null, { ...commandStdoutFixture });
 
     redisHelpers.setupRedisInstance(_.cloneDeep(expectedContext), (error: string, externalContext: any) => {
       sinon.assert.calledThrice(runShellCommandStub);
