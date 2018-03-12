@@ -12,7 +12,7 @@ import {
 
 import {
   denyHttpTM, releaseExternalIP, releaseRedisInternalIP, releaseMongoInternalIP, removeCluster,
-  removeImageNode, removeImageTM, removeRedis, removeMongo, removeTM
+  removeImageNode, removeImageTM, removeRedis, toggleMongoDelectionProtection, removeMongo, removeTM
 } from './autoremove.helpers';
 
 // Default variables
@@ -114,14 +114,15 @@ export function run(): Promise<string | null> {
       async.constant(context),
       setDefaultUser,
       setDefaultProject,
-      async.apply(setupAPIs, ['cloudbilling.googleapis.com'], {action: 'enable'}),
+      // async.apply(setupAPIs, ['cloudbilling.googleapis.com'], {action: 'enable'}),
       linkProjectToBilling,
-      async.apply(setupAPIs, DEFAULT_GCP_API, {action: 'enable'}),
+      // async.apply(setupAPIs, DEFAULT_GCP_API, {action: 'enable'}),
       removeCluster,
       releaseExternalIP,
       denyHttpTM,
       removeTM,
       releaseMongoInternalIP,
+      toggleMongoDelectionProtection,
       removeMongo,
       releaseRedisInternalIP,
       removeRedis,

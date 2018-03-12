@@ -158,7 +158,7 @@ COPY ./deployment/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord
 RUN > /etc/telegraf/telegraf.conf
 RUN cat ./deployment/telegraf/default-telegraf.conf >> /etc/telegraf/telegraf.conf
 RUN cat ./deployment/telegraf/filestat.plugin.conf  >> /etc/telegraf/telegraf.conf
-RUN cat ./deployment/telegraf/tail.plugin.conf  >> /etc/telegraf/telegraf.conf
+RUN cat ./deployment/telegraf/statsd.plugin.conf  >> /etc/telegraf/telegraf.conf
 COPY ./ecosystem-$MACHINE_SUFFIX.config.json ecosystem.config.json
 COPY ./deployment/supervisor/envs.sh /bin/envs.sh
 
