@@ -67,7 +67,7 @@ function createMongoFirewallRule(externalContext: any, cb: Function): void {
     VERSION
   } = externalContext;
 
-  const command = `gcloud compute firewall-rules create ${ENVIRONMENT}-mongo-restrict-ssh --direction=INGRESS --priority=1000 --network=default --action=ALLOW --rules=tcp:22 --target-tags=${ENVIRONMENT}-mongo-${VERSION}`;
+  const command = `gcloud compute firewall-rules create ${ENVIRONMENT}-mongo-restrict-ssh-${VERSION} --direction=INGRESS --priority=1000 --network=default --action=ALLOW --rules=tcp:22 --target-tags=${ENVIRONMENT}-mongo-${VERSION}`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
@@ -118,6 +118,8 @@ function createMongo(externalContext: any, cb: Function): void {
     MIN_CPU_PLATFORM: 'Automatic',
     IMAGE: 'ubuntu-1604-xenial-v20180126',
     IMAGE_PROJECT: 'ubuntu-os-cloud',
+    NO_BOOT_DISK_AUTO_DELETE: null,
+    DELETION_PROTECTION: null,
     BOOT_DISK_SIZE: MONGO_DISK_SIZE,
     BOOT_DISK_TYPE: 'pd-ssd'
   };
