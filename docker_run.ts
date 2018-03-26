@@ -23,6 +23,7 @@ const RELEASE_DATE: Date = new Date();
 const DOCKER_HOST = hostname();
 const TELEGRAF_DEBUG_MODE = process.env.TELEGRAF_DEBUG_MODE || 'false';
 const INFLUXDB_HOST = process.env.INFLUXDB_HOST;
+const INFLUXDB_PORT = process.env.INFLUXDB_PORT || 8086;
 const INFLUXDB_DATABASE_NAME = process.env.INFLUXDB_DATABASE_NAME;
 const INFLUXDB_USER = process.env.INFLUXDB_USER;
 const INFLUXDB_PASSWORD = process.env.INFLUXDB_PASSWORD;
@@ -73,6 +74,7 @@ function runTelegrafService(): void {
     `${echoCommand} "export DOCKER_HOST=\"${DOCKER_HOST}\"" >> ${file}`,
     `${echoCommand} "export TELEGRAF_DEBUG_MODE=\"${TELEGRAF_DEBUG_MODE}\"" >> ${file}`,
     `${echoCommand} "export INFLUXDB_HOST=\"${INFLUXDB_HOST}\"" >> ${file}`,
+    `${echoCommand} "export INFLUXDB_PORT=\"${INFLUXDB_PORT}\"" >> ${file}`,
     `${echoCommand} "export INFLUXDB_DATABASE_NAME=\"${INFLUXDB_DATABASE_NAME}\"" >> ${file}`,
     `${echoCommand} "export INFLUXDB_USER=\"${INFLUXDB_USER}\"" >> ${file}`,
     `${echoCommand} "export INFLUXDB_PASSWORD=\"${INFLUXDB_PASSWORD}\"" >> ${file}`,

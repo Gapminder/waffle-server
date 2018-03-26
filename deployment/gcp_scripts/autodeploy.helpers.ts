@@ -55,14 +55,19 @@ export function setDefaultProject(externalContext: any, cb: Function): void {
 export function setupAPIs(apisList: string[], options: any, externalContext: any, cb: Function): void {
   const { action = 'enable' } = options;
 
+  if (process.env.IGNORE_ENABLING_GCP_API === 'true') {
+    logger.info('Ignore step with setting up gcp API');
+    return cb(null, externalContext);
+  }
+
   async.eachSeries(apisList, (api: string, _cb: AsyncResultCallback<ExecOutputReturnValue, string>) => {
     const command = `gcloud services ${action} ${api}`;
-    const options: ExecOptions = {};
+    const shellOptions: ExecOptions = {};
 
-    return runShellCommand(command, options, _cb);
+    return runShellCommand(command, shellOptions, _cb);
   }, (error: string) => {
     return cb(error, externalContext);
-  })
+  });
 }
 
 export function linkProjectToBilling(externalContext: any, cb: Function): void {
@@ -84,6 +89,9 @@ export function buildImageTM(externalContext: any, cb: Function): void {
       IMAGE_URL,
       PORT
     },
+    PROJECT_ID,
+    REGION,
+    MACHINE_TYPE,
     MONGODB_URL,
     REDIS_HOST,
     COMPUTED_VARIABLES: {
@@ -93,6 +101,7 @@ export function buildImageTM(externalContext: any, cb: Function): void {
       NEW_RELIC_LICENSE_KEY,
       LOGS_SYNC_DISABLED,
       INFLUXDB_HOST,
+      INFLUXDB_PORT,
       INFLUXDB_DATABASE_NAME,
       INFLUXDB_USER,
       INFLUXDB_PASSWORD,
@@ -111,6 +120,7 @@ export function buildImageTM(externalContext: any, cb: Function): void {
     NEW_RELIC_LICENSE_KEY,
     LOGS_SYNC_DISABLED,
     INFLUXDB_HOST,
+    INFLUXDB_PORT,
     INFLUXDB_DATABASE_NAME,
     INFLUXDB_USER,
     INFLUXDB_PASSWORD,
@@ -141,6 +151,7 @@ export function buildImageNode(externalContext: any, cb: Function): void {
       NEW_RELIC_LICENSE_KEY,
       LOGS_SYNC_DISABLED,
       INFLUXDB_HOST,
+      INFLUXDB_PORT,
       INFLUXDB_DATABASE_NAME,
       INFLUXDB_USER,
       INFLUXDB_PASSWORD
@@ -157,6 +168,7 @@ export function buildImageNode(externalContext: any, cb: Function): void {
     NEW_RELIC_LICENSE_KEY,
     LOGS_SYNC_DISABLED,
     INFLUXDB_HOST,
+    INFLUXDB_PORT,
     INFLUXDB_DATABASE_NAME,
     INFLUXDB_USER,
     INFLUXDB_PASSWORD,

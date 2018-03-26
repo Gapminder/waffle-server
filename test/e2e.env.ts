@@ -6,6 +6,11 @@ const e2eEnv = {
   login: constants.DEFAULT_USER_EMAIL,
   mongodb: 'ws_ddf_test',
   nodeEnv: 'local',
+  influxdb_host: process.env.INFLUXDB_HOST,
+  influxdb_port: process.env.INFLUXDB_PORT,
+  influxdb_user: process.env.INFLUXDB_USER,
+  influxdb_password: process.env.INFLUXDB_PASSWORD,
+  influxdb_database_name: process.env.INFLUXDB_DATABASE_NAME,
   wsPort: '8081',
   wsHost: 'localhost',
   get wsHostUrl(): string {
