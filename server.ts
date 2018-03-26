@@ -14,17 +14,32 @@ import { reposService } from 'waffle-server-repo-service';
 import { UsersService } from './ws.services/users.service';
 import { ServiceLocator } from './ws.service-locator';
 import { DbService } from './ws.services/db.service';
-import { TelegrafService } from './ws.services/telegraf.service';
 
 import { Application } from './application';
 import { createLongRunningQueriesKiller } from './ws.utils/long-running-queries-killer';
 import { Connection } from 'mongoose';
 import { usersRepository } from './ws.repository/ddf/users/users.repository';
-import Signals = NodeJS.Signals;
+import { TelegrafService } from './ws.services/telegraf.service';
 
 reposService.logger = logger;
 
 process.setMaxListeners(0);
+
+process.on('uncaughtException', function (reason: Error): void {
+  logger.error('Process Event: uncaughtException', reason);
+});
+
+process.on('beforeExit', function (code: number): void {
+  logger.info('Process Event: beforeExit', code);
+});
+
+process.on('exit', function (code: number): void {
+  logger.info('Process Event: exit', code);
+});
+
+process.on('disconnect', function (): void {
+  logger.info('Process Event: disconnect');
+});
 
 connectToDb((error: any, db: Connection) => {
 
@@ -35,7 +50,6 @@ connectToDb((error: any, db: Connection) => {
   serviceLocator.set('warmupUtils', WarmupUtils);
   serviceLocator.set('usersService', new UsersService(usersRepository));
   serviceLocator.set('reposService', reposService);
-  serviceLocator.set('telegrafService', new TelegrafService());
 
   const dbService = new DbService(db);
   serviceLocator.set('dbService', dbService);
@@ -49,25 +63,4 @@ connectToDb((error: any, db: Connection) => {
       logger.error(startupError);
       process.exit(1);
     });
-
-  process.on('uncaughtException', function (reason: Error): void {
-    logger.error('Process Event: uncaughtException', reason);
-    application.telegrafService.onInstanceStateChanged();
-  });
-
-  process.on('beforeExit', function (code: number): void {
-    logger.error('Process Event: beforeExit', code);
-    application.telegrafService.onInstanceStateChanged();
-  });
-
-  process.on('exit', function (code: number): void {
-    logger.error('Process Event: exit', code);
-    application.telegrafService.onInstanceStateChanged();
-  });
-
-  process.on('disconnect', function (): void {
-    logger.error('Process Event: disconnect');
-    application.telegrafService.onInstanceStateChanged();
-  });
-
 });

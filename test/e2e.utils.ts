@@ -81,6 +81,11 @@ function setUpEnvironmentVariables(): void {
   shell.env['NODE_ENV'] = e2eEnv.nodeEnv;
   shell.env['DEFAULT_USER_PASSWORD'] = e2eEnv.pass;
   shell.env['PORT'] = e2eEnv.wsPort;
+  shell.env['INFLUXDB_HOST'] = e2eEnv.influxdb_host;
+  shell.env['INFLUXDB_PORT'] = e2eEnv.influxdb_port;
+  shell.env['INFLUXDB_USER'] = e2eEnv.influxdb_user;
+  shell.env['INFLUXDB_PASSWORD'] = e2eEnv.influxdb_password;
+  shell.env['INFLUXDB_DATABASE_NAME'] = e2eEnv.influxdb_database_name;
   /* tslint:enable:no-string-literal */
 }
 

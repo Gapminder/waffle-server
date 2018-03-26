@@ -23,13 +23,23 @@ module.exports = {
       out_file: 'logs/out.log',
       error_file: 'logs/err.log',
       env: {
+        HOST: appConfig.HOST,
+        PROJECT: appConfig.PROJECT,
+        MACHINE_TYPE: appConfig.MACHINE_TYPE,
+        REGION: appConfig.REGION,
+        IS_MONITORING_NEEDED: appConfig.IS_MONITORING_NEEDED,
         NODE_ENV: appConfig.NODE_ENV,
         DEFAULT_USER_PASSWORD: appConfig.DEFAULT_USER_PASSWORD,
         MONGODB_URL: appConfig.MONGODB_URL,
         NEWRELIC_KEY: appConfig.NEWRELIC_KEY,
         LOG_LEVEL: appConfig.LOG_LEVEL,
         PORT: appConfig.THRASHING_MACHINE ? 80 : appConfig.PORT,
-        THRASHING_MACHINE: appConfig.THRASHING_MACHINE
+        THRASHING_MACHINE: appConfig.THRASHING_MACHINE,
+        INFLUXDB_HOST: appConfig.INFLUXDB_HOST,
+        INFLUXDB_PORT: appConfig.INFLUXDB_PORT,
+        INFLUXDB_DATABASE_NAME: appConfig.INFLUXDB_DATABASE_NAME,
+        INFLUXDB_USER: appConfig.INFLUXDB_USER,
+        INFLUXDB_PASSWORD: appConfig.INFLUXDB_PASSWORD
       }
     }
   ]

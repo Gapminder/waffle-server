@@ -53,20 +53,6 @@ export function releaseRedisInternalIP(externalContext: any, cb: Function): void
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
-export function toggleMongoDelectionProtection(externalContext: any, cb: Function): void {
-  const {
-    MONGO_ZONE,
-    PROJECT_ID,
-    MONGO_INSTANCE_NAME
-  } = externalContext;
-
-  const command = `gcloud compute instances update ${MONGO_INSTANCE_NAME} --no-deletion-protection \
-    --zone=${MONGO_ZONE} --project=${PROJECT_ID} --quiet`;
-  const options: ExecOptions = {};
-
-  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
-}
-
 export function removeMongo(externalContext: any, cb: Function): void {
   const {
     MONGO_ZONE,

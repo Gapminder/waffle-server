@@ -6,10 +6,10 @@ import { logger } from './ws.config/log';
 import { ServiceLocator } from './ws.service-locator';
 import * as util from 'util';
 import { CronJob } from './ws.utils/long-running-queries-killer';
+import { TelegrafService } from './ws.services/telegraf.service';
 
 export class Application {
   public listen: Function;
-  public telegrafService: any;
 
   private config: any;
   private warmupUtils: any;
@@ -28,7 +28,6 @@ export class Application {
     this.config = serviceLocator.get('config');
     this.usersService = serviceLocator.get('usersService');
     this.longRunningQueriesKiller = serviceLocator.get('longRunningQueriesKiller');
-    this.telegrafService = serviceLocator.get('telegrafService');
 
     const app = serviceLocator.getApplication();
     this.listen = util.promisify(app.listen.bind(app));
@@ -36,7 +35,7 @@ export class Application {
 
   public run(): Promise<void> {
     return this.usersService.makeDefaultUser()
-      .then(() => this.telegrafService.onInstanceStateChanged('instance', 'ready', 1))
+      .then(() => TelegrafService.onInstanceRunning())
       .then(() => this.listen(this.config.PORT))
       .then(() => logger.info('\nExpress server listening on port %d in %s mode', this.config.PORT, this.config.NODE_ENV))
       .then(() => this.importService.importDdfRepos())

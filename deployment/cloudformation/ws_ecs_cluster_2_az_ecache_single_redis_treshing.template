@@ -849,6 +849,10 @@
       "Type": "String",
       "Description": "Host name for InfluxDB"
     },
+    "InfluxdbPort": {
+      "Type": "String",
+      "Description": "Port for InfluxDB"
+    },
     "InfluxdbDatabaseName": {
       "Type": "String",
       "Description": "Database name for InfluxDB"
@@ -1026,6 +1030,12 @@
                 "Name": "INFLUXDB_HOST",
                 "Value": {
                   "Ref": "InfluxdbHost"
+                }
+              },
+              {
+                "Name": "INFLUXDB_PORT",
+                "Value": {
+                  "Ref": "InfluxdbPort"
                 }
               },
               {
@@ -1236,6 +1246,12 @@
                 }
               },
               {
+                "Name": "INFLUXDB_PORT",
+                "Value": {
+                  "Ref": "InfluxdbPort"
+                }
+              },
+              {
                 "Name": "INFLUXDB_DATABASE_NAME",
                 "Value": {
                   "Ref": "InfluxdbDatabaseName"
@@ -1422,6 +1438,12 @@
                 "Name": "INFLUXDB_HOST",
                 "Value": {
                   "Ref": "InfluxdbHost"
+                }
+              },
+              {
+                "Name": "INFLUXDB_PORT",
+                "Value": {
+                  "Ref": "InfluxdbPort"
                 }
               },
               {
