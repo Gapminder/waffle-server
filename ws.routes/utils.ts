@@ -11,7 +11,7 @@ import * as semver from 'semver';
 
 import { DatasetsRepository } from '../ws.repository/ddf/datasets/datasets.repository';
 import { RecentDdfqlQueriesRepository } from '../ws.repository/ddf/recent-ddfql-queries/recent-ddfql-queries.repository';
-import { constants } from '../ws.utils/constants';
+import { constants, responseMessages } from '../ws.utils/constants';
 import * as path from 'path';
 
 import * as commonService from '../ws.services/common.service';
@@ -52,7 +52,7 @@ function bodyFromUrlQuery(req: express.Request, res: express.Response, next: exp
   parser.parse(parser.query, (error: string, parsedQuery: any) => {
     logger.info({ ddfqlRaw: parser.query });
     if (error) {
-      res.json(toErrorResponse('Query was sent in incorrect format'));
+      res.json(toErrorResponse(responseMessages.INCORRECT_QUERY_FORMAT));
     } else {
       req.body = _.extend(parsedQuery, { rawDdfQuery: { queryRaw: parser.query, type: parser.queryType } });
       next();
@@ -69,12 +69,12 @@ function bodyFromUrlAssets(req: express.Request, res: express.Response, next: ex
   const datasetAssetsPathFromUrl = safeDecodeUriComponent(pathnameUrl);
 
   if (datasetAssetsPathFromUrl === null) {
-    res.status(400).json(toErrorResponse('Malformed url was given'));
+    res.status(200).json(toErrorResponse(responseMessages.MALFORMED_URL));
     return;
   }
 
   if (RELATIVE_PATH_REGEX.test(datasetAssetsPathFromUrl)) {
-    res.status(400).json(toErrorResponse('You cannot use relative path constraints like "." or ".." in the asset path'));
+    res.status(200).json(toErrorResponse(responseMessages.RELATIVE_ASSET_PATH));
     return;
   }
 
@@ -82,7 +82,7 @@ function bodyFromUrlAssets(req: express.Request, res: express.Response, next: ex
     const isRequestedDefaultAssets = _.startsWith(req.originalUrl, `${constants.ASSETS_ROUTE_BASE_PATH}/default`);
 
     if (error && isRequestedDefaultAssets) {
-      res.status(500).json(toErrorResponse(`Default dataset couldn't be found`));
+      res.status(200).json(toErrorResponse(responseMessages.DATASET_NOT_FOUND));
       return;
     }
 
@@ -94,7 +94,7 @@ function bodyFromUrlAssets(req: express.Request, res: express.Response, next: ex
     );
 
     if (assetPathDescriptor.assetsDir !== constants.ASSETS_EXPECTED_DIR) {
-      res.status(403).json(toErrorResponse(`You cannot access directories other than "${constants.ASSETS_EXPECTED_DIR}"`));
+      res.status(200).json(toErrorResponse(responseMessages.WRONG_ASSETS_DIR(constants.ASSETS_EXPECTED_DIR)));
       return;
     }
 
@@ -178,7 +178,7 @@ function respondWithRawDdf(query: any, req: express.Request, res: express.Respon
     if (error) {
       logger.error(error);
       (res as any).use_express_redis_cache = false;
-      return res.status(500).json(toErrorResponse(error));
+      return res.status(200).json(toErrorResponse(error));
     }
     const collectionName = _.get(query, 'from', '');
     const docsAmount = _.get(result, collectionName, []).length;
@@ -216,7 +216,7 @@ function ensureCliVersion(req: express.Request, res: express.Response, next: exp
   const clientWsCliVersion = req.header('X-Gapminder-WSCLI-Version');
 
   if (!clientWsCliVersion) {
-    res.json(toErrorResponse('This url can be accessed only from WS-CLI'));
+    res.json(toErrorResponse(responseMessages.URL_CANNOT_BE_ACCESSED_FROM_WS_CLI));
     return;
   }
 
@@ -224,8 +224,7 @@ function ensureCliVersion(req: express.Request, res: express.Response, next: exp
 
   if (!ensureVersionsEquality(clientWsCliVersion, serverWsCliVersion)) {
     const changeCliVersionResponse = toErrorResponse(
-      `Please, change your WS-CLI version from ${clientWsCliVersion} to ${serverWsCliVersion}`
-    );
+      responseMessages.INCORRECT_CLI_VERSION(clientWsCliVersion, serverWsCliVersion));
 
     res.json(changeCliVersionResponse);
     return;
