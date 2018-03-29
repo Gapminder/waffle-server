@@ -19,7 +19,7 @@ describe('AssetsController', () => {
         return this;
       },
       end(): void {
-        expect(this._status).to.equal(404);
+        expect(this._status).to.equal(200);
         done();
       }
     };

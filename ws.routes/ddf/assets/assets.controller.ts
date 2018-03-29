@@ -9,7 +9,7 @@ export {
 function serveAsset(req: Request, res: Response): void {
   const assetPathDescriptor: any = _.get(req.body, 'assetPathDescriptor');
   if (!assetPathDescriptor) {
-    return res.status(404).end();
+    return res.status(200).end();
   }
 
   res.setHeader('Content-Disposition', `attachment; filename=${assetPathDescriptor.assetName}`);
