@@ -75,4 +75,16 @@ const constants: any = {
   LONG_RUNNING_QUERY_THRESHOLD_IN_SECONDS: 30
 };
 
+const responseMessages: any = {
+  INCORRECT_QUERY_FORMAT: 'Query was sent in incorrect format',
+  MALFORMED_URL: 'Malformed url was given',
+  RELATIVE_ASSET_PATH: 'You cannot use relative path constraints like "." or ".." in the asset path',
+  DATASET_NOT_FOUND: `Default dataset couldn't be found`,
+  WRONG_ASSETS_DIR: (dir: string) => `You cannot access directories other than "${dir}"`,
+  URL_CANNOT_BE_ACCESSED_FROM_WS_CLI: 'This url can be accessed only from WS-CLI',
+  INCORRECT_CLI_VERSION: (clientVersion: string, serverVersion: string) =>
+    `Please, change your WS-CLI version from ${clientVersion} to ${serverVersion}`
+};
+
 export { constants };
+export { responseMessages };
