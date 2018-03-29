@@ -632,7 +632,7 @@ describe('Routes utils', () => {
       sinon.assert.calledWith(jsonSpy, expectedErrorResponse);
 
       sinon.assert.calledOnce(statusStub);
-      sinon.assert.calledWith(statusStub, 500);
+      sinon.assert.calledWith(statusStub, 200);
 
       sinon.assert.notCalled(nextSpy);
 
@@ -1071,7 +1071,7 @@ describe('Routes utils', () => {
 
       routeUtils.bodyFromUrlAssets(req, res, nextSpy);
 
-      expect(res._status).to.equal(400);
+      expect(res._status).to.equal(200);
       sinon.assert.calledWith(jsonSpy, { success: false, error: 'Malformed url was given' });
       sinon.assert.notCalled(nextSpy);
     });
@@ -1096,7 +1096,7 @@ describe('Routes utils', () => {
 
       routeUtils.bodyFromUrlAssets(req, res, nextSpy);
 
-      expect(res._status).to.equal(400);
+      expect(res._status).to.equal(200);
       sinon.assert.calledWith(jsonSpy, {
         success: false,
         error: 'You cannot use relative path constraints like "." or ".." in the asset path'
@@ -1124,7 +1124,7 @@ describe('Routes utils', () => {
         },
         json(body: any): any {
           // Assert
-          expect(this._status).to.equal(500);
+          expect(this._status).to.equal(200);
           expect(body).to.deep.equal({
             success: false,
             error: 'Default dataset couldn\'t be found'
@@ -1161,7 +1161,7 @@ describe('Routes utils', () => {
         },
         json(body: any): any {
           // Assert
-          expect(this._status).to.equal(403);
+          expect(this._status).to.equal(200);
           expect(body).to.deep.equal({
             success: false,
             error: expectedError
