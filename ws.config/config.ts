@@ -9,7 +9,7 @@ const config: any = {
     return _.get(packageJson, 'dependencies.waffle-server-import-cli') as string;
   },
   NODE_ENV: process.env.NODE_ENV || DEFAULT_CONFIG.NODE_ENV,
-  HOST: process.env.HOST,
+  HOST: process.env.HOST || DEFAULT_CONFIG.HOST,
   PORT: parseInt(`${process.env.PORT || DEFAULT_CONFIG.PORT}`, 10),
   HOST_URL: process.env.HOST_URL || DEFAULT_CONFIG.HOST_URL,
   LOG_MARKER: DEFAULT_CONFIG.LOG_MARKER,

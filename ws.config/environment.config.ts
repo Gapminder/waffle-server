@@ -30,6 +30,7 @@ const LOG_MARKERS = {
 const DEFAULT_PORT = 3000;
 
 const environment = Object.freeze({
+  HOST: 'localhost',
   HOST_URL: DEFAULT_HOST_URLS[NODE_ENV],
   PORT: DEFAULT_PORT,
 
