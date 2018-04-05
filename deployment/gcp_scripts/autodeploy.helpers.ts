@@ -89,12 +89,13 @@ export function buildImageTM(externalContext: any, cb: Function): void {
       IMAGE_URL,
       PORT
     },
+    MACHINE_TYPES,
     PROJECT_ID,
     REGION,
-    MACHINE_TYPE,
     MONGODB_URL,
     REDIS_HOST,
     COMPUTED_VARIABLES: {
+      VERSION,
       DEFAULT_PROJECT_NAME,
       DEFAULT_USER_PASSWORD,
       PATH_TO_DDF_REPOSITORIES,
@@ -110,6 +111,10 @@ export function buildImageTM(externalContext: any, cb: Function): void {
   } = externalContext;
 
   const dockerArguments: DockerBuildArgumentsTM = Object.assign({
+    PROJECT: PROJECT_ID,
+    REGION,
+    MACHINE_TYPE: MACHINE_TYPES[MACHINE_SUFFIX],
+    VERSION,
     PORT,
     REDIS_HOST,
     MONGODB_URL,
@@ -142,9 +147,13 @@ export function buildImageNode(externalContext: any, cb: Function): void {
       IMAGE_URL,
       PORT
     },
+    MACHINE_TYPES,
+    PROJECT_ID,
+    REGION,
     REDIS_HOST,
     MONGODB_URL,
     COMPUTED_VARIABLES: {
+      VERSION,
       DEFAULT_PROJECT_NAME,
       DEFAULT_USER_PASSWORD,
       PATH_TO_DDF_REPOSITORIES,
@@ -159,6 +168,10 @@ export function buildImageNode(externalContext: any, cb: Function): void {
   } = externalContext;
 
   const dockerArguments: DockerBuildArguments = Object.assign({
+    PROJECT: PROJECT_ID,
+    REGION,
+    MACHINE_TYPE: MACHINE_TYPES[MACHINE_SUFFIX],
+    VERSION,
     PORT,
     REDIS_HOST,
     MONGODB_URL,
@@ -391,7 +404,11 @@ export function printExternalIPs(externalContext: any, cb: Function): void {
       const parsedResult = JSON.parse(result.stdout);
       const LOAD_BALANCER_IP_ADDRESS = _.get(parsedResult, pathToLoadBalancerIP, null);
 
-      logger.info({RESULTS:{ TM: TM_IP_ADDRESS, LB: LOAD_BALANCER_IP_ADDRESS, MONGODB: MONGODB_URL }});
+      logger.info({RESULTS: {
+        TM: `http://${TM_IP_ADDRESS}/api/ddf/assets/open-numbers/ddf--gapminder--systema_globalis/master/assets/world-50m.json`,
+        LB: `http://${LOAD_BALANCER_IP_ADDRESS}/api/ddf/ql/?_language=en&from=entities&animatable=time&select_key@=geo;&value@=name;;&where_$and@_un/_state:true;;;&join_;&order/_by@=rank;&dataset=open-numbers%252Fddf--gapminder--systema/_globalis%2523master`,
+        MONGODB: MONGODB_URL
+      }});
 
       return cb(null, LOAD_BALANCER_IP_ADDRESS);
     } catch (_error) {

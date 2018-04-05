@@ -3,7 +3,7 @@
     {
       "name": "WS",
       "script": "server.js",
-      "instances": "max",
+      "instances": 1,
       "exec_mode": "cluster",
       "listen_timeout": 60000,
       "restart_delay": 60000,

@@ -34,7 +34,7 @@ const datasetStateProto: DatasetState = {
 
 const defaultTags: Dictionary<string> = {
   project: config.PROJECT,
-  host: config.HOST,
+  hostname: config.HOSTNAME,
   node_env: config.NODE_ENV,
   machine_type: config.MACHINE_TYPE,
   region: config.REGION,
@@ -98,6 +98,7 @@ export class TelegrafService {
     const sendMeasurement = this.wrapTask(function(): void {
       TelegrafService.influxService
         .writePoints([point])
+        .then(() => logger.info({event:'Event: running instance', point}))
         .catch((error: string) => logger.error(error));
     });
 
@@ -120,6 +121,7 @@ export class TelegrafService {
     const sendMeasurment = this.wrapTask(function(): void {
       TelegrafService.influxService
         .writePoints([point])
+        .then(() => logger.info({event:'Event: dataset state changed', point}))
         .catch((error: string) => logger.error(error));
     });
 

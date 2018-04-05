@@ -2,6 +2,7 @@ import { Dictionary } from 'lodash';
 
 export interface DockerBuildArguments extends Dictionary<string|number|boolean> {
   PORT: number;
+  VERSION: string;
   PROJECT: string;
   REGION: string;
   MACHINE_TYPE: string;
