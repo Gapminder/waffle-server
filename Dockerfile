@@ -63,6 +63,15 @@ EXPOSE 443
 EXPOSE 8125/udp 8092/udp 8094
 
 #setup environment variables
+ARG PROJECT
+ENV PROJECT ${PROJECT}
+
+ARG MACHINE_TYPE
+ENV MACHINE_TYPE ${MACHINE_TYPE}
+
+ARG REGION
+ENV REGION ${REGION}
+
 ARG PORT
 ENV PORT ${PORT}
 
@@ -105,6 +114,9 @@ ENV STACK_NAME "${STACK_NAME:-'wsdevstack-test'}"
 ARG INFLUXDB_HOST
 ENV INFLUXDB_HOST "${INFLUXDB_HOST}"
 
+ARG INFLUXDB_PORT
+ENV INFLUXDB_PORT "${INFLUXDB_PORT}"
+
 ARG INFLUXDB_DATABASE_NAME
 ENV INFLUXDB_DATABASE_NAME "${INFLUXDB_DATABASE_NAME}"
 
@@ -140,11 +152,15 @@ RUN echo "export NODE_ENV=\"${NODE_ENV}\"\n" \
   "export RELEASE_DATE=\"${RELEASE_DATE}\"\n" \
   "export STACK_NAME=\"${STACK_NAME}\"\n" \
   "export INFLUXDB_HOST=\"${INFLUXDB_HOST}\"\n" \
+  "export INFLUXDB_PORT=\"${INFLUXDB_PORT}\"\n" \
   "export INFLUXDB_DATABASE_NAME=\"${INFLUXDB_DATABASE_NAME}\"\n" \
   "export INFLUXDB_USER=\"${INFLUXDB_USER}\"\n" \
   "export INFLUXDB_PASSWORD=\"${INFLUXDB_PASSWORD}\"\n" \
   "export MACHINE_SUFFIX=\"${MACHINE_SUFFIX}\"\n" \
   "export MONITORING_HOST=\"${MONITORING_HOST}\"\n" \
+  "export PROJECT=\"${PROJECT}\"\n" \
+  "export MACHINE_TYPE=\"${MACHINE_TYPE}\"\n" \
+  "export REGION=\"${REGION}\"\n" \
   "export WAFFLE_SERVER_VERSION=\"${WAFFLE_SERVER_VERSION}\"" >> /etc/default/telegraf
 RUN chmod 777 /etc/default/telegraf
 RUN touch /var/log/telegraf/telegraf.log
@@ -158,7 +174,6 @@ COPY ./deployment/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord
 RUN > /etc/telegraf/telegraf.conf
 RUN cat ./deployment/telegraf/default-telegraf.conf >> /etc/telegraf/telegraf.conf
 RUN cat ./deployment/telegraf/filestat.plugin.conf  >> /etc/telegraf/telegraf.conf
-RUN cat ./deployment/telegraf/tail.plugin.conf  >> /etc/telegraf/telegraf.conf
 COPY ./ecosystem-$MACHINE_SUFFIX.config.json ecosystem.config.json
 COPY ./deployment/supervisor/envs.sh /bin/envs.sh
 

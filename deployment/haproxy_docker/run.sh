@@ -16,6 +16,7 @@ echo -ne "export STACK_NAME=\"${STACK_NAME}\"\n" >> /etc/default/telegraf
 echo -ne "export DOCKER_HOST=\"${DOCKER_HOST}\"\n" >> /etc/default/telegraf
 echo -ne "export TELEGRAF_DEBUG_MODE=\"${TELEGRAF_DEBUG_MODE}\"\n" >> /etc/default/telegraf
 echo -ne "export INFLUXDB_HOST=\"${INFLUXDB_HOST}\"\n" >> /etc/default/telegraf
+echo -ne "export INFLUXDB_PORT=\"${INFLUXDB_PORT}\"\n" >> /etc/default/telegraf
 echo -ne "export INFLUXDB_DATABASE_NAME=\"${INFLUXDB_DATABASE_NAME}\"\n" >> /etc/default/telegraf
 echo -ne "export INFLUXDB_USER=\"${INFLUXDB_USER}\"\n" >> /etc/default/telegraf
 echo -ne "export INFLUXDB_PASSWORD=\"${INFLUXDB_PASSWORD}\"\n" >> /etc/default/telegraf

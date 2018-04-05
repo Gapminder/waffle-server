@@ -72,6 +72,7 @@ DDF_REPO_PATH=${DDF_REPO_PATH:-"/home/waffle-server/ddf"}
 DEFAULT_USER_PASSWORD=${DEFAULT_USER_PASSWORD:-"123"}
 STACK_NAME=${STACK_NAME}
 INFLUXDB_HOST=${INFLUXDB_HOST}
+INFLUXDB_PORT=${INFLUXDB_PORT}
 INFLUXDB_DATABASE_NAME=${INFLUXDB_DATABASE_NAME}
 INFLUXDB_USER=${INFLUXDB_USER}
 INFLUXDB_PASSWORD=${INFLUXDB_PASSWORD}
@@ -110,7 +111,7 @@ function _check_awscli {
 
 function _check_vars {
   IS_FAILED=false
-  for var in MONGODB_URL NEWRELIC_KEY AWS_SSH_KEY_NAME HAPROXY_ECR_NAME NODE_ECR_NAME STACK_NAME INFLUXDB_HOST INFLUXDB_DATABASE_NAME INFLUXDB_USER INFLUXDB_PASSWORD; do
+  for var in MONGODB_URL NEWRELIC_KEY AWS_SSH_KEY_NAME HAPROXY_ECR_NAME NODE_ECR_NAME STACK_NAME INFLUXDB_HOST INFLUXDB_PORT INFLUXDB_DATABASE_NAME INFLUXDB_USER INFLUXDB_PASSWORD; do
     if [ $(env | grep -w $var | wc -l) == "0" ]; then
       IS_FAILED=true
       echo "-- ERROR: '${var}' variable is not set."
@@ -154,6 +155,7 @@ ParameterKey=NewRelicKey,ParameterValue=${NEWRELIC_KEY} \
 ParameterKey=NodeEnv,ParameterValue=${NODE_ENV} \
 ParameterKey=StackName,ParameterValue=${STACK_NAME} \
 ParameterKey=InfluxdbHost,ParameterValue=${INFLUXDB_HOST} \
+ParameterKey=InfluxdbPort,ParameterValue=${INFLUXDB_PORT} \
 ParameterKey=InfluxdbDatabaseName,ParameterValue=${INFLUXDB_DATABASE_NAME} \
 ParameterKey=InfluxdbUser,ParameterValue=${INFLUXDB_USER} \
 ParameterKey=InfluxdbPassword,ParameterValue=${INFLUXDB_PASSWORD} \

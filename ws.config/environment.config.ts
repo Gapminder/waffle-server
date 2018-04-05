@@ -51,6 +51,7 @@ const environment = Object.freeze({
   PATH_TO_DIFF_DDF_RESULT_FILE: path.join(__dirname, '../ws.import/diffs'),
   DEFAULT_DATASETS: [],
 
+  IS_MONITORING_NEEDED: true,
   CLEAN_EXPORT: false
 });
 

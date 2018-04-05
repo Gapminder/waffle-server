@@ -28,6 +28,7 @@ export function importDdf(options: any, done: Function): void {
 
   console.time(`${DATASET_IMPORT_LABEL}: ${context.github}`);
   DatasetTracker.track(_.get(context, 'datasetName'));
+
   async.waterfall([
     async.constant(context),
     ddfImportUtils.resolvePathToDdfFolder,
@@ -70,6 +71,7 @@ export function importDdfRepos(): Promise<void> {
 
   return new Promise((resolve: Function) => {
     async.eachSeries(datasets, (github: any, onImported: Function) => {
+
       const context = {
         isDatasetPrivate: false,
         github,
