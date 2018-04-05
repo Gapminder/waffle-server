@@ -1,3 +1,45 @@
+<a name="2.12.9"></a>
+## [2.12.9](https://github.com/Gapminder/waffle-server/compare/v2.12.1...v2.12.9) (2018-04-05)
+
+
+### Bug Fixes
+
+* fix autoremove script ([a103d97](https://github.com/Gapminder/waffle-server/commit/a103d97))
+* **gcp:** fix environment issue with mid tests ([#591](https://github.com/Gapminder/waffle-server/issues/591)) ([a354c7c](https://github.com/Gapminder/waffle-server/commit/a354c7c))
+* **GCP:** add attempting to connect to LB on GCP ([42eafe6](https://github.com/Gapminder/waffle-server/commit/42eafe6))
+* **GCP:** change name convention for deployment configs ([904715b](https://github.com/Gapminder/waffle-server/commit/904715b))
+* **GCP:** fis issues with deployment monogo/redis/tm instances with certain machine type and disks spaces ([f6b1480](https://github.com/Gapminder/waffle-server/commit/f6b1480))
+* **GCP:** fix deployment running script ([0cc44ac](https://github.com/Gapminder/waffle-server/commit/0cc44ac))
+* **GCP:** fix deployment script for working with local environment of WS ([6820572](https://github.com/Gapminder/waffle-server/commit/6820572))
+* **GCP:** fix gcloud command for creation mongodb instance ([65ad137](https://github.com/Gapminder/waffle-server/commit/65ad137))
+* **GCP:** fix mongo docker image url ([28716a6](https://github.com/Gapminder/waffle-server/commit/28716a6))
+* **GCP:** fix mongo port ([fe8c0cf](https://github.com/Gapminder/waffle-server/commit/fe8c0cf))
+* **routes:** fix assets path for private repos ([115c8a5](https://github.com/Gapminder/waffle-server/commit/115c8a5))
+* **unit-tests:** update mocha version, fix minor issues with unit tests ([74fd5e3](https://github.com/Gapminder/waffle-server/commit/74fd5e3))
+
+
+### Features
+
+* **auto-deploy:** add auto removing stack from GCP (according to semver rule) ([3728ec5](https://github.com/Gapminder/waffle-server/commit/3728ec5))
+* **auto-deploy:** create auto deploument script for GCP (dev & prod environments ([8fccb77](https://github.com/Gapminder/waffle-server/commit/8fccb77))
+* **GCP:** add integration tests before running deployment process ([1d31d5f](https://github.com/Gapminder/waffle-server/commit/1d31d5f))
+* **GCP:** add integration tests before running deployment process ([4a34219](https://github.com/Gapminder/waffle-server/commit/4a34219))
+* **GCP:** add mongo instance to deployment process ([658fd7a](https://github.com/Gapminder/waffle-server/commit/658fd7a))
+* **GCP:** add mongo_url for WS deployment process ([efb145c](https://github.com/Gapminder/waffle-server/commit/efb145c))
+* **GCP:** add PROJECT_NAME ([a830252](https://github.com/Gapminder/waffle-server/commit/a830252))
+* **GCP:** add removing mongo instance ([4596c64](https://github.com/Gapminder/waffle-server/commit/4596c64))
+* **GCP:** add retryable operations ([9830266](https://github.com/Gapminder/waffle-server/commit/9830266))
+* **GCP:** add test environment ([cdcee62](https://github.com/Gapminder/waffle-server/commit/cdcee62))
+* **GCP:** fix region issue ([c5e1fe0](https://github.com/Gapminder/waffle-server/commit/c5e1fe0))
+* **GCP:** fix region quota issue ([67757dc](https://github.com/Gapminder/waffle-server/commit/67757dc))
+* **GCP:** remove FOLDER_ID ([95980c4](https://github.com/Gapminder/waffle-server/commit/95980c4))
+* **GCP:** skip step if already exists ([868325b](https://github.com/Gapminder/waffle-server/commit/868325b))
+* **GCP:** update deployment script for retrying failed commands ([b0475a2](https://github.com/Gapminder/waffle-server/commit/b0475a2))
+* **mid-tests:** setup enviromnent variable for mid tests of deployment process ([dfc64f1](https://github.com/Gapminder/waffle-server/commit/dfc64f1))
+* **mid-tests:** setup enviromnent variable for mid tests of deployment process ([0a812d8](https://github.com/Gapminder/waffle-server/commit/0a812d8))
+
+
+
 <a name="2.12.1"></a>
 ## [2.12.1](https://github.com/Gapminder/waffle-server/compare/v2.12.0...v2.12.1) (2017-11-27)
 

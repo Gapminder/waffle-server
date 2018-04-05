@@ -5,7 +5,7 @@
     "host": "localhost"
   },
   "name": "Waffle-Server",
-  "version": "2.12.8",
+  "version": "2.12.9",
   "description": "Server for keeping and serving ddf data",
   "main": "server.js",
   "scripts": {

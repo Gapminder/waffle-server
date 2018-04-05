@@ -27,7 +27,7 @@ function getBunyanStreams(environment: string): any[] {
   const consoleStream = {
     src: config.NODE_ENV === 'local',
     level: config.LOG_LEVEL,
-    stream: getLogStream(environment)
+    stream: (new PrettyStream()).pipe(process.stdout)
   };
 
   if (environment === 'production') {
@@ -35,16 +35,6 @@ function getBunyanStreams(environment: string): any[] {
   }
 
   return [fileStream, consoleStream];
-}
-
-function getLogStream(environment: string): any {
-  if (environment === 'local') {
-    const stream = new PrettyStream();
-    stream.pipe(process.stdout);
-    return stream;
-  }
-
-  return process.stdout;
 }
 
 function objSerializer(obj: any): any {

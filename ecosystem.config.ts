@@ -13,7 +13,7 @@ module.exports = {
     {
       name: appConfig.THRASHING_MACHINE ? 'TM' : 'WS',
       script: 'server.js',
-      instances: appConfig.THRASHING_MACHINE ? 1 : 'max',
+      instances: 1,
       exec_mode: 'cluster',
       listen_timeout: 60000,
       restart_delay: 60000,
@@ -23,7 +23,7 @@ module.exports = {
       out_file: 'logs/out.log',
       error_file: 'logs/err.log',
       env: {
-        HOST: appConfig.HOST,
+        HOSTNAME: appConfig.HOSTNAME,
         PROJECT: appConfig.PROJECT,
         MACHINE_TYPE: appConfig.MACHINE_TYPE,
         REGION: appConfig.REGION,
