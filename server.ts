@@ -19,13 +19,26 @@ import { Application } from './application';
 import { createLongRunningQueriesKiller } from './ws.utils/long-running-queries-killer';
 import { Connection } from 'mongoose';
 import { usersRepository } from './ws.repository/ddf/users/users.repository';
+import { TelegrafService } from './ws.services/telegraf.service';
 
 reposService.logger = logger;
 
 process.setMaxListeners(0);
 
 process.on('uncaughtException', function (reason: Error): void {
-  logger.error(reason);
+  logger.error('Process Event: uncaughtException', reason);
+});
+
+process.on('beforeExit', function (code: number): void {
+  logger.info('Process Event: beforeExit', code);
+});
+
+process.on('exit', function (code: number): void {
+  logger.info('Process Event: exit', code);
+});
+
+process.on('disconnect', function (): void {
+  logger.info('Process Event: disconnect');
 });
 
 connectToDb((error: any, db: Connection) => {
@@ -42,7 +55,9 @@ connectToDb((error: any, db: Connection) => {
   serviceLocator.set('dbService', dbService);
   serviceLocator.set('longRunningQueriesKiller', createLongRunningQueriesKiller(dbService));
 
-  new Application(serviceLocator)
+  const application = new Application(serviceLocator);
+
+  application
     .run()
     .catch((startupError: any) => {
       logger.error(startupError);

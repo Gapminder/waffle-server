@@ -52,7 +52,7 @@ const DEFAULT_CONFIG: any = {
     NUMBER_REPLICAS: 1,
     CPU_PERCENT: 40,
     REDIS_CONTAINER_IMAGE: 'docker.io/redis:4.0.2',
-    MONGODB_CONTAINER_IMAGE: 'docker.io/mongo:3.6',
+    MONGODB_CONTAINER_IMAGE: 'docker.io/mongo:3.6.3',
     SOURCE_PORT: 80,
     DEFAULT_MONGODB_PORT: 27017,
     DEFAULT_MONGODB_PATH: '/data/db',

@@ -1,5 +1,6 @@
 import { constants } from '../ws.utils/constants';
 import { logger } from '../ws.config/log';
+import {DatasetsFileds, TelegrafService} from '../ws.services/telegraf.service';
 
 export type TrackableType = 'datapoints' | 'entities' | 'concepts';
 export interface DatasetState {
@@ -32,17 +33,26 @@ const UNKNOWN_DATASET_TRACKER: IDatasetTracker = {
 
 /* tslint:disable: member-ordering */
 export class DatasetTracker implements IDatasetTracker {
+  public static TYPE_IMPORT: string = 'import';
+  public static TYPE_UPDATE: string = 'update';
+  public static TYPE_ROLLBACK: string = 'rollback';
+  public static TYPE_REMOVAL: string = 'removal';
   private static TRACKERS: Map<string, DatasetTracker> = new Map<string, DatasetTracker>();
 
   private conceptsAmount: number = 0;
   private entitiesAmount: number = 0;
   private datapointsAmount: number = 0;
   private translationsAmount: number = 0;
+  private identifier: string;
+  private type: string;
 
-  private constructor() {
+  private constructor(identifier: string, type: string) {
+    this.identifier = identifier;
+    this.type = type;
   }
 
   public increment(dataType: TrackableType, value: number): void {
+
     if (dataType === constants.CONCEPTS) {
       this.conceptsAmount += value;
     } else if (dataType === constants.ENTITIES) {
@@ -52,6 +62,12 @@ export class DatasetTracker implements IDatasetTracker {
     } else {
       this.translationsAmount +=value;
     }
+
+    TelegrafService.onDatasetStateChanged({
+      process: this.identifier,
+      type: this.type,
+      state: TelegrafService.STATE_PROCESS
+    }, this.getState() as DatasetsFileds);
   }
 
   public getState(): DatasetState {
@@ -63,9 +79,17 @@ export class DatasetTracker implements IDatasetTracker {
     };
   }
 
-  public static track(identifier: string): IDatasetTracker {
-    DatasetTracker.TRACKERS.set(identifier, new DatasetTracker());
-    return DatasetTracker.get(identifier);
+  public static track(identifier: string, type: string = DatasetTracker.TYPE_IMPORT): IDatasetTracker {
+    DatasetTracker.TRACKERS.set(identifier, new DatasetTracker(identifier, type));
+    const tracker = DatasetTracker.get(identifier);
+
+    TelegrafService.onDatasetStateChanged({
+      process: identifier,
+      type,
+      state: TelegrafService.STATE_RUN
+    }, tracker.getState() as DatasetsFileds);
+
+    return tracker;
   }
 
   public static get(identifier: string): IDatasetTracker {
@@ -80,10 +104,19 @@ export class DatasetTracker implements IDatasetTracker {
     return DatasetTracker.TRACKERS.has(identifier);
   }
 
-  public static clean(identifier: string): void {
+  public static clean(identifier: string, type: string = DatasetTracker.TYPE_IMPORT): void {
     if (DatasetTracker.TRACKERS.has(identifier)) {
       logger.info(JSON.stringify(DatasetTracker.TRACKERS.get(identifier).getState()));
     }
+
+    const tracker = DatasetTracker.get(identifier);
+
+    TelegrafService.onDatasetStateChanged({
+      process: identifier,
+      type,
+      state: TelegrafService.STATE_FINISH
+    }, tracker.getState() as DatasetsFileds);
+
     DatasetTracker.TRACKERS.delete(identifier);
   }
 }
