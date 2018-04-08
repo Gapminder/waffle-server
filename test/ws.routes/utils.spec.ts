@@ -961,7 +961,7 @@ describe('Routes utils', () => {
       sinon.assert.calledOnce(json);
       sinon.assert.calledWith(json, {
         success: false,
-        error: `Please, change your WS-CLI version from 2.5.24 to 2.5.23`
+        error: `Found that your local WS-CLI version 2.5.24 is incompatible with the selected Waffle Server instance.\n\tPlease reinstall your WS-CLI to version 2.5.23. Run "npm install -g waffle-server-import-cli@2.5.23"`
       });
     });
 
@@ -985,7 +985,10 @@ describe('Routes utils', () => {
 
       sinon.assert.notCalled(next);
       sinon.assert.calledOnce(json);
-      sinon.assert.calledWith(json, { success: false, error: `Please, change your WS-CLI version from bla to 2.5.23` });
+      sinon.assert.calledWith(json, {
+        success: false,
+        error: `Found that your local WS-CLI version bla is incompatible with the selected Waffle Server instance.\n\tPlease reinstall your WS-CLI to version 2.5.23. Run "npm install -g waffle-server-import-cli@2.5.23"`
+      });
     });
 
     it('responds with an error when WS-CLI version from client is not given', () => {

@@ -83,7 +83,7 @@ const responseMessages: any = {
   WRONG_ASSETS_DIR: (dir: string) => `You cannot access directories other than "${dir}"`,
   URL_CANNOT_BE_ACCESSED_FROM_WS_CLI: 'This url can be accessed only from WS-CLI',
   INCORRECT_CLI_VERSION: (clientVersion: string, serverVersion: string) =>
-    `Please, change your WS-CLI version from ${clientVersion} to ${serverVersion}`
+    `Found that your local WS-CLI version ${clientVersion} is incompatible with the selected Waffle Server instance.\n\tPlease reinstall your WS-CLI to version ${serverVersion}. Run "npm install -g waffle-server-import-cli@${serverVersion}"`
 };
 
 export { constants };
