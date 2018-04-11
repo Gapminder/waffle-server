@@ -20,6 +20,7 @@ const MEASUREMENT_INSTANCES: string = 'instances';
 const MEASUREMENT_DATASETS: string  = 'datasets';
 
 const MEASUREMENT_INSTANCES__FIELD_STATUS: string       = '_active';
+const MEASUREMENT_INSTANCES__FIELD_LAST_UPDATED: string = '_last_updated';
 const MEASUREMENT_DATASETS__FIELD_DATAPOINTS: string    = '_datapoints';
 const MEASUREMENT_DATASETS__FIELD_CONCEPTS: string      = '_concepts';
 const MEASUREMENT_DATASETS__FIELD_ENTITIES: string      = '_entities';
@@ -33,6 +34,8 @@ const datasetStateProto: DatasetState = {
 };
 
 const defaultTags: Dictionary<string> = {
+  version: config.VERSION,
+  suffix: config.MACHINE_SUFFIX,
   project: config.PROJECT,
   hostname: config.HOSTNAME,
   node_env: config.NODE_ENV,
@@ -56,7 +59,8 @@ export class TelegrafService {
   private static measurementInstancesSchema: ISchemaOptions = {
     measurement: MEASUREMENT_INSTANCES,
     fields: {
-      [MEASUREMENT_INSTANCES__FIELD_STATUS]: InfluxFieldType.BOOLEAN
+      [MEASUREMENT_INSTANCES__FIELD_STATUS]: InfluxFieldType.BOOLEAN,
+      [MEASUREMENT_INSTANCES__FIELD_LAST_UPDATED]: InfluxFieldType.INTEGER
     },
     tags: keys(defaultTags)
   };
@@ -87,15 +91,18 @@ export class TelegrafService {
   private static influxService: InfluxDB = new InfluxDB(TelegrafService.influxdbConfig);
 
   public static onInstanceRunning(): void {
-    const point: IPoint = {
-      measurement: MEASUREMENT_INSTANCES,
-      tags: clone(defaultTags),
-      fields: {
-        [MEASUREMENT_INSTANCES__FIELD_STATUS]: true
-      }
-    };
+    const tags = clone(defaultTags);
 
     const sendMeasurement = this.wrapTask(function(): void {
+      const point: IPoint = {
+        measurement: MEASUREMENT_INSTANCES,
+        tags,
+        fields: {
+          [MEASUREMENT_INSTANCES__FIELD_STATUS]: true,
+          [MEASUREMENT_INSTANCES__FIELD_LAST_UPDATED]: Date.now()
+        }
+      };
+
       TelegrafService.influxService
         .writePoints([point])
         .then(() => logger.info({event:'Event: running instance', point}))

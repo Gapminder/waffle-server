@@ -133,7 +133,7 @@ ARG RELEASE_DATE
 ENV RELEASE_DATE "${RELEASE_DATE:-'2017-11-28T17:15:42'}"
 
 ARG VERSION_TAG
-ENV WAFFLE_SERVER_VERSION "${VERSION_TAG:-'2.12.1'}"
+ENV VERSION_TAG "${VERSION_TAG:-'2.12.1'}"
 
 ARG VERSION
 ENV VERSION "${VERSION:-'2-12-1'}"
@@ -161,7 +161,8 @@ RUN echo "export NODE_ENV=\"${NODE_ENV}\"\n" \
   "export PROJECT=\"${PROJECT}\"\n" \
   "export MACHINE_TYPE=\"${MACHINE_TYPE}\"\n" \
   "export REGION=\"${REGION}\"\n" \
-  "export WAFFLE_SERVER_VERSION=\"${WAFFLE_SERVER_VERSION}\"" >> /etc/default/telegraf
+  "export VERSION_TAG=\"${VERSION_TAG}\"\n" \
+  "export VERSION=\"${VERSION}\"" >> /etc/default/telegraf
 RUN chmod 777 /etc/default/telegraf
 RUN touch /var/log/telegraf/telegraf.log
 RUN chmod 777 /var/log/telegraf/telegraf.log

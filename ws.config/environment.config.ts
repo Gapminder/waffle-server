@@ -2,6 +2,8 @@ import * as path from 'path';
 
 const DEFAULT_NODE_ENV = 'local';
 const NODE_ENV = process.env.NODE_ENV || DEFAULT_NODE_ENV;
+const packageJson = require('../package.json');
+const VERSION = packageJson.version.replace(/\./g, '-');
 
 const DEFAULT_LOG_LEVELS = Object.freeze({
   local: 'info',
@@ -33,6 +35,7 @@ const environment = Object.freeze({
   HOSTNAME: 'localhost',
   HOST_URL: DEFAULT_HOST_URLS[NODE_ENV],
   PORT: DEFAULT_PORT,
+  VERSION,
 
   LOG_MARKER: LOG_MARKERS[NODE_ENV],
   LOG_LEVEL: DEFAULT_LOG_LEVELS[NODE_ENV] || DEFAULT_LOG_LEVELS[DEFAULT_NODE_ENV],
