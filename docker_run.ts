@@ -14,13 +14,12 @@ const REDIS_PORT = process.env.REDIS_PORT || 6379;
 const PORT = process.env.PORT || 3000;
 const THRASHING_MACHINE = process.env.THRASHING_MACHINE || 'false';
 const LOGS_SYNC_DISABLED = process.env.LOGS_SYNC_DISABLED;
-const WAFFLE_SERVER_VERSION = require('./package.json').version;
+const VERSION = require('./package.json').version;
 const STACK_NAME = process.env.STACK_NAME;
 const AWS_DEFAULT_REGION = process.env.AWS_DEFAULT_REGION;
 const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID;
 const AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY;
 const RELEASE_DATE: Date = new Date();
-const DOCKER_HOST = hostname();
 const TELEGRAF_DEBUG_MODE = process.env.TELEGRAF_DEBUG_MODE || 'false';
 const INFLUXDB_HOST = process.env.INFLUXDB_HOST;
 const INFLUXDB_PORT = process.env.INFLUXDB_PORT || 8086;
@@ -32,7 +31,6 @@ const IS_LOCAL_ENVIRONMENT = typeof NODE_ENV === 'undefined' || NODE_ENV === 'lo
 const IS_DEVELOPMENT_ENVIRONMENT = NODE_ENV === 'development';
 const IS_THRASHING_MACHINE = THRASHING_MACHINE === 'true';
 const MACHINE_SUFFIX = process.env.MACHINE_SUFFIX || (IS_THRASHING_MACHINE ? 'TM' : 'WS');
-const HOST = `${STACK_NAME}-${MACHINE_SUFFIX}-${WAFFLE_SERVER_VERSION}-${RELEASE_DATE.toISOString()}-${DOCKER_HOST}`;
 
 const runWaffleServerCommand = `/usr/bin/pm2 start ecosystem.config.js`;
 const runWaffleServerThrashingMachineCommand = `THRASHING_MACHINE=true /usr/bin/pm2-docker start ecosystem.config.js`;
@@ -71,7 +69,6 @@ function runTelegrafService(): void {
     `${echoCommand} "export NODE_ENV=\"${NODE_ENV}\"" >> ${file}`,
     `${echoCommand} "export RELEASE_DATE=\"${RELEASE_DATE.toISOString()}\"" >> ${file}`,
     `${echoCommand} "export STACK_NAME=\"${STACK_NAME}\"" >> ${file}`,
-    `${echoCommand} "export DOCKER_HOST=\"${DOCKER_HOST}\"" >> ${file}`,
     `${echoCommand} "export TELEGRAF_DEBUG_MODE=\"${TELEGRAF_DEBUG_MODE}\"" >> ${file}`,
     `${echoCommand} "export INFLUXDB_HOST=\"${INFLUXDB_HOST}\"" >> ${file}`,
     `${echoCommand} "export INFLUXDB_PORT=\"${INFLUXDB_PORT}\"" >> ${file}`,
@@ -79,8 +76,7 @@ function runTelegrafService(): void {
     `${echoCommand} "export INFLUXDB_USER=\"${INFLUXDB_USER}\"" >> ${file}`,
     `${echoCommand} "export INFLUXDB_PASSWORD=\"${INFLUXDB_PASSWORD}\"" >> ${file}`,
     `${echoCommand} "export MACHINE_SUFFIX=\"${MACHINE_SUFFIX}\"" >> ${file}`,
-    `${echoCommand} "export WAFFLE_SERVER_VERSION=\"${WAFFLE_SERVER_VERSION}\"" >> ${file}`,
-    `${echoCommand} "export HOST=\"${HOST}\"" >> ${file}`,
+    `${echoCommand} "export VERSION=\"${VERSION}\"" >> ${file}`,
     `${echoCommand} "export AWS_DEFAULT_REGION=\"${AWS_DEFAULT_REGION}\"" >> ${file}`,
     `${echoCommand} "export AWS_ACCESS_KEY_ID=\"${AWS_ACCESS_KEY_ID}\"" >> ${file}`,
     `${echoCommand} "export AWS_SECRET_ACCESS_KEY=\"${AWS_SECRET_ACCESS_KEY}\"" >> ${file}`,
