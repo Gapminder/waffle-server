@@ -2,7 +2,6 @@ import { Dictionary } from 'lodash';
 
 export interface DockerBuildArguments extends Dictionary<string|number|boolean> {
   PORT: number;
-  VERSION: string;
   PROJECT: string;
   REGION: string;
   MACHINE_TYPE: string;
@@ -23,7 +22,8 @@ export interface DockerBuildArguments extends Dictionary<string|number|boolean> 
   INFLUXDB_PASSWORD: string;
   MACHINE_SUFFIX: string;
   RELEASE_DATE: string;
-  WAFFLE_SERVER_VERSION: string;
+  VERSION_TAG: string;
+  VERSION: string;
 }
 
 export interface DockerBuildArgumentsTM extends DockerBuildArguments {
