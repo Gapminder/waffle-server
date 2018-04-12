@@ -34,6 +34,7 @@ const datasetStateProto: DatasetState = {
 };
 
 const defaultTags: Dictionary<string> = {
+  created: config.RELEASE_DATE,
   version: config.VERSION,
   suffix: config.MACHINE_SUFFIX,
   project: config.PROJECT,
