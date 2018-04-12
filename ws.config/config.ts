@@ -17,6 +17,7 @@ const config: any = {
   PROJECT: process.env.PROJECT,
   MACHINE_TYPE: process.env.MACHINE_TYPE,
   REGION: process.env.REGION,
+  RELEASE_DATE: process.env.RELEASE_DATE || new Date().toISOString(),
 
   REDIS_HOST: process.env.REDIS_HOST || DEFAULT_CONFIG.REDIS_HOST,
   REDIS_PORT: process.env.REDIS_PORT || DEFAULT_CONFIG.REDIS_PORT,
