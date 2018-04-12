@@ -38,7 +38,7 @@ const defaultTags: Dictionary<string> = {
   version: config.VERSION,
   suffix: config.MACHINE_SUFFIX,
   project: config.PROJECT,
-  hostname: config.HOSTNAME,
+  hostname: `${config.RELEASE_DATE}--${config.HOSTNAME}`,
   node_env: config.NODE_ENV,
   machine_type: config.MACHINE_TYPE,
   region: config.REGION,
