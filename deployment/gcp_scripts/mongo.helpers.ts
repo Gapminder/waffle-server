@@ -53,9 +53,11 @@ export function setupMongoInstance(externalContext: any, cb: Function): void {
 
   async.waterfall([
     async.constant(context),
-    ... (_.isEmpty(MONGODB_URL) ? [createMongoFirewallRule, createMongo, getMongoInternalIP, reserveMongoInternalIP] : [])
+    ... (_.isEmpty(MONGODB_URL) ? [createMongoFirewallRule, createMongo] : []),
+    getMongoInternalIP,
+    reserveMongoInternalIP
   ], (error: string, result: any) => {
-    externalContext.MONGODB_URL = result.MONGODB_URL;
+    externalContext.MONGODB_URL = MONGODB_URL;
 
     return cb(error, externalContext);
   });
@@ -139,15 +141,9 @@ function createMongo(externalContext: any, cb: Function): void {
 function getMongoInternalIP(externalContext: any, cb: Function): void {
   const {
     MONGO_ZONE,
-    PROJECT_ID,
-    MONGODB_PORT,
-    MONGODB_NAME,
-    MONGODB_USER,
-    MONGODB_PASSWORD,
     MONGO_INSTANCE_NAME
   } = externalContext;
 
-  //fixme: --project=${PROJECT_ID}
   const command = `gcloud compute instances describe ${MONGO_INSTANCE_NAME} --zone=${MONGO_ZONE}`;
   const options: any = { pathsToCheck: [pathToMongoNetworkIP, pathToMongoSubnetwork] };
 
@@ -159,7 +155,8 @@ function getMongoInternalIP(externalContext: any, cb: Function): void {
 
       externalContext.MONGO_HOST = _.get(parsedStdout, pathToMongoNetworkIP, false);
       externalContext.MONGO_SUBNETWORK = _.get(parsedStdout, pathToMongoSubnetwork, false);
-      externalContext.MONGODB_URL = `mongodb://${MONGODB_USER}:${MONGODB_PASSWORD}@${externalContext.MONGO_HOST}:${MONGODB_PORT}/${MONGODB_NAME}`;
+      // externalContext.MONGODB_URL = `mongodb://${MONGODB_USER}:${MONGODB_PASSWORD}@${externalContext.MONGO_HOST}:${MONGODB_PORT}/${MONGODB_NAME}`;
+      // externalContext.MONGODB_URL = `mongodb://${MONGODB_USER}:${MONGODB_PASSWORD}@${externalContext.MONGO_HOST}:${MONGODB_PORT}/${MONGODB_NAME}`;
 
       logger.info('\nMONGO INTERNAL IP:', externalContext.MONGO_HOST, '\n');
       logger.info('\nMONGO URL:', externalContext.MONGODB_URL, ', ', externalContext.MONGO_SUBNETWORK, '\n');
@@ -173,7 +170,6 @@ function getMongoInternalIP(externalContext: any, cb: Function): void {
 
 function reserveMongoInternalIP(externalContext: any, cb: Function): void {
   const {
-    PROJECT_ID,
     MONGO_HOST,
     MONGO_SUBNETWORK,
     MONGO_REGION,
@@ -182,7 +178,6 @@ function reserveMongoInternalIP(externalContext: any, cb: Function): void {
   } = externalContext;
 
   const ADDRESS_NAME = `${ENVIRONMENT}-mongo-address-${VERSION}`;
-  //fixme: REGION, --project=${PROJECT_ID}
   const command = `gcloud compute addresses create ${ADDRESS_NAME} --region ${MONGO_REGION} --subnet ${MONGO_SUBNETWORK} --addresses ${MONGO_HOST}`;
   const options: ExecOptions = {};
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
