@@ -44,7 +44,7 @@ function updateEntities(externalContextFrozen: any): void {
       return {changesDescriptor, context: _.extend(externalContextFrozen)};
     });
   const entityChangesStream = getEntityChangesStream();
-  const entityChangesStreamForRemoveColumns = getEntityChangesStream();;
+  const entityChangesStreamForRemoveColumns = getEntityChangesStream();
 
   return (hi([
     toRemovedEntitiesStream(entityChangesStream, externalContextFrozen),
