@@ -424,8 +424,8 @@ describe('Remove Dataset Service', () => {
 
     const expectedDatapoints = [{ _id: 'DATAPOINTID1' }, { _id: 'DATAPOINTID2' }];
 
-    const conceptsRemoveByDatasetStub = sandbox.stub(conceptsRepository, 'removeByDataset').callsArgWithAsync(1, null, { result: { n: 5 } });
-    const entitiesRemoveByDatasetStub = sandbox.stub(entitiesRepository, 'removeByDataset').callsArgWithAsync(1, null, { result: { n: 5 } });
+    const conceptsRemoveByDatasetStub = sandbox.stub(conceptsRepository, 'removeByDataset').callsArgWithAsync(1, null, { n: 5 });
+    const entitiesRemoveByDatasetStub = sandbox.stub(entitiesRepository, 'removeByDataset').callsArgWithAsync(1, null, { n: 5 });
     const removeByIdsStub = sandbox.stub(datapointsRepository, 'removeByIds').callsArgWithAsync(1);
     const findIdsByDatasetAndLimitStub = sandbox.stub(datapointsRepository, 'findIdsByDatasetAndLimit');
     findIdsByDatasetAndLimitStub
@@ -504,8 +504,8 @@ describe('Remove Dataset Service', () => {
       removeByIds: _.noop
     };
 
-    sandbox.stub(conceptsRepository, 'removeByDataset').callsArgWithAsync(1, null, { result: { n: 5 } });
-    sandbox.stub(entitiesRepository, 'removeByDataset').callsArgWithAsync(1, null, { result: { n: 5 } });
+    sandbox.stub(conceptsRepository, 'removeByDataset').callsArgWithAsync(1, null, { n: 5 });
+    sandbox.stub(entitiesRepository, 'removeByDataset').callsArgWithAsync(1, null, { n: 5 });
     sandbox.stub(datapointsRepository, 'removeByIds').callsArgWithAsync(1);
     sandbox.stub(datapointsRepository, 'findIdsByDatasetAndLimit').callsArgWithAsync(2, null, []);
 
@@ -543,8 +543,8 @@ describe('Remove Dataset Service', () => {
       removeByIds: _.noop
     };
 
-    sandbox.stub(conceptsRepository, 'removeByDataset').callsArgWithAsync(1, null, { result: { n: 5 } });
-    sandbox.stub(entitiesRepository, 'removeByDataset').callsArgWithAsync(1, null, { result: { n: 5 } });
+    sandbox.stub(conceptsRepository, 'removeByDataset').callsArgWithAsync(1, null, { n: 5 });
+    sandbox.stub(entitiesRepository, 'removeByDataset').callsArgWithAsync(1, null, { n: 5 });
     sandbox.stub(datapointsRepository, 'removeByIds').callsArgWithAsync(1);
     sandbox.stub(datapointsRepository, 'findIdsByDatasetAndLimit').callsArgWithAsync(2, null, []);
 
@@ -579,7 +579,7 @@ describe('Remove Dataset Service', () => {
     sandbox.stub(ConceptsRepositoryFactory, 'versionAgnostic').callsFake(() => {
       return {
         removeByDataset: (datasetId, done) => {
-          done(null, { result: { n: 12 } });
+          done(null, { n: 12 });
         }
       };
     });
@@ -587,7 +587,7 @@ describe('Remove Dataset Service', () => {
     sandbox.stub(EntitiesRepositoryFactory, 'versionAgnostic').callsFake(() => {
       return {
         removeByDataset: (datasetId, done) => {
-          done(null, { result: { n: 42 } });
+          done(null, { n: 42 });
         }
       };
     });
@@ -645,7 +645,7 @@ describe('Remove Dataset Service', () => {
     sandbox.stub(ConceptsRepositoryFactory, 'versionAgnostic').callsFake(() => {
       return {
         removeByDataset: (datasetId, done) => {
-          done(null, { result: { n: 42 } });
+          done(null, { n: 42 });
         }
       };
     });
@@ -653,7 +653,7 @@ describe('Remove Dataset Service', () => {
     sandbox.stub(EntitiesRepositoryFactory, 'versionAgnostic').callsFake(() => {
       return {
         removeByDataset: (datasetId, done) => {
-          done(null, { result: { n: 42 } });
+          done(null, { n: 42 });
         }
       };
     });
@@ -723,7 +723,7 @@ describe('Remove Dataset Service', () => {
     sandbox.stub(ConceptsRepositoryFactory, 'versionAgnostic').callsFake(() => {
       return {
         removeByDataset: (datasetId, done) => {
-          done(null, { result: { n: 42 } });
+          done(null, { n: 42 });
         }
       };
     });
@@ -731,7 +731,7 @@ describe('Remove Dataset Service', () => {
     sandbox.stub(EntitiesRepositoryFactory, 'versionAgnostic').callsFake(() => {
       return {
         removeByDataset: (datasetId, done) => {
-          done(null, { result: { n: 42 } });
+          done(null, { n: 42 });
         }
       };
     });
@@ -827,7 +827,7 @@ describe('Remove Dataset Service', () => {
     sandbox.stub(DatasetTransactionsRepository, 'findDefault').callsArgWithAsync(1, null);
 
     sandbox.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({
-      removeByDataset: sandbox.stub().callsArgWithAsync(1, null, { result: { n: 42 } })
+      removeByDataset: sandbox.stub().callsArgWithAsync(1, null, { n: 42 })
     });
 
     sandbox.stub(EntitiesRepositoryFactory, 'versionAgnostic').returns({
@@ -860,11 +860,11 @@ describe('Remove Dataset Service', () => {
     const removeAllByDatasetStub = sandbox.stub(DatasetTransactionsRepository, 'removeAllByDataset').callsFake(transactionsRepository.removeAllByDataset);
 
     sandbox.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({
-      removeByDataset: sandbox.stub().callsArgWithAsync(1, null, { result: { n: 42 } })
+      removeByDataset: sandbox.stub().callsArgWithAsync(1, null, { n: 42 })
     });
 
     sandbox.stub(EntitiesRepositoryFactory, 'versionAgnostic').returns({
-      removeByDataset: sandbox.stub().callsArgWithAsync(1, null, { result: { n: 42 } })
+      removeByDataset: sandbox.stub().callsArgWithAsync(1, null, {  n: 42 })
     });
 
     sandbox.stub(DatasetSchemaRepository, 'removeByDataset').callsArgWithAsync(1);
@@ -929,11 +929,11 @@ describe('Remove Dataset Service', () => {
     const removeAllByDatasetStub = sandbox.stub(DatasetTransactionsRepository, 'removeAllByDataset').callsFake(transactionsRepository.removeAllByDataset);
 
     sandbox.stub(ConceptsRepositoryFactory, 'versionAgnostic').returns({
-      removeByDataset: sandbox.stub().callsArgWithAsync(1, null, { result: { n: 12 } })
+      removeByDataset: sandbox.stub().callsArgWithAsync(1, null, { n: 12 })
     });
 
     sandbox.stub(EntitiesRepositoryFactory, 'versionAgnostic').returns({
-      removeByDataset: sandbox.stub().callsArgWithAsync(1, null, { result: { n: 42 } })
+      removeByDataset: sandbox.stub().callsArgWithAsync(1, null, { n: 42 })
     });
 
     sandbox.stub(DatasetSchemaRepository, 'removeByDataset').callsArgWithAsync(1);

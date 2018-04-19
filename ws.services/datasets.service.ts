@@ -133,7 +133,7 @@ function _removeAllDataByDataset(externalContext: any, onDataRemoved: AsyncResul
 
       DatasetTracker
         .get(externalContext.datasetName)
-        .increment(constants.CONCEPTS, removeResult.result.n);
+        .increment(constants.CONCEPTS, removeResult.n);
 
       return done();
     }),
@@ -144,7 +144,7 @@ function _removeAllDataByDataset(externalContext: any, onDataRemoved: AsyncResul
 
       DatasetTracker
         .get(externalContext.datasetName)
-        .increment(constants.ENTITIES, removeResult.result.n);
+        .increment(constants.ENTITIES, removeResult.n);
 
       return done();
     }),
