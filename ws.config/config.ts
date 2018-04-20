@@ -35,8 +35,8 @@ const config: any = {
   INFLUXDB_HOST: process.env.INFLUXDB_HOST,
   INFLUXDB_PORT: process.env.INFLUXDB_PORT,
   INFLUXDB_DATABASE_NAME: process.env.INFLUXDB_DATABASE_NAME,
-  INFLUXDB_USER:  process.env.INFLUXDB_USER,
-  INFLUXDB_PASSWORD:  process.env.INFLUXDB_PASSWORD,
+  INFLUXDB_USER: process.env.INFLUXDB_USER,
+  INFLUXDB_PASSWORD: process.env.INFLUXDB_PASSWORD,
 
   // { error: 0, warn: 1, info: 2, verbose: 3, debug: 4, silly: 5 }
   LOG_LEVEL: process.env.LOG_LEVEL || DEFAULT_CONFIG.LOG_LEVEL,

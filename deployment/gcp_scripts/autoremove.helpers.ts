@@ -53,22 +53,6 @@ export function releaseRedisInternalIP(externalContext: any, cb: Function): void
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
-export function removeMongo(externalContext: any, cb: Function): void {
-  const {
-    MONGO_ZONE,
-    PROJECT_ID,
-    COMPUTED_VARIABLES: {
-      MONGODB_INSTANCE_NAME
-    }
-  } = externalContext;
-
-  const command = `gcloud beta compute instances delete ${MONGODB_INSTANCE_NAME} \
-    --delete-disks=all --zone=${MONGO_ZONE} --project=${PROJECT_ID} --quiet`;
-  const options: ExecOptions = {};
-
-  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
-}
-
 export function releaseMongoInternalIP(externalContext: any, cb: Function): void {
   const {
     PROJECT_ID,
