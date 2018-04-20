@@ -12,7 +12,7 @@ import {
 
 import {
   denyHttpTM, releaseExternalIP, releaseRedisInternalIP, releaseMongoInternalIP, removeCluster,
-  removeImageNode, removeImageTM, removeRedis, removeMongo, removeTM
+  removeImageNode, removeImageTM, removeRedis, removeTM
 } from './autoremove.helpers';
 
 // Default variables
@@ -121,7 +121,6 @@ export function run(): Promise<string | null> {
       denyHttpTM,
       removeTM,
       releaseMongoInternalIP,
-      removeMongo,
       releaseRedisInternalIP,
       removeRedis,
       removeImageNode,
