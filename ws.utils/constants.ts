@@ -76,15 +76,16 @@ const constants: any = {
 };
 
 const responseMessages: any = {
-  INCORRECT_QUERY_FORMAT: 'Query was sent in incorrect format',
-  MALFORMED_URL: 'Malformed url was given',
-  RELATIVE_ASSET_PATH: 'You cannot use relative path constraints like "." or ".." in the asset path',
-  DATASET_NOT_FOUND: `Default dataset couldn't be found`,
-  WRONG_ASSETS_DIR: (dir: string) => `You cannot access directories other than "${dir}"`,
-  URL_CANNOT_BE_ACCESSED_FROM_WS_CLI: 'This url can be accessed only from WS-CLI',
+  INCORRECT_QUERY_FORMAT: { code: 1, type: 'INCORRECT_QUERY_FORMAT', message: 'Query was sent in incorrect format' },
+  MALFORMED_URL: { code: 2, type: 'MALFORMED_URL', message: 'Malformed url was given' },
+  RELATIVE_ASSET_PATH: { code: 3, type: 'RELATIVE_ASSET_PATH', message: 'You cannot use relative path constraints like "." or ".." in the asset path'},
+  DATASET_NOT_FOUND: { code: 4, type: 'DATASET_NOT_FOUND', message: `Default dataset couldn't be found`},
+  WRONG_ASSETS_DIR: (dir: string) => ({ code: 5, type: 'WRONG_ASSETS_DIR', message: `You cannot access directories other than "${dir}"` }),
+  URL_CANNOT_BE_ACCESSED_FROM_WS_CLI: { code: 6, type: 'URL_CANNOT_BE_ACCESSED_FROM_WS_CLI', message: 'This url can be accessed only from WS-CLI' },
   INCORRECT_CLI_VERSION: (clientVersion: string, serverVersion: string) =>
     // tslint:disable-next-line:max-line-length
-    `Found that your local WS-CLI version ${clientVersion} is incompatible with the selected Waffle Server instance.\n\tPlease reinstall your WS-CLI to version ${serverVersion}. Run "npm install -g waffle-server-import-cli@${serverVersion}"`
+    ({ code: 7, type: 'INCORRECT_CLI_VERSION', message: `Found that your local WS-CLI version ${clientVersion} is incompatible with the selected Waffle Server instance.\n\tPlease reinstall your WS-CLI to version ${serverVersion}. Run "npm install -g waffle-server-import-cli@${serverVersion}"` })
+
 };
 
 export { constants };

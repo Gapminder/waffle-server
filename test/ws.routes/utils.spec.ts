@@ -13,11 +13,14 @@ import '../../ws.config/db.config';
 import '../../ws.repository';
 import { logger } from '../../ws.config/log';
 import { config } from '../../ws.config/config';
+import { WSRequest as Request } from '../../ws.routes/utils';
 import * as routeUtils from '../../ws.routes/utils';
 import { RecentDdfqlQueriesRepository } from '../../ws.repository/ddf/recent-ddfql-queries/recent-ddfql-queries.repository';
 import { constants } from '../../ws.utils/constants';
 
 import * as commonService from '../../ws.services/common.service';
+import {RequestTags} from '../../ws.services/telegraf.service';
+import {Response} from 'express';
 
 const sandbox = sinon.createSandbox();
 
@@ -29,6 +32,14 @@ describe('Routes utils', () => {
 
   after(() => {
     config.PATH_TO_DDF_REPOSITORIES = ORIGINAL_PATH_TO_DDF_REPOSITORIES;
+  });
+
+  let expressRequest;
+  let expressResponse;
+
+  beforeEach(() => {
+    expressRequest  = sandbox.createStubInstance(Request);
+    expressResponse = sandbox.createStubInstance(Response);
   });
 
   describe('Dataset accessibility check', () => {
@@ -50,19 +61,19 @@ describe('Routes utils', () => {
         }
       });
 
-      const req = {
+      const req = _.extend({
         body: {
           dataset: expectedDatasetName
         }
-      };
+      }, expressRequest);
       const loggerErrorStub = sandbox.stub(logger, 'error');
 
-      const res = {
+      const res = _.extend({
         json: (response) => {
-          expect(response).to.be.deep.equal({ success: false, error: errorMessage });
+          expect(response).to.be.deep.equal({success: false, error: errorMessage});
           done(); // At this point test is finished
         }
-      };
+      }, expressResponse);
 
       const next = () => {
         expect.fail(null, null, 'This function should not be called');
@@ -75,9 +86,9 @@ describe('Routes utils', () => {
     });
 
     it('should call next middleware if no dataset name was found', (done) => {
-      const req: any = {};
+      const req = _.extend({}, expressRequest);
 
-      const res: any = 'any';
+      const res = _.extend({}, expressResponse);
 
       const next = () => {
         done(); // At this point test is finished
@@ -99,13 +110,13 @@ describe('Routes utils', () => {
         }
       });
 
-      const req = {
+      const req = _.extend({
         body: {
           dataset: expectedDatasetName
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: (response) => {
           expect(response).to.be.deep.equal({
             success: false,
@@ -113,7 +124,7 @@ describe('Routes utils', () => {
           });
           done(); // At this point test is finished
         }
-      };
+      }, expressResponse);
 
       const next = () => {
         expect.fail(null, null, 'This function should not be called');
@@ -137,13 +148,13 @@ describe('Routes utils', () => {
         }
       });
 
-      const req = {
+      const req = _.extend({
         body: {
           dataset: expectedDatasetName
         }
-      };
+      }, expressRequest);
 
-      const res = 'any';
+      const res = _.extend({}, expressResponse);
 
       const next = () => {
         done();
@@ -170,14 +181,14 @@ describe('Routes utils', () => {
         }
       });
 
-      const req = {
+      const req = _.extend({
         body: {
           dataset_access_token: datasetAccessToken,
           dataset: expectedDatasetName
         }
-      };
+      }, expressRequest);
 
-      const res = 'any';
+      const res = _.extend('any', expressResponse);
 
       const next = () => {
         done();
@@ -202,13 +213,13 @@ describe('Routes utils', () => {
         }
       });
 
-      const req = {
+      const req = _.extend({
         body: {
           dataset: expectedDatasetName
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: (response) => {
           expect(response).to.deep.equal({
             success: false,
@@ -216,7 +227,7 @@ describe('Routes utils', () => {
           });
           done();
         }
-      };
+      }, expressResponse);
 
       const next = () => {
         expect.fail(null, null, 'Should not call next middleware when token is not provided');
@@ -241,14 +252,14 @@ describe('Routes utils', () => {
         }
       });
 
-      const req = {
+      const req = _.extend({
         body: {
           dataset_access_token: 'some fake token',
           dataset: expectedDatasetName
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: (response) => {
           expect(response).to.deep.equal({
             success: false,
@@ -256,7 +267,7 @@ describe('Routes utils', () => {
           });
           done();
         }
-      };
+      }, expressResponse);
 
       const next = () => {
         expect.fail(null, null, 'Should not call next middleware when token is not provided');
@@ -281,14 +292,14 @@ describe('Routes utils', () => {
         }
       });
 
-      const req = {
+      const req = _.extend({
         body: {
           dataset_access_token: null,
           dataset: expectedDatasetName
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: (response) => {
           expect(response).to.deep.equal({
             success: false,
@@ -296,7 +307,7 @@ describe('Routes utils', () => {
           });
           done();
         }
-      };
+      }, expressResponse);
 
       const next = () => {
         expect.fail(null, null, 'Should not call next middleware when token is not provided');
@@ -314,20 +325,20 @@ describe('Routes utils', () => {
       const expectedCachePrefix = 'MyPrefix';
       const expectedMethod = 'GET';
 
-      const req: any = {
+      const req = _.extend({
         query: {},
-        body: { bla: 42 },
+        body: {bla: 42},
         method: expectedMethod,
         url: '/status?name=ryan'
-      };
+      }, expressRequest);
 
       const parsedUrl = url.parse(req.url);
       const md5Payload = crypto.createHash('md5').update(parsedUrl.query + JSON.stringify(req.body)).digest('hex');
       const expectedCacheKey = `${expectedCachePrefix}-${req.method}-${parsedUrl.pathname}-${md5Payload}`;
 
-      const res: any = {
+      const res = _.extend({
         express_redis_cache_name: null
-      };
+      }, expressResponse);
 
       const next = () => {
         expect(res.express_redis_cache_name).to.equal(expectedCacheKey);
@@ -337,24 +348,24 @@ describe('Routes utils', () => {
       routeUtils.getCacheConfig(expectedCachePrefix)(req, res, next);
     });
 
-    it('should use default cache key prefix if it was not provided', (done) => {
+    it('should use default cache key prefix if it was not provided', (done: Function) => {
       const expectedCachePrefix = 'PREFIX_NOT_SET';
       const expectedMethod = 'GET';
 
-      const req: any = {
+      const req = _.extend({
         query: {},
-        body: { bla: 42 },
+        body: {bla: 42},
         method: expectedMethod,
         url: '/status?name=ryan'
-      };
+      }, expressRequest);
 
       const parsedUrl = url.parse(req.url);
       const md5Payload = crypto.createHash('md5').update(parsedUrl.query + JSON.stringify(req.body)).digest('hex');
       const expectedCacheKey = `${expectedCachePrefix}-${req.method}-${parsedUrl.pathname}-${md5Payload}`;
 
-      const res: any = {
+      const res = _.extend({
         express_redis_cache_name: null
-      };
+      }, expressResponse);
 
       const next = () => {
         expect(res.express_redis_cache_name).to.equal(expectedCacheKey);
@@ -365,13 +376,13 @@ describe('Routes utils', () => {
     });
 
     it('should invalidate redis cache if force option is provided', (done) => {
-      const req: any = {
-        query: { force: 'true' }
-      };
+      const req = _.extend({
+        query: {force: 'true'}
+      }, expressRequest);
 
-      const res: any = {
+      const res = _.extend({
         use_express_redis_cache: null
-      };
+      }, expressResponse);
 
       const next = () => {
         expect(res.use_express_redis_cache).to.be.false;
@@ -396,23 +407,23 @@ describe('Routes utils', () => {
 
       const queryRaw = encodeURIComponent(JSON.stringify(ddfql));
 
-      const req: any = {
+      const req = _.extend({
         query: {
           query: queryRaw
         }
-      };
+      }, expressRequest);
 
-      const res: any = {};
+      const res = _.extend({}, expressResponse);
 
       const loggerInfoStub = sandbox.stub(logger, 'info');
 
       const next = () => {
-        const rawDdfQuery = { queryRaw, type: 'JSON' };
-        const expectedBody = _.extend({ rawDdfQuery }, ddfql);
+        const expectedBody = ddfql;
         expect(req.body).to.deep.equal(expectedBody);
+        expect(_.pick(req.queryParser, ['query', 'queryType'])).to.deep.equal({query: queryRaw, queryType: 'JSON'});
 
         sinon.assert.calledOnce(loggerInfoStub);
-        sinon.assert.calledWithExactly(loggerInfoStub, { ddfqlRaw: queryRaw });
+        sinon.assert.calledWithExactly(loggerInfoStub, {ddfqlRaw: queryRaw});
 
         done();
       };
@@ -421,24 +432,24 @@ describe('Routes utils', () => {
     });
 
     it('should respond with an error when it is impossible to parse json', (done: Function) => {
-      const req: any = {
+      const req = _.extend({
         query: {
           query: 'bla'
         }
-      };
+      }, expressRequest);
 
       const loggerInfoStub = sandbox.stub(logger, 'info');
 
-      const res: any = {
+      const res = _.extend({
         json: (response: any) => {
           expect(response.success).to.be.false;
           expect(response.error).to.equal('Query was sent in incorrect format');
           sinon.assert.calledOnce(loggerInfoStub);
-          sinon.assert.calledWithExactly(loggerInfoStub, { ddfqlRaw: req.query.query });
+          sinon.assert.calledWithExactly(loggerInfoStub, {ddfqlRaw: req.query.query});
 
           done();
         }
-      };
+      }, expressResponse);
 
       const next = () => {
         expect.fail(null, null, 'Should not call next middleware');
@@ -458,21 +469,22 @@ describe('Routes utils', () => {
 
       const queryRaw = URLON.stringify(ddfql);
 
-      const req: any = {
+      const req = _.extend({
         query: {},
         url: `/api/ddf/ql/?${queryRaw}`
-      };
+      }, expressRequest);
 
-      const res: any = {};
+      const res = _.extend({}, expressResponse);
 
       const loggerInfoStub = sandbox.stub(logger, 'info');
 
       const next = () => {
-        const rawDdfQuery = { queryRaw, type: 'URLON' };
-        const expectedBody = _.extend({ rawDdfQuery }, ddfql);
+        const expectedBody = ddfql;
         expect(req.body).to.deep.equal(expectedBody);
+        expect(_.pick(req.queryParser, ['query', 'queryType'])).to.deep.equal({query: queryRaw, queryType: 'URLON'});
+
         sinon.assert.calledOnce(loggerInfoStub);
-        sinon.assert.calledWithExactly(loggerInfoStub, { ddfqlRaw: queryRaw });
+        sinon.assert.calledWithExactly(loggerInfoStub, {ddfqlRaw: queryRaw});
         done();
       };
 
@@ -480,25 +492,25 @@ describe('Routes utils', () => {
     });
 
     it('should respond with an error when it is impossible to parse urlon', (done: Function) => {
-      const req: any = {
+      const req = _.extend({
         query: {},
         url: '/api/ddf/ql/?%20%'
-      };
+      }, expressRequest);
 
       const queryRaw = url.parse(req.url).query;
 
       const loggerInfoStub = sandbox.stub(logger, 'info');
       sandbox.stub(logger, 'error');
 
-      const res: any = {
+      const res = _.extend({
         json: (response: any) => {
           expect(response.success).to.be.false;
           expect(response.error).to.equal('Query was sent in incorrect format');
           sinon.assert.calledOnce(loggerInfoStub);
-          sinon.assert.calledWithExactly(loggerInfoStub, { ddfqlRaw: queryRaw });
+          sinon.assert.calledWithExactly(loggerInfoStub, {ddfqlRaw: queryRaw});
           done();
         }
-      };
+      }, expressResponse);
 
       const next = () => {
         expect.fail(null, null, 'Should not call next middleware');
@@ -518,19 +530,19 @@ describe('Routes utils', () => {
 
       const queryRaw = URLON.stringify(ddfql);
 
-      const req: any = {
+      const req = _.extend({
         query: {},
         url: `/api/ddf/ql/?${queryRaw}`
-      };
+      }, expressRequest);
 
-      const res = {};
+      const res = _.extend({}, expressResponse);
 
       const loggerInfoStub = sandbox.stub(logger, 'info');
 
       const next = () => {
         expect(req.body.dataset).to.equal('VS-work/ddf--ws-testing#master-twin-for-e2e');
         sinon.assert.calledOnce(loggerInfoStub);
-        sinon.assert.calledWithExactly(loggerInfoStub, { ddfqlRaw: queryRaw });
+        sinon.assert.calledWithExactly(loggerInfoStub, {ddfqlRaw: queryRaw});
         done();
       };
 
@@ -548,19 +560,19 @@ describe('Routes utils', () => {
 
       const queryRaw = URLON.stringify(ddfql);
 
-      const req: any = {
+      const req = _.extend({
         query: {},
         url: `/api/ddf/ql/?${queryRaw}`
-      };
+      }, expressRequest);
 
-      const res = {};
+      const res = _.extend({}, expressResponse);
 
       const loggerInfoStub = sandbox.stub(logger, 'info');
 
       const next = () => {
         expect(req.body.dataset).to.equal('42');
         sinon.assert.calledOnce(loggerInfoStub);
-        sinon.assert.calledWithExactly(loggerInfoStub, { ddfqlRaw: queryRaw });
+        sinon.assert.calledWithExactly(loggerInfoStub, {ddfqlRaw: queryRaw});
         done();
       };
 
@@ -568,25 +580,25 @@ describe('Routes utils', () => {
     });
 
     it('should respond with an error when it is impossible to decode dataset in urlon query with decodeURIComponent', (done: Function) => {
-      const req = {
-        query: {},
+      const req = _.extend({
+        query: '',
         url: '/api/ddf/ql/?_from=entities&dataset=%&select_key@=company'
-      };
+      }, expressRequest);
 
       const queryRaw = url.parse(req.url).query;
 
       const loggerInfoStub = sandbox.stub(logger, 'info');
       sandbox.stub(logger, 'error');
 
-      const res = {
+      const res = _.extend({
         json: (response) => {
           expect(response.success).to.be.false;
           expect(response.error).to.equal('Query was sent in incorrect format');
           sinon.assert.calledOnce(loggerInfoStub);
-          sinon.assert.calledWithExactly(loggerInfoStub, { ddfqlRaw: queryRaw });
+          sinon.assert.calledWithExactly(loggerInfoStub, {ddfqlRaw: queryRaw});
           done();
         }
-      };
+      }, expressResponse);
 
       const next = () => {
         expect.fail(null, null, 'Should not call next middleware');
@@ -602,30 +614,31 @@ describe('Routes utils', () => {
 
     it('should flush redis cache if error occured', () => {
       const expectedError = 'Boo!';
-      const expectedErrorResponse = { success: false, error: 'Boo!' };
+      const expectedErrorResponse = {success: false, error: 'Boo!'};
 
       const loggerStub = sandbox.stub(logger, 'error');
-      const anyQuery = {};
 
-      const req: any = {
-        query: {},
+      const req = _.extend({
+        query: '',
+        queryParser: {query: ''},
+        body: {},
         url: 'doesn\'t matter'
-      };
+      }, expressRequest);
 
       const jsonSpy = sandbox.spy();
       const statusStub = sandbox.stub();
       const nextSpy = sandbox.spy();
 
-      const res: any = {
+      const res = _.extend({
         use_express_redis_cache: true,
         status(...args: any[]): any {
           statusStub(...args);
           return this;
         },
         json: jsonSpy
-      };
+      }, expressResponse);
 
-      (routeUtils.respondWithRawDdf(anyQuery, req, res, nextSpy) as Function)(expectedError);
+      (routeUtils.respondWithRawDdf(req, res, nextSpy) as Function)(expectedError);
       expect(res.use_express_redis_cache).to.equal(false);
 
       sinon.assert.calledOnce(jsonSpy);
@@ -641,24 +654,24 @@ describe('Routes utils', () => {
     });
 
     it('should respond with raw data (data that came from db)', () => {
-      const anyQuery = {};
-
-      const req: any = {
-        query: {},
+      const req = _.extend({
+        query: '',
+        queryParser: {query: ''},
+        body: {},
         url: 'doesn\'t matter'
-      };
+      }, expressRequest);
 
       const jsonSpy = sandbox.spy();
       const nextSpy = sandbox.spy();
 
-      const res: any = {
+      const res = _.extend({
         use_express_redis_cache: true,
         json: jsonSpy
-      };
+      }, expressResponse);
 
       const rawDdfData = [];
 
-      routeUtils.respondWithRawDdf(anyQuery, req, res, nextSpy)(null, rawDdfData);
+      routeUtils.respondWithRawDdf(req, res, nextSpy)(null, rawDdfData);
 
       sinon.assert.notCalled(jsonSpy);
       sinon.assert.calledOnce(nextSpy);
@@ -668,80 +681,73 @@ describe('Routes utils', () => {
     });
 
     it('should store query for which data will be returned in db (for the subsequernt warmups)', () => {
-      const ddfQuery = {
-        rawDdfQuery: {
+      const req = _.extend({
+        query: '',
+        queryParser: {
           docsAmount: 0,
-          queryRaw: {
-            some: 'bla'
-          },
+          query: 'some=bla',
+          queryType: 'URLON',
           timeSpentInMillis: 0
-        }
-      };
-
-      const req: any = {
-        query: {},
+        },
+        body: {some: 'bla'},
         url: 'doesn\'t matter'
-      };
+      }, expressRequest);
 
       const jsonSpy = sandbox.spy();
       const nextSpy = sandbox.spy();
 
-      const res: any = {
+      const res = _.extend({
         use_express_redis_cache: true,
         json: jsonSpy
-      };
+      }, expressResponse);
 
       const debugStub = sandbox.stub(logger, 'debug');
       const createWarmpUpQueryStub = sandbox.stub(RecentDdfqlQueriesRepository, 'create').callsFake((query, done) => {
-        done(null, ddfQuery.rawDdfQuery);
+        done(null, req.queryParser);
       });
 
       const rawDdfData = [];
-      routeUtils.respondWithRawDdf(ddfQuery, req, res, nextSpy)(null, rawDdfData);
+      routeUtils.respondWithRawDdf(req, res, nextSpy)(null, rawDdfData);
 
       sinon.assert.notCalled(jsonSpy);
       sinon.assert.calledOnce(nextSpy);
 
       sinon.assert.calledOnce(createWarmpUpQueryStub);
-      sinon.assert.calledWith(createWarmpUpQueryStub, ddfQuery.rawDdfQuery);
+      sinon.assert.calledWith(createWarmpUpQueryStub, req.queryParser);
 
       sinon.assert.calledOnce(debugStub);
-      sinon.assert.calledWith(debugStub, 'Writing query to cache warm up storage', ddfQuery.rawDdfQuery.queryRaw);
+      sinon.assert.calledWith(debugStub, 'Writing query to cache warm up storage', req.queryParser.query);
 
       expect(res.use_express_redis_cache).to.equal(true);
       expect(req.rawData.rawDdf).to.equal(rawDdfData);
     });
 
-    it('should log error if it is happened while sroring warmup query', () => {
+    it('should log error if it is happened while storing warmup query', () => {
       const expectedError = 'Boo!';
 
-      const ddfQuery = {
-        rawDdfQuery: {
-          queryRaw: {}
-        }
-      };
-
-      const req: any = {
-        query: {},
+      const req = _.extend({
+        query: '',
+        queryParser: {query: ''},
+        body: {},
         url: 'doesn\'t matter'
-      };
+      }, expressRequest);
 
       const jsonSpy = sandbox.spy();
       const nextSpy = sandbox.spy();
 
-      const res: any = {
+      const res = _.extend({
         use_express_redis_cache: true,
         json: jsonSpy
-      };
+      }, expressResponse);
 
       const debugStub = sandbox.stub(logger, 'debug');
 
-      sandbox.stub(RecentDdfqlQueriesRepository, 'create').callsFake((query, done) => {
+      sandbox.stub(RecentDdfqlQueriesRepository, 'create').callsFake((query: string, done: Function) => {
         done(expectedError);
       });
 
       const rawDdfData = [];
-      routeUtils.respondWithRawDdf(ddfQuery, req, res, nextSpy)(null, rawDdfData);
+      routeUtils.respondWithRawDdf(req, res, nextSpy)(null, rawDdfData);
 
       sinon.assert.calledWith(debugStub, expectedError);
 
@@ -749,31 +755,30 @@ describe('Routes utils', () => {
     });
 
     it('should store warmup query if it was sent with dataset property', () => {
-      const ddfQuery = {
+      const req = _.extend({
+        query: '',
         dataset: 'dataset',
-        rawDdfQuery: {
+        queryParser: {
           docsAmount: 0,
+          query: '',
           timeSpentInMillis: 0
-        }
-      };
-
-      const req: any = {
-        query: {},
+        },
+        body: {},
         url: 'doesn\'t matter'
-      };
+      }, expressRequest);
 
       const jsonSpy = sandbox.spy();
       const nextSpy = sandbox.spy();
 
-      const res: any = {
+      const res = _.extend({
         use_express_redis_cache: true,
         json: jsonSpy
-      };
+      }, expressResponse);
 
       const createWarmpUpQueryStub = sandbox.stub(RecentDdfqlQueriesRepository, 'create');
 
       const rawDdfData = [];
-      routeUtils.respondWithRawDdf(ddfQuery, req, res, nextSpy)(null, rawDdfData);
+      routeUtils.respondWithRawDdf(req, res, nextSpy)(null, rawDdfData);
 
       sinon.assert.notCalled(jsonSpy);
       sinon.assert.calledOnce(nextSpy);
@@ -785,31 +790,30 @@ describe('Routes utils', () => {
     });
 
     it('should store warmup query if it was sent with version property', () => {
-      const ddfQuery = {
-        rawDdfQuery: {
+      const req = _.extend({
+        query: '',
+        queryParser: {
           docsAmount: 5464554643,
+          query: '',
           timeSpentInMillis: 21423142
         },
-        version: 'version'
-      };
-
-      const req: any = {
-        query: {},
+        version: 'version',
+        body: {},
         url: 'doesn\'t matter'
-      };
+      }, expressRequest);
 
       const jsonSpy = sandbox.spy();
       const nextSpy = sandbox.spy();
 
-      const res: any = {
+      const res = _.extend({
         use_express_redis_cache: true,
         json: jsonSpy
-      };
+      }, expressResponse);
 
       const createWarmpUpQueryStub = sandbox.stub(RecentDdfqlQueriesRepository, 'create');
 
       const rawDdfData = [];
-      routeUtils.respondWithRawDdf(ddfQuery, req, res, nextSpy)(null, rawDdfData);
+      routeUtils.respondWithRawDdf(req, res, nextSpy)(null, rawDdfData);
 
       sinon.assert.notCalled(jsonSpy);
       sinon.assert.calledOnce(nextSpy);
@@ -821,32 +825,31 @@ describe('Routes utils', () => {
     });
 
     it('should store warmup query if it was sent with format property', () => {
-      const ddfQuery = {
-        rawDdfQuery: {
+      const req = _.extend({
+        query: {},
+        queryParser: {
           docsAmount: 12,
+          query: '',
           timeSpentInMillis: 453
         },
-        format: 'format'
-      };
-
-      const req: any = {
-        query: {},
+        format: 'format',
+        body: {},
         url: 'doesn\'t matter'
-      };
+      }, expressRequest);
 
       const jsonSpy = sandbox.spy();
       const nextSpy = sandbox.spy();
 
-      const res = {
+      const res = _.extend({
         use_express_redis_cache: true,
         json: jsonSpy,
         status: null
-      };
+      }, expressResponse);
 
       const createWarmpUpQueryStub = sandbox.stub(RecentDdfqlQueriesRepository, 'create');
 
       const rawDdfData = [];
-      routeUtils.respondWithRawDdf(ddfQuery, req as any, res as any, nextSpy)(null, rawDdfData);
+      routeUtils.respondWithRawDdf(req, res as any, nextSpy)(null, rawDdfData);
 
       sinon.assert.notCalled(jsonSpy);
       sinon.assert.calledOnce(nextSpy);
@@ -863,8 +866,8 @@ describe('Routes utils', () => {
     afterEach(() => sandbox.restore());
 
     it('should return token authentication middleware', () => {
-      const req = {} as express.Request;
-      const res = {} as express.Response;
+      const req = _.extend({}, expressRequest);
+      const res = _.extend({}, expressResponse);
       const next = () => {
       };
       const middleware = () => {
@@ -888,6 +891,13 @@ describe('Routes utils', () => {
   });
 
   describe('Response types', () => {
+    const defaultContext: RequestTags = {
+      queryParser: {
+        query: '',
+        queryType: ''
+      },
+      requestStartTime: 123
+    };
 
     afterEach(() => sandbox.restore());
 
@@ -896,7 +906,7 @@ describe('Routes utils', () => {
       const loggerErrorStub = sandbox.stub(logger, 'error');
 
       const expectedError = 'Boo!';
-      const response = routeUtils.toErrorResponse(expectedError);
+      const response = routeUtils.toErrorResponse(expectedError,   defaultContext, 'test');
 
       expect(response.success).to.be.false;
       expect(response.error).to.equal(expectedError);
@@ -909,7 +919,7 @@ describe('Routes utils', () => {
       const loggerErrorStub = sandbox.stub(logger, 'error');
 
       const expectedError = Error('Boo!');
-      const response = routeUtils.toErrorResponse(expectedError);
+      const response = routeUtils.toErrorResponse(expectedError, defaultContext, 'test');
 
       expect(response.success).to.be.false;
       expect(response.error).to.equal(expectedError.message);
@@ -941,14 +951,14 @@ describe('Routes utils', () => {
 
     it('checks that requests from CLI with unsupported version are invalid', () => {
       const header = sandbox.stub().returns('2.5.24');
-      const req: any = {
+      const req = _.extend({
         header
-      };
+      }, expressRequest);
 
       const json = sandbox.spy();
-      const res: any = {
+      const res = _.extend({
         json
-      };
+      }, expressResponse);
 
       const next = sandbox.spy();
 
@@ -967,14 +977,14 @@ describe('Routes utils', () => {
 
     it('checks that requests from CLI with invalid version are invalid', () => {
       const header = sandbox.stub().returns('bla');
-      const req: any = {
+      const req = _.extend({
         header
-      };
+      }, expressRequest);
 
       const json = sandbox.spy();
-      const res: any = {
+      const res = _.extend({
         json
-      };
+      }, expressResponse);
 
       const next = sandbox.spy();
 
@@ -993,14 +1003,14 @@ describe('Routes utils', () => {
 
     it('responds with an error when WS-CLI version from client is not given', () => {
       const header = sandbox.stub().returns(undefined);
-      const req: any = {
+      const req = _.extend({
         header
-      };
+      }, expressRequest);
 
       const json = sandbox.spy();
-      const res: any = {
+      const res = _.extend({
         json
-      };
+      }, expressResponse);
 
       const next = sandbox.spy();
 
@@ -1011,19 +1021,19 @@ describe('Routes utils', () => {
 
       sinon.assert.notCalled(next);
       sinon.assert.calledOnce(json);
-      sinon.assert.calledWith(json, { success: false, error: 'This url can be accessed only from WS-CLI' });
+      sinon.assert.calledWith(json, {success: false, error: 'This url can be accessed only from WS-CLI'});
     });
 
     it('checks that requests from CLI with supported version are valid', () => {
       const header = sandbox.stub().returns('2.5.24');
-      const req: any = {
+      const req = _.extend({
         header
-      };
+      }, expressRequest);
 
       const json = sandbox.spy();
-      const res: any = {
+      const res = _.extend({
         json
-      };
+      }, expressResponse);
 
       const next = sandbox.spy();
 
@@ -1041,10 +1051,10 @@ describe('Routes utils', () => {
     afterEach(() => sandbox.restore());
 
     it(`doesn't handles routes that start not with ${constants.ASSETS_ROUTE_BASE_PATH}`, (done: Function) => {
-      const req: any = {
+      const req = _.extend({
         baseUrl: 'foo'
-      };
-      const res: any = {};
+      }, expressRequest);
+      const res = _.extend({}, expressResponse);
 
       routeUtils.bodyFromUrlAssets(req, res, () => {
         expect(_.size(req)).to.equal(1);
@@ -1059,23 +1069,23 @@ describe('Routes utils', () => {
       const nextSpy = sandbox.spy();
       sandbox.stub(logger, 'error');
 
-      const req: any = {
+      const req = _.extend({
         originalUrl: `${constants.ASSETS_ROUTE_BASE_PATH}/%E0%A4%A`,
         baseUrl: constants.ASSETS_ROUTE_BASE_PATH
-      };
-      const res: any = {
+      }, expressRequest);
+      const res = _.extend({
         _status: -1,
         status(code: number): any {
           this._status = code;
           return this;
         },
         json: jsonSpy
-      };
+      }, expressResponse);
 
       routeUtils.bodyFromUrlAssets(req, res, nextSpy);
 
       expect(res._status).to.equal(200);
-      sinon.assert.calledWith(jsonSpy, { success: false, error: 'Malformed url was given' });
+      sinon.assert.calledWith(jsonSpy, {success: false, error: 'Malformed url was given'});
       sinon.assert.notCalled(nextSpy);
     });
 
@@ -1084,18 +1094,18 @@ describe('Routes utils', () => {
       const nextSpy = sandbox.spy();
       sandbox.stub(logger, 'error');
 
-      const req: any = {
+      const req = _.extend({
         originalUrl: `${constants.ASSETS_ROUTE_BASE_PATH}/../foo/./bar/../baz.json`,
         baseUrl: constants.ASSETS_ROUTE_BASE_PATH
-      };
-      const res: any = {
+      }, expressRequest);
+      const res = _.extend({
         _status: -1,
         status(code: number): any {
           this._status = code;
           return this;
         },
         json: jsonSpy
-      };
+      }, expressResponse);
 
       routeUtils.bodyFromUrlAssets(req, res, nextSpy);
 
@@ -1115,11 +1125,11 @@ describe('Routes utils', () => {
 
       sandbox.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, expectedError);
 
-      const req: any = {
+      const req = _.extend({
         originalUrl: `${constants.ASSETS_ROUTE_BASE_PATH}/default/assets/foo.json`,
         baseUrl: constants.ASSETS_ROUTE_BASE_PATH
-      };
-      const res: any = {
+      }, expressRequest);
+      const res = _.extend({
         _status: -1,
         status(code: number): any {
           this._status = code;
@@ -1135,7 +1145,7 @@ describe('Routes utils', () => {
           sinon.assert.notCalled(nextSpy);
           done();
         }
-      };
+      }, expressResponse);
 
       routeUtils.bodyFromUrlAssets(req, res, nextSpy);
     });
@@ -1150,13 +1160,13 @@ describe('Routes utils', () => {
         name: 'open-numbers/globalis#development'
       };
 
-      sandbox.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, { dataset: defaultDataset });
+      sandbox.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, {dataset: defaultDataset});
 
-      const req: any = {
+      const req = _.extend({
         originalUrl: `${constants.ASSETS_ROUTE_BASE_PATH}/default/SECURED/foo.json`,
         baseUrl: constants.ASSETS_ROUTE_BASE_PATH
-      };
-      const res: any = {
+      }, expressRequest);
+      const res = _.extend({
         _status: -1,
         status(code: number): any {
           this._status = code;
@@ -1172,7 +1182,7 @@ describe('Routes utils', () => {
           sinon.assert.notCalled(nextSpy);
           done();
         }
-      };
+      }, expressResponse);
 
       routeUtils.bodyFromUrlAssets(req, res, nextSpy);
     });
@@ -1182,23 +1192,23 @@ describe('Routes utils', () => {
         name: 'open-numbers/globalis'
       };
 
-      sandbox.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, { dataset: defaultDataset });
+      sandbox.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, null, {dataset: defaultDataset});
 
-      const req: any = {
+      const req = _.extend({
         query: {
           dataset_access_token: 'foobar'
         },
         body: {},
         originalUrl: `${constants.ASSETS_ROUTE_BASE_PATH}/default/assets/foo.json`,
         baseUrl: constants.ASSETS_ROUTE_BASE_PATH
-      };
-      const res: any = {
+      }, expressRequest);
+      const res = _.extend({
         _status: -1,
         status(code: number): any {
           this._status = code;
           return this;
         }
-      };
+      }, expressResponse);
 
       routeUtils.bodyFromUrlAssets(req, res, () => {
         // Assert
@@ -1219,21 +1229,21 @@ describe('Routes utils', () => {
     it(`parses an asset request url in order to get an asset descriptor: custom dataset has been requested`, (done: Function) => {
       sandbox.stub(commonService, 'findDefaultDatasetAndTransaction').callsArgWithAsync(1, 'don\'t care what kind of error is here in case of non default dataset asset request');
 
-      const req: any = {
+      const req = _.extend({
         query: {
           dataset_access_token: 'foobar'
         },
         body: {},
         originalUrl: `${constants.ASSETS_ROUTE_BASE_PATH}/myAccountOnGithub/my-custom-dataset/branch/feature/assets/foo2.json?dataset_access_token=foobar`,
         baseUrl: constants.ASSETS_ROUTE_BASE_PATH
-      };
-      const res: any = {
+      }, expressRequest);
+      const res = _.extend({
         _status: -1,
         status(code: number): any {
           this._status = code;
           return this;
         }
-      };
+      }, expressResponse);
 
       routeUtils.bodyFromUrlAssets(req, res, () => {
         // Assert

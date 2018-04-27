@@ -13,12 +13,22 @@ import * as reposService from '../../../../ws.services/repos.service';
 import * as cacheUtils from '../../../../ws.utils/cache-warmup';
 import * as cliApi from 'waffle-server-import-cli';
 import * as ddfImportUtils from '../../../../ws.import/utils/import-ddf.utils';
+import {WSRequest} from '../../../../ws.routes/utils';
+import {Request, Response} from 'express';
+import * as _ from 'lodash';
 
 const sandbox = sinon.createSandbox();
 
 describe('WS-CLI controller', () => {
 
   describe('Import Dataset', () => {
+    let expressRequest;
+    let expressResponse;
+
+    beforeEach(() => {
+      expressRequest  = sandbox.createStubInstance(Request);
+      expressResponse = sandbox.createStubInstance(Response);
+    });
 
     afterEach(() => sandbox.restore());
 
@@ -31,14 +41,20 @@ describe('WS-CLI controller', () => {
       const cliServiceStub = sandbox.stub(cliService, 'importDataset').callsFake((params, onImported) => onImported(expectedError));
       const resJsonSpy = sandbox.spy();
 
-      const req = {
-        body: {}
-      };
+      const req: WSRequest = _.extend({
+        query: '',
+        queryParser: {
+          query: '',
+          queryType: ''
+        },
+        body: {},
+        requestStartTime: 123
+      }, expressRequest);
 
-      const res = {
+      const res: Response = _.extend({
         headersSent: false,
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.importDataset(req, res);
 
@@ -61,14 +77,20 @@ describe('WS-CLI controller', () => {
       const cliServiceStub = sandbox.stub(cliService, 'importDataset').callsFake((params, onImported) => onImported(expectedError));
       const resJsonSpy = sandbox.spy();
 
-      const req = {
-        body: {}
-      };
+      const req = _.extend({
+        query: '',
+        queryParser: {
+          query: '',
+          queryType: ''
+        },
+        body: {},
+        requestStartTime: 123
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         headersSent: true,
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.importDataset(req, res);
 
@@ -88,16 +110,22 @@ describe('WS-CLI controller', () => {
       const expectedMessage = `finished import for dataset '${github}' and commit '${commit}'`;
       const cliServiceStub = sandbox.stub(cliService, 'importDataset').callsFake((params, onImported) => onImported());
 
-      const req = {
+      const req = _.extend({
+        query: '',
+        queryParser: {
+          query: '',
+          queryType: ''
+        },
         body: {
           github,
           commit
-        }
-      };
+        },
+        requestStartTime: 123
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.importDataset(req, res);
 
@@ -126,14 +154,20 @@ describe('WS-CLI controller', () => {
         params.lifecycleHooks.onTransactionCreated();
       });
 
-      const req = {
-        body: {}
-      };
+      const req = _.extend({
+        query: '',
+        queryParser: {
+          query: '',
+          queryType: ''
+        },
+        body: {},
+        requestStartTime: 123
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         headersSent: false,
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.importDataset(req, res);
 
@@ -152,14 +186,19 @@ describe('WS-CLI controller', () => {
         params.lifecycleHooks.onTransactionCreated();
       });
 
-      const req = {
-        body: {}
-      };
+      const req = _.extend({
+        query: '',
+        queryParser: {
+          query: '',
+          queryType: ''
+        },
+        requestStartTime: 123
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         headersSent: true,
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.importDataset(req, res);
 
@@ -170,6 +209,13 @@ describe('WS-CLI controller', () => {
   });
 
   describe('Clean cache', () => {
+    let expressRequest;
+    let expressResponse;
+
+    beforeEach(() => {
+      expressRequest  = sandbox.createStubInstance(Request);
+      expressResponse = sandbox.createStubInstance(Response);
+    });
 
     afterEach(() => sandbox.restore());
 
@@ -181,15 +227,15 @@ describe('WS-CLI controller', () => {
       const resJsonSpy = sandbox.spy();
       const cliServiceStub = sandbox.stub(cliService, 'cleanDdfRedisCache').callsFake((onCleaned) => onCleaned(null));
 
-      const req = {
+      const req = _.extend({
         user: {
           name: 'fake'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.cleanCache(req, res);
 
@@ -209,10 +255,19 @@ describe('WS-CLI controller', () => {
       const resJsonSpy = sandbox.spy();
       const cliServiceStub = sandbox.stub(cliService, 'cleanDdfRedisCache');
 
-      const req = {};
-      const res = {
+      const req = _.extend({
+        query: '',
+        queryParser: {
+          query: '',
+          queryType: ''
+        },
+        body: {},
+        requestStartTime: 123
+      }, expressRequest);
+
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.cleanCache(req, res);
 
@@ -234,15 +289,15 @@ describe('WS-CLI controller', () => {
       const resJsonSpy = sandbox.spy();
       const cliServiceStub = sandbox.stub(cliService, 'cleanDdfRedisCache').callsFake((onCleaned) => onCleaned(expectedError));
 
-      const req = {
+      const req = _.extend({
         user: {
           name: 'fake'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.cleanCache(req, res);
 
@@ -257,6 +312,13 @@ describe('WS-CLI controller', () => {
   });
 
   describe('Clean repos folder', () => {
+    let expressRequest;
+    let expressResponse;
+
+    beforeEach(() => {
+      expressRequest  = sandbox.createStubInstance(Request);
+      expressResponse = sandbox.createStubInstance(Response);
+    });
 
     afterEach(() => sandbox.restore());
 
@@ -279,15 +341,15 @@ describe('WS-CLI controller', () => {
       const ddfImportUtilsStub = sandbox.stub(ddfImportUtils, 'cloneImportedDdfRepos').callsFake(() => Promise.resolve());
       sandbox.stub(logger, 'info');
 
-      const req = {
+      const req = _.extend({
         user: {
           name: 'fake'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.cleanRepos(req, res);
     });
@@ -310,15 +372,15 @@ describe('WS-CLI controller', () => {
       const cliServiceStub = sandbox.stub(cliApi, 'cleanRepos').callsArgWithAsync(1, null);
       const ddfImportUtilsStub = sandbox.stub(ddfImportUtils, 'cloneImportedDdfRepos').callsFake(() => Promise.reject(expectedError));
 
-      const req = {
+      const req = _.extend({
         user: {
           name: 'fake'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.cleanRepos(req, res);
     });
@@ -332,10 +394,19 @@ describe('WS-CLI controller', () => {
       const resJsonSpy = sandbox.spy();
       const cliServiceStub = sandbox.stub(cliApi, 'cleanRepos');
 
-      const req = {};
-      const res = {
+      const req = _.extend({
+        query: '',
+        queryParser: {
+          query: '',
+          queryType: ''
+        },
+        body: {},
+        requestStartTime: 123
+      }, expressRequest);
+
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.cleanRepos(req, res);
 
@@ -357,15 +428,15 @@ describe('WS-CLI controller', () => {
       const resJsonSpy = sandbox.spy();
       const cliServiceStub = sandbox.stub(cliApi, 'cleanRepos').callsFake((path, onCleaned) => onCleaned(expectedError));
 
-      const req = {
+      const req = _.extend({
         user: {
           name: 'fake'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.cleanRepos(req, res);
 
@@ -380,24 +451,31 @@ describe('WS-CLI controller', () => {
   });
 
   describe('Authenticate user', () => {
+    let expressRequest;
+    let expressResponse;
+
+    beforeEach(() => {
+      expressRequest  = sandbox.createStubInstance(Request);
+      expressResponse = sandbox.createStubInstance(Response);
+    });
 
     afterEach(() => sandbox.restore());
 
     it('should log an error when email is absent in req.body', () => {
       const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Email was not provided';
-      const expectedResponse = { success: false, error: expectedError };
+      const expectedResponse = {success: false, error: expectedError};
 
       const loggerStub = sandbox.stub(logger, 'error');
       const resJsonSpy = sandbox.spy();
 
-      const req: any = {
+      const req = _.extend({
         body: {}
-      };
+      }, expressRequest);
 
-      const res: any = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.getToken(req, res);
 
@@ -412,20 +490,20 @@ describe('WS-CLI controller', () => {
     it('should log an error when password is absent in req.body', () => {
       const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Password was not provided';
-      const expectedResponse = { success: false, error: expectedError };
+      const expectedResponse = {success: false, error: expectedError};
 
       const loggerStub = sandbox.stub(logger, 'error');
       const resJsonSpy = sandbox.spy();
 
-      const req: any = {
+      const req = _.extend({
         body: {
           email: 'test'
         }
-      };
+      }, expressRequest);
 
-      const res: any = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.getToken(req, res);
 
@@ -440,24 +518,24 @@ describe('WS-CLI controller', () => {
     it('should log an error when throw error during authenticating user', () => {
       const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
-      const expectedResponse = { success: false, error: expectedError };
+      const expectedResponse = {success: false, error: expectedError};
 
       const loggerStub = sandbox.stub(logger, 'error');
       const resJsonSpy = sandbox.spy();
-      const authServiceStub = sandbox.stub(authService, 'authenticate').callsFake(({ email, password }, onAuthenticated) => {
+      const authServiceStub = sandbox.stub(authService, 'authenticate').callsFake(({email, password}, onAuthenticated) => {
         return onAuthenticated(expectedError);
       });
 
-      const req: any = {
+      const req = _.extend({
         body: {
           email: 'test',
           password: '123'
         }
-      };
+      }, expressRequest);
 
-      const res: any = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.getToken(req, res);
 
@@ -475,23 +553,23 @@ describe('WS-CLI controller', () => {
       const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const toDataResponseStub = sandbox.spy(routeUtils, 'toDataResponse');
       const expectedData = '111';
-      const expectedResponse = { success: true, data: { token: expectedData } };
+      const expectedResponse = {success: true, data: {token: expectedData}};
 
       const resJsonSpy = sandbox.spy();
-      const authServiceStub = sandbox.stub(authService, 'authenticate').callsFake(({ email, password }, onAuthenticated) => {
+      const authServiceStub = sandbox.stub(authService, 'authenticate').callsFake(({email, password}, onAuthenticated) => {
         return onAuthenticated(null, expectedData);
       });
 
-      const req: any = {
+      const req = _.extend({
         body: {
           email: 'test',
           password: '123'
         }
-      };
+      }, expressRequest);
 
-      const res: any = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.getToken(req, res);
 
@@ -501,11 +579,18 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.notCalled(toErrorResponseSpy);
       sinon.assert.calledOnce(toDataResponseStub);
-      sinon.assert.calledWithExactly(toDataResponseStub, { token: expectedData });
+      sinon.assert.calledWithExactly(toDataResponseStub, {token: expectedData});
     });
   });
 
   describe('Get state of the latest Transaction', () => {
+    let expressRequest;
+    let expressResponse;
+
+    beforeEach(() => {
+      expressRequest  = sandbox.createStubInstance(Request);
+      expressResponse = sandbox.createStubInstance(Response);
+    });
 
     afterEach(() => sandbox.restore());
 
@@ -517,11 +602,19 @@ describe('WS-CLI controller', () => {
       const loggerStub = sandbox.stub(logger, 'error');
       const resJsonSpy = sandbox.spy();
 
-      const req = {};
+      const req = _.extend({
+        query: '',
+        queryParser: {
+          query: '',
+          queryType: ''
+        },
+        body: {},
+        requestStartTime: 123
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.getStateOfLatestTransaction(req, res);
 
@@ -541,17 +634,17 @@ describe('WS-CLI controller', () => {
       const loggerStub = sandbox.stub(logger, 'error');
       const resJsonSpy = sandbox.spy();
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'user'
         },
         query: {}
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.getStateOfLatestTransaction(req, res);
 
@@ -574,7 +667,7 @@ describe('WS-CLI controller', () => {
         return onStatusGot(expectedError);
       });
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'user'
@@ -582,11 +675,11 @@ describe('WS-CLI controller', () => {
         query: {
           datasetName: 'dataset'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.getStateOfLatestTransaction(req, res);
 
@@ -611,7 +704,7 @@ describe('WS-CLI controller', () => {
         return onStatusGot(null, expectedData);
       });
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'user'
@@ -619,11 +712,11 @@ describe('WS-CLI controller', () => {
         query: {
           datasetName: 'dataset'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res =_.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.getStateOfLatestTransaction(req, res);
 
@@ -638,6 +731,13 @@ describe('WS-CLI controller', () => {
   });
 
   describe('Activate rollback', () => {
+    let expressRequest;
+    let expressResponse;
+
+    beforeEach(() => {
+      expressRequest  = sandbox.createStubInstance(Request);
+      expressResponse = sandbox.createStubInstance(Response);
+    });
 
     afterEach(() => sandbox.restore());
 
@@ -649,11 +749,18 @@ describe('WS-CLI controller', () => {
       const loggerStub = sandbox.stub(logger, 'error');
       const resJsonSpy = sandbox.spy();
 
-      const req = {};
+      const req = _.extend({
+        query: '',
+        queryParser: {
+          query: '',
+          queryType: ''
+        },
+        requestStartTime: 123
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.activateRollback(req, res);
 
@@ -673,17 +780,17 @@ describe('WS-CLI controller', () => {
       const loggerStub = sandbox.stub(logger, 'error');
       const resJsonSpy = sandbox.spy();
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'user'
         },
         body: {}
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.activateRollback(req, res);
 
@@ -706,7 +813,7 @@ describe('WS-CLI controller', () => {
         return onRollbackActivated(expectedError);
       });
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'user'
@@ -714,11 +821,11 @@ describe('WS-CLI controller', () => {
         body: {
           datasetName: 'dataset'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.activateRollback(req, res);
 
@@ -743,7 +850,7 @@ describe('WS-CLI controller', () => {
         return onRollbackActivated(null);
       });
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'user'
@@ -751,11 +858,11 @@ describe('WS-CLI controller', () => {
         body: {
           datasetName: 'dataset'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.activateRollback(req, res);
 
@@ -770,6 +877,13 @@ describe('WS-CLI controller', () => {
   });
 
   describe('Removal Dataset Controller', () => {
+    let expressRequest;
+    let expressResponse;
+
+    beforeEach(() => {
+      expressRequest  = sandbox.createStubInstance(Request);
+      expressResponse = sandbox.createStubInstance(Response);
+    });
 
     afterEach(() => sandbox.restore());
 
@@ -781,11 +895,19 @@ describe('WS-CLI controller', () => {
       const loggerStub = sandbox.stub(logger, 'error');
       const resJsonSpy = sandbox.spy();
 
-      const req = {};
+      const req: WSRequest = _.extend({
+        query: '',
+        queryParser: {
+          query: '',
+          queryType: ''
+        },
+        body: {},
+        requestStartTime: 123
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.removeDataset(req, res);
 
@@ -805,17 +927,17 @@ describe('WS-CLI controller', () => {
       const loggerStub = sandbox.stub(logger, 'error');
       const resJsonSpy = sandbox.spy();
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'user'
         },
         body: {}
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.removeDataset(req, res);
 
@@ -839,7 +961,7 @@ describe('WS-CLI controller', () => {
         return onDatasetRemoved(expectedError);
       });
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'user'
@@ -847,11 +969,11 @@ describe('WS-CLI controller', () => {
         body: {
           datasetName: 'dataset'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.removeDataset(req, res);
 
@@ -877,7 +999,7 @@ describe('WS-CLI controller', () => {
         return setTimeout(onDatasetRemoved, 1);
       });
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'user'
@@ -885,11 +1007,11 @@ describe('WS-CLI controller', () => {
         body: {
           datasetName: 'dataset'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       const loggerStub = sandbox.stub(logger, 'info').callsFake(() => {
         sinon.assert.calledOnce(loggerStub);
@@ -911,6 +1033,13 @@ describe('WS-CLI controller', () => {
   });
 
   describe('Get available Datasets and Versions', () => {
+    let expressRequest;
+    let expressResponse;
+
+    beforeEach(() => {
+      expressRequest  = sandbox.createStubInstance(Request);
+      expressResponse = sandbox.createStubInstance(Response);
+    });
 
     afterEach(() => sandbox.restore());
 
@@ -922,11 +1051,19 @@ describe('WS-CLI controller', () => {
       const loggerStub = sandbox.stub(logger, 'error');
       const resJsonSpy = sandbox.spy();
 
-      const req = {};
+      const req: WSRequest = _.extend({
+        query: '',
+        queryParser: {
+          query: '',
+          queryType: ''
+        },
+        body: {},
+        requestStartTime: 123
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.getAvailableDatasetsAndVersions(req, res);
 
@@ -941,7 +1078,7 @@ describe('WS-CLI controller', () => {
     it('should log an error when cli service coulnd\'t activate rollback of the latest transaction', () => {
       const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
-      const expectedResponse = { success: false, error: expectedError };
+      const expectedResponse = {success: false, error: expectedError};
 
       const loggerStub = sandbox.stub(logger, 'error');
       const resJsonSpy = sandbox.spy();
@@ -949,16 +1086,16 @@ describe('WS-CLI controller', () => {
         return onDatasetAndVersionsGot(expectedError);
       });
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'user'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.getAvailableDatasetsAndVersions(req, res);
 
@@ -985,7 +1122,7 @@ describe('WS-CLI controller', () => {
         return onDatasetAndVersionsGot(null, expectedData);
       });
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'user'
@@ -993,11 +1130,11 @@ describe('WS-CLI controller', () => {
         body: {
           datasetName: 'dataset'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.getAvailableDatasetsAndVersions(req, res);
 
@@ -1014,24 +1151,31 @@ describe('WS-CLI controller', () => {
   });
 
   describe('Update Dataset incrementally', () => {
+    let expressRequest;
+    let expressResponse;
+
+    beforeEach(() => {
+      expressRequest  = sandbox.createStubInstance(Request);
+      expressResponse = sandbox.createStubInstance(Response);
+    });
 
     afterEach(() => sandbox.restore());
 
     it('should log an error when unauthenticated user tries to update dataset incrementally', () => {
       const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Unauthenticated user cannot perform CLI operations';
-      const expectedResponse = { success: false, error: expectedError };
+      const expectedResponse = {success: false, error: expectedError};
 
       const loggerStub = sandbox.stub(logger, 'error');
       const resJsonSpy = sandbox.spy();
 
-      const req = {
+      const req = _.extend({
         query: {}
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.updateIncrementally(req, res);
 
@@ -1051,17 +1195,17 @@ describe('WS-CLI controller', () => {
       const loggerStub = sandbox.stub(logger, 'error');
       const resJsonSpy = sandbox.spy();
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'user'
         },
         body: {}
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.updateIncrementally(req, res);
 
@@ -1076,12 +1220,12 @@ describe('WS-CLI controller', () => {
     it('should log an error when hashTo url is absent in req.body', () => {
       const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'End commit for update was not given';
-      const expectedResponse = { success: false, error: expectedError };
+      const expectedResponse = {success: false, error: expectedError};
 
       const loggerStub = sandbox.stub(logger, 'error');
       const resJsonSpy = sandbox.spy();
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'user'
@@ -1089,11 +1233,11 @@ describe('WS-CLI controller', () => {
         body: {
           hashFrom: 'AAAAAAA'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.updateIncrementally(req, res);
 
@@ -1108,12 +1252,12 @@ describe('WS-CLI controller', () => {
     it('should log an error when github url is absent in req.body', () => {
       const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Repository github url was not given';
-      const expectedResponse = { success: false, error: expectedError };
+      const expectedResponse = {success: false, error: expectedError};
 
       const loggerStub = sandbox.stub(logger, 'error');
       const resJsonSpy = sandbox.spy();
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'user'
@@ -1122,11 +1266,11 @@ describe('WS-CLI controller', () => {
           hashFrom: 'AAAAAAA',
           hashTo: 'BBBBBBB'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.updateIncrementally(req, res);
 
@@ -1142,7 +1286,7 @@ describe('WS-CLI controller', () => {
       const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedGithubUrl = 'git@github.com:Gapminder/waffle-server.git#stage';
       const expectedError = 'Boo!';
-      const expectedResponse = { success: false, error: expectedError };
+      const expectedResponse = {success: false, error: expectedError};
 
       const loggerStub = sandbox.stub(logger, 'error');
       const resJsonSpy = sandbox.spy();
@@ -1150,7 +1294,7 @@ describe('WS-CLI controller', () => {
         return onDatasetUpdated(expectedError);
       });
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'user'
@@ -1160,12 +1304,12 @@ describe('WS-CLI controller', () => {
           hashTo: 'BBBBBBB',
           github: expectedGithubUrl
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy,
         headersSent: false
-      };
+      }, expressResponse);
 
       cliController.updateIncrementally(req, res);
 
@@ -1198,7 +1342,7 @@ describe('WS-CLI controller', () => {
         return onDatasetUpdated(expectedError);
       });
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'user'
@@ -1208,12 +1352,12 @@ describe('WS-CLI controller', () => {
           hashTo: 'BBBBBBB',
           github: expectedGithubUrl
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy,
         headersSent: true
-      };
+      }, expressResponse);
 
       cliController.updateIncrementally(req, res);
 
@@ -1248,7 +1392,7 @@ describe('WS-CLI controller', () => {
         return onDatasetUpdated(null);
       });
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'user'
@@ -1258,12 +1402,12 @@ describe('WS-CLI controller', () => {
           hashTo: expectedHashTo,
           github: expectedGithubUrl
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy,
         headersSent: true
-      };
+      }, expressResponse);
 
       cliController.updateIncrementally(req, res);
 
@@ -1293,7 +1437,7 @@ describe('WS-CLI controller', () => {
       const expectedHashTo = 'BBBBBBB';
       const expectedInfoMessage = `finished import for dataset '${expectedGithubUrl}' and commit '${expectedHashTo}'`;
       const expectedMessage = 'Dataset updating is in progress ...';
-      const expectedResponse = { success: true, message: expectedMessage };
+      const expectedResponse = {success: true, message: expectedMessage};
 
       const loggerStub = sandbox.stub(logger, 'info');
       const resJsonSpy = sandbox.spy();
@@ -1302,7 +1446,7 @@ describe('WS-CLI controller', () => {
         return onDatasetUpdated(null);
       });
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'user'
@@ -1312,12 +1456,12 @@ describe('WS-CLI controller', () => {
           hashTo: expectedHashTo,
           github: expectedGithubUrl
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy,
         headersSent: false
-      };
+      }, expressResponse);
 
       cliController.updateIncrementally(req, res);
 
@@ -1343,24 +1487,31 @@ describe('WS-CLI controller', () => {
   });
 
   describe('Get commit of the latest Dataset Version', () => {
+    let expressRequest;
+    let expressResponse;
+
+    beforeEach(() => {
+      expressRequest  = sandbox.createStubInstance(Request);
+      expressResponse = sandbox.createStubInstance(Response);
+    });
 
     afterEach(() => sandbox.restore());
 
     it('should log an error when unauthenticated user request commit of the latest dataset version', () => {
       const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Unauthenticated user cannot perform CLI operations';
-      const expectedResponse = { success: false, error: expectedError };
+      const expectedResponse = {success: false, error: expectedError};
 
       const loggerStub = sandbox.stub(logger, 'error');
       const resJsonSpy = sandbox.spy();
 
-      const req = {
+      const req = _.extend({
         query: {}
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.getCommitOfLatestDatasetVersion(req, res);
 
@@ -1380,17 +1531,17 @@ describe('WS-CLI controller', () => {
       const loggerStub = sandbox.stub(logger, 'error');
       const resJsonSpy = sandbox.spy();
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'user'
         },
         query: {}
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.getCommitOfLatestDatasetVersion(req, res);
 
@@ -1406,7 +1557,7 @@ describe('WS-CLI controller', () => {
       const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedGithubUrl = 'github:url';
       const expectedError = 'Boo!';
-      const expectedResponse = { success: false, error: expectedError };
+      const expectedResponse = {success: false, error: expectedError};
 
       const loggerStub = sandbox.stub(logger, 'error');
       const resJsonSpy = sandbox.spy();
@@ -1414,7 +1565,7 @@ describe('WS-CLI controller', () => {
         return onCommitGot(expectedError);
       });
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'user'
@@ -1422,11 +1573,11 @@ describe('WS-CLI controller', () => {
         query: {
           github: expectedGithubUrl
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.getCommitOfLatestDatasetVersion(req, res);
 
@@ -1472,7 +1623,7 @@ describe('WS-CLI controller', () => {
         return onCommitListGot(null, result);
       });
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'user'
@@ -1480,11 +1631,11 @@ describe('WS-CLI controller', () => {
         query: {
           github: expectedGithubUrl
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.getCommitOfLatestDatasetVersion(req, res);
 
@@ -1501,24 +1652,31 @@ describe('WS-CLI controller', () => {
   });
 
   describe('Set default Dataset', function () {
+    let expressRequest;
+    let expressResponse;
+
+    beforeEach(() => {
+      expressRequest  = sandbox.createStubInstance(Request);
+      expressResponse = sandbox.createStubInstance(Response);
+    });
 
     afterEach(() => sandbox.restore());
 
     it('should log an error when unauthenticated user tries to set default dataset', () => {
       const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'There is no authenticated user to get its datasets';
-      const expectedResponse = { success: false, error: expectedError };
+      const expectedResponse = {success: false, error: expectedError};
 
       const loggerStub = sandbox.stub(logger, 'error');
       const resJsonSpy = sandbox.spy();
 
-      const req = {
+      const req = _.extend({
         body: {}
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.setDefaultDataset(req, res);
 
@@ -1538,17 +1696,17 @@ describe('WS-CLI controller', () => {
       const loggerStub = sandbox.stub(logger, 'error');
       const resJsonSpy = sandbox.spy();
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'user'
         },
         body: {}
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.setDefaultDataset(req, res);
 
@@ -1568,7 +1726,7 @@ describe('WS-CLI controller', () => {
       const loggerStub = sandbox.stub(logger, 'error');
       const resJsonSpy = sandbox.spy();
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'user'
@@ -1576,11 +1734,11 @@ describe('WS-CLI controller', () => {
         body: {
           datasetName: 'datasetName'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.setDefaultDataset(req, res);
 
@@ -1595,7 +1753,7 @@ describe('WS-CLI controller', () => {
     it('should respond an error when cli service coulnd\'t set transaction as default one', () => {
       const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
-      const expectedResponse = { success: false, error: expectedError };
+      const expectedResponse = {success: false, error: expectedError};
 
       const loggerStub = sandbox.stub(logger, 'error');
       const resJsonSpy = sandbox.spy();
@@ -1603,7 +1761,7 @@ describe('WS-CLI controller', () => {
         return onDatasetUpdated(expectedError);
       });
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'user'
@@ -1612,11 +1770,11 @@ describe('WS-CLI controller', () => {
           datasetName: 'datasetName',
           commit: 'AAAAAAA'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.setDefaultDataset(req, res);
 
@@ -1633,7 +1791,7 @@ describe('WS-CLI controller', () => {
     it('should respond an error when cli service coulnd\'t clean redis cache', () => {
       const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
-      const expectedResponse = { success: false, error: expectedError };
+      const expectedResponse = {success: false, error: expectedError};
 
       const loggerStub = sandbox.stub(logger, 'error');
       const resJsonSpy = sandbox.spy();
@@ -1644,7 +1802,7 @@ describe('WS-CLI controller', () => {
         return onCacheCleaned(expectedError);
       });
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'user'
@@ -1653,11 +1811,11 @@ describe('WS-CLI controller', () => {
           datasetName: 'datasetName',
           commit: 'AAAAAAA'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.setDefaultDataset(req, res);
 
@@ -1680,7 +1838,7 @@ describe('WS-CLI controller', () => {
         dataset: 'datasetName',
         transaction: 'AAAAAAA'
       };
-      const expectedResponse = { success: true, data: expectedData };
+      const expectedResponse = {success: true, data: expectedData};
 
       const loggerStub = sandbox.stub(logger, 'error');
       const resJsonSpy = sandbox.spy();
@@ -1694,7 +1852,7 @@ describe('WS-CLI controller', () => {
         return onCacheWarmedUp(expectedError);
       });
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'user'
@@ -1703,11 +1861,11 @@ describe('WS-CLI controller', () => {
           datasetName: 'datasetName',
           commit: 'AAAAAAA'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.setDefaultDataset(req, res);
 
@@ -1731,7 +1889,7 @@ describe('WS-CLI controller', () => {
         dataset: 'datasetName',
         transaction: 'AAAAAAA'
       };
-      const expectedResponse = { success: true, data: expectedData };
+      const expectedResponse = {success: true, data: expectedData};
 
       const loggerStub = sandbox.stub(logger, 'info');
       const resJsonSpy = sandbox.spy();
@@ -1745,7 +1903,7 @@ describe('WS-CLI controller', () => {
         return onCacheWarmedUp();
       });
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'user'
@@ -1754,11 +1912,11 @@ describe('WS-CLI controller', () => {
           datasetName: 'datasetName',
           commit: 'AAAAAAA'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.setDefaultDataset(req, res);
 
@@ -1777,27 +1935,34 @@ describe('WS-CLI controller', () => {
   });
 
   describe('Get Datasets', function () {
+    let expressRequest;
+    let expressResponse;
+
+    beforeEach(() => {
+      expressRequest  = sandbox.createStubInstance(Request);
+      expressResponse = sandbox.createStubInstance(Response);
+    });
 
     afterEach(() => sandbox.restore());
 
     it('should get the list of available datasets for authenticated user', () => {
       const toDataResponseSpy = sandbox.spy(routeUtils, 'toDataResponse');
       const expectedData = [];
-      const expectedResponse = { success: true, data: expectedData };
+      const expectedResponse = {success: true, data: expectedData};
 
       const resJsonSpy = sandbox.spy();
       const cliServiceStub = sandbox.stub(cliService, 'findDatasetsWithVersions').callsFake((userId, onCleaned) => onCleaned(null, expectedData));
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'fake'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.getDatasets(req, res);
 
@@ -1817,10 +1982,18 @@ describe('WS-CLI controller', () => {
       const resJsonSpy = sandbox.spy();
       const cliServiceStub = sandbox.stub(cliService, 'findDatasetsWithVersions');
 
-      const req = {};
-      const res = {
+      const req: WSRequest = _.extend({
+        query: '',
+        queryParser: {
+          query: '',
+          queryType: ''
+        },
+        body: {},
+        requestStartTime: 123
+      }, expressRequest);;
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.getDatasets(req, res);
 
@@ -1836,22 +2009,22 @@ describe('WS-CLI controller', () => {
     it('should respond with an error if receiving available datasets got failed', () => {
       const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
-      const expectedResponse = { success: false, error: expectedError };
+      const expectedResponse = {success: false, error: expectedError};
 
       const loggerStub = sandbox.stub(logger, 'error');
       const resJsonSpy = sandbox.spy();
       const cliServiceStub = sandbox.stub(cliService, 'findDatasetsWithVersions').callsFake((userId, onCleaned) => onCleaned(expectedError));
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'fake'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.getDatasets(req, res);
 
@@ -1866,6 +2039,13 @@ describe('WS-CLI controller', () => {
   });
 
   describe('Get state of Dataset removal', () => {
+    let expressRequest;
+    let expressResponse;
+
+    beforeEach(() => {
+      expressRequest  = sandbox.createStubInstance(Request);
+      expressResponse = sandbox.createStubInstance(Response);
+    });
 
     afterEach(() => sandbox.restore());
 
@@ -1883,16 +2063,16 @@ describe('WS-CLI controller', () => {
       getRemovalStateForDatasetStub
         .onFirstCall().callsArgWith(2, null, removalStatus);
 
-      const req = {
+      const req = _.extend({
         query: {
           datasetName: 'datasetName'
         },
         user: {
           name: 'fake'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: () => {
           sinon.assert.notCalled(toErrorResponseSpy);
           sinon.assert.calledOnce(toDataResponseSpy);
@@ -1903,7 +2083,7 @@ describe('WS-CLI controller', () => {
 
           done();
         }
-      };
+      }, expressResponse);
 
       cliController.getStateOfDatasetRemoval(req, res);
     });
@@ -1919,16 +2099,16 @@ describe('WS-CLI controller', () => {
       getRemovalStateForDatasetStub
         .onFirstCall().callsArgWith(2, expectedError, null);
 
-      const req = {
+      const req = _.extend({
         query: {
           datasetName: 'datasetName'
         },
         user: {
           name: 'fake'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: () => {
           sinon.assert.notCalled(toDataResponseSpy);
           sinon.assert.calledOnce(toErrorResponseSpy);
@@ -1941,7 +2121,7 @@ describe('WS-CLI controller', () => {
           sinon.assert.calledWith(getRemovalStateForDatasetStub, req.query.datasetName, req.user);
           done();
         }
-      };
+      }, expressResponse);
 
       cliController.getStateOfDatasetRemoval(req, res);
     });
@@ -1953,14 +2133,14 @@ describe('WS-CLI controller', () => {
 
       const expectedError = 'No dataset name was given';
 
-      const req = {
+      const req = _.extend({
         query: {},
         user: {
           name: 'fake'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: () => {
           sinon.assert.notCalled(toDataResponseSpy);
           sinon.assert.calledOnce(toErrorResponseSpy);
@@ -1971,7 +2151,7 @@ describe('WS-CLI controller', () => {
 
           done();
         }
-      };
+      }, expressResponse);
 
       cliController.getStateOfDatasetRemoval(req, res);
     });
@@ -1983,9 +2163,17 @@ describe('WS-CLI controller', () => {
 
       const expectedError = 'Unauthenticated user cannot perform CLI operations';
 
-      const req = {};
+      const req: WSRequest = _.extend({
+        query: '',
+        queryParser: {
+          query: '',
+          queryType: ''
+        },
+        body: {},
+        requestStartTime: 123
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: () => {
           sinon.assert.notCalled(toDataResponseSpy);
           sinon.assert.calledOnce(toErrorResponseSpy);
@@ -1996,13 +2184,20 @@ describe('WS-CLI controller', () => {
 
           done();
         }
-      };
+      }, expressResponse);
 
       cliController.getStateOfDatasetRemoval(req, res);
     });
   });
 
   describe('Get removable Datasets', () => {
+    let expressRequest;
+    let expressResponse;
+
+    beforeEach(() => {
+      expressRequest  = sandbox.createStubInstance(Request);
+      expressResponse = sandbox.createStubInstance(Response);
+    });
 
     afterEach(() => sandbox.restore());
 
@@ -2010,22 +2205,22 @@ describe('WS-CLI controller', () => {
       const toDataResponseSpy = sandbox.spy(routeUtils, 'toDataResponse');
       const expectedInfoMessage = `finished getting removable datasets`;
       const expectedData = [];
-      const expectedResponse = { success: true, data: expectedData };
+      const expectedResponse = {success: true, data: expectedData};
 
       const loggerStub = sandbox.stub(logger, 'info');
       const resJsonSpy = sandbox.spy();
       const cliServiceStub = sandbox.stub(cliService, 'getRemovableDatasets').callsFake((userId, onCleaned) => onCleaned(null, expectedData));
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'fake'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.getRemovableDatasets(req, res);
 
@@ -2047,10 +2242,18 @@ describe('WS-CLI controller', () => {
       const resJsonSpy = sandbox.spy();
       const cliServiceStub = sandbox.stub(cliService, 'getRemovableDatasets');
 
-      const req = {};
-      const res = {
+      const req: WSRequest = _.extend({
+        query: '',
+        queryParser: {
+          query: '',
+          queryType: ''
+        },
+        body: {},
+        requestStartTime: 123
+      }, expressRequest);;
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.getRemovableDatasets(req, res);
 
@@ -2066,22 +2269,22 @@ describe('WS-CLI controller', () => {
     it('should respond with an error if receiving removable datasets got failed', () => {
       const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
-      const expectedResponse = { success: false, error: expectedError };
+      const expectedResponse = {success: false, error: expectedError};
 
       const loggerStub = sandbox.stub(logger, 'error');
       const resJsonSpy = sandbox.spy();
       const cliServiceStub = sandbox.stub(cliService, 'getRemovableDatasets').callsFake((userId, onCleaned) => onCleaned(expectedError));
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'fake'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.getRemovableDatasets(req, res);
 
@@ -2096,6 +2299,13 @@ describe('WS-CLI controller', () => {
   });
 
   describe('Get private Datasets', () => {
+    let expressRequest;
+    let expressResponse;
+
+    beforeEach(() => {
+      expressRequest  = sandbox.createStubInstance(Request);
+      expressResponse = sandbox.createStubInstance(Response);
+    });
 
     afterEach(() => sandbox.restore());
 
@@ -2103,22 +2313,22 @@ describe('WS-CLI controller', () => {
       const toDataResponseSpy = sandbox.spy(routeUtils, 'toDataResponse');
       const expectedInfoMessage = `finished getting private datasets`;
       const expectedData = [];
-      const expectedResponse = { success: true, data: expectedData };
+      const expectedResponse = {success: true, data: expectedData};
 
       const loggerStub = sandbox.stub(logger, 'info');
       const resJsonSpy = sandbox.spy();
       const cliServiceStub = sandbox.stub(cliService, 'getPrivateDatasets').callsFake((userId, onCleaned) => onCleaned(null, expectedData));
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'fake'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.getPrivateDatasets(req, res);
 
@@ -2140,10 +2350,18 @@ describe('WS-CLI controller', () => {
       const resJsonSpy = sandbox.spy();
       const cliServiceStub = sandbox.stub(cliService, 'getPrivateDatasets');
 
-      const req = {};
-      const res = {
+      const req: WSRequest = _.extend({
+        query: '',
+        queryParser: {
+          query: '',
+          queryType: ''
+        },
+        body: {},
+        requestStartTime: 123
+      }, expressRequest);;
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.getPrivateDatasets(req, res);
 
@@ -2159,22 +2377,22 @@ describe('WS-CLI controller', () => {
     it('should respond with an error if receiving private datasets got failed', () => {
       const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
-      const expectedResponse = { success: false, error: expectedError };
+      const expectedResponse = {success: false, error: expectedError};
 
       const loggerStub = sandbox.stub(logger, 'error');
       const resJsonSpy = sandbox.spy();
       const cliServiceStub = sandbox.stub(cliService, 'getPrivateDatasets').callsFake((userId, onCleaned) => onCleaned(expectedError));
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'fake'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.getPrivateDatasets(req, res);
 
@@ -2189,6 +2407,13 @@ describe('WS-CLI controller', () => {
   });
 
   describe('Generate Dataset access token', () => {
+    let expressRequest;
+    let expressResponse;
+
+    beforeEach(() => {
+      expressRequest  = sandbox.createStubInstance(Request);
+      expressResponse = sandbox.createStubInstance(Response);
+    });
 
     afterEach(() => sandbox.restore());
 
@@ -2200,11 +2425,19 @@ describe('WS-CLI controller', () => {
       const loggerStub = sandbox.stub(logger, 'error');
       const resJsonSpy = sandbox.spy();
 
-      const req = {};
+      const req: WSRequest = _.extend({
+        query: '',
+        queryParser: {
+          query: '',
+          queryType: ''
+        },
+        body: {},
+        requestStartTime: 123
+      }, expressRequest);;
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.generateDatasetAccessToken(req, res);
 
@@ -2219,22 +2452,22 @@ describe('WS-CLI controller', () => {
     it('should respond with an error when dataset name is absent in req.body', () => {
       const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'No dataset name was given';
-      const expectedResponse = { success: false, error: expectedError };
+      const expectedResponse = {success: false, error: expectedError};
 
       const loggerStub = sandbox.stub(logger, 'error');
       const resJsonSpy = sandbox.spy();
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'user'
         },
         body: {}
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.generateDatasetAccessToken(req, res);
 
@@ -2249,7 +2482,7 @@ describe('WS-CLI controller', () => {
     it('should respond with an error when cli service coulnd\'t set access token for given dataset', () => {
       const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Boo!';
-      const expectedResponse = { success: false, error: expectedError };
+      const expectedResponse = {success: false, error: expectedError};
 
       const loggerStub = sandbox.stub(logger, 'error');
       const resJsonSpy = sandbox.spy();
@@ -2257,7 +2490,7 @@ describe('WS-CLI controller', () => {
         return onDatasetRemoved(expectedError);
       });
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'user'
@@ -2265,11 +2498,11 @@ describe('WS-CLI controller', () => {
         body: {
           datasetName: 'dataset'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.generateDatasetAccessToken(req, res);
 
@@ -2286,7 +2519,7 @@ describe('WS-CLI controller', () => {
     it('should respond with an error when cli service couln\'t find dataset', () => {
       const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedError = 'Cannot generate access token for given dataset';
-      const expectedResponse = { success: false, error: expectedError };
+      const expectedResponse = {success: false, error: expectedError};
 
       const loggerErrorStub = sandbox.stub(logger, 'error');
       const loggerWarnStub = sandbox.stub(logger, 'warn');
@@ -2295,7 +2528,7 @@ describe('WS-CLI controller', () => {
         return onDatasetRemoved(null, null);
       });
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'user'
@@ -2303,13 +2536,13 @@ describe('WS-CLI controller', () => {
         body: {
           datasetName: 'dataset'
         }
-      };
+      }, expressRequest);
 
       const expectedWarn = `User was trying to generate an accessToken for not existing dataset: ${req.body.datasetName} or dataset that is not owned by him (Id: ${req.user._id}).`;
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.generateDatasetAccessToken(req, res);
 
@@ -2333,7 +2566,7 @@ describe('WS-CLI controller', () => {
         name: 'dataset',
         accessToken: 'TTTTTTTTT'
       };
-      const expectedResponse = { success: true, data: { accessToken: expectedData.accessToken } };
+      const expectedResponse = {success: true, data: {accessToken: expectedData.accessToken}};
 
       const loggerErrorStub = sandbox.stub(logger, 'error');
       const loggerWarnStub = sandbox.stub(logger, 'warn');
@@ -2342,7 +2575,7 @@ describe('WS-CLI controller', () => {
         return onDatasetRemoved(null, expectedData);
       });
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: '123',
           name: 'user'
@@ -2350,11 +2583,11 @@ describe('WS-CLI controller', () => {
         body: {
           datasetName: 'dataset'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.generateDatasetAccessToken(req, res);
 
@@ -2366,11 +2599,18 @@ describe('WS-CLI controller', () => {
       sinon.assert.calledWithExactly(resJsonSpy, expectedResponse);
       sinon.assert.notCalled(toErrorResponseSpy);
       sinon.assert.calledOnce(toDataResponseSpy);
-      sinon.assert.calledWithExactly(toDataResponseSpy, { accessToken: expectedData.accessToken });
+      sinon.assert.calledWithExactly(toDataResponseSpy, {accessToken: expectedData.accessToken});
     });
   });
 
   describe('Get Datasets in progress', () => {
+    let expressRequest;
+    let expressResponse;
+
+    beforeEach(() => {
+      expressRequest  = sandbox.createStubInstance(Request);
+      expressResponse = sandbox.createStubInstance(Response);
+    });
 
     afterEach(() => sandbox.restore());
 
@@ -2383,10 +2623,18 @@ describe('WS-CLI controller', () => {
       const resJsonSpy = sandbox.spy();
       const cliServiceStub = sandbox.stub(cliService, 'cleanDdfRedisCache');
 
-      const req = {};
-      const res = {
+      const req: WSRequest = _.extend({
+        query: '',
+        queryParser: {
+          query: '',
+          queryType: ''
+        },
+        body: {},
+        requestStartTime: 123
+      }, expressRequest);;
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.getDatasetsInProgress(req, res);
 
@@ -2407,7 +2655,7 @@ describe('WS-CLI controller', () => {
       }];
       const expectedMessage = 'finished getting private datasets is progress';
 
-      const expectedResponse = { success: true, data: expectedData };
+      const expectedResponse = {success: true, data: expectedData};
 
       const loggerStub = sandbox.stub(logger, 'info');
       const resJsonSpy = sandbox.spy();
@@ -2415,16 +2663,16 @@ describe('WS-CLI controller', () => {
         return onFound(null, expectedData);
       });
 
-      const req = {
+      const req = _.extend({
         user: {
           _id: 'fakeId',
           name: 'fake'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.getDatasetsInProgress(req, res);
 
@@ -2442,7 +2690,7 @@ describe('WS-CLI controller', () => {
       const toDataResponseSpy = sandbox.spy(routeUtils, 'toDataResponse');
       const toErrorResponseSpy = sandbox.spy(routeUtils, 'toErrorResponse');
       const expectedMessage = 'Boo!';
-      const expectedResponse = { success: false, error: expectedMessage };
+      const expectedResponse = {success: false, error: expectedMessage};
 
       const loggerStub = sandbox.stub(logger, 'error');
       const resJsonSpy = sandbox.spy();
@@ -2450,15 +2698,15 @@ describe('WS-CLI controller', () => {
         return onFound(expectedMessage);
       });
 
-      const req = {
+      const req = _.extend({
         user: {
           name: 'fake'
         }
-      };
+      }, expressRequest);
 
-      const res = {
+      const res = _.extend({
         json: resJsonSpy
-      };
+      }, expressResponse);
 
       cliController.getDatasetsInProgress(req, res);
 
