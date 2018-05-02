@@ -11,9 +11,9 @@ import * as _ from 'lodash';
 const config = {
   INFLUXDB_HOST: 'waffle-server-monitoring.gapminderdev.org',
   INFLUXDB_PORT: 8086,
-  INFLUXDB_DATABASE_NAME: 'waffle-server-prod',
-  INFLUXDB_USER: 'gapminderprod',
-  INFLUXDB_PASSWORD: 'ORorniaNITitapEREn',
+  INFLUXDB_DATABASE_NAME: 'waffle-server-dev',
+  INFLUXDB_USER: 'gapminderdev',
+  INFLUXDB_PASSWORD: '',
 }
 
 const influxdbConfig: ISingleHostConfig = {

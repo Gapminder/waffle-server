@@ -8,6 +8,9 @@ import { config } from '../ws.config/config';
 import { logger } from '../ws.config/log';
 import * as express from 'express';
 import * as semver from 'semver';
+const {
+  performance
+} = require('perf_hooks');
 
 import { DatasetsRepository } from '../ws.repository/ddf/datasets/datasets.repository';
 import { RecentDdfqlQueriesRepository } from '../ws.repository/ddf/recent-ddfql-queries/recent-ddfql-queries.repository';
@@ -206,7 +209,7 @@ function respondWithRawDdf(req: WSRequest, res: express.Response, next: express.
 
     const collectionName = _.get(req.body, 'from', '');
     const docsAmount = _.get(result, collectionName, []).length;
-    _storeWarmUpQueryForDefaultDataset(_.extend({docsAmount}, req.body));
+    _storeWarmUpQueryForDefaultDataset(docsAmount, req);
 
     (req as any).rawData = { rawDdf: result };
 
@@ -214,16 +217,15 @@ function respondWithRawDdf(req: WSRequest, res: express.Response, next: express.
   };
 }
 
-function _storeWarmUpQueryForDefaultDataset(query: any): void {
-  const rawDdfQuery = _.get(query, 'body', null);
-  const docsAmount = _.get(query, 'docsAmount', 0);
-  const timeSpentInMillis = Date.now() - _.get(query, 'queryStartTime', 0);
+function _storeWarmUpQueryForDefaultDataset(docsAmount: number = 0, req: WSRequest): void {
+  const rawDdfQuery = _.get(req, 'queryParser', {});
+  const timeSpentInMillis = performance.now() - _.get(req, 'queryStartTime', 0);
 
   if (!rawDdfQuery) {
     return;
   }
 
-  if (config.IS_TEST && (_.has(query, 'dataset') || _.has(query, 'version') || _.has(query, 'format'))) {
+  if (config.IS_TESTING) {
     return;
   }
 
@@ -233,7 +235,7 @@ function _storeWarmUpQueryForDefaultDataset(query: any): void {
     if (error) {
       logger.debug(error);
     } else {
-      logger.debug('Writing query to cache warm up storage', rawDdfQuery.queryRaw);
+      logger.debug('Writing query to cache warm up storage', _.get(rawDdfQuery, 'query', ''));
     }
   });
 }
@@ -328,7 +330,7 @@ function toErrorResponse(response: FailedResponse | Error | string, context: Req
 
   TelegrafService.onFailedRespond(error, context);
   logger.error(error);
-  return { success: false, error };
+  return { success: false, error: error.message };
 }
 
 function toMessageResponse(message: string): MessageResponse {
@@ -341,7 +343,7 @@ function toDataResponse(data: any): DataResponse {
 
 interface ErrorResponse {
   success: boolean;
-  error: FailedResponse;
+  error: string;
 }
 
 interface DataResponse {

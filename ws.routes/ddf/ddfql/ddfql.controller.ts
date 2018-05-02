@@ -14,6 +14,7 @@ import { logger } from '../../../ws.config/log';
 import * as routeUtils from '../../utils';
 import { ServiceLocator } from '../../../ws.service-locator/index';
 import { AsyncResultCallback } from 'async';
+import { performance } from 'perf_hooks';
 
 function createDdfqlController(serviceLocator: ServiceLocator): Application {
   const app = serviceLocator.getApplication();

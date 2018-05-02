@@ -56,7 +56,13 @@ const environment = Object.freeze({
   DEFAULT_DATASETS: [],
 
   IS_MONITORING_NEEDED: true,
-  CLEAN_EXPORT: false
+  CLEAN_EXPORT: false,
+
+  INFLUXDB_HOST: 'localhost',
+  INFLUXDB_PORT: 8086,
+  INFLUXDB_DATABASE_NAME: 'waffle-server-default',
+  INFLUXDB_USER: 'gapminderdev',
+  INFLUXDB_PASSWORD: ''
 });
 
 export {environment};
