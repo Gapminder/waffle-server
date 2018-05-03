@@ -111,7 +111,7 @@ describe('Routes utils', () => {
         json: (response) => {
           expect(response).to.be.deep.equal({
             success: false,
-            message: `Dataset with given name ${expectedDatasetName} was not found`
+            error: `Dataset with given name ${expectedDatasetName} was not found`
           });
           done(); // At this point test is finished
         }
