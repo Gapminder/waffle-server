@@ -26,8 +26,8 @@ const DEFAULT_CONFIG: any = {
     REDIS: 'g1-small'
   },
   DEFAULT_DISK_SIZES: {
-    TM: '20GB',
-    WS: 20,
+    TM: '30GB',
+    WS: 30,
     MONGO: '30GB',
     REDIS: '10GB'
   },

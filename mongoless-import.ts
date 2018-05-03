@@ -195,7 +195,7 @@ function transformRepositoryStateDescriptorsArrayToHash(descriptors: RepositoryS
   }, {});
 }
 
-export function mongolessImport() {
+export function mongolessImport(): void {
   normalizeRepositoryDescriptorsSource();
   const repositoryStateDescriptors = getRepositoryStateDescriptors();
   const reposDescriptorsFile = path.resolve('.', 'ws.import', 'repos', 'repositories-descriptors.json');

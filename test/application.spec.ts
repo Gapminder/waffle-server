@@ -5,6 +5,7 @@ import { Application } from '../application';
 import * as Config from '../ws.config';
 import * as Routes from '../ws.routes';
 import { logger } from '../ws.config/log';
+import * as wsMongoless from '../mongoless-import';
 
 let sandbox = sinon.createSandbox();
 
@@ -16,6 +17,7 @@ describe('Application', () => {
   it('starts application successfully', function (): any {
     sandbox.stub(Config, 'configureWaffleServer');
     sandbox.stub(Routes, 'registerRoutes');
+    const mongolessImportStub = sandbox.stub(wsMongoless, 'mongolessImport');
 
     const importDdfReposStub = sandbox.stub();
     const makeDefaultUserStub = sandbox.stub();
@@ -62,6 +64,7 @@ describe('Application', () => {
         makeDefaultUserStub,
         listenStub,
         importDdfReposStub,
+        mongolessImportStub,
         warmUpCacheStub,
         longRunningQueriesKillerStub
       );
@@ -74,6 +77,7 @@ describe('Application', () => {
   it('does not warm up cache when not in the THRESHING_MACHINE mode', function (): any {
     sandbox.stub(Config, 'configureWaffleServer');
     sandbox.stub(Routes, 'registerRoutes');
+    const mongolessImportStub = sandbox.stub(wsMongoless, 'mongolessImport');
 
     const importDdfReposStub = sandbox.stub();
     const makeDefaultUserStub = sandbox.stub();
@@ -119,6 +123,7 @@ describe('Application', () => {
         makeDefaultUserStub,
         listenStub,
         importDdfReposStub,
+        mongolessImportStub,
         warmUpCacheStub,
         longRunningQueriesKillerStub
       );
@@ -131,6 +136,7 @@ describe('Application', () => {
   it('logs error when warmup failed', function (): any {
     sandbox.stub(Config, 'configureWaffleServer');
     sandbox.stub(Routes, 'registerRoutes');
+    const mongolessImportStub = sandbox.stub(wsMongoless, 'mongolessImport');
 
     const importDdfReposStub = sandbox.stub();
     const makeDefaultUserStub = sandbox.stub();
@@ -177,6 +183,7 @@ describe('Application', () => {
         makeDefaultUserStub,
         listenStub,
         importDdfReposStub,
+        mongolessImportStub,
         warmUpCacheStub,
         longRunningQueriesKillerStub
       );
@@ -189,6 +196,7 @@ describe('Application', () => {
   it('fails startup when query killer was not started properly', function (): any {
     sandbox.stub(Config, 'configureWaffleServer');
     sandbox.stub(Routes, 'registerRoutes');
+    const mongolessImportStub = sandbox.stub(wsMongoless, 'mongolessImport');
 
     const importDdfReposStub = sandbox.stub();
     const makeDefaultUserStub = sandbox.stub();
@@ -234,6 +242,7 @@ describe('Application', () => {
         makeDefaultUserStub,
         listenStub,
         importDdfReposStub,
+        mongolessImportStub,
         warmUpCacheStub,
         longRunningQueriesKillerStub
       );
