@@ -35,7 +35,6 @@ export class Application {
 
   public run(): Promise<void> {
     return this.usersService.makeDefaultUser()
-      .then(() => TelegrafService.onInstanceRunning())
       .then(() => this.listen(this.config.PORT))
       .then(() => logger.info('\nExpress server listening on port %d in %s mode', this.config.PORT, this.config.NODE_ENV))
       .then(() => this.importService.importDdfRepos())
