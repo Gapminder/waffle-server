@@ -13,6 +13,7 @@ function registerDdfCliRoutes(serviceLocator: ServiceLocator): Application {
   router.use(cors());
   router.use(passport.initialize());
   router.use(compression());
+  router.use(routeUtils.trackingRequestTime);
 
   // authentication route should be defined before router.use(passport.authenticate('token'));
   // cause it is entry point for acquiring token and requesting other resources
