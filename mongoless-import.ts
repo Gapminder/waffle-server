@@ -195,9 +195,11 @@ function transformRepositoryStateDescriptorsArrayToHash(descriptors: RepositoryS
   }, {});
 }
 
-normalizeRepositoryDescriptorsSource();
-const repositoryStateDescriptors = getRepositoryStateDescriptors();
-const reposDescriptorsFile = path.resolve('.', 'ws.import', 'repos', 'repositories-descriptors.json');
+export function mongolessImport() {
+  normalizeRepositoryDescriptorsSource();
+  const repositoryStateDescriptors = getRepositoryStateDescriptors();
+  const reposDescriptorsFile = path.resolve('.', 'ws.import', 'repos', 'repositories-descriptors.json');
 
-fs.writeFileSync(reposDescriptorsFile,
-  JSON.stringify(transformRepositoryStateDescriptorsArrayToHash(repositoryStateDescriptors), null, 2));
+  fs.writeFileSync(reposDescriptorsFile,
+    JSON.stringify(transformRepositoryStateDescriptorsArrayToHash(repositoryStateDescriptors), null, 2));
+}
