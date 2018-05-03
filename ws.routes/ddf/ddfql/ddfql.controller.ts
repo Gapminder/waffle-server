@@ -17,6 +17,7 @@ import { getDDFCsvReaderObject } from 'vizabi-ddfcsv-reader';
 import { ServiceLocator } from '../../../ws.service-locator/index';
 import { AsyncResultCallback } from 'async';
 import { defaultRepository } from '../../../ws.config/mongoless-repos.config';
+import { performance } from 'perf_hooks';
 
 function createDdfqlController(serviceLocator: ServiceLocator): Application {
   const app = serviceLocator.getApplication();
@@ -31,6 +32,7 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
     routeUtils.getCacheConfig(constants.DDF_REDIS_CACHE_NAME_DDFQL),
     cache.route(statusCodesExpirationConfig),
     compression(),
+    routeUtils.trackingRequestTime,
     routeUtils.bodyFromUrlQuery,
     routeUtils.checkDatasetAccessibility,
     getDdfStats,
@@ -43,6 +45,7 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
     routeUtils.getCacheConfig(constants.DDF_REDIS_CACHE_NAME_DDFQL),
     cache.route(statusCodesExpirationConfig),
     compression(),
+    routeUtils.trackingRequestTime,
     routeUtils.checkDatasetAccessibility,
     getDdfStats,
     dataPostProcessors.gapfilling,
@@ -64,7 +67,7 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
       res.json(data);
     }).catch((error: any) => {
       logger.error(error);
-      res.json(routesUtils.toErrorResponse(error));
+      res.json(routesUtils.toErrorResponse(error, req));
     });
   });
 
@@ -82,7 +85,7 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
       res.json(data);
     }).catch((error: any) => {
       logger.error(error);
-      res.json(routesUtils.toErrorResponse(error));
+      res.json(routesUtils.toErrorResponse(error, req));
     });
   });
 
@@ -92,11 +95,10 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
     logger.info({ req }, 'DDFQL URL');
     logger.info({ obj: req.body }, 'DDFQL');
 
-    const queryStartTime: number = Date.now();
+    req.queryStartTime = performance.now();
     const query = _.get(req, 'body', {});
     const from = _.get(req, 'body.from', null);
-
-    const onEntriesCollected = routeUtils.respondWithRawDdf(_.extend({ queryStartTime }, query), req, res, next) as AsyncResultCallback<any, any>;
+    const onEntriesCollected = routeUtils.respondWithRawDdf(req, res, next) as AsyncResultCallback<any, any>;
 
     if (!from) {
       return onEntriesCollected(`The filed 'from' must present in query.`, null);
@@ -136,7 +138,7 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
       return conceptsService.collectConceptsByDdfql(options, onEntriesCollected);
     } else if (queryToSchema(from)) {
       req.ddfDataType = constants.SCHEMA;
-      const onSchemaEntriesFound = routeUtils.respondWithRawDdf(_.extend({ queryStartTime }, query), req, res, next) as AsyncResultCallback<any, any>;
+      const onSchemaEntriesFound = routeUtils.respondWithRawDdf(req, res, next) as AsyncResultCallback<any, any> ;
       return schemaService.findSchemaByDdfql(options, onSchemaEntriesFound);
     } else {
       return onEntriesCollected(`Value '${from}' in the 'from' field isn't supported yet.`, null);

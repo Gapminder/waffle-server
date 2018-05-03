@@ -46,6 +46,7 @@ describe('Mongo.helper Commands', () => {
   it('if MONGODB_URL already present in the context than skip setting Mongo instance and use existing', (done: Function) => {
     const expectedContextWithMongodbURL = Object.freeze({
       ...expectedContext,
+      SHOULD_BE_RESERVED_MONGO_INTERNAL_IP: true,
       COMPUTED_VARIABLES: Object.freeze({
         MONGODB_URL: 'TEST_MONGODB_URL', // added this
         MONGODB_INSTANCE_NAME: 'TEST_MONGODB_INSTANCE_NAME',

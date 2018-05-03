@@ -13,6 +13,7 @@ function registerDdfAssetsRoutes(serviceLocator: ServiceLocator): Application {
 
   router.use('*',
     compression(),
+    routeUtils.trackingRequestTime,
     routeUtils.bodyFromUrlAssets,
     routeUtils.checkDatasetAccessibility,
     AssetsController.serveAsset

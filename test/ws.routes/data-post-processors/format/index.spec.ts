@@ -1,13 +1,13 @@
 import '../../../../ws.repository';
 
 import * as sinon from 'sinon';
-import { expect } from 'chai';
+import {expect} from 'chai';
 import * as proxyquire from 'proxyquire';
 import * as stream from 'stream';
 import * as hi from 'highland';
-import { constants } from '../../../../ws.utils/constants';
+import {constants} from '../../../../ws.utils/constants';
 import * as routesUtils from '../../../../ws.routes/utils';
-import { logger } from '../../../../ws.config/log';
+import {logger} from '../../../../ws.config/log';
 
 const sandbox = sinon.createSandbox();
 
@@ -33,6 +33,7 @@ describe('Format Post Processor', () => {
         format: 'bla'
       },
       rawData: [],
+      body: {},
       ddfDataType: constants.CONCEPTS
     };
 
@@ -272,10 +273,15 @@ describe('Format Post Processor', () => {
   it('should hi.stream response if formatter returned data as hi.stream', () => {
     const expectedMimeType = 'application/json; charset=utf-8';
     const expectedObject = {};
-    const expectedErrorMessage = 'ALARM!!!';
+    const expectedErrorMessage = {
+      message: 'ALARM!!!',
+      code: 999,
+      type: 'INTERNAL_SERVER_TEXT_ERROR',
+      place: 'streamOrSend'
+    };
     const expectedResponse = {
       success: false,
-      error: expectedErrorMessage
+      error: expectedErrorMessage.message
     };
 
     const req = {
@@ -301,7 +307,7 @@ describe('Format Post Processor', () => {
           expect(formatType).to.not.exist;
 
           return onFormatted(null, hi([expectedObject]).map(() => {
-            throw expectedErrorMessage;
+            throw expectedErrorMessage.message;
           }));
         }
       }
