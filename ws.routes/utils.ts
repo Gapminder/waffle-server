@@ -278,11 +278,11 @@ function checkDatasetAccessibility(req: WSRequest, res: express.Response, next: 
   return DatasetsRepository.findByName(datasetName, (error: string, dataset: any) => {
     if (error) {
       logger.error(error);
-      return res.json({ success: false, error });
+      return res.json(toErrorResponse(error, req));
     }
 
     if (!dataset) {
-      return res.json({ success: false, message: `Dataset with given name ${datasetName} was not found` });
+      return res.json(toErrorResponse(`Dataset with given name ${datasetName} was not found`, req));
     }
 
     if (!dataset.private) {
@@ -294,7 +294,7 @@ function checkDatasetAccessibility(req: WSRequest, res: express.Response, next: 
       return next();
     }
 
-    return res.json({ success: false, error: 'You are not allowed to access data according to given query' });
+    return res.json(toErrorResponse('You are not allowed to access data according to given query', req));
   });
 }
 

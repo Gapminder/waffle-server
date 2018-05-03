@@ -12,6 +12,7 @@ export function setupMongoInstance(externalContext: any, cb: Function): void {
     MONGO_REGION,
     MONGO_MACHINE_TYPE,
     MONGO_DISK_SIZE,
+    SHOULD_BE_RESERVED_MONGO_INTERNAL_IP,
     COMPUTED_VARIABLES: {
       ENVIRONMENT,
       VERSION,
@@ -27,6 +28,7 @@ export function setupMongoInstance(externalContext: any, cb: Function): void {
     VERSION,
     MONGO_ZONE,
     MONGODB_INSTANCE_NAME,
+    SHOULD_BE_RESERVED_MONGO_INTERNAL_IP,
     MONGO_MACHINE_TYPE,
     MONGO_DISK_SIZE,
     MONGO_HOST: null,
@@ -91,12 +93,18 @@ function getMongoInternalIP(externalContext: any, cb: Function): void {
 
 function reserveMongoInternalIP(externalContext: any, cb: Function): void {
   const {
+    SHOULD_BE_RESERVED_MONGO_INTERNAL_IP,
     MONGO_HOST,
     MONGO_SUBNETWORK,
     MONGO_REGION,
     ENVIRONMENT,
     VERSION
   } = externalContext;
+
+  if (!SHOULD_BE_RESERVED_MONGO_INTERNAL_IP) {
+    logger.info('Ignore step with reserving mongo internal ip');
+    return cb(null, externalContext);
+  }
 
   const ADDRESS_NAME = `${ENVIRONMENT}-mongo-address-${VERSION}`;
   const command = `gcloud compute addresses create ${ADDRESS_NAME} --region ${MONGO_REGION} --subnet ${MONGO_SUBNETWORK} --addresses ${MONGO_HOST}`;
