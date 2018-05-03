@@ -1,6 +1,7 @@
 import * as _ from 'lodash';
 import * as cors from 'cors';
 import * as express from 'express';
+import * as routesUtils from '../../utils';
 import { Application, NextFunction } from 'express';
 import * as compression from 'compression';
 import { constants } from '../../../ws.utils/constants';
@@ -12,8 +13,10 @@ import * as dataPostProcessors from '../../data-post-processors';
 import { cache, statusCodesExpirationConfig } from '../../../ws.utils/redis-cache';
 import { logger } from '../../../ws.config/log';
 import * as routeUtils from '../../utils';
+import { getDDFCsvReaderObject } from 'vizabi-ddfcsv-reader';
 import { ServiceLocator } from '../../../ws.service-locator/index';
 import { AsyncResultCallback } from 'async';
+import { defaultRepository } from '../../../ws.config/mongoless-repos.config';
 import { performance } from 'perf_hooks';
 
 function createDdfqlController(serviceLocator: ServiceLocator): Application {
@@ -21,7 +24,7 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
 
   const router = express.Router();
 
-  router.options('/api/ddf/ql', cors({maxAge: 86400}));
+  router.options('/api/ddf/ql', cors({ maxAge: 86400 }));
 
   router.use(cors());
 
@@ -50,16 +53,51 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
     dataPostProcessors.pack
   );
 
+  router.get('/api/ddf/ml-ql', routeUtils.bodyFromUrlQuery, (req: any, res: any) => {
+    const datasetParam = req.body.dataset || defaultRepository;
+    const [dataset, branchParam] = datasetParam.split('#');
+    const branch = branchParam || 'master';
+    const commit = req.body.version || 'HEAD';
+    const repositoriesDescriptors = require('../../../ws.import/repos/repositories-descriptors.json');
+    const repositoriesDescriptor = repositoriesDescriptors[`${dataset}@${branch}:${commit}`];
+    const reader = getDDFCsvReaderObject();
+
+    reader.init({ path: repositoriesDescriptor.path });
+    reader.read(req.body).then((data: any[]) => {
+      res.json(data);
+    }).catch((error: any) => {
+      logger.error(error);
+      res.json(routesUtils.toErrorResponse(error, req));
+    });
+  });
+
+  router.post('/api/ddf/ml-ql', routeUtils.bodyFromUrlQuery, (req: any, res: any) => {
+    const datasetParam = req.body.dataset || defaultRepository;
+    const [dataset, branchParam] = datasetParam.split('#');
+    const branch = branchParam || 'master';
+    const commit = req.body.version || 'HEAD';
+    const repositoriesDescriptors = require('../../../ws.import/repos/repositories-descriptors.json');
+    const repositoriesDescriptor = repositoriesDescriptors[`${dataset}@${branch}:${commit}`];
+    const reader = getDDFCsvReaderObject();
+
+    reader.init({ path: repositoriesDescriptor.path });
+    reader.read(req.body).then((data: any[]) => {
+      res.json(data);
+    }).catch((error: any) => {
+      logger.error(error);
+      res.json(routesUtils.toErrorResponse(error, req));
+    });
+  });
+
   return app.use(router);
 
   function getDdfStats(req: any, res: any, next: NextFunction): void {
-    logger.info({req}, 'DDFQL URL');
-    logger.info({obj: req.body}, 'DDFQL');
+    logger.info({ req }, 'DDFQL URL');
+    logger.info({ obj: req.body }, 'DDFQL');
 
     req.queryStartTime = performance.now();
     const query = _.get(req, 'body', {});
     const from = _.get(req, 'body.from', null);
-
     const onEntriesCollected = routeUtils.respondWithRawDdf(req, res, next) as AsyncResultCallback<any, any>;
 
     if (!from) {
