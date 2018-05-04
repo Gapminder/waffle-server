@@ -48,6 +48,11 @@ function createAdapterServiceController(serviceLocator: ServiceLocator): Applica
     (req: any, res: any) => res.json(world50m)
   );
 
+  router.get('/healthz',
+    cors(),
+    (req: express.Request, res: express.Response) => res.send('OK')
+  );
+
   return app.use(router);
 
   function getTranslations(req: any, res: any): void {

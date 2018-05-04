@@ -159,9 +159,9 @@ RUN echo "export NODE_ENV=\"${NODE_ENV}\"\n" \
   "export REGION=\"${REGION}\"\n" \
   "export VERSION_TAG=\"${VERSION_TAG}\"\n" \
   "export VERSION=\"${VERSION}\"" >> /etc/default/telegraf
-RUN chmod 777 /etc/default/telegraf
+RUN chmod 666 /etc/default/telegraf
 RUN touch /var/log/telegraf/telegraf.log
-RUN chmod 777 /var/log/telegraf/telegraf.log
+RUN chmod 666 /var/log/telegraf/telegraf.log
 
 #setup services settings
 RUN mkdir -p /var/log/supervisor
