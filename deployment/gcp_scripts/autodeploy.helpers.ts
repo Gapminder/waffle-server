@@ -57,7 +57,7 @@ export function setDefaultProject(externalContext: any, cb: Function): void {
 export function setupAPIs(apisList: string[], options: any, externalContext: any, cb: Function): void {
   const { action = 'enable' } = options;
 
-  if (process.env.IGNORE_ENABLING_GCP_API === 'true') {
+  if (process.env.IGNORE_ENABLING_GCP_API !== 'false') {
     logger.info('Ignore step with setting up gcp API');
     return cb(null, externalContext);
   }
@@ -342,7 +342,7 @@ export function createPods(externalContext: any, cb: Function): void {
     NUMBER_REPLICAS
   } = externalContext;
 
-  const command = `kubectl run ${REPLICAS_NAME} --image=${IMAGE_URL} --port=${PORT} --replicas=${NUMBER_REPLICAS} --requests='cpu=2,memory=3.2G'`;
+  const command = `kubectl run ${REPLICAS_NAME} --image=${IMAGE_URL} --port=${PORT} --replicas=${NUMBER_REPLICAS}`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
