@@ -21,7 +21,7 @@ const DEFAULT_CONFIG: any = {
   },
   DEFAULT_MACHINE_TYPES: {
     TM: 'n1-highmem-2',
-    WS: 'g1-small',
+    WS: 'n1-standard-2',
     MONGO: 'n1-highmem-2',
     REDIS: 'g1-small'
   },
@@ -52,9 +52,9 @@ const DEFAULT_CONFIG: any = {
     ENABLE_AUTOSCALING: true,
     DEFAULT_REGION: 'europe-west1',
     MAX_NODES_PER_POOL: 100,
-    MAX_NODES: 20,
+    MAX_NODES: 10,
     MIN_NODES: 2,
-    NUM_NODES: 5,
+    NUM_NODES: 2,
     MAX_NUMBER_REPLICAS: 10,
     MIN_NUMBER_REPLICAS: 2,
     NUMBER_REPLICAS: 2,
@@ -65,7 +65,6 @@ const DEFAULT_CONFIG: any = {
     DEFAULT_MONGODB_PORT: 27017,
     DEFAULT_MONGODB_PATH: '/data/db',
     CREATE_CLUSTER__ALLOWED_PARAMS: [
-      'IMAGE_TYPE',
       'MACHINE_TYPE',
       'MAX_NODES_PER_POOL',
       'ENABLE_AUTOSCALING',
