@@ -6,6 +6,7 @@ import { logger } from './ws.config/log';
 import { ServiceLocator } from './ws.service-locator';
 import * as util from 'util';
 import { CronJob } from './ws.utils/long-running-queries-killer';
+import { mongolessImport } from './mongoless-import';
 
 export class Application {
   public listen: Function;
@@ -37,6 +38,7 @@ export class Application {
       .then(() => this.listen(this.config.PORT))
       .then(() => logger.info('\nExpress server listening on port %d in %s mode', this.config.PORT, this.config.NODE_ENV))
       .then(() => this.importService.importDdfRepos())
+      .then(() => mongolessImport())
       .then(() => this.warmup())
       .then(() => this.startLongRunningQueriesKiller());
   }

@@ -15,37 +15,38 @@ describe('Autodeploy.helper Commands', () => {
   afterEach(() => sandbox.restore());
 
   it('createProject: use FOLDER_ID as folder flag', (done: Function) => {
-    const runShellCommandStub = sandbox.stub(commonHelpers, 'runShellCommand').callsArgWithAsync(2, null);
     const expectedContext = {
       PROJECT_ID: 'TEST_PROJECT_ID',
       PROJECT_NAME: 'TEST_PROJECT_NAME',
       PROJECT_LABELS: 'TEST_PROJECT_NAME',
       FOLDER_ID: 'TEST_FOLDER_ID'
     };
+    const runShellCommandStub = sandbox.stub(commonHelpers, 'runShellCommand').callsArgWithAsync(2, null);
 
     autoDeployHelpers.createProject({ ...expectedContext }, (error: string, externalContext: any) => {
 
-      sinon.assert.calledWith(runShellCommandStub, expectNoEmptyParamsInCommand.and(hasFlag('folder')));
       expect(error).to.be.an('null');
       expect(externalContext).to.deep.equal(expectedContext);
+      sinon.assert.calledWith(runShellCommandStub, expectNoEmptyParamsInCommand.and(hasFlag('folder')));
 
       done();
     });
   });
 
   it('createProject: folder flag is ignored when folderId was NOT set', (done: Function) => {
-    const runShellCommandStub = sandbox.stub(commonHelpers, 'runShellCommand').callsArgWithAsync(2, null);
     const expectedContext = {
       PROJECT_ID: 'TEST_PROJECT_ID',
       PROJECT_NAME: 'TEST_PROJECT_NAME',
       PROJECT_LABELS: 'TEST_PROJECT_NAME'
     };
+    const runShellCommandStub = sandbox.stub(commonHelpers, 'runShellCommand').callsArgWithAsync(2, null);
 
     autoDeployHelpers.createProject({ ...expectedContext }, (error: string, externalContext: any) => {
 
-      sinon.assert.calledWith(runShellCommandStub, expectNoEmptyParamsInCommand);
       expect(error).to.be.an('null');
       expect(externalContext).to.deep.equal(expectedContext);
+      sinon.assert.calledOnce(runShellCommandStub);
+      sinon.assert.calledWith(runShellCommandStub, expectNoEmptyParamsInCommand);
 
       done();
     });
@@ -62,8 +63,11 @@ describe('Autodeploy.helper Commands', () => {
     const runShellCommandStub = sandbox.stub(commonHelpers, 'runShellCommand').callsArgWithAsync(2, expectedError);
 
     autoDeployHelpers.createProject({ ...expectedContext }, (error: string, externalContext: any) => {
+
       expect(error).to.be.an('null');
       expect(externalContext).to.deep.equal(expectedContext);
+      sinon.assert.calledOnce(runShellCommandStub);
+
       done();
     });
   });
@@ -79,14 +83,18 @@ describe('Autodeploy.helper Commands', () => {
     const runShellCommandStub = sandbox.stub(commonHelpers, 'runShellCommand').callsArgWithAsync(2, expectedError, expectedContext);
 
     autoDeployHelpers.createProject({ ...expectedContext }, (error: string, externalContext: any) => {
+
       expect(error).to.equal(expectedError);
       expect(externalContext).to.deep.equal(expectedContext);
+      sinon.assert.calledOnce(runShellCommandStub);
+
       done();
     });
   });
 
   it('setupAPIs: use apisList from patched arguments', (done: Function) => {
-    const runShellCommandStub = sandbox.stub(commonHelpers, 'runShellCommand').callsArgWithAsync(2, null);
+    const IGNORE_ENABLING_GCP_API = process.env.IGNORE_ENABLING_GCP_API;
+    process.env.IGNORE_ENABLING_GCP_API = 'false';
     const expectedContext = {
       PROJECT_NAME: 'TEST_PROJECT_NAME',
       PROJECT_LABELS: 'TEST_PROJECT_NAME',
@@ -94,13 +102,16 @@ describe('Autodeploy.helper Commands', () => {
     };
     const apisListStub = ['cloudbilling.googleapis.com'];
     const apisOptions = { action: 'enable' };
+    const runShellCommandStub = sandbox.stub(commonHelpers, 'runShellCommand').callsArgWithAsync(2, null);
 
     autoDeployHelpers.setupAPIs(apisListStub, apisOptions, { ...expectedContext }, (error: string, externalContext: any) => {
 
-      sinon.assert.calledWith(runShellCommandStub, expectNoEmptyParamsInCommand);
       expect(error).to.be.an('null');
       expect(externalContext).to.deep.equal(expectedContext);
+      sinon.assert.calledOnce(runShellCommandStub);
+      sinon.assert.calledWith(runShellCommandStub, expectNoEmptyParamsInCommand);
 
+      process.env.IGNORE_ENABLING_GCP_API = IGNORE_ENABLING_GCP_API;
       done();
     });
   });
@@ -134,11 +145,12 @@ describe('Autodeploy.helper Commands', () => {
     const expectedOptions = { pathsToCheck: [pathToTMNetworkIP] };
 
     const runShellCommandStub = sandbox.stub(commonHelpers, 'runShellCommand').callsArgWithAsync(2, null, runShellCommandResult);
+
     autoDeployHelpers.getTMExternalIP(initialContext, (error: string, externalContext: any) => {
 
-      sinon.assert.calledWith(runShellCommandStub, expectNoEmptyParamsInCommand, expectedOptions);
       expect(error).to.be.an('null');
       expect(externalContext).to.deep.equal(expectedContext);
+      sinon.assert.calledWith(runShellCommandStub, expectNoEmptyParamsInCommand, expectedOptions);
 
       done();
     });
@@ -166,9 +178,9 @@ describe('Autodeploy.helper Commands', () => {
 
     autoDeployHelpers.getTMExternalIP(_.cloneDeep(expectedContext), (error: string, externalContext: any) => {
 
-      sinon.assert.calledWith(runShellCommandStub, expectNoEmptyParamsInCommand, expectedOptions);
       expect(error).to.equal(expectedError);
       expect(externalContext).to.deep.equal(expectedContext);
+      sinon.assert.calledWith(runShellCommandStub, expectNoEmptyParamsInCommand, expectedOptions);
 
       done();
     });
@@ -189,9 +201,9 @@ describe('Autodeploy.helper Commands', () => {
 
     autoDeployHelpers.getTMExternalIP(_.cloneDeep(expectedContext), (error: string, externalContext: any) => {
 
-      sinon.assert.calledWith(runShellCommandStub, expectNoEmptyParamsInCommand, expectedOptions);
       expect(error).to.equal('Unexpected token u in JSON at position 0');
       expect(externalContext).to.deep.equal(expectedContext);
+      sinon.assert.calledWith(runShellCommandStub, expectNoEmptyParamsInCommand, expectedOptions);
 
       done();
     });
@@ -219,13 +231,13 @@ describe('Autodeploy.helper Commands', () => {
     };
     const expectedContext = ip;
     const expectedOptions = { pathsToCheck: [pathToLoadBalancerIP] };
-
     const runShellCommandStub = sandbox.stub(commonHelpers, 'runShellCommand').callsArgWithAsync(2, null, runShellCommandResult);
+
     autoDeployHelpers.printExternalIPs(initialContext, (error: string, externalContext: any) => {
 
-      sinon.assert.calledWith(runShellCommandStub, expectNoEmptyParamsInCommand, expectedOptions);
       expect(error).to.be.an('null');
       expect(externalContext).to.deep.equal(expectedContext);
+      sinon.assert.calledWith(runShellCommandStub, expectNoEmptyParamsInCommand, expectedOptions);
 
       done();
     });
@@ -243,11 +255,12 @@ describe('Autodeploy.helper Commands', () => {
     };
 
     const runShellCommandStub = sandbox.stub(commonHelpers, 'runShellCommand').callsArgWithAsync(2, null, runShellCommandResult);
+
     autoDeployHelpers.printExternalIPs({ ...expectedContext }, (error: string, externalContext: any) => {
 
-      sinon.assert.calledWith(runShellCommandStub, expectNoEmptyParamsInCommand);
       expect(error).to.be.an('undefined');
       expect(externalContext).to.be.an('undefined');
+      sinon.assert.calledWith(runShellCommandStub, expectNoEmptyParamsInCommand);
 
       done();
     });
