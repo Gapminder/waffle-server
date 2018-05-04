@@ -342,7 +342,7 @@ export function createPods(externalContext: any, cb: Function): void {
     NUMBER_REPLICAS
   } = externalContext;
 
-  const command = `kubectl run ${REPLICAS_NAME} --image=${IMAGE_URL} --port=${PORT} --replicas=${NUMBER_REPLICAS}`;
+  const command = `kubectl run ${REPLICAS_NAME} --image=${IMAGE_URL} --port=${PORT} --replicas=${NUMBER_REPLICAS} --requests='cpu=2,memory=3.2G'`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
