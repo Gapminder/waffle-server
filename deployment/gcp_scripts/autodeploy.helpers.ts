@@ -328,7 +328,7 @@ export function createCluster(externalContext: any, cb: Function): void {
   const gcloudArgs = _.pick(externalContext, CREATE_CLUSTER__ALLOWED_PARAMS);
   const commandArgs = getGCloudArguments(gcloudArgs);
   // fixme: --project=${PROJECT_ID}
-  const command = `gcloud container clusters create ${CLUSTER_NAME} ${commandArgs} --machine-type=${WS_MACHINE_TYPE} --disk-size=${WS_DISK_SIZE}`;
+  const command = `gcloud container clusters create ${CLUSTER_NAME} ${commandArgs} --machine-type=${WS_MACHINE_TYPE} --disk-size=${WS_DISK_SIZE} --enable-legacy-authorization`;
   const options: ExecOptions = {};
 
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
