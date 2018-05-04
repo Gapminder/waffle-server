@@ -203,3 +203,5 @@ export function mongolessImport(): void {
   fs.writeFileSync(reposDescriptorsFile,
     JSON.stringify(transformRepositoryStateDescriptorsArrayToHash(repositoryStateDescriptors), null, 2));
 }
+
+mongolessImport();
