@@ -19,6 +19,7 @@ import { AsyncResultCallback } from 'async';
 import { defaultRepository } from '../../../ws.config/mongoless-repos.config';
 import { performance } from 'perf_hooks';
 import {WSRequest} from '../../utils';
+import * as path from "path";
 
 function createDdfqlController(serviceLocator: ServiceLocator): Application {
   const app = serviceLocator.getApplication();
@@ -77,7 +78,7 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
     const [dataset, branchParam] = datasetParam.split('#');
     const branch = branchParam || 'master';
     const commit = _.get(reqBody, 'version', 'HEAD');
-    const repositoriesDescriptors = require('../../../ws.import/repos/repositories-descriptors.json');
+    const repositoriesDescriptors = require(path.resolve( 'ws.import', 'repos', 'repositories-descriptors.json'));
     const repositoriesDescriptor = repositoriesDescriptors[`${dataset}@${branch}:${commit}`];
     const reader = getDDFCsvReaderObject();
 
