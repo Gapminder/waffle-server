@@ -19,10 +19,7 @@ const repositoryDescriptors = {
     stage: ['HEAD']
   },
   'git@github.com:open-numbers/ddf--cait--historical_emissions.git': {},
-  'git@github.com:open-numbers/ddf--sodertornsmodellen.git': {},
-  'git@github.com:Gapminder/ddf--pcbs--census.git': {
-    'features/flattened': ['HEAD']
-  }
+  'git@github.com:open-numbers/ddf--sodertornsmodellen.git': {}
 };
 const defaultRepository = 'open-numbers/ddf--gapminder--systema_globalis';
 
