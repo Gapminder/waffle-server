@@ -8,6 +8,8 @@ import { expect } from 'chai';
 import * as URLON from 'urlon';
 import { logger } from '../ws.config/log';
 import * as async from 'async';
+import {ChildProcess} from 'child_process';
+import {ExecOutputReturnValue} from 'shelljs';
 
 const wsApi = supertest(e2eEnv.wsUrl);
 
@@ -44,7 +46,7 @@ function sendDdfqlRequest(ddfql: any, onResponseReceived: Function): void {
 function startWaffleServer(): void {
   setUpEnvironmentVariables();
   if (START_WAFFLE_SERVER) {
-    shell.exec(`PORT=${e2eEnv.wsPort} ./node_modules/.bin/pm2 restart ecosystem.config.js --name WSTEST > /dev/null`);
+    shell.exec(`./node_modules/.bin/pm2 restart ecosystem.config.js > /dev/null`);
 
     if (shell.error()) {
       logger.error('startWaffleServer error:', shell.error());
