@@ -2,7 +2,10 @@ import * as path from 'path';
 import * as shell from 'shelljs';
 import * as fsExtra from 'fs-extra';
 import * as fs from 'fs';
+import { constants } from './ws.utils/constants';
 import { config } from './ws.config/config';
+import { logger } from './ws.config/log';
+
 import { keys, includes } from 'lodash';
 import { repositoryDescriptors as repositoryDescriptorsSource } from './ws.config/mongoless-repos.config';
 
@@ -281,12 +284,15 @@ export async function mongolessImport(): Promise<void> {
     repositoryStateDescriptors.push(...await getRepositoryStateDescriptors(repository));
   }
 
-  const reposDescriptorsFile = path.resolve('.', 'ws.import', 'repos', 'repositories-descriptors.json');
+  const reposDescriptorsFile = path.resolve(constants.WORKDIR, 'ws.import', 'repos', 'repositories-descriptors.json');
   const reposDescriptorsFileContent =
     JSON.stringify(transformRepositoryStateDescriptorsArrayToHash(repositoryStateDescriptors), null, 2);
 
   return new Promise<void>((resolve: Function) => {
-    fs.writeFile(reposDescriptorsFile, reposDescriptorsFileContent, (err: Error) => resolve(err));
+    fs.writeFile(reposDescriptorsFile, reposDescriptorsFileContent, (err: Error) => {
+      logger.error(err);
+      resolve(err);
+    });
   });
 }
 

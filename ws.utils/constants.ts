@@ -1,3 +1,5 @@
+import * as fs from 'fs';
+
 const CONCEPTS = 'concepts';
 const ENTITIES = 'entities';
 const DATAPOINTS = 'datapoints';
@@ -17,6 +19,7 @@ const CONTINUOUS_CONCEPT_TYPES = [CONCEPT_TYPE_MEASURE, 'facet'];
 const DEFAULT_CONCEPT_TYPES = [...DESCRETE_CONCEPT_TYPES, ...CONTINUOUS_CONCEPT_TYPES];
 
 const constants: any = {
+  WORKDIR: fs.realpathSync('.'),
   MAX_VERSION: Number.MAX_SAFE_INTEGER,
 
   LIMIT_NUMBER_PROCESS: 10,
@@ -27,6 +30,7 @@ const constants: any = {
   DDF_REDIS_CACHE_LIFETIME: -1,
   DDF_REDIS_CACHE_NAME_TRANSLATIONS: TRANSLATIONS,
   DDF_REDIS_CACHE_NAME_DDFQL: 'ddfql',
+  DDF_REDIS_CACHE_NAME_MLQL: 'mlql',
 
   CONCEPTS,
   ENTITIES,

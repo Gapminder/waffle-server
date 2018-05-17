@@ -18,8 +18,8 @@ import { ServiceLocator } from '../../../ws.service-locator/index';
 import { AsyncResultCallback } from 'async';
 import { defaultRepository } from '../../../ws.config/mongoless-repos.config';
 import { performance } from 'perf_hooks';
-import {WSRequest} from '../../utils';
-import * as path from "path";
+import * as path from 'path';
+import * as fs from 'fs';
 
 function createDdfqlController(serviceLocator: ServiceLocator): Application {
   const app = serviceLocator.getApplication();
@@ -56,16 +56,31 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
   );
 
   router.get('/api/ddf/ml-ql',
+    routeUtils.getCacheConfig(constants.DDF_REDIS_CACHE_NAME_MLQL),
+    cache.route(statusCodesExpirationConfig),
+    compression(),
     routeUtils.trackingRequestTime,
     routeUtils.bodyFromUrlQuery,
-    getMongolessDdfStats);
+    getMongolessDdfStats
+  );
 
   router.post('/api/ddf/ml-ql',
+    routeUtils.getCacheConfig(constants.DDF_REDIS_CACHE_NAME_MLQL),
+    cache.route(statusCodesExpirationConfig),
+    compression(),
     routeUtils.trackingRequestTime,
     routeUtils.bodyFromUrlQuery,
-    getMongolessDdfStats);
+    getMongolessDdfStats
+  );
+
+  const getStackTrace = function (): void {
+    let obj = {};
+    Error.captureStackTrace(obj, getStackTrace);
+    return (obj as any).stack;
+  };
 
   return app.use(router);
+
 
   function getMongolessDdfStats(req: any, res: Response): void {
     logger.info({ req }, 'DDFQL URL');
@@ -75,16 +90,36 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
 
     const reqBody = _.get(req, 'body', {});
     const datasetParam = _.get(reqBody, 'dataset', defaultRepository);
-    const [dataset, branchParam] = datasetParam.split('#');
+    const [ dataset, branchParam ] = datasetParam.split('#');
     const branch = branchParam || 'master';
     const commit = _.get(reqBody, 'version', 'HEAD');
-    const repositoriesDescriptors = require(path.resolve( 'ws.import', 'repos', 'repositories-descriptors.json'));
-    const repositoriesDescriptor = repositoriesDescriptors[`${dataset}@${branch}:${commit}`];
+    const select = _.get(reqBody, 'select.key', []).concat(_.get(reqBody, 'select.value', []))
+    const repositoryDescriptorPath = path.resolve(constants.WORKDIR, 'ws.import', 'repos', 'repositories-descriptors.json');
+    let repositoriesDescriptors: object;
+
+    try {
+      logger.info('!!!!!!!!!!!!!!!!', repositoryDescriptorPath);
+      logger.info('!!!!!!!!!!!!!!!!', fs.statSync(repositoryDescriptorPath));
+      repositoriesDescriptors = JSON.parse(fs.readFileSync(repositoryDescriptorPath, 'utf8'));
+    } catch (error) {
+      console.trace('I am here');
+      logger.error(getStackTrace());
+      res.json(routesUtils.toErrorResponse(error, req, 'mongoless'));
+      return;
+    }
+
+    const repositoriesDescriptor = repositoriesDescriptors[ `${dataset}@${branch}:${commit}` ];
     const reader = getDDFCsvReaderObject();
 
     reader.init({ path: repositoriesDescriptor.path });
     reader.read(reqBody).then((data: any[]) => {
-      res.json(data);
+      res.set('Content-Type', 'application/json');
+      res.write(`{"success":true,"headers":${JSON.stringify(select)},"rows":[`);
+      data.map((row: object, index: number) => {
+        res.write((index ? ',' : '') + JSON.stringify(select.map((header: string) => row[ header ])));
+      });
+      res.write(`]}`);
+      res.end();
     }).catch((error: any) => {
       logger.error(error);
       res.json(routesUtils.toErrorResponse(error, req, 'mongoless'));
@@ -138,7 +173,7 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
       return conceptsService.collectConceptsByDdfql(options, onEntriesCollected);
     } else if (queryToSchema(from)) {
       req.ddfDataType = constants.SCHEMA;
-      const onSchemaEntriesFound = routeUtils.respondWithRawDdf(req, res, next) as AsyncResultCallback<any, any> ;
+      const onSchemaEntriesFound = routeUtils.respondWithRawDdf(req, res, next) as AsyncResultCallback<any, any>;
       return schemaService.findSchemaByDdfql(options, onSchemaEntriesFound);
     } else {
       return onEntriesCollected(`Value '${from}' in the 'from' field isn't supported yet.`, null);
