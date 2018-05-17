@@ -2,15 +2,22 @@ import 'mocha';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import _ = require('lodash');
-import * as commonHelpers from '../../deployment/gcp_scripts/common.helpers';
-import * as autoDeployHelpers from '../../deployment/gcp_scripts/autodeploy.helpers';
+import * as commonHelpers from '../../deployment/common.helpers';
+import * as autoDeployHelpers from '../../deployment/autodeploy.helpers';
 import { expectNoEmptyParamsInCommand, hasFlag } from './testUtils';
+import { loggerFactory } from '../../ws.config/log';
 
-import { pathToLoadBalancerIP, pathToTMNetworkIP } from '../../deployment/gcp_scripts/autodeploy.helpers';
+import { pathToLoadBalancerIP, pathToTMNetworkIP } from '../../deployment/autodeploy.helpers';
 
 const sandbox = sinon.createSandbox();
 
 describe('Autodeploy.helper Commands', () => {
+  let loggerStub;
+
+  beforeEach(() => {
+    loggerStub = {info: sandbox.stub(), error: sandbox.stub, warn: sandbox.stub()};
+    sandbox.stub(loggerFactory, 'getLogger').returns(loggerStub);
+  });
 
   afterEach(() => sandbox.restore());
 
@@ -22,12 +29,11 @@ describe('Autodeploy.helper Commands', () => {
       FOLDER_ID: 'TEST_FOLDER_ID'
     };
     const runShellCommandStub = sandbox.stub(commonHelpers, 'runShellCommand').callsArgWithAsync(2, null);
-
     autoDeployHelpers.createProject({ ...expectedContext }, (error: string, externalContext: any) => {
 
       expect(error).to.be.an('null');
       expect(externalContext).to.deep.equal(expectedContext);
-      sinon.assert.calledWith(runShellCommandStub, expectNoEmptyParamsInCommand.and(hasFlag('folder')));
+      sinon.assert.calledWithExactly(runShellCommandStub, expectNoEmptyParamsInCommand.and(hasFlag('folder')), sinon.match.object, sinon.match.func);
 
       done();
     });
@@ -67,6 +73,7 @@ describe('Autodeploy.helper Commands', () => {
       expect(error).to.be.an('null');
       expect(externalContext).to.deep.equal(expectedContext);
       sinon.assert.calledOnce(runShellCommandStub);
+      sinon.assert.calledWithExactly(loggerStub.info, 'RESULT: So, skipping the step..');
 
       done();
     });
@@ -229,41 +236,16 @@ describe('Autodeploy.helper Commands', () => {
       },
       LOAD_BALANCER_NAME: 'TEST_TM_ZONE'
     };
-    const expectedContext = ip;
     const expectedOptions = { pathsToCheck: [pathToLoadBalancerIP] };
     const runShellCommandStub = sandbox.stub(commonHelpers, 'runShellCommand').callsArgWithAsync(2, null, runShellCommandResult);
 
     autoDeployHelpers.printExternalIPs(initialContext, (error: string, externalContext: any) => {
 
       expect(error).to.be.an('null');
-      expect(externalContext).to.deep.equal(expectedContext);
-      sinon.assert.calledWith(runShellCommandStub, expectNoEmptyParamsInCommand, expectedOptions);
+      expect(externalContext).to.deep.equal(initialContext);
+      sinon.assert.notCalled(runShellCommandStub);
 
       done();
     });
   });
-
-  it('printExternalIPs: JSON parse error', (done: Function) => {
-    const runShellCommandResult = {
-      stdout: 'json'
-    };
-    const expectedContext = {
-      TM_INSTANCE_VARIABLES: {
-        IP_ADDRESS: 'TM_IP_ADDRESS'
-      },
-      LOAD_BALANCER_NAME: 'TEST_TM_ZONE'
-    };
-
-    const runShellCommandStub = sandbox.stub(commonHelpers, 'runShellCommand').callsArgWithAsync(2, null, runShellCommandResult);
-
-    autoDeployHelpers.printExternalIPs({ ...expectedContext }, (error: string, externalContext: any) => {
-
-      expect(error).to.be.an('undefined');
-      expect(externalContext).to.be.an('undefined');
-      sinon.assert.calledWith(runShellCommandStub, expectNoEmptyParamsInCommand);
-
-      done();
-    });
-  });
-
 });

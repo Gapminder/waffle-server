@@ -2,24 +2,20 @@ import * as _ from 'lodash';
 import * as url from 'url';
 import * as crypto from 'crypto';
 import * as URLON from 'urlon';
-import * as passport from 'passport';
 import * as express from 'express';
 
 import * as sinon from 'sinon';
 import {expect} from 'chai';
-import * as proxyquire from 'proxyquire';
 
-import '../../ws.config/db.config';
-import '../../ws.repository';
 import {logger} from '../../ws.config/log';
 import {config} from '../../ws.config/config';
 import * as routeUtils from '../../ws.routes/utils';
-import {RecentDdfqlQueriesRepository} from '../../ws.repository/ddf/recent-ddfql-queries/recent-ddfql-queries.repository';
 import {constants} from '../../ws.utils/constants';
 
 import * as commonService from '../../ws.services/common.service';
-import {RequestTags} from '../../ws.services/telegraf.service';
+// import {RequestTags} from '../../ws.services/telegraf.service';
 import {mockReq, mockRes} from 'sinon-express-mock';
+import * as passport from 'passport';
 
 const sandbox = sinon.createSandbox();
 
@@ -33,282 +29,7 @@ describe('Routes utils', () => {
     config.PATH_TO_DDF_REPOSITORIES = ORIGINAL_PATH_TO_DDF_REPOSITORIES;
   });
 
-  describe('Dataset accessibility check', () => {
-
-    afterEach(() => sandbox.restore());
-
-    it('should send unsuccessful response with an error happened during dataset searching', (done: Function) => {
-      const errorMessage = 'Searching error!';
-      const expectedDatasetName = 'fake/dataset';
-
-      const routeUtils = proxyquire('../../ws.routes/utils.js', {
-        '../ws.repository/ddf/datasets/datasets.repository': {
-          DatasetsRepository: {
-            findByName: (datasetName, onFound) => {
-              expect(datasetName).to.equal(expectedDatasetName);
-              onFound(errorMessage);
-            }
-          }
-        }
-      });
-
-      const req = mockReq({
-        body: {
-          dataset: expectedDatasetName
-        }
-      });
-      const loggerErrorStub = sandbox.stub(logger, 'error');
-
-      const res = mockRes({
-        json: (response) => {
-          expect(response).to.be.deep.equal({success: false, error: errorMessage});
-          done(); // At this point test is finished
-        }
-      });
-
-      const next = () => {
-        expect.fail(null, null, 'This function should not be called');
-
-        sinon.assert.calledOnce(loggerErrorStub);
-        sinon.assert.calledWithExactly(loggerErrorStub, errorMessage);
-      };
-
-      routeUtils.checkDatasetAccessibility(req, res, next);
-    });
-
-    it('should call next middleware if no dataset name was found', (done) => {
-      const req = mockReq({});
-
-      const res = mockRes({});
-
-      const next = () => {
-        done(); // At this point test is finished
-      };
-
-      routeUtils.checkDatasetAccessibility(req, res, next);
-    });
-
-    it('should respond with error when dataset was not found', (done) => {
-      const expectedDatasetName = 'fake/dataset';
-
-      const routeUtils = proxyquire('../../ws.routes/utils.js', {
-        '../ws.repository/ddf/datasets/datasets.repository': {
-          DatasetsRepository: {
-            findByName: (datasetName, onFound) => {
-              onFound(null);
-            }
-          }
-        }
-      });
-
-      const req = mockReq({
-        body: {
-          dataset: expectedDatasetName
-        }
-      });
-
-      const res = mockRes({
-        json: (response) => {
-          expect(response).to.be.deep.equal({
-            success: false,
-            error: `Dataset with given name ${expectedDatasetName} was not found`
-          });
-          done(); // At this point test is finished
-        }
-      });
-
-      const next = () => {
-        expect.fail(null, null, 'This function should not be called');
-      };
-
-      routeUtils.checkDatasetAccessibility(req, res, next);
-    });
-
-    it('should call next middleware when dataset is not private', (done) => {
-      const expectedDatasetName = 'fake/dataset';
-      const routeUtils = proxyquire('../../ws.routes/utils.js', {
-        '../ws.repository/ddf/datasets/datasets.repository': {
-          DatasetsRepository: {
-            findByName: (datasetName, onFound) => {
-              const datasetStub = {
-                private: false
-              };
-              onFound(null, datasetStub);
-            }
-          }
-        }
-      });
-
-      const req = mockReq({
-        body: {
-          dataset: expectedDatasetName
-        }
-      });
-
-      const res = mockRes({});
-
-      const next = () => {
-        done();
-      };
-
-      routeUtils.checkDatasetAccessibility(req, res, next);
-    });
-
-    it('should call next middleware when provided dataset access token matches token stored in dataset', (done) => {
-      const expectedDatasetName = 'fake/dataset';
-      const datasetAccessToken = 'aaaaabbbbbcccccddddd';
-
-      const routeUtils = proxyquire('../../ws.routes/utils.js', {
-        '../ws.repository/ddf/datasets/datasets.repository': {
-          DatasetsRepository: {
-            findByName: (datasetName, onFound) => {
-              const datasetStub = {
-                private: true,
-                accessToken: datasetAccessToken
-              };
-              onFound(null, datasetStub);
-            }
-          }
-        }
-      });
-
-      const req = mockReq({
-        body: {
-          dataset_access_token: datasetAccessToken,
-          dataset: expectedDatasetName
-        }
-      });
-
-      const res = mockRes('any');
-
-      const next = () => {
-        done();
-      };
-
-      routeUtils.checkDatasetAccessibility(req, res, next);
-    });
-
-    it('should respond with an error when user tries to access private dataset without access token', (done) => {
-      const expectedDatasetName = 'fake/dataset';
-      const routeUtils = proxyquire('../../ws.routes/utils.js', {
-        '../ws.repository/ddf/datasets/datasets.repository': {
-          DatasetsRepository: {
-            findByName: (datasetName, onFound) => {
-              const datasetStub = {
-                private: true,
-                accessToken: 'aaaaabbbbbcccccddddd'
-              };
-              onFound(null, datasetStub);
-            }
-          }
-        }
-      });
-
-      const req = mockReq({
-        body: {
-          dataset: expectedDatasetName
-        }
-      });
-
-      const res = mockRes({
-        json: (response) => {
-          expect(response).to.deep.equal({
-            success: false,
-            error: 'You are not allowed to access data according to given query'
-          });
-          done();
-        }
-      });
-
-      const next = () => {
-        expect.fail(null, null, 'Should not call next middleware when token is not provided');
-      };
-
-      routeUtils.checkDatasetAccessibility(req, res, next);
-    });
-
-    it('should respond with an error when user tries to access private dataset with wrong token', (done) => {
-      const expectedDatasetName = 'fake/dataset';
-      const routeUtils = proxyquire('../../ws.routes/utils.js', {
-        '../ws.repository/ddf/datasets/datasets.repository': {
-          DatasetsRepository: {
-            findByName: (datasetName, onFound) => {
-              const datasetStub = {
-                private: true,
-                accessToken: 'aaaaabbbbbcccccddddd'
-              };
-              onFound(null, datasetStub);
-            }
-          }
-        }
-      });
-
-      const req = mockReq({
-        body: {
-          dataset_access_token: 'some fake token',
-          dataset: expectedDatasetName
-        }
-      });
-
-      const res = mockRes({
-        json: (response) => {
-          expect(response).to.deep.equal({
-            success: false,
-            error: 'You are not allowed to access data according to given query'
-          });
-          done();
-        }
-      });
-
-      const next = () => {
-        expect.fail(null, null, 'Should not call next middleware when token is not provided');
-      };
-
-      routeUtils.checkDatasetAccessibility(req, res, next);
-    });
-
-    it('should respond with an error when user tries to access private dataset - dataset.accessToken and dataset_access_token are empty', (done) => {
-      const expectedDatasetName = 'fake/dataset';
-      const routeUtils = proxyquire('../../ws.routes/utils.js', {
-        '../ws.repository/ddf/datasets/datasets.repository': {
-          DatasetsRepository: {
-            findByName: (datasetName, onFound) => {
-              const datasetStub = {
-                private: true,
-                accessToken: null
-              };
-              onFound(null, datasetStub);
-            }
-          }
-        }
-      });
-
-      const req = mockReq({
-        body: {
-          dataset_access_token: null,
-          dataset: expectedDatasetName
-        }
-      });
-
-      const res = mockRes({
-        json: (response) => {
-          expect(response).to.deep.equal({
-            success: false,
-            error: 'You are not allowed to access data according to given query'
-          });
-          done();
-        }
-      });
-
-      const next = () => {
-        expect.fail(null, null, 'Should not call next middleware when token is not provided');
-      };
-
-      routeUtils.checkDatasetAccessibility(req, res, next);
-    });
-  });
-
-  describe('Cache config', () => {
+  describe('#cache config', () => {
 
     afterEach(() => sandbox.restore());
 
@@ -384,7 +105,7 @@ describe('Routes utils', () => {
     });
   });
 
-  describe('Parse query from url and populate request body with a result', () => {
+  describe('#parse query from url and populate request body with a result', () => {
 
     afterEach(() => sandbox.restore());
 
@@ -462,7 +183,7 @@ describe('Routes utils', () => {
 
       const req = mockReq({
         query: {},
-        url: `/api/ddf/ql/?${queryRaw}`
+        url: `/api/ddf/ml-ql/?${queryRaw}`
       });
 
       const res = mockRes({});
@@ -485,7 +206,7 @@ describe('Routes utils', () => {
     it('should respond with an error when it is impossible to parse urlon', (done: Function) => {
       const req = mockReq({
         query: {},
-        url: '/api/ddf/ql/?%20%'
+        url: '/api/ddf/ml-ql/?%20%'
       });
 
       const queryRaw = url.parse(req.url).query;
@@ -523,7 +244,7 @@ describe('Routes utils', () => {
 
       const req = mockReq({
         query: {},
-        url: `/api/ddf/ql/?${queryRaw}`
+        url: `/api/ddf/ml-ql/?${queryRaw}`
       });
 
       const res = mockRes({});
@@ -553,7 +274,7 @@ describe('Routes utils', () => {
 
       const req = mockReq({
         query: {},
-        url: `/api/ddf/ql/?${queryRaw}`
+        url: `/api/ddf/ml-ql/?${queryRaw}`
       });
 
       const res = mockRes({});
@@ -573,7 +294,7 @@ describe('Routes utils', () => {
     it('should respond with an error when it is impossible to decode dataset in urlon query with decodeURIComponent', (done: Function) => {
       const req = mockReq({
         query: '',
-        url: '/api/ddf/ql/?_from=entities&dataset=%&select_key@=company'
+        url: '/api/ddf/ml-ql/?_from=entities&dataset=%&select_key@=company'
       });
 
       const queryRaw = url.parse(req.url).query;
@@ -599,240 +320,11 @@ describe('Routes utils', () => {
     });
   });
 
-  describe('RouteUtils.respondWithRawDdf', () => {
+  xdescribe('#token authentication', () => {
 
     afterEach(() => sandbox.restore());
 
-    it('should flush redis cache if error occured', () => {
-      const expectedError = 'Boo!';
-      const expectedErrorResponse = {success: false, error: 'Boo!'};
-
-      const loggerStub = sandbox.stub(logger, 'error');
-
-      const req = mockReq({
-        query: '',
-        queryParser: {query: ''},
-        body: {},
-        url: 'doesn\'t matter'
-      });
-
-      const jsonSpy = sandbox.spy();
-      const statusStub = sandbox.stub();
-      const nextSpy = sandbox.spy();
-
-      const res = mockRes({
-        use_express_redis_cache: true,
-        status(...args: any[]): any {
-          statusStub(...args);
-          return this;
-        },
-        json: jsonSpy
-      });
-
-      (routeUtils.respondWithRawDdf(req, res, nextSpy) as Function)(expectedError);
-      expect(res.use_express_redis_cache).to.equal(false);
-
-      sinon.assert.calledOnce(jsonSpy);
-      sinon.assert.calledWith(jsonSpy, expectedErrorResponse);
-
-      sinon.assert.calledOnce(statusStub);
-      sinon.assert.calledWith(statusStub, 200);
-
-      sinon.assert.notCalled(nextSpy);
-
-      sinon.assert.calledTwice(loggerStub);
-      sinon.assert.calledWithExactly(loggerStub, expectedError);
-    });
-
-    it('should respond with raw data (data that came from db)', () => {
-      const req = mockReq({
-        query: '',
-        queryParser: {query: ''},
-        body: {},
-        url: 'doesn\'t matter'
-      });
-
-      const jsonSpy = sandbox.spy();
-      const nextSpy = sandbox.spy();
-
-      const res = mockRes({
-        use_express_redis_cache: true,
-        json: jsonSpy
-      });
-
-      const rawDdfData = [];
-
-      routeUtils.respondWithRawDdf(req, res, nextSpy)(null, rawDdfData);
-
-      sinon.assert.notCalled(jsonSpy);
-      sinon.assert.calledOnce(nextSpy);
-
-      expect(res.use_express_redis_cache).to.equal(true);
-      expect(req.rawData.rawDdf).to.equal(rawDdfData);
-    });
-
-    it('should store query for which data will be returned in db (for the subsequernt warmups)', () => {
-      const req = mockReq({
-        query: '',
-        queryParser: {
-          query: 'some=bla',
-          queryType: 'URLON',
-          parse: () => {
-          }
-        },
-        queryStartTime: 123,
-        body: {some: 'bla', from: 'test'},
-        url: 'doesn\'t matter'
-      });
-
-      const jsonSpy = sandbox.spy();
-      const nextSpy = sandbox.spy();
-
-      const res = mockRes({
-        use_express_redis_cache: true,
-        json: jsonSpy
-      });
-
-      const debugStub = sandbox.stub(logger, 'debug');
-      const IS_TESTING = config.IS_TESTING;
-      sandbox.stub(config, 'IS_TESTING').value(false);
-      const createWarmpUpQueryStub = sandbox.stub(RecentDdfqlQueriesRepository, 'create').callsArgWith(1, null, req.queryParser.query);
-
-      const rawDdfData = [];
-      routeUtils.respondWithRawDdf(req, res, nextSpy)(null, rawDdfData);
-
-      sinon.assert.notCalled(jsonSpy);
-      sinon.assert.calledOnce(nextSpy);
-
-      sinon.assert.calledOnce(createWarmpUpQueryStub);
-      sinon.assert.calledWith(createWarmpUpQueryStub, {
-        docsAmount: 0,
-        query: 'some=bla',
-        queryType: 'URLON',
-        timeSpentInMillis: sinon.match.number
-      }, sinon.match.func);
-
-      sinon.assert.calledOnce(debugStub);
-      sinon.assert.calledWith(debugStub, 'Writing query to cache warm up storage', req.queryParser.query);
-
-      expect(res.use_express_redis_cache).to.equal(true);
-      expect(req.rawData.rawDdf).to.equal(rawDdfData);
-      sandbox.stub(config, 'IS_TESTING').value(IS_TESTING);
-    });
-
-    it('should log error if it is happened while storing warmup query', () => {
-      const expectedError = 'Boo!';
-
-      const req = mockReq({
-        query: '',
-        queryParser: {query: ''},
-        body: {},
-        url: 'doesn\'t matter'
-      });
-
-      const jsonSpy = sandbox.spy();
-      const nextSpy = sandbox.spy();
-
-      const res = mockRes({
-        use_express_redis_cache: true,
-        json: jsonSpy
-      });
-
-      const debugStub = sandbox.stub(logger, 'debug');
-      const IS_TESTING = config.IS_TESTING;
-      sandbox.stub(config, 'IS_TESTING').value(false);
-      const createWarmpUpQueryStub = sandbox.stub(RecentDdfqlQueriesRepository, 'create').callsArgWith(1, expectedError);
-
-      const rawDdfData = [];
-      routeUtils.respondWithRawDdf(req, res, nextSpy)(null, rawDdfData);
-
-      sinon.assert.calledWith(debugStub, expectedError);
-      sinon.assert.calledOnce(nextSpy);
-      sinon.assert.calledOnce(createWarmpUpQueryStub);
-      sinon.assert.calledWith(createWarmpUpQueryStub, {
-        docsAmount: 0,
-        query: '',
-        timeSpentInMillis: sinon.match.number
-      }, sinon.match.func);
-      sandbox.stub(config, 'IS_TESTING').value(IS_TESTING);
-    });
-
-    it('shouldn\'t store warmup query if it was sent without params', () => {
-      const req = mockReq({
-        query: '',
-        dataset: 'dataset',
-        queryParser: null,
-        body: {},
-        url: 'doesn\'t matter'
-      });
-
-      const jsonSpy = sandbox.spy();
-      const nextSpy = sandbox.spy();
-
-      const res = mockRes({
-        use_express_redis_cache: true,
-        json: jsonSpy
-      });
-
-      const createWarmpUpQueryStub = sandbox.stub(RecentDdfqlQueriesRepository, 'create').callsArgWith(1);
-
-      const rawDdfData = [];
-      routeUtils.respondWithRawDdf(req, res, nextSpy)(null, rawDdfData);
-
-      sinon.assert.notCalled(jsonSpy);
-      sinon.assert.calledOnce(nextSpy);
-
-      sinon.assert.notCalled(createWarmpUpQueryStub);
-
-      expect(res.use_express_redis_cache).to.equal(true);
-      expect(req.rawData.rawDdf).to.equal(rawDdfData);
-    });
-
-    it('shouldn\'t store warmup query if it is test environment', () => {
-      const req = mockReq({
-        query: '',
-        queryParser: {
-          docsAmount: 5464554643,
-          query: '',
-          timeSpentInMillis: 21423142
-        },
-        version: 'version',
-        body: {},
-        url: 'doesn\'t matter'
-      });
-
-      const IS_TESTING = config.IS_TESTING;
-      sandbox.stub(config, 'IS_TESTING').value(true);
-      const jsonSpy = sandbox.spy();
-      const nextSpy = sandbox.spy();
-
-      const res = mockRes({
-        use_express_redis_cache: true,
-        json: jsonSpy
-      });
-
-      const createWarmpUpQueryStub = sandbox.stub(RecentDdfqlQueriesRepository, 'create').callsArgWith(1, null, req.queryParser.query);
-
-      const rawDdfData = [];
-      routeUtils.respondWithRawDdf(req, res, nextSpy)(null, rawDdfData);
-
-      sinon.assert.notCalled(jsonSpy);
-      sinon.assert.calledOnce(nextSpy);
-
-      sinon.assert.notCalled(createWarmpUpQueryStub);
-
-      expect(res.use_express_redis_cache).to.equal(true);
-      expect(req.rawData.rawDdf).to.equal(rawDdfData);
-
-      sandbox.stub(config, 'IS_TESTING').value(IS_TESTING);
-    });
-  });
-
-  describe('Token authentication', () => {
-
-    afterEach(() => sandbox.restore());
-
-    it('should return token authentication middleware', () => {
+    xit('should return token authentication middleware', () => {
       const req = mockReq({});
       const res = mockRes({});
       const next = () => {
@@ -845,9 +337,9 @@ describe('Routes utils', () => {
         return tokenAuthSpy;
       });
 
-      const tokenMiddleware = routeUtils.ensureAuthenticatedViaToken(req, res, next);
+      // const tokenMiddleware = routeUtils.ensureAuthenticatedViaToken(req, res, next);
 
-      expect(tokenMiddleware).to.equal(middleware);
+      // expect(tokenMiddleware).to.equal(middleware);
 
       sinon.assert.calledOnce(passportAuthStub);
       sinon.assert.calledWith(passportAuthStub, 'token');
@@ -857,8 +349,8 @@ describe('Routes utils', () => {
     });
   });
 
-  describe('Response types', () => {
-    const defaultContext: RequestTags = {
+  describe('#response types', () => {
+    const defaultContext: any = {
       url: '',
       queryParser: {
         query: '',
@@ -880,7 +372,7 @@ describe('Routes utils', () => {
         type: 'INTERNAL_SERVER_TEXT_ERROR'
       };
 
-      const response = routeUtils.toErrorResponse(expectedError, defaultContext, 'test');
+      const response = routeUtils.toErrorResponse(null, defaultContext, 'test');
 
       expect(response.success).to.be.false;
       expect(response.error).to.equal(expectedError.message);
@@ -924,108 +416,7 @@ describe('Routes utils', () => {
     });
   });
 
-  describe('Ensure WS-CLI that speaks to WS has supported version', () => {
-
-    afterEach(() => sandbox.restore());
-
-    it('checks that requests from CLI with unsupported version are invalid', () => {
-      const header = sandbox.stub().returns('2.5.24');
-      const req = mockReq({
-        header
-      });
-
-      const json = sandbox.spy();
-      const res = mockRes({
-        json
-      });
-
-      const next = sandbox.spy();
-
-      sandbox.stub(config, 'getWsCliVersionSupported').returns('2.5.23');
-      sandbox.stub(logger, 'error');
-
-      routeUtils.ensureCliVersion(req, res, next);
-
-      sinon.assert.notCalled(next);
-      sinon.assert.calledOnce(json);
-      sinon.assert.calledWith(json, {
-        success: false,
-        error: `Found that your local WS-CLI version 2.5.24 is incompatible with the selected Waffle Server instance.\n\tPlease reinstall your WS-CLI to version 2.5.23. Run "npm install -g waffle-server-import-cli@2.5.23"`
-      });
-    });
-
-    it('checks that requests from CLI with invalid version are invalid', () => {
-      const header = sandbox.stub().returns('bla');
-      const req = mockReq({
-        header
-      });
-
-      const json = sandbox.spy();
-      const res = mockRes({
-        json
-      });
-
-      const next = sandbox.spy();
-
-      sandbox.stub(config, 'getWsCliVersionSupported').returns('2.5.23');
-      sandbox.stub(logger, 'error');
-
-      routeUtils.ensureCliVersion(req, res, next);
-
-      sinon.assert.notCalled(next);
-      sinon.assert.calledOnce(json);
-      sinon.assert.calledWith(json, {
-        success: false,
-        error: `Found that your local WS-CLI version bla is incompatible with the selected Waffle Server instance.\n\tPlease reinstall your WS-CLI to version 2.5.23. Run "npm install -g waffle-server-import-cli@2.5.23"`
-      });
-    });
-
-    it('responds with an error when WS-CLI version from client is not given', () => {
-      const header = sandbox.stub().returns(undefined);
-      const req = mockReq({
-        header
-      });
-
-      const json = sandbox.spy();
-      const res = mockRes({
-        json
-      });
-
-      const next = sandbox.spy();
-
-      sandbox.stub(config, 'getWsCliVersionSupported').returns('2.5.23');
-      sandbox.stub(logger, 'error');
-
-      routeUtils.ensureCliVersion(req, res, next);
-
-      sinon.assert.notCalled(next);
-      sinon.assert.calledOnce(json);
-      sinon.assert.calledWith(json, {success: false, error: 'This url can be accessed only from WS-CLI'});
-    });
-
-    it('checks that requests from CLI with supported version are valid', () => {
-      const header = sandbox.stub().returns('2.5.24');
-      const req = mockReq({
-        header
-      });
-
-      const json = sandbox.spy();
-      const res = mockRes({
-        json
-      });
-
-      const next = sandbox.spy();
-
-      sandbox.stub(config, 'getWsCliVersionSupported').returns('2.5.24');
-
-      routeUtils.ensureCliVersion(req, res, next);
-
-      sinon.assert.notCalled(json);
-      sinon.assert.calledOnce(next);
-    });
-  });
-
-  describe('bodyFromUrlAssets - Parses a request body based asset url requested. Populates the body with a dataset and a dataset_access_token', () => {
+  describe('#bodyFromUrlAssets - Parses a request body based asset url requested. Populates the body with a dataset and a dataset_access_token', () => {
 
     afterEach(() => sandbox.restore());
 

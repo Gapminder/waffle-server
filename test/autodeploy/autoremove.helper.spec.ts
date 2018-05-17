@@ -2,8 +2,8 @@ import 'mocha';
 import * as _ from 'lodash';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
-import * as commonHelpers from '../../deployment/gcp_scripts/common.helpers';
-import * as autoRemoveHelpers from '../../deployment/gcp_scripts/autoremove.helpers';
+import * as commonHelpers from '../../deployment/common.helpers';
+import * as autoRemoveHelpers from '../../deployment/autoremove.helpers';
 import { expectNoEmptyParamsInCommand } from './testUtils';
 
 const sandbox = sinon.createSandbox();

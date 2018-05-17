@@ -8,25 +8,25 @@ const VERSION = packageJson.version.replace(/\./g, '-');
 const DEFAULT_LOG_LEVELS = Object.freeze({
   local: 'info',
   test: 'info',
-  development: 'info',
+  dev: 'info',
   stage: 'warn',
-  production: 'error'
+  prod: 'error'
 });
 
 const DEFAULT_HOST_URLS = Object.freeze({
   local: 'http://localhost',
   test: 'http://localhost',
-  development: 'https://waffle-server-dev.gapminderdev.org',
+  dev: 'https://waffle-server-dev.gapminderdev.org',
   stage: 'https://waffle-server-stage.gapminderdev.org',
-  production: 'https://waffle-server.gapminder.org'
+  prod: 'https://waffle-server.gapminder.org'
 });
 
 const LOG_MARKERS = {
   local: 'LOC',
   test: 'TEST',
-  development: 'DEV',
+  dev: 'DEV',
   stage: 'STG',
-  production: 'PRD'
+  prod: 'PRD'
 };
 
 const DEFAULT_PORT = 3000;
@@ -40,19 +40,16 @@ const environment = Object.freeze({
   LOG_MARKER: LOG_MARKERS[NODE_ENV],
   LOG_LEVEL: DEFAULT_LOG_LEVELS[NODE_ENV] || DEFAULT_LOG_LEVELS[DEFAULT_NODE_ENV],
 
-  MONGODB_URL: 'mongodb://localhost:27017/ws_ddf_local',
-
   REDIS_HOST: process.env.REDIS_HOST || 'localhost',
   REDIS_PORT: process.env.REDIS_PORT || 6379,
 
   NODE_ENV,
   SESSION_TIMEOUT: 60000,
 
-  MONGOOSE_DEBUG: false,
-  CLEAR_MONGO_DB_COLLECTIONS: false,
+  PATH_TO_DDF_REPOSITORIES: path.join(__dirname, '../ws-import'),
+  PATH_TO_DIFF_DDF_RESULT_FILE: path.join(__dirname, '../ws-import'),
+  PATH_TO_TRAVIS_KEY: path.join(__dirname, './travis.pk'),
 
-  PATH_TO_DDF_REPOSITORIES: path.join(__dirname, '../ws.import/repos'),
-  PATH_TO_DIFF_DDF_RESULT_FILE: path.join(__dirname, '../ws.import/diffs'),
   DEFAULT_DATASETS: [],
 
   IS_MONITORING_NEEDED: true,

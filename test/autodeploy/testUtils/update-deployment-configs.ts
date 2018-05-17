@@ -8,7 +8,7 @@ const access    = promisify(fs.access);
 const copyFile  = promisify(fs.copyFile);
 const writeFile = promisify(fs.writeFile);
 
-const pathToRealDeploymentConfigs = path.resolve('./deployment/gcp_scripts/configs');
+const pathToRealDeploymentConfigs = path.resolve('./deployment/configs');
 const pathToFixturesDeploymentConfig = path.resolve('./test/autodeploy/fixtures');
 
 async function run(): Promise<void> {

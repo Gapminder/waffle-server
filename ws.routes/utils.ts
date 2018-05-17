@@ -2,52 +2,54 @@ import * as _ from 'lodash';
 import * as async from 'async';
 import * as crypto from 'crypto';
 import * as url from 'url';
-import * as passport from 'passport';
 import * as URLON from 'urlon';
-import { config } from '../ws.config/config';
 import { logger } from '../ws.config/log';
 import * as express from 'express';
-import * as semver from 'semver';
+import { constants, responseMessages } from '../ws.utils/constants';
+import { extendQueryWithRepository, validateQueryStructure } from 'ddf-query-validator';
+import { FailedResponse, RequestTags, TelegrafService } from '../ws.services/telegraf.service';
+import {
+  getPossibleAssetsRepoPaths,
+  loadRepositoriesConfig,
+  RepositoriesConfig
+} from '../ws.config/repos.config';
+import { getS3FileReaderObject } from 'vizabi-ddfcsv-reader';
+
 const {
   performance
 } = require('perf_hooks');
 
-import { DatasetsRepository } from '../ws.repository/ddf/datasets/datasets.repository';
-import { RecentDdfqlQueriesRepository } from '../ws.repository/ddf/recent-ddfql-queries/recent-ddfql-queries.repository';
-import { constants, responseMessages } from '../ws.utils/constants';
-import * as path from 'path';
-
-import * as commonService from '../ws.services/common.service';
-import {
-  DatasetsFileds,
-  FailedResponse,
-  RequestTags,
-  ResponseTags,
-  TelegrafService
-} from '../ws.services/telegraf.service';
-
 const RELATIVE_PATH_REGEX = /\/\.+\/?/;
 
-const parseUrlonAsync: Function = async.asyncify((query: string) => {
+const UrlonParserAsync: Function = async.asyncify((query: string) => {
   const parsedQuery = URLON.parse(query);
 
   if (parsedQuery.dataset) {
     parsedQuery.dataset = decodeURIComponent(_.toString(parsedQuery.dataset));
   }
 
+  if (parsedQuery.branch) {
+    parsedQuery.branch = decodeURIComponent(_.toString(parsedQuery.branch));
+  }
+
   return parsedQuery;
 });
 
-const parseJsonAsync: Function = async.asyncify((query: string) => JSON.parse(decodeURIComponent(query)));
+const JsonParserAsync: Function = async.asyncify((query: string) => JSON.parse(decodeURIComponent(query)));
+
+const parser = {
+  urlon: UrlonParserAsync,
+  json: JsonParserAsync
+};
 
 export {
   getCacheConfig,
-  ensureAuthenticatedViaToken,
-  ensureCliVersion,
-  respondWithRawDdf,
-  checkDatasetAccessibility,
+  validateBodyStructure,
+  parseDatasetVersion,
   trackingRequestTime,
+  shareConfigWithRoute,
   bodyFromUrlQuery,
+  parseQueryFromUrlQuery,
   bodyFromUrlAssets,
   toDataResponse,
   toErrorResponse,
@@ -56,6 +58,8 @@ export {
 
 export interface WSRequest extends express.Request {
   requestStartTime: number;
+  queryStartTime?: number;
+  appConfig?: object;
   queryParser: {
     query: string;
     queryType: string;
@@ -68,12 +72,59 @@ function trackingRequestTime(req: WSRequest, res: express.Response, next: expres
   return next();
 }
 
+function shareConfigWithRoute(config: object, req: WSRequest, res: express.Response, next: express.NextFunction): void {
+  req.appConfig = config;
+  return next();
+}
+
+async function validateBodyStructure(req: WSRequest, res: express.Response, next: express.NextFunction): Promise<void | express.Response> {
+  try {
+    await validateQueryStructure(req.body, {});
+    return next();
+  } catch (error) {
+    return res.json(toErrorResponse(error, req, 'validateQueryStructure'));
+  }
+}
+
+async function parseDatasetVersion(req: WSRequest, res: express.Response, next: express.NextFunction): Promise<void | express.Response> {
+  try {
+    const reposConfig: RepositoriesConfig = await loadRepositoriesConfig();
+    await extendQueryWithRepository(req.body, reposConfig);
+    return next();
+  } catch (error) {
+    return res.json(toErrorResponse(error, req, 'parseDatasetVersion'));
+  }
+}
+
+function parseQueryFromUrlQuery(req: WSRequest, res: express.Response, next: express.NextFunction): void {
+  const parsedUrl = url.parse(req.url);
+  const query: string = _.isString(parsedUrl) ? parsedUrl : _.get(parsedUrl, 'query');
+  let queryType = 'json';
+
+  try {
+    JSON.parse(query);
+  } catch (error) {
+    queryType = 'urlon';
+  }
+
+  parser[ queryType ](query, (error: string, parsedQuery: any) => {
+    logger.info({ ddfqlRaw: parsedUrl, queryType });
+
+    if (error) {
+      res.json(toErrorResponse(`${responseMessages.INCORRECT_QUERY_FORMAT}: ${error}`, req, 'bodyFromUrlQuery'));
+    } else {
+      req.body = parsedQuery;
+      return next();
+    }
+  });
+}
+
 function bodyFromUrlQuery(req: WSRequest, res: express.Response, next: express.NextFunction): void {
   const query = _.get(req.query, 'query', null);
   const queryType = query ? 'JSON' : 'URLON';
   req.queryParser = query
-    ? { parse: parseJsonAsync, query, queryType }
-    : { parse: parseUrlonAsync, query: url.parse(req.url).query, queryType };
+    ? { parse: JsonParserAsync, query, queryType }
+    : { parse: UrlonParserAsync, query: url.parse(req.url).query, queryType };
 
   req.queryParser.parse(req.queryParser.query, (error: string, parsedQuery: any) => {
     logger.info({ ddfqlRaw: req.queryParser.query });
@@ -81,18 +132,13 @@ function bodyFromUrlQuery(req: WSRequest, res: express.Response, next: express.N
       res.json(toErrorResponse(responseMessages.INCORRECT_QUERY_FORMAT, req, 'bodyFromUrlQuery'));
     } else {
       req.body = parsedQuery;
-      next();
+      return next();
     }
   });
 }
 
-function bodyFromUrlAssets(req: WSRequest, res: express.Response, next: express.NextFunction): void {
-  if (!_.startsWith(req.baseUrl, constants.ASSETS_ROUTE_BASE_PATH)) {
-    return next();
-  }
-
-  const pathnameUrl = _.split(req.originalUrl, constants.ASSETS_ROUTE_BASE_PATH + '/').pop();
-  const datasetAssetsPathFromUrl = safeDecodeUriComponent(pathnameUrl);
+async function bodyFromUrlAssets(req: WSRequest, res: express.Response, next: express.NextFunction): Promise<void> {
+  const datasetAssetsPathFromUrl = safeDecodeUriComponent(req.baseUrl);
 
   if (datasetAssetsPathFromUrl === null) {
     res.status(200).json(toErrorResponse(responseMessages.MALFORMED_URL, req));
@@ -104,70 +150,41 @@ function bodyFromUrlAssets(req: WSRequest, res: express.Response, next: express.
     return;
   }
 
-  commonService.findDefaultDatasetAndTransaction({}, (error: any, context: any) => {
-    const isRequestedDefaultAssets = _.startsWith(req.originalUrl, `${constants.ASSETS_ROUTE_BASE_PATH}/default`);
+  const [ , repository, ...filepath ] = datasetAssetsPathFromUrl.split(constants.ASSETS_EXPECTED_DIR);
 
-    if (error && isRequestedDefaultAssets) {
-      res.status(200).json(toErrorResponse(responseMessages.DATASET_NOT_FOUND, req));
-      return;
-    }
-
-    const {pathname} = url.parse(datasetAssetsPathFromUrl);
-    const assetPathDescriptor = getAssetPathDescriptor(
-      config.PATH_TO_DDF_REPOSITORIES,
-      isRequestedDefaultAssets ? pathname.replace('default/', '') : pathname,
-      isRequestedDefaultAssets && _.get(context, 'dataset')
-    );
-
-    if (assetPathDescriptor.assetsDir !== constants.ASSETS_EXPECTED_DIR) {
-      res.status(200).json(toErrorResponse(responseMessages.WRONG_ASSETS_DIR(constants.ASSETS_EXPECTED_DIR), req));
-      return;
-    }
-
-    _.extend(req.body, {
-      dataset: assetPathDescriptor.dataset,
-      dataset_access_token: _.get(req.query, 'dataset_access_token'),
-      assetPathDescriptor
-    });
-
-    return next();
-  });
-}
-
-function getAssetPathDescriptor(pathToDdfRepos: string, datasetAssetPath: string, defaultDataset?: any): any {
-  const repoDescriptor: {repo: string, branch: string, account: string} = getRepoInfoFromDataset(defaultDataset) || {};
-  const defaultRepo = repoDescriptor.repo || '';
-  const defaultAccount = repoDescriptor.account || '';
-  const defaultBranch = repoDescriptor.branch || '';
-
-  const splittedDatasetAssetPath = datasetAssetPath.split('/');
-  const file = splittedDatasetAssetPath.pop();
-  const assetsPathFragments = splittedDatasetAssetPath.pop();
-
-  const [account = defaultAccount, repo = defaultRepo, ...splittedBranchName] = splittedDatasetAssetPath;
-  const branch = splittedBranchName.join('/') || defaultBranch;
-
-  return {
-    path: path.resolve(pathToDdfRepos, account, repo, branch, assetsPathFragments, file),
-    assetsDir: assetsPathFragments,
-    assetName: file,
-    dataset: `${account}/${repo}#${branch}`
-  };
-}
-
-function getRepoInfoFromDataset(dataset: any): any {
-  if (!dataset) {
-    return null;
+  if (_.isEmpty(repository)) {
+    res.status(200).json(toErrorResponse(responseMessages.MALFORMED_URL, req));
+    return;
   }
 
-  const [accountAndRepo, branch = 'master'] = _.split(dataset.name, '#');
-  const [account, repo] = _.split(accountAndRepo, '/');
+  if (_.isEmpty(filepath)) {
+    res.status(200).json(toErrorResponse(responseMessages.WRONG_ASSETS_DIR, req));
+    return;
+  }
 
-  return {
-    account,
-    repo,
-    branch
-  };
+  Object.assign(req.body, {
+    filepath: `${_.trim(constants.ASSETS_EXPECTED_DIR, '/')}/${filepath}`,
+    filename: filepath.join(constants.ASSETS_EXPECTED_DIR).split('/').pop(),
+    dataset_access_token: _.get(req.query, 'dataset_access_token')
+  });
+
+  try {
+    const reposConfig = await getPossibleAssetsRepoPaths();
+    const repoConfig = _.get(reposConfig, repository);
+
+    if (_.isEmpty(repoConfig)) {
+      res.status(200).json(toErrorResponse(responseMessages.MALFORMED_URL, req));
+      return;
+    }
+
+    const { repoNickname: dataset, branch, hash: commit } = repoConfig;
+    Object.assign(req.body, { dataset, branch, commit });
+
+    return next();
+  } catch (error) {
+    logger.error(error);
+    return next(error);
+  }
 }
 
 function safeDecodeUriComponent(uri: string): string {
@@ -179,8 +196,8 @@ function safeDecodeUriComponent(uri: string): string {
 }
 
 function getCacheConfig(prefix?: string): express.Handler {
-  return function (req: WSRequest, res: express.Response, next: express.NextFunction): void {
-    if (String(req.query.force) === 'true' && !config.IS_PRODUCTION) {
+  return function(req: WSRequest, res: express.Response, next: express.NextFunction): void {
+    if (String(req.query.force) === 'true' && !(req.appConfig as any).IS_PRODUCTION) {
       (res as any).use_express_redis_cache = false;
       return next();
     }
@@ -195,10 +212,6 @@ function getCacheConfig(prefix?: string): express.Handler {
   };
 }
 
-function ensureAuthenticatedViaToken(req: WSRequest, res: express.Response, next: express.NextFunction): express.Handler {
-  return passport.authenticate('token')(req, res, next);
-}
-
 function respondWithRawDdf(req: WSRequest, res: express.Response, next: express.NextFunction): Function {
   return (error: string, result: any) => {
     if (error) {
@@ -209,99 +222,11 @@ function respondWithRawDdf(req: WSRequest, res: express.Response, next: express.
 
     const collectionName = _.get(req.body, 'from', '');
     const docsAmount = _.get(result, collectionName, []).length;
-    _storeWarmUpQueryForDefaultDataset(docsAmount, req);
 
     (req as any).rawData = { rawDdf: result };
 
     return next();
   };
-}
-
-function _storeWarmUpQueryForDefaultDataset(docsAmount: number = 0, req: WSRequest): void {
-  const rawDdfQuery = _.get(req, 'queryParser', {});
-  const timeSpentInMillis = performance.now() - _.get(req, 'queryStartTime', 0);
-
-  if (!rawDdfQuery) {
-    return;
-  }
-
-  if (config.IS_TESTING) {
-    return;
-  }
-
-  const recentQuery = _.extend({timeSpentInMillis, docsAmount}, _.omit(rawDdfQuery, 'parse'));
-
-  RecentDdfqlQueriesRepository.create(recentQuery, (error: string) => {
-    if (error) {
-      logger.debug(error);
-    } else {
-      logger.debug('Writing query to cache warm up storage', _.get(rawDdfQuery, 'query', ''));
-    }
-  });
-}
-
-function ensureCliVersion(req: WSRequest, res: express.Response, next: express.NextFunction): void {
-  const clientWsCliVersion = req.header('X-Gapminder-WSCLI-Version');
-
-  if (!clientWsCliVersion) {
-    res.json(toErrorResponse(responseMessages.URL_CANNOT_BE_ACCESSED_FROM_WS_CLI, req));
-    return;
-  }
-
-  const serverWsCliVersion = config.getWsCliVersionSupported();
-
-  if (!ensureVersionsEquality(clientWsCliVersion, serverWsCliVersion)) {
-    const changeCliVersionResponse = toErrorResponse(
-      responseMessages.INCORRECT_CLI_VERSION(clientWsCliVersion, serverWsCliVersion), req);
-
-    res.json(changeCliVersionResponse);
-    return;
-  }
-
-  return next();
-}
-
-function ensureVersionsEquality(clientVersion: string, serverVersion: string): boolean {
-  try {
-    return semver.satisfies(clientVersion, serverVersion);
-  } catch (e) {
-    return false;
-  }
-}
-
-function checkDatasetAccessibility(req: WSRequest, res: express.Response, next: express.NextFunction): any {
-  const datasetName = _.get(req, 'body.dataset', null);
-  if (!datasetName) {
-    return next();
-  }
-
-  return DatasetsRepository.findByName(datasetName, (error: string, dataset: any) => {
-    if (error) {
-      logger.error(error);
-      return res.json(toErrorResponse(error, req));
-    }
-
-    if (!dataset) {
-      return res.json(toErrorResponse(`Dataset with given name ${datasetName} was not found`, req));
-    }
-
-    if (!dataset.private) {
-      return next();
-    }
-
-    const providedAccessToken = _.get(req, 'body.dataset_access_token', null);
-    if (_validateDatasetAccessToken(dataset.accessToken, providedAccessToken)) {
-      return next();
-    }
-
-    return res.json(toErrorResponse('You are not allowed to access data according to given query', req));
-  });
-}
-
-function _validateDatasetAccessToken(datasetAccessToken: string, providedAccessToken: string): boolean {
-  const tokensAreEqual = datasetAccessToken === providedAccessToken;
-  const tokensAreNotEmpty = !_.isEmpty(datasetAccessToken) && !_.isEmpty(providedAccessToken);
-  return tokensAreNotEmpty && tokensAreEqual;
 }
 
 function isResponseString(response: string | Error | FailedResponse): response is string {
@@ -318,10 +243,10 @@ function toErrorResponse(response: FailedResponse | Error | string, context: Req
 
   switch (true) {
     case isResponseString(response):
-      error = {message: response as string, code: 999, type: 'INTERNAL_SERVER_TEXT_ERROR', place};
+      error = { message: response as string, code: 999, type: 'INTERNAL_SERVER_TEXT_ERROR', place };
       break;
     case isResponseError(response):
-      error = {message: (response as Error).message, code: 998, type: 'INTERNAL_SERVER_ERROR', place};
+      error = { message: (response as Error).message, code: 998, type: 'INTERNAL_SERVER_ERROR', place };
       break;
     default:
       error = _.extend({ place }, response as FailedResponse);

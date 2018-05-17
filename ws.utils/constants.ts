@@ -1,3 +1,5 @@
+import * as fs from 'fs';
+
 const CONCEPTS = 'concepts';
 const ENTITIES = 'entities';
 const DATAPOINTS = 'datapoints';
@@ -17,6 +19,7 @@ const CONTINUOUS_CONCEPT_TYPES = [CONCEPT_TYPE_MEASURE, 'facet'];
 const DEFAULT_CONCEPT_TYPES = [...DESCRETE_CONCEPT_TYPES, ...CONTINUOUS_CONCEPT_TYPES];
 
 const constants: any = {
+  WORKDIR: fs.realpathSync('.'),
   MAX_VERSION: Number.MAX_SAFE_INTEGER,
 
   LIMIT_NUMBER_PROCESS: 10,
@@ -27,6 +30,7 @@ const constants: any = {
   DDF_REDIS_CACHE_LIFETIME: -1,
   DDF_REDIS_CACHE_NAME_TRANSLATIONS: TRANSLATIONS,
   DDF_REDIS_CACHE_NAME_DDFQL: 'ddfql',
+  DDF_REDIS_CACHE_NAME_MLQL: 'mlql',
 
   CONCEPTS,
   ENTITIES,
@@ -36,8 +40,6 @@ const constants: any = {
 
   ASC_SORTING_DIRECTION: 'asc',
   DESC_SORTING_DIRECTION: 'desc',
-
-  MONGO_SPECIAL_FIELDS: ['_id', '_v'],
 
   GID: 'gid',
   ORIGIN_ID: 'originId',
@@ -65,12 +67,11 @@ const constants: any = {
 
   DEFAULT_DATAPOINTS_QUERY_TIMEOUT_MS: 20000,
   DEFAULT_DATAPOINTS_QUERY_LIMIT: 1000000,
-  MONGODB_ALLOW_DISK_USE: true,
 
   ASSETS_CACHE_CONTROL_MAX_AGE_IN_MILLIS: (7 * 24 * 60) * 60 * 1000, // one week
 
   ASSETS_ROUTE_BASE_PATH: '/api/ddf/assets',
-  ASSETS_EXPECTED_DIR: 'assets',
+  ASSETS_EXPECTED_DIR: '/assets/',
 
   LONG_RUNNING_QUERY_THRESHOLD_IN_SECONDS: 30
 };

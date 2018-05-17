@@ -1,5 +1,10 @@
 {
   "extends": "tslint-config-valorsoft/tslint-node.json",
-  "rulesDirectory": "node_modules/codelyzer",
-  "rules": {}
+  "rulesDirectory": [
+    "node_modules/codelyzer",
+    "tslint-no-unused-expression-chai"
+  ],
+  "rules": {
+    "no-unused-expression-chai": true
+  }
 }

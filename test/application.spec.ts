@@ -5,7 +5,9 @@ import { Application } from '../application';
 import * as Config from '../ws.config';
 import * as Routes from '../ws.routes';
 import { logger } from '../ws.config/log';
-import * as wsMongoless from '../mongoless-import';
+import * as ddfqlController from '../ws.routes/ddfql/ddfql.controller';
+import { importService } from '../ws.services/import/import.service';
+
 
 let sandbox = sinon.createSandbox();
 
@@ -14,240 +16,84 @@ describe('Application', () => {
     sandbox.restore();
   });
 
-  it('starts application successfully', function (): any {
+  it('starts application successfully', async function (): Promise<void> {
     sandbox.stub(Config, 'configureWaffleServer');
     sandbox.stub(Routes, 'registerRoutes');
-    const mongolessImportStub = sandbox.stub(wsMongoless, 'mongolessImport');
 
-    const importDdfReposStub = sandbox.stub();
-    const makeDefaultUserStub = sandbox.stub();
-    const warmUpCacheStub = sandbox.stub();
-    const longRunningQueriesKillerStub = sandbox.stub();
     const listenStub = sandbox.stub();
-    const infoStub = sandbox.stub(logger, 'info');
+    const loggerStub = sandbox.stub(logger, 'info');
+    const importServiceStub = sandbox.stub(importService, 'importByConfig');
 
     const serviceLocator: any = {
-      getApplication: () => ({ listen: { bind: () => listenStub.callsArgWithAsync(1) } }),
+      getApplication: () => ({ listen: { bind: () => listenStub } }),
       get: (serviceName: string) => {
-        if (serviceName === 'importService') {
+        if (serviceName === 'config') {
           return {
-            importDdfRepos: importDdfReposStub.resolves()
+            PORT: 8888,
+            NODE_ENV: 'development'
           };
         }
 
-        if (serviceName === 'warmupUtils') {
-          return {
-            warmUpCache: warmUpCacheStub.callsArgWithAsync(0, null, 10)
-          };
-        }
-
-        if (serviceName === 'usersService') {
-          return { makeDefaultUser: makeDefaultUserStub.resolves() };
-        }
-
-        if (serviceName === 'longRunningQueriesKiller') {
-          return { start: longRunningQueriesKillerStub, running: true };
-        }
-
-        return {
-          THRASHING_MACHINE: true,
-          PORT: 8888,
-          NODE_ENV: 'development'
-        };
+        throw new Error(`No registered module '${serviceName}' in application`);
       }
     };
 
     const application = new Application(serviceLocator);
 
-    return application.run().then(() => {
-      sinon.assert.callOrder(
-        makeDefaultUserStub,
-        listenStub,
-        importDdfReposStub,
-        mongolessImportStub,
-        warmUpCacheStub,
-        longRunningQueriesKillerStub
-      );
+    try {
+      application.run();
+    } catch (error) {
+      throw new Error(`This should never be called. ${error}`);
+    }
 
-      sinon.assert.calledWith(infoStub, `Attempt to warm up the cache is has been completed. Amount of executed queries: 10`);
-      sinon.assert.calledWith(listenStub, 8888);
-    });
+    sinon.assert.calledOnce(listenStub);
+    sinon.assert.calledWithExactly(listenStub, 8888);
+    sinon.assert.calledOnce(importServiceStub);
+    sinon.assert.calledWithExactly(importServiceStub);
+    sinon.assert.calledOnce(loggerStub);
+    sinon.assert.calledWithExactly(loggerStub, `Express server listening on port 8888 in development mode`);
   });
 
-  it('does not warm up cache when not in the THRESHING_MACHINE mode', function (): any {
+  it('logs error when mongoless import failed', async function (): Promise<void> {
+    let actualError;
     sandbox.stub(Config, 'configureWaffleServer');
     sandbox.stub(Routes, 'registerRoutes');
-    const mongolessImportStub = sandbox.stub(wsMongoless, 'mongolessImport');
+    const expectedError = 'Boom!';
 
-    const importDdfReposStub = sandbox.stub();
-    const makeDefaultUserStub = sandbox.stub();
-    const warmUpCacheStub = sandbox.stub();
-    const longRunningQueriesKillerStub = sandbox.stub();
     const listenStub = sandbox.stub();
+    const loggerStub = sandbox.stub(logger, 'error');
+    const importServiceStub = sandbox.stub(importService, 'importByConfig').throwsException(expectedError);
 
     const serviceLocator: any = {
-      getApplication: () => ({ listen: { bind: () => listenStub.callsArgWithAsync(1) } }),
+      getApplication: () => ({ listen: { bind: () => listenStub } }),
       get: (serviceName: string) => {
-        if (serviceName === 'importService') {
+        if (serviceName === 'config') {
           return {
-            importDdfRepos: importDdfReposStub.resolves()
+            PORT: 3333,
+            NODE_ENV: 'development',
+            IS_TESTING: true
           };
         }
 
-        if (serviceName === 'warmupUtils') {
-          return {
-            warmUpCache: warmUpCacheStub.callsArgWithAsync(0, null)
-          };
-        }
-
-        if (serviceName === 'usersService') {
-          return { makeDefaultUser: makeDefaultUserStub.resolves() };
-        }
-
-        if (serviceName === 'longRunningQueriesKiller') {
-          return { start: longRunningQueriesKillerStub, running: true };
-        }
-
-        return {
-          THRASHING_MACHINE: false,
-          PORT: 8888,
-          NODE_ENV: 'development'
-        };
+        throw new Error(`No registered module '${serviceName}' in application`);
       }
     };
 
     const application = new Application(serviceLocator);
 
-    return application.run().then(() => {
-      sinon.assert.callOrder(
-        makeDefaultUserStub,
-        listenStub,
-        importDdfReposStub,
-        mongolessImportStub,
-        warmUpCacheStub,
-        longRunningQueriesKillerStub
-      );
-
-      sinon.assert.calledOnce(warmUpCacheStub);
-      sinon.assert.calledWithExactly(warmUpCacheStub, sinon.match.func);
-    });
-  });
-
-  it('logs error when warmup failed', function (): any {
-    sandbox.stub(Config, 'configureWaffleServer');
-    sandbox.stub(Routes, 'registerRoutes');
-    const mongolessImportStub = sandbox.stub(wsMongoless, 'mongolessImport');
-
-    const importDdfReposStub = sandbox.stub();
-    const makeDefaultUserStub = sandbox.stub();
-    const warmUpCacheStub = sandbox.stub();
-    const longRunningQueriesKillerStub = sandbox.stub();
-    const listenStub = sandbox.stub();
-    const errorStub = sandbox.stub(logger, 'error');
-
-    const serviceLocator: any = {
-      getApplication: () => ({ listen: { bind: () => listenStub.callsArgWithAsync(1) } }),
-      get: (serviceName: string) => {
-        if (serviceName === 'importService') {
-          return {
-            importDdfRepos: importDdfReposStub.resolves()
-          };
-        }
-
-        if (serviceName === 'warmupUtils') {
-          return {
-            warmUpCache: warmUpCacheStub.callsArgWithAsync(0, 'Boom!')
-          };
-        }
-
-        if (serviceName === 'usersService') {
-          return { makeDefaultUser: makeDefaultUserStub.resolves() };
-        }
-
-        if (serviceName === 'longRunningQueriesKiller') {
-          return { start: longRunningQueriesKillerStub, running: true };
-        }
-
-        return {
-          THRASHING_MACHINE: true,
-          PORT: 8888,
-          NODE_ENV: 'development'
-        };
-      }
-    };
-
-    const application = new Application(serviceLocator);
-
-    return application.run().then(() => {
-      sinon.assert.callOrder(
-        makeDefaultUserStub,
-        listenStub,
-        importDdfReposStub,
-        mongolessImportStub,
-        warmUpCacheStub,
-        longRunningQueriesKillerStub
-      );
-
-      sinon.assert.calledWith(errorStub, 'Boom!', 'Cache warm up failed.');
-      sinon.assert.calledOnce(warmUpCacheStub);
-    });
-  });
-
-  it('fails startup when query killer was not started properly', function (): any {
-    sandbox.stub(Config, 'configureWaffleServer');
-    sandbox.stub(Routes, 'registerRoutes');
-    const mongolessImportStub = sandbox.stub(wsMongoless, 'mongolessImport');
-
-    const importDdfReposStub = sandbox.stub();
-    const makeDefaultUserStub = sandbox.stub();
-    const warmUpCacheStub = sandbox.stub();
-    const longRunningQueriesKillerStub = sandbox.stub();
-    const listenStub = sandbox.stub();
-
-    const serviceLocator: any = {
-      getApplication: () => ({ listen: { bind: () => listenStub.callsArgWithAsync(1) } }),
-      get: (serviceName: string) => {
-        if (serviceName === 'importService') {
-          return {
-            importDdfRepos: importDdfReposStub.resolves()
-          };
-        }
-
-        if (serviceName === 'warmupUtils') {
-          return {
-            warmUpCache: warmUpCacheStub.callsArgWithAsync(0, 'Boom!')
-          };
-        }
-
-        if (serviceName === 'usersService') {
-          return { makeDefaultUser: makeDefaultUserStub.resolves() };
-        }
-
-        if (serviceName === 'longRunningQueriesKiller') {
-          return { start: longRunningQueriesKillerStub, running: false };
-        }
-
-        return {
-          THRASHING_MACHINE: true,
-          PORT: 8888,
-          NODE_ENV: 'development'
-        };
-      }
-    };
-
-    const application = new Application(serviceLocator);
-
-    return application.run().catch((error: any) => {
-      sinon.assert.callOrder(
-        makeDefaultUserStub,
-        listenStub,
-        importDdfReposStub,
-        mongolessImportStub,
-        warmUpCacheStub,
-        longRunningQueriesKillerStub
-      );
-
-      expect(error).to.equal('Long running queries killer failed to start');
-    });
+    try {
+      application.run();
+      throw new Error('This should never be called');
+    } catch (error) {
+      actualError = error;
+    }
+    expect(actualError).to.be.an('error');
+    expect(actualError.toString()).to.equal(expectedError);
+    expect(actualError.toString()).to.not.equal('This should never be called');
+    sinon.assert.calledOnce(listenStub);
+    sinon.assert.calledWithExactly(listenStub, 3333);
+    sinon.assert.calledOnce(importServiceStub);
+    sinon.assert.calledWithExactly(importServiceStub);
+    sinon.assert.calledOnce(loggerStub);
   });
 });

@@ -2,10 +2,11 @@ import 'mocha';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import { expectNoEmptyParamsInCommand } from './testUtils';
-import * as commonHelpers from '../../deployment/gcp_scripts/common.helpers';
-import * as redisHelpers from '../../deployment/gcp_scripts/redis.helpers';
+import * as commonHelpers from '../../deployment/common.helpers';
+import * as redisHelpers from '../../deployment/redis.helpers';
 import * as _ from 'lodash';
-import { pathToRedisSubnetwork, pathToRedisNetworkIP } from '../../deployment/gcp_scripts/redis.helpers';
+import { pathToRedisSubnetwork, pathToRedisNetworkIP } from '../../deployment/redis.helpers';
+import { loggerFactory } from '../../ws.config/log';
 
 const sandbox = sinon.createSandbox();
 
@@ -40,6 +41,13 @@ describe('Redis.helper Commands', () => {
       ENVIRONMENT: 'ENVIRONMENT',
       VERSION: 'TEST_VERSION'
     })
+  });
+
+  let loggerStub;
+
+  beforeEach(() => {
+    loggerStub = {info: sandbox.stub(), error: sandbox.stub, warn: sandbox.stub()};
+    sandbox.stub(loggerFactory, 'getLogger').returns(loggerStub);
   });
 
   afterEach(() => sandbox.restore());

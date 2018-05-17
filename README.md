@@ -5,15 +5,11 @@
 - WS serves DDF using query language specifically designed for DDF data format - [DDFQL](https://docs.google.com/document/d/1olFm-XXjWxQ4LrTCfM42an6LbjbIgnt__V1DZxSmnuQ)
 
 ## Tools that should be set up
- - MongoDB
  - Redis
- - Node.js (version >= 6.9)
+ - Node.js (version >= 8.11.1)
 
 ## Environment variables
-- `DEFAULT_USER_PASSWORD`	- is a variable for defining default WS user (example `DEFAULT_USER_PASSWORD=123`)
-- `MONGODB_URL` - defines connection url for mongodb (example	`MONGODB_URL=mongodb://localhost:27017/ws_ddf_local`)
 - `PORT` - defines on which port WS should run (example `PORT=3000`)
-- `THRASHING_MACHINE` - this variable should be set only for WS machine that dealing with DDF importing and updating (example `THRASHING_MACHINE=true`)
 - `NODE_ENV` - environment in which WS is running  (example `NODE_ENV=local`). Possible values:
  - local
  - production

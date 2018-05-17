@@ -7,13 +7,23 @@
     "preserveConstEnums": true,
     "removeComments": true,
     "sourceMap": true,
-    "typeRoots": ["node_modules/@types", "node_modules/influx/lib/src/index.d.ts"]
+    "typeRoots": ["node_modules/@types", "node_modules/bunyan-middleware/index.d.ts", "node_modules/vizabi-ddfcsv-reader/lib/src/index.d.ts"]
   },
+  "lib": [
+    "es2017",
+    "dom"
+  ],
   "include": [
-    "**/*"
+    "**/*.ts"
   ],
   "exclude": [
+    "dist",
+    "lib",
     "coverage",
-    "node_modules"
+    "**/*.spec.ts",
+    "**/*.int-spec.ts",
+    "node_modules",
+    "test-bb",
+    "test"
   ]
 }

@@ -1,5 +1,3 @@
-import './passport';
-
 import { configureExpress } from './express.config';
 import { ServiceLocator } from '../ws.service-locator';
 

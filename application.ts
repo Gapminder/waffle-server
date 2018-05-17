@@ -1,46 +1,42 @@
-import './ws.repository';
-
 import * as Config from './ws.config';
-import * as Routes from './ws.routes';
+import { registerRoutes } from './ws.routes';
 import { logger } from './ws.config/log';
 import { ServiceLocator } from './ws.service-locator';
-import * as util from 'util';
-import { CronJob } from './ws.utils/long-running-queries-killer';
-import { mongolessImport } from './mongoless-import';
+import { loadRepositoriesConfig, RepositoriesConfig } from './ws.config/repos.config';
 
 export class Application {
   public listen: Function;
 
   private config: any;
-  private warmupUtils: any;
-  private importUtils: any;
-  private importService: any;
-  private usersService: any;
-  private longRunningQueriesKiller: CronJob;
+  private reposConfig: RepositoriesConfig;
 
-  public constructor(serviceLocator: ServiceLocator) {
+  public constructor(private serviceLocator: ServiceLocator) {
     this.configure(serviceLocator);
     this.registerRoutes(serviceLocator);
 
-    this.importUtils = serviceLocator.get('importUtils');
-    this.importService = serviceLocator.get('importService');
-    this.warmupUtils = serviceLocator.get('warmupUtils');
     this.config = serviceLocator.get('config');
-    this.usersService = serviceLocator.get('usersService');
-    this.longRunningQueriesKiller = serviceLocator.get('longRunningQueriesKiller');
 
     const app = serviceLocator.getApplication();
-    this.listen = util.promisify(app.listen.bind(app));
+    this.listen = app.listen.bind(app);
   }
 
-  public run(): Promise<void> {
-    return this.usersService.makeDefaultUser()
-      .then(() => this.listen(this.config.PORT))
-      .then(() => logger.info('\nExpress server listening on port %d in %s mode', this.config.PORT, this.config.NODE_ENV))
-      .then(() => this.importService.importDdfRepos())
-      .then(() => mongolessImport())
-      .then(() => this.warmup())
-      .then(() => this.startLongRunningQueriesKiller());
+  public async run(): Promise<void> {
+    try {
+      // For test that with repositoryes config everything is ok
+      this.reposConfig = await loadRepositoriesConfig(true);
+      this.serviceLocator.set('repos-config', this.reposConfig);
+
+      this.listen(this.config.PORT);
+      // importService.importByConfig();
+      logger.info(`Express server listening on port ${this.config.PORT} in ${this.config.NODE_ENV} mode`);
+    } catch (startupError) {
+      logger.error(startupError);
+      if (this.config.IS_TESTING !== true) {
+        process.exit(1);
+      } else {
+        throw startupError;
+      }
+    }
   }
 
   private configure(serviceLocator: ServiceLocator): void {
@@ -48,24 +44,6 @@ export class Application {
   }
 
   private registerRoutes(serviceLocator: ServiceLocator): void {
-    Routes.registerRoutes(serviceLocator);
-  }
-
-  private warmup(): Promise<void> {
-    return util.promisify(this.warmupUtils.warmUpCache)()
-      .then((warmedQueriesAmount: number) => {
-          logger.info(`Attempt to warm up the cache is has been completed. Amount of executed queries: ${warmedQueriesAmount}`);
-      })
-      .catch((error: any) => logger.error(error, 'Cache warm up failed.'));
-  }
-
-  private startLongRunningQueriesKiller(): Promise<void> {
-    this.longRunningQueriesKiller.start();
-
-    if (!this.longRunningQueriesKiller.running) {
-      return Promise.reject('Long running queries killer failed to start');
-    }
-
-    return Promise.resolve();
+    registerRoutes(serviceLocator);
   }
 }

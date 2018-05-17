@@ -7,10 +7,10 @@ import {ChildProcess} from 'child_process';
 import {ExecOutputReturnValue} from 'shelljs';
 import * as path from 'path';
 
-import { DEFAULT_CONFIG } from '../../deployment/gcp_scripts/deployment_config.default';
+import { DEFAULT_CONFIG } from '../../deployment/deployment_config.default';
 
-import * as commonHelpers from '../../deployment/gcp_scripts/common.helpers';
-import * as autoDeploy from '../../deployment/gcp_scripts/autodeploy';
+import * as commonHelpers from '../../deployment/common.helpers';
+import * as autoDeploy from '../../deployment/autodeploy';
 
 const chai = require('chai');
 chai.use(require('./testUtils/chaiJsMatchers'));
