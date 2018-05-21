@@ -34,6 +34,7 @@ function sendDdfqlRequest(ddfql: any, onResponseReceived: Function): void {
   /*console.log(`encodedDataset`, encodedDataset);
   console.log(e2eEnv.datasetName);*/
 
+  // return wsApi.get(`/api/ddf/ml-ql?${URLON.stringify(ddfql)}`)
   return wsApi.get(`/api/ddf/ql?${URLON.stringify(ddfql)}`)
   // Here is alternative way of sending ddfql - via encoded JSON
   // return wsApi.get(`/api/ddf/ql?query=${encodeURIComponent(JSON.stringify(ddfql))}`)

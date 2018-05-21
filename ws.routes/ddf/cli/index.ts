@@ -38,6 +38,7 @@ function registerDdfCliRoutes(serviceLocator: ServiceLocator): Application {
   router.post('/remove-dataset', CliController.removeDataset);
   router.post('/transactions/latest/rollback', CliController.activateRollback);
   router.post('/datasets/default', CliController.setDefaultDataset);
+  router.post('/datasets/default/ml', CliController.setMongolessDefaultDataset);
   router.post('/datasets/accessToken', CliController.generateDatasetAccessToken);
   router.post('/cache/clean', CliController.cleanCache);
   router.post('/repos/clean', CliController.cleanRepos);

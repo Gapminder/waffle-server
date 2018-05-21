@@ -147,10 +147,6 @@ async function makeBranchesDrafts(repositoryGitUrl: string, repositoryName: stri
   const branches = keys(repositoryDescriptorsSource[repositoryGitUrl]);
 
   for (const branch of branches) {
-    if (branch === 'master') {
-      continue;
-    }
-
     for (const commit of repositoryDescriptorsSource[repositoryGitUrl][branch]) {
       const masterRepoPath = path.resolve(reposPath, repositoryName, 'master');
       const thisRepoPath = commit !== 'HEAD' ?

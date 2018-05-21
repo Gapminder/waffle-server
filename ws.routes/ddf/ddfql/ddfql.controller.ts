@@ -20,6 +20,7 @@ import { defaultRepository } from '../../../ws.config/mongoless-repos.config';
 import { performance } from 'perf_hooks';
 import * as path from 'path';
 import * as fs from 'fs';
+import { config } from '../../../ws.config/config';
 
 function createDdfqlController(serviceLocator: ServiceLocator): Application {
   const app = serviceLocator.getApplication();
@@ -89,17 +90,17 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
     req.queryStartTime = performance.now();
 
     const reqBody = _.get(req, 'body', {});
-    const datasetParam = _.get(reqBody, 'dataset', defaultRepository);
+    const datasetParam = _.get(reqBody, 'dataset', config.DEFAULT_DATASET || defaultRepository);
     const [ dataset, branchParam ] = datasetParam.split('#');
     const branch = branchParam || 'master';
-    const commit = _.get(reqBody, 'version', 'HEAD');
+    const commit = _.get(reqBody, 'version', config.DEFAULT_DATASET_VERSION || 'HEAD');
     const select = _.get(reqBody, 'select.key', []).concat(_.get(reqBody, 'select.value', []))
     const repositoryDescriptorPath = path.resolve(constants.WORKDIR, 'ws.import', 'repos', 'repositories-descriptors.json');
     let repositoriesDescriptors: object;
 
     try {
-      logger.info('!!!!!!!!!!!!!!!!', repositoryDescriptorPath);
-      logger.info('!!!!!!!!!!!!!!!!', fs.statSync(repositoryDescriptorPath));
+      logger.info('repositoryDescriptorPath', repositoryDescriptorPath);
+      logger.info('fsSstatSync:repositoryDescriptorPath', fs.statSync(repositoryDescriptorPath));
       repositoriesDescriptors = JSON.parse(fs.readFileSync(repositoryDescriptorPath, 'utf8'));
     } catch (error) {
       console.trace('I am here');
@@ -110,8 +111,15 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
 
     const repositoriesDescriptor = repositoriesDescriptors[ `${dataset}@${branch}:${commit}` ];
     const reader = getDDFCsvReaderObject();
+    const _path = _.get(repositoriesDescriptor, 'path', '');
 
-    reader.init({ path: repositoriesDescriptor.path });
+    if (_path === '' || _.isEmpty(repositoriesDescriptors)) {
+      logger.error(repositoriesDescriptors, `${dataset}@${branch}:${commit}`);
+    }
+
+    logger.info('repositoryDescriptor', repositoriesDescriptor, `${dataset}@${branch}:${commit}`);
+
+    reader.init({ path: _path });
     reader.read(reqBody).then((data: any[]) => {
       res.set('Content-Type', 'application/json');
       res.write(`{"success":true,"headers":${JSON.stringify(select)},"rows":[`);

@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import * as hi from 'highland';
-import {logger} from '../../../ws.config/log';
+import { logger } from '../../../ws.config/log';
 import * as authService from '../../../ws.services/auth.service';
 import * as cliService from '../../../ws.services/cli.service';
 import * as transactionsService from '../../../ws.services/dataset-transactions.service';
@@ -8,12 +8,12 @@ import * as datasetsService from '../../../ws.services/datasets.service';
 import * as reposService from '../../../ws.services/repos.service';
 import * as cacheUtils from '../../../ws.utils/cache-warmup';
 import * as routeUtils from '../../utils';
-import {cleanRepos as cliApiCleanRepos} from 'waffle-server-import-cli';
-import {config} from '../../../ws.config/config';
-import {Response} from 'express';
+import { cleanRepos as cliApiCleanRepos } from 'waffle-server-import-cli';
+import { config } from '../../../ws.config/config';
+import { Response } from 'express';
 import { RecentDdfqlQueriesRepository } from '../../../ws.repository/ddf/recent-ddfql-queries/recent-ddfql-queries.repository';
 import * as ddfImportUtils from '../../../ws.import/utils/import-ddf.utils';
-import {WSRequest as Request} from '../../utils';
+import { WSRequest as Request } from '../../utils';
 
 export {
   getToken,
@@ -28,6 +28,7 @@ export {
   activateRollback,
   getDatasets,
   setDefaultDataset,
+  setMongolessDefaultDataset,
   generateDatasetAccessToken,
   getPrivateDatasets,
   getDatasetsInProgress,
@@ -94,6 +95,45 @@ function setDefaultDataset(req: Request, res: Response): Response | void {
 
       return res.json(routeUtils.toDataResponse(defaultDatasetAndCommit));
     });
+  });
+}
+
+function setMongolessDefaultDataset(req: Request, res: Response): Response | void {
+  const datasetName = req.body.datasetName;
+  const transactionCommit = req.body.commit;
+
+  if (!req.user) {
+    return res.json(routeUtils.toErrorResponse('There is no authenticated user to get its datasets', req));
+  }
+
+  if (!datasetName) {
+    return res.json(routeUtils.toErrorResponse('Dataset name was not provided', req));
+  }
+
+  if (!transactionCommit) {
+    return res.json(routeUtils.toErrorResponse('Transaction commit was not provided', req));
+  }
+
+  config.DEFAULT_DATASET = datasetName;
+  config.DEFAULT_DATASET_VERSION = transactionCommit;
+
+  return cliService.cleanDdfRedisCache((cacheCleanError: string) => {
+    if (cacheCleanError) {
+      return res.json(routeUtils.toErrorResponse(cacheCleanError, req));
+    }
+
+    cacheUtils.warmUpCache((cacheWarmUpError: string) => {
+      if (cacheWarmUpError) {
+        return logger.error('Cache warm up error. ', cacheWarmUpError);
+      }
+      return logger.info('Cache is warmed up.');
+    });
+
+    return res.json(routeUtils.toDataResponse({
+      name: datasetName,
+      commit: transactionCommit,
+      createdAt: new Date()
+    }));
   });
 }
 
@@ -414,7 +454,7 @@ function getStateOfRecentQueries(req: Request, res: Response): void {
   const recentDdfqlQueriesStream = hi(RecentDdfqlQueriesRepository.findAllAsStream())
     .tap((recentQuery: any) => {
       logger.debug(recentQuery.toObject());
-      recentQueries.push(_.pick(recentQuery.toObject(), ['queryRaw', 'type', 'docsAmount', 'timeSpentInMillis']));
+      recentQueries.push(_.pick(recentQuery.toObject(), [ 'queryRaw', 'type', 'docsAmount', 'timeSpentInMillis' ]));
     });
 
   return ddfImportUtils.startStreamProcessing(recentDdfqlQueriesStream, null, (error: string) => {
