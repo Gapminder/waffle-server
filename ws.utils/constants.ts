@@ -41,8 +41,6 @@ const constants: any = {
   ASC_SORTING_DIRECTION: 'asc',
   DESC_SORTING_DIRECTION: 'desc',
 
-  MONGO_SPECIAL_FIELDS: ['_id', '_v'],
-
   GID: 'gid',
   ORIGIN_ID: 'originId',
   IS_OPERATOR: 'is--',
@@ -69,7 +67,6 @@ const constants: any = {
 
   DEFAULT_DATAPOINTS_QUERY_TIMEOUT_MS: 20000,
   DEFAULT_DATAPOINTS_QUERY_LIMIT: 1000000,
-  MONGODB_ALLOW_DISK_USE: true,
 
   ASSETS_CACHE_CONTROL_MAX_AGE_IN_MILLIS: (7 * 24 * 60) * 60 * 1000, // one week
 

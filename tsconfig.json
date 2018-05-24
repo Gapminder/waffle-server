@@ -7,7 +7,7 @@
     "preserveConstEnums": true,
     "removeComments": true,
     "sourceMap": true,
-    "typeRoots": ["node_modules/@types", "node_modules/influx/lib/src/index.d.ts"]
+    "typeRoots": ["node_modules/@types", "node_modules/bunyan-middleware/index.d.ts"]
   },
   "include": [
     "**/*"

@@ -25,9 +25,6 @@ RUN rm -f telegraf_${TELEGRAF_VERSION}-1_${ARCH}.deb
 #install node & npm packages
 RUN curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
 RUN apt-get install -y nodejs
-RUN npm i -g pm2
-RUN npm i -g pm2-logrotate
-RUN pm2 install pm2-logrotate
 RUN npm i -g shelljs
 RUN npm i -g typescript@2.5.2
 
@@ -81,29 +78,17 @@ ENV REDIS_HOST "${REDIS_HOST}"
 ARG REDIS_PORT
 ENV REDIS_PORT ${REDIS_PORT:-6379}
 
-ARG MONGODB_URL
-ENV MONGODB_URL "${MONGODB_URL}"
-
-ARG DEFAULT_USER_PASSWORD
-ENV DEFAULT_USER_PASSWORD "${DEFAULT_USER_PASSWORD}"
-
 ARG PATH_TO_DDF_REPOSITORIES
 ENV PATH_TO_DDF_REPOSITORIES "${PATH_TO_DDF_REPOSITORIES}"
 
 ARG NEW_RELIC_LICENSE_KEY
 ENV NEW_RELIC_LICENSE_KEY "${NEW_RELIC_LICENSE_KEY}"
 
-ARG THRASHING_MACHINE
-ENV THRASHING_MACHINE "${THRASHING_MACHINE}"
-
 ARG NODE_ENV
 ENV NODE_ENV ${NODE_ENV:-"development"}
 
 ARG ENVIRONMENT
 ENV ENVIRONMENT ${ENVIRONMENT}
-
-ARG LOGS_SYNC_DISABLED
-ENV LOGS_SYNC_DISABLED ${LOGS_SYNC_DISABLED:-"true"}
 
 ARG GCP_DEFAULT_REGION
 ENV GCP_DEFAULT_REGION "${GCP_DEFAULT_REGION}"
@@ -125,9 +110,6 @@ ENV INFLUXDB_USER "${INFLUXDB_USER}"
 
 ARG INFLUXDB_PASSWORD
 ENV INFLUXDB_PASSWORD "${INFLUXDB_PASSWORD}"
-
-ARG MACHINE_SUFFIX
-ENV MACHINE_SUFFIX "${MACHINE_SUFFIX:-'WS'}"
 
 ARG RELEASE_DATE
 ENV RELEASE_DATE "${RELEASE_DATE:-'2017-11-28T17:15:42'}"
@@ -165,14 +147,13 @@ RUN chmod 666 /var/log/telegraf/telegraf.log
 
 #setup services settings
 RUN mkdir -p /var/log/supervisor
-COPY ./deployment/rsys_conf/rsyslog.conf /etc/rsyslog.conf
-COPY ./deployment/rsys_conf/ws.conf /etc/rsyslog.d/ws.conf
 COPY ./deployment/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+RUN echo "[program:forever]" >> /etc/supervisor/conf.d/supervisord.conf
+RUN echo "command=npm run start:${ENVIRONMENT}" >> /etc/supervisor/conf.d/supervisord.conf
 RUN > /etc/telegraf/telegraf.conf
 RUN cat ./deployment/telegraf/default-telegraf.conf >> /etc/telegraf/telegraf.conf
 RUN cat ./deployment/telegraf/filestat.plugin.conf  >> /etc/telegraf/telegraf.conf
 RUN cat ./deployment/telegraf/procstat.plugin.conf  >> /etc/telegraf/telegraf.conf
-COPY ./ecosystem-$MACHINE_SUFFIX.config.json ecosystem.config.json
 COPY ./deployment/supervisor/envs.sh /bin/envs.sh
 
 ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]

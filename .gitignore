@@ -1,7 +1,6 @@
 # WebStroms project files
 .idea
-# Created by .ignore support plugin (hsz.mobi)
-### Node template
+
 # Logs
 logs/*.log*
 *.log
@@ -10,52 +9,39 @@ logs/*.log*
 
 # Coverage directory used by tools like istanbul
 coverage
+specReports
 .nyc_output
 
 # Dependency directory
 # https://www.npmjs.org/doc/misc/npm-faq.html#should-i-check-my-node_modules-folder-into-git
 node_modules
-samples/humnum-import/data
-ws.utils/devinfo.org.import/data
-
-ws.public/index.html
-ws.public/dest
 
 dumps
 # excel lock files
 .~*
 
-# exclude changes of secret-restricted data in environment settings
-/ws.config/env
-
 # Directory for GitHub repositories
-ws.import/repos/*
-ws.import/diffs/**/*.txt
-!ws.import/repos/.gitkeep
-!ws.import/diffs/.gitkeep
-
-settings_gapminder*.txt
-settings_valor.txt
-deployment/gcp_scripts/**/deployment_*.json
-deployment/gcp_scripts/**/build.*.sh
-deployment/gcp_scripts/**/*.txt
-dev
-dev.pub
-1.json
-2.json
-clean-env.sh
-
-specReports
-
-siege-attack.sh
-
-yarn.lock
+ddf
+diffs
 
 # forever
-test/pids
-test/sock
-test/config.json
+forever/*.*
+!forever/.gitkeep
+
+# AWS Settings
+settings_gapminder*.txt
+settings_valor.txt
+
+# GCP keys
+dev
+dev.pub
+
+#Yarn
+yarn.lock
 
 # deployment
 deployment/**/tmp/*.*
 !deployment/**/tmp/.gitkeep
+deployment/**/deployment_*.json
+deployment/**/build.*.sh
+deployment/**/*.txt

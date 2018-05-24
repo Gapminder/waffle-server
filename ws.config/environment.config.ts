@@ -40,19 +40,14 @@ const environment = Object.freeze({
   LOG_MARKER: LOG_MARKERS[NODE_ENV],
   LOG_LEVEL: DEFAULT_LOG_LEVELS[NODE_ENV] || DEFAULT_LOG_LEVELS[DEFAULT_NODE_ENV],
 
-  MONGODB_URL: 'mongodb://localhost:27017/ws_ddf_local',
-
   REDIS_HOST: process.env.REDIS_HOST || 'localhost',
   REDIS_PORT: process.env.REDIS_PORT || 6379,
 
   NODE_ENV,
   SESSION_TIMEOUT: 60000,
 
-  MONGOOSE_DEBUG: false,
-  CLEAR_MONGO_DB_COLLECTIONS: false,
-
-  PATH_TO_DDF_REPOSITORIES: path.join(__dirname, '../ws.import/repos'),
-  PATH_TO_DIFF_DDF_RESULT_FILE: path.join(__dirname, '../ws.import/diffs'),
+  PATH_TO_DDF_REPOSITORIES: path.join(__dirname, '../ddf'),
+  PATH_TO_DIFF_DDF_RESULT_FILE: path.join(__dirname, '../diffs'),
   DEFAULT_DATASETS: [],
 
   IS_MONITORING_NEEDED: true,

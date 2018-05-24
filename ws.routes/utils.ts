@@ -2,18 +2,10 @@ import * as _ from 'lodash';
 import * as async from 'async';
 import * as crypto from 'crypto';
 import * as url from 'url';
-import * as passport from 'passport';
 import * as URLON from 'urlon';
 import { config } from '../ws.config/config';
 import { logger } from '../ws.config/log';
 import * as express from 'express';
-import * as semver from 'semver';
-const {
-  performance
-} = require('perf_hooks');
-
-import { DatasetsRepository } from '../ws.repository/ddf/datasets/datasets.repository';
-import { RecentDdfqlQueriesRepository } from '../ws.repository/ddf/recent-ddfql-queries/recent-ddfql-queries.repository';
 import { constants, responseMessages } from '../ws.utils/constants';
 import * as path from 'path';
 
@@ -25,6 +17,10 @@ import {
   ResponseTags,
   TelegrafService
 } from '../ws.services/telegraf.service';
+
+const {
+  performance
+} = require('perf_hooks');
 
 const RELATIVE_PATH_REGEX = /\/\.+\/?/;
 
@@ -42,10 +38,7 @@ const parseJsonAsync: Function = async.asyncify((query: string) => JSON.parse(de
 
 export {
   getCacheConfig,
-  ensureAuthenticatedViaToken,
-  ensureCliVersion,
   respondWithRawDdf,
-  checkDatasetAccessibility,
   trackingRequestTime,
   bodyFromUrlQuery,
   bodyFromUrlAssets,
@@ -112,7 +105,7 @@ function bodyFromUrlAssets(req: WSRequest, res: express.Response, next: express.
       return;
     }
 
-    const {pathname} = url.parse(datasetAssetsPathFromUrl);
+    const { pathname } = url.parse(datasetAssetsPathFromUrl);
     const assetPathDescriptor = getAssetPathDescriptor(
       config.PATH_TO_DDF_REPOSITORIES,
       isRequestedDefaultAssets ? pathname.replace('default/', '') : pathname,
@@ -135,7 +128,7 @@ function bodyFromUrlAssets(req: WSRequest, res: express.Response, next: express.
 }
 
 function getAssetPathDescriptor(pathToDdfRepos: string, datasetAssetPath: string, defaultDataset?: any): any {
-  const repoDescriptor: {repo: string, branch: string, account: string} = getRepoInfoFromDataset(defaultDataset) || {};
+  const repoDescriptor: { repo: string, branch: string, account: string } = getRepoInfoFromDataset(defaultDataset) || {};
   const defaultRepo = repoDescriptor.repo || '';
   const defaultAccount = repoDescriptor.account || '';
   const defaultBranch = repoDescriptor.branch || '';
@@ -144,7 +137,7 @@ function getAssetPathDescriptor(pathToDdfRepos: string, datasetAssetPath: string
   const file = splittedDatasetAssetPath.pop();
   const assetsPathFragments = splittedDatasetAssetPath.pop();
 
-  const [account = defaultAccount, repo = defaultRepo, ...splittedBranchName] = splittedDatasetAssetPath;
+  const [ account = defaultAccount, repo = defaultRepo, ...splittedBranchName ] = splittedDatasetAssetPath;
   const branch = splittedBranchName.join('/') || defaultBranch;
 
   return {
@@ -160,8 +153,8 @@ function getRepoInfoFromDataset(dataset: any): any {
     return null;
   }
 
-  const [accountAndRepo, branch = 'master'] = _.split(dataset.name, '#');
-  const [account, repo] = _.split(accountAndRepo, '/');
+  const [ accountAndRepo, branch = 'master' ] = _.split(dataset.name, '#');
+  const [ account, repo ] = _.split(accountAndRepo, '/');
 
   return {
     account,
@@ -195,10 +188,6 @@ function getCacheConfig(prefix?: string): express.Handler {
   };
 }
 
-function ensureAuthenticatedViaToken(req: WSRequest, res: express.Response, next: express.NextFunction): express.Handler {
-  return passport.authenticate('token')(req, res, next);
-}
-
 function respondWithRawDdf(req: WSRequest, res: express.Response, next: express.NextFunction): Function {
   return (error: string, result: any) => {
     if (error) {
@@ -209,99 +198,11 @@ function respondWithRawDdf(req: WSRequest, res: express.Response, next: express.
 
     const collectionName = _.get(req.body, 'from', '');
     const docsAmount = _.get(result, collectionName, []).length;
-    _storeWarmUpQueryForDefaultDataset(docsAmount, req);
 
     (req as any).rawData = { rawDdf: result };
 
     return next();
   };
-}
-
-function _storeWarmUpQueryForDefaultDataset(docsAmount: number = 0, req: WSRequest): void {
-  const rawDdfQuery = _.get(req, 'queryParser', {});
-  const timeSpentInMillis = performance.now() - _.get(req, 'queryStartTime', 0);
-
-  if (!rawDdfQuery) {
-    return;
-  }
-
-  if (config.IS_TESTING) {
-    return;
-  }
-
-  const recentQuery = _.extend({timeSpentInMillis, docsAmount}, _.omit(rawDdfQuery, 'parse'));
-
-  RecentDdfqlQueriesRepository.create(recentQuery, (error: string) => {
-    if (error) {
-      logger.debug(error);
-    } else {
-      logger.debug('Writing query to cache warm up storage', _.get(rawDdfQuery, 'query', ''));
-    }
-  });
-}
-
-function ensureCliVersion(req: WSRequest, res: express.Response, next: express.NextFunction): void {
-  const clientWsCliVersion = req.header('X-Gapminder-WSCLI-Version');
-
-  if (!clientWsCliVersion) {
-    res.json(toErrorResponse(responseMessages.URL_CANNOT_BE_ACCESSED_FROM_WS_CLI, req));
-    return;
-  }
-
-  const serverWsCliVersion = config.getWsCliVersionSupported();
-
-  if (!ensureVersionsEquality(clientWsCliVersion, serverWsCliVersion)) {
-    const changeCliVersionResponse = toErrorResponse(
-      responseMessages.INCORRECT_CLI_VERSION(clientWsCliVersion, serverWsCliVersion), req);
-
-    res.json(changeCliVersionResponse);
-    return;
-  }
-
-  return next();
-}
-
-function ensureVersionsEquality(clientVersion: string, serverVersion: string): boolean {
-  try {
-    return semver.satisfies(clientVersion, serverVersion);
-  } catch (e) {
-    return false;
-  }
-}
-
-function checkDatasetAccessibility(req: WSRequest, res: express.Response, next: express.NextFunction): any {
-  const datasetName = _.get(req, 'body.dataset', null);
-  if (!datasetName) {
-    return next();
-  }
-
-  return DatasetsRepository.findByName(datasetName, (error: string, dataset: any) => {
-    if (error) {
-      logger.error(error);
-      return res.json(toErrorResponse(error, req));
-    }
-
-    if (!dataset) {
-      return res.json(toErrorResponse(`Dataset with given name ${datasetName} was not found`, req));
-    }
-
-    if (!dataset.private) {
-      return next();
-    }
-
-    const providedAccessToken = _.get(req, 'body.dataset_access_token', null);
-    if (_validateDatasetAccessToken(dataset.accessToken, providedAccessToken)) {
-      return next();
-    }
-
-    return res.json(toErrorResponse('You are not allowed to access data according to given query', req));
-  });
-}
-
-function _validateDatasetAccessToken(datasetAccessToken: string, providedAccessToken: string): boolean {
-  const tokensAreEqual = datasetAccessToken === providedAccessToken;
-  const tokensAreNotEmpty = !_.isEmpty(datasetAccessToken) && !_.isEmpty(providedAccessToken);
-  return tokensAreNotEmpty && tokensAreEqual;
 }
 
 function isResponseString(response: string | Error | FailedResponse): response is string {
@@ -318,10 +219,10 @@ function toErrorResponse(response: FailedResponse | Error | string, context: Req
 
   switch (true) {
     case isResponseString(response):
-      error = {message: response as string, code: 999, type: 'INTERNAL_SERVER_TEXT_ERROR', place};
+      error = { message: response as string, code: 999, type: 'INTERNAL_SERVER_TEXT_ERROR', place };
       break;
     case isResponseError(response):
-      error = {message: (response as Error).message, code: 998, type: 'INTERNAL_SERVER_ERROR', place};
+      error = { message: (response as Error).message, code: 998, type: 'INTERNAL_SERVER_ERROR', place };
       break;
     default:
       error = _.extend({ place }, response as FailedResponse);

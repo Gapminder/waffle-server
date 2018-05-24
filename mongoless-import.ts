@@ -34,7 +34,7 @@ type CommandResult = {
 
 type BranchIssue = { [key: string]: string };
 
-const reposPath = path.resolve('.', 'ws.import', 'repos');
+const reposPath = config.PATH_TO_DDF_REPOSITORIES;
 const repositories = keys(repositoryDescriptorsSource);
 
 function normalizeRepositoryDescriptorsSource(): void {
@@ -181,7 +181,7 @@ export async function getRepositoryStateDescriptors(repository: string): Promise
   }
 
   const lockFileName = repoName.replace(/\//, '-');
-  const lockFilePath = path.resolve('.', 'ws.import', 'repos', `${lockFileName}.lock`);
+  const lockFilePath = path.resolve(config.PATH_TO_DDF_REPOSITORIES, `${lockFileName}.lock`);
 
   fsExtra.writeFileSync(lockFilePath, '');
 
@@ -268,10 +268,6 @@ function transformRepositoryStateDescriptorsArrayToHash(descriptors: RepositoryS
 }
 
 export async function mongolessImport(): Promise<void> {
-  if (config.IS_TESTING || config.IS_LOCAL) {
-    return Promise.resolve();
-  }
-
   normalizeRepositoryDescriptorsSource();
 
   const repositoryStateDescriptors = [];
@@ -280,7 +276,7 @@ export async function mongolessImport(): Promise<void> {
     repositoryStateDescriptors.push(...await getRepositoryStateDescriptors(repository));
   }
 
-  const reposDescriptorsFile = path.resolve(constants.WORKDIR, 'ws.import', 'repos', 'repositories-descriptors.json');
+  const reposDescriptorsFile = path.resolve(config.PATH_TO_DDF_REPOSITORIES, 'repositories-descriptors.json');
   const reposDescriptorsFileContent =
     JSON.stringify(transformRepositoryStateDescriptorsArrayToHash(repositoryStateDescriptors), null, 2);
 
