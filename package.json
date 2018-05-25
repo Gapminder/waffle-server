@@ -7,7 +7,7 @@
   "name": "waffle-server-mongoless",
   "description": "Server for keeping and serving ddf data",
   "main": "server.js",
-  "version": "1.0.0",
+  "version": "3.0.0",
   "private": true,
   "scripts": {
     "tsc": "./node_modules/.bin/tsc --project tsconfig.json",

@@ -21,8 +21,8 @@ dumps
 .~*
 
 # Directory for GitHub repositories
-ddf
-diffs
+ddf/*
+diffs/*
 
 # forever
 forever/*.*

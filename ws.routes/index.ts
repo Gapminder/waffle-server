@@ -1,5 +1,5 @@
-import { registerDdfqlRoutes } from './ddf/ddfql';
-import { registerDdfAssetsRoutes } from './ddf/assets';
+import { registerDdfqlRoutes } from './ddfql';
+import { registerDdfAssetsRoutes } from './assets';
 import { ServiceLocator } from '../ws.service-locator/index';
 
 export {
