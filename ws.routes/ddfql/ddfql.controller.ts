@@ -2,9 +2,8 @@ import * as _ from 'lodash';
 import * as cors from 'cors';
 import * as express from 'express';
 import * as routesUtils from '../utils';
-import { Application, NextFunction, Response, Request } from 'express';
+import { Application, Response } from 'express';
 import * as compression from 'compression';
-import { constants } from '../../ws.utils/constants';
 import { logger } from '../../ws.config/log';
 import * as routeUtils from '../utils';
 import { getDDFCsvReaderObject } from 'vizabi-ddfcsv-reader';
@@ -12,8 +11,67 @@ import { ServiceLocator } from '../../ws.service-locator/index';
 import { defaultRepository } from '../../ws.config/mongoless-repos.config';
 import { performance } from 'perf_hooks';
 import * as path from 'path';
-import * as fs from 'fs';
 import { config } from '../../ws.config/config';
+import { spawn } from 'child_process';
+import { keys } from 'lodash';
+import { repositoryDescriptors as repositoryDescriptorsSource } from '../../ws.config/mongoless-repos.config';
+
+let importProcess;
+let repositoryStateDescriptors = {};
+
+export function mongolessImport(): void {
+  if (!importProcess) {
+    importProcess = spawn('node', [path.resolve(__dirname, 'mongoless-import-processing.js')]);
+
+    importProcess.stdout.on('data', (data: string) => {
+      if (!data) {
+        return;
+      }
+
+      const allFeedback = `${data}`.split('\n');
+
+      for (const feedback of allFeedback) {
+        if (!feedback || feedback.indexOf('#') !== 0) {
+          logger.info(feedback);
+
+          return;
+        }
+
+        let content;
+
+        try {
+          content = JSON.parse(feedback.substr(1));
+        } catch (err) {
+          console.log(err, feedback);
+          return;
+        }
+
+        switch (content.action) {
+          case 'empty-queue':
+            importProcess.kill();
+            importProcess = null;
+
+            break;
+          case 'repository-imported':
+            repositoryStateDescriptors = Object.assign({}, repositoryStateDescriptors, content.descriptors);
+            logger.info(content.repo + ' imported');
+
+            break;
+          default:
+            break;
+        }
+      }
+    });
+
+    importProcess.stderr.on('data', (data: string) => logger.info(`${data}`));
+  }
+
+  const repositories = keys(repositoryDescriptorsSource);
+
+  for (const repository of repositories) {
+    importProcess.stdin.write(repository + '\n');
+  }
+}
 
 function createDdfqlController(serviceLocator: ServiceLocator): Application {
   const app = serviceLocator.getApplication();
@@ -30,6 +88,12 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
     routeUtils.bodyFromUrlQuery,
     getMongolessDdfStats
   );
+
+  router.get('/api/ddf/ml-ql-status', (req: any, res: Response) => {
+    res.set('Content-Type', 'application/json');
+    res.write(JSON.stringify(repositoryStateDescriptors, null, 2));
+    res.end();
+  });
 
   router.post('/api/ddf/ml-ql',
     compression(),
@@ -55,30 +119,16 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
 
     const reqBody = _.get(req, 'body', {});
     const datasetParam = _.get(reqBody, 'dataset', config.DEFAULT_DATASET || defaultRepository);
-    const [ dataset, branchParam ] = datasetParam.split('#');
+    const [dataset, branchParam] = datasetParam.split('#');
     const branch = branchParam || 'master';
     const commit = _.get(reqBody, 'version', config.DEFAULT_DATASET_VERSION || 'HEAD');
-    const select = _.get(reqBody, 'select.key', []).concat(_.get(reqBody, 'select.value', []))
-    const repositoryDescriptorPath = path.resolve(config.PATH_TO_DDF_REPOSITORIES, 'repositories-descriptors.json');
-    let repositoriesDescriptors: object;
-
-    try {
-      logger.info('repositoryDescriptorPath', repositoryDescriptorPath);
-      logger.info('fsSstatSync:repositoryDescriptorPath', fs.statSync(repositoryDescriptorPath));
-      repositoriesDescriptors = JSON.parse(fs.readFileSync(repositoryDescriptorPath, 'utf8'));
-    } catch (error) {
-      console.trace('I am here');
-      logger.error(getStackTrace());
-      res.json(routesUtils.toErrorResponse(error, req, 'mongoless'));
-      return;
-    }
-
-    const repositoriesDescriptor = repositoriesDescriptors[ `${dataset}@${branch}:${commit}` ];
+    const select = _.get(reqBody, 'select.key', []).concat(_.get(reqBody, 'select.value', []));
+    const repositoriesDescriptor = repositoryStateDescriptors[`${dataset}@${branch}:${commit}`];
     const reader = getDDFCsvReaderObject();
     const _path = _.get(repositoriesDescriptor, 'path', '');
 
-    if (_path === '' || _.isEmpty(repositoriesDescriptors)) {
-      logger.error(repositoriesDescriptors, `${dataset}@${branch}:${commit}`);
+    if (_path === '' || _.isEmpty(repositoryStateDescriptors)) {
+      logger.error(repositoryStateDescriptors, `${dataset}@${branch}:${commit}`);
     }
 
     logger.info('repositoryDescriptor', repositoriesDescriptor, `${dataset}@${branch}:${commit}`);
@@ -88,7 +138,7 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
       res.set('Content-Type', 'application/json');
       res.write(`{"success":true,"headers":${JSON.stringify(select)},"rows":[`);
       data.map((row: object, index: number) => {
-        res.write((index ? ',' : '') + JSON.stringify(select.map((header: string) => row[ header ])));
+        res.write((index ? ',' : '') + JSON.stringify(select.map((header: string) => row[header])));
       });
       res.write(`]}`);
       res.end();

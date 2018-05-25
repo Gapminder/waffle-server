@@ -3,7 +3,7 @@ import * as Routes from './ws.routes';
 import { logger } from './ws.config/log';
 import { ServiceLocator } from './ws.service-locator';
 import * as util from 'util';
-import { mongolessImport } from './mongoless-import';
+import { mongolessImport } from './ws.routes/ddfql/ddfql.controller';
 
 export class Application {
   public listen: Function;

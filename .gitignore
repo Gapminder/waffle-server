@@ -1,5 +1,6 @@
 # WebStroms project files
 .idea
+ws-import
 
 # Logs
 logs/*.log*
