@@ -47,6 +47,9 @@ WORKDIR /home/waffle-server
 RUN mkdir /home/waffle-server/ddf
 VOLUME /home/waffle-server/ddf
 
+RUN mkdir /home/waffle-server/ws-import
+VOLUME /home/waffle-server/ws-import
+
 COPY . .
 RUN npm i
 RUN npm run tsc

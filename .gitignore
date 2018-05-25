@@ -1,6 +1,5 @@
 # WebStroms project files
 .idea
-ws-import
 
 # Logs
 logs/*.log*
@@ -16,6 +15,7 @@ specReports
 # Dependency directory
 # https://www.npmjs.org/doc/misc/npm-faq.html#should-i-check-my-node_modules-folder-into-git
 node_modules
+package-lock.json
 
 dumps
 # excel lock files
@@ -23,7 +23,7 @@ dumps
 
 # Directory for GitHub repositories
 ddf/*
-diffs/*
+ws-import/*
 
 # forever
 forever/*.*

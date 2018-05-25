@@ -3,11 +3,12 @@ settings_valor.txt
 deployment/deployment_*.json
 deployment/build.*.sh
 deployment/*.txt
-ddf
-diff
+ddf/*
+ws-import/*
 **/*.js
 **/*.js.map
 node_modules
+package-lock.json
 *.log
 **/*.log
 logs/*.log*
