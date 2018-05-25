@@ -15,6 +15,9 @@ import { config } from '../../ws.config/config';
 import { spawn } from 'child_process';
 import { keys } from 'lodash';
 import { repositoryDescriptors as repositoryDescriptorsSource } from '../../ws.config/mongoless-repos.config';
+import { GitUtils } from './git-utils';
+
+const repositoriesUnderImporting = new Set<string>();
 
 let importProcess;
 let repositoryStateDescriptors = {};
@@ -54,7 +57,12 @@ export function mongolessImport(): void {
             break;
           case 'repository-imported':
             repositoryStateDescriptors = Object.assign({}, repositoryStateDescriptors, content.descriptors);
-            logger.info(content.repo + ' imported');
+            logger.info(content.repoName + ' imported');
+            repositoriesUnderImporting.delete(content.repoName);
+
+            break;
+          case 'repository-is-importing':
+            repositoriesUnderImporting.add(content.repoName);
 
             break;
           default:
@@ -120,6 +128,14 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
     const reqBody = _.get(req, 'body', {});
     const datasetParam = _.get(reqBody, 'dataset', config.DEFAULT_DATASET || defaultRepository);
     const [dataset, branchParam] = datasetParam.split('#');
+    const repoName = GitUtils.getRepositoryNameByUrl(dataset);
+
+    if (repositoriesUnderImporting.has(repoName)) {
+      res.json(routesUtils.toErrorResponse(`dataset ${dataset} is temporary unavailable due to importing reason`, req, 'mongoless'));
+
+      return;
+    }
+
     const branch = branchParam || 'master';
     const commit = _.get(reqBody, 'version', config.DEFAULT_DATASET_VERSION || 'HEAD');
     const select = _.get(reqBody, 'select.key', []).concat(_.get(reqBody, 'select.value', []));

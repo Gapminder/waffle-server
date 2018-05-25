@@ -192,13 +192,17 @@ const runImportFlow = () => {
         busy = true;
 
         const repo = queue.shift();
+        const repoName = GitUtils.getRepositoryNameByUrl(repo);
+
+        console.log(`#${JSON.stringify({ action: 'repository-is-importing', repoName })}`);
+
         const repositoryStateDescriptors = await getRepositoryStateDescriptors(repo);
 
         busy = false;
 
         const o = {
           action: 'repository-imported',
-          repo,
+          repoName,
           descriptors: transformRepositoryStateDescriptorsArrayToHash(repositoryStateDescriptors)
         };
 

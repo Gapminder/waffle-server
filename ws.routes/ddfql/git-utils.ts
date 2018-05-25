@@ -19,6 +19,10 @@ export class GitUtils {
   }
 
   public static getRepositoryNameByUrl(repoUrl: string): string {
+    if (repoUrl.indexOf(':') === -1) {
+      return repoUrl;
+    }
+
     try {
       return repoUrl.split(':')[1].replace(/\.git$/, '');
     } catch (error) {
