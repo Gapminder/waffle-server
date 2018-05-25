@@ -11,16 +11,20 @@
   "private": true,
   "scripts": {
     "tsc": "./node_modules/.bin/tsc --project tsconfig.json",
+
     "prestart": "npm run tsc",
     "start": "./node_modules/.bin/forever start",
     "start:local": "npm start -- forever/local.json",
     "start:dev": "npm start -- forever/development.json",
+
     "stop": "./node_modules/.bin/forever stopall",
     "logs": "./node_modules/.bin/forever logs server.js",
+
     "prepublish": "npm run tsc",
     "publish": "GCP_STACK_ACTION=publish node ./deployment/index.js | bunyan",
     "publish:local": "NODE_ENV=local npm run publish",
     "publish:dev": "NODE_ENV=development npm run publish",
+
     "preunpublish": "npm run tsc",
     "unpublish": "GCP_STACK_ACTION=unpublish node ./deployment/index.js | bunyan",
     "unpublish:local": "NODE_ENV=local npm run unpublish",
