@@ -1,6 +1,5 @@
-import { e2eEnv } from '../../../e2e.env';
-import * as cliUtils from '../../../cli.utils';
-import * as e2eUtils from '../../../e2e.utils';
+import { e2eEnv } from '../../e2e.env';
+import * as e2eUtils from '../../e2e.utils';
 
 const versions = new Map<string, string>();
 
@@ -72,12 +71,7 @@ describe('Multiple datasets in WS', function() {
 });
 
 function getCommitForGivenIndex(index: number, repo: string): Promise<string> {
-  return new Promise((resolve: Function, reject: Function) => {
-    cliUtils.getCommitByGithubUrl(repo, index, (error: string, commit: string) => {
-      if (error) return reject(error);
-      resolve(commit);
-    });
-  });
+  return e2eEnv[repo].commitsList[index];
 }
 
 function sendDdfqlRequestAndVerifyResponse(ddfql, expectedResult): Promise<any> {

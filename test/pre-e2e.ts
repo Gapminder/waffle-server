@@ -32,7 +32,7 @@ e2eUtils.startWaffleServer();
 
 shell.exec('sleep 20');
 
-import * as cliUtils from './cli.utils';
+// import * as cliUtils from './cli.utils';
 
 process.on('SIGINT', () => {
   logger.info('Caught interrupt signal');
@@ -47,25 +47,25 @@ process.on('SIGINT', () => {
   });
 });
 
-const importOptions: cliUtils.ImportOptions = {
-  repos: [
-    {
-      url: e2eEnv.repo,
-      commitIndexToStartImport: COMMIT_INDEX_TO_IMPORT
-    },
-    {
-      url: e2eEnv.repo2,
-      commitIndexToStartImport: 9
-    }
-  ]
-};
+// const importOptions: cliUtils.ImportOptions = {
+//   repos: [
+//     {
+//       url: e2eEnv.repo,
+//       commitIndexToStartImport: COMMIT_INDEX_TO_IMPORT
+//     },
+//     {
+//       url: e2eEnv.repo2,
+//       commitIndexToStartImport: 9
+//     }
+//   ]
+// };
 
-syncFn(cliUtils.runDatasetImport.bind(cliUtils))(importOptions, (error: any) => {
-  if (error) {
-    logger.error(error);
-    process.exit(1);
-    return;
-  }
-
-  process.exit(0);
-});
+// syncFn(cliUtils.runDatasetImport.bind(cliUtils))(importOptions, (error: any) => {
+//   if (error) {
+//     logger.error(error);
+//     process.exit(1);
+//     return;
+//   }
+//
+//   process.exit(0);
+// });

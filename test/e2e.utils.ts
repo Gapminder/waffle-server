@@ -10,6 +10,7 @@ import { logger } from '../ws.config/log';
 import * as async from 'async';
 import {ChildProcess} from 'child_process';
 import {ExecOutputReturnValue} from 'shelljs';
+import { CallbackHandler } from 'supertest';
 
 const wsApi = supertest(e2eEnv.wsUrl);
 
@@ -25,7 +26,7 @@ export {
   sendDdfqlRequestAndExpectError
 };
 
-function sendDdfqlRequest(ddfql: any, onResponseReceived: Function): void {
+function sendDdfqlRequest(ddfql: any, onResponseReceived: CallbackHandler): void {
   const encodedDataset = _.has(ddfql, 'dataset') ? { dataset: encodeURIComponent(ddfql.dataset) } : {};
   ddfql = Object.assign({}, ddfql, { force: true }, encodedDataset);
   // ddfql = Object.assign({}, ddfql, encodedDataset);
@@ -34,10 +35,10 @@ function sendDdfqlRequest(ddfql: any, onResponseReceived: Function): void {
   /*console.log(`encodedDataset`, encodedDataset);
   console.log(e2eEnv.datasetName);*/
 
-  // return wsApi.get(`/api/ddf/ml-ql?${URLON.stringify(ddfql)}`)
-  return wsApi.get(`/api/ddf/ql?${URLON.stringify(ddfql)}`)
+  // wsApi.get(`/api/ddf/ml-ql?${URLON.stringify(ddfql)}`)
+  wsApi.get(`/api/ddf/ql?${URLON.stringify(ddfql)}`)
   // Here is alternative way of sending ddfql - via encoded JSON
-  // return wsApi.get(`/api/ddf/ql?query=${encodeURIComponent(JSON.stringify(ddfql))}`)
+  // wsApi.get(`/api/ddf/ql?query=${encodeURIComponent(JSON.stringify(ddfql))}`)
     .set('Accept', 'application/json')
     .expect(200)
     .expect('Content-Type', /application\/json/)
