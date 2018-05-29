@@ -1,0 +1,19 @@
+{
+  "headers": [
+    "company",
+    "anno",
+    "lines_of_code"
+  ],
+  "rows": [
+    [
+      "gap",
+      "2015",
+      496533
+    ],
+    [
+      "mcrsft",
+      "2015",
+      62493
+    ]
+  ]
+}

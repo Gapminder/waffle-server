@@ -1,0 +1,24 @@
+{
+  "headers": [
+    "concept",
+    "concept_type"
+  ],
+  "rows": [
+    [
+      "num_users",
+      "measure"
+    ],
+    [
+      "lines_of_code",
+      "measure"
+    ],
+    [
+      "latitude",
+      "measure"
+    ],
+    [
+      "longitude",
+      "measure"
+    ]
+  ]
+}

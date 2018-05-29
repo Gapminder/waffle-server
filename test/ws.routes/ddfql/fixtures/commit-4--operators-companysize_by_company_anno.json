@@ -1,0 +1,24 @@
+{
+  "headers": [
+    "company",
+    "anno",
+    "company_scale"
+  ],
+  "rows": [
+    [
+      "mcrsft",
+      "1975",
+      "small"
+    ],
+    [
+      "zsoft",
+      "2015",
+      "small"
+    ],
+    [
+      "gap",
+      "2014",
+      "small"
+    ]
+  ]
+}

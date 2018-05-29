@@ -2,10 +2,11 @@ import * as _ from 'lodash';
 import * as async from 'async';
 import { runShellCommand } from './common.helpers';
 import { ExecOptions, ExecOutputReturnValue } from 'shelljs';
-import { logger } from '../ws.config/log';
+import { loggerFactory } from '../ws.config/log';
 
 export const pathToRedisNetworkIP = 'networkInterfaces.0.networkIP';
 export const pathToRedisSubnetwork = 'networkInterfaces.0.subnetwork';
+const GCP_STACK_ACTION = process.env.GCP_STACK_ACTION;
 
 export function setupRedisInstance(externalContext: any, cb: Function): void {
   const {
@@ -77,6 +78,7 @@ function getRedisInternalIP(externalContext: any, cb: Function): void {
 
   const command = `gcloud compute instances describe ${REDIS_INSTANCE_NAME} --zone=${REDIS_ZONE}`;
   const options: any = { pathsToCheck: [pathToRedisNetworkIP, pathToRedisSubnetwork] };
+  const logger = loggerFactory.getLogger(GCP_STACK_ACTION);
 
   return runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
 

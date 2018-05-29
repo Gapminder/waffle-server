@@ -1,0 +1,24 @@
+{
+  "headers": [
+    "company_scale",
+    "anno",
+    "lines_of_code"
+  ],
+  "rows": [
+    [
+      "small",
+      "1975",
+      1000
+    ],
+    [
+      "medium",
+      "2014",
+      10000
+    ],
+    [
+      "large",
+      "2016",
+      100000
+    ]
+  ]
+}

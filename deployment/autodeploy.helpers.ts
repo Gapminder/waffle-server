@@ -4,10 +4,11 @@ import { AsyncResultCallback } from 'async';
 import { ExecOptions, ExecOutputReturnValue } from 'shelljs';
 import { DockerBuildArguments } from './interfaces';
 import { getDockerArguments, getGCloudArguments, runShellCommand } from './common.helpers';
-import { logger } from '../ws.config/log';
+import { loggerFactory } from '../ws.config/log';
 
 export const pathToLoadBalancerIP = 'status.loadBalancer.ingress.0.ip';
 export const pathToTMNetworkIP = 'networkInterfaces.0.accessConfigs.0.natIP';
+const GCP_STACK_ACTION = process.env.GCP_STACK_ACTION;
 
 export function setDefaultUser(externalContext: any, cb: Function): void {
   const {
@@ -23,11 +24,11 @@ export function setDefaultUser(externalContext: any, cb: Function): void {
 export function createProject(externalContext: any, cb: Function): void {
   const {
     PROJECT_ID,
-    PROJECT_NAME,
     FOLDER_ID,
     PROJECT_LABELS
   } = externalContext;
 
+  const logger = loggerFactory.getLogger(GCP_STACK_ACTION);
   const command = `gcloud projects create ${PROJECT_ID} ${ FOLDER_ID ? '--folder=' + FOLDER_ID : '' } --labels=${PROJECT_LABELS} --name=${PROJECT_ID} --enable-cloud-apis`;
   const options: ExecOptions = {};
 
@@ -54,6 +55,7 @@ export function setDefaultProject(externalContext: any, cb: Function): void {
 
 export function setupAPIs(apisList: string[], options: any, externalContext: any, cb: Function): void {
   const { action = 'enable' } = options;
+  const logger = loggerFactory.getLogger(GCP_STACK_ACTION);
 
   if (process.env.IGNORE_ENABLING_GCP_API !== 'false') {
     logger.info('Ignore step with setting up gcp API');
@@ -228,10 +230,9 @@ export function createTM(externalContext: any, cb: Function): void {
     },
     TM_ZONE,
     TM_MACHINE_TYPE,
-    TM_DISK_SIZE,
+    TM_DISK_SIZE
   } = externalContext;
 
-  // fixme: --project=${PROJECT_ID}
   const command = `gcloud beta compute instances create-with-container ${TM_INSTANCE_NAME} --tags=${TM_INSTANCE_NAME} --machine-type=${TM_MACHINE_TYPE} --boot-disk-size=${TM_DISK_SIZE} --zone=${TM_ZONE} --container-image=${IMAGE_URL}`;
   const options: ExecOptions = {};
 
@@ -248,9 +249,9 @@ export function getTMExternalIP(externalContext: any, cb: Function): void {
     TM_ZONE,
   } = externalContext;
 
-  // fixme: --project=${PROJECT_ID}
   const command = `gcloud compute instances describe ${TM_INSTANCE_NAME} --zone=${TM_ZONE}`;
   const options: any = { pathsToCheck: [ pathToTMNetworkIP ] };
+  const logger = loggerFactory.getLogger(GCP_STACK_ACTION);
 
   return runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
     if (error) {
@@ -283,7 +284,6 @@ export function allowHttpTM(externalContext: any, cb: Function): void {
     FIREWALL_RULE__ALLOWED_PORTS
   } = externalContext;
 
-  // fixme: --project=${PROJECT_ID}
   const command = `gcloud compute firewall-rules create ${FIREWALL_RULE__ALLOW_HTTP} --allow=${FIREWALL_RULE__ALLOWED_PORTS} --target-tags=${TM_INSTANCE_NAME}`;
   const options: ExecOptions = {};
 
@@ -304,7 +304,6 @@ export function promoteTMExternalIP(externalContext: any, cb: Function): void {
   } = externalContext;
 
   const ADDRESS_NAME = `${ENVIRONMENT}-tm-address-${VERSION}`;
-  // fixme: REGION, --project=${PROJECT_ID}
   const command = `gcloud compute addresses create ${ADDRESS_NAME} --addresses ${IP_ADDRESS} --region ${TM_REGION}`;
   const options: ExecOptions = {};
 
@@ -318,7 +317,6 @@ export function createCluster(externalContext: any, cb: Function): void {
 
   const gcloudArgs = _.pick(externalContext, CREATE_CLUSTER__ALLOWED_PARAMS);
   const commandArgs = getGCloudArguments(gcloudArgs);
-  // fixme: --project=${PROJECT_ID}
   const command = `gcloud container clusters create ${CLUSTER_NAME} ${commandArgs} --machine-type=${WS_MACHINE_TYPE} --disk-size=${WS_DISK_SIZE} --enable-legacy-authorization`;
   const options: ExecOptions = {};
 
@@ -382,6 +380,8 @@ export function printExternalIPs(externalContext: any, cb: Function): void {
   const {
     TM_INSTANCE_VARIABLES: { IP_ADDRESS: TM_IP_ADDRESS }
   } = externalContext;
+
+  const logger = loggerFactory.getLogger(GCP_STACK_ACTION);
 
   logger.info({
     RESULTS: {

@@ -1,0 +1,16 @@
+{
+  "headers": [
+    "region",
+    "full_name"
+  ],
+  "rows": [
+    [
+      "america",
+      "The Americas, including north, south and central america"
+    ],
+    [
+      "europe",
+      "The European part of Eurasia"
+    ]
+  ]
+}

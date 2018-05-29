@@ -47,7 +47,6 @@ export function releaseRedisInternalIP(externalContext: any, cb: Function): void
   } = externalContext;
 
   const ADDRESS_NAME = `${ENVIRONMENT}-redis-address-${VERSION}`;
-  //fixme: REGION
   const command = `gcloud compute addresses delete ${ADDRESS_NAME} --region=${REDIS_REGION} --project=${PROJECT_ID} --quiet`;
   const options: ExecOptions = {};
   return runShellCommand(command, options, (error: string) => cb(error, externalContext));
@@ -93,7 +92,6 @@ export function releaseExternalIP(externalContext: any, cb: Function): void {
   } = externalContext;
 
   const ADDRESS_NAME = `${ENVIRONMENT}-tm-address-${VERSION}`;
-  //fixme: REGION
   const command = `gcloud compute addresses delete ${ADDRESS_NAME} --region=${TM_REGION} --project=${PROJECT_ID} --quiet`;
   const options: ExecOptions = {};
 

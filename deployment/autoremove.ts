@@ -3,7 +3,7 @@ import * as async from 'async';
 import * as semverRegex from 'semver-regex';
 import { GCloudArguments } from './interfaces';
 import { getContextInstance } from './common.helpers';
-import { logger } from '../ws.config/log';
+import { loggerFactory } from '../ws.config/log';
 import { DEFAULT_CONFIG } from './deployment_config.default';
 
 import {
@@ -24,7 +24,6 @@ const {
   DEFAULT_WS_PORTS,
   DEFAULT_MACHINE_TYPES,
   DEFAULT_IMAGE_NAME_SUFFIXES,
-  DEFAULT_MACHINE_SUFFIXES,
   DEFAULT_GCP_VARIABLES,
   DEFAULT_GCP_API
 } = DEFAULT_CONFIG;
@@ -32,7 +31,10 @@ const {
 export function run(): Promise<string | null> {
 
   // Computed variables
+  const GCP_STACK_ACTION = process.env.GCP_STACK_ACTION;
   const _VERSION = process.env.VERSION;
+  const NODE_ENV = process.env.NODE_ENV || DEFAULT_NODE_ENV;
+  const logger = loggerFactory.createLogger({environment: NODE_ENV, loggerName: GCP_STACK_ACTION});
 
   if (_.isNil(_VERSION)) {
     logger.error('Variable VERSION was not defined!');
@@ -46,7 +48,6 @@ export function run(): Promise<string | null> {
 
   logger.info(`You give '${_VERSION}' version. Are you sure you want to delete it?`);
 
-  const NODE_ENV = process.env.NODE_ENV || DEFAULT_NODE_ENV;
   const ENVIRONMENT = DEFAULT_ENVIRONMENTS[NODE_ENV] || NODE_ENV;
   const VERSION_TAG = semverRegex().exec(process.env.VERSION)[0];
   const VERSION = VERSION_TAG.replace(/\./g, '-');

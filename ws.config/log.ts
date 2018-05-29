@@ -35,6 +35,12 @@ function getBunyanStreams(environment: string): any[] {
   return [fileStream, consoleStream];
 }
 
+export interface LoggerOptions {
+  loggerName: string;
+  environment?: string;
+  logMarker?: string;
+}
+
 function objSerializer(obj: any): any {
   return obj;
 }
@@ -44,7 +50,8 @@ class LoggerFactory {
     waffle: logger
   };
 
-  public createLogger({environment, loggerName, logMarker}): object {
+  public createLogger(options: LoggerOptions): bunyan.Logger {
+    const {loggerName, logMarker, environment} = options;
     if (!_.isEmpty(this.loggers[loggerName])) {
       return this.loggers[loggerName];
     }
@@ -61,6 +68,10 @@ class LoggerFactory {
     this.loggers[loggerName] = _logger;
 
     return _logger;
+  }
+
+  public getLogger(loggerName: string = 'waffle'): bunyan.Logger {
+    return this.loggers[loggerName];
   }
 
   private objSerializer(obj: any): any {

@@ -4,11 +4,11 @@ import * as shell from 'shelljs';
 import { ChildProcess } from 'child_process';
 import { ExecOutputReturnValue } from 'shelljs';
 import { DockerBuildArguments, GCloudArguments } from './interfaces';
-import { logger } from '../ws.config/log';
+import { loggerFactory } from '../ws.config/log';
 import { constants } from '../ws.utils/constants';
-import { Dictionary } from 'async';
 
 interface AsyncResultCallback<T, E> { (err?: E, result?: T): void; }
+const GCP_STACK_ACTION = process.env.GCP_STACK_ACTION;
 
 const {
   DEFAULT_NODE_ENV
@@ -34,6 +34,7 @@ export function runShellCommand(command: string, options: any, cb: AsyncResultCa
   }
 
   const wrappedCommand = `${command}${outputParam}`;
+  const logger = loggerFactory.getLogger(GCP_STACK_ACTION);
   logger.info('RUN COMMAND: ', wrappedCommand, '\n');
 
   let attemptCounter = 0;

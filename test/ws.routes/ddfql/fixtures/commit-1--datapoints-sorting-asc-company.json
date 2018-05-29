@@ -1,0 +1,34 @@
+{
+  "headers": [
+    "company",
+    "anno",
+    "company_size"
+  ],
+  "rows": [
+    [
+      "gap",
+      "2015",
+      "small"
+    ],
+    [
+      "gap",
+      "2016",
+      "small"
+    ],
+    [
+      "mic",
+      "1975",
+      "small"
+    ],
+    [
+      "mic",
+      "2015",
+      "large"
+    ],
+    [
+      "mic",
+      "2016",
+      "large"
+    ]
+  ]
+}

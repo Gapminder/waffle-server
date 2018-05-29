@@ -1,0 +1,21 @@
+{
+  "headers": ["concept", "additional_column"],
+  "rows": [
+    ["company", "bedrijf"],
+    ["english_speaking", "Engels sprekende"],
+    ["foundation", "fundament"],
+    ["company_size", "bedrijfsomvang"],
+    ["name", "naam"],
+    ["anno", "anno"],
+    ["lines_of_code", "lines_of_code"],
+    ["region", "regio"],
+    ["country", "land"],
+    ["num_users", "num gebruikers"],
+    ["latitude", "breedtegraad"],
+    ["longitude", "Lengtegraad"],
+    ["full_name_changed", "FULL_NAME veranderd"],
+    ["project", "project"],
+    ["domain", "domein"],
+    ["additional_column", "extra kolom"]
+  ]
+}

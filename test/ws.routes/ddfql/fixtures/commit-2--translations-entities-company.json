@@ -1,0 +1,10 @@
+{
+  "headers": ["company", "name", "country", "full_name_changed", "additional_column"],
+  "rows": [
+    ["mic", "Microsoft", "Amerikas forente stater van Amerika", null, "any text 1"],
+    ["gap", "Gapminder", "Sweden", null, "any text 2"],
+    ["valor", "Valor programvare", "Ukraina", null, null],
+    ["small", null, null, "Niet heel groot", null],
+    ["large", null, null, "HEEL GROOT!!!$(#(*#*($", null]
+  ]
+}

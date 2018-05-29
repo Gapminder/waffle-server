@@ -25,7 +25,7 @@ const repositoryDescriptors = {
   'git@github.com:open-numbers/ddf--cait--historical_emissions.git': {},
   'git@github.com:open-numbers/ddf--sodertornsmodellen.git': {}
 };
-// const defaultRepository = 'VS-work/ddf--ws-testing';
-const defaultRepository = 'open-numbers/ddf--gapminder--systema_globalis';
+const defaultRepository = 'VS-work/ddf--ws-testing';
+// const defaultRepository = 'open-numbers/ddf--gapminder--systema_globalis';
 
 export { repositoryDescriptors, defaultRepository };

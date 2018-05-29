@@ -1,0 +1,20 @@
+{
+  "headers": [
+    "key",
+    "value"
+  ],
+  "rows": [
+    [
+      [
+        "concept"
+      ],
+      "concept_type"
+    ],
+    [
+      [
+        "concept"
+      ],
+      "domain"
+    ]
+  ]
+}

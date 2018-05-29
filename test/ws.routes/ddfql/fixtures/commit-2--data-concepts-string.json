@@ -1,0 +1,28 @@
+{
+  "headers": [
+    "concept",
+    "concept_type"
+  ],
+  "rows": [
+    [
+      "full_name_changed",
+      "string"
+    ],
+    [
+      "additional_column",
+      "string"
+    ],
+    [
+      "name",
+      "string"
+    ],
+    [
+      "country",
+      "string"
+    ],
+    [
+      "domain",
+      "string"
+    ]
+  ]
+}

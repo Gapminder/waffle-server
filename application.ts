@@ -23,7 +23,7 @@ export class Application {
   public run(): Promise<void> {
     return this.listen(this.config.PORT)
       .then(() => mongolessImport())
-      .then(() => logger.info('\nExpress server listening on port %d in %s mode', this.config.PORT, this.config.NODE_ENV));
+      .then(() => logger.info(`Express server listening on port ${this.config.PORT} in ${this.config.NODE_ENV} mode`));
   }
 
   private configure(serviceLocator: ServiceLocator): void {

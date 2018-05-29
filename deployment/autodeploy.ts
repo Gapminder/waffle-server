@@ -2,7 +2,7 @@ import * as async from 'async';
 import { GCloudArguments } from './interfaces';
 import { setupRedisInstance } from './redis.helpers';
 import { getContextInstance } from './common.helpers';
-import { logger } from '../ws.config/log';
+import { loggerFactory } from '../ws.config/log';
 import { DEFAULT_CONFIG } from './deployment_config.default';
 import * as _ from 'lodash';
 
@@ -16,7 +16,6 @@ import {
 
 // Default variables
 import * as packageJson from '../package.json';
-
 
 function setupEnvironment(): any {
   const {
@@ -144,6 +143,9 @@ function setupEnvironment(): any {
 export function run(): Promise<string | null> {
   return new Promise((resolve: Function, reject: Function) => {
     const context = setupEnvironment();
+    const GCP_STACK_ACTION = process.env.GCP_STACK_ACTION;
+
+    const logger = loggerFactory.createLogger({environment: context.COMPUTED_VARIABLES.NODE_ENV, loggerName: GCP_STACK_ACTION});
 
     async.waterfall([
       async.constant(context),

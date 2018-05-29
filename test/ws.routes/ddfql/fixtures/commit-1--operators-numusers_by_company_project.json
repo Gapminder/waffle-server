@@ -1,0 +1,19 @@
+{
+  "headers": [
+    "company",
+    "project",
+    "num_users"
+  ],
+  "rows": [
+    [
+      "mic",
+      "xbox",
+      6
+    ],
+    [
+      "mic",
+      "office",
+      333
+    ]
+  ]
+}
