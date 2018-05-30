@@ -3,7 +3,6 @@ import * as async from 'async';
 import * as crypto from 'crypto';
 import * as url from 'url';
 import * as URLON from 'urlon';
-import { config } from '../ws.config/config';
 import { logger } from '../ws.config/log';
 import * as express from 'express';
 import { constants, responseMessages } from '../ws.utils/constants';
@@ -40,6 +39,7 @@ export {
   getCacheConfig,
   respondWithRawDdf,
   trackingRequestTime,
+  shareConfigWithRoute,
   bodyFromUrlQuery,
   bodyFromUrlAssets,
   toDataResponse,
@@ -49,6 +49,7 @@ export {
 
 export interface WSRequest extends express.Request {
   requestStartTime: number;
+  appConfig?: object;
   queryParser: {
     query: string;
     queryType: string;
@@ -58,6 +59,11 @@ export interface WSRequest extends express.Request {
 
 function trackingRequestTime(req: WSRequest, res: express.Response, next: express.NextFunction): void {
   req.requestStartTime = performance.now();
+  return next();
+}
+
+function shareConfigWithRoute(config: object, req: WSRequest, res: express.Response, next: express.NextFunction): void {
+  req.appConfig = config;
   return next();
 }
 
@@ -97,18 +103,17 @@ function bodyFromUrlAssets(req: WSRequest, res: express.Response, next: express.
     return;
   }
 
-  commonService.findDefaultDatasetAndTransaction({}, (error: any, context: any) => {
-    const isRequestedDefaultAssets = _.startsWith(req.originalUrl, `${constants.ASSETS_ROUTE_BASE_PATH}/default`);
-
-    if (error && isRequestedDefaultAssets) {
+  commonService.findDefaultDatasetAndTransaction({appConfig: req.appConfig}, (error: any, context: any) => {
+    if (error) {
       res.status(200).json(toErrorResponse(responseMessages.DATASET_NOT_FOUND, req));
       return;
     }
 
     const { pathname } = url.parse(datasetAssetsPathFromUrl);
+    const isRequestedDefaultAssets = _.startsWith(req.originalUrl, `${constants.ASSETS_ROUTE_BASE_PATH}/default`);
     const assetPathDescriptor = getAssetPathDescriptor(
-      config.PATH_TO_DDF_REPOSITORIES,
-      isRequestedDefaultAssets ? pathname.replace('default/', '') : pathname,
+      (req.appConfig as any).PATH_TO_DDF_REPOSITORIES,
+      isRequestedDefaultAssets ? pathname.replace('default', context.dataset) : pathname,
       isRequestedDefaultAssets && _.get(context, 'dataset')
     );
 
@@ -173,7 +178,7 @@ function safeDecodeUriComponent(uri: string): string {
 
 function getCacheConfig(prefix?: string): express.Handler {
   return function (req: WSRequest, res: express.Response, next: express.NextFunction): void {
-    if (String(req.query.force) === 'true' && !config.IS_PRODUCTION) {
+    if (String(req.query.force) === 'true' && !(req.appConfig as any).IS_PRODUCTION) {
       (res as any).use_express_redis_cache = false;
       return next();
     }

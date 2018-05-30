@@ -23,9 +23,13 @@ const repositoryDescriptors = {
     stage: ['HEAD']
   },
   'git@github.com:open-numbers/ddf--cait--historical_emissions.git': {},
-  'git@github.com:open-numbers/ddf--sodertornsmodellen.git': {}
+  'git@github.com:open-numbers/ddf--sodertornsmodellen.git': {},
+  'git@github.com:open-numbers/ddf--open_numbers--world_development_indicators.git': {
+    'merge-concepts': ['HEAD']
+  }
 };
-const defaultRepository = 'VS-work/ddf--ws-testing';
-// const defaultRepository = 'open-numbers/ddf--gapminder--systema_globalis';
+// const defaultRepository = 'VS-work/ddf--ws-testing';
+const defaultRepository = 'open-numbers/ddf--gapminder--systema_globalis';
+const defaultRepositoryCommit = 'HEAD';
 
-export { repositoryDescriptors, defaultRepository };
+export { repositoryDescriptors, defaultRepository, defaultRepositoryCommit };

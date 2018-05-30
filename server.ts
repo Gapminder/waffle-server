@@ -32,8 +32,4 @@ serviceLocator.set('config', config);
 const application = new Application(serviceLocator);
 
 application
-  .run()
-  .catch((startupError: any) => {
-    logger.error(startupError);
-    process.exit(1);
-  });
+  .run();

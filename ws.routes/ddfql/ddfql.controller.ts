@@ -13,7 +13,6 @@ import { performance } from 'perf_hooks';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as NodeRSA from 'node-rsa';
-import { config } from '../../ws.config/config';
 import { spawn } from 'child_process';
 import { keys } from 'lodash';
 import { repositoryDescriptors as repositoryDescriptorsSource } from '../../ws.config/mongoless-repos.config';
@@ -26,7 +25,7 @@ const pk = fs.readFileSync(path.resolve(__dirname, '..', '..', 'ws.config', 'tra
 let importProcess;
 let repositoryStateDescriptors = {};
 
-export function mongolessImport(repositoryName?: string): void {
+export function mongolessImport(config: object, repositoryName?: string): void {
   if (!importProcess) {
     importProcess = spawn('node', [path.resolve(__dirname, 'mongoless-import-processing.js')]);
 
@@ -89,7 +88,7 @@ export function mongolessImport(repositoryName?: string): void {
   }
 }
 
-function travisHandler(req: any, res: Response) {
+function travisHandler(req: WSRequest, res: Response): void {
   const hasError = (msg: string) => {
     res.writeHead(400, {'content-type': 'application/json'});
     res.end(JSON.stringify({error: msg}));
@@ -122,37 +121,43 @@ function travisHandler(req: any, res: Response) {
   res.end('{"ok":true}');
 
   if (result.status === 0) {
-    mongolessImport(`git@github.com:${result.repository.owner_name}/${result.repository.name}.git`);
+    mongolessImport(req.appConfig, `git@github.com:${result.repository.owner_name}/${result.repository.name}.git`);
   }
 }
 
 function createDdfqlController(serviceLocator: ServiceLocator): Application {
   const app = serviceLocator.getApplication();
+  const config = serviceLocator.get('config');
 
   const router = express.Router();
 
-  router.options('/ql', cors({maxAge: 86400}));
+  router.options('/ml-ql', cors({maxAge: 86400}));
 
   router.use(cors());
 
-  router.get('/ql',
+  router.get('/ml-ql',
     compression(),
     routeUtils.trackingRequestTime,
+    routeUtils.shareConfigWithRoute.bind(routeUtils, config),
     routeUtils.bodyFromUrlQuery,
     getMongolessDdfStats
   );
 
-  router.get('/travis', travisHandler);
-  router.post('/travis', travisHandler);
+  router.get('/travis', routeUtils.shareConfigWithRoute.bind(routeUtils, config), travisHandler);
+  router.post('/travis', routeUtils.shareConfigWithRoute.bind(routeUtils, config), travisHandler);
 
-  router.post('/ql',
+  router.post('/ml-ql',
     compression(),
     routeUtils.trackingRequestTime,
+    routeUtils.shareConfigWithRoute.bind(routeUtils, config),
     routeUtils.bodyFromUrlQuery,
     getMongolessDdfStats
   );
 
-  router.get('/datasets/status', (req: any, res: Response) => {
+  router.get('/datasets/status',
+    routeUtils.trackingRequestTime,
+    routeUtils.shareConfigWithRoute.bind(routeUtils, config),
+    (req: any, res: Response) => {
     res.set('Content-Type', 'application/json');
     res.write(JSON.stringify(repositoryStateDescriptors, null, 2));
     res.end();
@@ -161,6 +166,7 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
   router.get('/datasets/setDefault',
     compression(),
     routeUtils.trackingRequestTime,
+    routeUtils.shareConfigWithRoute.bind(routeUtils, config),
     setDefaultDataset
   );
 
@@ -170,7 +176,7 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
     return (obj as any).stack;
   };
 
-  return app.use('/api/ddf/ml', router);
+  return app.use('/api/ddf', router);
 
 
   function getMongolessDdfStats(req: WSRequest, res: Response): void {

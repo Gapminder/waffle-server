@@ -31,14 +31,14 @@ function sendDdfqlRequest(ddfql: any, onResponseReceived: CallbackHandler): void
   ddfql = Object.assign({}, ddfql, { force: true }, encodedDataset);
   // ddfql = Object.assign({}, ddfql, encodedDataset);
 
-  // console.log(`/api/ddf/ql?${URLON.stringify(ddfql)}`);
+  // console.log(`/api/ddf/ml-ql?${URLON.stringify(ddfql)}`);
   /*console.log(`encodedDataset`, encodedDataset);
   console.log(e2eEnv.datasetName);*/
 
   // wsApi.get(`/api/ddf/ml-ql?${URLON.stringify(ddfql)}`)
-  wsApi.get(`/api/ddf/ql?${URLON.stringify(ddfql)}`)
+  wsApi.get(`/api/ddf/ml-ql?${URLON.stringify(ddfql)}`)
   // Here is alternative way of sending ddfql - via encoded JSON
-  // wsApi.get(`/api/ddf/ql?query=${encodeURIComponent(JSON.stringify(ddfql))}`)
+  // wsApi.get(`/api/ddf/ml-ql?query=${encodeURIComponent(JSON.stringify(ddfql))}`)
     .set('Accept', 'application/json')
     .expect(200)
     .expect('Content-Type', /application\/json/)

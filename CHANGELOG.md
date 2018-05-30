@@ -174,7 +174,7 @@
 ### Features
 
 * **newrelic:** add environment to name of newrelic app ([a55e2bd](https://github.com/Gapminder/waffle-server/commit/a55e2bd))
-* **routes:** change CORS headers for OPTIONS request for /api/ddf/ql route ([ff29fdb](https://github.com/Gapminder/waffle-server/commit/ff29fdb))
+* **routes:** change CORS headers for OPTIONS request for /api/ddf/ml-ql route ([ff29fdb](https://github.com/Gapminder/waffle-server/commit/ff29fdb))
 
 
 

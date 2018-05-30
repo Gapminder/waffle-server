@@ -1,6 +1,5 @@
 import '../ws.config/config';
 import * as _ from 'lodash';
-import { config } from '../ws.config/config';
 
 export {
   findDefaultDatasetAndTransaction,
@@ -8,6 +7,7 @@ export {
 };
 
 function findDefaultDatasetAndTransaction(pipe: any, done: Function): void {
+  const config = pipe.appConfig;
 
   if (!_.get(config, 'DEFAULT_DATASET', null)) {
     return done('Dataset isn\'t present.');

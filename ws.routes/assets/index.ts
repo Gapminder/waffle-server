@@ -8,12 +8,14 @@ import { Application } from 'express';
 
 function registerDdfAssetsRoutes(serviceLocator: ServiceLocator): Application {
   const router = express.Router();
+  const config = serviceLocator.get('config');
 
   router.use(cors());
 
   router.use('*',
     compression(),
     routeUtils.trackingRequestTime,
+    routeUtils.shareConfigWithRoute.bind(routeUtils, config),
     routeUtils.bodyFromUrlAssets,
     AssetsController.serveAsset
   );

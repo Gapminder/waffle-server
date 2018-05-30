@@ -183,7 +183,7 @@ describe('Routes utils', () => {
 
       const req = mockReq({
         query: {},
-        url: `/api/ddf/ql/?${queryRaw}`
+        url: `/api/ddf/ml-ql/?${queryRaw}`
       });
 
       const res = mockRes({});
@@ -206,7 +206,7 @@ describe('Routes utils', () => {
     it('should respond with an error when it is impossible to parse urlon', (done: Function) => {
       const req = mockReq({
         query: {},
-        url: '/api/ddf/ql/?%20%'
+        url: '/api/ddf/ml-ql/?%20%'
       });
 
       const queryRaw = url.parse(req.url).query;
@@ -244,7 +244,7 @@ describe('Routes utils', () => {
 
       const req = mockReq({
         query: {},
-        url: `/api/ddf/ql/?${queryRaw}`
+        url: `/api/ddf/ml-ql/?${queryRaw}`
       });
 
       const res = mockRes({});
@@ -274,7 +274,7 @@ describe('Routes utils', () => {
 
       const req = mockReq({
         query: {},
-        url: `/api/ddf/ql/?${queryRaw}`
+        url: `/api/ddf/ml-ql/?${queryRaw}`
       });
 
       const res = mockRes({});
@@ -294,7 +294,7 @@ describe('Routes utils', () => {
     it('should respond with an error when it is impossible to decode dataset in urlon query with decodeURIComponent', (done: Function) => {
       const req = mockReq({
         query: '',
-        url: '/api/ddf/ql/?_from=entities&dataset=%&select_key@=company'
+        url: '/api/ddf/ml-ql/?_from=entities&dataset=%&select_key@=company'
       });
 
       const queryRaw = url.parse(req.url).query;
