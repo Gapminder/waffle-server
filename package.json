@@ -57,6 +57,7 @@
     "influx": "5.0.7",
     "lodash": "4.17.10",
     "mkdirp": "0.5.1",
+    "node-rsa": "1.0.0",
     "passport": "^0.4.0",
     "semver-regex": "2.0.0",
     "shelljs": "0.8.2",
@@ -74,6 +75,7 @@
     "mocha-minimalist-reporter": "1.1.0",
     "sinon": "5.0.10",
     "sinon-express-mock": "^2.0.2",
+    "supertest": "^3.1.0",
     "ts-node": "6.0.5",
     "tslint": "5.9.1",
     "tslint-config-valorsoft": "git://github.com/korel-san/tslint-config-valorsoft.git#node-typescript-2.5.2"

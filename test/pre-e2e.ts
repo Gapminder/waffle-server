@@ -32,7 +32,7 @@ e2eUtils.startWaffleServer();
 
 shell.exec('sleep 20');
 
-import * as cliUtils from './cli.utils';
+// import * as cliUtils from './cli.utils';
 
 process.on('SIGINT', () => {
   logger.info('Caught interrupt signal');
@@ -47,6 +47,7 @@ process.on('SIGINT', () => {
   });
 });
 
+/*
 const importOptions: cliUtils.ImportOptions = {
   repos: [
     {
@@ -69,3 +70,4 @@ syncFn(cliUtils.runDatasetImport.bind(cliUtils))(importOptions, (error: any) => 
 
   process.exit(0);
 });
+ */

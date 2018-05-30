@@ -46,3 +46,5 @@ deployment/**/tmp/*.*
 deployment/**/deployment_*.json
 deployment/**/build.*.sh
 deployment/**/*.txt
+
+ws.config/travis.pk

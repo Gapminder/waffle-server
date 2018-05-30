@@ -11,6 +11,8 @@ import { ServiceLocator } from '../../ws.service-locator/index';
 import { defaultRepository } from '../../ws.config/mongoless-repos.config';
 import { performance } from 'perf_hooks';
 import * as path from 'path';
+import * as fs from 'fs';
+import * as NodeRSA from 'node-rsa';
 import { config } from '../../ws.config/config';
 import { spawn } from 'child_process';
 import { keys } from 'lodash';
@@ -19,11 +21,12 @@ import { GitUtils } from './git-utils';
 import { toDataResponse, toErrorResponse, WSRequest } from '../utils';
 
 const repositoriesUnderImporting = new Set<string>();
+const pk = fs.readFileSync(path.resolve(__dirname, '..', '..', 'ws.config', 'travis.pk'));
 
 let importProcess;
 let repositoryStateDescriptors = {};
 
-export function mongolessImport(): void {
+export function mongolessImport(repositoryName?: string): void {
   if (!importProcess) {
     importProcess = spawn('node', [path.resolve(__dirname, 'mongoless-import-processing.js')]);
 
@@ -75,10 +78,51 @@ export function mongolessImport(): void {
     importProcess.stderr.on('data', (data: string) => logger.info(`${data}`));
   }
 
-  const repositories = keys(repositoryDescriptorsSource);
+  if (repositoryName) {
+    importProcess.stdin.write(`${repositoryName}\n`);
+  } else {
+    const repositories = keys(repositoryDescriptorsSource);
 
-  for (const repository of repositories) {
-    importProcess.stdin.write(repository + '\n');
+    for (const repository of repositories) {
+      importProcess.stdin.write(`${repository}\n`);
+    }
+  }
+}
+
+function travisHandler(req: any, res: Response) {
+  const hasError = (msg: string) => {
+    res.writeHead(400, {'content-type': 'application/json'});
+    res.end(JSON.stringify({error: msg}));
+  };
+  const repoSlug = req.headers['travis-repo-slug'];
+  const sig = req.headers.signature;
+
+  if (!sig) {
+    return hasError('No Signature found on request');
+  }
+
+  if (!repoSlug) {
+    return hasError('No repo found on request');
+  }
+
+  const key = new NodeRSA(pk, {signingScheme: 'sha1'});
+
+  if (!key.verify(JSON.parse(req.body.payload), sig, 'base64', 'base64'))
+    return hasError('Signed payload does not match signature');
+
+  let result;
+
+  try {
+    result = JSON.parse(req.body.payload);
+  } catch (err) {
+    return hasError(err.message);
+  }
+
+  res.writeHead(200, {'content-type': 'application/json'});
+  res.end('{"ok":true}');
+
+  if (result.status === 0) {
+    mongolessImport(`git@github.com:${result.repository.owner_name}/${result.repository.name}.git`);
   }
 }
 
@@ -87,7 +131,7 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
 
   const router = express.Router();
 
-  router.options('/ql', cors({ maxAge: 86400 }));
+  router.options('/ql', cors({maxAge: 86400}));
 
   router.use(cors());
 
@@ -97,6 +141,9 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
     routeUtils.bodyFromUrlQuery,
     getMongolessDdfStats
   );
+
+  router.get('/travis', travisHandler);
+  router.post('/travis', travisHandler);
 
   router.post('/ql',
     compression(),
@@ -127,8 +174,8 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
 
 
   function getMongolessDdfStats(req: WSRequest, res: Response): void {
-    logger.info({ req }, 'DDFQL URL');
-    logger.info({ obj: req.body }, 'DDFQL');
+    logger.info({req}, 'DDFQL URL');
+    logger.info({obj: req.body}, 'DDFQL');
 
     (req as any).queryStartTime = performance.now();
 
@@ -156,7 +203,7 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
 
     logger.info('repositoryDescriptor', repositoriesDescriptor, `${dataset}@${branch}:${commit}`);
 
-    reader.init({ path: _path });
+    reader.init({path: _path});
     reader.read(reqBody).then((data: any[]) => {
       res.set('Content-Type', 'application/json');
       res.write(`{"success":true,"headers":${JSON.stringify(select)},"rows":[`);
@@ -172,15 +219,15 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
   }
 
   function setDefaultDataset(req: WSRequest, res: Response, next: NextFunction): Response | void {
-    logger.info({ query: req.query }, 'SetDefaultDataset');
+    logger.info({query: req.query}, 'SetDefaultDataset');
     const reqBody = _.get(req, 'query', {});
     const datasetParam = _.get(reqBody, 'dataset', null);
     if (_.isEmpty(datasetParam)) {
       return res.json(toErrorResponse('No dataset in query params', req, 'setDefaultDataset'));
     }
     const [dataset, branchParam] = datasetParam.split('#');
-    config.DEFAULT_DATASET = _.get(reqBody, 'datasetName',  config.DEFAULT_DATASET || defaultRepository);
-    config.DEFAULT_DATASET_VERSION = _.get(reqBody, 'version',  config.DEFAULT_DATASET_VERSION || 'HEAD');
+    config.DEFAULT_DATASET = _.get(reqBody, 'datasetName', config.DEFAULT_DATASET || defaultRepository);
+    config.DEFAULT_DATASET_VERSION = _.get(reqBody, 'version', config.DEFAULT_DATASET_VERSION || 'HEAD');
     const repoName = GitUtils.getRepositoryNameByUrl(dataset);
 
     if (repositoriesUnderImporting.has(repoName)) {
