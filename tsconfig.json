@@ -10,10 +10,14 @@
     "typeRoots": ["node_modules/@types", "node_modules/bunyan-middleware/index.d.ts"]
   },
   "include": [
-    "**/*"
+    "**/*.ts"
   ],
   "exclude": [
+    "dist",
+    "lib",
     "coverage",
+    "**/*.spec.ts",
+    "**/*.int-spec.ts",
     "node_modules"
   ]
 }

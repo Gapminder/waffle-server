@@ -37,7 +37,7 @@ export class GitUtils {
   }
 
   public async initRepository(): Promise<CommandResult> {
-    const masterRepoPath = path.resolve(this.reposRoot, this.repositoryName, 'master');
+    const masterRepoPath = path.resolve(this.reposRoot, this.repositoryName, 'master-HEAD');
     const command = `git clone -v ${this.repositoryGitUrl} ${masterRepoPath}`;
 
     return new Promise<CommandResult>((resolve: Function) => {

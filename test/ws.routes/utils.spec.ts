@@ -13,7 +13,7 @@ import * as routeUtils from '../../ws.routes/utils';
 import {constants} from '../../ws.utils/constants';
 
 import * as commonService from '../../ws.services/common.service';
-import {RequestTags} from '../../ws.services/telegraf.service';
+// import {RequestTags} from '../../ws.services/telegraf.service';
 import {mockReq, mockRes} from 'sinon-express-mock';
 import * as passport from 'passport';
 
@@ -350,7 +350,7 @@ describe('Routes utils', () => {
   });
 
   describe('#response types', () => {
-    const defaultContext: RequestTags = {
+    const defaultContext: any = {
       url: '',
       queryParser: {
         query: '',
@@ -372,7 +372,7 @@ describe('Routes utils', () => {
         type: 'INTERNAL_SERVER_TEXT_ERROR'
       };
 
-      const response = routeUtils.toErrorResponse(expectedError, defaultContext, 'test');
+      const response = routeUtils.toErrorResponse(null, defaultContext, 'test');
 
       expect(response.success).to.be.false;
       expect(response.error).to.equal(expectedError.message);

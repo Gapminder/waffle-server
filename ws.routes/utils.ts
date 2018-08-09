@@ -74,13 +74,16 @@ function bodyFromUrlQuery(req: WSRequest, res: express.Response, next: express.N
     ? { parse: parseJsonAsync, query, queryType }
     : { parse: parseUrlonAsync, query: url.parse(req.url).query, queryType };
 
+  if (_.isNil(query)) {
+    return next();
+  }
+
   req.queryParser.parse(req.queryParser.query, (error: string, parsedQuery: any) => {
     logger.info({ ddfqlRaw: req.queryParser.query });
     if (error) {
       res.json(toErrorResponse(responseMessages.INCORRECT_QUERY_FORMAT, req, 'bodyFromUrlQuery'));
     } else {
-      req.body = parsedQuery;
-      next();
+      return next();
     }
   });
 }

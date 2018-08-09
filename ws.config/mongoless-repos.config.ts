@@ -7,6 +7,7 @@ const repositoryDescriptors = {
     master: ['HEAD', 'be06a23', 'd9911b2', '6bae063', '9268712', '1e8a3b8', '1406026', '434f8f1', 'a003ffc', 'e6ef10e', '90b1e28', '0f78190'],
     'master-twin-for-e2e': ['HEAD', '9af6a48']
   },
+  'git@github.com:open-numbers/ddf--ihme--death_cause.git': {},
   'git@github.com:buchslava/readers-test-ds-bubbles-3.git': {},
   'git@github.com:buchslava/readers-test-ds-gm-population.git': {},
   'git@github.com:buchslava/readers-test-ds-gm-static-assets.git': {},
@@ -31,5 +32,6 @@ const repositoryDescriptors = {
 // const defaultRepository = 'VS-work/ddf--ws-testing';
 const defaultRepository = 'open-numbers/ddf--gapminder--systema_globalis';
 const defaultRepositoryCommit = 'HEAD';
+const defaultRepositoryBranch = 'master';
 
-export { repositoryDescriptors, defaultRepository, defaultRepositoryCommit };
+export { repositoryDescriptors, defaultRepository, defaultRepositoryCommit, defaultRepositoryBranch };

@@ -8,7 +8,11 @@ import { logger } from '../../ws.config/log';
 import * as routeUtils from '../utils';
 import { getDDFCsvReaderObject } from 'vizabi-ddfcsv-reader';
 import { ServiceLocator } from '../../ws.service-locator/index';
-import { defaultRepository } from '../../ws.config/mongoless-repos.config';
+import {
+  defaultRepository,
+  defaultRepositoryBranch, defaultRepositoryCommit,
+  repositoryDescriptors
+} from '../../ws.config/mongoless-repos.config';
 import { performance } from 'perf_hooks';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -106,8 +110,9 @@ function travisHandler(req: WSRequest, res: Response): void {
 
   const key = new NodeRSA(pk, {signingScheme: 'sha1'});
 
-  if (!key.verify(JSON.parse(req.body.payload), sig, 'base64', 'base64'))
+  if (!key.verify(JSON.parse(req.body.payload), sig, 'base64', 'base64')) {
     return hasError('Signed payload does not match signature');
+  }
 
   let result;
 
@@ -150,7 +155,7 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
     compression(),
     routeUtils.trackingRequestTime,
     routeUtils.shareConfigWithRoute.bind(routeUtils, config),
-    routeUtils.bodyFromUrlQuery,
+    // routeUtils.bodyFromUrlQuery,
     getMongolessDdfStats
   );
 
@@ -209,7 +214,11 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
 
     logger.info('repositoryDescriptor', repositoriesDescriptor, `${dataset}@${branch}:${commit}`);
 
-    reader.init({path: _path});
+    reader.init({path: _path, datasetsConfig: {
+        'open-numbers/ddf--ihme--death_cause': { master: [ 'HEAD' ] },
+        default: { dataset: 'open-numbers/ddf--ihme--death_cause', branch: 'master', commit: 'HEAD' }
+      }
+    });
     reader.read(reqBody).then((data: any[]) => {
       res.set('Content-Type', 'application/json');
       res.write(`{"success":true,"headers":${JSON.stringify(select)},"rows":[`);

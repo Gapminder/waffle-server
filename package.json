@@ -17,7 +17,6 @@
     "start:dev": "npm start -- forever/development.json",
     "stop": "./node_modules/.bin/forever stopall",
     "logs": "./node_modules/.bin/forever logs server.js",
-    "prepublish": "npm run tsc",
     "publish": "GCP_STACK_ACTION=publish node ./deployment/index.js | bunyan",
     "publish:local": "NODE_ENV=local npm run publish",
     "publish:dev": "NODE_ENV=development npm run publish",
@@ -32,9 +31,10 @@
   "dependencies": {
     "@types/async": "2.0.49",
     "@types/body-parser": "1.17.0",
+    "@types/core-js": "2.5.0",
     "@types/express": "4.11.1",
-    "@types/lodash": "4.14.101",
-    "@types/node": "9.4.0",
+    "@types/lodash": "4.14.116",
+    "@types/node": "10.5.7",
     "@types/passport": "0.4.5",
     "@types/shelljs": "0.8.0",
     "JSONStream": "1.3.3",
@@ -45,7 +45,7 @@
     "compression": "1.7.2",
     "cookie-parser": "1.4.3",
     "cors": "2.8.4",
-    "ddf-validation": "1.17.0",
+    "ddf-validation": "1.18.2",
     "debug": "3.1.0",
     "express": "4.16.3",
     "express-bunyan-logger": "1.3.3",
@@ -61,9 +61,9 @@
     "passport": "0.4.0",
     "semver-regex": "2.0.0",
     "shelljs": "0.8.2",
-    "typescript": "2.8.3",
+    "typescript": "3.0.1",
     "urlon": "2.0.1",
-    "vizabi-ddfcsv-reader": "2.2.1"
+    "vizabi-ddfcsv-reader": "git+ssh://git@github.com:vizabi/vizabi-ddfcsv-reader.git#fix-in-clause-conj-plugin"
   },
   "devDependencies": {
     "@types/chai": "4.1.3",
@@ -77,7 +77,7 @@
     "sinon": "5.0.10",
     "sinon-express-mock": "2.0.4",
     "supertest": "3.1.0",
-    "ts-node": "6.0.5",
+    "ts-node": "7.0.0",
     "tslint": "5.10.0",
     "tslint-config-valorsoft": "git://github.com/korel-san/tslint-config-valorsoft.git#node-typescript-2.5.2"
   }

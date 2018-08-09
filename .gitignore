@@ -2,10 +2,10 @@
 .idea
 
 # Logs
-logs/*.log*
-*.log
+*.log*
 *.js
 *.js.map
+*.d.ts
 
 # Coverage directory used by tools like istanbul
 coverage
@@ -15,7 +15,6 @@ specReports
 # Dependency directory
 # https://www.npmjs.org/doc/misc/npm-faq.html#should-i-check-my-node_modules-folder-into-git
 node_modules
-package-lock.json
 
 dumps
 # excel lock files
