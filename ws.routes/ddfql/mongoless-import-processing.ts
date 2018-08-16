@@ -1,5 +1,6 @@
 import * as path from 'path';
 import * as fsExtra from 'fs-extra';
+import { logger } from '../../ws.config/log';
 import { keys, includes } from 'lodash';
 import { repositoryDescriptors as repositoryDescriptorsSource } from '../../ws.config/mongoless-repos.config';
 import { CheckoutResult, GitUtils } from './git-utils';
@@ -91,7 +92,7 @@ export async function getRepositoryStateDescriptors(repository: string): Promise
 
   const gitUtils = new GitUtils(reposPath, repository, repoName);
   const lockFileName = repoName.replace(/\//, '-');
-  const lockFilePath = path.resolve('.', 'ws-import', `${lockFileName}.lock`);
+  const lockFilePath = path.resolve(reposPath, `${lockFileName}.lock`);
 
   fsExtra.writeFileSync(lockFilePath, '');
 
