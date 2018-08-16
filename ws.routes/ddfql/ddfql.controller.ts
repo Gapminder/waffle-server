@@ -18,7 +18,6 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as NodeRSA from 'node-rsa';
 import { spawn } from 'child_process';
-import { keys } from 'lodash';
 import { repositoryDescriptors as repositoryDescriptorsSource } from '../../ws.config/mongoless-repos.config';
 import { GitUtils } from './git-utils';
 import { toDataResponse, toErrorResponse, WSRequest } from '../utils';
@@ -84,7 +83,7 @@ export function mongolessImport(config: object, repositoryName?: string): void {
   if (repositoryName) {
     importProcess.stdin.write(`${repositoryName}\n`);
   } else {
-    const repositories = keys(repositoryDescriptorsSource);
+    const repositories = _.keys(repositoryDescriptorsSource);
 
     for (const repository of repositories) {
       importProcess.stdin.write(`${repository}\n`);
@@ -206,7 +205,7 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
     const select = _.get(reqBody, 'select.key', []).concat(_.get(reqBody, 'select.value', []));
     const repositoriesDescriptor = repositoryStateDescriptors[`${dataset}@${branch}:${commit}`];
     const reader = getDDFCsvReaderObject();
-    const _path = _.get(repositoriesDescriptor, 'path', '');
+    const _path = config.PATH_TO_DDF_REPOSITORIES + '/';
 
     if (_path === '' || _.isEmpty(repositoryStateDescriptors)) {
       logger.error(repositoryStateDescriptors, `${dataset}@${branch}:${commit}`);
@@ -214,10 +213,28 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
 
     logger.info('repositoryDescriptor', repositoriesDescriptor, `${dataset}@${branch}:${commit}`);
 
-    reader.init({path: _path, datasetsConfig: {
-        'open-numbers/ddf--ihme--death_cause': { master: [ 'HEAD' ] },
-        default: { dataset: 'open-numbers/ddf--ihme--death_cause', branch: 'master', commit: 'HEAD' }
-      }
+    const datasetsConfig = _.chain(repositoryDescriptors)
+      .cloneDeep()
+      .mapKeys((value: object, key: string) => {
+        return GitUtils.getRepositoryNameByUrl(key);
+      })
+      .mapValues((datasetConfig: object) => {
+        if (_.isEmpty(datasetConfig)) {
+          return {master: ['HEAD']};
+        }
+        return _.mapValues(datasetConfig, (commits: string[]) => _.isEmpty(commits) ? ['HEAD'] : commits);
+      })
+      .value();
+
+    reader.init({
+      path: _path,
+      datasetsConfig: Object.assign({
+        default: {
+          dataset: GitUtils.getRepositoryNameByUrl(defaultRepository),
+          branch: defaultRepositoryBranch,
+          commit: defaultRepositoryCommit
+        }
+      }, datasetsConfig)
     });
     reader.read(reqBody).then((data: any[]) => {
       res.set('Content-Type', 'application/json');
