@@ -63,7 +63,7 @@
     "shelljs": "0.8.2",
     "typescript": "3.0.1",
     "urlon": "2.0.1",
-    "vizabi-ddfcsv-reader": "git+ssh://git@github.com:vizabi/vizabi-ddfcsv-reader.git#fix-in-clause-conj-plugin"
+    "vizabi-ddfcsv-reader": "git+ssh://git@github.com:vizabi/vizabi-ddfcsv-reader.git#feat-create-query-validator"
   },
   "devDependencies": {
     "@types/chai": "4.1.3",
