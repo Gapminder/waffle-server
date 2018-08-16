@@ -12,4 +12,4 @@ package-lock.json
 *.log
 **/*.log
 logs/*.log*
-!logs/.gitkeep
+!**/.gitkeep
