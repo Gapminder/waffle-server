@@ -1,5 +1,6 @@
 const repositoryDescriptors = {
   'git@github.com:open-numbers/ddf--gapminder--systema_globalis.git': {
+    master: ['HEAD'],
     stage: ['HEAD'],
     develop: ['HEAD', '3bc7bf0', 'ed8ed6c']
   },
