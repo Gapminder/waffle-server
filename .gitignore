@@ -44,3 +44,5 @@ deployment/**/build.*.sh
 deployment/**/*.txt
 
 ws.config/travis.pk
+
+test-bb/fixtures

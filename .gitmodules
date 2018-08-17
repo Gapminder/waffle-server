@@ -1,0 +1,59 @@
+[submodule "readers-test-ds-systema-globalis"]
+	path = test-bb/fixtures/readers-test-ds-systema-globalis/master-HEAD
+	url = git@github.com:buchslava/readers-test-ds-systema-globalis.git
+	branch = master
+	ignore = dirty
+[submodule "readers-test-ds-presentation-set"]
+	path = test-bb/fixtures/readers-test-ds-presentation-set/master-HEAD
+	url = git@github.com:buchslava/readers-test-ds-presentation-set.git
+	branch = master
+	ignore = dirty
+[submodule "readers-test-ds-sankey"]
+	path = test-bb/fixtures/readers-test-ds-sankey/master-HEAD
+	url = git@github.com:buchslava/readers-test-ds-sankey.git
+	branch = master
+	ignore = dirty
+[submodule "readers-test-ds-systema-globalis-tiny"]
+	path = test-bb/fixtures/readers-test-ds-systema-globalis-tiny/master-HEAD
+	url = git@github.com:buchslava/readers-test-ds-systema-globalis-tiny.git
+	branch = master
+	ignore = dirty
+[submodule "readers-test-ds-gm-population"]
+	path = test-bb/fixtures/readers-test-ds-gm-population/master-HEAD
+	url = git@github.com:buchslava/readers-test-ds-gm-population.git
+	branch = master
+	ignore = dirty
+[submodule "readers-test-ds-bubbles-3"]
+	path = test-bb/fixtures/readers-test-ds-bubbles-3/master-HEAD
+	url = git@github.com:buchslava/readers-test-ds-bubbles-3.git
+	branch = master
+	ignore = dirty
+[submodule "readers-test-ds-gm-population-big"]
+	path = test-bb/fixtures/readers-test-ds-gm-population-big/master-HEAD
+	url = git@github.com:buchslava/readers-test-ds-gm-population-big.git
+	branch = master
+	ignore = dirty
+[submodule "readers-test-ds-sg-mix-entity"]
+	path = test-bb/fixtures/readers-test-ds-sg-mix-entity/master-HEAD
+	url = git@github.com:buchslava/readers-test-ds-sg-mix-entity.git
+	branch = master
+	ignore = dirty
+[submodule "readers-test-ds-static-assets"]
+	path = test-bb/fixtures/readers-test-ds-static-assets/master-HEAD
+	url = git@github.com:buchslava/readers-test-ds-static-assets.git
+	branch = master
+	ignore = dirty
+[submodule "readers-test-ds-gm-static-assets"]
+	path = test-bb/fixtures/readers-test-ds-gm-static-assets/master-HEAD
+	url = git@github.com:buchslava/readers-test-ds-gm-static-assets.git
+	branch = master
+	ignore = dirty
+[submodule "readers-test-sodertornsmodellen"]
+	path = test-bb/fixtures/readers-test-sodertornsmodellen/master-HEAD
+	url = git@github.com:buchslava/readers-test-sodertornsmodellen.git
+	branch = master
+	ignore = dirty
+[submodule "path_test"]
+	path = test-bb/fixtures/readers-test-sodertornsmodellen/master-HEAD
+	url = git@github.com:buchslava/readers-test-sodertornsmodellen.git
+	branch = master

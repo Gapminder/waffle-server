@@ -25,6 +25,8 @@
     "unpublish:local": "NODE_ENV=local npm run unpublish",
     "unpublish:dev": "NODE_ENV=development npm run unpublish",
     "test": "npm run specs:minimalist",
+    "test-bb": "DEFAULT_DATASET_NAME=buchslava/readers-test-ds-systema-globalis mocha --require ts-node/register --timeout 200000 test-bb/**/*.spec.ts",
+    "submodules:init": "git submodule update --remote --init -f",
     "specs": "mocha --exit --reporter-options reportDir=specReports,reportFilename=specReport --timeout 20000 --require ts-node/register --require ./mocha.env 'test/**/*.spec.ts'",
     "specs:minimalist": "npm run specs -- --reporter mocha-minimalist-reporter"
   },
@@ -70,6 +72,7 @@
     "@types/mocha": "5.2.0",
     "@types/sinon": "5.0.0",
     "@types/supertest": "2.0.4",
+    "bb-tests-provider": "0.1.9",
     "chai": "4.1.2",
     "codelyzer": "4.3.0",
     "mocha": "5.2.0",

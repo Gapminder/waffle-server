@@ -1,0 +1,11 @@
+git submodule add -b master -f --name path_test -- git@github.com:buchslava/readers-test-ds-systema-globalis.git ./test-bb/fixtures/readers-test-ds-systema-globalis/master-HEAD
+git submodule add -b master -f --name path_test -- git@github.com:buchslava/readers-test-ds-presentation-set.git ./test-bb/fixtures/readers-test-ds-presentation-set/master-HEAD
+git submodule add -b master -f --name path_test -- git@github.com:buchslava/readers-test-ds-sankey.git ./test-bb/fixtures/readers-test-ds-sankey/master-HEAD
+git submodule add -b master -f --name path_test -- git@github.com:buchslava/readers-test-ds-systema-globalis-tiny.git ./test-bb/fixtures/readers-test-ds-systema-globalis-tiny/master-HEAD
+git submodule add -b master -f --name path_test -- git@github.com:buchslava/readers-test-ds-gm-population.git ./test-bb/fixtures/readers-test-ds-gm-population/master-HEAD
+git submodule add -b master -f --name path_test -- git@github.com:buchslava/readers-test-ds-bubbles-3.git ./test-bb/fixtures/readers-test-ds-bubbles-3/master-HEAD
+git submodule add -b master -f --name path_test -- git@github.com:buchslava/readers-test-ds-gm-population-big.git ./test-bb/fixtures/readers-test-ds-gm-population-big/master-HEAD
+git submodule add -b master -f --name path_test -- git@github.com:buchslava/readers-test-ds-sg-mix-entity.git ./test-bb/fixtures/readers-test-ds-sg-mix-entity/master-HEAD
+git submodule add -b master -f --name path_test -- git@github.com:buchslava/readers-test-ds-static-assets.git ./test-bb/fixtures/readers-test-ds-static-assets/master-HEAD
+git submodule add -b master -f --name path_test -- git@github.com:buchslava/readers-test-ds-gm-static-assets.git ./test-bb/fixtures/readers-test-ds-gm-static-assets/master-HEAD
+git submodule add -b master -f --name path_test -- git@github.com:buchslava/readers-test-sodertornsmodellen.git ./test-bb/fixtures/readers-test-sodertornsmodellen/master-HEAD
