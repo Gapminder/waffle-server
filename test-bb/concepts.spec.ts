@@ -20,7 +20,9 @@ export const conceptsTestSuitesComplete: TestSuitesComplete = {
           $and: [
             {concept_type: {$eq: 'entity_set'}}
           ]
-        }
+        },
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite().forDataSuite(sg).withTitle('3 fields selects should be expected')
@@ -38,7 +40,9 @@ export const conceptsTestSuitesComplete: TestSuitesComplete = {
             {concept_type: {$eq: 'entity_set'}}
           ]
         },
-        order_by: ['concept']
+        order_by: ['concept'],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite().forDataSuite(sg).withTitle('ar-SA base data selects should be expected')
@@ -56,7 +60,9 @@ export const conceptsTestSuitesComplete: TestSuitesComplete = {
             {concept_type: {$eq: 'entity_set'}}
           ]
         },
-        order_by: ['concept']
+        order_by: ['concept'],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite().forDataSuite(sodertornsmodellen).withTitle('recent 1')
@@ -70,7 +76,9 @@ export const conceptsTestSuitesComplete: TestSuitesComplete = {
         },
         from: 'concepts',
         where: {},
-        language: 'en'
+        language: 'en',
+        force: true,
+        dataset: sodertornsmodellen.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -95,7 +103,9 @@ export const conceptsTestSuitesComplete: TestSuitesComplete = {
         },
         from: 'concepts',
         where: {},
-        language: 'en'
+        language: 'en',
+        force: true,
+        dataset: sodertornsmodellen.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -120,7 +130,9 @@ export const conceptsTestSuitesComplete: TestSuitesComplete = {
         },
         from: 'concepts',
         where: {},
-        language: 'en'
+        language: 'en',
+        force: true,
+        dataset: gmPopulation.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -148,7 +160,9 @@ export const conceptsTestSuitesComplete: TestSuitesComplete = {
         },
         from: 'concepts',
         where: {},
-        language: 'en'
+        language: 'en',
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -175,7 +189,9 @@ export const conceptsTestSuitesComplete: TestSuitesComplete = {
               }
             }
           ]
-        }
+        },
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -204,7 +220,9 @@ export const conceptsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'concept'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern)
   ]

@@ -20,7 +20,9 @@ xdescribe('Additional concepts supporting', () => {
           $and: [
             {concept_type: {$eq: 'entity_set'}}
           ]
-        }
+        },
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
       new TestSuite()
@@ -38,7 +40,9 @@ xdescribe('Additional concepts supporting', () => {
           $and: [
             {concept_type: {$eq: 'entity_set'}}
           ]
-        }
+        },
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(JustAnErrorAssertPattern)
   ];

@@ -15,7 +15,9 @@ export const schemaConceptsTestSuitesComplete: TestSuitesComplete = {
           key: ['key', 'value'],
           value: []
         },
-        from: 'concepts.schema'
+        from: 'concepts.schema',
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern)
 
@@ -34,7 +36,9 @@ export const schemaEntitiesTestSuitesComplete: TestSuitesComplete = {
           key: ['key', 'value'],
           value: []
         },
-        from: 'entities.schema'
+        from: 'entities.schema',
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern)
   ]
@@ -52,7 +56,9 @@ export const schemaDatapointsTestSuitesComplete: TestSuitesComplete = {
           key: ['key', 'value'],
           value: []
         },
-        from: 'datapoints.schema'
+        from: 'datapoints.schema',
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -65,7 +71,9 @@ export const schemaDatapointsTestSuitesComplete: TestSuitesComplete = {
           key: ['key', 'value'],
           value: ['min(value)', 'max(value)']
         },
-        from: 'datapoints.schema'
+        from: 'datapoints.schema',
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -78,7 +86,9 @@ export const schemaDatapointsTestSuitesComplete: TestSuitesComplete = {
           key: ['key', 'value'],
           value: ['min(value)', 'max(value)']
         },
-        from: 'datapoints.schema'
+        from: 'datapoints.schema',
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern)
   ]

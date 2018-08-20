@@ -33,7 +33,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
           time: {$gt: 1800, $lt: 2016}
         },
         grouping: {},
-        order_by: ['time', 'geo']
+        order_by: ['time', 'geo'],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -74,7 +76,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
             key: 'time',
             where: {$and: [{time: {$gt: '1990', $lte: '2015'}}]}
           }
-        }
+        },
+        force: true,
+        dataset: sg.getDataset()
       })
       .postponeFor('it should be serious refactoring for query processing: filter results after merging', WsProdServerTestObject)
       .withAssertPattern(GeneralAssertPattern),
@@ -94,7 +98,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
           $geo: {key: 'geo', where: {'is--country': true}},
           $time: {key: 'time', where: {time: '2015'}}
         },
-        order_by: ['time']
+        order_by: ['time'],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -115,7 +121,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
             where: {'is--country': true}
           }
         },
-        order_by: ['time', 'geo']
+        order_by: ['time', 'geo'],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -137,7 +145,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
           $geo: {key: 'geo', where: {'is--country': true, geo: {$in: ['ago']}}},
           $time: {key: 'time', where: {time: {$gte: '1800', $lte: '2015'}}}
         },
-        order_by: ['time', 'geo']
+        order_by: ['time', 'geo'],
+        force: true,
+        dataset: sgTiny.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -158,7 +168,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         join: {
           $country_code: {key: 'country_code', where: {country_code: {$in: ['900']}}}
         },
-        order_by: ['country_code', 'year', 'gender', 'age']
+        order_by: ['country_code', 'year', 'gender', 'age'],
+        force: true,
+        dataset: gmPopulation.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -179,7 +191,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         join: {
           $geo: {key: 'geo', where: {world_4region: {$in: ['americas', 'asia']}}}
         },
-        order_by: ['geo', 'time']
+        order_by: ['geo', 'time'],
+        force: true,
+        dataset: sgTiny.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -196,7 +210,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         where: {},
         join: {},
-        order_by: ['country', 'time']
+        order_by: ['country', 'time'],
+        force: true,
+        dataset: bubbles3.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -219,7 +235,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
           $year: {key: 'year', where: {year: '2017'}},
           $age: {key: 'age', where: {age: {$nin: ['80plus', '100plus']}}}
         },
-        order_by: ['geo', 'year', 'age']
+        order_by: ['geo', 'year', 'age'],
+        force: true,
+        dataset: gmPopulationBig.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -238,10 +256,12 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
           $and: [{geo: '$geo'}, {time: '$time'}]
         },
         join: {
-          $geo: {key: 'geo', where: {'un_state': true}},
+          $geo: {key: 'geo', where: {un_state: true}},
           $time: {key: 'time', where: {time: {$gte: '1800', $lte: '2015'}}}
         },
-        order_by: ['geo', 'time']
+        order_by: ['geo', 'time'],
+        force: true,
+        dataset: presentationSet.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -263,7 +283,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
           $geo: {key: 'geo', where: {geo: {$in: ['world']}}},
           $time: {key: 'time', where: {time: '2015'}}
         },
-        order_by: ['geo', 'time']
+        order_by: ['geo', 'time'],
+        force: true,
+        dataset: staticAssets.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -285,7 +307,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
           $geo: {key: 'geo', where: {geo: {$in: ['world']}}},
           $age: {key: 'age', where: {age: {$nin: ['80plus', '100plus']}}}
         },
-        order_by: ['geo', 'year', 'age']
+        order_by: ['geo', 'year', 'age'],
+        force: true,
+        dataset: gmPopulationBig.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -310,7 +334,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         order_by: [
           'global',
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sgMixEntity.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -340,7 +366,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
           }
         },
         order_by: ['country', 'time'],
-        language: 'en'
+        language: 'en',
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -398,7 +426,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         order_by: [
           'basomrade',
           'year'
-        ]
+        ],
+        force: true,
+        dataset: sodertornsmodellen.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -445,7 +475,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -469,7 +501,7 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         where: {
           $and: [
             {
-              'geo': '$geo'
+              geo: '$geo'
             }
           ]
         },
@@ -484,7 +516,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         order_by: [
           'time',
           'geo'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -507,15 +541,17 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         where: {
           time: {
-            '$gt': 1800,
-            '$lt': 2016
+            $gt: 1800,
+            $lt: 2016
           }
         },
         grouping: {},
         order_by: [
           'time',
           'geo'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -543,7 +579,8 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
           'country',
           'time'
         ],
-        dataset: 'buchslava/readers-test-ds-bubbles-3'
+        force: true,
+        dataset: bubbles3.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -580,7 +617,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -617,7 +656,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -670,7 +711,7 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
           'time'
         ],
         force: true,
-        dataset: 'buchslava/readers-test-ds-static-assets'
+        dataset: staticAssets.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -729,7 +770,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -777,7 +820,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -828,7 +873,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -876,7 +923,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -930,7 +979,7 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
           'time'
         ],
         force: true,
-        dataset: 'buchslava/readers-test-ds-presentation-set'
+        dataset: presentationSet.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -980,7 +1029,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -1031,7 +1082,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -1070,7 +1123,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -1109,7 +1164,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -1135,7 +1192,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         join: {},
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -1193,7 +1252,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -1242,7 +1303,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -1293,7 +1356,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -1342,7 +1407,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -1391,7 +1458,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -1414,7 +1483,7 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
           ]
         },
         where: {
-          '$and': [
+          $and: [
             {
               geo: '$geo'
             },
@@ -1439,7 +1508,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -1478,7 +1549,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -1517,7 +1590,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -1554,7 +1629,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -1578,7 +1655,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         join: {},
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -1602,7 +1681,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         join: {},
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -1644,13 +1725,15 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
           $time: {
             key: 'time',
             where: {
-              'time': '2015'
+              time: '2015'
             }
           }
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -1698,7 +1781,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -1737,7 +1822,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -1776,7 +1863,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -1818,7 +1907,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -1864,7 +1955,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -1913,7 +2006,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -1959,7 +2054,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -2005,7 +2102,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -2051,7 +2150,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -2097,7 +2198,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -2134,7 +2237,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -2179,7 +2284,7 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
           'time'
         ],
         force: true,
-        dataset: 'buchslava/readers-test-ds-systema-globalis-tiny'
+        dataset: sgTiny.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -2216,7 +2321,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -2256,7 +2363,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -2304,7 +2413,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -2343,7 +2454,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -2369,7 +2482,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         join: {},
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -2393,7 +2508,7 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         where: {
           $and: [
             {
-              'geo': '$geo'
+              geo: '$geo'
             }
           ]
         },
@@ -2407,7 +2522,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -2431,7 +2548,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         join: {},
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -2490,7 +2609,7 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
           'geo'
         ],
         force: true,
-        dataset: 'buchslava/readers-test-ds-systema-globalis-tiny'
+        dataset: sgTiny.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -2529,7 +2648,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'year'
-        ]
+        ],
+        force: true,
+        dataset: sodertornsmodellen.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -2571,7 +2692,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'year'
-        ]
+        ],
+        force: true,
+        dataset: sodertornsmodellen.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -2631,7 +2754,7 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
           'year'
         ],
         force: true,
-        dataset: 'buchslava/readers-test-sodertornsmodellen'
+        dataset: sodertornsmodellen.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -2668,7 +2791,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'year'
-        ]
+        ],
+        force: true,
+        dataset: sodertornsmodellen.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -2708,7 +2833,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'year'
-        ]
+        ],
+        force: true,
+        dataset: sodertornsmodellen.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -2756,7 +2883,7 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
           'age'
         ],
         force: true,
-        dataset: 'buchslava/readers-test-ds-gm-population'
+        dataset: gmPopulation.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -2830,7 +2957,8 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         order_by: [
           'year'
         ],
-        dataset: 'buchslava/readers-test-ds-gm-population-big'
+        force: true,
+        dataset: gmPopulationBig.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -2890,7 +3018,7 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
           'age'
         ],
         force: true,
-        dataset: 'buchslava/readers-test-ds-gm-population-big'
+        dataset: gmPopulationBig.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -2947,7 +3075,8 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         order_by: [
           'year'
         ],
-        dataset: 'buchslava/readers-test-ds-gm-population-big'
+        force: true,
+        dataset: gmPopulationBig.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -3030,7 +3159,8 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         order_by: [
           'year'
         ],
-        dataset: 'buchslava/readers-test-ds-gm-population-big'
+        force: true,
+        dataset: gmPopulationBig.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -3099,7 +3229,7 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
           'age'
         ],
         force: true,
-        dataset: 'buchslava/readers-test-ds-gm-population-big'
+        dataset: gmPopulationBig.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -3174,7 +3304,8 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         order_by: [
           'year'
         ],
-        dataset: 'buchslava/readers-test-ds-gm-population-big'
+        force: true,
+        dataset: gmPopulationBig.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -3262,7 +3393,8 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         order_by: [
           'year'
         ],
-        dataset: 'buchslava/readers-test-ds-gm-population-big'
+        force: true,
+        dataset: gmPopulationBig.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -3346,7 +3478,8 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         order_by: [
           'year'
         ],
-        dataset: 'buchslava/readers-test-ds-gm-population-big'
+        force: true,
+        dataset: gmPopulationBig.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -3443,7 +3576,8 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         order_by: [
           'year'
         ],
-        dataset: 'buchslava/readers-test-ds-gm-population-big'
+        force: true,
+        dataset: gmPopulationBig.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -3470,7 +3604,7 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
           'time'
         ],
         force: true,
-        dataset: 'buchslava/readers-test-ds-sg-mix-entity'
+        dataset: sgMixEntity.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -3508,7 +3642,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'year'
-        ]
+        ],
+        force: true,
+        dataset: sodertornsmodellen.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -3549,7 +3685,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'year'
-        ]
+        ],
+        force: true,
+        dataset: sodertornsmodellen.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -3586,7 +3724,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'year'
-        ]
+        ],
+        force: true,
+        dataset: sodertornsmodellen.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -3626,7 +3766,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'year'
-        ]
+        ],
+        force: true,
+        dataset: sodertornsmodellen.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -3675,7 +3817,9 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -3724,10 +3868,12 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'time'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern)
-    ]
+  ]
 };
 
 describe(datapointsTestSuitesComplete.title, () => {

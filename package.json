@@ -65,14 +65,14 @@
     "shelljs": "0.8.2",
     "typescript": "3.0.1",
     "urlon": "2.0.1",
-    "vizabi-ddfcsv-reader": "git+ssh://git@github.com:vizabi/vizabi-ddfcsv-reader.git#feat-create-query-validator"
+    "vizabi-ddfcsv-reader": "git+ssh://git@github.com/vizabi/vizabi-ddfcsv-reader.git#feat-create-query-validator"
   },
   "devDependencies": {
     "@types/chai": "4.1.3",
     "@types/mocha": "5.2.0",
     "@types/sinon": "5.0.0",
     "@types/supertest": "2.0.4",
-    "bb-tests-provider": "0.1.9",
+    "bb-tests-provider": "0.1.10",
     "chai": "4.1.2",
     "codelyzer": "4.3.0",
     "mocha": "5.2.0",

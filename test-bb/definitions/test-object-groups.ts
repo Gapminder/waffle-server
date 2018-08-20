@@ -13,54 +13,74 @@ import {
   sodertornsmodellen
 } from './data-suite-registry';
 import { DdfCsvReaderTestObject, WsProdServerTestObject } from '../test-objects';
+import * as _ from 'lodash';
+import { defaultRepository, defaultRepositoryBranch, defaultRepositoryCommit, repositoryDescriptors } from '../../ws.config/mongoless-repos.config';
+import { GitUtils } from '../../ws.routes/ddfql/git-utils';
 
 // const wsPath = 'https://waffle-server-stage.gapminder.org/api/ddf/ql';
-const wsPath = 'http://localhost:3000/api/ddf/ml-ql';
-const ghWsAcc = 'buchslava';
+const wsPath = 'http://localhost:3000/api/ddf/ql/urlon';
 const fixturesPath = './test-bb/fixtures';
 
+const datasetsConfig = _.chain(repositoryDescriptors)
+  .cloneDeep()
+  .mapKeys((value: object, key: string) => {
+    return GitUtils.getRepositoryNameByUrl(key);
+  })
+  .mapValues((datasetConfig: object) => {
+    if (_.isEmpty(datasetConfig)) {
+      return {master: ['HEAD']};
+    }
+    return _.mapValues(datasetConfig, (commits: string[]) => _.isEmpty(commits) ? ['HEAD'] : commits);
+  })
+  .defaults({'default': {
+    dataset: GitUtils.getRepositoryNameByUrl(defaultRepository),
+    branch: defaultRepositoryBranch,
+    commit: defaultRepositoryCommit
+  }})
+  .value();
+
 export const getTestObjectGroups = (): AbstractTestObject[] => [
-  new DdfCsvReaderTestObject().forDataSuite(sg).init({path: `${fixturesPath}/${sg.nick}/master-HEAD`}),
-  new WsProdServerTestObject().forDataSuite(sg).init({path: wsPath, dataset: `${ghWsAcc}/${sg.nick}`}),
-  new DdfCsvReaderTestObject().forDataSuite(presentationSet).init({path: `${fixturesPath}/${presentationSet.nick}/master-HEAD`}),
+  new DdfCsvReaderTestObject().forDataSuite(sg).init({path: `${fixturesPath}/${sg.datasetNick}/master-HEAD`, datasetsConfig}),
+  new WsProdServerTestObject().forDataSuite(sg).init({path: wsPath, dataset: sg.getDataset()}),
+  new DdfCsvReaderTestObject().forDataSuite(presentationSet).init({path: `${fixturesPath}/${presentationSet.datasetNick}/master-HEAD`, datasetsConfig}),
   new WsProdServerTestObject().forDataSuite(presentationSet).init({
     path: wsPath,
-    dataset: `${ghWsAcc}/${presentationSet.nick}`
+    dataset: presentationSet.getDataset()
   }),
-  new DdfCsvReaderTestObject().forDataSuite(sankey).init({path: `${fixturesPath}/${sankey.nick}/master-HEAD`}),
-  new WsProdServerTestObject().forDataSuite(sankey).init({path: wsPath, dataset: `${ghWsAcc}/${sankey.nick}`}),
-  new DdfCsvReaderTestObject().forDataSuite(sgTiny).init({path: `${fixturesPath}/${sgTiny.nick}/master-HEAD`}),
-  new WsProdServerTestObject().forDataSuite(sgTiny).init({path: wsPath, dataset: `${ghWsAcc}/${sgTiny.nick}`}),
-  new DdfCsvReaderTestObject().forDataSuite(gmPopulation).init({path: `${fixturesPath}/${gmPopulation.nick}/master-HEAD`}),
+  new DdfCsvReaderTestObject().forDataSuite(sankey).init({path: `${fixturesPath}/${sankey.datasetNick}/master-HEAD`, datasetsConfig}),
+  new WsProdServerTestObject().forDataSuite(sankey).init({path: wsPath, dataset: sankey.getDataset()}),
+  new DdfCsvReaderTestObject().forDataSuite(sgTiny).init({path: `${fixturesPath}/${sgTiny.datasetNick}/master-HEAD`, datasetsConfig}),
+  new WsProdServerTestObject().forDataSuite(sgTiny).init({path: wsPath, dataset: sgTiny.getDataset()}),
+  new DdfCsvReaderTestObject().forDataSuite(gmPopulation).init({path: `${fixturesPath}/${gmPopulation.datasetNick}/master-HEAD`, datasetsConfig}),
   new WsProdServerTestObject().forDataSuite(gmPopulation).init({
     path: wsPath,
-    dataset: `${ghWsAcc}/${gmPopulation.nick}`
+    dataset: gmPopulation.getDataset()
   }),
-  new DdfCsvReaderTestObject().forDataSuite(bubbles3).init({path: `${fixturesPath}/${bubbles3.nick}/master-HEAD`}),
-  new WsProdServerTestObject().forDataSuite(bubbles3).init({path: wsPath, dataset: `${ghWsAcc}/${bubbles3.nick}`}),
-  new DdfCsvReaderTestObject().forDataSuite(gmPopulationBig).init({path: `${fixturesPath}/${gmPopulationBig.nick}/master-HEAD`}),
+  new DdfCsvReaderTestObject().forDataSuite(bubbles3).init({path: `${fixturesPath}/${bubbles3.datasetNick}/master-HEAD`, datasetsConfig}),
+  new WsProdServerTestObject().forDataSuite(bubbles3).init({path: wsPath, dataset: bubbles3.getDataset()}),
+  new DdfCsvReaderTestObject().forDataSuite(gmPopulationBig).init({path: `${fixturesPath}/${gmPopulationBig.datasetNick}/master-HEAD`, datasetsConfig}),
   new WsProdServerTestObject().forDataSuite(gmPopulationBig).init({
     path: wsPath,
-    dataset: `${ghWsAcc}/${gmPopulationBig.nick}`
+    dataset: gmPopulationBig.getDataset()
   }),
-  new DdfCsvReaderTestObject().forDataSuite(sgMixEntity).init({path: `${fixturesPath}/${sgMixEntity.nick}/master-HEAD`}),
+  new DdfCsvReaderTestObject().forDataSuite(sgMixEntity).init({path: `${fixturesPath}/${sgMixEntity.datasetNick}/master-HEAD`, datasetsConfig}),
   new WsProdServerTestObject().forDataSuite(sgMixEntity).init({
     path: wsPath,
-    dataset: `${ghWsAcc}/${sgMixEntity.nick}`
+    dataset: sgMixEntity.getDataset()
   }),
-  new DdfCsvReaderTestObject().forDataSuite(staticAssets).init({path: `${fixturesPath}/${staticAssets.nick}/master-HEAD`}),
+  new DdfCsvReaderTestObject().forDataSuite(staticAssets).init({path: `${fixturesPath}/${staticAssets.datasetNick}/master-HEAD`, datasetsConfig}),
   new WsProdServerTestObject().forDataSuite(staticAssets).init({
     path: wsPath,
-    dataset: `${ghWsAcc}/${staticAssets.nick}`
+    dataset: staticAssets.getDataset()
   }),
-  new DdfCsvReaderTestObject().forDataSuite(gmStaticAssets).init({path: `${fixturesPath}/${gmStaticAssets.nick}/master-HEAD`}),
+  new DdfCsvReaderTestObject().forDataSuite(gmStaticAssets).init({path: `${fixturesPath}/${gmStaticAssets.datasetNick}/master-HEAD`, datasetsConfig}),
   new WsProdServerTestObject().forDataSuite(gmStaticAssets).init({
     path: wsPath,
-    dataset: `${ghWsAcc}/${gmStaticAssets.nick}`
+    dataset: gmStaticAssets.getDataset()
   }),
-  new DdfCsvReaderTestObject().forDataSuite(sodertornsmodellen).init({path: `${fixturesPath}/${sodertornsmodellen.nick}/master-HEAD`}),
+  new DdfCsvReaderTestObject().forDataSuite(sodertornsmodellen).init({path: `${fixturesPath}/${sodertornsmodellen.datasetNick}/master-HEAD`, datasetsConfig}),
   new WsProdServerTestObject().forDataSuite(sodertornsmodellen).init({
     path: wsPath,
-    dataset: `${ghWsAcc}/${sodertornsmodellen.nick}`
-  }),
+    dataset: sodertornsmodellen.getDataset()
+  })
 ];

@@ -18,7 +18,9 @@ export const entitiesTestSuitesComplete: TestSuitesComplete = {
         },
         where: {'is--country': true},
         grouping: {},
-        orderBy: null
+        orderBy: null,
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -35,7 +37,9 @@ export const entitiesTestSuitesComplete: TestSuitesComplete = {
         },
         where: {'is--country': true},
         grouping: {},
-        orderBy: null
+        orderBy: null,
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -48,7 +52,9 @@ export const entitiesTestSuitesComplete: TestSuitesComplete = {
         select: {key: ['geo'], value: ['name', 'shape_lores_svg']},
         where: {'is--world_4region': true},
         grouping: {},
-        orderBy: null
+        orderBy: null,
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -61,7 +67,9 @@ export const entitiesTestSuitesComplete: TestSuitesComplete = {
         select: {key: ['tag'], value: ['name', 'parent']},
         where: {},
         grouping: {},
-        orderBy: null
+        orderBy: null,
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -75,7 +83,9 @@ export const entitiesTestSuitesComplete: TestSuitesComplete = {
         select: {key: ['world_4region'], value: ['name', 'rank', 'shape_lores_svg']},
         where: {},
         join: {},
-        order_by: ['rank']
+        order_by: ['rank'],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -98,14 +108,16 @@ export const entitiesTestSuitesComplete: TestSuitesComplete = {
         where: {
           $and: [
             {
-              'un_state': true
+              un_state: true
             }
           ]
         },
         join: {},
         order_by: [
           'rank'
-        ]
+        ],
+        force: true,
+        dataset: presentationSet.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -128,7 +140,9 @@ export const entitiesTestSuitesComplete: TestSuitesComplete = {
         join: {},
         order_by: [
           'rank'
-        ]
+        ],
+        force: true,
+        dataset: sankey.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -151,7 +165,9 @@ export const entitiesTestSuitesComplete: TestSuitesComplete = {
         join: {},
         order_by: [
           'rank'
-        ]
+        ],
+        force: true,
+        dataset: sodertornsmodellen.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -174,7 +190,9 @@ export const entitiesTestSuitesComplete: TestSuitesComplete = {
         join: {},
         order_by: [
           'rank'
-        ]
+        ],
+        force: true,
+        dataset: sodertornsmodellen.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -199,7 +217,9 @@ export const entitiesTestSuitesComplete: TestSuitesComplete = {
         join: {},
         order_by: [
           'rank'
-        ]
+        ],
+        force: true,
+        dataset: sodertornsmodellen.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -223,7 +243,8 @@ export const entitiesTestSuitesComplete: TestSuitesComplete = {
         order_by: [
           'rank'
         ],
-        force: true
+        force: true,
+        dataset: sankey.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -249,10 +270,12 @@ export const entitiesTestSuitesComplete: TestSuitesComplete = {
             }
           ]
         },
-        'join': {},
-        'order_by': [
+        join: {},
+        order_by: [
           'rank'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -291,7 +314,9 @@ export const entitiesTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'rank'
-        ]
+        ],
+        force: true,
+        dataset: gmPopulationBig.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -324,7 +349,7 @@ export const entitiesTestSuitesComplete: TestSuitesComplete = {
             where: {
               $or: [
                 {
-                  'un_state': true
+                  un_state: true
                 },
                 {
                   'is--global': true
@@ -338,7 +363,9 @@ export const entitiesTestSuitesComplete: TestSuitesComplete = {
         },
         order_by: [
           'rank'
-        ]
+        ],
+        force: true,
+        dataset: sg.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
@@ -364,7 +391,9 @@ export const entitiesTestSuitesComplete: TestSuitesComplete = {
         join: {},
         order_by: [
           'rank'
-        ]
+        ],
+        force: true,
+        dataset: sodertornsmodellen.getDataset()
       })
       .withAssertPattern(GeneralAssertPattern)
   ]
