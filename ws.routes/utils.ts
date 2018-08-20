@@ -23,11 +23,15 @@ const {
 
 const RELATIVE_PATH_REGEX = /\/\.+\/?/;
 
-const parseUrlonAsync: Function = async.asyncify((query: string) => {
+const UrlonParserAsync: Function = async.asyncify((query: string) => {
   const parsedQuery = URLON.parse(query);
 
   if (parsedQuery.dataset) {
     parsedQuery.dataset = decodeURIComponent(_.toString(parsedQuery.dataset));
+  }
+
+  if (parsedQuery.branch) {
+    parsedQuery.branch = decodeURIComponent(_.toString(parsedQuery.branch));
   }
 
   return parsedQuery;
@@ -41,6 +45,8 @@ export {
   trackingRequestTime,
   shareConfigWithRoute,
   bodyFromUrlQuery,
+  parseJsonFromUrlQuery,
+  parseUrlonFromUrlQuery,
   bodyFromUrlAssets,
   toDataResponse,
   toErrorResponse,
@@ -67,22 +73,49 @@ function shareConfigWithRoute(config: object, req: WSRequest, res: express.Respo
   return next();
 }
 
+function parseJsonFromUrlQuery(req: WSRequest, res: express.Response, next: express.NextFunction): void {
+  const parsedUrl = url.parse(req.url);
+
+  parseJsonAsync(_.get(parsedUrl, 'query', parsedUrl), (error: string, parsedQuery: any) => {
+    logger.info({ ddfqlRaw: parsedUrl });
+
+    if (error) {
+      res.json(toErrorResponse(`${responseMessages.INCORRECT_QUERY_FORMAT}: ${error}`, req, 'bodyFromUrlQuery'));
+    } else {
+      req.body = parsedQuery;
+      return next();
+    }
+  });
+}
+
+function parseUrlonFromUrlQuery(req: WSRequest, res: express.Response, next: express.NextFunction): void {
+  const parsedUrl = url.parse(req.url);
+
+  UrlonParserAsync(_.get(parsedUrl, 'query', parsedUrl), (error: string, parsedQuery: any) => {
+    logger.info({ ddfqlRaw: parsedUrl });
+
+    if (error) {
+      res.json(toErrorResponse(`${responseMessages.INCORRECT_QUERY_FORMAT}: ${error}`, req, 'bodyFromUrlQuery'));
+    } else {
+      req.body = parsedQuery;
+      return next();
+    }
+  });
+}
+
 function bodyFromUrlQuery(req: WSRequest, res: express.Response, next: express.NextFunction): void {
   const query = _.get(req.query, 'query', null);
   const queryType = query ? 'JSON' : 'URLON';
   req.queryParser = query
     ? { parse: parseJsonAsync, query, queryType }
-    : { parse: parseUrlonAsync, query: url.parse(req.url).query, queryType };
-
-  if (_.isNil(query)) {
-    return next();
-  }
+    : { parse: UrlonParserAsync, query: url.parse(req.url).query, queryType };
 
   req.queryParser.parse(req.queryParser.query, (error: string, parsedQuery: any) => {
     logger.info({ ddfqlRaw: req.queryParser.query });
     if (error) {
       res.json(toErrorResponse(responseMessages.INCORRECT_QUERY_FORMAT, req, 'bodyFromUrlQuery'));
     } else {
+      req.body = parsedQuery;
       return next();
     }
   });
