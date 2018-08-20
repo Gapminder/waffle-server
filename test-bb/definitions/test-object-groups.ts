@@ -15,7 +15,7 @@ import {
 import { DdfCsvReaderTestObject, WsProdServerTestObject } from '../test-objects';
 
 // const wsPath = 'https://waffle-server-stage.gapminder.org/api/ddf/ql';
-const wsPath = 'http://localhost:3000';
+const wsPath = 'http://localhost:3000/api/ddf/ml-ql';
 const ghWsAcc = 'buchslava';
 const fixturesPath = './test-bb/fixtures';
 

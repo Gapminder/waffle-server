@@ -46,3 +46,5 @@ deployment/**/*.txt
 ws.config/travis.pk
 
 test-bb/fixtures
+!test-bb/test-objects/**/*.js
+!test-bb/test-objects/**/*.js.map

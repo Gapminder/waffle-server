@@ -1,6 +1,6 @@
 import { AbstractTestObject } from 'bb-tests-provider';
 
-const ddfCsvReader = require('./ddfcsv-reader/lib/index');
+const ddfCsvReader = require('./ddfcsv-reader/vizabi-ddfcsv-reader-node');
 
 export class DdfCsvReaderTestObject extends AbstractTestObject {
   getTitle(): string {
