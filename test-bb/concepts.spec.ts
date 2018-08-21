@@ -1,6 +1,6 @@
 import { printSummaryTable, runTests, TestSuite } from 'bb-tests-provider';
 import { GeneralAssertPattern, getTestObjectGroups, sg, gmPopulation, sodertornsmodellen } from './definitions';
-import { DdfCsvReaderTestObject, WsNewServerTestObject } from './test-objects';
+import { DdfCsvReaderTestObject, WsDevServerTestObject, WsNewServerTestObject } from './test-objects';
 import { TestSuitesComplete } from './test-suites-complete';
 
 export const conceptsTestSuitesComplete: TestSuitesComplete = {
@@ -67,7 +67,7 @@ export const conceptsTestSuitesComplete: TestSuitesComplete = {
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite().forDataSuite(sodertornsmodellen).withTitle('recent 1')
       .withRecordsCount(595)
-      .postponeFor('due to query error', WsNewServerTestObject, DdfCsvReaderTestObject)
+      .postponeFor('due to query error', WsNewServerTestObject, DdfCsvReaderTestObject, WsDevServerTestObject)
       .withInputData({
         select: {
           key: [
@@ -85,7 +85,7 @@ export const conceptsTestSuitesComplete: TestSuitesComplete = {
     new TestSuite()
       .forDataSuite(sodertornsmodellen)
       .withTitle('recent 2')
-      .postponeFor('due to query error', WsNewServerTestObject, DdfCsvReaderTestObject)
+      .postponeFor('due to query error', WsNewServerTestObject, DdfCsvReaderTestObject, WsDevServerTestObject)
       .withRecordsCount(595)
       .withInputData({
         select: {
@@ -111,7 +111,7 @@ export const conceptsTestSuitesComplete: TestSuitesComplete = {
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
       .forDataSuite(gmPopulation)
-      .postponeFor('due to query error', WsNewServerTestObject, DdfCsvReaderTestObject)
+      .postponeFor('due to query error', WsNewServerTestObject, DdfCsvReaderTestObject, WsDevServerTestObject)
       .withTitle('recent 3')
       .withRecordsCount(6)
       .withInputData({
