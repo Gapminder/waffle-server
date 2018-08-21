@@ -1,4 +1,4 @@
-import { printSummaryTable, runTests, TestSuite } from 'bb-tests-provider/dist';
+import { printSummaryTable, runTests, TestSuite } from 'bb-tests-provider';
 import { GeneralAssertPattern, getTestObjectGroups, sg, presentationSet, sankey, sodertornsmodellen, gmPopulationBig } from './definitions';
 import { TestSuitesComplete } from './test-suites-complete';
 

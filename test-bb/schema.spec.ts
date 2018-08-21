@@ -1,7 +1,7 @@
-import { printSummaryTable, runTests, TestSuite } from 'bb-tests-provider/dist';
+import { printSummaryTable, runTests, TestSuite } from 'bb-tests-provider';
 import { GeneralAssertPattern, getTestObjectGroups, sg, sankey } from './definitions';
-import { DdfCsvReaderTestObject, WsProdServerTestObject } from './test-objects';
-import { TestSuitesComplete } from "./test-suites-complete";
+import { DdfCsvReaderTestObject, WsNewServerTestObject } from './test-objects';
+import { TestSuitesComplete } from './test-suites-complete';
 
 export const schemaConceptsTestSuitesComplete: TestSuitesComplete = {
   title: 'Schema supporting for concepts',
@@ -63,7 +63,7 @@ export const schemaDatapointsTestSuitesComplete: TestSuitesComplete = {
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
       .forDataSuite(sg)
-      .postponeFor('performance and functionality should be considered', DdfCsvReaderTestObject, WsProdServerTestObject)
+      .postponeFor('performance and functionality should be considered', DdfCsvReaderTestObject, WsNewServerTestObject)
       .withTitle('should max-min response be expected')
       .withRecordsCount(0)
       .withInputData({
@@ -78,7 +78,7 @@ export const schemaDatapointsTestSuitesComplete: TestSuitesComplete = {
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
       .forDataSuite(sankey)
-      .postponeFor('performance and functionality should be considered', DdfCsvReaderTestObject, WsProdServerTestObject)
+      .postponeFor('performance and functionality should be considered', DdfCsvReaderTestObject, WsNewServerTestObject)
       .withTitle('simple max-min test')
       .withRecordsCount(0)
       .withInputData({
@@ -99,7 +99,7 @@ export const schemaGeneralTestSuitesComplete: TestSuitesComplete = {
   testSuites: [
     new TestSuite()
       .forDataSuite(sg)
-      .postponeFor('this is an issue, should be resolved later', DdfCsvReaderTestObject, WsProdServerTestObject)
+      .postponeFor('this is an issue, should be resolved later', DdfCsvReaderTestObject, WsNewServerTestObject)
       .withTitle('simple test')
       .withRecordsCount(0)
       .withInputData({

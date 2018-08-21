@@ -1,4 +1,4 @@
-import { printSummaryTable, runTests, TestSuite } from 'bb-tests-provider/dist';
+import { printSummaryTable, runTests, TestSuite } from 'bb-tests-provider';
 import { GeneralAssertPattern, JustAnErrorAssertPattern, sg, getTestObjectGroups } from './definitions';
 
 xdescribe('Additional concepts supporting', () => {

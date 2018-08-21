@@ -1,4 +1,4 @@
-import { printSummaryTable, runTests, TestSuite } from 'bb-tests-provider/dist';
+import { printSummaryTable, runTests, TestSuite } from 'bb-tests-provider';
 import {
   GeneralAssertPattern,
   getTestObjectGroups,
@@ -12,7 +12,7 @@ import {
   staticAssets,
   sgMixEntity
 } from './definitions';
-import { WsProdServerTestObject } from './test-objects';
+import { WsNewServerTestObject } from './test-objects';
 import { TestSuitesComplete } from './test-suites-complete';
 
 export const datapointsTestSuitesComplete: TestSuitesComplete = {
@@ -80,7 +80,7 @@ export const datapointsTestSuitesComplete: TestSuitesComplete = {
         force: true,
         dataset: sg.getDataset()
       })
-      .postponeFor('it should be serious refactoring for query processing: filter results after merging', WsProdServerTestObject)
+      .postponeFor('it should be serious refactoring for query processing: filter results after merging', WsNewServerTestObject)
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
       .forDataSuite(sg)

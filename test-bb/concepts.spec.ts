@@ -1,6 +1,6 @@
-import { printSummaryTable, runTests, TestSuite } from 'bb-tests-provider/dist';
+import { printSummaryTable, runTests, TestSuite } from 'bb-tests-provider';
 import { GeneralAssertPattern, getTestObjectGroups, sg, gmPopulation, sodertornsmodellen } from './definitions';
-import { WsProdServerTestObject } from './test-objects';
+import { DdfCsvReaderTestObject, WsNewServerTestObject } from './test-objects';
 import { TestSuitesComplete } from './test-suites-complete';
 
 export const conceptsTestSuitesComplete: TestSuitesComplete = {
@@ -67,6 +67,7 @@ export const conceptsTestSuitesComplete: TestSuitesComplete = {
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite().forDataSuite(sodertornsmodellen).withTitle('recent 1')
       .withRecordsCount(595)
+      .postponeFor('due to query error', WsNewServerTestObject, DdfCsvReaderTestObject)
       .withInputData({
         select: {
           key: [
@@ -84,7 +85,7 @@ export const conceptsTestSuitesComplete: TestSuitesComplete = {
     new TestSuite()
       .forDataSuite(sodertornsmodellen)
       .withTitle('recent 2')
-      .postponeFor('WS has null instead empty strings and populated json instead json string', WsProdServerTestObject)
+      .postponeFor('due to query error', WsNewServerTestObject, DdfCsvReaderTestObject)
       .withRecordsCount(595)
       .withInputData({
         select: {
@@ -110,6 +111,7 @@ export const conceptsTestSuitesComplete: TestSuitesComplete = {
       .withAssertPattern(GeneralAssertPattern),
     new TestSuite()
       .forDataSuite(gmPopulation)
+      .postponeFor('due to query error', WsNewServerTestObject, DdfCsvReaderTestObject)
       .withTitle('recent 3')
       .withRecordsCount(6)
       .withInputData({
@@ -138,7 +140,7 @@ export const conceptsTestSuitesComplete: TestSuitesComplete = {
     new TestSuite()
       .forDataSuite(sg)
       .withTitle('recent 4')
-      .postponeFor('WS has null instead empty strings and populated json instead json string', WsProdServerTestObject)
+      .postponeFor('WS has null instead empty strings and populated json instead json string', WsNewServerTestObject)
       .withRecordsCount(595)
       .withInputData({
         select: {

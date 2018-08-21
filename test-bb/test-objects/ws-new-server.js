@@ -1,10 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const dist_1 = require("bb-tests-provider/dist");
+const bb_tests_provider_1 = require("bb-tests-provider");
 const vizabi_ws_reader_node_1 = require("./ws-reader/vizabi-ws-reader-node");
-class WsProdServerTestObject extends dist_1.AbstractTestObject {
+class WsNewServerTestObject extends bb_tests_provider_1.AbstractTestObject {
     getTitle() {
-        return 'WS prod';
+        return 'NEW WS local';
     }
     getObject() {
         return vizabi_ws_reader_node_1.WsReader.getReader();
@@ -16,5 +16,5 @@ class WsProdServerTestObject extends dist_1.AbstractTestObject {
         return 'init';
     }
 }
-exports.WsProdServerTestObject = WsProdServerTestObject;
-//# sourceMappingURL=ws-prod-server.js.map
+exports.WsNewServerTestObject = WsNewServerTestObject;
+//# sourceMappingURL=ws-new-server.js.map

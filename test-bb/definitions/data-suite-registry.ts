@@ -1,4 +1,4 @@
-import { DataSuite } from 'bb-tests-provider/dist';
+import { DataSuite } from 'bb-tests-provider';
 
 export const sg = new DataSuite('sg', 'Systema Globalis').withDatasetNick('readers-test-ds-systema-globalis').withGitRepoOwner('buchslava');
 export const presentationSet = new DataSuite('presentationSet', 'Presentation Set').withDatasetNick('readers-test-ds-presentation-set').withGitRepoOwner('buchslava');

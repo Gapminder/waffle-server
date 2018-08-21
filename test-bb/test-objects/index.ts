@@ -1,2 +1,2 @@
 export { DdfCsvReaderTestObject } from './ddf-csv-reader';
-export { WsProdServerTestObject } from './ws-prod-server';
+export { WsNewServerTestObject } from './ws-new-server';

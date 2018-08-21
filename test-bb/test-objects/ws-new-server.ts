@@ -1,9 +1,9 @@
-import { AbstractTestObject } from 'bb-tests-provider/dist';
+import { AbstractTestObject } from 'bb-tests-provider';
 import { WsReader } from './ws-reader/vizabi-ws-reader-node';
 
-export class WsProdServerTestObject extends AbstractTestObject {
+export class WsNewServerTestObject extends AbstractTestObject {
   getTitle(): string {
-    return 'WS prod';
+    return 'NEW WS local';
   }
 
   getObject() {
