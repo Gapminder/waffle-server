@@ -37,7 +37,13 @@ const UrlonParserAsync: Function = async.asyncify((query: string) => {
   return parsedQuery;
 });
 
-const parseJsonAsync: Function = async.asyncify((query: string) => JSON.parse(decodeURIComponent(query)));
+const JsonParserAsync: Function = async.asyncify((query: string) => JSON.parse(decodeURIComponent(query)));
+
+
+const parser = {
+  urlon: UrlonParserAsync,
+  json: JsonParserAsync
+};
 
 export {
   getCacheConfig,
@@ -45,8 +51,7 @@ export {
   trackingRequestTime,
   shareConfigWithRoute,
   bodyFromUrlQuery,
-  parseJsonFromUrlQuery,
-  parseUrlonFromUrlQuery,
+  parseQueryFromUrlQuery,
   bodyFromUrlAssets,
   toDataResponse,
   toErrorResponse,
@@ -74,25 +79,21 @@ function shareConfigWithRoute(config: object, req: WSRequest, res: express.Respo
 }
 
 function parseJsonFromUrlQuery(req: WSRequest, res: express.Response, next: express.NextFunction): void {
-  const parsedUrl = url.parse(req.url);
-
-  parseJsonAsync(_.get(parsedUrl, 'query', parsedUrl), (error: string, parsedQuery: any) => {
-    logger.info({ ddfqlRaw: parsedUrl });
-
-    if (error) {
-      res.json(toErrorResponse(`${responseMessages.INCORRECT_QUERY_FORMAT}: ${error}`, req, 'bodyFromUrlQuery'));
-    } else {
-      req.body = parsedQuery;
-      return next();
-    }
-  });
 }
 
-function parseUrlonFromUrlQuery(req: WSRequest, res: express.Response, next: express.NextFunction): void {
+function parseQueryFromUrlQuery(req: WSRequest, res: express.Response, next: express.NextFunction): void {
   const parsedUrl = url.parse(req.url);
+  const query: string = _.isString(parsedUrl) ? parsedUrl : _.get(parsedUrl, 'query');
+  let queryType = 'json';
 
-  UrlonParserAsync(_.get(parsedUrl, 'query', parsedUrl), (error: string, parsedQuery: any) => {
-    logger.info({ ddfqlRaw: parsedUrl });
+  try {
+    JSON.parse(query);
+  } catch (error) {
+    queryType = 'urlon';
+  }
+
+  parser[queryType](query, (error: string, parsedQuery: any) => {
+    logger.info({ ddfqlRaw: parsedUrl, queryType });
 
     if (error) {
       res.json(toErrorResponse(`${responseMessages.INCORRECT_QUERY_FORMAT}: ${error}`, req, 'bodyFromUrlQuery'));
@@ -107,7 +108,7 @@ function bodyFromUrlQuery(req: WSRequest, res: express.Response, next: express.N
   const query = _.get(req.query, 'query', null);
   const queryType = query ? 'JSON' : 'URLON';
   req.queryParser = query
-    ? { parse: parseJsonAsync, query, queryType }
+    ? { parse: JsonParserAsync, query, queryType }
     : { parse: UrlonParserAsync, query: url.parse(req.url).query, queryType };
 
   req.queryParser.parse(req.queryParser.query, (error: string, parsedQuery: any) => {

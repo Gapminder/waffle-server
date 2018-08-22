@@ -139,19 +139,11 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
 
   router.use(cors());
 
-  router.get('/ql/json',
+  router.get('/ql',
     compression(),
     routeUtils.trackingRequestTime,
     routeUtils.shareConfigWithRoute.bind(routeUtils, config),
-    routeUtils.parseJsonFromUrlQuery,
-    getMongolessDdfStats
-  );
-
-  router.get('/ql/urlon',
-    compression(),
-    routeUtils.trackingRequestTime,
-    routeUtils.shareConfigWithRoute.bind(routeUtils, config),
-    routeUtils.parseUrlonFromUrlQuery,
+    routeUtils.parseQueryFromUrlQuery,
     getMongolessDdfStats
   );
 
