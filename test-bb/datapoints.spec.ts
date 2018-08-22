@@ -13,7 +13,9 @@ import {
   sgMixEntity
 } from './definitions';
 import { WsNewServerTestObject } from './test-objects';
-import { TestSuitesComplete } from './test-suites-complete';
+import { TestSuitesComplete } from './definitions/test-suites-complete';
+
+import { testsOptions } from './answers-config';
 
 export const datapointsTestSuitesComplete: TestSuitesComplete = {
   title: 'Datapoints supporting',
@@ -3883,5 +3885,5 @@ describe(datapointsTestSuitesComplete.title, () => {
     printSummaryTable(datapointsTestSuitesComplete.testSuites, aggregatedData);
   });
 
-  runTests(getTestObjectGroups, datapointsTestSuitesComplete.testSuites, aggregatedData);
+  runTests(getTestObjectGroups, datapointsTestSuitesComplete.testSuites, aggregatedData, testsOptions);
 });

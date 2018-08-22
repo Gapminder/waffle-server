@@ -1,7 +1,8 @@
 import { printSummaryTable, runTests, TestSuite } from 'bb-tests-provider';
 import { GeneralAssertPattern, getTestObjectGroups, sg, gmPopulation, sodertornsmodellen } from './definitions';
 import { DdfCsvReaderTestObject, WsDevServerTestObject, WsNewServerTestObject } from './test-objects';
-import { TestSuitesComplete } from './test-suites-complete';
+import { TestSuitesComplete } from './definitions/test-suites-complete';
+import { testsOptions } from './answers-config';
 
 export const conceptsTestSuitesComplete: TestSuitesComplete = {
   title: 'Concepts supporting',
@@ -237,5 +238,5 @@ describe(conceptsTestSuitesComplete.title, () => {
     printSummaryTable(conceptsTestSuitesComplete.testSuites, aggregatedData);
   });
 
-  runTests(getTestObjectGroups, conceptsTestSuitesComplete.testSuites, aggregatedData);
+  runTests(getTestObjectGroups, conceptsTestSuitesComplete.testSuites, aggregatedData, testsOptions);
 });

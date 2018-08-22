@@ -1,7 +1,8 @@
 import { printSummaryTable, runTests, TestSuite } from 'bb-tests-provider';
 import { GeneralAssertPattern, getTestObjectGroups, sg, sankey } from './definitions';
 import { DdfCsvReaderTestObject, WsNewServerTestObject } from './test-objects';
-import { TestSuitesComplete } from './test-suites-complete';
+import { TestSuitesComplete } from './definitions/test-suites-complete';
+import { testsOptions } from './answers-config';
 
 export const schemaConceptsTestSuitesComplete: TestSuitesComplete = {
   title: 'Schema supporting for concepts',
@@ -121,7 +122,7 @@ describe('Schema supporting', () => {
       printSummaryTable(schemaConceptsTestSuitesComplete.testSuites, aggregatedData);
     });
 
-    runTests(getTestObjectGroups, schemaConceptsTestSuitesComplete.testSuites, aggregatedData);
+    runTests(getTestObjectGroups, schemaConceptsTestSuitesComplete.testSuites, aggregatedData, testsOptions);
   });
 
   describe(schemaEntitiesTestSuitesComplete.title, () => {
@@ -131,7 +132,7 @@ describe('Schema supporting', () => {
       printSummaryTable(schemaEntitiesTestSuitesComplete.testSuites, aggregatedData);
     });
 
-    runTests(getTestObjectGroups, schemaEntitiesTestSuitesComplete.testSuites, aggregatedData);
+    runTests(getTestObjectGroups, schemaEntitiesTestSuitesComplete.testSuites, aggregatedData, testsOptions);
   });
 
   describe(schemaDatapointsTestSuitesComplete.title, () => {
@@ -141,7 +142,7 @@ describe('Schema supporting', () => {
       printSummaryTable(schemaDatapointsTestSuitesComplete.testSuites, aggregatedData);
     });
 
-    runTests(getTestObjectGroups, schemaDatapointsTestSuitesComplete.testSuites, aggregatedData);
+    runTests(getTestObjectGroups, schemaDatapointsTestSuitesComplete.testSuites, aggregatedData, testsOptions);
   });
 
   describe(schemaGeneralTestSuitesComplete.title, () => {
@@ -151,6 +152,6 @@ describe('Schema supporting', () => {
       printSummaryTable(schemaGeneralTestSuitesComplete.testSuites, aggregatedData);
     });
 
-    runTests(getTestObjectGroups, schemaGeneralTestSuitesComplete.testSuites, aggregatedData);
+    runTests(getTestObjectGroups, schemaGeneralTestSuitesComplete.testSuites, aggregatedData, testsOptions);
   });
 });

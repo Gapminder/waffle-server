@@ -6,6 +6,7 @@
 *.js
 *.js.map
 *.d.ts
+*.tmp
 
 !**/.gitkeep
 

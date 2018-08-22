@@ -1,12 +1,12 @@
-import { conceptsTestSuitesComplete } from './concepts.spec';
-import { entitiesTestSuitesComplete } from './entities.spec';
-import { datapointsTestSuitesComplete } from './datapoints.spec';
+import { conceptsTestSuitesComplete } from '../concepts.spec';
+import { entitiesTestSuitesComplete } from '../entities.spec';
+import { datapointsTestSuitesComplete } from '../datapoints.spec';
 import {
   schemaConceptsTestSuitesComplete,
   schemaEntitiesTestSuitesComplete,
   schemaDatapointsTestSuitesComplete,
   schemaGeneralTestSuitesComplete
-} from './schema.spec';
+} from '../schema.spec';
 
 export const testSuitesData = [
   conceptsTestSuitesComplete,

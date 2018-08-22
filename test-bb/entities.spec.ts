@@ -1,6 +1,7 @@
 import { printSummaryTable, runTests, TestSuite } from 'bb-tests-provider';
 import { GeneralAssertPattern, getTestObjectGroups, sg, presentationSet, sankey, sodertornsmodellen, gmPopulationBig } from './definitions';
-import { TestSuitesComplete } from './test-suites-complete';
+import { TestSuitesComplete } from './definitions/test-suites-complete';
+import { testsOptions } from './answers-config';
 
 export const entitiesTestSuitesComplete: TestSuitesComplete = {
   title: 'Entities supporting',
@@ -406,5 +407,5 @@ describe(entitiesTestSuitesComplete.title, () => {
     printSummaryTable(entitiesTestSuitesComplete.testSuites, aggregatedData);
   });
 
-  runTests(getTestObjectGroups, entitiesTestSuitesComplete.testSuites, aggregatedData);
+  runTests(getTestObjectGroups, entitiesTestSuitesComplete.testSuites, aggregatedData, testsOptions);
 });
