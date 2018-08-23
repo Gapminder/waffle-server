@@ -11,6 +11,7 @@ export {
   sgMixEntity,
   staticAssets,
   gmStaticAssets,
-  sodertornsmodellen
+  sodertornsmodellen,
+  wsTesting
 } from './data-suite-registry';
 export { getTestObjectGroups } from './test-object-groups';

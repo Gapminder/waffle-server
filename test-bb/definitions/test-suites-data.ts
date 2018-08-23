@@ -1,6 +1,8 @@
 import { conceptsTestSuitesComplete } from '../concepts.spec';
 import { entitiesTestSuitesComplete } from '../entities.spec';
 import { datapointsTestSuitesComplete } from '../datapoints.spec';
+import { conceptsAgTestSuitesCompletes } from '../ag-concepts.spec';
+import { entitiesAgTestSuitesCompletes } from '../ag-entities.spec';
 import {
   schemaConceptsTestSuitesComplete,
   schemaEntitiesTestSuitesComplete,
@@ -15,5 +17,7 @@ export const testSuitesData = [
   schemaConceptsTestSuitesComplete,
   schemaEntitiesTestSuitesComplete,
   schemaDatapointsTestSuitesComplete,
-  schemaGeneralTestSuitesComplete
+  schemaGeneralTestSuitesComplete,
+  ...conceptsAgTestSuitesCompletes,
+  ...entitiesAgTestSuitesCompletes
 ];

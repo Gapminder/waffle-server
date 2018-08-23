@@ -10,7 +10,8 @@ import {
   sgMixEntity,
   staticAssets,
   gmStaticAssets,
-  sodertornsmodellen
+  sodertornsmodellen,
+  wsTesting
 } from './data-suite-registry';
 import { DdfCsvReaderTestObject, WsDevServerTestObject, WsNewServerTestObject } from '../test-objects';
 import { chain, isEmpty, mapValues } from 'lodash';
@@ -19,7 +20,7 @@ import { GitUtils } from '../../ws.routes/ddfql/git-utils';
 import { DataSuite } from 'bb-tests-provider';
 
 const wsDevPath = 'https://waffle-server-dev.gapminderdev.org/api/ddf/ml-ql';
-const wsNewPath = 'http://localhost:3000/api/ddf/ql/urlon';
+const wsNewPath = 'http://localhost:3000/api/ddf/ql';
 const fixturesPath = './test-bb/fixtures';
 const datasetsConfig = chain(repositoryDescriptors)
   .cloneDeep()
@@ -40,9 +41,9 @@ const datasetsConfig = chain(repositoryDescriptors)
   })
   .value();
 
-function getTestObjectsForDataSuite(ds: DataSuite) {
+function getTestObjectsForDataSuite(ds: DataSuite): AbstractTestObject[] {
   return [
-    new DdfCsvReaderTestObject().forDataSuite(ds).init({path: `${fixturesPath}/${ds.datasetNick}/master-HEAD`, datasetsConfig}),
+    new DdfCsvReaderTestObject().forDataSuite(ds).init({path: `${fixturesPath}/`, datasetsConfig}),
     new WsNewServerTestObject().forDataSuite(ds).init({path: wsNewPath, dataset: ds.getDataset()}),
     new WsDevServerTestObject().forDataSuite(ds).init({path: wsDevPath, dataset: ds.getDataset()})
   ];
@@ -59,5 +60,6 @@ export const getTestObjectGroups = (): AbstractTestObject[] => [
   ...getTestObjectsForDataSuite(sgMixEntity),
   ...getTestObjectsForDataSuite(staticAssets),
   ...getTestObjectsForDataSuite(gmStaticAssets),
-  ...getTestObjectsForDataSuite(sodertornsmodellen)
+  ...getTestObjectsForDataSuite(sodertornsmodellen),
+  ...getTestObjectsForDataSuite(wsTesting)
 ];

@@ -11,3 +11,4 @@ export const sgMixEntity = new DataSuite('sgMixEntity', 'SG Mixed Entities').wit
 export const staticAssets = new DataSuite('staticAssets', 'Static Assets').withDatasetNick('readers-test-ds-static-assets').withGitRepoOwner('buchslava');
 export const gmStaticAssets = new DataSuite('gmStaticAssets', 'GM Static Assets').withDatasetNick('readers-test-ds-gm-static-assets').withGitRepoOwner('buchslava');
 export const sodertornsmodellen = new DataSuite('sodertornsmodellen', 'Sodertornsmodellen').withDatasetNick('readers-test-sodertornsmodellen').withGitRepoOwner('buchslava');
+export const wsTesting = new DataSuite('wsTesting', 'WS testing').withDatasetNick('ddf--ws-testing').withGitRepoOwner('VS-work');
