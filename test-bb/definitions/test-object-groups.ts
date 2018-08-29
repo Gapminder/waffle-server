@@ -16,15 +16,25 @@ import {
 import { DdfCsvReaderTestObject, WsDevServerTestObject, WsNewServerTestObject } from '../test-objects';
 import { chain, isEmpty, mapValues } from 'lodash';
 import { defaultRepository, defaultRepositoryBranch, defaultRepositoryCommit, repositoryDescriptors } from '../../ws.config/mongoless-repos.config';
-import { GitUtils } from '../../ws.routes/ddfql/git-utils';
 import { DataSuite } from 'bb-tests-provider';
 
 const wsDevPath = 'https://waffle-server-dev.gapminderdev.org/api/ddf/ml-ql';
 const wsNewPath = 'http://localhost:3000/api/ddf/ql';
 const fixturesPath = './test-bb/fixtures';
+const getRepositoryNameByUrl = (repoUrl: string): string => {
+  if (repoUrl.indexOf(':') === -1) {
+    return repoUrl;
+  }
+
+  try {
+    return repoUrl.split(':')[1].replace(/\.git$/, '');
+  } catch (error) {
+    return null;
+  }
+};
 const datasetsConfig = chain(repositoryDescriptors)
   .cloneDeep()
-  .mapKeys((value: object, key: string) => GitUtils.getRepositoryNameByUrl(key))
+  .mapKeys((value: object, key: string) => getRepositoryNameByUrl(key))
   .mapValues((datasetConfig: object) => {
     if (isEmpty(datasetConfig)) {
       return {master: ['HEAD']};
@@ -34,7 +44,7 @@ const datasetsConfig = chain(repositoryDescriptors)
   })
   .defaults({
     default: {
-      dataset: GitUtils.getRepositoryNameByUrl(defaultRepository),
+      dataset: getRepositoryNameByUrl(defaultRepository),
       branch: defaultRepositoryBranch,
       commit: defaultRepositoryCommit
     }

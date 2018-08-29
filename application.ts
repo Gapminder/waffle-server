@@ -2,8 +2,8 @@ import * as Config from './ws.config';
 import * as Routes from './ws.routes';
 import { logger } from './ws.config/log';
 import { ServiceLocator } from './ws.service-locator';
-import { mongolessImport } from './ws.routes/ddfql/ddfql.controller';
 import { defaultRepository, defaultRepositoryCommit } from './ws.config/mongoless-repos.config';
+import { ImportService } from './ws.services/import/import.service';
 
 export class Application {
   public listen: Function;
@@ -25,7 +25,7 @@ export class Application {
       this.config.DEFAULT_DATASET = defaultRepository;
       this.config.DEFAULT_DATASET_VERSION = defaultRepositoryCommit;
       this.listen(this.config.PORT);
-      mongolessImport(this.config);
+      (new ImportService()).importByConfig();
       logger.info(`Express server listening on port ${this.config.PORT} in ${this.config.NODE_ENV} mode`);
     } catch (startupError) {
       logger.error(startupError);

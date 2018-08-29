@@ -1,0 +1,99 @@
+[
+  {
+    "repoNickname": "open-numbers/ddf--gapminder--systema_globalis"
+  },
+  {
+    "repoNickname": "open-numbers/ddf--gapminder--systema_globalis",
+    "branch": "stage"
+  },
+  {
+    "repoNickname": "open-numbers/ddf--gapminder--systema_globalis",
+    "branch": "develop",
+    "isDefault": true
+  },
+  {
+    "repoNickname": "open-numbers/ddf--gapminder--systema_globalis",
+    "branch": "develop",
+    "hash": "3bc7bf0"
+  },
+  {
+    "repoNickname": "open-numbers/ddf--gapminder--systema_globalis",
+    "branch": "develop",
+    "hash": "ed8ed6c"
+  },
+  {
+    "repoNickname": "VS-work/ddf--ws-testing"
+  },
+  {
+    "repoNickname": "VS-work/ddf--ws-testing",
+    "branch": "master",
+    "hash": "be06a23"
+  },
+  {
+    "repoNickname": "VS-work/ddf--ws-testing",
+    "branch": "master",
+    "hash": "d9911b2"
+  },
+  {
+    "repoNickname": "VS-work/ddf--ws-testing",
+    "branch": "master",
+    "hash": "6bae063"
+  },
+  {
+    "repoNickname": "VS-work/ddf--ws-testing",
+    "branch": "master",
+    "hash": "9268712"
+  },
+  {
+    "repoNickname": "VS-work/ddf--ws-testing",
+    "branch": "master",
+    "hash": "1e8a3b8"
+  },
+  {
+    "repoNickname": "VS-work/ddf--ws-testing",
+    "branch": "master",
+    "hash": "1406026"
+  },
+  {
+    "repoNickname": "VS-work/ddf--ws-testing",
+    "branch": "master",
+    "hash": "434f8f1"
+  },
+  {
+    "repoNickname": "VS-work/ddf--ws-testing",
+    "branch": "master",
+    "hash": "a003ffc"
+  },
+  {
+    "repoNickname": "VS-work/ddf--ws-testing",
+    "branch": "master",
+    "hash": "e6ef10e"
+  },
+  {
+    "repoNickname": "VS-work/ddf--ws-testing",
+    "branch": "master",
+    "hash": "90b1e28"
+  },
+  {
+    "repoNickname": "VS-work/ddf--ws-testing",
+    "branch": "master",
+    "hash": "0f78190"
+  },
+  {
+    "repoNickname": "VS-work/ddf--ws-testing",
+    "branch": "master-twin-for-e2e"
+  },
+  {
+    "repoNickname": "VS-work/ddf--ws-testing",
+    "branch": "master-twin-for-e2e",
+    "hash": "9af6a48"
+  },
+  {
+    "repoNickname": "open-numbers/ddf--cait--historical_emissions"
+  },
+  {
+    "repoNickname": "open-numbers/ddf--open_numbers--world_development_indicators",
+    "branch": "merge-concepts",
+    "isDefault": true
+  }
+]
