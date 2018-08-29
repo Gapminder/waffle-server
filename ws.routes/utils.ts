@@ -16,6 +16,13 @@ import {
   ResponseTags,
   TelegrafService
 } from '../ws.services/telegraf.service';
+import {
+  defaultRepository,
+  defaultRepositoryBranch,
+  defaultRepositoryCommit,
+  repositoryDescriptors
+} from '../ws.config/mongoless-repos.config';
+import * as fs from 'fs';
 
 const {
   performance
@@ -140,33 +147,44 @@ function bodyFromUrlAssets(req: WSRequest, res: express.Response, next: express.
     return;
   }
 
-  commonService.findDefaultDatasetAndTransaction({appConfig: req.appConfig}, (error: any, context: any) => {
-    if (error) {
-      res.status(200).json(toErrorResponse(responseMessages.DATASET_NOT_FOUND, req));
-      return;
+  const ASSETS_EXPECTED_DIR = constants.ASSETS_EXPECTED_DIR;
+  const PATH_TO_DDF_REPOSITORIES = (req.appConfig as any).PATH_TO_DDF_REPOSITORIES;
+  const [assetPathLookup, fullFilenamePath] = datasetAssetsPathFromUrl.split(ASSETS_EXPECTED_DIR);
+
+  if (!fullFilenamePath) {
+    res.status(200).json(toErrorResponse(responseMessages.WRONG_ASSETS_DIR, req));
+    return;
+  }
+
+  let repoNickname = defaultRepository;
+  let branch = defaultRepositoryBranch;
+  let hash = defaultRepositoryCommit;
+
+  if (assetPathLookup !== 'default') {
+    const [repoOwner, repoName, branchAndHash] = _.split(assetPathLookup, '/');
+    repoNickname = `${repoOwner}/${repoName}`;
+    [branch = defaultRepositoryBranch, hash = defaultRepositoryCommit] = _.split(branchAndHash, '-');
+  }
+
+  const fullDatasetPath = path.resolve(PATH_TO_DDF_REPOSITORIES, repoNickname, `${branch}-${hash}`);
+
+  if (!fs.existsSync(fullDatasetPath)) {
+    res.status(200).json(toErrorResponse(responseMessages.DATASET_NOT_FOUND, req));
+    return;
+  }
+
+  const filepath = path.join(fullDatasetPath, ASSETS_EXPECTED_DIR, fullFilenamePath);
+  const filename = _.split(fullFilenamePath, '/').pop();
+
+  _.extend(req.body, {
+    dataset_access_token: _.get(req.query, 'dataset_access_token'),
+    assetDescriptor: {
+      filename,
+      filepath
     }
-
-    const { pathname } = url.parse(datasetAssetsPathFromUrl);
-    const isRequestedDefaultAssets = _.startsWith(req.originalUrl, `${constants.ASSETS_ROUTE_BASE_PATH}/default`);
-    const assetPathDescriptor = getAssetPathDescriptor(
-      (req.appConfig as any).PATH_TO_DDF_REPOSITORIES,
-      isRequestedDefaultAssets ? pathname.replace('default', context.dataset) : pathname,
-      isRequestedDefaultAssets && _.get(context, 'dataset')
-    );
-
-    if (assetPathDescriptor.assetsDir !== constants.ASSETS_EXPECTED_DIR) {
-      res.status(200).json(toErrorResponse(responseMessages.WRONG_ASSETS_DIR(constants.ASSETS_EXPECTED_DIR), req));
-      return;
-    }
-
-    _.extend(req.body, {
-      dataset: assetPathDescriptor.dataset,
-      dataset_access_token: _.get(req.query, 'dataset_access_token'),
-      assetPathDescriptor
-    });
-
-    return next();
   });
+
+  return next();
 }
 
 function getAssetPathDescriptor(pathToDdfRepos: string, datasetAssetPath: string, defaultDataset?: any): any {

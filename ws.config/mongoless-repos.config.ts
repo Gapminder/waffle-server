@@ -21,12 +21,14 @@ const repositoryDescriptors = {
   'git@github.com:buchslava/readers-test-ds-gm-population-big.git': {},
   'git@github.com:buchslava/readers-test-sodertornsmodellen.git': {},
   'git@github.com:open-numbers/ddf--gapminder--population.git': {
+    master: ['HEAD'],
     develop: ['HEAD'],
     stage: ['HEAD']
   },
   'git@github.com:open-numbers/ddf--cait--historical_emissions.git': {},
   'git@github.com:open-numbers/ddf--sodertornsmodellen.git': {},
   'git@github.com:open-numbers/ddf--open_numbers--world_development_indicators.git': {
+    master: ['HEAD'],
     'merge-concepts': ['HEAD']
   }
 };

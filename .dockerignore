@@ -13,3 +13,5 @@ package-lock.json
 **/*.log
 logs/*.log*
 !**/.gitkeep
+test-bb
+.gitmodules

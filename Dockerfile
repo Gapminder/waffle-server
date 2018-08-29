@@ -25,8 +25,8 @@ RUN rm -f telegraf_${TELEGRAF_VERSION}-1_${ARCH}.deb
 #install node & npm packages
 RUN curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
 RUN apt-get install -y nodejs
-RUN npm i -g shelljs
-RUN npm i -g typescript@2.5.2
+RUN npm i -g shelljs@0.8.2
+RUN npm i -g typescript@3.0.1
 
 #install dumb-init
 RUN wget -O /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.0/dumb-init_1.2.0_amd64

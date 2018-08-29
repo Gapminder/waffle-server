@@ -77,7 +77,7 @@ export function mongolessImport(config: object, repositoryName?: string): void {
       }
     });
 
-    importProcess.stderr.on('data', (data: string) => logger.info(`${data}`));
+    importProcess.stderr.on('data', (data: string) => logger.error(`${data}`));
   }
 
   if (repositoryName) {

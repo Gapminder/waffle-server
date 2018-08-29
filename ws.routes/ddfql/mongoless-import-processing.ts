@@ -1,6 +1,5 @@
 import * as path from 'path';
 import * as fsExtra from 'fs-extra';
-import { logger } from '../../ws.config/log';
 import { keys, includes } from 'lodash';
 import { repositoryDescriptors as repositoryDescriptorsSource } from '../../ws.config/mongoless-repos.config';
 import { CheckoutResult, GitUtils } from './git-utils';
@@ -47,7 +46,9 @@ function makeBranchDraft(masterRepoPath: string, thisRepoPath: string): Promise<
         return resolve(err);
       }
 
-      fsExtra.copy(masterRepoPath, thisRepoPath, (copyErr: Error) => resolve(copyErr));
+      fsExtra.copy(masterRepoPath, thisRepoPath, (copyErr: Error) => {
+        resolve(copyErr);
+      });
     });
   });
 }
@@ -58,10 +59,8 @@ async function makeBranchesDrafts(repositoryGitUrl: string, repositoryName: stri
 
   for (const branch of branches) {
     for (const commit of repositoryDescriptorsSource[repositoryGitUrl][branch]) {
-      const masterRepoPath = path.resolve(reposPath, repositoryName, 'master');
-      const thisRepoPath = commit !== 'HEAD' ?
-        path.resolve(reposPath, repositoryName, `${branch}-${commit}`) :
-        path.resolve(reposPath, repositoryName, `${branch}`);
+      const masterRepoPath = path.resolve(reposPath, repositoryName, 'master-HEAD');
+      const thisRepoPath = path.resolve(reposPath, repositoryName, `${branch}-${commit}`);
       const issue = await makeBranchDraft(masterRepoPath, thisRepoPath);
 
       if (issue) {

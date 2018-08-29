@@ -7,11 +7,11 @@ export {
 };
 
 function serveAsset(req: Request, res: Response): void {
-  const assetPathDescriptor: any = _.get(req.body, 'assetPathDescriptor');
-  if (!assetPathDescriptor) {
+  const assetDescriptor: any = _.get(req.body, 'assetDescriptor');
+  if (!assetDescriptor) {
     return res.status(200).end();
   }
 
-  res.setHeader('Content-Disposition', `attachment; filename=${assetPathDescriptor.assetName}`);
-  res.sendFile(assetPathDescriptor.path, { maxAge: constants.ASSETS_CACHE_CONTROL_MAX_AGE_IN_MILLIS });
+  res.setHeader('Content-Disposition', `attachment; filename=${assetDescriptor.filename}`);
+  res.sendFile(assetDescriptor.filepath, { maxAge: constants.ASSETS_CACHE_CONTROL_MAX_AGE_IN_MILLIS });
 }

@@ -18,6 +18,7 @@
     "coverage",
     "**/*.spec.ts",
     "**/*.int-spec.ts",
-    "node_modules"
+    "node_modules",
+    "test-bb"
   ]
 }

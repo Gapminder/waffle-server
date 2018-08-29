@@ -385,7 +385,9 @@ export function printExternalIPs(externalContext: any, cb: Function): void {
 
   logger.info({
     RESULTS: {
-      TM: `http://${TM_IP_ADDRESS}/api/ddf/ml-ql?_language=en&from=entities&animatable=time&select_key@=geo;&value@=name;;&where_$and@_un/_state:true;;;&join_;&order/_by@=rank;&dataset=open-numbers%252Fddf--gapminder--systema/_globalis%2523master`
+      ASSETS_DEFAULT: `http://${TM_IP_ADDRESS}/api/ddf/assets/default/assets/world-50m.json`,
+      ASSETS: `http://${TM_IP_ADDRESS}/api/ddf/assets/open-numbers/ddf--gapminder--systema_globalis/master/assets/world-50m.json`,
+      DDFQL: `http://${TM_IP_ADDRESS}/api/ddf/ql?_language=en&from=entities&animatable=time&select_key@=geo;&value@=name;;&where_$and@_un/_state:true;;;&join_;&order/_by@=rank;&dataset=open-numbers%252Fddf--gapminder--systema/_globalis`
     }
   });
 
