@@ -1,6 +1,9 @@
 [
   {
-    "repoNickname": "open-numbers/ddf--gapminder--systema_globalis"
+    "repoNickname": "open-numbers/ddf--gapminder--systema_globalis",
+    "branch": "master",
+    "hash": "HEAD",
+    "isDefault": true
   },
   {
     "repoNickname": "open-numbers/ddf--gapminder--systema_globalis",
@@ -8,8 +11,7 @@
   },
   {
     "repoNickname": "open-numbers/ddf--gapminder--systema_globalis",
-    "branch": "develop",
-    "isDefault": true
+    "branch": "develop"
   },
   {
     "repoNickname": "open-numbers/ddf--gapminder--systema_globalis",
@@ -93,7 +95,39 @@
   },
   {
     "repoNickname": "open-numbers/ddf--open_numbers--world_development_indicators",
-    "branch": "merge-concepts",
-    "isDefault": true
+    "branch": "merge-concepts"
+  },
+  {
+    "repoNickname": "buchslava/readers-test-ds-bubbles-3"
+  },
+  {
+    "repoNickname": "buchslava/readers-test-ds-gm-population-big"
+  },
+  {
+    "repoNickname": "buchslava/readers-test-ds-gm-population"
+  },
+  {
+    "repoNickname": "buchslava/readers-test-ds-gm-static-assets"
+  },
+  {
+    "repoNickname": "buchslava/readers-test-ds-presentation-set"
+  },
+  {
+    "repoNickname": "buchslava/readers-test-ds-sankey"
+  },
+  {
+    "repoNickname": "buchslava/readers-test-ds-sg-mix-entity"
+  },
+  {
+    "repoNickname": "buchslava/readers-test-ds-static-assets"
+  },
+  {
+    "repoNickname": "buchslava/readers-test-ds-systema-globalis-tiny"
+  },
+  {
+    "repoNickname": "buchslava/readers-test-ds-systema-globalis"
+  },
+  {
+    "repoNickname": "buchslava/readers-test-sodertornsmodellen"
   }
 ]
