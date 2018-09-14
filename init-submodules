@@ -1,3 +1,5 @@
+#!/bin/bash
+
 git submodule add -b master -f --name readers-test-ds-systema-globalis -- git@github.com:buchslava/readers-test-ds-systema-globalis.git ./test-bb/fixtures/buchslava/readers-test-ds-systema-globalis/master-HEAD
 git submodule add -b master -f --name readers-test-ds-presentation-set -- git@github.com:buchslava/readers-test-ds-presentation-set.git ./test-bb/fixtures/buchslava/readers-test-ds-presentation-set/master-HEAD
 git submodule add -b master -f --name readers-test-ds-sankey -- git@github.com:buchslava/readers-test-ds-sankey.git ./test-bb/fixtures/buchslava/readers-test-ds-sankey/master-HEAD

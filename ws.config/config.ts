@@ -1,6 +1,7 @@
 import * as _ from 'lodash';
 import {environment as DEFAULT_CONFIG} from './environment.config';
-import * as packageJson from '../package.json';
+import * as path from "path";
+const packageJson = require('../package.json');
 
 const PRODUCTION_ENVS = new Set(['stage', 'production']);
 
@@ -20,6 +21,7 @@ const config: any = {
 
   PATH_TO_DIFF_DDF_RESULT_FILE: process.env.PATH_TO_DIFF_DDF_RESULT_FILE || DEFAULT_CONFIG.PATH_TO_DIFF_DDF_RESULT_FILE,
   PATH_TO_DDF_REPOSITORIES: process.env.PATH_TO_DDF_REPOSITORIES || DEFAULT_CONFIG.PATH_TO_DDF_REPOSITORIES,
+  PATH_TO_TRAVIS_KEY: process.env.PATH_TO_TRAVIS_KEY || DEFAULT_CONFIG.PATH_TO_TRAVIS_KEY,
 
   DATASET_NAME: process.env.DATASET_NAME,
   CLEAN_EXPORT: process.env.CLEAN_EXPORT || DEFAULT_CONFIG.CLEAN_EXPORT,

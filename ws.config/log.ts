@@ -8,7 +8,7 @@ const logger = bunyan.createLogger({
   name: `WS_${config.LOG_MARKER}`,
   serializers: _.extend({
     obj: objSerializer,
-    ddfqlRaw: objSerializer,
+    ddfqlRaw: objSerializer
   }, bunyan.stdSerializers),
   streams: getBunyanStreams(config.NODE_ENV)
 });
@@ -60,7 +60,7 @@ class LoggerFactory {
       name: `WS_${logMarker || config.LOG_MARKER}`,
       serializers: _.extend({
         obj: this.objSerializer,
-        ddfqlRaw: this.objSerializer,
+        ddfqlRaw: this.objSerializer
       }, bunyan.stdSerializers),
       streams: this.getBunyanStreams(environment || config.NODE_ENV, loggerName)
     });

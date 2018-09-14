@@ -7,7 +7,7 @@
     "preserveConstEnums": true,
     "removeComments": true,
     "sourceMap": true,
-    "typeRoots": ["node_modules/@types", "node_modules/bunyan-middleware/index.d.ts"]
+    "typeRoots": ["node_modules/@types", "node_modules/bunyan-middleware/index.d.ts", "node_modules/vizabi-ddfcsv-reader/lib/src/index.d.ts"]
   },
   "lib": [
     "es2017",

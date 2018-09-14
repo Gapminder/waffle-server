@@ -26,6 +26,7 @@ dumps
 # Directory for GitHub repositories
 ddf/*
 ws-import/*
+ws-repos/*
 
 # forever
 forever/*.*
@@ -43,7 +44,7 @@ deployment/**/tmp/*.*
 deployment/**/deployment_*.json
 deployment/**/build.*.sh
 deployment/**/*.txt
-
+**/dev-waffle-server-*.json
 ws.config/travis.pk
 
 test-bb/fixtures

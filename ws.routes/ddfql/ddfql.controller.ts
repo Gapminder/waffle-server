@@ -6,7 +6,7 @@ import { Application, Response, Request, NextFunction } from 'express';
 import * as compression from 'compression';
 import { logger } from '../../ws.config/log';
 import * as routeUtils from '../utils';
-import { getDDFCsvReaderObject } from 'vizabi-ddfcsv-reader';
+import { getDDFCsvReaderObject } from '../../node_modules/vizabi-ddfcsv-reader/lib/src';
 import { ServiceLocator } from '../../ws.service-locator/index';
 import {
   defaultRepository,
@@ -20,6 +20,7 @@ import * as NodeRSA from 'node-rsa';
 import { spawn } from 'child_process';
 import { repositoryDescriptors as repositoryDescriptorsSource } from '../../ws.config/mongoless-repos.config';
 import { toDataResponse, toErrorResponse, WSRequest } from '../utils';
+import { config } from '../../ws.config/config';
 
 const getRepositoryNameByUrl = (repoUrl: string): string => {
   if (repoUrl.indexOf(':') === -1) {
@@ -33,7 +34,7 @@ const getRepositoryNameByUrl = (repoUrl: string): string => {
   }
 };
 const repositoriesUnderImporting = new Set<string>();
-const pk = fs.readFileSync(path.resolve(__dirname, '..', '..', 'ws.config', 'travis.pk'));
+const pk = fs.readFileSync(config.PATH_TO_TRAVIS_KEY);
 
 let importProcess;
 let repositoryStateDescriptors = {};

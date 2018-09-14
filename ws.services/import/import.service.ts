@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as threads from 'threads';
 import { isEmpty, keys } from 'lodash';
 import { logger } from '../../ws.config/log';
-import { Subject, Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { RepoDescriptor } from './repo-descriptor';
 import { DataSetManager } from './dataset-manager';
 import 'rxjs/add/operator/mergeMap';
@@ -35,7 +35,7 @@ const importDataSet = async (repoDescriptor: RepoDescriptor) => {
     let res;
 
     thread
-      .send({repoDescriptor})
+      .send({ repoDescriptor })
       .on('message', async (message: any) => {
         try {
           const dataSetManager = new DataSetManager(message.repoDescriptor, reposRootPath, importRootPath);
@@ -65,13 +65,13 @@ export class ImportService {
   private resultOfImport: Observable<any>;
   private issues: string[] = [];
 
-  public constructor() {
+  public constructor () {
     this.resultOfImport = this.prepareImportQueue.mergeMap((dataSetManager: DataSetManager) => importDataSet(dataSetManager), 1);
     this.resultOfImport.subscribe((imported: any) => logger.info(imported));
     this.validateConfig();
   }
 
-  public importByConfig(): void {
+  public importByConfig (): void {
     if (this.isConfigValid()) {
       for (const repoDescriptor of repoDescriptors) {
         this.prepareImportQueue.next(repoDescriptor);
@@ -79,11 +79,11 @@ export class ImportService {
     }
   }
 
-  public isConfigValid(): boolean {
+  public isConfigValid (): boolean {
     return isEmpty(this.issues);
   }
 
-  private validateConfig(): void {
+  private validateConfig (): void {
     this.issues = [];
 
     const defaults = {};
@@ -97,20 +97,24 @@ export class ImportService {
       }
 
       if (repoDescriptor.isDefault) {
-        if (!defaults[repoDescriptor.repoNickname]) {
-          defaults[repoDescriptor.repoNickname] = 0;
+        if (!defaults[ repoDescriptor.repoNickname ]) {
+          defaults[ repoDescriptor.repoNickname ] = 0;
         }
 
-        defaults[repoDescriptor.repoNickname]++;
+        defaults[ repoDescriptor.repoNickname ]++;
       }
 
       recordNo++;
     }
 
     const defaultsIssues = keys(defaults)
-      .filter((key: string) => defaults[key] > 1)
-      .map((key: string) => `more than one default for ${defaults[key]}`);
+      .filter((key: string) => defaults[ key ] > 1)
+      .map((key: string) => `more than one default for ${defaults[ key ]}`);
 
     this.issues.push(...defaultsIssues);
   }
 }
+
+const importService = new ImportService();
+
+export { importService };
