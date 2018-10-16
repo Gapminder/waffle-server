@@ -3,6 +3,7 @@ import * as sinon from 'sinon';
 
 import * as AssetsController from '../../../ws.routes/assets/assets.controller';
 import { constants } from '../../../ws.utils/constants';
+import * as vizabiDdfcsvReader from 'vizabi-ddfcsv-reader/lib/src';
 
 const sandbox = sinon.createSandbox();
 
@@ -10,7 +11,7 @@ describe('AssetsController', () => {
 
   afterEach(() => sandbox.restore());
 
-  it('sends 404 when there is no assetPathDescriptor attached to the request body', (done: Function) => {
+  it('sends 404 when there is no repositoryPath attached to the request body', (done: Function) => {
     const req: any = {};
     const res: any = {
       _status: -1,
@@ -27,27 +28,40 @@ describe('AssetsController', () => {
     AssetsController.serveAsset(req, res);
   });
 
-  it('sends file when there is a valid assetPathDescriptor in the request body', () => {
+  it('sends file when there is a valid repositoryPath in the request body', async () => {
+    const data: any = {
+      test: 'test'
+    };
+
+    sandbox.stub(vizabiDdfcsvReader, 'getS3FileReaderObject').returns({
+      init: sandbox.stub(),
+      getAsset: sandbox.stub().resolves(data)
+    });
+
     const req: any = {
       body: {
-        assetPathDescriptor: {
-          path: '/far/far/galaxy/deathStar.json',
-          assetName: 'deathStar.json'
-        }
+        repositoryPath: '/far/far',
+        filepath: '/galaxy/deathStar.json',
+        filename: 'deathStar.json'
       }
     };
 
     const res: any = {
       setHeader: sandbox.stub(),
-      sendFile: sandbox.stub()
+      json: sandbox.stub(),
+      set: sandbox.stub(),
+      send: sandbox.stub()
     };
 
-    AssetsController.serveAsset(req, res);
+    await AssetsController.serveAsset(req, res);
 
-    sinon.assert.calledOnce(res.setHeader);
-    sinon.assert.calledOnce(res.sendFile);
+    sinon.assert.calledTwice(res.setHeader);
+    sinon.assert.calledOnce(res.set);
+    sinon.assert.calledOnce(res.send);
 
     sinon.assert.calledWith(res.setHeader, 'Content-Disposition', `attachment; filename=deathStar.json`);
-    sinon.assert.calledWith(res.sendFile, '/far/far/galaxy/deathStar.json', { maxAge: constants.ASSETS_CACHE_CONTROL_MAX_AGE_IN_MILLIS });
+    sinon.assert.calledWith(res.setHeader, 'Content-type', 'text/plain');
+    sinon.assert.calledWith(res.set, 'Cache-Control', `public, max-age=${constants.ASSETS_CACHE_CONTROL_MAX_AGE_IN_MILLIS}, s-maxage=${constants.ASSETS_CACHE_CONTROL_MAX_AGE_IN_MILLIS}`);
+    sinon.assert.calledWith(res.send, data);
   });
 });

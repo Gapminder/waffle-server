@@ -1,8 +1,6 @@
-import * as _ from 'lodash';
-import * as async from 'async';
-import { ExecOptions, ExecOutputReturnValue } from 'shelljs';
+import { ExecOptions } from 'shelljs';
 
-import { getGCloudArguments, runShellCommand } from './common.helpers';
+import * as commonHelpers from '../deployment/common.helpers';
 
 export function removeImageTM(externalContext: any, cb: Function): void {
   const { TM_INSTANCE_VARIABLES: { IMAGE_URL }, PROJECT_ID } = externalContext;
@@ -10,7 +8,7 @@ export function removeImageTM(externalContext: any, cb: Function): void {
   const command = `gcloud container images delete ${IMAGE_URL} --project=${PROJECT_ID} --quiet`;
   const options: ExecOptions = {};
 
-  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+  return commonHelpers.runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
 export function removeImageNode(externalContext: any, cb: Function): void {
@@ -19,7 +17,7 @@ export function removeImageNode(externalContext: any, cb: Function): void {
   const command = `gcloud container images delete ${IMAGE_URL} --project=${PROJECT_ID} --quiet`;
   const options: ExecOptions = {};
 
-  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+  return commonHelpers.runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
 export function removeRedis(externalContext: any, cb: Function): void {
@@ -33,7 +31,7 @@ export function removeRedis(externalContext: any, cb: Function): void {
     --delete-disks=all --zone=${REDIS_ZONE} --project=${PROJECT_ID} --quiet`;
   const options: ExecOptions = {};
 
-  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+  return commonHelpers.runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
 export function releaseRedisInternalIP(externalContext: any, cb: Function): void {
@@ -49,7 +47,7 @@ export function releaseRedisInternalIP(externalContext: any, cb: Function): void
   const ADDRESS_NAME = `${ENVIRONMENT}-redis-address-${VERSION}`;
   const command = `gcloud compute addresses delete ${ADDRESS_NAME} --region=${REDIS_REGION} --project=${PROJECT_ID} --quiet`;
   const options: ExecOptions = {};
-  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+  return commonHelpers.runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
 export function removeTM(externalContext: any, cb: Function): void {
@@ -65,7 +63,7 @@ export function removeTM(externalContext: any, cb: Function): void {
     --delete-disks=all --zone=${TM_ZONE} --project=${PROJECT_ID} --quiet`;
   const options: ExecOptions = {};
 
-  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+  return commonHelpers.runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
 export function denyHttpTM(externalContext: any, cb: Function): void {
@@ -77,7 +75,7 @@ export function denyHttpTM(externalContext: any, cb: Function): void {
   const command = `gcloud compute firewall-rules delete ${FIREWALL_RULE__ALLOW_HTTP} --project=${PROJECT_ID} --quiet`;
   const options: ExecOptions = {};
 
-  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+  return commonHelpers.runShellCommand(command, options, (error: string) => cb(error, externalContext));
 
 }
 
@@ -95,7 +93,7 @@ export function releaseExternalIP(externalContext: any, cb: Function): void {
   const command = `gcloud compute addresses delete ${ADDRESS_NAME} --region=${TM_REGION} --project=${PROJECT_ID} --quiet`;
   const options: ExecOptions = {};
 
-  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+  return commonHelpers.runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
 export function removeCluster(externalContext: any, cb: Function): void {
@@ -104,5 +102,5 @@ export function removeCluster(externalContext: any, cb: Function): void {
   const command = `gcloud container clusters delete ${CLUSTER_NAME} --zone=${LB_ZONE} --project=${PROJECT_ID} --quiet`;
   const options: ExecOptions = {};
 
-  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+  return commonHelpers.runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }

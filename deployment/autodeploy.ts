@@ -181,7 +181,7 @@ export function run(): Promise<string | null> {
 
     async.waterfall([
       async.constant(context),
-      ...prepareTools,
+      // ...prepareTools,
       // setupRedisInstance,
       // buildImageTM,
       // pushImageTM,

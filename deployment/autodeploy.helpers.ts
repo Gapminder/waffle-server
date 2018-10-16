@@ -3,7 +3,7 @@ import * as async from 'async';
 import { AsyncResultCallback } from 'async';
 import { ExecOptions, ExecOutputReturnValue } from 'shelljs';
 import { DockerBuildArguments } from './interfaces';
-import { getDockerArguments, getGCloudArguments, runShellCommand } from './common.helpers';
+import * as commonHelpers from '../deployment/common.helpers';
 import { loggerFactory } from '../ws.config/log';
 
 export const pathToLoadBalancerIP = 'status.loadBalancer.ingress.0.ip';
@@ -18,7 +18,7 @@ export function setDefaultUser (externalContext: any, cb: Function): void {
   const command = `gcloud config set account ${OWNER_ACCOUNT}`;
   const options: ExecOptions = {};
 
-  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+  return commonHelpers.runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
 export function createProject (externalContext: any, cb: Function): void {
@@ -32,7 +32,7 @@ export function createProject (externalContext: any, cb: Function): void {
   const command = `gcloud projects create ${PROJECT_ID} ${ FOLDER_ID ? '--folder=' + FOLDER_ID : '' } --labels=${PROJECT_LABELS} --name=${PROJECT_ID} --enable-cloud-apis`;
   const options: ExecOptions = {};
 
-  return runShellCommand(command, options, (error: string) => {
+  return commonHelpers.runShellCommand(command, options, (error: string) => {
     if (_.includes(error, 'The project ID you specified is already in use by another project')) {
       logger.info('RESULT: So, skipping the step..');
       return cb(null, externalContext);
@@ -50,7 +50,7 @@ export function setDefaultProject (externalContext: any, cb: Function): void {
   const command = `gcloud config set project ${PROJECT_ID}`;
   const options: ExecOptions = {};
 
-  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+  return commonHelpers.runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
 export function setupAPIs (apisList: string[], options: any, externalContext: any, cb: Function): void {
@@ -66,7 +66,7 @@ export function setupAPIs (apisList: string[], options: any, externalContext: an
     const command = `gcloud services ${action} ${api}`;
     const shellOptions: ExecOptions = {};
 
-    return runShellCommand(command, shellOptions, _cb);
+    return commonHelpers.runShellCommand(command, shellOptions, _cb);
   }, (error: string) => {
     return cb(error, externalContext);
   });
@@ -81,7 +81,7 @@ export function linkProjectToBilling (externalContext: any, cb: Function): void 
   const command = `gcloud beta billing projects link ${PROJECT_ID} --billing-account=${BILLING_ACCOUNT}`;
   const options: ExecOptions = {};
 
-  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+  return commonHelpers.runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
 export function buildImageTM (externalContext: any, cb: Function): void {
@@ -94,7 +94,6 @@ export function buildImageTM (externalContext: any, cb: Function): void {
     MACHINE_TYPES,
     PROJECT_ID,
     REGION,
-    REDIS_HOST,
     COMPUTED_VARIABLES: {
       ENVIRONMENT,
       NODE_ENV,
@@ -127,7 +126,6 @@ export function buildImageTM (externalContext: any, cb: Function): void {
     VERSION_TAG,
     RELEASE_DATE,
     PORT,
-    REDIS_HOST,
     MACHINE_SUFFIX,
     DEFAULT_PROJECT_NAME,
     DEFAULT_USER_PASSWORD,
@@ -144,11 +142,11 @@ export function buildImageTM (externalContext: any, cb: Function): void {
     S3_BUCKET
   });
 
-  const commandArgs = getDockerArguments(dockerArguments);
+  const commandArgs = commonHelpers.getDockerArguments(dockerArguments);
   const command = `docker build --rm -t ${IMAGE_URL} ${commandArgs} .`;
   const options: ExecOptions = {};
 
-  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+  return commonHelpers.runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
 export function buildImageNode (externalContext: any, cb: Function): void {
@@ -161,7 +159,6 @@ export function buildImageNode (externalContext: any, cb: Function): void {
     MACHINE_TYPES,
     PROJECT_ID,
     REGION,
-    REDIS_HOST,
     COMPUTED_VARIABLES: {
       ENVIRONMENT,
       NODE_ENV,
@@ -193,7 +190,6 @@ export function buildImageNode (externalContext: any, cb: Function): void {
     VERSION,
     RELEASE_DATE,
     PORT,
-    REDIS_HOST,
     DEFAULT_PROJECT_NAME,
     DEFAULT_USER_PASSWORD,
     PATH_TO_DDF_REPOSITORIES,
@@ -209,11 +205,11 @@ export function buildImageNode (externalContext: any, cb: Function): void {
     S3_BUCKET
   });
 
-  const commandArgs = getDockerArguments(dockerArguments);
+  const commandArgs = commonHelpers.getDockerArguments(dockerArguments);
   const command = `docker build --rm -t ${IMAGE_URL} ${commandArgs} .`;
   const options: ExecOptions = {};
 
-  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+  return commonHelpers.runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
 export function pushImageTM (externalContext: any, cb: Function): void {
@@ -222,7 +218,7 @@ export function pushImageTM (externalContext: any, cb: Function): void {
   const command = `gcloud docker -- push ${IMAGE_URL}`;
   const options: ExecOptions = {};
 
-  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+  return commonHelpers.runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
 export function pushImageNode (externalContext: any, cb: Function): void {
@@ -231,7 +227,7 @@ export function pushImageNode (externalContext: any, cb: Function): void {
   const command = `gcloud docker -- push ${IMAGE_URL}`;
   const options: ExecOptions = {};
 
-  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+  return commonHelpers.runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
 export function createTM (externalContext: any, cb: Function): void {
@@ -248,7 +244,7 @@ export function createTM (externalContext: any, cb: Function): void {
   const command = `gcloud compute instances create-with-container ${TM_INSTANCE_NAME} --tags=${TM_INSTANCE_NAME} --machine-type=${TM_MACHINE_TYPE} --boot-disk-size=${TM_DISK_SIZE} --zone=${TM_ZONE} --container-image=${IMAGE_URL}`;
   const options: ExecOptions = {};
 
-  return runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
+  return commonHelpers.runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
     return cb(error, externalContext);
   });
 }
@@ -265,7 +261,7 @@ export function getTMExternalIP (externalContext: any, cb: Function): void {
   const options: any = { pathsToCheck: [ pathToTMNetworkIP ] };
   const logger = loggerFactory.getLogger(GCP_STACK_ACTION);
 
-  return runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
+  return commonHelpers.runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
     if (error) {
       return cb(error, externalContext);
     }
@@ -299,7 +295,7 @@ export function allowHttpTM (externalContext: any, cb: Function): void {
   const command = `gcloud compute firewall-rules create ${FIREWALL_RULE__ALLOW_HTTP} --allow=${FIREWALL_RULE__ALLOWED_PORTS} --target-tags=${TM_INSTANCE_NAME}`;
   const options: ExecOptions = {};
 
-  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+  return commonHelpers.runShellCommand(command, options, (error: string) => cb(error, externalContext));
 
 }
 
@@ -319,14 +315,14 @@ export function promoteTMExternalIP (externalContext: any, cb: Function): void {
   const command = `gcloud compute addresses create ${ADDRESS_NAME} --addresses ${IP_ADDRESS} --region ${TM_REGION}`;
   const options: ExecOptions = {};
 
-  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+  return commonHelpers.runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
 export function setupGcloudContainerConfig (externalContext: any, cb: Function): void {
   const command = `gcloud config set container/new_scopes_behavior true`;
   const options: ExecOptions = {};
 
-  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+  return commonHelpers.runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
 export function createCluster (externalContext: any, cb: Function): void {
@@ -335,11 +331,11 @@ export function createCluster (externalContext: any, cb: Function): void {
   } = externalContext;
 
   const gcloudArgs = _.pick(externalContext, CREATE_CLUSTER__ALLOWED_PARAMS);
-  const commandArgs = getGCloudArguments(gcloudArgs);
+  const commandArgs = commonHelpers.getGCloudArguments(gcloudArgs);
   const command = `gcloud container clusters create ${CLUSTER_NAME} ${commandArgs} --machine-type=${WS_MACHINE_TYPE} --disk-size=${WS_DISK_SIZE} --enable-legacy-authorization --enable-basic-auth --no-issue-client-certificate --enable-ip-alias`;
   const options: ExecOptions = {};
 
-  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+  return commonHelpers.runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
 export function createPods (externalContext: any, cb: Function): void {
@@ -354,7 +350,7 @@ export function createPods (externalContext: any, cb: Function): void {
   const command = `kubectl run ${REPLICAS_NAME} --requests='${REPLICAS_REQUESTS}' --image=${IMAGE_URL} --port=${PORT} --replicas=${NUMBER_REPLICAS}`;
   const options: ExecOptions = {};
 
-  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+  return commonHelpers.runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
 export function createReplicas (externalContext: any, cb: Function): void {
@@ -366,7 +362,7 @@ export function createReplicas (externalContext: any, cb: Function): void {
   const command = `kubectl scale ${REPLICAS_NAME} --replicas=${NUMBER_REPLICAS}`;
   const options: ExecOptions = {};
 
-  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+  return commonHelpers.runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
 export function setupAutoscale (externalContext: any, cb: Function): void {
@@ -380,7 +376,7 @@ export function setupAutoscale (externalContext: any, cb: Function): void {
   const command = `kubectl autoscale deployment ${REPLICAS_NAME} --min=${MIN_NUMBER_REPLICAS} --max=${MAX_NUMBER_REPLICAS} --cpu-percent=${CPU_PERCENT}`;
   const options: ExecOptions = {};
 
-  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+  return commonHelpers.runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
 export function setupLoadbalancer (externalContext: any, cb: Function): void {
@@ -394,7 +390,7 @@ export function setupLoadbalancer (externalContext: any, cb: Function): void {
   const command = `kubectl expose deployment ${REPLICAS_NAME} --port=${SOURCE_PORT} --target-port=${TARGET_PORT} --name=${LOAD_BALANCER_NAME} --type=LoadBalancer`;
   const options: ExecOptions = {};
 
-  return runShellCommand(command, options, (error: string) => cb(error, externalContext));
+  return commonHelpers.runShellCommand(command, options, (error: string) => cb(error, externalContext));
 }
 
 export function getLoadbalancerExternalIP (externalContext: any, cb: Function): void {
@@ -406,7 +402,7 @@ export function getLoadbalancerExternalIP (externalContext: any, cb: Function): 
   const options: any = { pathsToCheck: [ pathToLoadBalancerIP ] };
   const logger = loggerFactory.getLogger(GCP_STACK_ACTION);
 
-  return runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
+  return commonHelpers.runShellCommand(command, options, (error: string, result: ExecOutputReturnValue) => {
     if (error) {
       return cb(error, externalContext);
     }

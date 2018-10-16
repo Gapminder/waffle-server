@@ -26,6 +26,7 @@ describe('Application', () => {
 
     const serviceLocator: any = {
       getApplication: () => ({ listen: { bind: () => listenStub } }),
+      set: sandbox.stub(),
       get: (serviceName: string) => {
         if (serviceName === 'config') {
           return {
@@ -41,7 +42,8 @@ describe('Application', () => {
     const application = new Application(serviceLocator);
 
     try {
-      application.run();
+      await application.run();
+      await application.importDatasets();
     } catch (error) {
       throw new Error(`This should never be called. ${error}`);
     }
@@ -66,6 +68,7 @@ describe('Application', () => {
 
     const serviceLocator: any = {
       getApplication: () => ({ listen: { bind: () => listenStub } }),
+      set: sandbox.stub(),
       get: (serviceName: string) => {
         if (serviceName === 'config') {
           return {
@@ -82,7 +85,9 @@ describe('Application', () => {
     const application = new Application(serviceLocator);
 
     try {
-      application.run();
+      await application.run();
+      application.importDatasets();
+
       throw new Error('This should never be called');
     } catch (error) {
       actualError = error;
@@ -90,6 +95,7 @@ describe('Application', () => {
     expect(actualError).to.be.an('error');
     expect(actualError.toString()).to.equal(expectedError);
     expect(actualError.toString()).to.not.equal('This should never be called');
+
     sinon.assert.calledOnce(listenStub);
     sinon.assert.calledWithExactly(listenStub, 3333);
     sinon.assert.calledOnce(importServiceStub);

@@ -28,7 +28,6 @@ const TEST_ENVIRONMENTS = process.env.TEST_ENVIRONMENTS ? process.env.TEST_ENVIR
 let allCommands = [];
 
 describe('Autoimport Test: runShellCommand', () => {
-  let runShellCommandStub;
   const DEFAULT_PATH_TO_CONFIG_FILE = path.resolve('./test/autodeploy/fixtures/deployment_config_');
 
   // Get list of all reserved environments (development,local,prod,test)
@@ -41,7 +40,9 @@ describe('Autoimport Test: runShellCommand', () => {
     .value();
 
   beforeEach(() => {
-    runShellCommandStub = sandbox.stub(commonHelpers, 'runShellCommand').callsFake(runShellCommandFn);
+    let runShellCommandStub = sandbox.stub(commonHelpers, 'runShellCommand').callsFake(runShellCommandFn);
+    sandbox.stub(commonHelpers, 'checkGcloudTool');
+    sandbox.stub(commonHelpers, 'checkDockerTool');
     allCommands = [];
   });
 
@@ -63,9 +64,11 @@ describe('Autoimport Test: runShellCommand', () => {
         process.env.NODE_ENV = testEnv;
       }
 
-      const error = await autoDeploy.run();
-      /* tslint:disable-next-line */
-      expect(error).to.not.exist;
+      try {
+        await autoDeploy.run();
+      } catch(error) {
+        throw Error(`No error should be thrown. But this one was thrown: ${error}`);
+      }
 
       const allCommandsWithEnv = getAllCommandsWhichShouldBeWithEnvironment(allCommands);
 
@@ -73,7 +76,7 @@ describe('Autoimport Test: runShellCommand', () => {
       // If testEnv is null, then it should be set as DEFAULT_NODE_ENV from default config
       testEnv = _.isNil(testEnv) ? DEFAULT_NODE_ENV : testEnv;
       // If testEnv isn't included in the list of default environments, then use it as is
-      const actualTestEnv = DEFAULT_ENVIRONMENTS[testEnv] || testEnv;
+      const actualTestEnv = testEnv;
 
       allCommandsWithEnv.forEach((command: string) => {
         return expect(command, `wrong ENVIRONMENT in command:\n* ${command}`).to.contain(actualTestEnv);
@@ -92,7 +95,8 @@ const PROJECT_ID = `${PROJECT_NAME}-${ENVIRONMENT}`;
 const REGION = 'europe-west1';
 
 function getAllCommandsWhichShouldBeWithEnvironment(_allCommands: string[]): string[] {
-  return _.reject(_allCommands, (command: string) => command.match(/config|services/gi));
+  console.log(_allCommands);
+  return _allCommands.filter((command: string) => !command.match(/config|services/gi));
 }
 
 // TODO use 'times' not super cool because mongo setup step could be skipped and then total number of steps will be decreased

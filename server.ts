@@ -15,6 +15,7 @@ process.on('uncaughtException', function (reason: Error): void {
 });
 
 process.on('beforeExit', function (code: number): void {
+
   logger.info('Process Event: beforeExit', code);
 });
 

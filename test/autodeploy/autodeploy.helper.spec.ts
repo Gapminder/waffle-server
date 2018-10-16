@@ -15,6 +15,8 @@ describe('Autodeploy.helper Commands', () => {
   let loggerStub;
 
   beforeEach(() => {
+    sandbox.stub(commonHelpers, 'checkGcloudTool');
+    sandbox.stub(commonHelpers, 'checkDockerTool');
     loggerStub = {info: sandbox.stub(), error: sandbox.stub, warn: sandbox.stub()};
     sandbox.stub(loggerFactory, 'getLogger').returns(loggerStub);
   });

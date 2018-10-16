@@ -3,6 +3,7 @@ import { registerRoutes } from './ws.routes';
 import { logger } from './ws.config/log';
 import { ServiceLocator } from './ws.service-locator';
 import { loadRepositoriesConfig, RepositoriesConfig } from './ws.config/repos.config';
+import { importService } from './ws.services/import/import.service';
 
 export class Application {
   public listen: Function;
@@ -27,7 +28,6 @@ export class Application {
       this.serviceLocator.set('repos-config', this.reposConfig);
 
       this.listen(this.config.PORT);
-      // importService.importByConfig();
       logger.info(`Express server listening on port ${this.config.PORT} in ${this.config.NODE_ENV} mode`);
     } catch (startupError) {
       logger.error(startupError);
@@ -37,6 +37,10 @@ export class Application {
         throw startupError;
       }
     }
+  }
+
+  public importDatasets(): void {
+    importService.importByConfig();
   }
 
   private configure(serviceLocator: ServiceLocator): void {

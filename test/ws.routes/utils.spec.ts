@@ -89,7 +89,11 @@ describe('Routes utils', () => {
 
     it('should invalidate redis cache if force option is provided', (done) => {
       const req = mockReq({
-        query: {force: 'true'}
+        query: {force: 'true'},
+        url: '/api/ddf/ql/anyroute',
+        appConfig: {
+          IS_PRODUCTION: false
+        }
       });
 
       const res = mockRes({
@@ -372,7 +376,7 @@ describe('Routes utils', () => {
         type: 'INTERNAL_SERVER_TEXT_ERROR'
       };
 
-      const response = routeUtils.toErrorResponse(null, defaultContext, 'test');
+      const response = routeUtils.toErrorResponse(expectedError.message, defaultContext, expectedError.place);
 
       expect(response.success).to.be.false;
       expect(response.error).to.equal(expectedError.message);

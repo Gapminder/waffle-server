@@ -14,6 +14,7 @@ import {
   RepositoriesConfig
 } from '../ws.config/repos.config';
 import { getS3FileReaderObject } from 'vizabi-ddfcsv-reader';
+import {config} from '../ws.config/config';
 
 const {
   performance
@@ -183,6 +184,7 @@ async function bodyFromUrlAssets(req: WSRequest, res: express.Response, next: ex
     return next();
   } catch (error) {
     logger.error(error);
+
     return next(error);
   }
 }
