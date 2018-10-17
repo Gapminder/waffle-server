@@ -1,3 +1,5 @@
+import * as fs from 'fs';
+
 const CONCEPTS = 'concepts';
 const ENTITIES = 'entities';
 const DATAPOINTS = 'datapoints';
@@ -17,13 +19,18 @@ const CONTINUOUS_CONCEPT_TYPES = [CONCEPT_TYPE_MEASURE, 'facet'];
 const DEFAULT_CONCEPT_TYPES = [...DESCRETE_CONCEPT_TYPES, ...CONTINUOUS_CONCEPT_TYPES];
 
 const constants: any = {
+  WORKDIR: fs.realpathSync('.'),
   MAX_VERSION: Number.MAX_SAFE_INTEGER,
 
   LIMIT_NUMBER_PROCESS: 10,
 
+  AUTODEPLOY_RETRY_TIMES: 10,
+  AUTODEPLOY_RETRY_INTERVAL: 10000,
+
   DDF_REDIS_CACHE_LIFETIME: -1,
   DDF_REDIS_CACHE_NAME_TRANSLATIONS: TRANSLATIONS,
   DDF_REDIS_CACHE_NAME_DDFQL: 'ddfql',
+  DDF_REDIS_CACHE_NAME_MLQL: 'mlql',
 
   CONCEPTS,
   ENTITIES,
@@ -33,8 +40,6 @@ const constants: any = {
 
   ASC_SORTING_DIRECTION: 'asc',
   DESC_SORTING_DIRECTION: 'desc',
-
-  MONGO_SPECIAL_FIELDS: ['_id', '_v'],
 
   GID: 'gid',
   ORIGIN_ID: 'originId',
@@ -62,14 +67,27 @@ const constants: any = {
 
   DEFAULT_DATAPOINTS_QUERY_TIMEOUT_MS: 20000,
   DEFAULT_DATAPOINTS_QUERY_LIMIT: 1000000,
-  MONGODB_ALLOW_DISK_USE: true,
 
   ASSETS_CACHE_CONTROL_MAX_AGE_IN_MILLIS: (7 * 24 * 60) * 60 * 1000, // one week
 
   ASSETS_ROUTE_BASE_PATH: '/api/ddf/assets',
-  ASSETS_EXPECTED_DIR: 'assets',
+  ASSETS_EXPECTED_DIR: '/assets/',
 
   LONG_RUNNING_QUERY_THRESHOLD_IN_SECONDS: 30
 };
 
+const responseMessages: any = {
+  INCORRECT_QUERY_FORMAT: { code: 1, type: 'INCORRECT_QUERY_FORMAT', message: 'Query was sent in incorrect format' },
+  MALFORMED_URL: { code: 2, type: 'MALFORMED_URL', message: 'Malformed url was given' },
+  RELATIVE_ASSET_PATH: { code: 3, type: 'RELATIVE_ASSET_PATH', message: 'You cannot use relative path constraints like "." or ".." in the asset path'},
+  DATASET_NOT_FOUND: { code: 4, type: 'DATASET_NOT_FOUND', message: `Default dataset couldn't be found`},
+  WRONG_ASSETS_DIR: (dir: string) => ({ code: 5, type: 'WRONG_ASSETS_DIR', message: `You cannot access directories other than "${dir}"` }),
+  URL_CANNOT_BE_ACCESSED_FROM_WS_CLI: { code: 6, type: 'URL_CANNOT_BE_ACCESSED_FROM_WS_CLI', message: 'This url can be accessed only from WS-CLI' },
+  INCORRECT_CLI_VERSION: (clientVersion: string, serverVersion: string) =>
+    // tslint:disable-next-line:max-line-length
+    ({ code: 7, type: 'INCORRECT_CLI_VERSION', message: `Found that your local WS-CLI version ${clientVersion} is incompatible with the selected Waffle Server instance.\n\tPlease reinstall your WS-CLI to version ${serverVersion}. Run "npm install -g waffle-server-import-cli@${serverVersion}"` })
+
+};
+
 export { constants };
+export { responseMessages };

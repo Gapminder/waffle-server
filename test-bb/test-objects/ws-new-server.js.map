@@ -1,0 +1,1 @@
+{"version":3,"file":"ws-new-server.js","sourceRoot":"","sources":["ws-new-server.ts"],"names":[],"mappings":";;AAAA,yDAAuD;AACvD,6EAA6D;AAE7D,MAAa,qBAAsB,SAAQ,sCAAkB;IAC3D,QAAQ;QACN,OAAO,cAAc,CAAC;IACxB,CAAC;IAED,SAAS;QACP,OAAO,gCAAQ,CAAC,SAAS,EAAE,CAAC;IAC9B,CAAC;IAED,aAAa;QACX,OAAO,MAAM,CAAC;IAChB,CAAC;IAED,aAAa;QACX,OAAO,MAAM,CAAC;IAChB,CAAC;CACF;AAhBD,sDAgBC"}

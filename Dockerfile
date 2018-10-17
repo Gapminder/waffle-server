@@ -1,7 +1,8 @@
 FROM ubuntu:16.04
 
+#install ubuntu packages
 RUN apt-get update
-RUN apt-get install -y sudo git python build-essential libssl-dev openssh-server curl redis-tools nfs-common rsyslog libkrb5-dev net-tools lsof nano htop apt-utils apache2-utils
+RUN apt-get install -y sudo git python build-essential libssl-dev openssh-server curl redis-tools nfs-common rsyslog libkrb5-dev net-tools lsof nano htop apt-utils apache2-utils supervisor mc
 
 RUN set -ex && \
     for key in \
@@ -12,36 +13,27 @@ RUN set -ex && \
         gpg --keyserver keyserver.pgp.com --recv-keys "$key" ; \
     done
 
+#install telegraf separately due to complexity of gpg registering keys
 ENV TELEGRAF_VERSION 1.4.3
-RUN ARCH= && dpkgArch="$(dpkg --print-architecture)" && \
-    case "${dpkgArch##*-}" in \
-      amd64) ARCH='amd64';; \
-      arm64) ARCH='arm64';; \
-      armhf) ARCH='armhf';; \
-      armel) ARCH='armel';; \
-      *)     echo "Unsupported architecture: ${dpkgArch}"; exit 1;; \
-    esac && \
-    wget -q https://dl.influxdata.com/telegraf/releases/telegraf_${TELEGRAF_VERSION}-1_${ARCH}.deb.asc && \
-    wget -q https://dl.influxdata.com/telegraf/releases/telegraf_${TELEGRAF_VERSION}-1_${ARCH}.deb && \
-    gpg --batch --verify telegraf_${TELEGRAF_VERSION}-1_${ARCH}.deb.asc telegraf_${TELEGRAF_VERSION}-1_${ARCH}.deb && \
-    dpkg -i telegraf_${TELEGRAF_VERSION}-1_${ARCH}.deb && \
-    rm -f telegraf_${TELEGRAF_VERSION}-1_${ARCH}.deb*
+ENV ARCH 'amd64'
+RUN wget -q https://dl.influxdata.com/telegraf/releases/telegraf_${TELEGRAF_VERSION}-1_${ARCH}.deb.asc
+RUN wget -q https://dl.influxdata.com/telegraf/releases/telegraf_${TELEGRAF_VERSION}-1_${ARCH}.deb
+RUN gpg --batch --verify telegraf_${TELEGRAF_VERSION}-1_${ARCH}.deb.asc telegraf_${TELEGRAF_VERSION}-1_${ARCH}.deb
+RUN dpkg -i telegraf_${TELEGRAF_VERSION}-1_${ARCH}.deb
+RUN rm -f telegraf_${TELEGRAF_VERSION}-1_${ARCH}.deb
 
-COPY ./deployment/rsys_conf/rsyslog.conf /etc/rsyslog.conf
-COPY ./deployment/rsys_conf/ws.conf /etc/rsyslog.d/ws.conf
-COPY ./deployment/tmp/telegraf.conf /etc/telegraf/telegraf.conf
-
+#install node & npm packages
 RUN curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
 RUN apt-get install -y nodejs
-RUN npm i -g pm2
-RUN npm i -g pm2-logrotate
-RUN pm2 install pm2-logrotate
-RUN npm i -g shelljs
+RUN npm i -g shelljs@0.8.2
+RUN npm i -g typescript@3.0.1
+RUN npm i -g yarn
 
+#install dumb-init
 RUN wget -O /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.0/dumb-init_1.2.0_amd64
 RUN chmod +x /usr/local/bin/dumb-init
 
-#Add ssh-key for Git
+#add ssh-key for git
 RUN mkdir -p /root/.ssh
 COPY dev /root/.ssh/dev
 COPY dev.pub /root/.ssh/dev.pub
@@ -56,80 +48,128 @@ WORKDIR /home/waffle-server
 RUN mkdir /home/waffle-server/ddf
 VOLUME /home/waffle-server/ddf
 
-COPY package.json .
-RUN npm i
+RUN mkdir /home/waffle-server/ws-import
+VOLUME /home/waffle-server/ws-import
 
+COPY . .
+RUN yarn
+RUN npm run tsc
+RUN ln -s /home/waffle-server/logs /var/log/waffle-server
+
+#exposing ports
+EXPOSE ${PORT}
 EXPOSE 3000
 EXPOSE 80
+EXPOSE 443
 EXPOSE 8125/udp 8092/udp 8094
+
+#setup environment variables
+ARG PROJECT
+ENV PROJECT ${PROJECT}
+
+ARG MACHINE_TYPE
+ENV MACHINE_TYPE ${MACHINE_TYPE}
+
+ARG REGION
+ENV REGION ${REGION}
 
 ARG PORT
 ENV PORT ${PORT}
 
 ARG REDIS_HOST
-ENV REDIS_HOST ${REDIS_HOST}
+ENV REDIS_HOST "${REDIS_HOST}"
 
-ARG MONGODB_URL
-ENV MONGODB_URL ${MONGODB_URL}
-
-ARG DEFAULT_USER_PASSWORD
-ENV DEFAULT_USER_PASSWORD ${DEFAULT_USER_PASSWORD}
+ARG REDIS_PORT
+ENV REDIS_PORT ${REDIS_PORT:-6379}
 
 ARG PATH_TO_DDF_REPOSITORIES
-ENV PATH_TO_DDF_REPOSITORIES ${PATH_TO_DDF_REPOSITORIES}
+ENV PATH_TO_DDF_REPOSITORIES "${PATH_TO_DDF_REPOSITORIES}"
 
 ARG NEW_RELIC_LICENSE_KEY
-ENV NEW_RELIC_LICENSE_KEY ${NEW_RELIC_LICENSE_KEY}
-
-ARG THRASHING_MACHINE
-ENV THRASHING_MACHINE ${THRASHING_MACHINE}
+ENV NEW_RELIC_LICENSE_KEY "${NEW_RELIC_LICENSE_KEY}"
 
 ARG NODE_ENV
-ENV NODE_ENV ${NODE_ENV}
+ENV NODE_ENV ${NODE_ENV:-"development"}
 
-ARG LOGS_SYNC_DISABLED
-ENV LOGS_SYNC_DISABLED ${LOGS_SYNC_DISABLED}
+ARG ENVIRONMENT
+ENV ENVIRONMENT ${ENVIRONMENT}
 
-ARG AWS_DEFAULT_REGION
-ENV AWS_DEFAULT_REGION ${AWS_DEFAULT_REGION}
-
-ARG AWS_ACCESS_KEY_ID
-ENV AWS_ACCESS_KEY_ID ${AWS_ACCESS_KEY_ID}
-
-ARG AWS_SECRET_ACCESS_KEY
-ENV AWS_SECRET_ACCESS_KEY ${AWS_SECRET_ACCESS_KEY}
-
-ARG AWS_SSH_KEY_NAME
-ENV AWS_SSH_KEY_NAME ${AWS_SSH_KEY_NAME}
+ARG GCP_DEFAULT_REGION
+ENV GCP_DEFAULT_REGION "${GCP_DEFAULT_REGION}"
 
 ARG STACK_NAME
-ENV STACK_NAME ${STACK_NAME}
+ENV STACK_NAME "${STACK_NAME:-'wsdevstack-test'}"
 
 ARG INFLUXDB_HOST
-ENV INFLUXDB_HOST ${INFLUXDB_HOST}
+ENV INFLUXDB_HOST "${INFLUXDB_HOST}"
+
+ARG INFLUXDB_PORT
+ENV INFLUXDB_PORT "${INFLUXDB_PORT}"
 
 ARG INFLUXDB_DATABASE_NAME
-ENV INFLUXDB_DATABASE_NAME ${INFLUXDB_DATABASE_NAME}
+ENV INFLUXDB_DATABASE_NAME "${INFLUXDB_DATABASE_NAME}"
 
 ARG INFLUXDB_USER
-ENV INFLUXDB_USER ${INFLUXDB_USER}
+ENV INFLUXDB_USER "${INFLUXDB_USER}"
 
 ARG INFLUXDB_PASSWORD
-ENV INFLUXDB_PASSWORD ${INFLUXDB_PASSWORD}
+ENV INFLUXDB_PASSWORD "${INFLUXDB_PASSWORD}"
 
-ARG TELEGRAF_DEBUG_MODE
-ENV TELEGRAF_DEBUG_MODE ${TELEGRAF_DEBUG_MODE:-'false'}
+ARG RELEASE_DATE
+ENV RELEASE_DATE "${RELEASE_DATE:-'2017-11-28T17:15:42'}"
 
-ARG MACHINE_SUFFIX
-ENV MACHINE_SUFFIX ${THRASHING_MACHINE:+'TM'}
+ARG VERSION_TAG
+ENV VERSION_TAG "${VERSION_TAG:-'2.12.1'}"
 
-ENV TERM xterm-256color
+ARG VERSION
+ENV VERSION "${VERSION:-'2-12-1'}"
 
-COPY . .
-RUN npm run tsc
-RUN chmod +x docker_run.js
-RUN chmod 777 /etc/default/telegraf
-RUN ln -s /home/waffle-server/logs /var/log/waffle-server
+ARG DEFAULT_DATASETS
+ENV DEFAULT_DATASETS "${DEFAULT_DATASETS}"
 
-ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
-CMD ["/home/waffle-server/docker_run.js"]
+ARG S3_SECRET_KEY
+ENV S3_SECRET_KEY "${S3_SECRET_KEY}"
+
+ARG S3_ACCESS_KEY
+ENV S3_ACCESS_KEY "${S3_ACCESS_KEY}"
+
+ARG S3_BUCKET
+ENV S3_BUCKET "${S3_BUCKET}"
+
+ENV TERM "xterm-256color"
+
+#setup telegraf
+#RUN > /etc/default/telegraf
+#RUN echo "export NODE_ENV=\"${NODE_ENV}\"\n" \
+#  "export RELEASE_DATE=\"${RELEASE_DATE}\"\n" \
+#  "export STACK_NAME=\"${STACK_NAME}\"\n" \
+#  "export INFLUXDB_HOST=\"${INFLUXDB_HOST}\"\n" \
+#  "export INFLUXDB_PORT=\"${INFLUXDB_PORT}\"\n" \
+#  "export INFLUXDB_DATABASE_NAME=\"${INFLUXDB_DATABASE_NAME}\"\n" \
+#  "export INFLUXDB_USER=\"${INFLUXDB_USER}\"\n" \
+#  "export INFLUXDB_PASSWORD=\"${INFLUXDB_PASSWORD}\"\n" \
+#  "export MACHINE_SUFFIX=\"${MACHINE_SUFFIX}\"\n" \
+#  "export PROJECT=\"${PROJECT}\"\n" \
+#  "export MACHINE_TYPE=\"${MACHINE_TYPE}\"\n" \
+#  "export S3_BUCKET=\"${S3_BUCKET}\"\n" \
+#  "export REGION=\"${REGION}\"\n" \
+#  "export VERSION_TAG=\"${VERSION_TAG}\"\n" \
+#  "export VERSION=\"${VERSION}\"" >> /etc/default/telegraf
+#RUN chmod 666 /etc/default/telegraf
+#RUN touch /var/log/telegraf/telegraf.log
+#RUN chmod 666 /var/log/telegraf/telegraf.log
+
+#setup services settings
+#RUN mkdir -p /var/log/supervisor
+#COPY ./deployment/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+#RUN echo "[program:node]" >> /etc/supervisor/conf.d/supervisord.conf
+#RUN echo "command=npm run start:${ENVIRONMENT}" >> /etc/supervisor/conf.d/supervisord.conf
+#COPY ./deployment/supervisor/envs.sh /bin/envs.sh
+#RUN > /etc/telegraf/telegraf.conf
+#RUN cat ./deployment/telegraf/default-telegraf.conf >> /etc/telegraf/telegraf.conf
+#RUN cat ./deployment/telegraf/filestat.plugin.conf  >> /etc/telegraf/telegraf.conf
+#RUN cat ./deployment/telegraf/procstat.plugin.conf  >> /etc/telegraf/telegraf.conf
+
+#ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
+
+CMD ["npm", "run", "start"]

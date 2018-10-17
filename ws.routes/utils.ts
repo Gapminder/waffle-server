@@ -2,151 +2,191 @@ import * as _ from 'lodash';
 import * as async from 'async';
 import * as crypto from 'crypto';
 import * as url from 'url';
-import * as passport from 'passport';
 import * as URLON from 'urlon';
-import { config } from '../ws.config/config';
 import { logger } from '../ws.config/log';
 import * as express from 'express';
-import * as semver from 'semver';
+import { constants, responseMessages } from '../ws.utils/constants';
+import { extendQueryWithRepository, validateQueryStructure } from 'ddf-query-validator';
+import { FailedResponse, RequestTags, TelegrafService } from '../ws.services/telegraf.service';
+import {
+  getPossibleAssetsRepoPaths,
+  loadRepositoriesConfig,
+  RepositoriesConfig
+} from '../ws.config/repos.config';
+import { getS3FileReaderObject } from 'vizabi-ddfcsv-reader';
+import {config} from '../ws.config/config';
 
-import { DatasetsRepository } from '../ws.repository/ddf/datasets/datasets.repository';
-import { RecentDdfqlQueriesRepository } from '../ws.repository/ddf/recent-ddfql-queries/recent-ddfql-queries.repository';
-import { constants } from '../ws.utils/constants';
-import * as path from 'path';
-
-import * as commonService from '../ws.services/common.service';
+const {
+  performance
+} = require('perf_hooks');
 
 const RELATIVE_PATH_REGEX = /\/\.+\/?/;
 
-const parseUrlonAsync: Function = async.asyncify((query: string) => {
+const UrlonParserAsync: Function = async.asyncify((query: string) => {
   const parsedQuery = URLON.parse(query);
 
   if (parsedQuery.dataset) {
     parsedQuery.dataset = decodeURIComponent(_.toString(parsedQuery.dataset));
   }
 
+  if (parsedQuery.branch) {
+    parsedQuery.branch = decodeURIComponent(_.toString(parsedQuery.branch));
+  }
+
   return parsedQuery;
 });
 
-const parseJsonAsync: Function = async.asyncify((query: string) => JSON.parse(decodeURIComponent(query)));
+const JsonParserAsync: Function = async.asyncify((query: string) => JSON.parse(decodeURIComponent(query)));
+
+const parser = {
+  urlon: UrlonParserAsync,
+  json: JsonParserAsync
+};
 
 export {
   getCacheConfig,
-  ensureAuthenticatedViaToken,
-  ensureCliVersion,
-  respondWithRawDdf,
-  checkDatasetAccessibility,
+  validateBodyStructure,
+  parseDatasetVersion,
+  trackingRequestTime,
+  shareConfigWithRoute,
   bodyFromUrlQuery,
+  parseQueryFromUrlQuery,
   bodyFromUrlAssets,
   toDataResponse,
   toErrorResponse,
   toMessageResponse
 };
 
-function bodyFromUrlQuery(req: express.Request, res: express.Response, next: express.NextFunction): void {
-  const query = _.get(req.query, 'query', null);
-  const parser = query
-    ? { parse: parseJsonAsync, query, queryType: 'JSON' }
-    : { parse: parseUrlonAsync, query: url.parse(req.url).query, queryType: 'URLON' };
+export interface WSRequest extends express.Request {
+  requestStartTime: number;
+  queryStartTime?: number;
+  appConfig?: object;
+  queryParser: {
+    query: string;
+    queryType: string;
+    parse: Function;
+  };
+}
 
-  parser.parse(parser.query, (error: string, parsedQuery: any) => {
-    logger.info({ ddfqlRaw: parser.query });
+function trackingRequestTime(req: WSRequest, res: express.Response, next: express.NextFunction): void {
+  req.requestStartTime = performance.now();
+  return next();
+}
+
+function shareConfigWithRoute(config: object, req: WSRequest, res: express.Response, next: express.NextFunction): void {
+  req.appConfig = config;
+  return next();
+}
+
+async function validateBodyStructure(req: WSRequest, res: express.Response, next: express.NextFunction): Promise<void | express.Response> {
+  try {
+    await validateQueryStructure(req.body, {});
+    return next();
+  } catch (error) {
+    return res.json(toErrorResponse(error, req, 'validateQueryStructure'));
+  }
+}
+
+async function parseDatasetVersion(req: WSRequest, res: express.Response, next: express.NextFunction): Promise<void | express.Response> {
+  try {
+    const reposConfig: RepositoriesConfig = await loadRepositoriesConfig();
+    await extendQueryWithRepository(req.body, reposConfig);
+    return next();
+  } catch (error) {
+    return res.json(toErrorResponse(error, req, 'parseDatasetVersion'));
+  }
+}
+
+function parseQueryFromUrlQuery(req: WSRequest, res: express.Response, next: express.NextFunction): void {
+  const parsedUrl = url.parse(req.url);
+  const query: string = _.isString(parsedUrl) ? parsedUrl : _.get(parsedUrl, 'query');
+  let queryType = 'json';
+
+  try {
+    JSON.parse(query);
+  } catch (error) {
+    queryType = 'urlon';
+  }
+
+  parser[ queryType ](query, (error: string, parsedQuery: any) => {
+    logger.info({ ddfqlRaw: parsedUrl, queryType });
+
     if (error) {
-      res.json(toErrorResponse('Query was sent in incorrect format'));
+      res.json(toErrorResponse(`${responseMessages.INCORRECT_QUERY_FORMAT}: ${error}`, req, 'bodyFromUrlQuery'));
     } else {
-      req.body = _.extend(parsedQuery, { rawDdfQuery: { queryRaw: parser.query, type: parser.queryType } });
-      next();
+      req.body = parsedQuery;
+      return next();
     }
   });
 }
 
-function bodyFromUrlAssets(req: express.Request, res: express.Response, next: express.NextFunction): void {
-  if (!_.startsWith(req.baseUrl, constants.ASSETS_ROUTE_BASE_PATH)) {
-    return next();
-  }
+function bodyFromUrlQuery(req: WSRequest, res: express.Response, next: express.NextFunction): void {
+  const query = _.get(req.query, 'query', null);
+  const queryType = query ? 'JSON' : 'URLON';
+  req.queryParser = query
+    ? { parse: JsonParserAsync, query, queryType }
+    : { parse: UrlonParserAsync, query: url.parse(req.url).query, queryType };
 
-  const datasetAssetsPathFromUrl = safeDecodeUriComponent(_.last(_.split(req.originalUrl, constants.ASSETS_ROUTE_BASE_PATH + '/')));
+  req.queryParser.parse(req.queryParser.query, (error: string, parsedQuery: any) => {
+    logger.info({ ddfqlRaw: req.queryParser.query });
+    if (error) {
+      res.json(toErrorResponse(responseMessages.INCORRECT_QUERY_FORMAT, req, 'bodyFromUrlQuery'));
+    } else {
+      req.body = parsedQuery;
+      return next();
+    }
+  });
+}
+
+async function bodyFromUrlAssets(req: WSRequest, res: express.Response, next: express.NextFunction): Promise<void> {
+  const datasetAssetsPathFromUrl = safeDecodeUriComponent(req.baseUrl);
 
   if (datasetAssetsPathFromUrl === null) {
-    res.status(400).json(toErrorResponse('Malformed url was given'));
+    res.status(200).json(toErrorResponse(responseMessages.MALFORMED_URL, req));
     return;
   }
 
   if (RELATIVE_PATH_REGEX.test(datasetAssetsPathFromUrl)) {
-    res.status(400).json(toErrorResponse('You cannot use relative path constraints like "." or ".." in the asset path'));
+    res.status(200).json(toErrorResponse(responseMessages.RELATIVE_ASSET_PATH, req));
     return;
   }
 
-  commonService.findDefaultDatasetAndTransaction({}, (error: any, context: any) => {
-    const defaultDatasetAssetRequested = _.startsWith(req.originalUrl, `${constants.ASSETS_ROUTE_BASE_PATH}/default`);
+  const [ , repository, ...filepath ] = datasetAssetsPathFromUrl.split(constants.ASSETS_EXPECTED_DIR);
 
-    if (error && defaultDatasetAssetRequested) {
-      res.status(500).json(toErrorResponse(`Default dataset couldn't be found`));
-      return;
-    }
-
-    const assetPathDescriptor = getAssetPathDescriptor(
-      config.PATH_TO_DDF_REPOSITORIES,
-      datasetAssetsPathFromUrl,
-      defaultDatasetAssetRequested && _.get(context, 'dataset')
-    );
-
-    if (assetPathDescriptor.assetsDir !== constants.ASSETS_EXPECTED_DIR) {
-      res.status(403).json(toErrorResponse(`You cannot access directories other than "${constants.ASSETS_EXPECTED_DIR}"`));
-      return;
-    }
-
-    _.extend(req.body, {
-      dataset: assetPathDescriptor.dataset,
-      dataset_access_token: _.get(req.query, 'dataset_access_token'),
-      assetPathDescriptor
-    });
-
-    return next();
-  });
-}
-
-function getAssetPathDescriptor(pathToDdfRepos: string, datasetAssetPath: string, defaultDataset?: any): any {
-  const splittedDatasetAssetPath = _.split(datasetAssetPath, '/');
-  const defaultDatasetInfo = getRepoInfoFromDataset(defaultDataset);
-
-  const account = defaultDatasetInfo
-    ? defaultDatasetInfo.account
-    : _.nth(splittedDatasetAssetPath, 0);
-
-  const repo = defaultDatasetInfo
-    ? defaultDatasetInfo.repo
-    : _.nth(splittedDatasetAssetPath, 1) || '';
-
-  const branch = defaultDatasetInfo
-    ? defaultDatasetInfo.branch
-    : _.nth(splittedDatasetAssetPath, 2) || '';
-
-  const assetsPathFragments = defaultDatasetInfo
-    ? _.slice(splittedDatasetAssetPath, 1)
-    : _.slice(splittedDatasetAssetPath, 3);
-
-  return {
-    path: path.resolve(pathToDdfRepos, account, repo, branch, _.join(assetsPathFragments, '/')),
-    assetsDir: _.first(assetsPathFragments),
-    assetName: _.last(assetsPathFragments),
-    dataset: `${account}/${repo}#${branch}`
-  };
-}
-
-function getRepoInfoFromDataset(dataset: any): any {
-  if (!dataset) {
-    return null;
+  if (_.isEmpty(repository)) {
+    res.status(200).json(toErrorResponse(responseMessages.MALFORMED_URL, req));
+    return;
   }
 
-  const [accountAndRepo, branch = 'master'] = _.split(dataset.name, '#');
-  const [account, repo] = _.split(accountAndRepo, '/');
+  if (_.isEmpty(filepath)) {
+    res.status(200).json(toErrorResponse(responseMessages.WRONG_ASSETS_DIR, req));
+    return;
+  }
 
-  return {
-    account,
-    repo,
-    branch
-  };
+  Object.assign(req.body, {
+    filepath: `${_.trim(constants.ASSETS_EXPECTED_DIR, '/')}/${filepath}`,
+    filename: filepath.join(constants.ASSETS_EXPECTED_DIR).split('/').pop(),
+    dataset_access_token: _.get(req.query, 'dataset_access_token')
+  });
+
+  try {
+    const reposConfig = await getPossibleAssetsRepoPaths();
+    const repoConfig = _.get(reposConfig, repository);
+
+    if (_.isEmpty(repoConfig)) {
+      res.status(200).json(toErrorResponse(responseMessages.MALFORMED_URL, req));
+      return;
+    }
+
+    const { repoNickname: dataset, branch, hash: commit } = repoConfig;
+    Object.assign(req.body, { dataset, branch, commit });
+
+    return next();
+  } catch (error) {
+    logger.error(error);
+
+    return next(error);
+  }
 }
 
 function safeDecodeUriComponent(uri: string): string {
@@ -158,8 +198,8 @@ function safeDecodeUriComponent(uri: string): string {
 }
 
 function getCacheConfig(prefix?: string): express.Handler {
-  return function (req: express.Request, res: express.Response, next: express.NextFunction): void {
-    if (String(req.query.force) === 'true' && !config.IS_PRODUCTION) {
+  return function(req: WSRequest, res: express.Response, next: express.NextFunction): void {
+    if (String(req.query.force) === 'true' && !(req.appConfig as any).IS_PRODUCTION) {
       (res as any).use_express_redis_cache = false;
       return next();
     }
@@ -174,20 +214,16 @@ function getCacheConfig(prefix?: string): express.Handler {
   };
 }
 
-function ensureAuthenticatedViaToken(req: express.Request, res: express.Response, next: express.NextFunction): express.Handler {
-  return passport.authenticate('token')(req, res, next);
-}
-
-function respondWithRawDdf(query: any, req: express.Request, res: express.Response, next: express.NextFunction): Function {
+function respondWithRawDdf(req: WSRequest, res: express.Response, next: express.NextFunction): Function {
   return (error: string, result: any) => {
     if (error) {
       logger.error(error);
       (res as any).use_express_redis_cache = false;
-      return res.status(500).json(toErrorResponse(error));
+      return res.status(200).json(toErrorResponse(error, req));
     }
-    const collectionName = _.get(query, 'from', '');
+
+    const collectionName = _.get(req.body, 'from', '');
     const docsAmount = _.get(result, collectionName, []).length;
-    _storeWarmUpQueryForDefaultDataset(_.extend({docsAmount}, query));
 
     (req as any).rawData = { rawDdf: result };
 
@@ -195,96 +231,33 @@ function respondWithRawDdf(query: any, req: express.Request, res: express.Respon
   };
 }
 
-function _storeWarmUpQueryForDefaultDataset(query: any): void {
-  const rawDdfQuery = _.get(query, 'rawDdfQuery', null);
-  const docsAmount = _.get(query, 'docsAmount', 0);
-  const timeSpentInMillis = Date.now() - _.get(query, 'queryStartTime', 0);
-
-  if (!rawDdfQuery) {
-    return;
-  }
-
-  if (config.IS_TEST && (_.has(query, 'dataset') || _.has(query, 'version') || _.has(query, 'format'))) {
-    return;
-  }
-
-  RecentDdfqlQueriesRepository.create(_.extend({timeSpentInMillis, docsAmount}, rawDdfQuery), (error: string) => {
-    if (error) {
-      logger.debug(error);
-    } else {
-      logger.debug('Writing query to cache warm up storage', rawDdfQuery.queryRaw);
-    }
-  });
+function isResponseString(response: string | Error | FailedResponse): response is string {
+  return typeof response === 'string';
 }
 
-function ensureCliVersion(req: express.Request, res: express.Response, next: express.NextFunction): void {
-  const clientWsCliVersion = req.header('X-Gapminder-WSCLI-Version');
-
-  if (!clientWsCliVersion) {
-    res.json(toErrorResponse('This url can be accessed only from WS-CLI'));
-    return;
-  }
-
-  const serverWsCliVersion = config.getWsCliVersionSupported();
-
-  if (!ensureVersionsEquality(clientWsCliVersion, serverWsCliVersion)) {
-    const changeCliVersionResponse = toErrorResponse(
-      `Please, change your WS-CLI version from ${clientWsCliVersion} to ${serverWsCliVersion}`
-    );
-
-    res.json(changeCliVersionResponse);
-    return;
-  }
-
-  return next();
+function isResponseError(response: string | Error | FailedResponse): response is Error {
+  return response instanceof Error;
 }
 
-function ensureVersionsEquality(clientVersion: string, serverVersion: string): boolean {
-  try {
-    return semver.satisfies(clientVersion, serverVersion);
-  } catch (e) {
-    return false;
+// TODO: remove default value for place variable and fix all usages
+function toErrorResponse(response: FailedResponse | Error | string, context: RequestTags, place: string = 'default'): ErrorResponse {
+  let error: FailedResponse;
+
+  switch (true) {
+    case isResponseString(response):
+      error = { message: response as string, code: 999, type: 'INTERNAL_SERVER_TEXT_ERROR', place };
+      break;
+    case isResponseError(response):
+      error = { message: (response as Error).message, code: 998, type: 'INTERNAL_SERVER_ERROR', place };
+      break;
+    default:
+      error = _.extend({ place }, response as FailedResponse);
+      break;
   }
-}
 
-function checkDatasetAccessibility(req: express.Request, res: express.Response, next: express.NextFunction): any {
-  const datasetName = _.get(req, 'body.dataset', null);
-  if (!datasetName) {
-    return next();
-  }
-
-  return DatasetsRepository.findByName(datasetName, (error: string, dataset: any) => {
-    if (error) {
-      logger.error(error);
-      return res.json({ success: false, error });
-    }
-
-    if (!dataset) {
-      return res.json({ success: false, message: `Dataset with given name ${datasetName} was not found` });
-    }
-
-    if (!dataset.private) {
-      return next();
-    }
-
-    const providedAccessToken = _.get(req, 'body.dataset_access_token', null);
-    if (_validateDatasetAccessToken(dataset.accessToken, providedAccessToken)) {
-      return next();
-    }
-
-    return res.json({ success: false, error: 'You are not allowed to access data according to given query' });
-  });
-}
-
-function _validateDatasetAccessToken(datasetAccessToken: string, providedAccessToken: string): boolean {
-  const tokensAreEqual = datasetAccessToken === providedAccessToken;
-  const tokensAreNotEmpty = !_.isEmpty(datasetAccessToken) && !_.isEmpty(providedAccessToken);
-  return tokensAreNotEmpty && tokensAreEqual;
-}
-
-function toErrorResponse(error: any): ErrorResponse {
+  TelegrafService.onFailedRespond(error, context);
   logger.error(error);
-  return { success: false, error: error.message || error };
+  return { success: false, error: error.message };
 }
 
 function toMessageResponse(message: string): MessageResponse {
@@ -297,7 +270,7 @@ function toDataResponse(data: any): DataResponse {
 
 interface ErrorResponse {
   success: boolean;
-  error: any;
+  error: string;
 }
 
 interface DataResponse {

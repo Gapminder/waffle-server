@@ -1,9 +1,0 @@
-import './ddf/users/users.model';
-import './ddf/concepts/concepts.model';
-import './ddf/data-points/data-points.model';
-import './ddf/dataset-transactions/dataset-transactions.model';
-import './ddf/datasets/datasets.model';
-import './ddf/dataset-index/dataset-index.model';
-import './ddf/entities/entities.model';
-import './ddf/key-value/key-value.model';
-import './ddf/recent-ddfql-queries/recent-ddfql-queries.model';

@@ -1,11 +1,5 @@
 import '../ws.config/config';
 import * as _ from 'lodash';
-import * as transactionsService from './dataset-transactions.service';
-
-interface DatasetAndTransaction {
-  dataset?: any;
-  transaction?: any;
-}
 
 export {
   findDefaultDatasetAndTransaction,
@@ -13,25 +7,20 @@ export {
 };
 
 function findDefaultDatasetAndTransaction(pipe: any, done: Function): void {
-  return transactionsService.findDefaultDatasetAndTransaction(pipe.datasetName, pipe.version, (error: string, datasetAndTransaction: DatasetAndTransaction) => {
-    if (error) {
-      return done(error);
-    }
+  const config = pipe.appConfig;
 
-    if (!_.get(datasetAndTransaction, 'dataset', null)) {
-      return done('Dataset isn\'t present in db.');
-    }
-    if (!_.get(datasetAndTransaction, 'transaction', null)) {
-      return done('Transaction isn\'t present in db.');
-    }
+  if (!_.get(config, 'DEFAULT_DATASET', null)) {
+    return done('Dataset isn\'t present.');
+  }
+  if (!_.get(config, 'DEFAULT_DATASET_VERSION', null)) {
+    return done('Transaction isn\'t present.');
+  }
 
-    const { dataset, transaction } = datasetAndTransaction;
-    pipe.dataset = dataset;
-    pipe.transaction = transaction;
-    pipe.version = transaction.createdAt;
+  pipe.dataset = config.DEFAULT_DATASET;
+  pipe.transaction = config.DEFAULT_DATASET_VERSION;
+  pipe.version = Date.now();
 
-    return done(null, pipe);
-  });
+  return done(null, pipe);
 }
 
 function translateDocument(target: any, language: string): any {

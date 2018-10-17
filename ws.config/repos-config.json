@@ -1,0 +1,114 @@
+{
+  "repositoryDescriptors": {
+    "open-numbers/ddf--gapminder--systema_globalis": {
+      "master": [
+        "a3b178c142cc614854acf492b7766229b1f3f0c5"
+      ],
+      "stage": [
+        "a3b178c142cc614854acf492b7766229b1f3f0c5"
+      ],
+      "develop": [
+        "d69dc1ddbf11651b4b3c56e0cb55361cf2566c97",
+        "de6bfb5671cf68b65f72cc35f443be972c3cf2c5",
+        "8170b6701960801f028ee7f8d3b90f532c566414"
+      ]
+    },
+    "VS-work/ddf--ws-testing": {
+      "master": [
+        "0f7819024ad4440032181d82620c7af060858e5b",
+        "be06a237f2b84d69aa12428362071bd684456fba",
+        "d9911b2dd073f1569af38ffaba3c0d5f5dfcdc6e",
+        "6bae063cb58ff1c1c53a404982c58d2d13b46ce8",
+        "92687123680340300a8719f725d0ac34b76718d7",
+        "1e8a3b88f1ccd1bc27fecef3f209b1b40025e779",
+        "1406026f5d2d75a5ca65b3efc15e800f70b8f2ce",
+        "434f8f1e3933824af90a4c2de29f2cc00499e279",
+        "a003ffc87574cf30c60ea511f011a3c6965e798a",
+        "e6ef10e1df5ce1fd1644d1e7949f698f554eea4d",
+        "90b1e28f98d338f7e4093e6f1d66d675dc0bbf4b"
+      ],
+      "master-twin-for-e2e": [
+        "9af6a48dc50d4a5c0f5f9bcc6d006cbfa1b09152"
+      ]
+    },
+    "open-numbers/ddf--cait--historical_emissions": {
+      "master": [
+        "9a050bf897531541999adb6a6485bddba360503f"
+      ]
+    },
+    "open-numbers/ddf--gapminder--population": {
+      "master": [
+        "a29faa75a715c13953c2381ae0aeb978a89f513d"
+      ],
+      "develop": [
+        "8b9038dc6092fa1f12c67ca8fa5a0fce9bbd7268"
+      ]
+    },
+    "open-numbers/ddf--open_numbers--world_development_indicators": {
+      "master": [
+        "798e9665456ad760178e29f22da40f48ba72cfdb"
+      ],
+      "merge-concepts": [
+        "37450d46df8fac3a1f2d9d4cf4c2246803a7eecb"
+      ]
+    },
+    "buchslava/readers-test-ds-bubbles-3": {
+      "master": [
+        "e4772eef2e215cff6c40b8522d65b617b5f452c0"
+      ]
+    },
+    "buchslava/readers-test-ds-gm-population-big": {
+      "master": [
+        "d1287d12b9039af6fbae5dc5348d0b1b8fc37bbc"
+      ]
+    },
+    "buchslava/readers-test-ds-gm-population": {
+      "master": [
+        "fa685e953490b6559bd642f91fe0a57971705826"
+      ]
+    },
+    "buchslava/readers-test-ds-gm-static-assets": {
+      "master": [
+        "9b7c3f1bdab6bca6fc7f99c1f79469f7c8b2106c"
+      ]
+    },
+    "buchslava/readers-test-ds-presentation-set": {
+      "master": [
+        "083815f85f63416fd2bed128748f92337cd5a207"
+      ]
+    },
+    "buchslava/readers-test-ds-sankey": {
+      "master": [
+        "9cb62ffe0fe7c592a11170e753f66c7989f61994"
+      ]
+    },
+    "buchslava/readers-test-ds-sg-mix-entity": {
+      "master": [
+        "9fd31b63280b7318b0eee8d5cdaf2a291dd0bc2d"
+      ]
+    },
+    "buchslava/readers-test-ds-static-assets": {
+      "master": [
+        "4db260421fd4a953405e7b27c643fc3a6f08bc72"
+      ]
+    },
+    "buchslava/readers-test-ds-systema-globalis-tiny": {
+      "master": [
+        "1af2374d8161b8b9e77c083c65591b5318bf8048"
+      ]
+    },
+    "buchslava/readers-test-ds-systema-globalis": {
+      "master": [
+        "e4b7bb2049f56a4bca82806280d8f14cb11cc2b6"
+      ]
+    },
+    "buchslava/readers-test-sodertornsmodellen": {
+      "master": [
+        "746f8bf24b5be851e1492a340a671782b10e2225"
+      ]
+    }
+  },
+  "defaultRepository": "open-numbers/ddf--gapminder--systema_globalis",
+  "defaultRepositoryCommit": "a3b178c142cc614854acf492b7766229b1f3f0c5",
+  "defaultRepositoryBranch": "master"
+}

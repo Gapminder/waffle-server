@@ -8,6 +8,9 @@ import { expect } from 'chai';
 import * as URLON from 'urlon';
 import { logger } from '../ws.config/log';
 import * as async from 'async';
+import {ChildProcess} from 'child_process';
+import {ExecOutputReturnValue} from 'shelljs';
+import { CallbackHandler } from 'supertest';
 
 const wsApi = supertest(e2eEnv.wsUrl);
 
@@ -23,12 +26,19 @@ export {
   sendDdfqlRequestAndExpectError
 };
 
-function sendDdfqlRequest(ddfql: any, onResponseReceived: Function): void {
+function sendDdfqlRequest(ddfql: any, onResponseReceived: CallbackHandler): void {
   const encodedDataset = _.has(ddfql, 'dataset') ? { dataset: encodeURIComponent(ddfql.dataset) } : {};
   ddfql = Object.assign({}, ddfql, { force: true }, encodedDataset);
-  return wsApi.get(`/api/ddf/ql?${URLON.stringify(ddfql)}`)
+  // ddfql = Object.assign({}, ddfql, encodedDataset);
+
+  // console.log(`/api/ddf/ml-ql?${URLON.stringify(ddfql)}`);
+  /*console.log(`encodedDataset`, encodedDataset);
+  console.log(e2eEnv.datasetName);*/
+
+  // wsApi.get(`/api/ddf/ml-ql?${URLON.stringify(ddfql)}`)
+  wsApi.get(`/api/ddf/ml-ql?${URLON.stringify(ddfql)}`)
   // Here is alternative way of sending ddfql - via encoded JSON
-  // return wsApi.get(`/api/ddf/ql?query=${encodeURIComponent(JSON.stringify(ddfql))}`)
+  // wsApi.get(`/api/ddf/ml-ql?query=${encodeURIComponent(JSON.stringify(ddfql))}`)
     .set('Accept', 'application/json')
     .expect(200)
     .expect('Content-Type', /application\/json/)
@@ -38,7 +48,7 @@ function sendDdfqlRequest(ddfql: any, onResponseReceived: Function): void {
 function startWaffleServer(): void {
   setUpEnvironmentVariables();
   if (START_WAFFLE_SERVER) {
-    shell.exec(`PORT=${e2eEnv.wsPort} ./node_modules/.bin/pm2 restart ecosystem.config.js --name WSTEST > /dev/null`);
+    shell.exec(`./node_modules/.bin/pm2 restart ecosystem.config.js > /dev/null`);
 
     if (shell.error()) {
       logger.error('startWaffleServer error:', shell.error());
@@ -75,6 +85,11 @@ function setUpEnvironmentVariables(): void {
   shell.env['NODE_ENV'] = e2eEnv.nodeEnv;
   shell.env['DEFAULT_USER_PASSWORD'] = e2eEnv.pass;
   shell.env['PORT'] = e2eEnv.wsPort;
+  shell.env['INFLUXDB_HOST'] = e2eEnv.influxdb_host;
+  shell.env['INFLUXDB_PORT'] = e2eEnv.influxdb_port;
+  shell.env['INFLUXDB_USER'] = e2eEnv.influxdb_user;
+  shell.env['INFLUXDB_PASSWORD'] = e2eEnv.influxdb_password;
+  shell.env['INFLUXDB_DATABASE_NAME'] = e2eEnv.influxdb_database_name;
   /* tslint:enable:no-string-literal */
 }
 
