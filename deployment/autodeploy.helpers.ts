@@ -112,7 +112,10 @@ export function buildImageTM (externalContext: any, cb: Function): void {
       DEFAULT_DATASETS,
       S3_SECRET_KEY,
       S3_ACCESS_KEY,
-      S3_BUCKET
+      S3_BUCKET,
+      GCP_PROJECT_ID,
+      PATH_TO_GCP_SERVICE_ACCOUNT_FILE,
+      GCP_STORAGE_BUCKET_NAME
     }
   } = externalContext;
 
@@ -139,7 +142,10 @@ export function buildImageTM (externalContext: any, cb: Function): void {
     DEFAULT_DATASETS,
     S3_SECRET_KEY,
     S3_ACCESS_KEY,
-    S3_BUCKET
+    S3_BUCKET,
+    GCP_PROJECT_ID,
+    PATH_TO_GCP_SERVICE_ACCOUNT_FILE,
+    GCP_STORAGE_BUCKET_NAME
   });
 
   const commandArgs = commonHelpers.getDockerArguments(dockerArguments);
@@ -176,7 +182,10 @@ export function buildImageNode (externalContext: any, cb: Function): void {
       INFLUXDB_PASSWORD,
       S3_SECRET_KEY,
       S3_ACCESS_KEY,
-      S3_BUCKET
+      S3_BUCKET,
+      GCP_PROJECT_ID,
+      PATH_TO_GCP_SERVICE_ACCOUNT_FILE,
+      GCP_STORAGE_BUCKET_NAME
     }
   } = externalContext;
 
@@ -202,7 +211,10 @@ export function buildImageNode (externalContext: any, cb: Function): void {
     MACHINE_SUFFIX,
     S3_SECRET_KEY,
     S3_ACCESS_KEY,
-    S3_BUCKET
+    S3_BUCKET,
+    GCP_PROJECT_ID,
+    PATH_TO_GCP_SERVICE_ACCOUNT_FILE,
+    GCP_STORAGE_BUCKET_NAME
   });
 
   const commandArgs = commonHelpers.getDockerArguments(dockerArguments);

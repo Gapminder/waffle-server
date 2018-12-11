@@ -39,9 +39,8 @@ forever/*.*
 settings_gapminder*.txt
 settings_valor.txt
 
-# GCP keys
-dev
-dev.pub
+# WS private& public keys
+keys/*
 
 # deployment
 deployment/**/tmp/*.*
@@ -49,7 +48,6 @@ deployment/**/deployment_*.json
 deployment/**/build.*.sh
 deployment/**/*.txt
 **/dev-waffle-server-*.json
-ws.config/travis.pk
 
 test-bb/fixtures
 !test-bb/test-objects/**/*.js

@@ -7,7 +7,7 @@
   "name": "waffle-server-mongoless",
   "description": "Server for keeping and serving ddf data",
   "main": "server.js",
-  "version": "3.1.18",
+  "version": "3.1.19",
   "private": true,
   "scripts": {
     "tsc": "./node_modules/.bin/tsc --project tsconfig.json",
@@ -77,7 +77,7 @@
     "threads": "0.12.0",
     "typescript": "3.0.1",
     "urlon": "2.0.1",
-    "vizabi-ddfcsv-reader": "2.4.1"
+    "vizabi-ddfcsv-reader": "2.5.0"
   },
   "devDependencies": {
     "@types/chai": "4.1.3",

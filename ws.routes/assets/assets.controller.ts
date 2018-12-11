@@ -4,7 +4,7 @@ import { performance } from 'perf_hooks';
 import { logger } from '../../ws.config/log';
 import * as routesUtils from '../utils';
 import { WSRequest } from '../utils';
-import { getS3FileReaderObject } from 'vizabi-ddfcsv-reader';
+import { getGcpFileReaderObject } from 'vizabi-ddfcsv-reader';
 import { constants, responseMessages } from '../../ws.utils/constants';
 import { config } from '../../ws.config/config';
 
@@ -22,7 +22,7 @@ async function serveAsset(req: WSRequest, res: Response): Promise<Response | voi
   req.queryStartTime = performance.now();
 
   try {
-    const reader = getS3FileReaderObject();
+    const reader = getGcpFileReaderObject();
     reader.init({path: query.repositoryPath});
     const data = await reader.getAsset(query.filepath);
 

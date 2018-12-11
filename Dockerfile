@@ -2,8 +2,6 @@ FROM ubuntu:16.04
 
 #install ubuntu packages
 RUN apt-get update
-RUN apt-get install -y sudo git python build-essential libssl-dev openssh-server curl redis-tools nfs-common rsyslog libkrb5-dev net-tools lsof nano htop apt-utils apache2-utils supervisor mc
-
 RUN set -ex && \
     for key in \
         05CE15085FC09D18E99EFB22684A14CF2582E0C5 ; \
@@ -12,6 +10,8 @@ RUN set -ex && \
         gpg --keyserver pgp.mit.edu --recv-keys "$key" || \
         gpg --keyserver keyserver.pgp.com --recv-keys "$key" ; \
     done
+RUN apt-get update
+RUN apt-get install --fix-missing -y sudo git python build-essential libssl-dev openssh-server curl redis-tools nfs-common rsyslog libkrb5-dev net-tools lsof nano htop apt-utils apache2-utils supervisor mc
 
 #install telegraf separately due to complexity of gpg registering keys
 ENV TELEGRAF_VERSION 1.4.3
@@ -35,8 +35,8 @@ RUN chmod +x /usr/local/bin/dumb-init
 
 #add ssh-key for git
 RUN mkdir -p /root/.ssh
-COPY dev /root/.ssh/dev
-COPY dev.pub /root/.ssh/dev.pub
+COPY keys/dev /root/.ssh/dev
+COPY keys/dev.pub /root/.ssh/dev.pub
 RUN chmod 400 /root/.ssh/dev
 RUN echo "    IdentityFile ~/.ssh/dev" >> /etc/ssh/ssh_config
 RUN echo "Host github.com\n\tStrictHostKeyChecking no\n" >> /root/.ssh/config
@@ -135,6 +135,15 @@ ENV S3_ACCESS_KEY "${S3_ACCESS_KEY}"
 
 ARG S3_BUCKET
 ENV S3_BUCKET "${S3_BUCKET}"
+
+ARG PATH_TO_GCP_SERVICE_ACCOUNT_FILE
+ENV PATH_TO_GCP_SERVICE_ACCOUNT_FILE "${PATH_TO_GCP_SERVICE_ACCOUNT_FILE}"
+
+ARG GCP_PROJECT_ID
+ENV GCP_PROJECT_ID "${GCP_PROJECT_ID}"
+
+ARG GCP_STORAGE_BUCKET_NAME
+ENV GCP_STORAGE_BUCKET_NAME "${GCP_STORAGE_BUCKET_NAME}"
 
 ENV TERM "xterm-256color"
 

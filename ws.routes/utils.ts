@@ -13,8 +13,6 @@ import {
   loadRepositoriesConfig,
   RepositoriesConfig
 } from '../ws.config/repos.config';
-import { getS3FileReaderObject } from 'vizabi-ddfcsv-reader';
-import {config} from '../ws.config/config';
 
 const {
   performance

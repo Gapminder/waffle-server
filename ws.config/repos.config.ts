@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { logger } from './log';
-import { getS3FileReaderObject } from 'vizabi-ddfcsv-reader';
+import { getGcpFileReaderObject } from 'vizabi-ddfcsv-reader';
 import { config } from './config';
 
 export interface Repository {
@@ -31,14 +31,24 @@ const cachedRepositoryConfig: RepositoriesConfig = {
 
 export async function loadRepositoriesConfig(isForceLoad: boolean = false): Promise<RepositoriesConfig> {
   try {
-    if (!isForceLoad) {
+    // old S3 approach
+    /*if (!isForceLoad) {
       return cachedRepositoryConfig;
     }
+
     const options = { ResponseCacheControl: 'no-cache' };
+
     const ddfcsvReader = getS3FileReaderObject();
     ddfcsvReader.init({});
     const reposConfig = await ddfcsvReader.getFile(config.PATH_TO_REPOS_CONFIG, true, options);
     Object.assign(cachedRepositoryConfig, reposConfig, { resource: `s3://${config.S3_BUCKET}/${config.PATH_TO_REPOS_CONFIG}` });
+    */
+
+    const ddfcsvReader = getGcpFileReaderObject();
+
+    ddfcsvReader.init({});
+    const reposConfig = await ddfcsvReader.getFile(config.PATH_TO_REPOS_CONFIG, true, {});
+    Object.assign(cachedRepositoryConfig, reposConfig);
 
     return Object.assign({}, cachedRepositoryConfig, { cached: false });
   } catch (error) {
