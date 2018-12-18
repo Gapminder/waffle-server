@@ -31,12 +31,12 @@ const cachedRepositoryConfig: RepositoriesConfig = {
 
 export async function loadRepositoriesConfig(isForceLoad: boolean = false): Promise<RepositoriesConfig> {
   try {
-    // old S3 approach
-    /*if (!isForceLoad) {
+    if (!isForceLoad) {
       return cachedRepositoryConfig;
     }
 
-    const options = { ResponseCacheControl: 'no-cache' };
+    // old S3 approach
+    /*const options = { ResponseCacheControl: 'no-cache' };
 
     const ddfcsvReader = getS3FileReaderObject();
     ddfcsvReader.init({});

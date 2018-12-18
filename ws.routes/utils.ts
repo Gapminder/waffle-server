@@ -13,6 +13,7 @@ import {
   loadRepositoriesConfig,
   RepositoriesConfig
 } from '../ws.config/repos.config';
+import { EndpointDiagnosticManager } from 'cross-project-diagnostics';
 
 const {
   performance
@@ -64,6 +65,7 @@ export interface WSRequest extends express.Request {
     queryType: string;
     parse: Function;
   };
+  diag?: EndpointDiagnosticManager;
 }
 
 function trackingRequestTime(req: WSRequest, res: express.Response, next: express.NextFunction): void {
@@ -77,21 +79,29 @@ function shareConfigWithRoute(config: object, req: WSRequest, res: express.Respo
 }
 
 async function validateBodyStructure(req: WSRequest, res: express.Response, next: express.NextFunction): Promise<void | express.Response> {
+  const { debug, error } = req.diag.prepareDiagnosticFor('validateBodyStructure');
+
   try {
     await validateQueryStructure(req.body, {});
+    debug('body validation ok');
     return next();
-  } catch (error) {
-    return res.json(toErrorResponse(error, req, 'validateQueryStructure'));
+  } catch (err) {
+    error('body validation NOT ok', err);
+    return res.json(toErrorResponse(err, req, 'validateQueryStructure'));
   }
 }
 
 async function parseDatasetVersion(req: WSRequest, res: express.Response, next: express.NextFunction): Promise<void | express.Response> {
+  const { debug, error } = req.diag.prepareDiagnosticFor('parseDatasetVersion');
+
   try {
     const reposConfig: RepositoriesConfig = await loadRepositoriesConfig();
     await extendQueryWithRepository(req.body, reposConfig);
+    debug('dataset version parsing ok');
     return next();
-  } catch (error) {
-    return res.json(toErrorResponse(error, req, 'parseDatasetVersion'));
+  } catch (err) {
+    error('dataset version parsing NOT ok', err);
+    return res.json(toErrorResponse(err, req, 'parseDatasetVersion'));
   }
 }
 
