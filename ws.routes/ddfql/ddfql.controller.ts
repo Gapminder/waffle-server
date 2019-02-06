@@ -6,7 +6,8 @@ import { Application, Response, Request, NextFunction } from 'express';
 import * as compression from 'compression';
 import { logger } from '../../ws.config/log';
 import * as routeUtils from '../utils';
-import { getGcpFileReaderObject } from 'vizabi-ddfcsv-reader';
+import { prepareDDFCsvReaderObject } from 'vizabi-ddfcsv-reader';
+import { GcpFileReader } from 'gcp-ddf-resource-reader';
 import { ServiceLocator } from '../../ws.service-locator/index';
 import { performance } from 'perf_hooks';
 import * as path from 'path';
@@ -223,7 +224,7 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
     req.queryStartTime = performance.now();
 
     const query = _.get(req, 'body', {});
-    const reader = getGcpFileReaderObject();
+    const reader = prepareDDFCsvReaderObject(new GcpFileReader())();
     const select = _.get(query, 'select.key', []).concat(_.get(query, 'select.value', []));
     const headersStr = JSON.stringify(select);
     const queryStr = JSON.stringify(query);

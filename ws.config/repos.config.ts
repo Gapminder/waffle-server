@@ -1,6 +1,7 @@
 import * as _ from 'lodash';
 import { logger } from './log';
-import { getGcpFileReaderObject } from 'vizabi-ddfcsv-reader';
+import { prepareDDFCsvReaderObject } from 'vizabi-ddfcsv-reader';
+import { GcpFileReader } from 'gcp-ddf-resource-reader';
 import { config } from './config';
 
 export interface Repository {
@@ -44,7 +45,7 @@ export async function loadRepositoriesConfig(isForceLoad: boolean = false): Prom
     Object.assign(cachedRepositoryConfig, reposConfig, { resource: `s3://${config.S3_BUCKET}/${config.PATH_TO_REPOS_CONFIG}` });
     */
 
-    const ddfcsvReader = getGcpFileReaderObject();
+    const ddfcsvReader = prepareDDFCsvReaderObject(new GcpFileReader())();
 
     ddfcsvReader.init({});
     const reposConfig = await ddfcsvReader.getFile(config.PATH_TO_REPOS_CONFIG, true, {});

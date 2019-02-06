@@ -65,6 +65,7 @@
     "express-session": "1.15.6",
     "forever": "0.15.3",
     "fs-extra": "6.0.1",
+    "gcp-ddf-resource-reader": "1.0.0",
     "http-errors": "1.6.3",
     "influx": "5.0.7",
     "lodash": "4.17.10",
@@ -78,7 +79,7 @@
     "threads": "0.12.0",
     "typescript": "3.0.1",
     "urlon": "2.0.1",
-    "vizabi-ddfcsv-reader": "2.5.15"
+    "vizabi-ddfcsv-reader": "3.0.0"
   },
   "devDependencies": {
     "@types/chai": "4.1.3",

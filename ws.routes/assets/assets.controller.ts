@@ -4,7 +4,8 @@ import { performance } from 'perf_hooks';
 import { logger } from '../../ws.config/log';
 import * as routesUtils from '../utils';
 import { WSRequest } from '../utils';
-import { getGcpFileReaderObject } from 'vizabi-ddfcsv-reader';
+import { prepareDDFCsvReaderObject } from 'vizabi-ddfcsv-reader';
+import { GcpFileReader } from 'gcp-ddf-resource-reader';
 import { constants, responseMessages } from '../../ws.utils/constants';
 import { config } from '../../ws.config/config';
 
@@ -22,7 +23,7 @@ async function serveAsset(req: WSRequest, res: Response): Promise<Response | voi
   req.queryStartTime = performance.now();
 
   try {
-    const reader = getGcpFileReaderObject();
+    const reader = prepareDDFCsvReaderObject(new GcpFileReader())();
     reader.init({path: query.repositoryPath});
     const data = await reader.getAsset(query.filepath);
 
