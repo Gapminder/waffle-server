@@ -50,7 +50,7 @@ const environment = Object.freeze({
   PATH_TO_DIFF_DDF_RESULT_FILE: path.join(__dirname, '../ws-import'),
   PATH_TO_TRAVIS_KEY: path.join(__dirname, '../keys/travis.pk'),
 
-  // PATH_TO_GCP_SERVICE_ACCOUNT_FILE: path.join(__dirname, '../keys/gcp-service-account.json'),
+  // PATH_TO_GCP_SERVICE_ACCOUNT_FILE: path.join(__dirname, '../keys/dev-gcp-service-account.json'),
 
   // GCP_PROJECT_ID: 'dev-waffle-server',
   // GCP_STORAGE_BUCKET_NAME: 'gapminder-ws-dev-ds-storage',

@@ -2,15 +2,13 @@
   "repositoryDescriptors": {
     "open-numbers/ddf--gapminder--systema_globalis": {
       "master": [
-        "a3b178c142cc614854acf492b7766229b1f3f0c5"
+        "f937c2f7fd2bf2b00918ba50ba662ad08986ded4"
       ],
       "stage": [
-        "a3b178c142cc614854acf492b7766229b1f3f0c5"
+        "f937c2f7fd2bf2b00918ba50ba662ad08986ded4"
       ],
       "develop": [
-        "d69dc1ddbf11651b4b3c56e0cb55361cf2566c97",
-        "de6bfb5671cf68b65f72cc35f443be972c3cf2c5",
-        "8170b6701960801f028ee7f8d3b90f532c566414"
+        "f6e0a8875b3d03fd91c3f94915caa76aa17ed597"
       ]
     },
     "VS-work/ddf--ws-testing": {
@@ -109,6 +107,6 @@
     }
   },
   "defaultRepository": "open-numbers/ddf--gapminder--systema_globalis",
-  "defaultRepositoryCommit": "a3b178c142cc614854acf492b7766229b1f3f0c5",
+  "defaultRepositoryCommit": "f937c2f7fd2bf2b00918ba50ba662ad08986ded4",
   "defaultRepositoryBranch": "master"
 }
