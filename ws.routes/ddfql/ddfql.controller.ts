@@ -128,7 +128,7 @@ function travisHandler(req: WSRequest, res: Response): void {
   }
 }
 
-function createDiagnostics(req: WSRequest, res: express.Response, next: express.NextFunction): void {
+export function createDiagnostics(req: WSRequest, res: express.Response, next: express.NextFunction): void {
   const query = _.get(req, 'body', {});
   const diagSeverityLevel: Level = query.diag ? getLevelByLabel(query.diag) : Level.OFF;
   const diag: EndpointDiagnosticManager = createDiagnosticManagerOn(process.env.npm_package_name, process.env.npm_package_version)
