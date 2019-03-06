@@ -6,7 +6,7 @@ import * as URLON from 'urlon';
 import { logger } from '../ws.config/log';
 import * as express from 'express';
 import { constants, responseMessages } from '../ws.utils/constants';
-import { extendQueryWithRepository, validateQueryStructure } from 'ddf-query-validator';
+import { extendQueryWithRepository, validateQueryStructure, IQueryRepoDescriptor } from 'ddf-query-validator';
 import { FailedResponse, RequestTags, TelegrafService } from '../ws.services/telegraf.service';
 import {
   getPossibleAssetsRepoPaths,
@@ -14,6 +14,7 @@ import {
   RepositoriesConfig
 } from '../ws.config/repos.config';
 import { EndpointDiagnosticManager } from 'cross-project-diagnostics';
+import { getCacheTagValue } from './ddfql/ddfql.controller';
 
 const {
   performance
@@ -66,6 +67,7 @@ export interface WSRequest extends express.Request {
     parse: Function;
   };
   diag?: EndpointDiagnosticManager;
+  repoDescriptor?: IQueryRepoDescriptor;
 }
 
 function trackingRequestTime(req: WSRequest, res: express.Response, next: express.NextFunction): void {
@@ -87,6 +89,13 @@ async function validateBodyStructure(req: WSRequest, res: express.Response, next
     return next();
   } catch (err) {
     error('body validation NOT ok', err);
+
+    const cacheTag = getCacheTagValue(req);
+
+    if (cacheTag) {
+      res.set('Cache-Tag', cacheTag);
+    }
+
     return res.json(toErrorResponse(err, req, 'validateQueryStructure'));
   }
 }
@@ -96,7 +105,7 @@ async function parseDatasetVersion(req: WSRequest, res: express.Response, next: 
 
   try {
     const reposConfig: RepositoriesConfig = await loadRepositoriesConfig();
-    await extendQueryWithRepository(req.body, reposConfig);
+    req.repoDescriptor = await extendQueryWithRepository(req.body, reposConfig) as IQueryRepoDescriptor;
     debug('dataset version parsing ok');
     return next();
   } catch (err) {

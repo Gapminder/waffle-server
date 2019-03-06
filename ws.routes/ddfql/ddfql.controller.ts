@@ -139,6 +139,18 @@ export function createDiagnostics(req: WSRequest, res: express.Response, next: e
   return next();
 }
 
+export function getCacheTagValue(req: WSRequest): string {
+  if (!req.repoDescriptor) {
+    return null;
+  }
+
+  if (req.repoDescriptor.isDefaultBranch) {
+    return `${req.repoDescriptor.dataset},${req.repoDescriptor.dataset}#${req.repoDescriptor.branch}`;
+  }
+
+  return `${req.repoDescriptor.dataset}#${req.repoDescriptor.branch}`;
+}
+
 function createDdfqlController(serviceLocator: ServiceLocator): Application {
   const app = serviceLocator.getApplication();
   const appConfig = serviceLocator.get('config');
@@ -156,8 +168,8 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
     routeUtils.shareConfigWithRoute.bind(routeUtils, appConfig),
     routeUtils.parseQueryFromUrlQuery,
     createDiagnostics,
-    routeUtils.validateBodyStructure,
     routeUtils.parseDatasetVersion,
+    routeUtils.validateBodyStructure,
     getMongolessDdfStats
   );
 
@@ -218,6 +230,12 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
 
 
   function getMongolessDdfStats(req: WSRequest, res: Response): void {
+    const cacheTag = getCacheTagValue(req);
+
+    if (cacheTag) {
+      res.set('Cache-Tag', cacheTag);
+    }
+
     logger.info({req}, 'DDFQL URL');
     logger.info({obj: req.body}, 'DDFQL');
 
