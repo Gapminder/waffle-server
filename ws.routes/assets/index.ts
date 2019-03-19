@@ -5,6 +5,7 @@ import * as routeUtils from '../utils';
 import * as AssetsController from './assets.controller';
 import { ServiceLocator } from '../../ws.service-locator/index';
 import { Application } from 'express';
+import { createDiagnostics } from '../ddfql/ddfql.controller';
 
 function registerDdfAssetsRoutes(serviceLocator: ServiceLocator): Application {
   const router = express.Router();
@@ -16,6 +17,7 @@ function registerDdfAssetsRoutes(serviceLocator: ServiceLocator): Application {
     compression(),
     routeUtils.trackingRequestTime,
     routeUtils.shareConfigWithRoute.bind(routeUtils, config),
+    createDiagnostics,
     routeUtils.bodyFromUrlAssets,
     routeUtils.parseDatasetVersion,
     AssetsController.serveAsset

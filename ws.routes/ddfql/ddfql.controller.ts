@@ -6,13 +6,15 @@ import { Application, Response, Request, NextFunction } from 'express';
 import * as compression from 'compression';
 import { logger } from '../../ws.config/log';
 import * as routeUtils from '../utils';
-import { getS3FileReaderObject } from 'vizabi-ddfcsv-reader';
+import { prepareDDFCsvReaderObject } from 'vizabi-ddfcsv-reader';
+import { GcpFileReader } from 'gcp-ddf-resource-reader';
 import { ServiceLocator } from '../../ws.service-locator/index';
 import { performance } from 'perf_hooks';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as NodeRSA from 'node-rsa';
 import { spawn } from 'child_process';
+import { createDiagnosticManagerOn, EndpointDiagnosticManager, getLevelByLabel, Level } from 'cross-project-diagnostics';
 import { toDataResponse, toErrorResponse, WSRequest } from '../utils';
 import { config } from '../../ws.config/config';
 import { loadRepositoriesConfig } from '../../ws.config/repos.config';
@@ -22,6 +24,7 @@ const pk = fs.readFileSync(config.PATH_TO_TRAVIS_KEY);
 
 let importProcess;
 let repositoryStateDescriptors = {};
+let queryCount = 0;
 
 export async function mongolessImport(importConfig: object, repositoryName?: string): Promise<void> {
   if (!importProcess) {
@@ -125,6 +128,29 @@ function travisHandler(req: WSRequest, res: Response): void {
   }
 }
 
+export function createDiagnostics(req: WSRequest, res: express.Response, next: express.NextFunction): void {
+  const query = _.get(req, 'body', {});
+  const diagSeverityLevel: Level = query.diag ? getLevelByLabel(query.diag) : Level.OFF;
+  const diag: EndpointDiagnosticManager = createDiagnosticManagerOn(process.env.npm_package_name, process.env.npm_package_version)
+    .forRequest(req.query.requestId).withSeverityLevel(diagSeverityLevel);
+
+  req.diag = diag;
+
+  return next();
+}
+
+export function getCacheTagValue(req: WSRequest): string {
+  if (!req.repoDescriptor) {
+    return null;
+  }
+
+  if (req.repoDescriptor.isDefaultBranch) {
+    return `${req.repoDescriptor.dataset},${req.repoDescriptor.dataset}#${req.repoDescriptor.branch}`;
+  }
+
+  return `${req.repoDescriptor.dataset}#${req.repoDescriptor.branch}`;
+}
+
 function createDdfqlController(serviceLocator: ServiceLocator): Application {
   const app = serviceLocator.getApplication();
   const appConfig = serviceLocator.get('config');
@@ -141,8 +167,9 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
     routeUtils.trackingRequestTime,
     routeUtils.shareConfigWithRoute.bind(routeUtils, appConfig),
     routeUtils.parseQueryFromUrlQuery,
-    routeUtils.validateBodyStructure,
+    createDiagnostics,
     routeUtils.parseDatasetVersion,
+    routeUtils.validateBodyStructure,
     getMongolessDdfStats
   );
 
@@ -151,6 +178,7 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
     routeUtils.trackingRequestTime,
     routeUtils.shareConfigWithRoute.bind(routeUtils, appConfig),
     routeUtils.validateBodyStructure,
+    createDiagnostics,
     routeUtils.parseDatasetVersion,
     getMongolessDdfStats
   );
@@ -160,6 +188,7 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
     routeUtils.trackingRequestTime,
     routeUtils.shareConfigWithRoute.bind(routeUtils, appConfig),
     routeUtils.bodyFromUrlQuery,
+    createDiagnostics,
     getMongolessDdfStats
   );
 
@@ -170,6 +199,7 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
     compression(),
     routeUtils.trackingRequestTime,
     routeUtils.shareConfigWithRoute.bind(routeUtils, appConfig),
+    createDiagnostics,
     // routeUtils.bodyFromUrlQuery,
     getMongolessDdfStats
   );
@@ -200,33 +230,54 @@ function createDdfqlController(serviceLocator: ServiceLocator): Application {
 
 
   function getMongolessDdfStats(req: WSRequest, res: Response): void {
+    const cacheTag = getCacheTagValue(req);
+
+    if (cacheTag) {
+      res.set('Cache-Tag', cacheTag);
+    }
+
     logger.info({req}, 'DDFQL URL');
     logger.info({obj: req.body}, 'DDFQL');
 
     req.queryStartTime = performance.now();
 
     const query = _.get(req, 'body', {});
-    const reader = getS3FileReaderObject();
+    const reader = prepareDDFCsvReaderObject(new GcpFileReader())();
     const select = _.get(query, 'select.key', []).concat(_.get(query, 'select.value', []));
     const headersStr = JSON.stringify(select);
     const queryStr = JSON.stringify(query);
+    const diag = req.diag;
+
+    const { debug, fatal } = diag.prepareDiagnosticFor('getMongolessDdfStats');
 
     reader.init({
       path: query.repositoryPath
     });
-    reader.read(query).then((data: any[]) => {
+    reader.read(query, null, diag).then((data: any[]) => {
+      debug('got result');
+      const diagnosticsResult = JSON.stringify(diag.content);
       const requestTime = performance.now() - req.requestStartTime;
       const queryTime = performance.now() - req.queryStartTime;
+
       res.set('Content-Type', 'application/json');
       res.write(`{"success":true,"requestTime":${requestTime},"queryTime":${queryTime},"query":${queryStr},"headers":${headersStr},"rows":[`);
       data.map((row: object, index: number) => {
         res.write((index ? ',' : '') + JSON.stringify(select.map((header: string) => row[header])));
       });
-      res.write(`]}`);
+      res.write(`]`);
+
+      if (diag.diagnosticDescriptor.level !== Level.OFF) {
+        res.write(`, "_diagnostic": ${diagnosticsResult}`);
+      }
+
+      res.write(`}`);
       res.end();
-    }).catch((error: any) => {
-      logger.error(error);
-      return res.json(routesUtils.toErrorResponse(error, req, 'vizabi-ddfcsv-reader'));
+    }).catch((err: any) => {
+      fatal('ddfcsv reader error', err);
+      logger.error(err);
+      const result = routesUtils.toErrorResponse(err, req, 'vizabi-ddfcsv-reader');
+      diag.putDiagnosticContentInto(result);
+      return res.json(result);
     });
   }
 

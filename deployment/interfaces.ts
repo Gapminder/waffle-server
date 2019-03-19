@@ -26,6 +26,9 @@ export interface DockerBuildArguments extends Dictionary<string|number|boolean> 
   S3_SECRET_KEY: string;
   S3_ACCESS_KEY: string;
   S3_BUCKET: string;
+  GCP_PROJECT_ID: string;
+  PATH_TO_GCP_SERVICE_ACCOUNT_FILE: string;
+  GCP_STORAGE_BUCKET_NAME: string;
 }
 
 export interface GCloudArguments {

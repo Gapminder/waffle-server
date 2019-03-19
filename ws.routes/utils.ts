@@ -6,15 +6,15 @@ import * as URLON from 'urlon';
 import { logger } from '../ws.config/log';
 import * as express from 'express';
 import { constants, responseMessages } from '../ws.utils/constants';
-import { extendQueryWithRepository, validateQueryStructure } from 'ddf-query-validator';
+import { extendQueryWithRepository, validateQueryStructure, IQueryRepoDescriptor } from 'ddf-query-validator';
 import { FailedResponse, RequestTags, TelegrafService } from '../ws.services/telegraf.service';
 import {
   getPossibleAssetsRepoPaths,
   loadRepositoriesConfig,
   RepositoriesConfig
 } from '../ws.config/repos.config';
-import { getS3FileReaderObject } from 'vizabi-ddfcsv-reader';
-import {config} from '../ws.config/config';
+import { EndpointDiagnosticManager } from 'cross-project-diagnostics';
+import { getCacheTagValue } from './ddfql/ddfql.controller';
 
 const {
   performance
@@ -66,6 +66,8 @@ export interface WSRequest extends express.Request {
     queryType: string;
     parse: Function;
   };
+  diag?: EndpointDiagnosticManager;
+  repoDescriptor?: IQueryRepoDescriptor;
 }
 
 function trackingRequestTime(req: WSRequest, res: express.Response, next: express.NextFunction): void {
@@ -79,21 +81,36 @@ function shareConfigWithRoute(config: object, req: WSRequest, res: express.Respo
 }
 
 async function validateBodyStructure(req: WSRequest, res: express.Response, next: express.NextFunction): Promise<void | express.Response> {
+  const { debug, error } = req.diag.prepareDiagnosticFor('validateBodyStructure');
+
   try {
     await validateQueryStructure(req.body, {});
+    debug('body validation ok');
     return next();
-  } catch (error) {
-    return res.json(toErrorResponse(error, req, 'validateQueryStructure'));
+  } catch (err) {
+    error('body validation NOT ok', err);
+
+    const cacheTag = getCacheTagValue(req);
+
+    if (cacheTag) {
+      res.set('Cache-Tag', cacheTag);
+    }
+
+    return res.json(toErrorResponse(err, req, 'validateQueryStructure'));
   }
 }
 
 async function parseDatasetVersion(req: WSRequest, res: express.Response, next: express.NextFunction): Promise<void | express.Response> {
+  const { debug, error } = req.diag.prepareDiagnosticFor('parseDatasetVersion');
+
   try {
     const reposConfig: RepositoriesConfig = await loadRepositoriesConfig();
-    await extendQueryWithRepository(req.body, reposConfig);
+    req.repoDescriptor = await extendQueryWithRepository(req.body, reposConfig) as IQueryRepoDescriptor;
+    debug('dataset version parsing ok');
     return next();
-  } catch (error) {
-    return res.json(toErrorResponse(error, req, 'parseDatasetVersion'));
+  } catch (err) {
+    error('dataset version parsing NOT ok', err);
+    return res.json(toErrorResponse(err, req, 'parseDatasetVersion'));
   }
 }
 
